@@ -11,19 +11,17 @@ PLATFORMS = [Platform.MEDIA_PLAYER]
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: config_entries.ConfigEntry
-) -> bool:
+) -> None:
     """Set up a DLNA DMR device from a config entry."""
     LOGGER.debug("Setting up config entry: %s", entry.unique_id)
 
     # Forward setup to the appropriate platform
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: config_entries.ConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
     # Forward to the same platform as async_setup_entry did
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)

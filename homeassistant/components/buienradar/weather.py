@@ -9,6 +9,7 @@ from buienradar.constants import (
     DATETIME,
     MAX_TEMP,
     MIN_TEMP,
+    NIGHTTIME,
     RAIN,
     RAIN_CHANCE,
     WINDAZIMUTH,
@@ -16,6 +17,7 @@ from buienradar.constants import (
 )
 
 from homeassistant.components.weather import (
+    ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_CLOUDY,
     ATTR_CONDITION_EXCEPTIONAL,
     ATTR_CONDITION_FOG,
@@ -58,7 +60,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BuienRadarConfigEntry
 from .const import DEFAULT_TIMEFRAME
-from .util import BrData
+from .util import BrData, BuienradarData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -147,22 +149,24 @@ class BrWeather(WeatherEntity):
     @callback
     def data_updated(self, data: BrData) -> None:
         """Update data."""
-        self._attr_attribution = data.attribution
-        self._attr_condition = self._calc_condition(data)
-        self._forecast = self._calc_forecast(data)
-        self._attr_humidity = data.humidity
+        values = BuienradarData(data.data)
+        self._attr_attribution = values.attribution
+        self._attr_condition = self._calc_condition(values)
+        self._forecast = self._calc_forecast(values)
+        self._attr_humidity = values.humidity
         self._attr_name = (
-            self._stationname or f"BR {data.stationname or '(unknown station)'}"
+            self._stationname or f"BR {values.stationname or '(unknown station)'}"
         )
-        self._attr_native_pressure = data.pressure
-        self._attr_native_temperature = data.temperature
-        self._attr_native_apparent_temperature = data.feeltemperature
-        self._attr_native_visibility = data.visibility
-        self._attr_native_wind_gust_speed = data.wind_gust
-        self._attr_native_wind_speed = data.wind_speed
-        self._attr_wind_bearing = data.wind_bearing
+        self._attr_native_pressure = values.pressure
+        self._attr_native_temperature = values.temperature
+        self._attr_native_apparent_temperature = values.feeltemperature
+        self._attr_native_visibility = values.visibility
+        self._attr_native_wind_gust_speed = values.wind_gust
+        self._attr_native_wind_speed = values.wind_speed
+        self._attr_wind_bearing = values.wind_bearing
 
-        if not self.hass:
+        # hass is None until the entity is added, not needed once on a coordinator
+        if not self.hass:  # type: ignore[truthy-bool]
             return
         self.async_write_ha_state()
         assert self.platform.config_entry
@@ -170,13 +174,16 @@ class BrWeather(WeatherEntity):
             self.hass, self.async_update_listeners(("daily",))
         )
 
-    def _calc_condition(self, data: BrData):
+    def _calc_condition(self, data: BuienradarData):
         """Return the current condition."""
         if data.condition and (ccode := data.condition.get(CONDCODE)):
-            return CONDITION_MAP.get(ccode)
+            condition = CONDITION_MAP.get(ccode)
+            if condition == ATTR_CONDITION_SUNNY and data.condition.get(NIGHTTIME):
+                return ATTR_CONDITION_CLEAR_NIGHT
+            return condition
         return None
 
-    def _calc_forecast(self, data: BrData):
+    def _calc_forecast(self, data: BuienradarData):
         """Return the forecast array."""
         fcdata_out = []
 

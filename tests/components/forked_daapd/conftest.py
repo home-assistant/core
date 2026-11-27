@@ -1,12 +1,11 @@
 """Common fixtures for forked_daapd tests."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.forked_daapd.const import CONF_TTS_PAUSE_TIME, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="config_entry")

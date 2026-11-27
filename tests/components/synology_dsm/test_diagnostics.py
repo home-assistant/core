@@ -3,6 +3,9 @@
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 from synology_dsm.api.core.external_usb import SynoCoreExternalUSBDevice
 from synology_dsm.api.dsm.network import NetworkInterface
 from syrupy.assertion import SnapshotAssertion
@@ -21,10 +24,6 @@ from homeassistant.core import HomeAssistant
 
 from .common import mock_dsm_hardware, mock_dsm_information
 from .consts import HOST, MACS, PASSWORD, PORT, SERIAL, USE_SSL, USERNAME
-
-from tests.common import MockConfigEntry
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture

@@ -1,10 +1,9 @@
 """Tests for HomematicIP Cloud siren."""
 
 from homeassistant.components.siren import (
-    ATTR_AVAILABLE_TONES,
-    ATTR_TONE,
-    ATTR_VOLUME_LEVEL,
+    SirenEntityCapabilityAttribute,
     SirenEntityFeature,
+    SirenServiceArgument,
 )
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, STATE_OFF
 from homeassistant.core import HomeAssistant
@@ -35,7 +34,9 @@ async def test_hmip_mp3_siren(
         | SirenEntityFeature.TONES
         | SirenEntityFeature.VOLUME_SET
     )
-    assert len(ha_state.attributes[ATTR_AVAILABLE_TONES]) == 253
+    assert (
+        len(ha_state.attributes[SirenEntityCapabilityAttribute.AVAILABLE_TONES]) == 253
+    )
 
     functional_channel = hmip_device.functionalChannels[1]
     service_call_counter = len(functional_channel.mock_calls)
@@ -46,8 +47,8 @@ async def test_hmip_mp3_siren(
         "turn_on",
         {
             "entity_id": entity_id,
-            ATTR_TONE: 5,
-            ATTR_VOLUME_LEVEL: 0.6,
+            SirenServiceArgument.TONE: 5,
+            SirenServiceArgument.VOLUME_LEVEL: 0.6,
         },
         blocking=True,
     )
@@ -62,7 +63,7 @@ async def test_hmip_mp3_siren(
     await hass.services.async_call(
         "siren",
         "turn_on",
-        {"entity_id": entity_id, ATTR_TONE: 0},
+        {"entity_id": entity_id, SirenServiceArgument.TONE: 0},
         blocking=True,
     )
     assert functional_channel.mock_calls[-1][2] == {

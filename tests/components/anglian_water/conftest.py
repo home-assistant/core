@@ -7,14 +7,13 @@ from freezegun.api import FrozenDateTimeFactory
 from pyanglianwater.api import API
 from pyanglianwater.meter import SmartMeter
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 
 from homeassistant.components.anglian_water.const import CONF_ACCOUNT_NUMBER, DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from .const import ACCESS_TOKEN, ACCOUNT_NUMBER, PASSWORD, USERNAME
-
-from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 @pytest.fixture
@@ -66,6 +65,7 @@ def mock_anglian_water_authenticator() -> Generator[MagicMock]:
         mock_instance.refresh_token = ACCESS_TOKEN
         mock_instance.send_login_request.return_value = None
         mock_instance.send_refresh_request.return_value = None
+        mock_instance.send_mfa_request.return_value = None
         yield mock_instance
 
 
@@ -105,6 +105,6 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.anglian_water.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry

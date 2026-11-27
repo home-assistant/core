@@ -5,16 +5,16 @@ from collections.abc import Iterable
 from typing import Any, override
 
 from homeassistant.components.remote import (
-    ATTR_DELAY_SECS,
-    ATTR_NUM_REPEATS,
     DEFAULT_DELAY_SECS,
     RemoteEntity,
+    RemoteServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.trigger import PluggableAction
 
 from . import LOGGER
+from .const import TV_STATE_OFF, TV_STATE_ON
 from .coordinator import PhilipsTVConfigEntry, PhilipsTVDataUpdateCoordinator
 from .entity import PhilipsJsEntity
 from .helpers import async_get_turn_on_trigger
@@ -61,9 +61,11 @@ class PhilipsTVRemote(PhilipsJsEntity, RemoteEntity):
     @override
     def is_on(self) -> bool | None:
         """Return true if device is on."""
-        return bool(
-            self._tv.on and (self._tv.powerstate == "On" or self._tv.powerstate is None)
-        )
+        if not self._tv.on:
+            return False
+        if self._tv.powerstate is not None:
+            return self._tv.powerstate == TV_STATE_ON
+        return self._tv.screenstate != TV_STATE_OFF
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -77,17 +79,20 @@ class PhilipsTVRemote(PhilipsJsEntity, RemoteEntity):
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        if self._tv.on:
-            await self._tv.sendKey("Standby")
-            self.async_write_ha_state()
-        else:
+        if not self.is_on:
             LOGGER.debug("Tv was already turned off")
+            return
+        if self._tv.powerstate:
+            await self._tv.setPowerState("Standby")
+        else:
+            await self._tv.sendKey("Standby")
+        self.async_write_ha_state()
 
     @override
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a command to one device."""
-        num_repeats = kwargs[ATTR_NUM_REPEATS]
-        delay = kwargs.get(ATTR_DELAY_SECS, DEFAULT_DELAY_SECS)
+        num_repeats = kwargs[RemoteServiceArgument.NUM_REPEATS]
+        delay = kwargs.get(RemoteServiceArgument.DELAY_SECS, DEFAULT_DELAY_SECS)
 
         for _ in range(num_repeats):
             for single_command in command:

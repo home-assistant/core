@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.playstation_network.config_flow import (
     PSNAWPAuthenticationError,
@@ -26,8 +27,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import NPSSO_TOKEN, NPSSO_TOKEN_INVALID_JSON, PSN_ID
-
-from tests.common import MockConfigEntry
 
 MOCK_DATA_ADVANCED_STEP = {CONF_NPSSO: NPSSO_TOKEN}
 
@@ -173,8 +172,15 @@ async def test_parse_npsso_token_failures(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={CONF_NPSSO: NPSSO_TOKEN_INVALID_JSON},
     )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_NPSSO: NPSSO_TOKEN_INVALID_JSON},
+    )
+
     assert result["errors"] == {"base": "invalid_account"}
 
     mock_psnawp_npsso.side_effect = lambda token: token

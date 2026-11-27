@@ -1,14 +1,24 @@
 """Config flow to configure the HomematicIP Cloud integration."""
 
 from collections.abc import Mapping
+import logging
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 
-from .const import _LOGGER, DOMAIN, HMIPC_AUTHTOKEN, HMIPC_HAPID, HMIPC_NAME, HMIPC_PIN
+from .const import (
+    DOMAIN,
+    HMIPC_AUTHTOKEN,
+    HMIPC_CLIENT_ID,
+    HMIPC_HAPID,
+    HMIPC_NAME,
+    HMIPC_PIN,
+)
 from .hap import HomematicipAuth
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class HomematicipCloudFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -51,11 +61,11 @@ class HomematicipCloudFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(HMIPC_HAPID): str,
-                    vol.Optional(HMIPC_NAME): str,
-                    vol.Optional(HMIPC_PIN): str,
+                    probatio.Required(HMIPC_HAPID): str,
+                    probatio.Optional(HMIPC_NAME): str,
+                    probatio.Optional(HMIPC_PIN): str,
                 }
             ),
             errors=errors,
@@ -73,7 +83,10 @@ class HomematicipCloudFlowHandler(ConfigFlow, domain=DOMAIN):
                 if self.source == "reauth":
                     return self.async_update_reload_and_abort(
                         self._get_reauth_entry(),
-                        data_updates={HMIPC_AUTHTOKEN: authtoken},
+                        data_updates={
+                            HMIPC_AUTHTOKEN: authtoken,
+                            HMIPC_CLIENT_ID: self.auth.client_id,
+                        },
                     )
                 return self.async_create_entry(
                     title=self.auth.config[HMIPC_HAPID],
@@ -81,6 +94,7 @@ class HomematicipCloudFlowHandler(ConfigFlow, domain=DOMAIN):
                         HMIPC_HAPID: self.auth.config[HMIPC_HAPID],
                         HMIPC_AUTHTOKEN: authtoken,
                         HMIPC_NAME: self.auth.config.get(HMIPC_NAME),
+                        HMIPC_CLIENT_ID: self.auth.client_id,
                     },
                 )
             if self.source == "reauth":
@@ -119,9 +133,9 @@ class HomematicipCloudFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(HMIPC_PIN): str,
+                    probatio.Optional(HMIPC_PIN): str,
                 }
             ),
             errors=errors,

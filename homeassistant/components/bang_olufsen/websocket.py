@@ -19,7 +19,6 @@ from mozart_api.models import (
 )
 from mozart_api.mozart_client import BaseWebSocketResponse, MozartClient
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -36,6 +35,9 @@ from .const import (
 from .entity import BeoBase
 from .util import get_device, get_remotes
 
+if TYPE_CHECKING:
+    from . import BeoConfigEntry
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -43,14 +45,14 @@ class BeoWebsocket(BeoBase):
     """The WebSocket listeners."""
 
     def __init__(
-        self, hass: HomeAssistant, entry: ConfigEntry, client: MozartClient
+        self, hass: HomeAssistant, entry: BeoConfigEntry, client: MozartClient
     ) -> None:
         """Initialize the WebSocket listeners."""
 
         BeoBase.__init__(self, entry, client)
 
         self.hass = hass
-        self._device = get_device(hass, self._unique_id)
+        self._device = get_device(hass, self._unique_id, self.entry.entry_id)
 
         # WebSocket callbacks
         self._client.get_notification_notifications(self.on_notification_notification)
@@ -185,8 +187,8 @@ class BeoWebsocket(BeoBase):
             # Get remote devices connected to the device from Home Assistant
             device_serial_numbers = [
                 device.serial_number
-                for device in device_registry.devices.get_devices_for_config_entry_id(
-                    self.entry.entry_id
+                for device in dr.async_entries_for_config_entry(
+                    device_registry, self.entry.entry_id
                 )
                 if device.serial_number is not None
                 and device.model == BeoModel.BEOREMOTE_ONE

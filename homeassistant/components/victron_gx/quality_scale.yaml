@@ -4,10 +4,7 @@ rules:
     status: exempt
     comment: |
       This integration does not have actions.
-  appropriate-polling:
-    status: exempt
-    comment: |
-      This integration does not poll.
+  appropriate-polling: done
   brands: done
   common-modules: done
   config-flow-test-coverage: done
@@ -32,10 +29,7 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: exempt
-    comment: |
-      This integration does not have actions.
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
@@ -69,10 +63,7 @@ rules:
     comment: |
       Not relevant.
   reconfiguration-flow: done
-  repair-issues:
-    status: exempt
-    comment: |
-      This integration has no user-actionable repair issues to raise.
+  repair-issues: done
   stale-devices: done
   # Platinum
   async-dependency: done

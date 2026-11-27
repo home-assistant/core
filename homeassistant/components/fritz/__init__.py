@@ -1,7 +1,5 @@
 """Support for AVM Fritz!Box functions."""
 
-import logging
-
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -21,12 +19,11 @@ from .const import (
     DOMAIN,
     FRITZ_AUTH_EXCEPTIONS,
     FRITZ_EXCEPTIONS,
+    LOGGER,
     PLATFORMS,
 )
 from .coordinator import FRITZ_DATA_KEY, AvmWrapper, FritzConfigEntry, FritzData
 from .services import async_setup_services
-
-_LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -37,9 +34,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: FritzConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: FritzConfigEntry) -> None:
     """Set up fritzboxtools from config entry."""
-    _LOGGER.debug("Setting up FRITZ!Box Tools component")
+    LOGGER.debug("Setting up FRITZ!Box Tools component")
+
+    if entry.data.get(CONF_SSL) is None:
+        LOGGER.info("Set missing ssl option to config entry %s", entry.title)
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, CONF_SSL: DEFAULT_SSL}
+        )
 
     avm_wrapper = AvmWrapper(
         hass=hass,
@@ -48,7 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FritzConfigEntry) -> boo
         port=entry.data[CONF_PORT],
         username=entry.data[CONF_USERNAME],
         password=entry.data[CONF_PASSWORD],
-        use_tls=entry.data.get(CONF_SSL, DEFAULT_SSL),
+        use_tls=entry.data[CONF_SSL],
         device_discovery_enabled=entry.options.get(
             CONF_FEATURE_DEVICE_TRACKING, DEFAULT_CONF_FEATURE_DEVICE_TRACKING
         ),
@@ -67,10 +70,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: FritzConfigEntry) -> boo
             translation_placeholders={"error": str(ex)},
         ) from ex
 
-    if (
-        "X_AVM-DE_UPnP1" in avm_wrapper.connection.services
-        and not (await avm_wrapper.async_get_upnp_configuration())["NewEnable"]
-    ):
+    if "X_AVM-DE_UPnP1" in avm_wrapper.connection.services and not (
+        await avm_wrapper.async_get_upnp_configuration()
+    ).get("NewEnable"):
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="error_upnp_disabled",
@@ -83,16 +85,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: FritzConfigEntry) -> boo
     # Load the other platforms like switch
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: FritzConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: FritzConfigEntry) -> None:
     """Unload FRITZ!Box Tools config entry."""
     avm_wrapper = entry.runtime_data
 
     fritz_data = hass.data[FRITZ_DATA_KEY]
 
     if avm_wrapper.unique_id in fritz_data.tracked:
+        fritz_data.link_sensors.pop(avm_wrapper.unique_id)
         fritz_data.tracked.pop(avm_wrapper.unique_id)
         fritz_data.profile_switches.pop(avm_wrapper.unique_id)
         fritz_data.wol_buttons.pop(avm_wrapper.unique_id)
@@ -100,4 +101,4 @@ async def async_unload_entry(hass: HomeAssistant, entry: FritzConfigEntry) -> bo
     if not bool(fritz_data.tracked):
         hass.data.pop(FRITZ_DATA_KEY)
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

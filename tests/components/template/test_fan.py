@@ -1,10 +1,14 @@
 """The tests for the Template fan platform."""
 
+from enum import StrEnum
+from itertools import chain
 from typing import Any
 
+import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
-import voluptuous as vol
 
 from homeassistant.components import fan, template
 from homeassistant.components.fan import (
@@ -14,30 +18,40 @@ from homeassistant.components.fan import (
     ATTR_PRESET_MODE,
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
+    FanEntityCapabilityAttribute,
     FanEntityFeature,
+    FanEntityStateAttribute,
     NotValidPresetModeError,
 )
+from homeassistant.components.template.const import FAN_INCOMPLETE_PRESET_MODE_OPTIONS
+from homeassistant.components.template.fan import DEFAULT_NAME
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
 
 from .conftest import (
     ConfigurationStyle,
     TemplatePlatformSetup,
     assert_action,
+    assert_attributes_template,
+    assert_extra_template_attributes,
+    assert_invalid_config_entry_actions_do_not_create_entities,
+    assert_invalid_yaml_actions_do_not_create_entities,
+    assert_state_and_attributes,
     async_get_flow_preview_state,
     async_trigger,
+    get_issues_with_prefix,
     make_test_action,
     make_test_trigger,
     setup_and_test_nested_unique_id,
     setup_and_test_unique_id,
     setup_entity,
+    setup_mock_template_entity_restore_state,
+    setup_restore_template_entity,
 )
 
-from tests.common import MockConfigEntry
 from tests.components.fan import common
-from tests.typing import WebSocketGenerator
 
 TEST_INPUT_BOOLEAN = "input_boolean.state"
 TEST_STATE_ENTITY_ID = "sensor.test_sensor"
@@ -47,7 +61,7 @@ TEST_FAN = TemplatePlatformSetup(
     fan.DOMAIN,
     "test_fan",
     make_test_trigger(
-        TEST_INPUT_BOOLEAN, TEST_STATE_ENTITY_ID, TEST_AVAILABILITY_ENTITY
+        TEST_AVAILABILITY_ENTITY, TEST_INPUT_BOOLEAN, TEST_STATE_ENTITY_ID
     ),
 )
 
@@ -1084,7 +1098,7 @@ async def test_set_invalid_osc_from_initial_state(
     """Test set invalid oscillating when fan is in initial state."""
     await async_trigger(hass, TEST_STATE_ENTITY_ID, "anything")
     await common.async_turn_on(hass, TEST_FAN.entity_id)
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await common.async_oscillate(hass, TEST_FAN.entity_id, "invalid")
     _verify(hass, STATE_ON, None, None, None, None)
 
@@ -1108,7 +1122,7 @@ async def test_set_invalid_osc(hass: HomeAssistant, calls: list[ServiceCall]) ->
     await common.async_oscillate(hass, TEST_FAN.entity_id, False)
     _verify(hass, STATE_ON, None, False, None, None)
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await common.async_oscillate(hass, TEST_FAN.entity_id, None)
     _verify(hass, STATE_ON, None, False, None, None)
 
@@ -1366,3 +1380,487 @@ async def test_flow_preview(
     )
 
     assert state["state"] == STATE_ON
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "state": "{{ state_attr('sensor.test_sensor', 'is_on') }}",
+            "turn_on": [],
+            "turn_off": [],
+            "percentage": "{{ state_attr('sensor.test_sensor', 'percentage') }}",
+            "set_percentage": [],
+            "preset_mode": "{{ state_attr('sensor.test_sensor', 'preset_mode') }}",
+            "set_preset_mode": [],
+            "preset_modes": ["off", "auto", "low", "medium", "high"],
+            "oscillating": "{{ state_attr('sensor.test_sensor', 'oscillating') }}",
+            "set_oscillating": [],
+            "direction": "{{ state_attr('sensor.test_sensor', 'direction') }}",
+            "set_direction": [],
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    (
+        "saved_state",
+        "saved_extra_data",
+        "initial_state",
+        "initial_attributes",
+    ),
+    [
+        (
+            STATE_ON,
+            {
+                "is_on": True,
+                "percentage": 10,
+                "preset_mode": "auto",
+                "oscillating": True,
+                "direction": DIRECTION_FORWARD,
+            },
+            STATE_ON,
+            {
+                "percentage": 10,
+                "preset_mode": "auto",
+                "oscillating": True,
+                "direction": DIRECTION_FORWARD,
+            },
+        ),
+        (
+            STATE_OFF,
+            {
+                "is_on": False,
+                "percentage": 0,
+                "preset_mode": "off",
+                "oscillating": False,
+                "direction": DIRECTION_FORWARD,
+            },
+            STATE_OFF,
+            {
+                "percentage": 0,
+                "preset_mode": "off",
+                "oscillating": False,
+                "direction": DIRECTION_FORWARD,
+            },
+        ),
+        (
+            # Missing Key
+            STATE_ON,
+            {
+                "is_on": True,
+                "percentage": 0,
+            },
+            STATE_UNKNOWN,
+            {
+                "percentage": None,
+                "preset_mode": None,
+                "oscillating": None,
+                "direction": None,
+            },
+        ),
+        (
+            STATE_UNAVAILABLE,
+            {
+                "is_on": True,
+                "percentage": 0,
+                "preset_mode": "auto",
+                "oscillating": True,
+                "direction": DIRECTION_FORWARD,
+            },
+            STATE_UNKNOWN,
+            {
+                "percentage": None,
+                "preset_mode": None,
+                "oscillating": None,
+                "direction": None,
+            },
+        ),
+        (
+            STATE_UNKNOWN,
+            {
+                "is_on": False,
+                "percentage": 0,
+                "preset_mode": "off",
+                "oscillating": False,
+                "direction": DIRECTION_FORWARD,
+            },
+            STATE_UNKNOWN,
+            {
+                "percentage": None,
+                "preset_mode": None,
+                "oscillating": None,
+                "direction": None,
+            },
+        ),
+        (
+            STATE_ON,
+            {
+                "is_on": "True",
+            },
+            STATE_UNKNOWN,
+            {
+                "percentage": None,
+                "preset_mode": None,
+                "oscillating": None,
+                "direction": None,
+            },
+        ),
+        (
+            STATE_ON,
+            {
+                "percentage": "0",
+            },
+            STATE_UNKNOWN,
+            {
+                "percentage": None,
+                "preset_mode": None,
+                "oscillating": None,
+                "direction": None,
+            },
+        ),
+        (
+            STATE_ON,
+            {
+                "oscillating": "True",
+            },
+            STATE_UNKNOWN,
+            {
+                "percentage": None,
+                "preset_mode": None,
+                "oscillating": None,
+                "direction": None,
+            },
+        ),
+        (
+            STATE_ON,
+            {
+                "preset_mode": 75,
+            },
+            STATE_UNKNOWN,
+            {
+                "percentage": None,
+                "preset_mode": None,
+                "oscillating": None,
+                "direction": None,
+            },
+        ),
+        (
+            STATE_ON,
+            {
+                "direction": 75,
+            },
+            STATE_UNKNOWN,
+            {
+                "percentage": None,
+                "preset_mode": None,
+                "oscillating": None,
+                "direction": None,
+            },
+        ),
+    ],
+)
+async def test_restore_state(
+    hass: HomeAssistant,
+    config: ConfigType,
+    style: ConfigurationStyle,
+    saved_state: str,
+    saved_extra_data: dict | None,
+    initial_state: str,
+    initial_attributes: ConfigType,
+) -> None:
+    """Test restoring template fan."""
+
+    restored_attributes = {  # These should be ignored
+        "percentage": 45,
+        "preset_mode": "high",
+        "oscillating": True,
+        "direction": DIRECTION_REVERSE,
+    }
+
+    setup_mock_template_entity_restore_state(
+        hass,
+        TEST_FAN,
+        saved_state,
+        saved_extra_data=saved_extra_data,
+        saved_attributes=restored_attributes,
+    )
+
+    await setup_restore_template_entity(
+        hass,
+        TEST_FAN,
+        style,
+        config,
+        f"states('{TEST_STATE_ENTITY_ID}') | float(0) > 10",
+    )
+
+    state = assert_state_and_attributes(
+        hass,
+        TEST_FAN,
+        initial_state,
+        initial_attributes,
+    )
+
+    await async_trigger(
+        hass,
+        TEST_STATE_ENTITY_ID,
+        "11",
+        {
+            "is_on": True,
+            "percentage": 55,
+            "preset_mode": "low",
+            "oscillating": True,
+            "direction": DIRECTION_REVERSE,
+        },
+    )
+
+    state = hass.states.get(TEST_FAN.entity_id)
+    assert state.state == STATE_ON
+    assert state.attributes["percentage"] == 55
+    assert state.attributes["preset_mode"] == "low"
+    assert state.attributes["oscillating"] is True
+    assert state.attributes["direction"] == DIRECTION_REVERSE
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    ("action", "config"),
+    [
+        ("turn_on", {"turn_off": []}),
+        ("turn_off", {"turn_on": []}),
+        ("set_direction", OPTIMISTIC_ON_OFF_ACTIONS),
+        ("set_oscillating", OPTIMISTIC_ON_OFF_ACTIONS),
+        ("set_percentage", OPTIMISTIC_ON_OFF_ACTIONS),
+        ("set_preset_mode", OPTIMISTIC_ON_OFF_ACTIONS),
+    ],
+)
+async def test_invalid_yaml_actions_do_not_create_entities(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    action: str,
+    config: ConfigType,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid yaml actions do not create entities."""
+    await assert_invalid_yaml_actions_do_not_create_entities(
+        hass, TEST_FAN, style, config, action, caplog
+    )
+
+
+@pytest.mark.parametrize(
+    ("action", "config"),
+    [
+        ("turn_on", {"turn_off": []}),
+        ("turn_off", {"turn_on": []}),
+        ("set_direction", OPTIMISTIC_ON_OFF_ACTIONS),
+        ("set_oscillating", OPTIMISTIC_ON_OFF_ACTIONS),
+        ("set_percentage", OPTIMISTIC_ON_OFF_ACTIONS),
+        ("set_preset_mode", OPTIMISTIC_ON_OFF_ACTIONS),
+    ],
+)
+async def test_invalid_config_entry_actions_do_not_create_entities(
+    hass: HomeAssistant,
+    action: str,
+    config: ConfigType,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid config entry actions do not create entities."""
+    await assert_invalid_config_entry_actions_do_not_create_entities(
+        hass, TEST_FAN, config, action, caplog
+    )
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_extra_template_attributes(
+    hass: HomeAssistant, style: ConfigurationStyle
+) -> None:
+    """Test extra attributes."""
+    await assert_extra_template_attributes(
+        hass, TEST_FAN, style, {"state": "{{ 'on' }}", **OPTIMISTIC_ON_OFF_ACTIONS}
+    )
+
+
+@pytest.mark.parametrize(
+    "attribute",
+    list(chain(FanEntityCapabilityAttribute, FanEntityStateAttribute)),
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_blocked_template_attributes(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    attribute,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test blocked extra attributes."""
+    await setup_entity(
+        hass,
+        TEST_FAN,
+        style,
+        0,
+        {
+            "state": "{{ 'on' }}",
+            **OPTIMISTIC_ON_OFF_ACTIONS,
+            "attributes": {str(attribute): "{{ 'does not matter' }}"},
+        },
+    )
+    assert (
+        f"Unsupported attribute(s) found for {DEFAULT_NAME}: {attribute}" in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_attributes_template(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test attributes as a single template."""
+    await assert_attributes_template(
+        hass,
+        TEST_FAN,
+        style,
+        {"state": "{{ 'on' }}", **OPTIMISTIC_ON_OFF_ACTIONS},
+        caplog,
+    )
+
+
+@pytest.mark.parametrize(
+    "attribute",
+    list(chain(FanEntityCapabilityAttribute, FanEntityStateAttribute)),
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_attributes_template_with_blocked_attributes(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    attribute: StrEnum,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test blocked attributes for a single attributes template."""
+    await setup_entity(
+        hass,
+        TEST_FAN,
+        style,
+        1,
+        {
+            "state": "{{ 'on' }}",
+            **OPTIMISTIC_ON_OFF_ACTIONS,
+            "attributes": f"{{{{ dict({attribute}='does not matter') }}}}",
+        },
+    )
+
+    await async_trigger(hass, "sensor.test_extra_attributes", "anything")
+
+    error = f"Unsupported attribute(s) found for {TEST_FAN.entity_id}: {attribute}"
+    assert error in caplog.text
+
+
+def get_incomplete_preset_mode_options_issues(
+    issue_registry: ir.IssueRegistry,
+) -> list[ir.IssueEntry]:
+    """Return the incomplete fan preset mode options issues."""
+    return get_issues_with_prefix(
+        issue_registry, FAN_INCOMPLETE_PRESET_MODE_OPTIONS.translation_key
+    )
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    ("config", "options"),
+    [
+        pytest.param(
+            {"preset_mode": "{{ 'auto' }}"},
+            "- `preset_mode` requires `preset_modes` and `set_preset_mode`",
+            id="preset_mode_only",
+        ),
+        pytest.param(
+            {"preset_mode": "{{ 'auto' }}", "preset_modes": ["auto"]},
+            "- `preset_mode` requires `preset_modes` and `set_preset_mode`\n"
+            "- `preset_modes` requires `set_preset_mode`",
+            id="preset_mode_without_action",
+        ),
+        pytest.param(
+            {"preset_modes": ["auto"]},
+            "- `preset_modes` requires `set_preset_mode`",
+            id="list_only",
+        ),
+        pytest.param(
+            PRESET_MODE_ACTION,
+            "- `set_preset_mode` requires `preset_modes`",
+            id="action_only",
+        ),
+        pytest.param(
+            {**PRESET_MODE_ACTION, "preset_modes": []},
+            "- `set_preset_mode` requires `preset_modes`",
+            id="action_with_empty_list",
+        ),
+    ],
+)
+async def test_incomplete_preset_mode_options_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    style: ConfigurationStyle,
+    config: ConfigType,
+    options: str,
+) -> None:
+    """Test a repair issue is created for partially set preset mode options."""
+    await setup_entity(
+        hass, TEST_FAN, style, 1, {**OPTIMISTIC_ON_OFF_ACTIONS, **config}, "{{ True }}"
+    )
+
+    issues = get_incomplete_preset_mode_options_issues(issue_registry)
+    assert len(issues) == 1
+    assert issues[0].breaks_in_ha_version == "2027.6.0"
+    assert issues[0].is_fixable is False
+    assert issues[0].severity == ir.IssueSeverity.WARNING
+    assert issues[0].learn_more_url == (
+        "https://www.home-assistant.io/integrations/template/#fan"
+    )
+    assert (
+        issues[0].translation_key == FAN_INCOMPLETE_PRESET_MODE_OPTIONS.translation_key
+    )
+    assert issues[0].translation_placeholders == {
+        "identifier": f"name: {TEST_FAN.object_id}",
+        "options": options,
+    }
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    "config",
+    [
+        pytest.param({}, id="none"),
+        pytest.param(OPTIMISTIC_PRESET_MODE_CONFIG2, id="without_preset_mode"),
+        pytest.param(
+            {**OPTIMISTIC_PRESET_MODE_CONFIG2, "preset_mode": "{{ 'auto' }}"},
+            id="all",
+        ),
+    ],
+)
+async def test_no_incomplete_preset_mode_options_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    style: ConfigurationStyle,
+    config: ConfigType,
+) -> None:
+    """Test no repair issue is created for complete preset mode options."""
+    await setup_entity(
+        hass, TEST_FAN, style, 1, {**OPTIMISTIC_ON_OFF_ACTIONS, **config}, "{{ True }}"
+    )
+
+    assert get_incomplete_preset_mode_options_issues(issue_registry) == []

@@ -1,5 +1,6 @@
 """Support EZVIZ last motion image."""
 
+from datetime import datetime
 import logging
 from typing import override
 
@@ -14,7 +15,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from .const import CONF_ENCRYPTION_PASSWORD, DOMAIN
 from .coordinator import EzvizConfigEntry, EzvizDataUpdateCoordinator
 from .entity import EzvizEntity
 
@@ -24,6 +25,13 @@ IMAGE_TYPE = ImageEntityDescription(
     key="last_motion_image",
     translation_key="last_motion_image",
 )
+
+
+def _parse_last_alarm_time(last_alarm_time: object) -> datetime | None:
+    """Parse the last alarm time from the coordinator payload."""
+    if not isinstance(last_alarm_time, str):
+        return None
+    return dt_util.parse_datetime(last_alarm_time)
 
 
 async def async_setup_entry(
@@ -51,13 +59,16 @@ class EzvizLastMotion(EzvizEntity, ImageEntity):
         ImageEntity.__init__(self, hass)
         self._attr_unique_id = f"{serial}_{IMAGE_TYPE.key}"
         self.entity_description = IMAGE_TYPE
-        self._attr_image_url = self.data["last_alarm_pic"]
-        self._attr_image_last_updated = dt_util.parse_datetime(
-            str(self.data["last_alarm_time"])
+        last_alarm_pic = self.data.get("last_alarm_pic")
+        self._attr_image_url = (
+            last_alarm_pic if isinstance(last_alarm_pic, str) else None
+        )
+        self._attr_image_last_updated = _parse_last_alarm_time(
+            self.data.get("last_alarm_time")
         )
         camera = hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, serial)
         self.alarm_image_password = (
-            camera.data[CONF_PASSWORD]
+            camera.options.get(CONF_ENCRYPTION_PASSWORD) or camera.data[CONF_PASSWORD]
             if camera and camera.source != SOURCE_IGNORE
             else None
         )
@@ -71,6 +82,8 @@ class EzvizLastMotion(EzvizEntity, ImageEntity):
     @override
     async def _async_load_image_from_url(self, url: str) -> Image | None:
         """Load an image by url."""
+        if not url:
+            return None
         if response := await self._fetch_url(url):
             image_data = response.content
             if self.data["encrypted"] and self.alarm_image_password is not None:
@@ -96,16 +109,14 @@ class EzvizLastMotion(EzvizEntity, ImageEntity):
     @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        if (
-            self.data["last_alarm_pic"]
-            and self.data["last_alarm_pic"] != self._attr_image_url
-        ):
-            _LOGGER.debug("Image url changed to %s", self.data["last_alarm_pic"])
+        last_alarm_pic = self.data.get("last_alarm_pic")
+        if last_alarm_pic and last_alarm_pic != self._attr_image_url:
+            _LOGGER.debug("Image url changed to %s", last_alarm_pic)
 
-            self._attr_image_url = self.data["last_alarm_pic"]
+            self._attr_image_url = last_alarm_pic
             self._cached_image = None
-            self._attr_image_last_updated = dt_util.parse_datetime(
-                str(self.data["last_alarm_time"])
+            self._attr_image_last_updated = _parse_last_alarm_time(
+                self.data.get("last_alarm_time")
             )
 
         super()._handle_coordinator_update()

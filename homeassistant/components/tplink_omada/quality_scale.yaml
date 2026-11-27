@@ -64,7 +64,7 @@ rules:
   entity-device-class: done
   entity-disabled-by-default: todo
   entity-translations: done
-  exception-translations: todo
+  exception-translations: done
   icon-translations: done
   reconfiguration-flow: todo
   repair-issues: todo
@@ -77,4 +77,4 @@ rules:
   inject-websession:
     status: done
     comment: Uses async_create_clientsession in case where unsafe cookies are needed.
-  strict-typing: todo
+  strict-typing: done

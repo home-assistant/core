@@ -4,19 +4,17 @@ from pathlib import Path
 import sqlite3
 from unittest.mock import patch
 
+import probatio
 import pytest
-import voluptuous as vol
-from voluptuous import MultipleInvalid
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.sql.const import DOMAIN
-from homeassistant.components.sql.services import SERVICE_QUERY
+from homeassistant.components.sql.services import SQLService
 from homeassistant.components.sql.util import generate_lambda_stmt
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
-
-from tests.components.recorder.common import async_wait_recording_done
 
 
 async def test_query_service_recorder_db(
@@ -34,7 +32,7 @@ async def test_query_service_recorder_db(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_QUERY,
+        SQLService.QUERY,
         {
             "query": (
                 "SELECT states_meta.entity_id, states.state "
@@ -73,7 +71,7 @@ async def test_query_service_external_db(hass: HomeAssistant, tmp_path: Path) ->
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_QUERY,
+        SQLService.QUERY,
         {"query": "SELECT name, age FROM users ORDER BY age", "db_url": db_url},
         blocking=True,
         return_response=True,
@@ -104,7 +102,7 @@ async def test_query_service_rollback_on_error(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_QUERY,
+            SQLService.QUERY,
             {
                 "query": "SELECT name, age FROM users ORDER BY age",
                 "db_url": "sqlite:///",
@@ -139,7 +137,7 @@ async def test_query_service_data_conversion(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_QUERY,
+        SQLService.QUERY,
         {"query": "SELECT * FROM data", "db_url": db_url},
         blocking=True,
         return_response=True,
@@ -167,7 +165,7 @@ async def test_query_service_no_results(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_QUERY,
+        SQLService.QUERY,
         {"query": "SELECT * FROM states"},
         blocking=True,
         return_response=True,
@@ -184,10 +182,10 @@ async def test_query_service_invalid_query_not_select(
     await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
-    with pytest.raises(vol.Invalid, match="SQL query must be of type SELECT"):
+    with pytest.raises(probatio.Invalid, match="SQL query must be of type SELECT"):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_QUERY,
+            SQLService.QUERY,
             {"query": "UPDATE states SET state = 'hacked'"},
             blocking=True,
             return_response=True,
@@ -202,10 +200,12 @@ async def test_query_service_sqlalchemy_error(
     await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
-    with pytest.raises(MultipleInvalid, match="SQL query is empty or unknown type"):
+    with pytest.raises(
+        probatio.MultipleInvalid, match="SQL query is empty or unknown type"
+    ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_QUERY,
+            SQLService.QUERY,
             # Syntactically incorrect query
             {"query": "SELEC * FROM states"},
             blocking=True,
@@ -229,7 +229,7 @@ async def test_query_service_invalid_db_url(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_QUERY,
+            SQLService.QUERY,
             {
                 "query": "SELECT 1",
                 "db_url": "postgresql://user:pass@host:123/dbname",
@@ -256,7 +256,7 @@ async def test_query_service_performance_issue_validation(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_QUERY,
+            SQLService.QUERY,
             {"query": "SELECT entity_id FROM states"},
             blocking=True,
             return_response=True,

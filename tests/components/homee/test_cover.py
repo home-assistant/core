@@ -4,15 +4,16 @@ from collections.abc import AsyncGenerator
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 from websockets import frames
 from websockets.exceptions import ConnectionClosed
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
-    ATTR_TILT_POSITION,
     DOMAIN as COVER_DOMAIN,
     CoverEntityFeature,
+    CoverService,
+    CoverServiceArgument,
     CoverState,
 )
 from homeassistant.components.homeassistant import (
@@ -20,27 +21,13 @@ from homeassistant.components.homeassistant import (
     SERVICE_UPDATE_ENTITY,
 )
 from homeassistant.components.homee.const import DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_CLOSE_COVER,
-    SERVICE_CLOSE_COVER_TILT,
-    SERVICE_OPEN_COVER,
-    SERVICE_OPEN_COVER_TILT,
-    SERVICE_SET_COVER_POSITION,
-    SERVICE_SET_COVER_TILT_POSITION,
-    SERVICE_STOP_COVER,
-    SERVICE_STOP_COVER_TILT,
-    STATE_UNAVAILABLE,
-    Platform,
-)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import build_mock_node, setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -63,26 +50,28 @@ async def test_open_close_stop_cover(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: "cover.shutter_with_position_and_slats"},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: "cover.shutter_with_position_and_slats"},
         blocking=True,
     )
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: "cover.shutter_with_position_and_slats"},
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: "cover.shutter_with_position_and_slats"},
         blocking=True,
     )
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: "cover.shutter_with_position_and_slats"},
+        CoverService.STOP,
+        {TargetKey.ENTITY_ID: "cover.shutter_with_position_and_slats"},
         blocking=True,
     )
 
     calls = mock_homee.set_value.call_args_list
     for index, call in enumerate(calls):
         assert call[0] == (mock_homee.nodes[0].id, 1, index)
+        enum_value = call[0][2]
+        assert f"{enum_value}" == str(index)
 
 
 async def test_open_close_reverse_cover(
@@ -99,20 +88,24 @@ async def test_open_close_reverse_cover(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: "cover.shutter_with_position_and_slats"},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: "cover.shutter_with_position_and_slats"},
         blocking=True,
     )
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: "cover.shutter_with_position_and_slats"},
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: "cover.shutter_with_position_and_slats"},
         blocking=True,
     )
 
     calls = mock_homee.set_value.call_args_list
     assert calls[0][0] == (mock_homee.nodes[0].id, 1, 1)  # Open
     assert calls[1][0] == (mock_homee.nodes[0].id, 1, 0)  # Close
+
+    for call in calls:
+        enum_value = call[0][2]
+        assert f"{enum_value}" in ("0", "1")
 
 
 async def test_set_cover_position(
@@ -128,20 +121,29 @@ async def test_set_cover_position(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: "cover.shutter_with_position_and_slats", ATTR_POSITION: 100},
+        CoverService.SET_POSITION,
+        {
+            TargetKey.ENTITY_ID: "cover.shutter_with_position_and_slats",
+            CoverServiceArgument.POSITION: 100,
+        },
         blocking=True,
     )
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: "cover.shutter_with_position_and_slats", ATTR_POSITION: 0},
+        CoverService.SET_POSITION,
+        {
+            TargetKey.ENTITY_ID: "cover.shutter_with_position_and_slats",
+            CoverServiceArgument.POSITION: 0,
+        },
         blocking=True,
     )
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: "cover.shutter_with_position_and_slats", ATTR_POSITION: 50},
+        CoverService.SET_POSITION,
+        {
+            TargetKey.ENTITY_ID: "cover.shutter_with_position_and_slats",
+            CoverServiceArgument.POSITION: 50,
+        },
         blocking=True,
     )
 
@@ -171,26 +173,28 @@ async def test_close_open_slats(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER_TILT,
-        {ATTR_ENTITY_ID: "cover.slats_position"},
+        CoverService.STOP_TILT,
+        {TargetKey.ENTITY_ID: "cover.slats_position"},
         blocking=True,
     )
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER_TILT,
-        {ATTR_ENTITY_ID: "cover.slats_position"},
+        CoverService.CLOSE_TILT,
+        {TargetKey.ENTITY_ID: "cover.slats_position"},
         blocking=True,
     )
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER_TILT,
-        {ATTR_ENTITY_ID: "cover.slats_position"},
+        CoverService.OPEN_TILT,
+        {TargetKey.ENTITY_ID: "cover.slats_position"},
         blocking=True,
     )
 
     calls = mock_homee.set_value.call_args_list
     for index, call in enumerate(calls):
         assert call[0] == (mock_homee.nodes[0].id, 2, index)
+        enum_value = call[0][2]
+        assert f"{enum_value}" == str(index)
 
 
 async def test_close_open_reversed_slats(
@@ -214,20 +218,24 @@ async def test_close_open_reversed_slats(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER_TILT,
-        {ATTR_ENTITY_ID: "cover.slats_position"},
+        CoverService.CLOSE_TILT,
+        {TargetKey.ENTITY_ID: "cover.slats_position"},
         blocking=True,
     )
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER_TILT,
-        {ATTR_ENTITY_ID: "cover.slats_position"},
+        CoverService.OPEN_TILT,
+        {TargetKey.ENTITY_ID: "cover.slats_position"},
         blocking=True,
     )
 
     calls = mock_homee.set_value.call_args_list
     assert calls[0][0] == (mock_homee.nodes[0].id, 2, 2)  # Close
     assert calls[1][0] == (mock_homee.nodes[0].id, 2, 1)  # Open
+
+    for call in calls:
+        enum_value = call[0][2]
+        assert f"{enum_value}" in ("1", "2")
 
 
 async def test_set_slat_position(
@@ -243,20 +251,29 @@ async def test_set_slat_position(
     # Slats have a range of -45 to 90 on this device.
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_TILT_POSITION,
-        {ATTR_ENTITY_ID: "cover.slats_position", ATTR_TILT_POSITION: 100},
+        CoverService.SET_TILT_POSITION,
+        {
+            TargetKey.ENTITY_ID: "cover.slats_position",
+            CoverServiceArgument.TILT_POSITION: 100,
+        },
         blocking=True,
     )
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_TILT_POSITION,
-        {ATTR_ENTITY_ID: "cover.slats_position", ATTR_TILT_POSITION: 0},
+        CoverService.SET_TILT_POSITION,
+        {
+            TargetKey.ENTITY_ID: "cover.slats_position",
+            CoverServiceArgument.TILT_POSITION: 0,
+        },
         blocking=True,
     )
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_TILT_POSITION,
-        {ATTR_ENTITY_ID: "cover.slats_position", ATTR_TILT_POSITION: 50},
+        CoverService.SET_TILT_POSITION,
+        {
+            TargetKey.ENTITY_ID: "cover.slats_position",
+            CoverServiceArgument.TILT_POSITION: 50,
+        },
         blocking=True,
     )
 
@@ -396,8 +413,8 @@ async def test_send_error(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: "cover.no_position"},
+            CoverService.OPEN,
+            {TargetKey.ENTITY_ID: "cover.no_position"},
             blocking=True,
         )
 

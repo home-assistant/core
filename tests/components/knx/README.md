@@ -17,6 +17,7 @@ async def test_some_yaml(hass: HomeAssistant, knx: KNXTestKit):
         }
     )
 
+
 async def test_some_config_store(hass: HomeAssistant, knx: KNXTestKit):
     await knx.setup_integration(config_store_fixture="config_store_filename.json")
 ```

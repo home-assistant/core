@@ -3,6 +3,7 @@
 from datetime import datetime
 from typing import Any, override
 
+from aioamazondevices.exceptions import InvalidInputError
 from aioamazondevices.structures import (
     AmazonMediaControls,
     AmazonMediaState,
@@ -19,9 +20,10 @@ from homeassistant.components.media_player import (
     MediaType,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import _LOGGER
+from .const import DOMAIN, LOGGER
 from .coordinator import AmazonConfigEntry, AmazonDevicesCoordinator, alexa_api_call
 from .entity import AmazonEntity
 
@@ -50,6 +52,7 @@ async def async_setup_entry(
         """Add entities for newly discovered devices."""
         new_entities: list[AlexaDevicesMediaPlayer] = []
 
+        known_devices.intersection_update(coordinator.data)
         for serial_num, device in coordinator.data.items():
             if serial_num in known_devices or not device.media_player_supported:
                 continue
@@ -89,15 +92,11 @@ class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
     @property
     def media_state(self) -> AmazonMediaState | None:
         """Return the media state relating to device."""
-        if not self.coordinator or not self.coordinator.media_states:
-            return None
         return self.coordinator.media_states.get(self._serial_num)
 
     @property
     def volume_state(self) -> AmazonVolumeState | None:
         """Volume settings for device."""
-        if not self.coordinator or not self.coordinator.volume_states:
-            return None
         return self.coordinator.volume_states.get(self._serial_num)
 
     @property
@@ -233,13 +232,20 @@ class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
     ) -> None:
         """Call alexa music."""
         async with alexa_api_call(self.coordinator):
-            await self.coordinator.api.call_alexa_music(
-                self.device, search_phrase, provider_id
-            )
+            try:
+                await self.coordinator.api.call_alexa_music(
+                    self.device, search_phrase, provider_id
+                )
+            except InvalidInputError as err:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_music_provider",
+                    translation_placeholders={"provider": provider_id},
+                ) from err
 
     async def async_set_device_volume(self, volume: int) -> None:
         """Set the device volume."""
-        _LOGGER.debug(
+        LOGGER.debug(
             "Setting volume for %s to %s%%",
             self.device.serial_number,
             volume,
@@ -278,7 +284,7 @@ class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
         self._prev_volume = None
 
     async def _send_media_command(self, command: AmazonMediaControls) -> None:
-        _LOGGER.debug(
+        LOGGER.debug(
             "Sending media command '%s' to %s", command, self.device.serial_number
         )
         async with alexa_api_call(self.coordinator):

@@ -2,29 +2,20 @@
 
 from unittest.mock import MagicMock, call
 
+from chip.clusters import Objects as clusters
 from matter_server.client.models.node import MatterNode
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fan import (
-    ATTR_DIRECTION,
-    ATTR_OSCILLATING,
-    ATTR_PERCENTAGE,
-    ATTR_PRESET_MODE,
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
     DOMAIN as FAN_DOMAIN,
-    SERVICE_OSCILLATE,
-    SERVICE_SET_DIRECTION,
-    SERVICE_SET_PERCENTAGE,
     FanEntityFeature,
+    FanService,
+    FanServiceArgument,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    Platform,
-)
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -33,6 +24,12 @@ from .common import (
     snapshot_matter_entities,
     trigger_subscription_callback,
 )
+
+
+@pytest.fixture
+def platform() -> Platform:
+    """Return the platform under test."""
+    return Platform.FAN
 
 
 @pytest.mark.usefixtures("matter_devices")
@@ -123,8 +120,8 @@ async def test_fan_turn_on_with_percentage(
     entity_id = "fan.mock_air_purifier"
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id, ATTR_PERCENTAGE: 50},
+        FanService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id, FanServiceArgument.PERCENTAGE: 50},
         blocking=True,
     )
     assert matter_client.write_attribute.call_count == 1
@@ -133,20 +130,50 @@ async def test_fan_turn_on_with_percentage(
         attribute_path="1/514/2",
         value=50,
     )
-    # test again where preset_mode is omitted in the service call
-    # which should select the last active percentage
+    # test again where percentage is omitted in the service call.
+    # This fixture's PercentCurrent is 255, a device-specific quirk value
+    # (not part of the Matter spec) that is not valid to write back, so it
+    # should fall back to the last known preset mode instead of blindly
+    # replaying that sentinel value.
     matter_client.write_attribute.reset_mock()
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id},
+        FanService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_count == 1
+    assert matter_client.write_attribute.call_args == call(
+        node_id=matter_node.node_id,
+        attribute_path="1/514/0",
+        value=clusters.FanControl.Enums.FanModeEnum.kAuto,
+    )
+
+
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
+@pytest.mark.parametrize("node_fixture", ["mock_air_purifier"])
+async def test_fan_turn_on_replays_last_known_percentage(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test that a bare turn_on replays a real last known percentage."""
+    entity_id = "fan.mock_air_purifier"
+    # simulate the device confirming a real (non-quirk) speed
+    set_node_attribute(matter_node, 1, 514, 3, 70)
+    await trigger_subscription_callback(hass, matter_client)
+
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        FanService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert matter_client.write_attribute.call_count == 1
     assert matter_client.write_attribute.call_args == call(
         node_id=matter_node.node_id,
         attribute_path="1/514/2",
-        value=255,
+        value=70,
     )
 
 
@@ -161,8 +188,8 @@ async def test_fan_turn_on_with_preset_mode(
     entity_id = "fan.mocked_fan_switch"
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: "medium"},
+        FanService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id, FanServiceArgument.PRESET_MODE: "medium"},
         blocking=True,
     )
     assert matter_client.write_attribute.call_count == 1
@@ -176,8 +203,11 @@ async def test_fan_turn_on_with_preset_mode(
         matter_client.write_attribute.reset_mock()
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: preset_mode},
+            FanService.TURN_ON,
+            {
+                TargetKey.ENTITY_ID: entity_id,
+                FanServiceArgument.PRESET_MODE: preset_mode,
+            },
             blocking=True,
         )
         assert matter_client.write_attribute.call_count == 1
@@ -192,8 +222,8 @@ async def test_fan_turn_on_with_preset_mode(
     await trigger_subscription_callback(hass, matter_client)
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: "medium"},
+        FanService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id, FanServiceArgument.PRESET_MODE: "medium"},
         blocking=True,
     )
     assert matter_client.write_attribute.call_count == 2
@@ -215,8 +245,8 @@ async def test_fan_turn_on_with_preset_mode(
     await trigger_subscription_callback(hass, matter_client)
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id},
+        FanService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert matter_client.write_attribute.call_count == 1
@@ -237,8 +267,8 @@ async def test_fan_turn_off(
     entity_id = "fan.mock_air_purifier"
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: entity_id},
+        FanService.TURN_OFF,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert matter_client.write_attribute.call_count == 1
@@ -253,8 +283,8 @@ async def test_fan_turn_off(
     await trigger_subscription_callback(hass, matter_client)
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: entity_id},
+        FanService.TURN_OFF,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert matter_client.write_attribute.call_count == 2
@@ -281,8 +311,11 @@ async def test_fan_oscillate(
     for oscillating, value in ((True, 1), (False, 0)):
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_OSCILLATE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_OSCILLATING: oscillating},
+            FanService.OSCILLATE,
+            {
+                TargetKey.ENTITY_ID: entity_id,
+                FanServiceArgument.OSCILLATING: oscillating,
+            },
             blocking=True,
         )
         assert matter_client.write_attribute.call_count == 1
@@ -305,8 +338,8 @@ async def test_fan_set_direction(
     for direction, value in ((DIRECTION_FORWARD, 0), (DIRECTION_REVERSE, 1)):
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_SET_DIRECTION,
-            {ATTR_ENTITY_ID: entity_id, ATTR_DIRECTION: direction},
+            FanService.SET_DIRECTION,
+            {TargetKey.ENTITY_ID: entity_id, FanServiceArgument.DIRECTION: direction},
             blocking=True,
         )
         assert matter_client.write_attribute.call_count == 1
@@ -463,8 +496,8 @@ async def test_fan_set_percentage_without_multispeed(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PERCENTAGE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_PERCENTAGE: 75},
+        FanService.SET_PERCENTAGE,
+        {TargetKey.ENTITY_ID: entity_id, FanServiceArgument.PERCENTAGE: 75},
         blocking=True,
     )
     assert matter_client.write_attribute.call_count == 1
@@ -473,3 +506,24 @@ async def test_fan_set_percentage_without_multispeed(
         attribute_path="1/514/2",
         value=75,
     )
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_air_purifier"])
+@pytest.mark.parametrize("attributes", [{"1/514/4": 0}])
+async def test_fan_without_speed_steps(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test a fan reporting no speed steps keeps the default step size."""
+    entity_id = "fan.mock_air_purifier"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["percentage_step"] == 1
+
+    # a proper speed count is picked up when the features are recalculated
+    set_node_attribute(matter_node, 1, 514, 4, 5)
+    set_node_attribute(matter_node, 1, 514, 65532, 47)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id)
+    assert state.attributes["percentage_step"] == 20

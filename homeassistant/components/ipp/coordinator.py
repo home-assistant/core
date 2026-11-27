@@ -4,15 +4,19 @@ from datetime import timedelta
 import logging
 from typing import override
 
-from pyipp import IPP, IPPError, Printer as IPPPrinter
+from pyipp import IPP, IPPConnectionError, IPPError, Printer as IPPPrinter
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    UpdateFailed,
+    UpdateFailedUnreachable,
+)
 
-from .const import CONF_BASE_PATH, DOMAIN
+from .const import CONF_BASE_PATH, DOMAIN, REQUEST_TIMEOUT
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
@@ -36,6 +40,7 @@ class IPPDataUpdateCoordinator(DataUpdateCoordinator[IPPPrinter]):
             tls=config_entry.data[CONF_SSL],
             verify_ssl=config_entry.data[CONF_VERIFY_SSL],
             session=async_get_clientsession(hass, config_entry.data[CONF_VERIFY_SSL]),
+            request_timeout=REQUEST_TIMEOUT,
         )
 
         super().__init__(
@@ -51,5 +56,16 @@ class IPPDataUpdateCoordinator(DataUpdateCoordinator[IPPPrinter]):
         """Fetch data from IPP."""
         try:
             return await self.ipp.printer()
+        except IPPConnectionError as error:
+            # The printer could not be reached, e.g. because it is switched
+            # off or in standby. This is expected often enough on a home
+            # network that it is only logged at info level.
+            raise UpdateFailedUnreachable(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from error
         except IPPError as error:
-            raise UpdateFailed(f"Invalid response from API: {error}") from error
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_response",
+            ) from error

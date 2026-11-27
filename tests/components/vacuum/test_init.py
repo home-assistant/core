@@ -1,26 +1,25 @@
 """The tests for the Vacuum entity integration."""
 
 from dataclasses import asdict
-import logging
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockEntity,
+    MockModule,
+    mock_integration,
+    setup_test_component_platform,
+)
 
 from homeassistant.components.vacuum import (
     DOMAIN,
-    SERVICE_CLEAN_AREA,
-    SERVICE_CLEAN_SPOT,
-    SERVICE_LOCATE,
-    SERVICE_PAUSE,
-    SERVICE_RETURN_TO_BASE,
-    SERVICE_SEND_COMMAND,
-    SERVICE_SET_FAN_SPEED,
-    SERVICE_START,
-    SERVICE_STOP,
     StateVacuumEntity,
     VacuumActivity,
     VacuumEntityFeature,
+    VacuumService,
 )
+from homeassistant.components.vacuum.services import _async_clean_area
 from homeassistant.core import Context, HomeAssistant, ServiceCall
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
@@ -31,25 +30,16 @@ from . import (
     help_async_setup_entry_init,
     help_async_unload_entry,
 )
-from .common import async_start
-
-from tests.common import (
-    MockConfigEntry,
-    MockEntity,
-    MockModule,
-    mock_integration,
-    setup_test_component_platform,
-)
 
 
 @pytest.mark.parametrize(
     ("service", "expected_state"),
     [
-        (SERVICE_CLEAN_SPOT, VacuumActivity.CLEANING),
-        (SERVICE_PAUSE, VacuumActivity.PAUSED),
-        (SERVICE_RETURN_TO_BASE, VacuumActivity.RETURNING),
-        (SERVICE_START, VacuumActivity.CLEANING),
-        (SERVICE_STOP, VacuumActivity.IDLE),
+        (VacuumService.CLEAN_SPOT, VacuumActivity.CLEANING),
+        (VacuumService.PAUSE, VacuumActivity.PAUSED),
+        (VacuumService.RETURN_TO_BASE, VacuumActivity.RETURNING),
+        (VacuumService.START, VacuumActivity.CLEANING),
+        (VacuumService.STOP, VacuumActivity.IDLE),
     ],
 )
 async def test_state_services(
@@ -110,7 +100,7 @@ async def test_fan_speed(hass: HomeAssistant, config_flow_fixture: None) -> None
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_FAN_SPEED,
+        VacuumService.SET_FAN_SPEED,
         {"entity_id": mock_vacuum.entity_id, "fan_speed": "high"},
         blocking=True,
     )
@@ -153,7 +143,7 @@ async def test_locate(hass: HomeAssistant, config_flow_fixture: None) -> None:
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_LOCATE,
+        VacuumService.LOCATE,
         {"entity_id": mock_vacuum.entity_id},
         blocking=True,
     )
@@ -202,7 +192,7 @@ async def test_send_command(hass: HomeAssistant, config_flow_fixture: None) -> N
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SEND_COMMAND,
+        VacuumService.SEND_COMMAND,
         {
             "entity_id": mock_vacuum.entity_id,
             "command": "add_str",
@@ -266,7 +256,7 @@ async def test_clean_area_service(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_CLEAN_AREA,
+        VacuumService.CLEAN_AREA,
         {"entity_id": mock_vacuum.entity_id, "cleaning_area_id": targeted_areas},
         blocking=True,
     )
@@ -298,7 +288,7 @@ async def test_clean_area_not_configured(hass: HomeAssistant) -> None:
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_CLEAN_AREA,
+            VacuumService.CLEAN_AREA,
             {"entity_id": mock_vacuum.entity_id, "cleaning_area_id": ["area_1"]},
             blocking=True,
         )
@@ -373,7 +363,7 @@ async def test_clean_area_no_segments(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_CLEAN_AREA,
+            VacuumService.CLEAN_AREA,
             {
                 "entity_id": [mock_vacuum.entity_id, mock_vacuum_2.entity_id],
                 "cleaning_area_id": [*targeted_areas, "area_3"],
@@ -442,7 +432,7 @@ async def test_clean_area_no_registry_entry(hass: HomeAssistant) -> None:
     call = ServiceCall(
         hass,
         DOMAIN,
-        SERVICE_CLEAN_AREA,
+        VacuumService.CLEAN_AREA,
         {"cleaning_area_id": ["area_1"]},
         context=Context(),
     )
@@ -451,13 +441,19 @@ async def test_clean_area_no_registry_entry(hass: HomeAssistant) -> None:
         RuntimeError,
         match="Cannot perform area clean, registry entry is not set",
     ):
-        await StateVacuumEntity.async_internal_clean_area([mock_vacuum], call)
+        await _async_clean_area([mock_vacuum], call)
 
     with pytest.raises(
         RuntimeError,
         match="Cannot create segments issue, registry entry is not set",
     ):
         mock_vacuum.async_create_segments_issue()
+
+    with pytest.raises(
+        RuntimeError,
+        match="Cannot delete segments issue, registry entry is not set",
+    ):
+        mock_vacuum.async_delete_segments_issue()
 
 
 @pytest.mark.usefixtures("config_flow_fixture")
@@ -498,7 +494,9 @@ async def test_last_seen_segments(
 
 @pytest.mark.usefixtures("config_flow_fixture")
 async def test_segments_changed_issue(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test segments changed issue."""
     mock_vacuum = MockVacuumWithCleanArea(name="Testing", entity_id="vacuum.testing")
@@ -533,7 +531,7 @@ async def test_segments_changed_issue(
     mock_vacuum.async_create_segments_issue()
 
     issue_id = f"segments_changed_{entity_entry.id}"
-    issue = ir.async_get(hass).async_get_issue(DOMAIN, issue_id)
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert issue is not None
     assert issue.severity == ir.IssueSeverity.WARNING
     assert issue.translation_key == "segments_changed"
@@ -551,41 +549,18 @@ async def test_segments_changed_issue(
     )
     await hass.async_block_till_done()
 
-    assert ir.async_get(hass).async_get_issue(DOMAIN, issue_id) is None
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 
-@pytest.mark.parametrize(("is_built_in", "log_warnings"), [(True, 0), (False, 3)])
-async def test_vacuum_log_deprecated_battery_using_properties(
+@pytest.mark.usefixtures("config_flow_fixture")
+async def test_delete_segments_changed_issue(
     hass: HomeAssistant,
-    config_flow_fixture: None,
-    caplog: pytest.LogCaptureFixture,
-    is_built_in: bool,
-    log_warnings: int,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test incorrectly using battery properties logs warning."""
+    """Test deleting the segments changed issue."""
+    mock_vacuum = MockVacuumWithCleanArea(name="Testing", entity_id="vacuum.testing")
 
-    class MockLegacyVacuum(MockVacuum):
-        """Mocked vacuum entity."""
-
-        @property
-        def activity(self) -> VacuumActivity:
-            """Return the state of the entity."""
-            return VacuumActivity.CLEANING
-
-        @property
-        def battery_level(self) -> int:
-            """Return the battery level of the vacuum."""
-            return 50
-
-        @property
-        def battery_icon(self) -> str:
-            """Return the battery icon of the vacuum."""
-            return "mdi:battery-50"
-
-    entity = MockLegacyVacuum(
-        name="Testing",
-        entity_id="vacuum.test",
-    )
     config_entry = MockConfigEntry(domain="test")
     config_entry.add_to_hass(hass)
 
@@ -596,170 +571,29 @@ async def test_vacuum_log_deprecated_battery_using_properties(
             async_setup_entry=help_async_setup_entry_init,
             async_unload_entry=help_async_unload_entry,
         ),
-        built_in=is_built_in,
     )
-    setup_test_component_platform(hass, DOMAIN, [entity], from_config_entry=True)
+    setup_test_component_platform(hass, DOMAIN, [mock_vacuum], from_config_entry=True)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    state = hass.states.get(entity.entity_id)
-    assert state is not None
+    entity_entry = entity_registry.async_get(mock_vacuum.entity_id)
+    issue_id = f"segments_changed_{entity_entry.id}"
 
-    assert (
-        len([record for record in caplog.records if record.levelno >= logging.WARNING])
-        == log_warnings
-    )
+    # Deleting when no issue exists is a no-op
+    mock_vacuum.async_delete_segments_issue()
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
-    assert (
-        "integration 'test' is setting the battery_icon which has been deprecated."
-        in caplog.text
-    ) != is_built_in
-    assert (
-        "integration 'test' is setting the battery_level which has been deprecated."
-        in caplog.text
-    ) != is_built_in
-
-
-@pytest.mark.parametrize(("is_built_in", "log_warnings"), [(True, 0), (False, 3)])
-async def test_vacuum_log_deprecated_battery_using_attr(
-    hass: HomeAssistant,
-    config_flow_fixture: None,
-    caplog: pytest.LogCaptureFixture,
-    is_built_in: bool,
-    log_warnings: int,
-) -> None:
-    """Test _attr_battery_* attribute logs issue and raises repair."""
-
-    class MockLegacyVacuum(MockVacuum):
-        """Mocked vacuum entity."""
-
-        def start(self) -> None:
-            """Start cleaning."""
-            self._attr_battery_level = 50
-            self._attr_battery_icon = "mdi:battery-50"
-
-    entity = MockLegacyVacuum(
-        name="Testing",
-        entity_id="vacuum.test",
-    )
-    config_entry = MockConfigEntry(domain="test")
-    config_entry.add_to_hass(hass)
-
-    mock_integration(
+    # Simulates an issue left open by an entity instance removed in a reload
+    ir.async_create_issue(
         hass,
-        MockModule(
-            "test",
-            async_setup_entry=help_async_setup_entry_init,
-            async_unload_entry=help_async_unload_entry,
-        ),
-        built_in=is_built_in,
+        DOMAIN,
+        issue_id,
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="segments_changed",
+        translation_placeholders={"entity_id": mock_vacuum.entity_id},
     )
-    setup_test_component_platform(hass, DOMAIN, [entity], from_config_entry=True)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
 
-    state = hass.states.get(entity.entity_id)
-    assert state is not None
-    entity.start()
-
-    assert (
-        len([record for record in caplog.records if record.levelno >= logging.WARNING])
-        == log_warnings
-    )
-
-    assert (
-        "integration 'test' is setting the battery_level which has been deprecated."
-        in caplog.text
-    ) != is_built_in
-    assert (
-        "integration 'test' is setting the battery_icon which has been deprecated."
-        in caplog.text
-    ) != is_built_in
-
-    await async_start(hass, entity.entity_id)
-
-    caplog.clear()
-
-    await async_start(hass, entity.entity_id)
-
-    # Test we only log once
-    assert (
-        len([record for record in caplog.records if record.levelno >= logging.WARNING])
-        == 0
-    )
-
-
-@pytest.mark.parametrize(("is_built_in", "log_warnings"), [(True, 0), (False, 1)])
-async def test_vacuum_log_deprecated_battery_supported_feature(
-    hass: HomeAssistant,
-    config_flow_fixture: None,
-    caplog: pytest.LogCaptureFixture,
-    is_built_in: bool,
-    log_warnings: int,
-) -> None:
-    """Test incorrectly setting battery supported feature logs warning."""
-
-    class MockVacuum(StateVacuumEntity):
-        """Mock vacuum class."""
-
-        _attr_supported_features = (
-            VacuumEntityFeature.STATE | VacuumEntityFeature.BATTERY
-        )
-        _attr_name = "Testing"
-
-    entity = MockVacuum()
-    config_entry = MockConfigEntry(domain="test")
-    config_entry.add_to_hass(hass)
-
-    mock_integration(
-        hass,
-        MockModule(
-            "test",
-            async_setup_entry=help_async_setup_entry_init,
-            async_unload_entry=help_async_unload_entry,
-        ),
-        built_in=is_built_in,
-    )
-    setup_test_component_platform(hass, DOMAIN, [entity], from_config_entry=True)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-
-    state = hass.states.get(entity.entity_id)
-    assert state is not None
-
-    assert (
-        len([record for record in caplog.records if record.levelno >= logging.WARNING])
-        == log_warnings
-    )
-
-    assert (
-        "integration 'test' is setting the battery supported feature" in caplog.text
-    ) != is_built_in
-
-
-async def test_vacuum_not_log_deprecated_battery_properties_during_init(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test not logging deprecation until after added to hass."""
-
-    class MockLegacyVacuum(MockVacuum):
-        """Mocked vacuum entity."""
-
-        def __init__(self, **kwargs: Any) -> None:
-            """Initialize a mock vacuum entity."""
-            super().__init__(**kwargs)
-            self._attr_battery_level = 50
-
-        @property
-        def activity(self) -> VacuumActivity:
-            """Return the state of the entity."""
-            return VacuumActivity.CLEANING
-
-    entity = MockLegacyVacuum(
-        name="Testing",
-        entity_id="vacuum.test",
-    )
-    assert entity.battery_level == 50
-
-    assert (
-        len([record for record in caplog.records if record.levelno >= logging.WARNING])
-        == 0
-    )
+    mock_vacuum.async_delete_segments_issue()
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None

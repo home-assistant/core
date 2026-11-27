@@ -2,7 +2,7 @@
 
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -31,8 +31,9 @@ from homeassistant.const import (
     STATE_ON,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -40,28 +41,30 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
-    _LOGGER,
     ATTR_FAN_STATE,
     ATTR_HVAC_STATE,
     CONF_HUMIDIFIER,
     DEFAULT_SSL,
     DOMAIN,
     HOLD_MODE_TEMPERATURE,
+    LOGGER,
 )
 from .coordinator import VenstarConfigEntry, VenstarDataUpdateCoordinator
 from .entity import VenstarEntity
 
+INTEGRATION_TITLE = "Venstar"
+
 PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_HUMIDIFIER, default=True): cv.boolean,
-        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-        vol.Optional(CONF_TIMEOUT, default=5): vol.All(
-            vol.Coerce(int), vol.Range(min=1)
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Optional(probatio.Secret(CONF_PASSWORD)): cv.string,
+        probatio.Optional(CONF_HUMIDIFIER, default=True): cv.boolean,
+        probatio.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+        probatio.Optional(CONF_TIMEOUT, default=5): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=1)
         ),
-        vol.Optional(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_PIN): cv.string,
+        probatio.Optional(CONF_USERNAME): cv.string,
+        probatio.Optional(probatio.Secret(CONF_PIN)): cv.string,
     }
 )
 
@@ -89,20 +92,54 @@ async def async_setup_platform(
     add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Venstar thermostat platform.
-
-    Venstar uses config flow for configuration now. If an entry exists in
-    configuration.yaml, the import flow will attempt to import it and create
-    a config entry.
-    """
-    _LOGGER.warning(
-        "Loading venstar via platform config is deprecated; The configuration"
-        " has been migrated to a config entry and can be safely removed"
-    )
-    # Trigger the import flow for this YAML entry; duplicates by host are
-    # aborted in the import step so each configured device is imported.
-    await hass.config_entries.flow.async_init(
+    """Set up the Venstar thermostat platform."""
+    result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+    )
+    if (
+        result["type"] is FlowResultType.ABORT
+        and result["reason"] != "already_configured"
+    ):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_{result['reason']}",
+            breaks_in_ha_version="2027.6.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=f"deprecated_yaml_import_issue_{result['reason']}",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": INTEGRATION_TITLE,
+            },
+        )
+        # The shared issue tells users to remove all YAML, which would drop this one.
+        ir.async_delete_issue(hass, HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}")
+        return
+
+    # Each thermostat imports on its own, so another one may already have failed.
+    if any(
+        issue.active
+        and issue.domain == DOMAIN
+        and issue.issue_id.startswith("deprecated_yaml_import_issue_")
+        for issue in ir.async_get(hass).issues.values()
+    ):
+        return
+
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2027.6.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": INTEGRATION_TITLE,
+        },
     )
 
 
@@ -153,7 +190,7 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
 
     @property
     @override
-    def temperature_unit(self) -> str:
+    def native_temperature_unit(self) -> str:
         """Return the unit of measurement, as defined by the API."""
         if self._client.tempunits == self._client.TEMPUNITS_F:
             return UnitOfTemperature.FAHRENHEIT
@@ -161,7 +198,7 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._client.get_indoor_temp()
 
@@ -214,7 +251,7 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the target temperature we try to reach."""
         if self._client.mode == self._client.MODE_HEAT:
             return self._client.heattemp
@@ -224,7 +261,7 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature_low(self) -> float | None:
+    def native_target_temperature_low(self) -> float | None:
         """Return the lower bound temp if auto mode is on."""
         if self._client.mode == self._client.MODE_AUTO:
             return self._client.heattemp
@@ -232,7 +269,7 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature_high(self) -> float | None:
+    def native_target_temperature_high(self) -> float | None:
         """Return the upper bound temp if auto mode is on."""
         if self._client.mode == self._client.MODE_AUTO:
             return self._client.cooltemp
@@ -266,7 +303,7 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
             success = self._client.set_mode(self._client.MODE_OFF)
 
         if not success:
-            _LOGGER.error("Failed to change the operation mode")
+            LOGGER.error("Failed to change the operation mode")
         return success
 
     @override
@@ -295,7 +332,7 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
                 success = self._client.set_setpoints(temp_low, temp_high)
             else:
                 success = False
-                _LOGGER.error(
+                LOGGER.error(
                     (
                         "The thermostat is currently not in a mode "
                         "that supports target temperature: %s"
@@ -304,7 +341,7 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
                 )
 
             if not success:
-                _LOGGER.error("Failed to change the temperature")
+                LOGGER.error("Failed to change the temperature")
         self.schedule_update_ha_state()
 
     @override
@@ -316,7 +353,7 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
             success = self._client.set_fan(self._client.FAN_AUTO)
 
         if not success:
-            _LOGGER.error("Failed to change the fan mode")
+            LOGGER.error("Failed to change the fan mode")
         self.schedule_update_ha_state()
 
     @override
@@ -331,7 +368,7 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
         success = self._client.set_hum_setpoint(humidity)
 
         if not success:
-            _LOGGER.error("Failed to change the target humidity level")
+            LOGGER.error("Failed to change the target humidity level")
         self.schedule_update_ha_state()
 
     @override
@@ -346,9 +383,9 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
             success = self._client.set_away(self._client.AWAY_HOME)
             success = success and self._client.set_schedule(1)
         else:
-            _LOGGER.error("Unknown hold mode: %s", preset_mode)
+            LOGGER.error("Unknown hold mode: %s", preset_mode)
             success = False
 
         if not success:
-            _LOGGER.error("Failed to change the schedule/hold state")
+            LOGGER.error("Failed to change the schedule/hold state")
         self.schedule_update_ha_state()

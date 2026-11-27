@@ -1,7 +1,9 @@
 {
   "domain": "irish_rail_transport",
   "name": "Irish Rail Transport",
+  "categories": ["vehicles_transport.public_transport"],
   "codeowners": ["@ttroy50"],
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/irish_rail_transport",
   "iot_class": "cloud_polling",
   "loggers": ["pyirishrail"],

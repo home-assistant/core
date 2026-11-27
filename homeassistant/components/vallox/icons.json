@@ -10,6 +10,33 @@
         "default": "mdi:air-filter"
       }
     },
+    "fan": {
+      "ventilation": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "auto": "mdi:fan-auto",
+              "away": "mdi:home-export-outline",
+              "boost": "mdi:fan-plus",
+              "extra": "mdi:fan-clock",
+              "fireplace": "mdi:fireplace",
+              "home": "mdi:home"
+            }
+          }
+        }
+      }
+    },
+    "number": {
+      "fan_speed_away": {
+        "default": "mdi:fan"
+      },
+      "fan_speed_boost": {
+        "default": "mdi:fan"
+      },
+      "fan_speed_home": {
+        "default": "mdi:fan"
+      }
+    },
     "sensor": {
       "cell_state": {
         "default": "mdi:swap-horizontal-bold"

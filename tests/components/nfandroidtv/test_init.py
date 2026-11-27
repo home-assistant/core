@@ -4,11 +4,11 @@ from unittest.mock import AsyncMock
 
 from notifications_android_tv.notifications import ConnectError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
+from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_notifications_android_tv")
@@ -41,3 +41,4 @@ async def test_config_entry_not_ready(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert hass.services.has_service(NOTIFY_DOMAIN, "android_tv_fire_tv_1_2_3_4")

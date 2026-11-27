@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.indevolt.const import (
     CONF_GENERATION,
@@ -11,8 +12,6 @@ from homeassistant.components.indevolt.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_HOST, CONF_MODEL
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 TEST_HOST = "192.168.1.100"
 TEST_HOST_ALT = "192.168.1.101"
@@ -161,6 +160,6 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock the async_setup_entry function."""
     with patch(
         "homeassistant.components.indevolt.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup:
         yield mock_setup

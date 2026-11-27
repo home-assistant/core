@@ -11,7 +11,6 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntityFeature,
     AlarmControlPanelState,
 )
-from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -43,6 +42,7 @@ class BlinkSyncModuleHA(
 ):
     """Representation of a Blink Alarm Control Panel."""
 
+    _attr_attribution = DEFAULT_ATTRIBUTION
     _attr_supported_features = AlarmControlPanelEntityFeature.ARM_AWAY
     _attr_code_arm_required = False
     _attr_has_entity_name = True
@@ -77,7 +77,6 @@ class BlinkSyncModuleHA(
         """Update attributes for alarm control panel."""
         self.sync.attributes["network_info"] = self.api.networks
         self.sync.attributes["associated_cameras"] = list(self.sync.cameras)
-        self.sync.attributes[ATTR_ATTRIBUTION] = DEFAULT_ATTRIBUTION
         self._attr_extra_state_attributes = self.sync.attributes
         self._attr_alarm_state = (
             AlarmControlPanelState.ARMED_AWAY
@@ -90,6 +89,8 @@ class BlinkSyncModuleHA(
         """Send disarm command."""
         try:
             await self.sync.async_arm(False)
+            # BlinkPy may skip the refresh below, so read the new state now.
+            await self.sync.get_network_info()
 
         except TimeoutError as er:
             raise HomeAssistantError("Blink failed to disarm camera") from er
@@ -104,6 +105,8 @@ class BlinkSyncModuleHA(
         """Send arm command."""
         try:
             await self.sync.async_arm(True)
+            # BlinkPy may skip the refresh below, so read the new state now.
+            await self.sync.get_network_info()
 
         except TimeoutError as er:
             raise HomeAssistantError("Blink failed to arm camera away") from er

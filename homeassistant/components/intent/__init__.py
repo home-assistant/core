@@ -5,47 +5,36 @@ import logging
 from typing import Any, Protocol, override
 
 from aiohttp import web
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import http, sensor
 from homeassistant.components.button import (
     DOMAIN as BUTTON_DOMAIN,
-    SERVICE_PRESS as SERVICE_PRESS_BUTTON,
     ButtonDeviceClass,
+    ButtonService,
 )
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.cover import (
     ATTR_POSITION,
     DOMAIN as COVER_DOMAIN,
-    SERVICE_CLOSE_COVER,
-    SERVICE_OPEN_COVER,
-    SERVICE_SET_COVER_POSITION,
-    SERVICE_STOP_COVER,
     CoverDeviceClass,
+    CoverService,
 )
+from homeassistant.components.homeassistant import HomeAssistantService
 from homeassistant.components.http.data_validator import RequestDataValidator
-from homeassistant.components.input_button import DOMAIN as INPUT_BUTTON_DOMAIN
-from homeassistant.components.lock import (
-    DOMAIN as LOCK_DOMAIN,
-    SERVICE_LOCK,
-    SERVICE_UNLOCK,
+from homeassistant.components.input_button import (
+    DOMAIN as INPUT_BUTTON_DOMAIN,
+    InputButtonService,
 )
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockService
 from homeassistant.components.media_player import MediaPlayerDeviceClass
 from homeassistant.components.switch import SwitchDeviceClass
 from homeassistant.components.valve import (
     DOMAIN as VALVE_DOMAIN,
-    SERVICE_CLOSE_VALVE,
-    SERVICE_OPEN_VALVE,
-    SERVICE_SET_VALVE_POSITION,
-    SERVICE_STOP_VALVE,
     ValveDeviceClass,
+    ValveService,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TOGGLE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-)
+from homeassistant.const import TargetKey
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, State
 from homeassistant.helpers import (
     area_registry as ar,
@@ -109,7 +98,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         OnOffIntentHandler(
             intent.INTENT_TURN_ON,
             HOMEASSISTANT_DOMAIN,
-            SERVICE_TURN_ON,
+            HomeAssistantService.TURN_ON,
             description=(
                 "Turns on/opens/presses a device or entity."
                 " For locks, this performs a 'lock' action."
@@ -124,7 +113,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         OnOffIntentHandler(
             intent.INTENT_TURN_OFF,
             HOMEASSISTANT_DOMAIN,
-            SERVICE_TURN_OFF,
+            HomeAssistantService.TURN_OFF,
             description=(
                 "Turns off/closes a device or entity."
                 " For locks, this performs an 'unlock' action."
@@ -139,7 +128,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         intent.ServiceIntentHandler(
             intent.INTENT_TOGGLE,
             HOMEASSISTANT_DOMAIN,
-            SERVICE_TOGGLE,
+            HomeAssistantService.TOGGLE,
             description="Toggles a device or entity",
             device_classes=ONOFF_DEVICE_CLASSES,
         ),
@@ -188,7 +177,7 @@ class OnOffIntentHandler(intent.ServiceIntentHandler):
         hass = intent_obj.hass
 
         if state.domain in (BUTTON_DOMAIN, INPUT_BUTTON_DOMAIN):
-            if service != SERVICE_TURN_ON:
+            if service != HomeAssistantService.TURN_ON:
                 raise intent.IntentHandleError(
                     f"Entity {state.entity_id} cannot be turned off"
                 )
@@ -197,8 +186,10 @@ class OnOffIntentHandler(intent.ServiceIntentHandler):
                 hass.async_create_task(
                     hass.services.async_call(
                         state.domain,
-                        SERVICE_PRESS_BUTTON,
-                        {ATTR_ENTITY_ID: state.entity_id},
+                        ButtonService.PRESS
+                        if state.domain == BUTTON_DOMAIN
+                        else InputButtonService.PRESS,
+                        {TargetKey.ENTITY_ID: state.entity_id},
                         context=intent_obj.context,
                         blocking=True,
                     )
@@ -209,17 +200,17 @@ class OnOffIntentHandler(intent.ServiceIntentHandler):
         if state.domain == COVER_DOMAIN:
             # on = open
             # off = close
-            if service == SERVICE_TURN_ON:
-                service_name = SERVICE_OPEN_COVER
+            if service == HomeAssistantService.TURN_ON:
+                service_name: str = CoverService.OPEN
             else:
-                service_name = SERVICE_CLOSE_COVER
+                service_name = CoverService.CLOSE
 
             await self._run_then_background(
                 hass.async_create_task(
                     hass.services.async_call(
                         COVER_DOMAIN,
                         service_name,
-                        {ATTR_ENTITY_ID: state.entity_id},
+                        {TargetKey.ENTITY_ID: state.entity_id},
                         context=intent_obj.context,
                         blocking=True,
                     )
@@ -230,17 +221,17 @@ class OnOffIntentHandler(intent.ServiceIntentHandler):
         if state.domain == LOCK_DOMAIN:
             # on = lock
             # off = unlock
-            if service == SERVICE_TURN_ON:
-                service_name = SERVICE_LOCK
+            if service == HomeAssistantService.TURN_ON:
+                service_name = LockService.LOCK
             else:
-                service_name = SERVICE_UNLOCK
+                service_name = LockService.UNLOCK
 
             await self._run_then_background(
                 hass.async_create_task(
                     hass.services.async_call(
                         LOCK_DOMAIN,
                         service_name,
-                        {ATTR_ENTITY_ID: state.entity_id},
+                        {TargetKey.ENTITY_ID: state.entity_id},
                         context=intent_obj.context,
                         blocking=True,
                     )
@@ -251,17 +242,17 @@ class OnOffIntentHandler(intent.ServiceIntentHandler):
         if state.domain == VALVE_DOMAIN:
             # on = opened
             # off = closed
-            if service == SERVICE_TURN_ON:
-                service_name = SERVICE_OPEN_VALVE
+            if service == HomeAssistantService.TURN_ON:
+                service_name = ValveService.OPEN
             else:
-                service_name = SERVICE_CLOSE_VALVE
+                service_name = ValveService.CLOSE
 
             await self._run_then_background(
                 hass.async_create_task(
                     hass.services.async_call(
                         VALVE_DOMAIN,
                         service_name,
-                        {ATTR_ENTITY_ID: state.entity_id},
+                        {TargetKey.ENTITY_ID: state.entity_id},
                         context=intent_obj.context,
                         blocking=True,
                     )
@@ -284,12 +275,14 @@ class GetStateIntentHandler(intent.IntentHandler):
     intent_type = intent.INTENT_GET_STATE
     description = "Gets or checks the state of a device or entity"
     slot_schema = {
-        vol.Any("name", "area", "floor"): cv.string,
-        vol.Optional("domain"): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional("device_class"): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional("state"): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional("preferred_area_id"): cv.string,
-        vol.Optional("preferred_floor_id"): cv.string,
+        probatio.Any("name", "area", "floor"): cv.string,
+        probatio.Optional("domain"): probatio.All(probatio.EnsureList(), [cv.string]),
+        probatio.Optional("device_class"): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        ),
+        probatio.Optional("state"): probatio.All(probatio.EnsureList(), [cv.string]),
+        probatio.Optional("preferred_area_id"): cv.string,
+        probatio.Optional("preferred_floor_id"): cv.string,
     }
 
     @override
@@ -339,13 +332,19 @@ class GetStateIntentHandler(intent.IntentHandler):
         match_result = intent.async_match_targets(
             hass, match_constraints, match_preferences
         )
+        no_match_reason = match_result.no_match_reason
         if (
             (not match_result.is_match)
-            and (match_result.no_match_reason is not None)
-            and (not match_result.no_match_reason.is_no_entities_reason())
+            and (no_match_reason is not None)
+            and (
+                (not no_match_reason.is_no_entities_reason())
+                or (
+                    entity_name
+                    and (no_match_reason is intent.MatchFailedReason.ASSISTANT)
+                )
+            )
         ):
-            # Don't try to answer questions for certain errors.
-            # Other match failure reasons are OK.
+            # Don't try to answer questions for certain errors or for named entities that are not exposed.
             raise intent.MatchFailedError(
                 result=match_result, constraints=match_constraints
             )
@@ -427,7 +426,7 @@ class SetPositionIntentHandler(intent.DynamicServiceIntentHandler):
         super().__init__(
             intent.INTENT_SET_POSITION,
             required_slots={
-                ATTR_POSITION: vol.All(vol.Coerce(int), vol.Range(min=0, max=100))
+                ATTR_POSITION: probatio.All(probatio.Coerce(int), probatio.Percentage())
             },
             description="Sets the position of a device or entity",
             platforms={COVER_DOMAIN, VALVE_DOMAIN},
@@ -440,10 +439,10 @@ class SetPositionIntentHandler(intent.DynamicServiceIntentHandler):
     ) -> tuple[str, str]:
         """Get the domain and service name to call."""
         if state.domain == COVER_DOMAIN:
-            return (COVER_DOMAIN, SERVICE_SET_COVER_POSITION)
+            return (COVER_DOMAIN, CoverService.SET_POSITION)
 
         if state.domain == VALVE_DOMAIN:
-            return (VALVE_DOMAIN, SERVICE_SET_VALVE_POSITION)
+            return (VALVE_DOMAIN, ValveService.SET_POSITION)
 
         raise intent.IntentHandleError(f"Domain not supported: {state.domain}")
 
@@ -466,10 +465,10 @@ class StopMovingIntentHandler(intent.DynamicServiceIntentHandler):
     ) -> tuple[str, str]:
         """Get the domain and service name to call."""
         if state.domain == COVER_DOMAIN:
-            return (COVER_DOMAIN, SERVICE_STOP_COVER)
+            return (COVER_DOMAIN, CoverService.STOP)
 
         if state.domain == VALVE_DOMAIN:
-            return (VALVE_DOMAIN, SERVICE_STOP_VALVE)
+            return (VALVE_DOMAIN, ValveService.STOP)
 
         raise intent.IntentHandleError(f"Domain not supported: {state.domain}")
 
@@ -507,7 +506,7 @@ class RespondIntentHandler(intent.IntentHandler):
     description = "Returns the provided response with no action."
 
     slot_schema = {
-        vol.Optional("response"): cv.string,
+        probatio.Optional("response"): cv.string,
     }
 
     @override
@@ -528,11 +527,11 @@ class GetTemperatureIntent(intent.IntentHandler):
     intent_type = intent.INTENT_GET_TEMPERATURE
     description = "Gets the current temperature of a climate device or entity"
     slot_schema = {
-        vol.Optional("area"): intent.non_empty_string,
-        vol.Optional("name"): intent.non_empty_string,
-        vol.Optional("floor"): intent.non_empty_string,
-        vol.Optional("preferred_area_id"): cv.string,
-        vol.Optional("preferred_floor_id"): cv.string,
+        probatio.Optional("area"): intent.non_empty_string,
+        probatio.Optional("name"): intent.non_empty_string,
+        probatio.Optional("floor"): intent.non_empty_string,
+        probatio.Optional("preferred_area_id"): cv.string,
+        probatio.Optional("preferred_floor_id"): cv.string,
     }
     platforms = {CLIMATE_DOMAIN}
 
@@ -640,14 +639,14 @@ class IntentHandleView(http.HomeAssistantView):
     name = "api:intent:handle"
 
     @RequestDataValidator(
-        vol.Schema(
+        probatio.Schema(
             {
-                vol.Required("name"): cv.string,
-                vol.Optional("data"): vol.Schema({cv.string: object}),
-                vol.Optional("language"): cv.string,
-                vol.Optional("assistant"): vol.Any(cv.string, None),
-                vol.Optional("device_id"): vol.Any(cv.string, None),
-                vol.Optional("satellite_id"): vol.Any(cv.string, None),
+                probatio.Required("name"): cv.string,
+                probatio.Optional("data"): probatio.Schema({cv.string: object}),
+                probatio.Optional("language"): cv.string,
+                probatio.Optional("assistant"): probatio.Any(cv.string, None),
+                probatio.Optional("device_id"): probatio.Any(cv.string, None),
+                probatio.Optional("satellite_id"): probatio.Any(cv.string, None),
             }
         )
     )

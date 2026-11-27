@@ -10,9 +10,16 @@ from zwave_js_server.const.command_class.lock import DOOR_STATUS_PROPERTY
 from zwave_js_server.const.command_class.notification import (
     CC_SPECIFIC_NOTIFICATION_TYPE,
     AccessControlNotificationEvent,
+    Co2AlarmNotificationEvent,
+    CoAlarmNotificationEvent,
+    GasAlarmNotificationEvent,
+    HeatAlarmNotificationEvent,
+    HomeSecurityNotificationEvent,
     NotificationEvent,
     NotificationType,
+    PowerManagementNotificationEvent,
     SmokeAlarmNotificationEvent,
+    WaterAlarmNotificationEvent,
 )
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.value import Value as ZwaveValue
@@ -27,7 +34,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.components.script import scripts_with_entity
 from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -37,10 +44,12 @@ from homeassistant.helpers.issue_registry import (
     async_delete_issue,
 )
 from homeassistant.helpers.start import async_at_started
+from homeassistant.helpers.typing import Undefined
 
 from .const import DOMAIN
 from .entity import NewZwaveDiscoveryInfo, ZWaveBaseEntity
 from .helpers import (
+    get_device_id,
     get_opening_state_notification_value,
     is_opening_state_notification_value,
 )
@@ -74,6 +83,32 @@ NOTIFICATION_WATER_VALVE = "15"
 NOTIFICATION_WEATHER = "16"
 NOTIFICATION_IRRIGATION = "17"
 NOTIFICATION_GAS = "18"
+
+# Generic device classes where heat notifications represent primary
+# functionality rather than diagnostic.
+# https://github.com/zwave-js/backlog/issues/119#issuecomment-3096168116
+HEAT_PRIMARY_DEVICE_CLASSES: set[str | int] = {
+    "Appliance",
+    "Notification Sensor",
+    "Thermostat",
+    "Multilevel Sensor",
+    "Alarm Sensor",
+}
+
+# Water Valve state keys can't be used to tell the variables apart:
+# zwave-js replaces the state id with the enum values for the operation
+# and current alarm variables.
+WATER_VALVE_OPERATION_PROPERTY_KEYS: set[str | int | None] = {
+    "Valve operation status",
+    "Master valve operation status",
+}
+WATER_VALVE_PROBLEM_PROPERTY_KEYS: set[str | int | None] = {
+    "Valve short circuit status",
+    "Master valve short circuit status",
+    "Valve current alarm status",
+    "Master valve current alarm status",
+    "Valve jammed status",
+}
 
 # Deprecated/legacy synthetic Access Control door state notification
 # event IDs that don't exist in zwave-js-server
@@ -185,40 +220,6 @@ LEGACY_DOOR_STATE_REPAIR_ISSUE_KEYS = frozenset(
 #
 # Mapping rules:
 # The catch all description should not have a device class and be marked as diagnostic.
-#
-# The following notifications have been moved to diagnostic:
-# Smoke Alarm
-# - Alarm silenced
-# - Replacement required
-# - Replacement required, End-of-life
-# - Maintenance required, planned periodic inspection
-# - Maintenance required, dust in device
-# CO Alarm
-# - Carbon monoxide test
-# - Replacement required
-# - Replacement required, End-of-life
-# - Alarm silenced
-# - Maintenance required, planned periodic inspection
-# CO2 Alarm
-# - Carbon dioxide test
-# - Replacement required
-# - Replacement required, End-of-life
-# - Alarm silenced
-# - Maintenance required, planned periodic inspection
-# Heat Alarm
-# - Rapid temperature rise (location provided)
-# - Rapid temperature rise
-# - Rapid temperature fall (location provided)
-# - Rapid temperature fall
-# - Heat alarm test
-# - Alarm silenced
-# - Replacement required, End-of-life
-# - Maintenance required, dust in device
-# - Maintenance required, planned periodic inspection
-
-# Water Alarm
-# - Replace water filter
-# - Sump pump failure
 
 
 # This set can be removed once all notification sensors have been migrated
@@ -226,131 +227,17 @@ LEGACY_DOOR_STATE_REPAIR_ISSUE_KEYS = frozenset(
 MIGRATED_NOTIFICATION_TYPES = {
     NotificationType.SMOKE_ALARM,
     NotificationType.ACCESS_CONTROL,
+    NotificationType.HEAT_ALARM,
+    NotificationType.POWER_MANAGEMENT,
+    NotificationType.WATER_VALVE,
+    NotificationType.CO_ALARM,
+    NotificationType.CO2_ALARM,
+    NotificationType.GAS_ALARM,
+    NotificationType.WATER_ALARM,
+    NotificationType.HOME_SECURITY,
 }
 
 NOTIFICATION_SENSOR_MAPPINGS: tuple[NotificationZWaveJSEntityDescription, ...] = (
-    NotificationZWaveJSEntityDescription(
-        # NotificationType 2: Carbon Monoxide - State Id's 1 and 2
-        key=NOTIFICATION_CARBON_MONOOXIDE,
-        states={1, 2},
-        device_class=BinarySensorDeviceClass.CO,
-    ),
-    NotificationZWaveJSEntityDescription(
-        # NotificationType 2: Carbon Monoxide - State Id 4, 5, 7
-        key=NOTIFICATION_CARBON_MONOOXIDE,
-        states={4, 5, 7},
-        device_class=BinarySensorDeviceClass.PROBLEM,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    NotificationZWaveJSEntityDescription(
-        # NotificationType 2: Carbon Monoxide - All other State Id's
-        key=NOTIFICATION_CARBON_MONOOXIDE,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    NotificationZWaveJSEntityDescription(
-        # NotificationType 3: Carbon Dioxide - State Id's 1 and 2
-        key=NOTIFICATION_CARBON_DIOXIDE,
-        states={1, 2},
-        device_class=BinarySensorDeviceClass.GAS,
-    ),
-    NotificationZWaveJSEntityDescription(
-        # NotificationType 3: Carbon Dioxide - State Id's 4, 5, 7
-        key=NOTIFICATION_CARBON_DIOXIDE,
-        states={4, 5, 7},
-        device_class=BinarySensorDeviceClass.PROBLEM,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    NotificationZWaveJSEntityDescription(
-        # NotificationType 3: Carbon Dioxide - All other State Id's
-        key=NOTIFICATION_CARBON_DIOXIDE,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    NotificationZWaveJSEntityDescription(
-        # NotificationType 4: Heat - State Id's 1, 2, 5, 6 (heat/underheat)
-        key=NOTIFICATION_HEAT,
-        states={1, 2, 5, 6},
-        device_class=BinarySensorDeviceClass.HEAT,
-    ),
-    NotificationZWaveJSEntityDescription(
-        # NotificationType 4: Heat - State ID's 8, A, B
-        key=NOTIFICATION_HEAT,
-        states={8, 10, 11},
-        device_class=BinarySensorDeviceClass.PROBLEM,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    NotificationZWaveJSEntityDescription(
-        # NotificationType 4: Heat - All other State Id's
-        key=NOTIFICATION_HEAT,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    NotificationZWaveJSEntityDescription(
-        # NotificationType 5: Water - State Id's 1, 2, 3, 4, 6, 7, 8, 9, 0A
-        key=NOTIFICATION_WATER,
-        states={1, 2, 3, 4, 6, 7, 8, 9, 10},
-        device_class=BinarySensorDeviceClass.MOISTURE,
-    ),
-    NotificationZWaveJSEntityDescription(
-        # NotificationType 5: Water - State Id's B
-        key=NOTIFICATION_WATER,
-        states={11},
-        device_class=BinarySensorDeviceClass.PROBLEM,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    NotificationZWaveJSEntityDescription(
-        # NotificationType 5: Water - All other State Id's
-        key=NOTIFICATION_WATER,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    NotificationZWaveJSEntityDescription(
-        # NotificationType 7: Home Security - State Id's 1, 2 (intrusion)
-        key=NOTIFICATION_HOME_SECURITY,
-        states={1, 2},
-        device_class=BinarySensorDeviceClass.SAFETY,
-    ),
-    NotificationZWaveJSEntityDescription(
-        # NotificationType 7: Home Security - State Id's 3, 4, 9 (tampering)
-        key=NOTIFICATION_HOME_SECURITY,
-        states={3, 4, 9},
-        device_class=BinarySensorDeviceClass.TAMPER,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    NotificationZWaveJSEntityDescription(
-        # NotificationType 7: Home Security - State Id's 5, 6 (glass breakage)
-        key=NOTIFICATION_HOME_SECURITY,
-        states={5, 6},
-        device_class=BinarySensorDeviceClass.SAFETY,
-    ),
-    NotificationZWaveJSEntityDescription(
-        # NotificationType 7: Home Security - State Id's 7, 8 (motion)
-        key=NOTIFICATION_HOME_SECURITY,
-        states={7, 8},
-        device_class=BinarySensorDeviceClass.MOTION,
-    ),
-    NotificationZWaveJSEntityDescription(
-        # NotificationType 8: Power Management -
-        # State Id's 2, 3 (Mains status)
-        key=NOTIFICATION_POWER_MANAGEMENT,
-        not_states={2},
-        states={3},
-        device_class=BinarySensorDeviceClass.PLUG,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    NotificationZWaveJSEntityDescription(
-        # NotificationType 8: Power Management -
-        # State Id's 6, 7, 8, 9 (power status)
-        key=NOTIFICATION_POWER_MANAGEMENT,
-        states={6, 7, 8, 9},
-        device_class=BinarySensorDeviceClass.SAFETY,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    NotificationZWaveJSEntityDescription(
-        # NotificationType 8: Power Management -
-        # State Id's 10, 11, 17 (Battery maintenance status)
-        key=NOTIFICATION_POWER_MANAGEMENT,
-        states={10, 11, 17},
-        device_class=BinarySensorDeviceClass.BATTERY,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
     NotificationZWaveJSEntityDescription(
         # NotificationType 9: System - State Id's 1, 2, 3, 4, 6, 7
         key=NOTIFICATION_SYSTEM,
@@ -369,24 +256,6 @@ NOTIFICATION_SENSOR_MAPPINGS: tuple[NotificationZWaveJSEntityDescription, ...] =
         key=NOTIFICATION_SIREN,
         states={1},
         device_class=BinarySensorDeviceClass.SOUND,
-    ),
-    NotificationZWaveJSEntityDescription(
-        # NotificationType 18: Gas - State Id's 1, 2, 3, 4
-        key=NOTIFICATION_GAS,
-        states={1, 2, 3, 4},
-        device_class=BinarySensorDeviceClass.GAS,
-    ),
-    NotificationZWaveJSEntityDescription(
-        # NotificationType 18: Gas - State Id 6
-        key=NOTIFICATION_GAS,
-        states={6},
-        device_class=BinarySensorDeviceClass.PROBLEM,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    NotificationZWaveJSEntityDescription(
-        # NotificationType 18: Gas - All other State Id's
-        key=NOTIFICATION_GAS,
-        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
 
@@ -534,6 +403,7 @@ def _async_check_legacy_entity_repair(
             hass,
             DOMAIN,
             f"{repair_description.issue_translation_key}.{entity_id}",
+            config_entry_id=entity_entry.config_entry_id,
             is_fixable=False,
             is_persistent=False,
             severity=IssueSeverity.WARNING,
@@ -728,10 +598,16 @@ class ZWaveNotificationBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
         if description:
             self.entity_description = description
 
-        # Entity class attributes
-        self._attr_name = self.generate_name(
-            alternate_value_name=self.info.primary_value.metadata.states[self.state_key]
-        )
+        # Notification sensors are named after their notification state. A
+        # description may set its own name to override that.
+        if not hasattr(self, "entity_description") or (
+            self.entity_description.name is Undefined
+        ):
+            self._attr_name = self.generate_name(
+                alternate_value_name=self.info.primary_value.metadata.states[
+                    self.state_key
+                ]
+            )
         self._attr_unique_id = f"{self._attr_unique_id}.{self.state_key}"
 
     @property
@@ -835,9 +711,13 @@ class ZWaveOpeningStateBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
 
         # Unlike the base implementation, keep this entity in place so its
         # registry entry and user customizations survive metadata rediscovery.
-        controller_events.discovered_value_ids[self.device_entry.id].discard(
-            value.value_id
+        # discovered_value_ids is keyed by the node device id, not the child device id.
+        node_device_id = dr.async_get_device_id_by_identifier(
+            self.hass,
+            get_device_id(self.driver, self.info.node),
+            config_entry_id=self.config_entry.entry_id,
         )
+        controller_events.discovered_value_ids[node_device_id].discard(value.value_id)
         node_events = controller_events.node_events
         value_updates_disc_info = node_events.value_updates_disc_info[
             value.node.node_id
@@ -914,6 +794,33 @@ OPENING_STATE_NOTIFICATION_SCHEMA = ZWaveValueDiscoverySchema(
 
 
 DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
+    # Zooz ZSE43 Tilt/Shock Sensor. Its vibration sensor is reported
+    # through the Home Security "Cover status" notification, so expose
+    # that notification as a vibration sensor.
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        manufacturer_id={0x027A},
+        product_id={0xE003},
+        product_type={0x7000},
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            property={"Home Security"},
+            property_key={"Cover status"},
+            type={ValueType.NUMBER},
+            any_available_states_keys={3},
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.HOME_SECURITY)
+            },
+        ),
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 7: Home Security - State Id 3 (product cover removed)
+            key=NOTIFICATION_HOME_SECURITY,
+            name="Vibration",
+            states={3},
+            device_class=BinarySensorDeviceClass.VIBRATION,
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
     NewZWaveDiscoverySchema(
         platform=Platform.BINARY_SENSOR,
         primary_value=ZWaveValueDiscoverySchema(
@@ -1469,6 +1376,795 @@ DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
                 SmokeAlarmNotificationEvent.MAINTENANCE_STATUS_REPLACEMENT_REQUIRED_END_OF_LIFE,
                 SmokeAlarmNotificationEvent.PERIODIC_INSPECTION_STATUS_MAINTENANCE_REQUIRED_PLANNED_PERIODIC_INSPECTION,
                 SmokeAlarmNotificationEvent.DUST_IN_DEVICE_STATUS_MAINTENANCE_REQUIRED_DUST_IN_DEVICE,
+            },
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            type={ValueType.NUMBER},
+            any_available_states_keys={
+                PowerManagementNotificationEvent.MAINS_STATUS_AC_MAINS_RE_CONNECTED
+            },
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.POWER_MANAGEMENT)
+            },
+        ),
+        allow_multi=True,
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 8: Power Management - State Id 3 (Mains re-connected),
+            # with State Id 2 (Mains disconnected) as its off state
+            key=NOTIFICATION_POWER_MANAGEMENT,
+            not_states={
+                PowerManagementNotificationEvent.IDLE,
+                PowerManagementNotificationEvent.MAINS_STATUS_AC_MAINS_DISCONNECTED,
+            },
+            states={
+                PowerManagementNotificationEvent.MAINS_STATUS_AC_MAINS_RE_CONNECTED
+            },
+            device_class=BinarySensorDeviceClass.PLUG,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            type={ValueType.NUMBER},
+            any_available_states_keys={
+                PowerManagementNotificationEvent.OVER_CURRENT_STATUS_OVER_CURRENT_DETECTED,
+                PowerManagementNotificationEvent.OVER_VOLTAGE_STATUS_OVER_VOLTAGE_DETECTED,
+                PowerManagementNotificationEvent.OVER_LOAD_STATUS_OVER_LOAD_DETECTED,
+                PowerManagementNotificationEvent.LOAD_ERROR,
+            },
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.POWER_MANAGEMENT)
+            },
+        ),
+        allow_multi=True,
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 8: Power Management - State Id's 6, 7, 8, 9 (power status)
+            key=NOTIFICATION_POWER_MANAGEMENT,
+            states={
+                PowerManagementNotificationEvent.OVER_CURRENT_STATUS_OVER_CURRENT_DETECTED,
+                PowerManagementNotificationEvent.OVER_VOLTAGE_STATUS_OVER_VOLTAGE_DETECTED,
+                PowerManagementNotificationEvent.OVER_LOAD_STATUS_OVER_LOAD_DETECTED,
+                PowerManagementNotificationEvent.LOAD_ERROR,
+            },
+            device_class=BinarySensorDeviceClass.SAFETY,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            type={ValueType.NUMBER},
+            any_available_states_keys={
+                PowerManagementNotificationEvent.BATTERY_MAINTENANCE_STATUS_REPLACE_BATTERY_SOON,
+                PowerManagementNotificationEvent.BATTERY_MAINTENANCE_STATUS_REPLACE_BATTERY_NOW,
+                PowerManagementNotificationEvent.BATTERY_MAINTENANCE_STATUS_BATTERY_FLUID_IS_LOW,
+                PowerManagementNotificationEvent.BATTERY_LEVEL_STATUS_CHARGE_BATTERY_SOON,
+                PowerManagementNotificationEvent.BATTERY_LEVEL_STATUS_CHARGE_BATTERY_NOW,
+            },
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.POWER_MANAGEMENT)
+            },
+        ),
+        allow_multi=True,
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 8: Power Management -
+            # State Id's 10, 11, 17 (battery maintenance), 14, 15 (battery level)
+            key=NOTIFICATION_POWER_MANAGEMENT,
+            states={
+                PowerManagementNotificationEvent.BATTERY_MAINTENANCE_STATUS_REPLACE_BATTERY_SOON,
+                PowerManagementNotificationEvent.BATTERY_MAINTENANCE_STATUS_REPLACE_BATTERY_NOW,
+                PowerManagementNotificationEvent.BATTERY_MAINTENANCE_STATUS_BATTERY_FLUID_IS_LOW,
+                PowerManagementNotificationEvent.BATTERY_LEVEL_STATUS_CHARGE_BATTERY_SOON,
+                PowerManagementNotificationEvent.BATTERY_LEVEL_STATUS_CHARGE_BATTERY_NOW,
+            },
+            device_class=BinarySensorDeviceClass.BATTERY,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            type={ValueType.NUMBER},
+            any_available_states_keys={
+                PowerManagementNotificationEvent.BATTERY_LOAD_STATUS_BATTERY_IS_CHARGING
+            },
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.POWER_MANAGEMENT)
+            },
+        ),
+        allow_multi=True,
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 8: Power Management - State Id 12 (Battery is charging)
+            key=NOTIFICATION_POWER_MANAGEMENT,
+            states={
+                PowerManagementNotificationEvent.BATTERY_LOAD_STATUS_BATTERY_IS_CHARGING
+            },
+            device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            type={ValueType.NUMBER},
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.POWER_MANAGEMENT)
+            },
+        ),
+        allow_multi=True,
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 8: Power Management - All other State Id's
+            key=NOTIFICATION_POWER_MANAGEMENT,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            not_states={
+                PowerManagementNotificationEvent.IDLE,
+                PowerManagementNotificationEvent.MAINS_STATUS_AC_MAINS_RE_CONNECTED,
+                PowerManagementNotificationEvent.OVER_CURRENT_STATUS_OVER_CURRENT_DETECTED,
+                PowerManagementNotificationEvent.OVER_VOLTAGE_STATUS_OVER_VOLTAGE_DETECTED,
+                PowerManagementNotificationEvent.OVER_LOAD_STATUS_OVER_LOAD_DETECTED,
+                PowerManagementNotificationEvent.LOAD_ERROR,
+                PowerManagementNotificationEvent.BATTERY_MAINTENANCE_STATUS_REPLACE_BATTERY_SOON,
+                PowerManagementNotificationEvent.BATTERY_MAINTENANCE_STATUS_REPLACE_BATTERY_NOW,
+                PowerManagementNotificationEvent.BATTERY_MAINTENANCE_STATUS_BATTERY_FLUID_IS_LOW,
+                PowerManagementNotificationEvent.BATTERY_LEVEL_STATUS_CHARGE_BATTERY_SOON,
+                PowerManagementNotificationEvent.BATTERY_LEVEL_STATUS_CHARGE_BATTERY_NOW,
+                PowerManagementNotificationEvent.BATTERY_LOAD_STATUS_BATTERY_IS_CHARGING,
+            },
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={
+                CommandClass.NOTIFICATION,
+            },
+            type={ValueType.NUMBER},
+            any_available_states_keys={
+                HeatAlarmNotificationEvent.HEAT_SENSOR_STATUS_OVERHEAT_DETECTED_LOCATION_PROVIDED,
+                HeatAlarmNotificationEvent.HEAT_SENSOR_STATUS_OVERHEAT_DETECTED,
+                HeatAlarmNotificationEvent.HEAT_SENSOR_STATUS_UNDERHEAT_DETECTED_LOCATION_PROVIDED,
+                HeatAlarmNotificationEvent.HEAT_SENSOR_STATUS_UNDERHEAT_DETECTED,
+            },
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.HEAT_ALARM)
+            },
+        ),
+        device_class_generic=HEAT_PRIMARY_DEVICE_CLASSES,
+        allow_multi=True,
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 4: Heat - overheat/underheat detected (primary)
+            key=NOTIFICATION_HEAT,
+            states={
+                HeatAlarmNotificationEvent.HEAT_SENSOR_STATUS_OVERHEAT_DETECTED_LOCATION_PROVIDED,
+                HeatAlarmNotificationEvent.HEAT_SENSOR_STATUS_OVERHEAT_DETECTED,
+                HeatAlarmNotificationEvent.HEAT_SENSOR_STATUS_UNDERHEAT_DETECTED_LOCATION_PROVIDED,
+                HeatAlarmNotificationEvent.HEAT_SENSOR_STATUS_UNDERHEAT_DETECTED,
+            },
+            device_class=BinarySensorDeviceClass.HEAT,
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={
+                CommandClass.NOTIFICATION,
+            },
+            type={ValueType.NUMBER},
+            any_available_states_keys={
+                HeatAlarmNotificationEvent.HEAT_SENSOR_STATUS_OVERHEAT_DETECTED_LOCATION_PROVIDED,
+                HeatAlarmNotificationEvent.HEAT_SENSOR_STATUS_OVERHEAT_DETECTED,
+                HeatAlarmNotificationEvent.HEAT_SENSOR_STATUS_UNDERHEAT_DETECTED_LOCATION_PROVIDED,
+                HeatAlarmNotificationEvent.HEAT_SENSOR_STATUS_UNDERHEAT_DETECTED,
+            },
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.HEAT_ALARM)
+            },
+        ),
+        not_device_class_generic=HEAT_PRIMARY_DEVICE_CLASSES,
+        allow_multi=True,
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 4: Heat - overheat/underheat detected (diagnostic)
+            key=NOTIFICATION_HEAT,
+            states={
+                HeatAlarmNotificationEvent.HEAT_SENSOR_STATUS_OVERHEAT_DETECTED_LOCATION_PROVIDED,
+                HeatAlarmNotificationEvent.HEAT_SENSOR_STATUS_OVERHEAT_DETECTED,
+                HeatAlarmNotificationEvent.HEAT_SENSOR_STATUS_UNDERHEAT_DETECTED_LOCATION_PROVIDED,
+                HeatAlarmNotificationEvent.HEAT_SENSOR_STATUS_UNDERHEAT_DETECTED,
+            },
+            device_class=BinarySensorDeviceClass.HEAT,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={
+                CommandClass.NOTIFICATION,
+            },
+            type={ValueType.NUMBER},
+            any_available_states_keys={
+                HeatAlarmNotificationEvent.MAINTENANCE_STATUS_REPLACEMENT_REQUIRED_END_OF_LIFE,
+                HeatAlarmNotificationEvent.DUST_IN_DEVICE_STATUS_MAINTENANCE_REQUIRED_DUST_IN_DEVICE,
+                HeatAlarmNotificationEvent.PERIODIC_INSPECTION_STATUS_MAINTENANCE_REQUIRED_PLANNED_PERIODIC_INSPECTION,
+            },
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.HEAT_ALARM)
+            },
+        ),
+        allow_multi=True,
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 4: Heat - replacement/dust/inspection
+            key=NOTIFICATION_HEAT,
+            states={
+                HeatAlarmNotificationEvent.MAINTENANCE_STATUS_REPLACEMENT_REQUIRED_END_OF_LIFE,
+                HeatAlarmNotificationEvent.DUST_IN_DEVICE_STATUS_MAINTENANCE_REQUIRED_DUST_IN_DEVICE,
+                HeatAlarmNotificationEvent.PERIODIC_INSPECTION_STATUS_MAINTENANCE_REQUIRED_PLANNED_PERIODIC_INSPECTION,
+            },
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={
+                CommandClass.NOTIFICATION,
+            },
+            type={ValueType.NUMBER},
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.HEAT_ALARM)
+            },
+        ),
+        allow_multi=True,
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 4: Heat - All other State Id's
+            # Rapid rise and fall are events, and not states.
+            key=NOTIFICATION_HEAT,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            not_states={
+                HeatAlarmNotificationEvent.IDLE,
+                HeatAlarmNotificationEvent.HEAT_SENSOR_STATUS_OVERHEAT_DETECTED_LOCATION_PROVIDED,
+                HeatAlarmNotificationEvent.HEAT_SENSOR_STATUS_OVERHEAT_DETECTED,
+                HeatAlarmNotificationEvent.HEAT_SENSOR_STATUS_UNDERHEAT_DETECTED_LOCATION_PROVIDED,
+                HeatAlarmNotificationEvent.HEAT_SENSOR_STATUS_UNDERHEAT_DETECTED,
+                HeatAlarmNotificationEvent.MAINTENANCE_STATUS_REPLACEMENT_REQUIRED_END_OF_LIFE,
+                HeatAlarmNotificationEvent.DUST_IN_DEVICE_STATUS_MAINTENANCE_REQUIRED_DUST_IN_DEVICE,
+                HeatAlarmNotificationEvent.PERIODIC_INSPECTION_STATUS_MAINTENANCE_REQUIRED_PLANNED_PERIODIC_INSPECTION,
+            },
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            property={"Water Valve"},
+            property_key=WATER_VALVE_OPERATION_PROPERTY_KEYS,
+            type={ValueType.NUMBER},
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.WATER_VALVE)
+            },
+        ),
+        allow_multi=True,
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 15: Water Valve - valve/master valve operation
+            key=NOTIFICATION_WATER_VALVE,
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            property={"Water Valve"},
+            property_key=WATER_VALVE_PROBLEM_PROPERTY_KEYS,
+            type={ValueType.NUMBER},
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.WATER_VALVE)
+            },
+        ),
+        allow_multi=True,
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 15: Water Valve - short circuit, current alarm, jammed
+            key=NOTIFICATION_WATER_VALVE,
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            property={"Water Valve"},
+            not_property_key=WATER_VALVE_OPERATION_PROPERTY_KEYS
+            | WATER_VALVE_PROBLEM_PROPERTY_KEYS,
+            type={ValueType.NUMBER},
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.WATER_VALVE)
+            },
+        ),
+        allow_multi=True,
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 15: Water Valve - All other notification values
+            key=NOTIFICATION_WATER_VALVE,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            type={ValueType.NUMBER},
+            any_available_states_keys={
+                CoAlarmNotificationEvent.SENSOR_STATUS_CARBON_MONOXIDE_DETECTED_LOCATION_PROVIDED,
+                CoAlarmNotificationEvent.SENSOR_STATUS_CARBON_MONOXIDE_DETECTED,
+            },
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.CO_ALARM)
+            },
+        ),
+        allow_multi=True,
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 2: Carbon Monoxide - State Id's 1 and 2
+            key=NOTIFICATION_CARBON_MONOOXIDE,
+            states={
+                CoAlarmNotificationEvent.SENSOR_STATUS_CARBON_MONOXIDE_DETECTED_LOCATION_PROVIDED,
+                CoAlarmNotificationEvent.SENSOR_STATUS_CARBON_MONOXIDE_DETECTED,
+            },
+            device_class=BinarySensorDeviceClass.CO,
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            type={ValueType.NUMBER},
+            any_available_states_keys={
+                CoAlarmNotificationEvent.MAINTENANCE_STATUS_REPLACEMENT_REQUIRED,
+                CoAlarmNotificationEvent.MAINTENANCE_STATUS_REPLACEMENT_REQUIRED_END_OF_LIFE,
+                CoAlarmNotificationEvent.PERIODIC_INSPECTION_STATUS_MAINTENANCE_REQUIRED_PLANNED_PERIODIC_INSPECTION,
+            },
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.CO_ALARM)
+            },
+        ),
+        allow_multi=True,
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 2: Carbon Monoxide - State Id's 4, 5, 7
+            key=NOTIFICATION_CARBON_MONOOXIDE,
+            states={
+                CoAlarmNotificationEvent.MAINTENANCE_STATUS_REPLACEMENT_REQUIRED,
+                CoAlarmNotificationEvent.MAINTENANCE_STATUS_REPLACEMENT_REQUIRED_END_OF_LIFE,
+                CoAlarmNotificationEvent.PERIODIC_INSPECTION_STATUS_MAINTENANCE_REQUIRED_PLANNED_PERIODIC_INSPECTION,
+            },
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            type={ValueType.NUMBER},
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.CO_ALARM)
+            },
+        ),
+        allow_multi=True,
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 2: Carbon Monoxide - All other State Id's
+            key=NOTIFICATION_CARBON_MONOOXIDE,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            not_states={
+                CoAlarmNotificationEvent.IDLE,
+                CoAlarmNotificationEvent.SENSOR_STATUS_CARBON_MONOXIDE_DETECTED_LOCATION_PROVIDED,
+                CoAlarmNotificationEvent.SENSOR_STATUS_CARBON_MONOXIDE_DETECTED,
+                CoAlarmNotificationEvent.MAINTENANCE_STATUS_REPLACEMENT_REQUIRED,
+                CoAlarmNotificationEvent.MAINTENANCE_STATUS_REPLACEMENT_REQUIRED_END_OF_LIFE,
+                CoAlarmNotificationEvent.PERIODIC_INSPECTION_STATUS_MAINTENANCE_REQUIRED_PLANNED_PERIODIC_INSPECTION,
+            },
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            type={ValueType.NUMBER},
+            any_available_states_keys={
+                Co2AlarmNotificationEvent.SENSOR_STATUS_CARBON_DIOXIDE_DETECTED_LOCATION_PROVIDED,
+                Co2AlarmNotificationEvent.SENSOR_STATUS_CARBON_DIOXIDE_DETECTED,
+            },
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.CO2_ALARM)
+            },
+        ),
+        allow_multi=True,
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 3: Carbon Dioxide - State Id's 1 and 2
+            key=NOTIFICATION_CARBON_DIOXIDE,
+            states={
+                Co2AlarmNotificationEvent.SENSOR_STATUS_CARBON_DIOXIDE_DETECTED_LOCATION_PROVIDED,
+                Co2AlarmNotificationEvent.SENSOR_STATUS_CARBON_DIOXIDE_DETECTED,
+            },
+            device_class=BinarySensorDeviceClass.GAS,
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            type={ValueType.NUMBER},
+            any_available_states_keys={
+                Co2AlarmNotificationEvent.MAINTENANCE_STATUS_REPLACEMENT_REQUIRED,
+                Co2AlarmNotificationEvent.MAINTENANCE_STATUS_REPLACEMENT_REQUIRED_END_OF_LIFE,
+                Co2AlarmNotificationEvent.PERIODIC_INSPECTION_STATUS_MAINTENANCE_REQUIRED_PLANNED_PERIODIC_INSPECTION,
+            },
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.CO2_ALARM)
+            },
+        ),
+        allow_multi=True,
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 3: Carbon Dioxide - State Id's 4, 5, 7
+            key=NOTIFICATION_CARBON_DIOXIDE,
+            states={
+                Co2AlarmNotificationEvent.MAINTENANCE_STATUS_REPLACEMENT_REQUIRED,
+                Co2AlarmNotificationEvent.MAINTENANCE_STATUS_REPLACEMENT_REQUIRED_END_OF_LIFE,
+                Co2AlarmNotificationEvent.PERIODIC_INSPECTION_STATUS_MAINTENANCE_REQUIRED_PLANNED_PERIODIC_INSPECTION,
+            },
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            type={ValueType.NUMBER},
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.CO2_ALARM)
+            },
+        ),
+        allow_multi=True,
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 3: Carbon Dioxide - All other State Id's
+            key=NOTIFICATION_CARBON_DIOXIDE,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            not_states={
+                Co2AlarmNotificationEvent.IDLE,
+                Co2AlarmNotificationEvent.SENSOR_STATUS_CARBON_DIOXIDE_DETECTED_LOCATION_PROVIDED,
+                Co2AlarmNotificationEvent.SENSOR_STATUS_CARBON_DIOXIDE_DETECTED,
+                Co2AlarmNotificationEvent.MAINTENANCE_STATUS_REPLACEMENT_REQUIRED,
+                Co2AlarmNotificationEvent.MAINTENANCE_STATUS_REPLACEMENT_REQUIRED_END_OF_LIFE,
+                Co2AlarmNotificationEvent.PERIODIC_INSPECTION_STATUS_MAINTENANCE_REQUIRED_PLANNED_PERIODIC_INSPECTION,
+            },
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            type={ValueType.NUMBER},
+            any_available_states_keys={
+                GasAlarmNotificationEvent.COMBUSTIBLE_GAS_STATUS_COMBUSTIBLE_GAS_DETECTED_LOCATION_PROVIDED,
+                GasAlarmNotificationEvent.COMBUSTIBLE_GAS_STATUS_COMBUSTIBLE_GAS_DETECTED,
+                GasAlarmNotificationEvent.TOXIC_GAS_STATUS_TOXIC_GAS_DETECTED_LOCATION_PROVIDED,
+                GasAlarmNotificationEvent.TOXIC_GAS_STATUS_TOXIC_GAS_DETECTED,
+            },
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.GAS_ALARM)
+            },
+        ),
+        allow_multi=True,
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 18: Gas - State Id's 1, 2, 3, 4
+            key=NOTIFICATION_GAS,
+            states={
+                GasAlarmNotificationEvent.COMBUSTIBLE_GAS_STATUS_COMBUSTIBLE_GAS_DETECTED_LOCATION_PROVIDED,
+                GasAlarmNotificationEvent.COMBUSTIBLE_GAS_STATUS_COMBUSTIBLE_GAS_DETECTED,
+                GasAlarmNotificationEvent.TOXIC_GAS_STATUS_TOXIC_GAS_DETECTED_LOCATION_PROVIDED,
+                GasAlarmNotificationEvent.TOXIC_GAS_STATUS_TOXIC_GAS_DETECTED,
+            },
+            device_class=BinarySensorDeviceClass.GAS,
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            type={ValueType.NUMBER},
+            any_available_states_keys={
+                GasAlarmNotificationEvent.MAINTENANCE_STATUS_REPLACEMENT_REQUIRED,
+            },
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.GAS_ALARM)
+            },
+        ),
+        allow_multi=True,
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 18: Gas - State Id 6
+            key=NOTIFICATION_GAS,
+            states={
+                GasAlarmNotificationEvent.MAINTENANCE_STATUS_REPLACEMENT_REQUIRED,
+            },
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            type={ValueType.NUMBER},
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.GAS_ALARM)
+            },
+        ),
+        allow_multi=True,
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 18: Gas - All other State Id's
+            key=NOTIFICATION_GAS,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            not_states={
+                GasAlarmNotificationEvent.IDLE,
+                GasAlarmNotificationEvent.COMBUSTIBLE_GAS_STATUS_COMBUSTIBLE_GAS_DETECTED_LOCATION_PROVIDED,
+                GasAlarmNotificationEvent.COMBUSTIBLE_GAS_STATUS_COMBUSTIBLE_GAS_DETECTED,
+                GasAlarmNotificationEvent.TOXIC_GAS_STATUS_TOXIC_GAS_DETECTED_LOCATION_PROVIDED,
+                GasAlarmNotificationEvent.TOXIC_GAS_STATUS_TOXIC_GAS_DETECTED,
+                GasAlarmNotificationEvent.MAINTENANCE_STATUS_REPLACEMENT_REQUIRED,
+            },
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            type={ValueType.NUMBER},
+            any_available_states_keys={
+                WaterAlarmNotificationEvent.SENSOR_STATUS_WATER_LEAK_DETECTED_LOCATION_PROVIDED,
+                WaterAlarmNotificationEvent.SENSOR_STATUS_WATER_LEAK_DETECTED,
+                WaterAlarmNotificationEvent.WATER_LEVEL_DROPPED_LOCATION_PROVIDED,
+                WaterAlarmNotificationEvent.WATER_LEVEL_DROPPED,
+                WaterAlarmNotificationEvent.WATER_FLOW_ALARM,
+                WaterAlarmNotificationEvent.WATER_PRESSURE_ALARM,
+                WaterAlarmNotificationEvent.WATER_TEMPERATURE_ALARM,
+                WaterAlarmNotificationEvent.WATER_LEVEL_ALARM,
+                WaterAlarmNotificationEvent.PUMP_STATUS_SUMP_PUMP_ACTIVE,
+            },
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.WATER_ALARM)
+            },
+        ),
+        allow_multi=True,
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 5: Water - State Id's 1, 2, 3, 4, 6, 7, 8, 9, 0A
+            key=NOTIFICATION_WATER,
+            states={
+                WaterAlarmNotificationEvent.SENSOR_STATUS_WATER_LEAK_DETECTED_LOCATION_PROVIDED,
+                WaterAlarmNotificationEvent.SENSOR_STATUS_WATER_LEAK_DETECTED,
+                WaterAlarmNotificationEvent.WATER_LEVEL_DROPPED_LOCATION_PROVIDED,
+                WaterAlarmNotificationEvent.WATER_LEVEL_DROPPED,
+                WaterAlarmNotificationEvent.WATER_FLOW_ALARM,
+                WaterAlarmNotificationEvent.WATER_PRESSURE_ALARM,
+                WaterAlarmNotificationEvent.WATER_TEMPERATURE_ALARM,
+                WaterAlarmNotificationEvent.WATER_LEVEL_ALARM,
+                WaterAlarmNotificationEvent.PUMP_STATUS_SUMP_PUMP_ACTIVE,
+            },
+            device_class=BinarySensorDeviceClass.MOISTURE,
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            type={ValueType.NUMBER},
+            any_available_states_keys={
+                WaterAlarmNotificationEvent.PUMP_STATUS_SUMP_PUMP_FAILURE,
+            },
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.WATER_ALARM)
+            },
+        ),
+        allow_multi=True,
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 5: Water - State Id's B
+            key=NOTIFICATION_WATER,
+            states={
+                WaterAlarmNotificationEvent.PUMP_STATUS_SUMP_PUMP_FAILURE,
+            },
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            type={ValueType.NUMBER},
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.WATER_ALARM)
+            },
+        ),
+        allow_multi=True,
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 5: Water - All other State Id's
+            key=NOTIFICATION_WATER,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            not_states={
+                WaterAlarmNotificationEvent.IDLE,
+                WaterAlarmNotificationEvent.SENSOR_STATUS_WATER_LEAK_DETECTED_LOCATION_PROVIDED,
+                WaterAlarmNotificationEvent.SENSOR_STATUS_WATER_LEAK_DETECTED,
+                WaterAlarmNotificationEvent.WATER_LEVEL_DROPPED_LOCATION_PROVIDED,
+                WaterAlarmNotificationEvent.WATER_LEVEL_DROPPED,
+                WaterAlarmNotificationEvent.WATER_FLOW_ALARM,
+                WaterAlarmNotificationEvent.WATER_PRESSURE_ALARM,
+                WaterAlarmNotificationEvent.WATER_TEMPERATURE_ALARM,
+                WaterAlarmNotificationEvent.WATER_LEVEL_ALARM,
+                WaterAlarmNotificationEvent.PUMP_STATUS_SUMP_PUMP_ACTIVE,
+                WaterAlarmNotificationEvent.PUMP_STATUS_SUMP_PUMP_FAILURE,
+            },
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            type={ValueType.NUMBER},
+            any_available_states_keys={
+                HomeSecurityNotificationEvent.SENSOR_STATUS_INTRUSION_LOCATION_PROVIDED,
+                HomeSecurityNotificationEvent.SENSOR_STATUS_INTRUSION,
+            },
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.HOME_SECURITY)
+            },
+        ),
+        allow_multi=True,
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 7: Home Security - State Id's 1, 2 (intrusion)
+            key=NOTIFICATION_HOME_SECURITY,
+            states={
+                HomeSecurityNotificationEvent.SENSOR_STATUS_INTRUSION_LOCATION_PROVIDED,
+                HomeSecurityNotificationEvent.SENSOR_STATUS_INTRUSION,
+            },
+            device_class=BinarySensorDeviceClass.SAFETY,
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            type={ValueType.NUMBER},
+            any_available_states_keys={
+                HomeSecurityNotificationEvent.COVER_STATUS_TAMPERING_PRODUCT_COVER_REMOVED,
+                HomeSecurityNotificationEvent.TAMPERING_INVALID_CODE,
+                HomeSecurityNotificationEvent.TAMPERING_PRODUCT_MOVED,
+            },
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.HOME_SECURITY)
+            },
+        ),
+        allow_multi=True,
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 7: Home Security - State Id's 3, 4, 9 (tampering)
+            key=NOTIFICATION_HOME_SECURITY,
+            states={
+                HomeSecurityNotificationEvent.COVER_STATUS_TAMPERING_PRODUCT_COVER_REMOVED,
+                HomeSecurityNotificationEvent.TAMPERING_INVALID_CODE,
+                HomeSecurityNotificationEvent.TAMPERING_PRODUCT_MOVED,
+            },
+            device_class=BinarySensorDeviceClass.TAMPER,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            type={ValueType.NUMBER},
+            any_available_states_keys={
+                HomeSecurityNotificationEvent.GLASS_BREAKAGE_LOCATION_PROVIDED,
+                HomeSecurityNotificationEvent.GLASS_BREAKAGE,
+            },
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.HOME_SECURITY)
+            },
+        ),
+        allow_multi=True,
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 7: Home Security - State Id's 5, 6 (glass breakage)
+            key=NOTIFICATION_HOME_SECURITY,
+            states={
+                HomeSecurityNotificationEvent.GLASS_BREAKAGE_LOCATION_PROVIDED,
+                HomeSecurityNotificationEvent.GLASS_BREAKAGE,
+            },
+            device_class=BinarySensorDeviceClass.GLASS_BREAK,
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            type={ValueType.NUMBER},
+            any_available_states_keys={
+                HomeSecurityNotificationEvent.MOTION_SENSOR_STATUS_MOTION_DETECTION_LOCATION_PROVIDED,
+                HomeSecurityNotificationEvent.MOTION_SENSOR_STATUS_MOTION_DETECTION,
+            },
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.HOME_SECURITY)
+            },
+        ),
+        allow_multi=True,
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 7: Home Security - State Id's 7, 8 (motion)
+            key=NOTIFICATION_HOME_SECURITY,
+            states={
+                HomeSecurityNotificationEvent.MOTION_SENSOR_STATUS_MOTION_DETECTION_LOCATION_PROVIDED,
+                HomeSecurityNotificationEvent.MOTION_SENSOR_STATUS_MOTION_DETECTION,
+            },
+            device_class=BinarySensorDeviceClass.MOTION,
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            type={ValueType.NUMBER},
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.HOME_SECURITY)
+            },
+        ),
+        allow_multi=True,
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 7: Home Security - All other State Id's
+            # Not diagnostic, unlike other catch-alls, to not move existing entities.
+            key=NOTIFICATION_HOME_SECURITY,
+            not_states={
+                HomeSecurityNotificationEvent.IDLE,
+                HomeSecurityNotificationEvent.SENSOR_STATUS_INTRUSION_LOCATION_PROVIDED,
+                HomeSecurityNotificationEvent.SENSOR_STATUS_INTRUSION,
+                HomeSecurityNotificationEvent.COVER_STATUS_TAMPERING_PRODUCT_COVER_REMOVED,
+                HomeSecurityNotificationEvent.TAMPERING_INVALID_CODE,
+                HomeSecurityNotificationEvent.TAMPERING_PRODUCT_MOVED,
+                HomeSecurityNotificationEvent.GLASS_BREAKAGE_LOCATION_PROVIDED,
+                HomeSecurityNotificationEvent.GLASS_BREAKAGE,
+                HomeSecurityNotificationEvent.MOTION_SENSOR_STATUS_MOTION_DETECTION_LOCATION_PROVIDED,
+                HomeSecurityNotificationEvent.MOTION_SENSOR_STATUS_MOTION_DETECTION,
             },
         ),
         entity_class=ZWaveNotificationBinarySensor,

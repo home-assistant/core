@@ -9,17 +9,16 @@ from unittest.mock import AsyncMock, patch
 from aiohttp import ClientSession
 from linkplay.bridge import LinkPlayBridge, LinkPlayDevice
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
+from pytest_homeassistant.plugins import AiohttpClientMocker
 
 from homeassistant.components.linkplay.const import DOMAIN
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_CLOSE
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, load_fixture
-from tests.conftest import AiohttpClientMocker
-
 HOST = "10.0.0.150"
 HOST_REENTRY = "10.0.0.66"
-UUID = "FF31F09E-5001-FBDE-0546-2DBFFF31F09E"
+UUID = "FF31F09E5001FBDE05462DBFFF31F09E"
 NAME = "Smart Zone 1_54B9"
 
 
@@ -51,7 +50,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.linkplay.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 

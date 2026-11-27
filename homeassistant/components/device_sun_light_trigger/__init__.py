@@ -4,7 +4,7 @@ from datetime import timedelta
 from functools import partial
 import logging
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
@@ -12,21 +12,19 @@ from homeassistant.components.device_tracker import (
 )
 from homeassistant.components.group import get_entity_ids as group_get_entity_ids
 from homeassistant.components.light import (
-    ATTR_PROFILE,
-    ATTR_TRANSITION,
     DOMAIN as LIGHT_DOMAIN,
+    LightService,
+    LightServiceArgument,
     is_on as light_is_on,
 )
 from homeassistant.components.person import DOMAIN as PERSON_DOMAIN
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     EVENT_HOMEASSISTANT_START,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_HOME,
     STATE_NOT_HOME,
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
+    TargetKey,
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
@@ -49,22 +47,22 @@ DEFAULT_LIGHT_PROFILE = "relax"
 
 LIGHT_TRANSITION_TIME = timedelta(minutes=15)
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Optional(CONF_DEVICE_GROUP): cv.entity_id,
-                vol.Optional(
+                probatio.Optional(CONF_DEVICE_GROUP): cv.entity_id,
+                probatio.Optional(
                     CONF_DISABLE_TURN_OFF, default=DEFAULT_DISABLE_TURN_OFF
                 ): cv.boolean,
-                vol.Optional(CONF_LIGHT_GROUP): cv.string,
-                vol.Optional(
+                probatio.Optional(CONF_LIGHT_GROUP): cv.string,
+                probatio.Optional(
                     CONF_LIGHT_PROFILE, default=DEFAULT_LIGHT_PROFILE
                 ): cv.string,
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -148,11 +146,11 @@ async def activate_automation(  # noqa: C901
             return
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
+            LightService.TURN_ON,
             {
-                ATTR_ENTITY_ID: light_id,
-                ATTR_TRANSITION: LIGHT_TRANSITION_TIME.total_seconds(),
-                ATTR_PROFILE: light_profile,
+                TargetKey.ENTITY_ID: light_id,
+                LightServiceArgument.TRANSITION: LIGHT_TRANSITION_TIME.total_seconds(),
+                LightServiceArgument.PROFILE: light_profile,
             },
         )
 
@@ -223,8 +221,11 @@ async def activate_automation(  # noqa: C901
             hass.async_create_task(
                 hass.services.async_call(
                     LIGHT_DOMAIN,
-                    SERVICE_TURN_ON,
-                    {ATTR_ENTITY_ID: light_ids, ATTR_PROFILE: light_profile},
+                    LightService.TURN_ON,
+                    {
+                        TargetKey.ENTITY_ID: light_ids,
+                        LightServiceArgument.PROFILE: light_profile,
+                    },
                 )
             )
 
@@ -241,7 +242,9 @@ async def activate_automation(  # noqa: C901
                 if now > start_point + index * LIGHT_TRANSITION_TIME:
                     hass.async_create_task(
                         hass.services.async_call(
-                            LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: light_id}
+                            LIGHT_DOMAIN,
+                            LightService.TURN_ON,
+                            {TargetKey.ENTITY_ID: light_id},
                         )
                     )
 
@@ -273,7 +276,7 @@ async def activate_automation(  # noqa: C901
         logger.info("Everyone has left but there are lights on. Turning them off")
         hass.async_create_task(
             hass.services.async_call(
-                LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: light_ids}
+                LIGHT_DOMAIN, LightService.TURN_OFF, {TargetKey.ENTITY_ID: light_ids}
             )
         )
 

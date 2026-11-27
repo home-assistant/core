@@ -1,8 +1,5 @@
 {
   "config": {
-    "abort": {
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
-    },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
@@ -68,8 +65,26 @@
     "fan_mode_failed": {
       "message": "Honeywell could not set fan mode"
     },
+    "hold_until_invalid_mode": {
+      "message": "Honeywell cannot set a temporary hold while the system mode is {mode}"
+    },
+    "hold_until_invalid_temperature": {
+      "message": "Honeywell temporary hold temperature {temperature} is not valid. Accepted range is {min_temp} to {max_temp}."
+    },
+    "hold_until_invalid_time": {
+      "message": "Honeywell temporary hold must end on a quarter hour"
+    },
+    "hold_until_temperature_mode": {
+      "message": "Honeywell cannot set a temporary hold temperature while the system mode is {mode}"
+    },
+    "no_devices_found": {
+      "message": "No Honeywell devices found"
+    },
     "set_hold_failed": {
       "message": "Honeywell could not set permanent hold"
+    },
+    "set_hold_until_failed": {
+      "message": "Honeywell could not set temporary hold"
     },
     "set_mode_failed": {
       "message": "Honeywell invalid system mode returned {mode}"
@@ -105,6 +120,22 @@
         },
         "description": "Additional Honeywell config options. Temperatures are set in Fahrenheit."
       }
+    }
+  },
+  "services": {
+    "set_hold_until": {
+      "description": "Sets a temporary hold that ends at a given time.",
+      "fields": {
+        "temperature": {
+          "description": "Target temperature during the hold. If omitted, the current target temperature is kept. Cannot be used while the system mode is auto.",
+          "name": "Temperature"
+        },
+        "until": {
+          "description": "Time of day on the thermostat's clock at which the hold ends. Must be on a quarter hour.",
+          "name": "Until"
+        }
+      },
+      "name": "Set hold until"
     }
   }
 }

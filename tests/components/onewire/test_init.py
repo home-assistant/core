@@ -2,9 +2,15 @@
 
 from unittest.mock import MagicMock, patch
 
-from aio_ownet.exceptions import OWServerReturnError
+from aio_ownet.exceptions import (
+    OWServerConnectionError,
+    OWServerProtocolError,
+    OWServerReturnError,
+)
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.onewire.const import DOMAIN
@@ -18,9 +24,6 @@ from homeassistant.setup import async_setup_component
 from . import setup_owproxy_mock_devices
 from .const import MOCK_OWPROXY_DEVICES
 
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.typing import WebSocketGenerator
-
 
 @pytest.mark.usefixtures("owproxy_with_connerror")
 async def test_connect_failure(
@@ -32,20 +35,32 @@ async def test_connect_failure(
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert config_entry.error_reason_translation_key == "cannot_connect"
 
 
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(OWServerReturnError(-1), id="return_error"),
+        pytest.param(OWServerProtocolError("Malformed header"), id="protocol_error"),
+    ],
+)
 async def test_listing_failure(
-    hass: HomeAssistant, config_entry: MockConfigEntry, owproxy: MagicMock
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    owproxy: MagicMock,
+    exception: Exception,
 ) -> None:
     """Test listing failure raises ConfigEntryNotReady."""
-    owproxy.return_value.read.side_effect = OWServerReturnError(-1)
-    owproxy.return_value.dir.side_effect = OWServerReturnError(-1)
+    setup_owproxy_mock_devices(owproxy, [])
+    owproxy.return_value.dir.side_effect = exception
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert config_entry.error_reason_translation_key == "cannot_connect"
 
 
 async def test_unload_entry(
@@ -110,6 +125,63 @@ async def test_registry_delayed(
     )
 
 
+async def test_scan_for_new_devices_failure(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    owproxy: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the periodic device scan survives server errors."""
+    setup_owproxy_mock_devices(owproxy, [])
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    owproxy.return_value.dir.side_effect = OWServerConnectionError("Unreachable")
+    for _ in range(2):
+        freezer.tick(_DEVICE_SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert caplog.text.count("Error scanning for new devices: Unreachable") == 1
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    setup_owproxy_mock_devices(owproxy, ["1F.111111111111"])
+    freezer.tick(_DEVICE_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "Scanning for new devices recovered" in caplog.text
+    assert (
+        len(dr.async_entries_for_config_entry(device_registry, config_entry.entry_id))
+        == 2
+    )
+
+
+async def test_device_via_device_links(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    owproxy: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a coupler branch device links to its parent via via_device_id."""
+    # The 1F coupler exposes a 1D device on its "main" branch.
+    setup_owproxy_mock_devices(owproxy, ["1F.111111111111"])
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    parent_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "1F.111111111111"), config_entry.entry_id
+    )
+    assert parent_device is not None
+
+    child_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "1D.111111111111"), config_entry.entry_id
+    )
+    assert child_device is not None
+    assert child_device.via_device_id == parent_device.id
+
+
 @patch("homeassistant.components.onewire._PLATFORMS", [Platform.SENSOR])
 async def test_registry_cleanup(
     hass: HomeAssistant,
@@ -137,16 +209,127 @@ async def test_registry_cleanup(
     assert len(dr.async_entries_for_config_entry(device_registry, entry_id)) == 2
 
     # Try to remove "10.111111111111" - fails as it is live
-    device = device_registry.async_get_device(identifiers={(DOMAIN, live_id)})
+    device = device_registry.async_get_device_by_identifier((DOMAIN, live_id), entry_id)
     client = await hass_ws_client(hass)
-    response = await client.remove_device(device.id, entry_id)
+    response = await client.remove_device(device.id)
     assert not response["success"]
     assert len(dr.async_entries_for_config_entry(device_registry, entry_id)) == 2
-    assert device_registry.async_get_device(identifiers={(DOMAIN, live_id)}) is not None
+    assert (
+        device_registry.async_get_device_by_identifier((DOMAIN, live_id), entry_id)
+        is not None
+    )
 
     # Try to remove "28.111111111111" - succeeds as it is dead
-    device = device_registry.async_get_device(identifiers={(DOMAIN, dead_id)})
-    response = await client.remove_device(device.id, entry_id)
+    device = device_registry.async_get_device_by_identifier((DOMAIN, dead_id), entry_id)
+    response = await client.remove_device(device.id)
     assert response["success"]
     assert len(dr.async_entries_for_config_entry(device_registry, entry_id)) == 1
-    assert device_registry.async_get_device(identifiers={(DOMAIN, dead_id)}) is None
+    assert (
+        device_registry.async_get_device_by_identifier((DOMAIN, dead_id), entry_id)
+        is None
+    )
+
+
+@patch("homeassistant.components.onewire._PLATFORMS", [Platform.SENSOR])
+async def test_registry_cleanup_after_scan(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+    owproxy: MagicMock,
+    hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test removing a device disconnected without reload, then reconnected."""
+    assert await async_setup_component(hass, "config", {})
+
+    entry_id = config_entry.entry_id
+    live_id = "10.111111111111"
+    dead_id = "28.111111111111"
+    dead_entity_id = "sensor.28_111111111111_temperature"
+
+    setup_owproxy_mock_devices(owproxy, [live_id, dead_id])
+    await hass.config_entries.async_setup(entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get(dead_entity_id) is not None
+
+    # Device is no longer on bus at the next scan
+    setup_owproxy_mock_devices(owproxy, [live_id])
+    freezer.tick(_DEVICE_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    client = await hass_ws_client(hass)
+    device = device_registry.async_get_device_by_identifier((DOMAIN, live_id), entry_id)
+    response = await client.remove_device(device.id)
+    assert not response["success"]
+
+    device = device_registry.async_get_device_by_identifier((DOMAIN, dead_id), entry_id)
+    response = await client.remove_device(device.id)
+    assert response["success"]
+    await hass.async_block_till_done()
+    assert hass.states.get(dead_entity_id) is None
+
+    # Device is reconnected, and added again at the next scan
+    setup_owproxy_mock_devices(owproxy, [live_id, dead_id])
+    freezer.tick(_DEVICE_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (
+        device_registry.async_get_device_by_identifier((DOMAIN, dead_id), entry_id)
+        is not None
+    )
+    assert hass.states.get(dead_entity_id) is not None
+
+
+@patch("homeassistant.components.onewire._PLATFORMS", [Platform.SENSOR])
+async def test_registry_cleanup_reconnect_parent(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+    owproxy: MagicMock,
+    hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test branch devices are linked again when a removed coupler reconnects."""
+    assert await async_setup_component(hass, "config", {})
+
+    entry_id = config_entry.entry_id
+    parent_id = "1F.111111111111"
+    child_id = "1D.111111111111"
+
+    setup_owproxy_mock_devices(owproxy, [parent_id])
+    await hass.config_entries.async_setup(entry_id)
+    await hass.async_block_till_done()
+
+    # Coupler and branch device are no longer on bus at the next scan
+    setup_owproxy_mock_devices(owproxy, [])
+    freezer.tick(_DEVICE_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Only the coupler is removed
+    client = await hass_ws_client(hass)
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, parent_id), entry_id
+    )
+    response = await client.remove_device(device.id)
+    assert response["success"]
+    child_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, child_id), entry_id
+    )
+    assert child_device.via_device_id is None
+
+    # Coupler is reconnected at the next scan
+    setup_owproxy_mock_devices(owproxy, [parent_id])
+    freezer.tick(_DEVICE_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    parent_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, parent_id), entry_id
+    )
+    child_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, child_id), entry_id
+    )
+    assert child_device.via_device_id == parent_device.id

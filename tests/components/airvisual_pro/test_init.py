@@ -2,13 +2,12 @@
 
 from unittest.mock import Mock, patch
 
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.airvisual_pro.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-
-from tests.common import MockConfigEntry
 
 
 async def test_device_registry(
@@ -23,5 +22,7 @@ async def test_device_registry(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "XXXXXXX")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "XXXXXXX"), config_entry.entry_id
+    )
     assert device_entry == snapshot

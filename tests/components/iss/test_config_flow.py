@@ -2,13 +2,13 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.iss.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_SHOW_ON_MAP
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 async def test_create_entry(hass: HomeAssistant) -> None:
@@ -21,7 +21,7 @@ async def test_create_entry(hass: HomeAssistant) -> None:
     assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
 
-    with patch("homeassistant.components.iss.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.iss.async_setup_entry", return_value=None):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {},
@@ -40,7 +40,7 @@ async def test_integration_already_exists(hass: HomeAssistant) -> None:
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data={}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     assert result.get("type") is FlowResultType.ABORT
@@ -57,7 +57,7 @@ async def test_options(hass: HomeAssistant) -> None:
 
     config_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.iss.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.iss.async_setup_entry", return_value=None):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         optionflow = await hass.config_entries.options.async_init(config_entry.entry_id)

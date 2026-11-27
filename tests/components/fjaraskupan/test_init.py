@@ -2,18 +2,17 @@
 
 from fjaraskupan import ANNOUNCE_MANUFACTURER, DEVICE_NAME
 from habluetooth import BluetoothServiceInfo
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import (
+    inject_bluetooth_service_info,
+    patch_discovered_devices,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.fjaraskupan.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import (
-    inject_bluetooth_service_info,
-    patch_discovered_devices,
-)
-from tests.typing import WebSocketGenerator
 
 MOCK_SERVICE_INFO_DISCOVERY = BluetoothServiceInfo(
     address="11:11:11:11:11:11",
@@ -55,8 +54,8 @@ async def test_setup(
     )
 
     await hass.async_block_till_done()
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_SERVICE_INFO_DISCOVERY.address)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERVICE_INFO_DISCOVERY.address), config_entry.entry_id
     )
     assert device_entry is not None
     assert device_entry.manufacturer == "Fjäråskupan"
@@ -95,8 +94,8 @@ async def test_setup_ignore_device(
     )
 
     await hass.async_block_till_done()
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_SERVICE_INFO_DISCOVERY.address)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERVICE_INFO_DISCOVERY.address), config_entry.entry_id
     )
     assert device_entry is None
 
@@ -119,20 +118,20 @@ async def test_remove_device(
     inject_bluetooth_service_info(hass, MOCK_SERVICE_INFO_DISCOVERY)
 
     await hass.async_block_till_done()
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_SERVICE_INFO_DISCOVERY.address)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERVICE_INFO_DISCOVERY.address), config_entry.entry_id
     )
     assert device_entry
 
     client = await hass_ws_client(hass)
-    response = await client.remove_device(device_entry.id, config_entry.entry_id)
+    response = await client.remove_device(device_entry.id)
     assert not response["success"]
 
     await hass.async_block_till_done()
     assert device_registry.async_get(device_entry.id)
 
     with patch_discovered_devices([]):
-        response = await client.remove_device(device_entry.id, config_entry.entry_id)
+        response = await client.remove_device(device_entry.id)
         assert response["success"]
 
         await hass.async_block_till_done()

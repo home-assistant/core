@@ -1,0 +1,498 @@
+"""Coordinators for Google Health."""
+
+import asyncio
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+import logging
+from typing import TYPE_CHECKING, override
+
+from google_health_api import GoogleHealthApi
+from google_health_api.exceptions import (
+    GoogleHealthApiError,
+    HealthApiForbiddenException,
+    HealthAuthException,
+)
+from google_health_api.model import (
+    ActiveEnergyBurnedRollupValue,
+    ActiveMinutesRollupValue,
+    ActiveZoneMinutesRollupValue,
+    AltitudeRollupValue,
+    Bmi,
+    BodyFat,
+    DailyHeartRateVariability,
+    DailyOxygenSaturation,
+    DailyRespiratoryRate,
+    DailyRestingHeartRate,
+    DailyVO2Max,
+    DistanceRollupValue,
+    FloorsRollupValue,
+    Height,
+    HydrationLogRollupValue,
+    NutritionLogRollupValue,
+    PairedDevice,
+    SedentaryPeriodRollupValue,
+    Sleep,
+    StepsRollupValue,
+    TotalCaloriesRollupValue,
+    Weight,
+)
+
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
+
+from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from . import GoogleHealthConfigEntry
+
+_LOGGER = logging.getLogger(__name__)
+
+POLLING_INTERVAL = timedelta(minutes=15)
+BODY_POLLING_INTERVAL = timedelta(hours=1)
+DEVICE_POLLING_INTERVAL = timedelta(hours=1)
+DEFAULT_PAGE_SIZE = 1
+SLEEP_PAGE_SIZE = 10
+
+
+@dataclass
+class GoogleHealthActivityData:
+    """Class to hold activity data."""
+
+    steps: StepsRollupValue | None = None
+    distance: DistanceRollupValue | None = None
+    active_energy_burned: ActiveEnergyBurnedRollupValue | None = None
+    total_calories: TotalCaloriesRollupValue | None = None
+    floors: FloorsRollupValue | None = None
+    altitude: AltitudeRollupValue | None = None
+    active_minutes: ActiveMinutesRollupValue | None = None
+    active_zone_minutes: ActiveZoneMinutesRollupValue | None = None
+    sedentary_period: SedentaryPeriodRollupValue | None = None
+    rollup_start: datetime | None = None
+
+    @property
+    def altitude_gain_millimeters(self) -> int | None:
+        """Return daily elevation gain in millimeters."""
+        return self.altitude.gain_millimeters_sum if self.altitude else None
+
+    def _active_minutes_for(self, level: str) -> int | None:
+        """Return daily active duration in minutes for an activity level."""
+        if not self.active_minutes:
+            return None
+        return next(
+            (
+                item.active_minutes_sum
+                for item in self.active_minutes.active_minutes_rollup_by_activity_level
+                if item.activity_level == level and item.active_minutes_sum is not None
+            ),
+            None,
+        )
+
+    @property
+    def light_activity_minutes(self) -> int | None:
+        """Return daily light activity duration in minutes."""
+        return self._active_minutes_for("LIGHT")
+
+    @property
+    def moderate_activity_minutes(self) -> int | None:
+        """Return daily moderate activity duration in minutes."""
+        return self._active_minutes_for("MODERATE")
+
+    @property
+    def vigorous_activity_minutes(self) -> int | None:
+        """Return daily vigorous activity duration in minutes."""
+        return self._active_minutes_for("VIGOROUS")
+
+    @property
+    def fat_burn_active_zone_minutes(self) -> int | None:
+        """Return daily fat burn active zone minutes."""
+        return (
+            self.active_zone_minutes.sum_in_fat_burn_heart_zone
+            if self.active_zone_minutes
+            else None
+        )
+
+    @property
+    def cardio_active_zone_minutes(self) -> int | None:
+        """Return daily cardio active zone minutes."""
+        return (
+            self.active_zone_minutes.sum_in_cardio_heart_zone
+            if self.active_zone_minutes
+            else None
+        )
+
+    @property
+    def peak_active_zone_minutes(self) -> int | None:
+        """Return daily peak active zone minutes."""
+        return (
+            self.active_zone_minutes.sum_in_peak_heart_zone
+            if self.active_zone_minutes
+            else None
+        )
+
+    @property
+    def total_active_zone_minutes(self) -> int | None:
+        """Return total daily active zone minutes across all heart rate zones."""
+        if self.active_zone_minutes is None:
+            return None
+        return (
+            (self.fat_burn_active_zone_minutes or 0)
+            + (self.cardio_active_zone_minutes or 0)
+            + (self.peak_active_zone_minutes or 0)
+        )
+
+    @property
+    def sedentary_duration(self) -> timedelta | None:
+        """Return daily sedentary duration."""
+        return self.sedentary_period.duration_sum if self.sedentary_period else None
+
+
+@dataclass
+class GoogleHealthBodyData:
+    """Class to hold body measurements."""
+
+    weight: Weight | None = None
+    height: Height | None = None
+    bmi: Bmi | None = None
+    resting_heart_rate: DailyRestingHeartRate | None = None
+    body_fat: BodyFat | None = None
+    heart_rate_variability: DailyHeartRateVariability | None = None
+    oxygen_saturation: DailyOxygenSaturation | None = None
+    respiratory_rate: DailyRespiratoryRate | None = None
+    vo2_max: DailyVO2Max | None = None
+
+
+class GoogleHealthDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
+    """Base coordinator for Google Health API."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        logger: logging.Logger,
+        name: str,
+        update_interval: timedelta,
+        entry: GoogleHealthConfigEntry,
+        api_client: GoogleHealthApi,
+    ) -> None:
+        """Initialize the coordinator."""
+        self.api = api_client
+        super().__init__(
+            hass,
+            logger,
+            name=name,
+            update_interval=update_interval,
+            config_entry=entry,
+        )
+
+    @override
+    async def _async_update_data(self) -> _DataT:
+        """Fetch data from API."""
+        try:
+            return await self._async_fetch_data()
+        except (HealthAuthException, HealthApiForbiddenException) as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="auth_error",
+            ) from err
+        except GoogleHealthApiError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+            ) from err
+
+    async def _async_fetch_data(self) -> _DataT:
+        """Fetch data from API."""
+        raise NotImplementedError
+
+
+class GoogleHealthActivityCoordinator(
+    GoogleHealthDataUpdateCoordinator[GoogleHealthActivityData]
+):
+    """Coordinator to fetch activity data from Google Health API."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: GoogleHealthConfigEntry,
+        api_client: GoogleHealthApi,
+    ) -> None:
+        """Initialize the coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=f"{DOMAIN}_activity",
+            update_interval=POLLING_INTERVAL,
+            entry=entry,
+            api_client=api_client,
+        )
+
+    @override
+    async def _async_fetch_data(self) -> GoogleHealthActivityData:
+        """Fetch activity rollups for today.
+
+        Queries the daily rollup endpoints using Home Assistant's local time
+        zone. If no data points exist for today yet, the API returns None,
+        which the sensors default to 0.
+        """
+        rollup_start = dt_util.start_of_local_day()
+        (
+            steps_rollup,
+            distance_rollup,
+            active_energy_rollup,
+            total_calories_rollup,
+            floors_rollup,
+            altitude_rollup,
+            active_minutes_rollup,
+            active_zone_minutes_rollup,
+            sedentary_period_rollup,
+        ) = await asyncio.gather(
+            self.api.steps.today(self.hass.config.time_zone),
+            self.api.distance.today(self.hass.config.time_zone),
+            self.api.active_energy_burned.today(self.hass.config.time_zone),
+            self.api.total_calories.today(self.hass.config.time_zone),
+            self.api.floors.today(self.hass.config.time_zone),
+            self.api.altitude.today(self.hass.config.time_zone),
+            self.api.active_minutes.today(self.hass.config.time_zone),
+            self.api.active_zone_minutes.today(self.hass.config.time_zone),
+            self.api.sedentary_period.today(self.hass.config.time_zone),
+        )
+
+        steps = steps_rollup.data if steps_rollup else None
+        distance = distance_rollup.data if distance_rollup else None
+        active_energy_burned = (
+            active_energy_rollup.data if active_energy_rollup else None
+        )
+        total_calories = total_calories_rollup.data if total_calories_rollup else None
+        floors = floors_rollup.data if floors_rollup else None
+        altitude = altitude_rollup.data if altitude_rollup else None
+        active_minutes = active_minutes_rollup.data if active_minutes_rollup else None
+        active_zone_minutes = (
+            active_zone_minutes_rollup.data if active_zone_minutes_rollup else None
+        )
+        sedentary_period = (
+            sedentary_period_rollup.data if sedentary_period_rollup else None
+        )
+
+        return GoogleHealthActivityData(
+            steps=steps,
+            distance=distance,
+            active_energy_burned=active_energy_burned,
+            total_calories=total_calories,
+            floors=floors,
+            altitude=altitude,
+            active_minutes=active_minutes,
+            active_zone_minutes=active_zone_minutes,
+            sedentary_period=sedentary_period,
+            rollup_start=rollup_start,
+        )
+
+
+class GoogleHealthBodyCoordinator(
+    GoogleHealthDataUpdateCoordinator[GoogleHealthBodyData]
+):
+    """Coordinator to fetch body measurements from Google Health API."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: GoogleHealthConfigEntry,
+        api_client: GoogleHealthApi,
+    ) -> None:
+        """Initialize the coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=f"{DOMAIN}_body",
+            update_interval=BODY_POLLING_INTERVAL,
+            entry=entry,
+            api_client=api_client,
+        )
+
+    @override
+    async def _async_fetch_data(self) -> GoogleHealthBodyData:
+        """Fetch latest body measurements and vitals in parallel."""
+        # The Google Health API returns data points sorted by interval start time
+        # in descending order (newest first). Querying with page_size=1 and grabbing
+        # the first element is sufficient to fetch the most recent measurement.
+        # Nested gathers keep mypy tuple types inferred (overloads stop at 6).
+        (
+            (weight_result, height_result, hr_result, body_fat_result),
+            (hrv_result, spo2_result, respiratory_rate_result, vo2_max_result),
+        ) = await asyncio.gather(
+            asyncio.gather(
+                self.api.weight.list(page_size=DEFAULT_PAGE_SIZE),
+                self.api.height.list(page_size=DEFAULT_PAGE_SIZE),
+                self.api.daily_resting_heart_rate.list(page_size=DEFAULT_PAGE_SIZE),
+                self.api.body_fat.list(page_size=DEFAULT_PAGE_SIZE),
+            ),
+            asyncio.gather(
+                self.api.daily_heart_rate_variability.list(page_size=DEFAULT_PAGE_SIZE),
+                self.api.daily_oxygen_saturation.list(page_size=DEFAULT_PAGE_SIZE),
+                self.api.daily_respiratory_rate.list(page_size=DEFAULT_PAGE_SIZE),
+                self.api.daily_vo2_max.list(page_size=DEFAULT_PAGE_SIZE),
+            ),
+        )
+        bmi_result = await self.api.bmi.list(
+            page_size=DEFAULT_PAGE_SIZE,
+            weight_result=weight_result,
+            height_result=height_result,
+        )
+
+        weight = (
+            weight_result.data_points[0].data if weight_result.data_points else None
+        )
+        height = (
+            height_result.data_points[0].data if height_result.data_points else None
+        )
+        bmi = bmi_result.data_points[0].data if bmi_result.data_points else None
+        resting_heart_rate = (
+            hr_result.data_points[0].data if hr_result.data_points else None
+        )
+        body_fat = (
+            body_fat_result.data_points[0].data if body_fat_result.data_points else None
+        )
+        heart_rate_variability = (
+            hrv_result.data_points[0].data if hrv_result.data_points else None
+        )
+        oxygen_saturation = (
+            spo2_result.data_points[0].data if spo2_result.data_points else None
+        )
+        respiratory_rate = (
+            respiratory_rate_result.data_points[0].data
+            if respiratory_rate_result.data_points
+            else None
+        )
+        vo2_max = (
+            vo2_max_result.data_points[0].data if vo2_max_result.data_points else None
+        )
+
+        return GoogleHealthBodyData(
+            weight=weight,
+            height=height,
+            bmi=bmi,
+            resting_heart_rate=resting_heart_rate,
+            body_fat=body_fat,
+            heart_rate_variability=heart_rate_variability,
+            oxygen_saturation=oxygen_saturation,
+            respiratory_rate=respiratory_rate,
+            vo2_max=vo2_max,
+        )
+
+
+class GoogleHealthDeviceCoordinator(
+    GoogleHealthDataUpdateCoordinator[dict[str, PairedDevice]]
+):
+    """Coordinator to fetch paired devices from Google Health API."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: GoogleHealthConfigEntry,
+        api_client: GoogleHealthApi,
+    ) -> None:
+        """Initialize the coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=f"{DOMAIN}_devices",
+            update_interval=DEVICE_POLLING_INTERVAL,
+            entry=entry,
+            api_client=api_client,
+        )
+
+    @override
+    async def _async_fetch_data(self) -> dict[str, PairedDevice]:
+        """Fetch paired devices."""
+        devices: dict[str, PairedDevice] = {}
+        result = await self.api.paired_devices.list()
+        async for page in result:
+            for device in page.paired_devices:
+                devices[device.device_id] = device
+        return devices
+
+
+@dataclass
+class GoogleHealthSleepData:
+    """Class to hold sleep data."""
+
+    # The most recent sleep session with summary data
+    sleep: Sleep | None = None
+
+
+class GoogleHealthSleepCoordinator(
+    GoogleHealthDataUpdateCoordinator[GoogleHealthSleepData]
+):
+    """Coordinator to fetch sleep data from Google Health API."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: GoogleHealthConfigEntry,
+        api_client: GoogleHealthApi,
+    ) -> None:
+        """Initialize the coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=f"{DOMAIN}_sleep",
+            update_interval=BODY_POLLING_INTERVAL,
+            entry=entry,
+            api_client=api_client,
+        )
+
+    @override
+    async def _async_fetch_data(self) -> GoogleHealthSleepData:
+        """Fetch latest sleep session."""
+        sleep_result = await self.api.sleep.list(page_size=SLEEP_PAGE_SIZE)
+
+        # Find the first session with a sleep summary
+        for data_point in sleep_result.data_points or ():
+            if data_point.data.summary:
+                return GoogleHealthSleepData(sleep=data_point.data)
+
+        # No sessions or current session still in progress
+        return GoogleHealthSleepData()
+
+
+@dataclass
+class GoogleHealthNutritionData:
+    """Class to hold hydration and nutrition data."""
+
+    hydration: HydrationLogRollupValue | None = None
+    nutrition: NutritionLogRollupValue | None = None
+
+
+class GoogleHealthNutritionCoordinator(
+    GoogleHealthDataUpdateCoordinator[GoogleHealthNutritionData]
+):
+    """Coordinator to fetch nutrition data from Google Health API."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: GoogleHealthConfigEntry,
+        api_client: GoogleHealthApi,
+    ) -> None:
+        """Initialize the coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=f"{DOMAIN}_nutrition",
+            update_interval=POLLING_INTERVAL,
+            entry=entry,
+            api_client=api_client,
+        )
+
+    @override
+    async def _async_fetch_data(self) -> GoogleHealthNutritionData:
+        """Fetch hydration and nutrition rollups for today."""
+        hydration_rollup, nutrition_rollup = await asyncio.gather(
+            self.api.hydration_log.today(self.hass.config.time_zone),
+            self.api.nutrition_log.today(self.hass.config.time_zone),
+        )
+
+        return GoogleHealthNutritionData(
+            hydration=hydration_rollup.data if hydration_rollup else None,
+            nutrition=nutrition_rollup.data if nutrition_rollup else None,
+        )

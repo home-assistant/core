@@ -5,7 +5,7 @@ from typing import Any, override
 
 from meteoclimatic import MeteoclimaticClient
 from meteoclimatic.exceptions import MeteoclimaticError, StationNotFound
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 
@@ -26,9 +26,9 @@ class MeteoclimaticFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_STATION_CODE, default=user_input.get(CONF_STATION_CODE, "")
                     ): str
                 }

@@ -12,7 +12,7 @@ from homeassistant.const import CONF_DEVICE, CONF_ID, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import CONNECT_RETRIES, DEFAULT_SCAN_INTERVAL, DOMAIN, REOPEN_DELAYS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,10 +21,10 @@ _LOGGER = logging.getLogger(__name__)
 class BRouteData:
     """Class for data of the B Route."""
 
-    instantaneous_current_r_phase: float
-    instantaneous_current_t_phase: float
-    instantaneous_power: float
-    total_consumption: float
+    instantaneous_current_r_phase: float | None
+    instantaneous_current_t_phase: float | None
+    instantaneous_power: float | None
+    total_consumption: float | None
 
 
 type BRouteConfigEntry = ConfigEntry[BRouteUpdateCoordinator]
@@ -55,7 +55,14 @@ class BRouteUpdateCoordinator(DataUpdateCoordinator[BRouteData]):
         self.bid = entry.data[CONF_ID]
         self._password = entry.data[CONF_PASSWORD]
 
-        self.api = Momonga(dev=self.device, rbid=self.bid, pwd=self._password)
+        self.api = Momonga(
+            dev=self.device,
+            rbid=self.bid,
+            pwd=self._password,
+            reopen_delays=REOPEN_DELAYS,
+            scan_retries=CONNECT_RETRIES,
+            join_retries=CONNECT_RETRIES,
+        )
 
         super().__init__(
             hass,
@@ -97,6 +104,9 @@ class BRouteUpdateCoordinator(DataUpdateCoordinator[BRouteData]):
 
     def _get_data(self) -> BRouteData:
         """Get the data from API."""
+        if not self.api.is_open:
+            # The session is left closed when momonga gives up recovering it
+            self.api.reopen()
         current = self.api.get_instantaneous_current()
         return BRouteData(
             instantaneous_current_r_phase=current["r phase current"],

@@ -9,8 +9,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import ACMEDA_ENTITY_REMOVE, ACMEDA_HUB_UPDATE, LOGGER
+from .const import ACMEDA_HUB_UPDATE, LOGGER
 from .helpers import update_devices
+
+type AcmedaConfigEntry = ConfigEntry[PulseHub]
 
 
 class PulseHub:
@@ -18,12 +20,11 @@ class PulseHub:
 
     api: aiopulse.Hub
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: AcmedaConfigEntry) -> None:
         """Initialize the system."""
         self.config_entry = config_entry
         self.hass = hass
         self.tasks: list[asyncio.Task[None]] = []
-        self.current_rollers: dict[int, aiopulse.Roller] = {}
         self.cleanup_callbacks: list[Callable[[], None]] = []
 
     @property
@@ -36,7 +37,7 @@ class PulseHub:
         """Return the host of this hub."""
         return self.config_entry.data["host"]  # type: ignore[no-any-return]
 
-    async def async_setup(self, tries: int = 0) -> bool:
+    async def async_setup(self, tries: int = 0) -> None:
         """Set up a hub based on host parameter."""
         self.api = hub = aiopulse.Hub(self.host)
 
@@ -44,7 +45,6 @@ class PulseHub:
         self.tasks.append(asyncio.create_task(hub.run()))
 
         LOGGER.debug("Hub setup complete")
-        return True
 
     async def async_reset(self) -> bool:
         """Reset this hub to default state."""
@@ -79,11 +79,3 @@ class PulseHub:
             async_dispatcher_send(
                 self.hass, ACMEDA_HUB_UPDATE.format(self.config_entry.entry_id)
             )
-
-            for unique_id in list(self.current_rollers):
-                if unique_id not in self.api.rollers:
-                    LOGGER.debug("Notifying remove of %s", unique_id)
-                    self.current_rollers.pop(unique_id)
-                    async_dispatcher_send(
-                        self.hass, ACMEDA_ENTITY_REMOVE.format(unique_id)
-                    )

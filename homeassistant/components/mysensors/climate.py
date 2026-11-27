@@ -3,14 +3,12 @@
 from typing import Any, override
 
 from homeassistant.components.climate import (
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
     ClimateEntity,
     ClimateEntityFeature,
+    ClimateServiceArgument,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
+from homeassistant.const import Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -19,6 +17,7 @@ from homeassistant.util.unit_system import METRIC_SYSTEM
 from . import setup_mysensors_platform
 from .const import MYSENSORS_DISCOVERY, DiscoveryInfo
 from .entity import MySensorsChildEntity
+from .models import MySensorsConfigEntry
 
 DICT_HA_TO_MYS = {
     HVACMode.AUTO: "AutoChangeOver",
@@ -39,7 +38,7 @@ OPERATION_LIST = [HVACMode.OFF, HVACMode.AUTO, HVACMode.COOL, HVACMode.HEAT]
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MySensorsConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up this platform for a specific ConfigEntry(==Gateway)."""
@@ -47,11 +46,11 @@ async def async_setup_entry(
     async def async_discover(discovery_info: DiscoveryInfo) -> None:
         """Discover and add a MySensors climate."""
         setup_mysensors_platform(
-            hass,
+            config_entry,
             Platform.CLIMATE,
             discovery_info,
             MySensorsHVAC,
-            async_add_entities=async_add_entities,
+            async_add_entities,
         )
 
     config_entry.async_on_unload(
@@ -90,8 +89,8 @@ class MySensorsHVAC(MySensorsChildEntity, ClimateEntity):
 
     @property
     @override
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement."""
+    def native_temperature_unit(self) -> str:
+        """Return the unit of measurement used by the device."""
         return (
             UnitOfTemperature.CELSIUS
             if self.hass.config.units is METRIC_SYSTEM
@@ -100,7 +99,7 @@ class MySensorsHVAC(MySensorsChildEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         value: str | None = self._values.get(self.gateway.const.SetReq.V_TEMP)
         float_value: float | None = None
@@ -112,7 +111,7 @@ class MySensorsHVAC(MySensorsChildEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach.
 
         Either V_HVAC_SETPOINT_COOL or V_HVAC_SETPOINT_HEAT may be used.
@@ -125,14 +124,14 @@ class MySensorsHVAC(MySensorsChildEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature_high(self) -> float | None:
+    def native_target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""
         set_req = self.gateway.const.SetReq
         return float(self._values[set_req.V_HVAC_SETPOINT_COOL])
 
     @property
     @override
-    def target_temperature_low(self) -> float | None:
+    def native_target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
         set_req = self.gateway.const.SetReq
         return float(self._values[set_req.V_HVAC_SETPOINT_HEAT])
@@ -159,9 +158,9 @@ class MySensorsHVAC(MySensorsChildEntity, ClimateEntity):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         set_req = self.gateway.const.SetReq
-        temp = kwargs.get(ATTR_TEMPERATURE)
-        low = kwargs.get(ATTR_TARGET_TEMP_LOW)
-        high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
+        temp = kwargs.get(ClimateServiceArgument.TEMPERATURE)
+        low = kwargs.get(ClimateServiceArgument.TARGET_TEMP_LOW)
+        high = kwargs.get(ClimateServiceArgument.TARGET_TEMP_HIGH)
         heat = self._values.get(set_req.V_HVAC_SETPOINT_HEAT)
         cool = self._values.get(set_req.V_HVAC_SETPOINT_COOL)
         updates = []

@@ -1,14 +1,78 @@
 {
   "entity": {
     "binary_sensor": {
+      "generator_schedule_enabled": {
+        "default": "mdi:calendar-clock",
+        "state": {
+          "off": "mdi:calendar-remove"
+        }
+      },
       "grid_status": {
         "default": "mdi:transmission-tower",
         "state": {
           "off": "mdi:transmission-tower-off"
         }
+      },
+      "operating": {
+        "default": "mdi:cog",
+        "state": {
+          "off": "mdi:cog-off"
+        }
+      },
+      "producing": {
+        "default": "mdi:flash",
+        "state": {
+          "off": "mdi:flash-off"
+        }
+      }
+    },
+    "button": {
+      "acb_sleep": {
+        "default": "mdi:sleep"
+      },
+      "acb_wake": {
+        "default": "mdi:sleep-off"
+      }
+    },
+    "select": {
+      "acb_sleep_soc": {
+        "default": "mdi:battery-clock"
       }
     },
     "sensor": {
+      "acb_aggregate_sleep_state": {
+        "default": "mdi:sleep",
+        "state": {
+          "awake": "mdi:sleep-off",
+          "mixed": "mdi:dots-horizontal",
+          "waking": "mdi:sleep-off"
+        }
+      },
+      "acb_battery_charge_status": {
+        "default": "mdi:battery",
+        "state": {
+          "charging": "mdi:battery-charging",
+          "discharging": "mdi:battery-arrow-down",
+          "idle": "mdi:battery"
+        }
+      },
+      "acb_battery_sleep_soc_target": {
+        "default": "mdi:battery-clock-outline"
+      },
+      "acb_battery_sleep_state": {
+        "default": "mdi:sleep",
+        "state": {
+          "awake": "mdi:sleep-off",
+          "waking": "mdi:sleep-off"
+        }
+      },
+      "acb_battery_state": {
+        "default": "mdi:battery",
+        "state": {
+          "charging": "mdi:battery-charging",
+          "discharging": "mdi:battery-arrow-down"
+        }
+      },
       "admin_state": {
         "default": "mdi:transmission-tower",
         "state": {
@@ -17,6 +81,12 @@
       },
       "available_energy": {
         "default": "mdi:battery-50"
+      },
+      "comm_level_2_4_ghz": {
+        "default": "mdi:signal"
+      },
+      "comm_level_sub_ghz": {
+        "default": "mdi:signal"
       },
       "current_power_production": {
         "default": "mdi:solar-power"
@@ -29,6 +99,21 @@
       },
       "daily_production_phase": {
         "default": "mdi:solar-power"
+      },
+      "generator_admin_state": {
+        "default": "mdi:engine"
+      },
+      "generator_gen_type": {
+        "default": "mdi:engine"
+      },
+      "generator_oper_state": {
+        "default": "mdi:engine"
+      },
+      "generator_requested_mode": {
+        "default": "mdi:engine"
+      },
+      "generator_start_method": {
+        "default": "mdi:engine"
       },
       "grid_status": {
         "default": "mdi:transmission-tower",

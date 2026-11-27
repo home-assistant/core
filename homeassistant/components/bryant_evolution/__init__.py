@@ -29,13 +29,13 @@ async def _can_reach_device(client: BryantEvolutionLocalClient) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: BryantEvolutionConfigEntry
-) -> bool:
+) -> None:
     """Set up Bryant Evolution from a config entry."""
 
     # Add a device for the SAM itself.
     sam_uid = names.sam_device_uid(entry)
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    sam_device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, sam_uid)},
         manufacturer="Bryant",
@@ -55,7 +55,7 @@ async def async_setup_entry(
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, names.system_device_uid(sam_uid, sys_id))},
-            via_device=(DOMAIN, names.sam_device_uid(entry)),
+            via_device_id=sam_device.id,
             manufacturer="Bryant",
             name=f"System {sys_id}",
         )
@@ -73,11 +73,10 @@ async def async_setup_entry(
         except FileNotFoundError as f:
             raise ConfigEntryNotReady from f
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: BryantEvolutionConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

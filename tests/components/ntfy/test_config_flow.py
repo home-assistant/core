@@ -1,6 +1,6 @@
 """Test the ntfy config flow."""
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 from unittest.mock import AsyncMock
 
@@ -11,6 +11,7 @@ from aiontfy.exceptions import (
     NtfyUnauthorizedAuthenticationError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.ntfy.const import (
@@ -35,8 +36,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
@@ -269,7 +268,7 @@ async def test_add_topic_flow(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("mock_aiontfy")
-async def test_generated_topic(hass: HomeAssistant, mock_random: AsyncMock) -> None:
+async def test_generated_topic(hass: HomeAssistant) -> None:
     """Test add topic subentry flow with generated topic name."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -296,6 +295,8 @@ async def test_generated_topic(hass: HomeAssistant, mock_random: AsyncMock) -> N
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "add_topic"
+    topic_key = next(key for key in result["data_schema"].schema if key == CONF_TOPIC)
+    assert topic_key.description == {"suggested_value": "a" * 16}
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
@@ -304,8 +305,6 @@ async def test_generated_topic(hass: HomeAssistant, mock_random: AsyncMock) -> N
             SECTION_FILTER: {},
         },
     )
-
-    mock_random.assert_called_once()
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
@@ -450,8 +449,7 @@ async def test_flow_reauth(
         },
     )
     mock_aiontfy.generate_token.return_value = AccountTokenResponse(
-        token="newtoken",
-        last_access=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
+        token="newtoken", last_access=datetime(1970, 1, 1, 0, 0, 0, tzinfo=UTC)
     )
     config_entry.add_to_hass(hass)
     result = await config_entry.start_reauth_flow(hass)
@@ -510,8 +508,7 @@ async def test_form_reauth_errors(
     )
     mock_aiontfy.account.side_effect = exception
     mock_aiontfy.generate_token.return_value = AccountTokenResponse(
-        token="newtoken",
-        last_access=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
+        token="newtoken", last_access=datetime(1970, 1, 1, 0, 0, 0, tzinfo=UTC)
     )
     config_entry.add_to_hass(hass)
     result = await config_entry.start_reauth_flow(hass)
@@ -597,8 +594,7 @@ async def test_flow_reconfigure(
         },
     )
     mock_aiontfy.generate_token.return_value = AccountTokenResponse(
-        token="newtoken",
-        last_access=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
+        token="newtoken", last_access=datetime(1970, 1, 1, 0, 0, 0, tzinfo=UTC)
     )
     config_entry.add_to_hass(hass)
     result = await config_entry.start_reconfigure_flow(hass)
@@ -700,8 +696,7 @@ async def test_flow_reconfigure_errors(
         },
     )
     mock_aiontfy.generate_token.return_value = AccountTokenResponse(
-        token="newtoken",
-        last_access=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
+        token="newtoken", last_access=datetime(1970, 1, 1, 0, 0, 0, tzinfo=UTC)
     )
     mock_aiontfy.account.side_effect = exception
 

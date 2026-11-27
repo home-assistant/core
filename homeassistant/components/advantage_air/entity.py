@@ -5,11 +5,13 @@ from typing import Any
 from advantage_air import ApiError
 
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import AdvantageAirCoordinator
+from .helpers import get_system_id
 
 
 class AdvantageAirEntity(CoordinatorEntity[AdvantageAirCoordinator]):
@@ -20,7 +22,7 @@ class AdvantageAirEntity(CoordinatorEntity[AdvantageAirCoordinator]):
     def __init__(self, coordinator: AdvantageAirCoordinator) -> None:
         """Initialize common aspects of an Advantage Air entity."""
         super().__init__(coordinator)
-        self._attr_unique_id: str = self.coordinator.data["system"]["rid"]
+        self._attr_unique_id: str = get_system_id(self.coordinator.data["system"])
 
     def update_handle_factory(self, func, *keys):
         """Return the provided API function wrapped.
@@ -49,7 +51,11 @@ class AdvantageAirAcEntity(AdvantageAirEntity):
         self._attr_unique_id += f"-{ac_key}"
 
         self._attr_device_info = DeviceInfo(
-            via_device=(DOMAIN, self.coordinator.data["system"]["rid"]),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.coordinator.hass,
+                (DOMAIN, get_system_id(self.coordinator.data["system"])),
+                config_entry_id=self.coordinator.config_entry.entry_id,
+            ),
             identifiers={(DOMAIN, self._attr_unique_id)},
             manufacturer="Advantage Air",
             model=self.coordinator.data["system"]["sysType"],
@@ -105,7 +111,11 @@ class AdvantageAirThingEntity(AdvantageAirEntity):
         self._attr_unique_id += f"-{self._id}"
 
         self._attr_device_info = DeviceInfo(
-            via_device=(DOMAIN, self.coordinator.data["system"]["rid"]),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.coordinator.hass,
+                (DOMAIN, get_system_id(self.coordinator.data["system"])),
+                config_entry_id=self.coordinator.config_entry.entry_id,
+            ),
             identifiers={(DOMAIN, self._attr_unique_id)},
             manufacturer="Advantage Air",
             model="MyPlace",

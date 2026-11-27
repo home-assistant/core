@@ -16,7 +16,6 @@ from miio.integrations.humidifier.zhimi.airhumidifier_miot import (
 )
 
 from homeassistant.components.humidifier import (
-    ATTR_HUMIDITY,
     HumidifierDeviceClass,
     HumidifierEntity,
     HumidifierEntityFeature,
@@ -28,6 +27,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.percentage import percentage_to_ranged_value
 
 from .const import (
+    ATTR_HUMIDITY,
     CONF_FLOW_TYPE,
     MODEL_AIRHUMIDIFIER_CA1,
     MODEL_AIRHUMIDIFIER_CA4,

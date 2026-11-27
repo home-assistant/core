@@ -1,14 +1,20 @@
 """DataUpdateCoordinator for WeatherKit integration."""
 
-from datetime import datetime, timedelta
-from typing import override
+from datetime import timedelta
+import time
+from typing import Any, override
 
 from apple_weatherkit import DataSetType
-from apple_weatherkit.client import WeatherKitApiClient, WeatherKitApiClientError
+from apple_weatherkit.client import (
+    WeatherKitApiClient,
+    WeatherKitApiClientAuthenticationError,
+    WeatherKitApiClientError,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -20,19 +26,19 @@ REQUESTED_DATA_SETS = [
     DataSetType.HOURLY_FORECAST,
 ]
 
-STALE_DATA_THRESHOLD = timedelta(hours=1)
+STALE_DATA_THRESHOLD = timedelta(hours=1).total_seconds()
 
 HOURLY_FORECAST_DURATION = timedelta(days=7)
 
 type WeatherKitConfigEntry = ConfigEntry[WeatherKitDataUpdateCoordinator]
 
 
-class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator):
+class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching data from the API."""
 
     config_entry: WeatherKitConfigEntry
     supported_data_sets: list[DataSetType] | None = None
-    last_updated_at: datetime | None = None
+    last_updated_at: float | None = None
 
     def __init__(
         self,
@@ -66,7 +72,7 @@ class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator):
         LOGGER.debug("Supported data sets: %s", self.supported_data_sets)
 
     @override
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> dict[str, Any]:
         """Update the current weather and forecasts."""
         try:
             if not self.supported_data_sets:
@@ -80,15 +86,20 @@ class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator):
                 hourly_start=dt_now,
                 hourly_end=dt_now + HOURLY_FORECAST_DURATION,
             )
+        except WeatherKitApiClientAuthenticationError as exception:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="authentication_error",
+            ) from exception
         except WeatherKitApiClientError as exception:
             if self.data is None or (
                 self.last_updated_at is not None
-                and datetime.now() - self.last_updated_at > STALE_DATA_THRESHOLD  # pylint: disable=home-assistant-enforce-naive-now
+                and time.time() - self.last_updated_at > STALE_DATA_THRESHOLD
             ):
                 raise UpdateFailed(exception) from exception
 
             LOGGER.debug("Using stale data because update failed: %s", exception)
             return self.data
         else:
-            self.last_updated_at = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
+            self.last_updated_at = time.time()
             return updated_data

@@ -1,10 +1,12 @@
 """Tests for the OralB integration."""
 
 from home_assistant_bluetooth import BluetoothServiceInfoBleak
+from pytest_homeassistant.components.bluetooth import (
+    generate_advertisement_data,
+    generate_ble_device,
+)
 
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
-
-from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
 
 NOT_ORALB_SERVICE_INFO = BluetoothServiceInfo(
     name="Not it",
@@ -32,6 +34,39 @@ ORALB_IO_SERIES_4_SERVICE_INFO = BluetoothServiceInfo(
     address="78:DB:2F:C2:48:BE",
     rssi=-63,
     manufacturer_data={220: b"\x074\x0c\x038\x00\x00\x02\x01\x00\x04"},
+    service_uuids=[],
+    service_data={},
+    source="local",
+)
+
+ORALB_IO_SIX_SECTORS_SECTOR_5_SERVICE_INFO = BluetoothServiceInfo(
+    name="Oral-B Toothbrush",
+    address="78:DB:2F:C2:48:BE",
+    rssi=-63,
+    # running, 6 sectors, currently in sector 5
+    manufacturer_data={220: b"\x062\x0c\x03\x00\x00\x1e\x00\x05\x0a\x06"},
+    service_uuids=[],
+    service_data={},
+    source="local",
+)
+
+ORALB_IO_SIX_SECTORS_LAST_SECTOR_SERVICE_INFO = BluetoothServiceInfo(
+    name="Oral-B Toothbrush",
+    address="78:DB:2F:C2:48:BE",
+    rssi=-63,
+    # running, 6 sectors, "last sector" sentinel (7) resolves to sector 6
+    manufacturer_data={220: b"\x062\x0c\x03\x00\x00\x28\x00\x07\x0a\x06"},
+    service_uuids=[],
+    service_data={},
+    source="local",
+)
+
+ORALB_IO_POST_BRUSHING_SMART_ADAPT_SERVICE_INFO = BluetoothServiceInfo(
+    name="Oral-B Toothbrush",
+    address="78:DB:2F:C2:48:BE",
+    rssi=-63,
+    # post-brushing summary screens (state 10) after a Smart Adapt (mode 11) session
+    manufacturer_data={220: b"\x0612\x0ar\x00\x05\x0b\x01\x00\x06"},
     service_uuids=[],
     service_data={},
     source="local",

@@ -73,7 +73,7 @@
       "seaLevelPressure": 1029,
       "relativeHumidity": 55,
       "totalPrecipitation": 0.3,
-      "conditionCode": "rainy"
+      "conditionCode": "rain"
     },
     {
       "forecastTimeUtc": "2025-09-28 10:00:00",
@@ -86,7 +86,7 @@
       "seaLevelPressure": 1028,
       "relativeHumidity": 50,
       "totalPrecipitation": 0.4,
-      "conditionCode": "rainy"
+      "conditionCode": "rain"
     },
     {
       "forecastTimeUtc": "2025-09-29 10:00:00",
@@ -99,7 +99,7 @@
       "seaLevelPressure": 1027,
       "relativeHumidity": 45,
       "totalPrecipitation": 0.5,
-      "conditionCode": "rainy"
+      "conditionCode": "rain"
     },
     {
       "forecastTimeUtc": "2025-09-30 10:00:00",
@@ -112,7 +112,7 @@
       "seaLevelPressure": 1026,
       "relativeHumidity": 40,
       "totalPrecipitation": 0.6,
-      "conditionCode": "rainy"
+      "conditionCode": "rain"
     },
     {
       "forecastTimeUtc": "2025-10-01 10:00:00",
@@ -125,7 +125,7 @@
       "seaLevelPressure": 1025,
       "relativeHumidity": 35,
       "totalPrecipitation": 0.7,
-      "conditionCode": "rainy"
+      "conditionCode": "rain"
     }
   ]
 }

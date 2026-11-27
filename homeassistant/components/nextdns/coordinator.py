@@ -24,15 +24,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-if TYPE_CHECKING:
-    from . import NextDnsConfigEntry
-
 from .const import (
     DOMAIN,
     UPDATE_INTERVAL_ANALYTICS,
     UPDATE_INTERVAL_CONNECTION,
     UPDATE_INTERVAL_SETTINGS,
 )
+
+if TYPE_CHECKING:
+    from . import NextDnsConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,16 +51,18 @@ class NextDnsUpdateCoordinator[CoordinatorDataT: NextDnsData](
         config_entry: NextDnsConfigEntry,
         nextdns: NextDns,
         profile_id: str,
+        subentry_id: str,
     ) -> None:
         """Initialize."""
         self.nextdns = nextdns
         self.profile_id = profile_id
+        self.subentry_id = subentry_id
 
         super().__init__(
             hass,
             _LOGGER,
             config_entry=config_entry,
-            name=DOMAIN,
+            name=f"{DOMAIN}_{subentry_id}",
             update_interval=self._update_interval,
         )
 

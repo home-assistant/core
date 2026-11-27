@@ -4,8 +4,8 @@ import logging
 from typing import Any, override
 
 from bluetooth_data_tools import human_readable_name
-from pycasperglow import CasperGlow, CasperGlowError
-import voluptuous as vol
+import probatio
+from pycasperglow import MANUFACTURER_ID, CasperGlow, CasperGlowError
 
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
@@ -18,6 +18,13 @@ from homeassistant.helpers.device_registry import format_mac
 from .const import DOMAIN, LOCAL_NAMES
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _is_casper_glow_discovery(discovery_info: BluetoothServiceInfoBleak) -> bool:
+    """Return whether the Bluetooth discovery looks like a Casper Glow."""
+    return MANUFACTURER_ID in discovery_info.manufacturer_data and any(
+        discovery_info.name.startswith(local_name) for local_name in LOCAL_NAMES
+    )
 
 
 class CasperGlowConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -36,6 +43,9 @@ class CasperGlowConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
         """Handle the bluetooth discovery step."""
+        if not _is_casper_glow_discovery(discovery_info):
+            return self.async_abort(reason="not_supported")
+
         await self.async_set_unique_id(format_mac(discovery_info.address))
         self._abort_if_unique_id_configured()
         self._discovery_info = discovery_info
@@ -58,7 +68,8 @@ class CasperGlowConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         glow = CasperGlow(self._discovery_info.device)
         try:
-            await glow.handshake()
+            # Unconfirmed discovery: don't hold a connection slot retrying.
+            await glow.handshake(max_attempts=1)
         except CasperGlowError:
             return self.async_abort(reason="cannot_connect")
         except Exception:
@@ -68,7 +79,6 @@ class CasperGlowConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._discovery_info.address,
             )
             return self.async_abort(reason="unknown")
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="bluetooth_confirm",
             description_placeholders=self.context["title_placeholders"],
@@ -118,13 +128,7 @@ class CasperGlowConfigFlow(ConfigFlow, domain=DOMAIN):
                 if (
                     format_mac(discovery.address) in current_addresses
                     or discovery.address in self._discovered_devices
-                    or not (
-                        discovery.name
-                        and any(
-                            discovery.name.startswith(local_name)
-                            for local_name in LOCAL_NAMES
-                        )
-                    )
+                    or not _is_casper_glow_discovery(discovery)
                 ):
                     continue
                 self._discovered_devices[discovery.address] = discovery
@@ -132,9 +136,9 @@ class CasperGlowConfigFlow(ConfigFlow, domain=DOMAIN):
         if not self._discovered_devices:
             return self.async_abort(reason="no_devices_found")
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required(CONF_ADDRESS): vol.In(
+                probatio.Required(CONF_ADDRESS): probatio.In(
                     {
                         service_info.address: human_readable_name(
                             None, service_info.name, service_info.address

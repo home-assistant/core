@@ -3,27 +3,15 @@
 from typing import Any
 
 import pytest
-
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_UNIT_OF_MEASUREMENT,
-    CONF_ENTITY_ID,
-    STATE_OFF,
-    STATE_ON,
-    UnitOfDensity,
-    UnitOfRatio,
-)
-from homeassistant.core import HomeAssistant
-
-from tests.components.common import (
+from pytest_homeassistant.components.common import (
+    TargetSupport,
     TriggerStateDescription,
     arm_trigger,
     assert_trigger_behavior_all,
     assert_trigger_behavior_each,
     assert_trigger_behavior_first,
     assert_trigger_options_supported,
+    assert_triggers_target_support,
     parametrize_numerical_state_value_changed_trigger_states,
     parametrize_numerical_state_value_crossed_threshold_trigger_states,
     parametrize_target_entities,
@@ -31,11 +19,29 @@ from tests.components.common import (
     target_entities,
 )
 
+from homeassistant.components.air_quality.trigger import TRIGGERS
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_UNIT_OF_MEASUREMENT,
+    STATE_OFF,
+    STATE_ON,
+    TargetKey,
+    UnitOfDensity,
+    UnitOfRadiationConcentration,
+    UnitOfRatio,
+)
+from homeassistant.core import HomeAssistant
+
 _UGM3_UNIT_ATTRIBUTES = {
     ATTR_UNIT_OF_MEASUREMENT: UnitOfDensity.MICROGRAMS_PER_CUBIC_METER
 }
 _PPB_UNIT_ATTRIBUTES = {ATTR_UNIT_OF_MEASUREMENT: UnitOfRatio.PARTS_PER_BILLION}
 _PPM_UNIT_ATTRIBUTES = {ATTR_UNIT_OF_MEASUREMENT: UnitOfRatio.PARTS_PER_MILLION}
+_BQM3_UNIT_ATTRIBUTES = {
+    ATTR_UNIT_OF_MEASUREMENT: UnitOfRadiationConcentration.BECQUEREL_PER_CUBIC_METER
+}
 
 
 @pytest.fixture
@@ -69,6 +75,55 @@ _UGM3_CROSSED_THRESHOLD = {
             "unit_of_measurement": UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         },
     }
+}
+_BQM3_CROSSED_THRESHOLD = {
+    "threshold": {
+        "type": "above",
+        "value": {
+            "number": 50,
+            "unit_of_measurement": (
+                UnitOfRadiationConcentration.BECQUEREL_PER_CUBIC_METER
+            ),
+        },
+    }
+}
+
+
+_TRIGGER_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "gas_detected": TargetSupport.STANDARD,
+    "gas_cleared": TargetSupport.STANDARD,
+    "co_detected": TargetSupport.STANDARD,
+    "co_cleared": TargetSupport.STANDARD,
+    "smoke_detected": TargetSupport.STANDARD,
+    "smoke_cleared": TargetSupport.STANDARD,
+    "co_changed": TargetSupport.STANDARD,
+    "co_crossed_threshold": TargetSupport.STANDARD,
+    "ozone_changed": TargetSupport.STANDARD,
+    "ozone_crossed_threshold": TargetSupport.STANDARD,
+    "voc_changed": TargetSupport.STANDARD,
+    "voc_crossed_threshold": TargetSupport.STANDARD,
+    "voc_ratio_changed": TargetSupport.STANDARD,
+    "voc_ratio_crossed_threshold": TargetSupport.STANDARD,
+    "no_changed": TargetSupport.STANDARD,
+    "no_crossed_threshold": TargetSupport.STANDARD,
+    "no2_changed": TargetSupport.STANDARD,
+    "no2_crossed_threshold": TargetSupport.STANDARD,
+    "so2_changed": TargetSupport.STANDARD,
+    "so2_crossed_threshold": TargetSupport.STANDARD,
+    "radon_changed": TargetSupport.STANDARD,
+    "radon_crossed_threshold": TargetSupport.STANDARD,
+    "co2_changed": TargetSupport.STANDARD,
+    "co2_crossed_threshold": TargetSupport.STANDARD,
+    "pm1_changed": TargetSupport.STANDARD,
+    "pm1_crossed_threshold": TargetSupport.STANDARD,
+    "pm25_changed": TargetSupport.STANDARD,
+    "pm25_crossed_threshold": TargetSupport.STANDARD,
+    "pm4_changed": TargetSupport.STANDARD,
+    "pm4_crossed_threshold": TargetSupport.STANDARD,
+    "pm10_changed": TargetSupport.STANDARD,
+    "pm10_crossed_threshold": TargetSupport.STANDARD,
+    "n2o_changed": TargetSupport.STANDARD,
+    "n2o_crossed_threshold": TargetSupport.STANDARD,
 }
 
 
@@ -107,6 +162,8 @@ _UGM3_CROSSED_THRESHOLD = {
         ("air_quality.n2o_crossed_threshold", _PLAIN_CROSSED_THRESHOLD, True, True),
         ("air_quality.so2_changed", _CHANGED_THRESHOLD, False, False),
         ("air_quality.so2_crossed_threshold", _UGM3_CROSSED_THRESHOLD, True, True),
+        ("air_quality.radon_changed", _CHANGED_THRESHOLD, False, False),
+        ("air_quality.radon_crossed_threshold", _BQM3_CROSSED_THRESHOLD, True, True),
     ],
 )
 async def test_air_quality_trigger_options_validation(
@@ -124,6 +181,11 @@ async def test_air_quality_trigger_options_validation(
         supports_behavior=supports_behavior,
         supports_duration=supports_duration,
     )
+
+
+def test_trigger_target_support() -> None:
+    """Certify the trigger registry matches its declared target support."""
+    assert_triggers_target_support(TRIGGERS, _TRIGGER_TARGET_SUPPORT)
 
 
 @pytest.mark.parametrize(
@@ -456,6 +518,19 @@ async def test_air_quality_trigger_binary_sensor_behavior_all(
             threshold_unit=UnitOfRatio.PARTS_PER_BILLION,
             unit_attributes=_PPB_UNIT_ATTRIBUTES,
         ),
+        # With unit conversion (Bq/m³ base unit)
+        *parametrize_numerical_state_value_changed_trigger_states(
+            "air_quality.radon_changed",
+            device_class=SensorDeviceClass.RADON,
+            threshold_unit=UnitOfRadiationConcentration.BECQUEREL_PER_CUBIC_METER,
+            unit_attributes=_BQM3_UNIT_ATTRIBUTES,
+        ),
+        *parametrize_numerical_state_value_crossed_threshold_trigger_states(
+            "air_quality.radon_crossed_threshold",
+            device_class=SensorDeviceClass.RADON,
+            threshold_unit=UnitOfRadiationConcentration.BECQUEREL_PER_CUBIC_METER,
+            unit_attributes=_BQM3_UNIT_ATTRIBUTES,
+        ),
         # Without unit conversion (single-unit device classes)
         *parametrize_numerical_state_value_changed_trigger_states(
             "air_quality.co2_changed",
@@ -593,6 +668,13 @@ async def test_air_quality_trigger_sensor_behavior_each(
             threshold_unit=UnitOfRatio.PARTS_PER_BILLION,
             unit_attributes=_PPB_UNIT_ATTRIBUTES,
         ),
+        # With unit conversion (Bq/m³ base unit)
+        *parametrize_numerical_state_value_crossed_threshold_trigger_states(
+            "air_quality.radon_crossed_threshold",
+            device_class=SensorDeviceClass.RADON,
+            threshold_unit=UnitOfRadiationConcentration.BECQUEREL_PER_CUBIC_METER,
+            unit_attributes=_BQM3_UNIT_ATTRIBUTES,
+        ),
         # Without unit conversion (single-unit device classes)
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
             "air_quality.co2_crossed_threshold",
@@ -703,6 +785,13 @@ async def test_air_quality_trigger_sensor_crossed_threshold_behavior_first(
             threshold_unit=UnitOfRatio.PARTS_PER_BILLION,
             unit_attributes=_PPB_UNIT_ATTRIBUTES,
         ),
+        # With unit conversion (Bq/m³ base unit)
+        *parametrize_numerical_state_value_crossed_threshold_trigger_states(
+            "air_quality.radon_crossed_threshold",
+            device_class=SensorDeviceClass.RADON,
+            threshold_unit=UnitOfRadiationConcentration.BECQUEREL_PER_CUBIC_METER,
+            unit_attributes=_BQM3_UNIT_ATTRIBUTES,
+        ),
         # Without unit conversion (single-unit device classes)
         *parametrize_numerical_state_value_crossed_threshold_trigger_states(
             "air_quality.co2_crossed_threshold",
@@ -790,7 +879,7 @@ async def test_air_quality_trigger_unit_conversion_co_ppm_to_ugm3(
                 "value": {"number": 1000, "unit_of_measurement": "μg/m³"},
             }
         },
-        {CONF_ENTITY_ID: [entity_id]},
+        {TargetKey.ENTITY_ID: [entity_id]},
         calls,
     )
 

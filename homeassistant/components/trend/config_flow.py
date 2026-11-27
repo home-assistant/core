@@ -3,11 +3,12 @@
 from collections.abc import Mapping
 from typing import Any, cast, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.counter import DOMAIN as COUNTER_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import CONF_ATTRIBUTE, CONF_ENTITY_ID, CONF_NAME, UnitOfTime
+from homeassistant.core import callback
 from homeassistant.helpers import selector
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
@@ -31,28 +32,30 @@ from .const import (
 ALLOWED_DOMAINS = [COUNTER_DOMAIN, SENSOR_DOMAIN]
 
 
-async def get_base_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
+async def get_base_options_schema(handler: SchemaCommonFlowHandler) -> probatio.Schema:
     """Get base options schema."""
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Optional(CONF_ENTITY_ID): selector.EntitySelector(
+            probatio.Optional(CONF_ENTITY_ID): selector.EntitySelector(
                 selector.EntitySelectorConfig(multiple=False, read_only=True),
             ),
-            vol.Optional(CONF_ATTRIBUTE): selector.AttributeSelector(
+            probatio.Optional(CONF_ATTRIBUTE): selector.AttributeSelector(
                 selector.AttributeSelectorConfig(
                     entity_id=handler.options[CONF_ENTITY_ID]
                 )
             ),
-            vol.Optional(CONF_INVERT, default=False): selector.BooleanSelector(),
+            probatio.Optional(CONF_INVERT, default=False): selector.BooleanSelector(),
         }
     )
 
 
-async def get_extended_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
+async def get_extended_options_schema(
+    handler: SchemaCommonFlowHandler,
+) -> probatio.Schema:
     """Get extended options schema."""
     return (await get_base_options_schema(handler)).extend(
         {
-            vol.Optional(
+            probatio.Optional(
                 CONF_MAX_SAMPLES, default=DEFAULT_MAX_SAMPLES
             ): selector.NumberSelector(
                 selector.NumberSelectorConfig(
@@ -60,7 +63,7 @@ async def get_extended_options_schema(handler: SchemaCommonFlowHandler) -> vol.S
                     mode=selector.NumberSelectorMode.BOX,
                 ),
             ),
-            vol.Optional(
+            probatio.Optional(
                 CONF_MIN_SAMPLES, default=DEFAULT_MIN_SAMPLES
             ): selector.NumberSelector(
                 selector.NumberSelectorConfig(
@@ -68,7 +71,7 @@ async def get_extended_options_schema(handler: SchemaCommonFlowHandler) -> vol.S
                     mode=selector.NumberSelectorMode.BOX,
                 ),
             ),
-            vol.Optional(
+            probatio.Optional(
                 CONF_MIN_GRADIENT, default=DEFAULT_MIN_GRADIENT
             ): selector.NumberSelector(
                 selector.NumberSelectorConfig(
@@ -76,7 +79,7 @@ async def get_extended_options_schema(handler: SchemaCommonFlowHandler) -> vol.S
                     mode=selector.NumberSelectorMode.BOX,
                 ),
             ),
-            vol.Optional(
+            probatio.Optional(
                 CONF_SAMPLE_DURATION, default=DEFAULT_SAMPLE_DURATION
             ): selector.NumberSelector(
                 selector.NumberSelectorConfig(
@@ -89,10 +92,10 @@ async def get_extended_options_schema(handler: SchemaCommonFlowHandler) -> vol.S
     )
 
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_NAME): selector.TextSelector(),
-        vol.Required(CONF_ENTITY_ID): selector.EntitySelector(
+        probatio.Required(CONF_NAME): selector.TextSelector(),
+        probatio.Required(CONF_ENTITY_ID): selector.EntitySelector(
             selector.EntitySelectorConfig(domain=ALLOWED_DOMAINS, multiple=False),
         ),
     }
@@ -113,6 +116,7 @@ class ConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     }
     options_flow_reloads = True
 
+    @callback
     @override
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""

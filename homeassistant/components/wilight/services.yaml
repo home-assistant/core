@@ -2,16 +2,20 @@ set_watering_time:
   target:
   fields:
     watering_time:
+      required: true
       example: 30
 set_pause_time:
   target:
   fields:
     pause_time:
+      required: true
       example: 24
 set_trigger:
   target:
   fields:
     trigger_index:
+      required: true
       example: "1"
     trigger:
+      required: true
       example: "'12707001'"

@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 from pynobo import PynoboError, nobo
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
@@ -20,6 +21,8 @@ from homeassistant.components.climate import (
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
     SERVICE_SET_TEMPERATURE,
+    ClimateService,
+    ClimateServiceArgument,
     HVACMode,
 )
 from homeassistant.components.nobo_hub.const import (
@@ -27,16 +30,22 @@ from homeassistant.components.nobo_hub.const import (
     DOMAIN,
     OVERRIDE_TYPE_NOW,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from . import fire_hub_update
+from . import entity_unique_ids, fire_hub_update
+from .conftest import SERIAL
 
-from tests.common import MockConfigEntry, snapshot_platform
-
-CLIMATE_ENTITY = "climate.living_room_living_room"
+CLIMATE_ENTITY = "climate.living_room_heating"
+BEDROOM_ZONE = {
+    "zone_id": "2",
+    "name": "Bedroom",
+    "week_profile_id": "0",
+    "temp_comfort_c": "22",
+    "temp_eco_c": "18",
+}
 
 
 @pytest.fixture
@@ -121,8 +130,11 @@ async def test_set_hvac_mode(
     """Each HVAC mode maps to the expected zone override."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: CLIMATE_ENTITY, ATTR_HVAC_MODE: hvac_mode},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: CLIMATE_ENTITY,
+            ClimateServiceArgument.HVAC_MODE: hvac_mode,
+        },
         blocking=True,
     )
     mock_nobo_hub.async_create_override.assert_called_once_with(
@@ -152,8 +164,11 @@ async def test_set_preset_mode(
     """Each preset maps to the expected override mode."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: CLIMATE_ENTITY, ATTR_PRESET_MODE: preset},
+        ClimateService.SET_PRESET_MODE,
+        {
+            TargetKey.ENTITY_ID: CLIMATE_ENTITY,
+            ClimateServiceArgument.PRESET_MODE: preset,
+        },
         blocking=True,
     )
     mock_nobo_hub.async_create_override.assert_called_once_with(
@@ -176,8 +191,11 @@ async def test_set_preset_with_override_type_now(
     """The override_type option flows into the zone override call."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: CLIMATE_ENTITY, ATTR_PRESET_MODE: PRESET_COMFORT},
+        ClimateService.SET_PRESET_MODE,
+        {
+            TargetKey.ENTITY_ID: CLIMATE_ENTITY,
+            ClimateServiceArgument.PRESET_MODE: PRESET_COMFORT,
+        },
         blocking=True,
     )
     mock_nobo_hub.async_create_override.assert_called_once_with(
@@ -189,14 +207,14 @@ async def test_set_preset_with_override_type_now(
 
 
 @pytest.mark.usefixtures("init_integration")
-async def test_zone_removed_marks_unavailable(
+async def test_zone_removed_removes_entity(
     hass: HomeAssistant,
     mock_nobo_hub: MagicMock,
 ) -> None:
-    """A zone removed via the Nobø app must not crash and goes unavailable."""
+    """Removing a zone via the Nobø app must not crash and removes the entity."""
     mock_nobo_hub.zones.pop("1")
     await fire_hub_update(hass, mock_nobo_hub)
-    assert hass.states.get(CLIMATE_ENTITY).state == STATE_UNAVAILABLE
+    assert hass.states.get(CLIMATE_ENTITY) is None
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -207,11 +225,11 @@ async def test_set_temperature_updates_zone(
     """Setting target temperatures updates the zone on the hub."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: CLIMATE_ENTITY,
-            ATTR_TARGET_TEMP_LOW: 16.4,
-            ATTR_TARGET_TEMP_HIGH: 21.6,
+            TargetKey.ENTITY_ID: CLIMATE_ENTITY,
+            ClimateServiceArgument.TARGET_TEMP_LOW: 16.4,
+            ClimateServiceArgument.TARGET_TEMP_HIGH: 21.6,
         },
         blocking=True,
     )
@@ -264,3 +282,43 @@ async def test_climate_action_wraps_library_error(
         )
     assert exc_info.value.translation_domain == DOMAIN
     assert exc_info.value.translation_key == expected_key
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_new_zone_adds_entity(
+    hass: HomeAssistant,
+    mock_nobo_hub: MagicMock,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A zone added on the hub at runtime creates a climate entity."""
+    entry_id = mock_config_entry.entry_id
+    assert f"{SERIAL}:2" not in entity_unique_ids(entity_registry, entry_id)
+
+    mock_nobo_hub.zones["2"] = BEDROOM_ZONE
+    await fire_hub_update(hass, mock_nobo_hub)
+
+    assert f"{SERIAL}:2" in entity_unique_ids(entity_registry, entry_id)
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_readded_zone_reappears(
+    hass: HomeAssistant,
+    mock_nobo_hub: MagicMock,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A zone removed and re-added under the same id (the hub reuses ids) reappears."""
+    entry_id = mock_config_entry.entry_id
+
+    mock_nobo_hub.zones["2"] = BEDROOM_ZONE
+    await fire_hub_update(hass, mock_nobo_hub)
+    assert f"{SERIAL}:2" in entity_unique_ids(entity_registry, entry_id)
+
+    del mock_nobo_hub.zones["2"]
+    await fire_hub_update(hass, mock_nobo_hub)
+    assert f"{SERIAL}:2" not in entity_unique_ids(entity_registry, entry_id)
+
+    mock_nobo_hub.zones["2"] = BEDROOM_ZONE
+    await fire_hub_update(hass, mock_nobo_hub)
+    assert f"{SERIAL}:2" in entity_unique_ids(entity_registry, entry_id)

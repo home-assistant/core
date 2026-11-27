@@ -6,14 +6,11 @@ from typing import Any, override
 from pylutron import Lutron, LutronEntity, Output
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_FLASH,
-    ATTR_TRANSITION,
     ColorMode,
     LightEntity,
     LightEntityFeature,
+    LightServiceArgument,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -36,7 +33,7 @@ async def async_setup_entry(
 
     async_add_entities(
         (
-            LutronLight(area_name, device, entry_data.client, config_entry)
+            LutronLight(hass, area_name, device, entry_data.client, config_entry)
             for area_name, device in entry_data.lights
         ),
         True,
@@ -65,23 +62,29 @@ class LutronLight(LutronDevice, LightEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         area_name: str,
         lutron_device: LutronEntity,
         controller: Lutron,
-        config_entry: ConfigEntry,
+        config_entry: LutronConfigEntry,
     ) -> None:
         """Initialize the device."""
-        super().__init__(area_name, lutron_device, controller)
+        super().__init__(
+            hass, area_name, lutron_device, controller, config_entry.entry_id
+        )
         self._config_entry = config_entry
 
     @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
-        if flash := kwargs.get(ATTR_FLASH):
+        if flash := kwargs.get(LightServiceArgument.FLASH):
             self._lutron_device.flash(0.5 if flash == "short" else 1.5)
         else:
-            if ATTR_BRIGHTNESS in kwargs and self._lutron_device.is_dimmable:
-                brightness = kwargs[ATTR_BRIGHTNESS]
+            if (
+                LightServiceArgument.BRIGHTNESS in kwargs
+                and self._lutron_device.is_dimmable
+            ):
+                brightness = kwargs[LightServiceArgument.BRIGHTNESS]
             elif self._prev_brightness == 0:
                 brightness = self._config_entry.options.get(
                     CONF_DEFAULT_DIMMER_LEVEL, DEFAULT_DIMMER_LEVEL
@@ -90,17 +93,31 @@ class LutronLight(LutronDevice, LightEntity):
                 brightness = self._prev_brightness
             self._prev_brightness = brightness
             args = {"new_level": to_lutron_level(brightness)}
-            if ATTR_TRANSITION in kwargs:
-                args["fade_time_seconds"] = kwargs[ATTR_TRANSITION]
+            if LightServiceArgument.TRANSITION in kwargs:
+                args["fade_time_seconds"] = kwargs[LightServiceArgument.TRANSITION]
             self._lutron_device.set_level(**args)
+            # Publish now rather than waiting for the controller to report back.
+            self._publish_level()
 
     @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         args = {"new_level": 0}
-        if ATTR_TRANSITION in kwargs:
-            args["fade_time_seconds"] = kwargs[ATTR_TRANSITION]
+        if LightServiceArgument.TRANSITION in kwargs:
+            args["fade_time_seconds"] = kwargs[LightServiceArgument.TRANSITION]
         self._lutron_device.set_level(**args)
+        self._publish_level()
+
+    def _publish_level(self) -> None:
+        """Publish the device's current level without waiting for a report.
+
+        Reads `last_level()` like `_update_callback` does, so a report that
+        lands around the same time cannot be overwritten by a separately held
+        assumed value -- whichever reached the library last is what gets
+        published.
+        """
+        self._update_attrs()
+        self.schedule_update_ha_state()
 
     @property
     @override

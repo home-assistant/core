@@ -72,6 +72,8 @@ from .const import (
     DEV_MODEL_TH_SENSOR_YS8014_UC,
     DEV_MODEL_TH_SENSOR_YS8017_EC,
     DEV_MODEL_TH_SENSOR_YS8017_UC,
+    DEV_MODEL_WATER_METER_YS5018_EC,
+    DEV_MODEL_WATER_METER_YS5018_UC,
 )
 from .coordinator import YoLinkConfigEntry, YoLinkCoordinator
 from .entity import YoLinkEntity
@@ -250,6 +252,22 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
                 ATTR_DEVICE_MULTI_FUNCTIONAL_SENSOR,
             ]
         ),
+        value=parse_data_temperature,
+    ),
+    YoLinkSensorEntityDescription(
+        key="temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        exists_fn=lambda device: (
+            device.device_type == ATTR_DEVICE_WATER_METER_CONTROLLER
+            and device.device_model_name
+            in [
+                DEV_MODEL_WATER_METER_YS5018_EC,
+                DEV_MODEL_WATER_METER_YS5018_UC,
+            ]
+        ),
+        should_update_entity=lambda value: value is not None,
         value=parse_data_temperature,
     ),
     # mcu temperature

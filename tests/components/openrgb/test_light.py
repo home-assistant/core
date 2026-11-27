@@ -2,11 +2,16 @@
 
 from collections.abc import Generator
 import copy
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from openrgb.utils import OpenRGBDisconnected, RGBColor
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.light import (
@@ -19,6 +24,8 @@ from homeassistant.components.light import (
     EFFECT_OFF,
     ColorMode,
     LightEntityFeature,
+    LightService,
+    LightServiceArgument,
 )
 from homeassistant.components.openrgb.const import (
     DEFAULT_COLOR,
@@ -30,20 +37,16 @@ from homeassistant.components.openrgb.const import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -69,22 +72,21 @@ async def test_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
     # Ensure entities are correctly assigned to device
-    device_entry = device_registry.async_get_device(
-        identifiers={
-            (
-                DOMAIN,
-                UID_SEPARATOR.join(
-                    [
-                        mock_config_entry.entry_id,
-                        "DRAM",
-                        "ENE",
-                        "ENE SMBus Device",
-                        "none",
-                        "I2C: PIIX4, address 0x70",
-                    ]
-                ),
-            )
-        }
+    device_entry = device_registry.async_get_device_by_identifier(
+        (
+            DOMAIN,
+            UID_SEPARATOR.join(
+                [
+                    mock_config_entry.entry_id,
+                    "DRAM",
+                    "ENE",
+                    "ENE SMBus Device",
+                    "none",
+                    "I2C: PIIX4, address 0x70",
+                ]
+            ),
+        ),
+        mock_config_entry.entry_id,
     )
     assert device_entry
     entity_entries = er.async_entries_for_config_entry(
@@ -232,8 +234,8 @@ async def test_turn_on_light(
     # Turn on without parameters
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.ene_dram"},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: "light.ene_dram"},
         blocking=True,
     )
 
@@ -270,10 +272,10 @@ async def test_turn_on_light_with_color(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.ene_dram",
-            ATTR_RGB_COLOR: (0, 255, 0),  # Green
+            TargetKey.ENTITY_ID: "light.ene_dram",
+            LightServiceArgument.RGB_COLOR: (0, 255, 0),  # Green
         },
         blocking=True,
     )
@@ -307,10 +309,10 @@ async def test_turn_on_light_with_brightness(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.ene_dram",
-            ATTR_BRIGHTNESS: 128,
+            TargetKey.ENTITY_ID: "light.ene_dram",
+            LightServiceArgument.BRIGHTNESS: 128,
         },
         blocking=True,
     )
@@ -327,10 +329,10 @@ async def test_turn_on_light_with_effect(
     """Test turning on the light with effect."""
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.ene_dram",
-            ATTR_EFFECT: "rainbow",
+            TargetKey.ENTITY_ID: "light.ene_dram",
+            LightServiceArgument.EFFECT: "rainbow",
         },
         blocking=True,
     )
@@ -346,10 +348,10 @@ async def test_turn_on_light_with_effect_off(
     """Test turning on the light with effect Off."""
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.ene_dram",
-            ATTR_EFFECT: EFFECT_OFF,
+            TargetKey.ENTITY_ID: "light.ene_dram",
+            LightServiceArgument.EFFECT: EFFECT_OFF,
         },
         blocking=True,
     )
@@ -395,8 +397,8 @@ async def test_turn_on_restores_previous_values(
     # Turn on without parameters - should restore previous mode and values
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.ene_dram"},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: "light.ene_dram"},
         blocking=True,
     )
 
@@ -463,8 +465,8 @@ async def test_previous_values_updated_on_refresh(
     # state (green, 50%, Breathing)
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.ene_dram"},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: "light.ene_dram"},
         blocking=True,
     )
 
@@ -510,8 +512,8 @@ async def test_turn_on_restores_rainbow_after_off(
     # Turn on without parameters - should restore Rainbow mode
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.ene_dram"},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: "light.ene_dram"},
         blocking=True,
     )
 
@@ -560,8 +562,8 @@ async def test_turn_on_restores_rainbow_after_off_by_color(
     # Turn on without parameters - should restore Rainbow mode, not Direct
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.ene_dram"},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: "light.ene_dram"},
         blocking=True,
     )
 
@@ -579,8 +581,8 @@ async def test_turn_off_light(
     """Test turning off the light."""
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.ene_dram"},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "light.ene_dram"},
         blocking=True,
     )
 
@@ -616,13 +618,74 @@ async def test_turn_off_light_without_off_mode(
     # Turn off the light
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.ene_dram"},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "light.ene_dram"},
         blocking=True,
     )
 
-    # Device should have set_color called with black/off color instead
+    # Device should have set_color called with black/off color instead,
+    # without any mode switch (the active mode is already color-capable)
+    mock_openrgb_device.set_mode.assert_not_called()
     mock_openrgb_device.set_color.assert_called_once_with(RGBColor(*OFF_COLOR), True)
+
+
+@pytest.mark.usefixtures("mock_openrgb_client")
+async def test_turn_off_light_without_off_mode_in_non_color_mode(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_openrgb_device: MagicMock,
+) -> None:
+    """Test turning off a light without Off mode while a non-color mode is active.
+
+    Color writes are ignored by the device while a mode without PER_LED
+    color support (e.g. a firmware effect) is active, so turning off must
+    first switch to the preferred no-effect mode — otherwise painting
+    black is a silent no-op and the light never turns off.
+    """
+    # Modify the device to not have Off mode
+    mock_openrgb_device.modes = [
+        mode_data
+        for mode_data in mock_openrgb_device.modes
+        if mode_data.name != OpenRGBMode.OFF
+    ]
+    # Activate a mode without PER_LED color support ("Spectrum Cycle")
+    mock_openrgb_device.active_mode = next(
+        index
+        for index, mode_data in enumerate(mock_openrgb_device.modes)
+        if mode_data.name == "Spectrum Cycle"
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    # Verify light is initially on
+    state = hass.states.get("light.ene_dram")
+    assert state
+    assert state.state == STATE_ON
+
+    # Turn off the light
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "light.ene_dram"},
+        blocking=True,
+    )
+
+    # The device must first be switched to the preferred no-effect mode
+    # (color-capable), then painted black — in that order
+    mock_openrgb_device.set_mode.assert_called_once_with(OpenRGBMode.DIRECT)
+    mock_openrgb_device.set_color.assert_called_once_with(RGBColor(*OFF_COLOR), True)
+    assert [
+        call
+        for call in mock_openrgb_device.mock_calls
+        if call[0] in ("set_mode", "set_color")
+    ] == [
+        call.set_mode(OpenRGBMode.DIRECT),
+        call.set_color(RGBColor(*OFF_COLOR), True),
+    ]
 
 
 # Test error handling
@@ -642,10 +705,10 @@ async def test_turn_on_light_with_color_exceptions(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
+            LightService.TURN_ON,
             {
-                ATTR_ENTITY_ID: "light.ene_dram",
-                ATTR_RGB_COLOR: (0, 255, 0),
+                TargetKey.ENTITY_ID: "light.ene_dram",
+                LightServiceArgument.RGB_COLOR: (0, 255, 0),
             },
             blocking=True,
         )
@@ -667,10 +730,10 @@ async def test_turn_on_light_with_mode_exceptions(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
+            LightService.TURN_ON,
             {
-                ATTR_ENTITY_ID: "light.ene_dram",
-                ATTR_EFFECT: "rainbow",
+                TargetKey.ENTITY_ID: "light.ene_dram",
+                LightServiceArgument.EFFECT: "rainbow",
             },
             blocking=True,
         )
@@ -687,10 +750,10 @@ async def test_turn_on_light_with_unsupported_effect(
     ):
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
+            LightService.TURN_ON,
             {
-                ATTR_ENTITY_ID: "light.ene_dram",
-                ATTR_EFFECT: "InvalidEffect",
+                TargetKey.ENTITY_ID: "light.ene_dram",
+                LightServiceArgument.EFFECT: "InvalidEffect",
             },
             blocking=True,
         )
@@ -707,11 +770,11 @@ async def test_turn_on_light_with_color_and_non_color_effect(
     ):
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
+            LightService.TURN_ON,
             {
-                ATTR_ENTITY_ID: "light.ene_dram",
-                ATTR_EFFECT: "rainbow",
-                ATTR_RGB_COLOR: (255, 0, 0),
+                TargetKey.ENTITY_ID: "light.ene_dram",
+                LightServiceArgument.EFFECT: "rainbow",
+                LightServiceArgument.RGB_COLOR: (255, 0, 0),
             },
             blocking=True,
         )
@@ -728,11 +791,11 @@ async def test_turn_on_light_with_brightness_and_non_color_effect(
     ):
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
+            LightService.TURN_ON,
             {
-                ATTR_ENTITY_ID: "light.ene_dram",
-                ATTR_EFFECT: "rainbow",
-                ATTR_BRIGHTNESS: 128,
+                TargetKey.ENTITY_ID: "light.ene_dram",
+                LightServiceArgument.EFFECT: "rainbow",
+                LightServiceArgument.BRIGHTNESS: 128,
             },
             blocking=True,
         )
@@ -852,11 +915,11 @@ async def test_duplicate_device_names(
     )
 
     # Verify devices exist with correct names (suffix based on device.id position)
-    device1_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, device1_key)}
+    device1_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, device1_key), mock_config_entry.entry_id
     )
-    device2_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, device2_key)}
+    device2_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, device2_key), mock_config_entry.entry_id
     )
 
     assert device1_entry

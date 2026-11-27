@@ -11,7 +11,7 @@ from aiotedee import (
     TedeeLocalAuthException,
     TedeeLocalClient,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.webhook import async_generate_id as webhook_generate_id
 from homeassistant.config_entries import (
@@ -81,12 +81,12 @@ class TedeeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_HOST,
                     ): str,
-                    vol.Required(
+                    probatio.Required(
                         CONF_LOCAL_ACCESS_TOKEN,
                     ): str,
                 }
@@ -107,9 +107,9 @@ class TedeeConfigFlow(ConfigFlow, domain=DOMAIN):
         if not user_input:
             return self.async_show_form(
                 step_id="reauth_confirm",
-                data_schema=vol.Schema(
+                data_schema=probatio.Schema(
                     {
-                        vol.Required(
+                        probatio.Required(
                             CONF_LOCAL_ACCESS_TOKEN,
                             default=self._get_reauth_entry().data[
                                 CONF_LOCAL_ACCESS_TOKEN
@@ -128,12 +128,12 @@ class TedeeConfigFlow(ConfigFlow, domain=DOMAIN):
             reconfigure_entry = self._get_reconfigure_entry()
             return self.async_show_form(
                 step_id="reconfigure",
-                data_schema=vol.Schema(
+                data_schema=probatio.Schema(
                     {
-                        vol.Required(
+                        probatio.Required(
                             CONF_HOST, default=reconfigure_entry.data[CONF_HOST]
                         ): str,
-                        vol.Required(
+                        probatio.Required(
                             CONF_LOCAL_ACCESS_TOKEN,
                             default=reconfigure_entry.data[CONF_LOCAL_ACCESS_TOKEN],
                         ): str,

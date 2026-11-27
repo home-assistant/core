@@ -1,19 +1,22 @@
 """Support for KEBA charging stations."""
 
 import asyncio
+from collections.abc import Callable
 import logging
 
 from keba_kecontact.connection import KebaKeContact
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_HOST, Platform
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.typing import ConfigType
 
+from .const import DOMAIN, KebaServiceArgument
+from .services import async_setup_services
+
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "keba"
 PLATFORMS = (Platform.BINARY_SENSOR, Platform.SENSOR, Platform.LOCK, Platform.NOTIFY)
 
 CONF_RFID = "rfid"
@@ -26,33 +29,22 @@ CONF_FS_INTERVAL = "refresh_interval"
 MAX_POLLING_INTERVAL = 5  # in seconds
 MAX_FAST_POLLING_COUNT = 4
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Required(CONF_HOST): cv.string,
-                vol.Optional(CONF_RFID, default="00845500"): cv.string,
-                vol.Optional(CONF_FS, default=False): cv.boolean,
-                vol.Optional(CONF_FS_TIMEOUT, default=30): cv.positive_int,
-                vol.Optional(CONF_FS_FALLBACK, default=6): cv.positive_int,
-                vol.Optional(CONF_FS_PERSIST, default=0): cv.positive_int,
-                vol.Optional(CONF_FS_INTERVAL, default=5): cv.positive_int,
+                probatio.Required(CONF_HOST): cv.string,
+                probatio.Optional(CONF_RFID, default="00845500"): cv.string,
+                probatio.Optional(CONF_FS, default=False): cv.boolean,
+                probatio.Optional(CONF_FS_TIMEOUT, default=30): cv.positive_int,
+                probatio.Optional(CONF_FS_FALLBACK, default=6): cv.positive_int,
+                probatio.Optional(CONF_FS_PERSIST, default=0): cv.positive_int,
+                probatio.Optional(CONF_FS_INTERVAL, default=5): cv.positive_int,
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
-
-_SERVICE_MAP = {
-    "request_data": "async_request_data",
-    "set_energy": "async_set_energy",
-    "set_current": "async_set_current",
-    "authorize": "async_start",
-    "deauthorize": "async_stop",
-    "enable": "async_enable_ev",
-    "disable": "async_disable_ev",
-    "set_failsafe": "async_set_failsafe",
-}
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -74,23 +66,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     fallback = config[DOMAIN][CONF_FS_FALLBACK] if failsafe else 0
     persist = config[DOMAIN][CONF_FS_PERSIST] if failsafe else 0
     try:
-        hass.loop.create_task(keba.set_failsafe(timeout, fallback, persist))
+        await keba.set_failsafe(timeout, fallback, persist)
     except ValueError as ex:
         _LOGGER.warning("Could not set failsafe mode %s", ex)
 
-    # Register services to hass
-    async def execute_service(call: ServiceCall) -> None:
-        """Execute a service to KEBA charging station.
-
-        This must be a member function as we need access to the keba
-        object here.
-        """
-        function_name = _SERVICE_MAP[call.service]
-        function_call = getattr(keba, function_name)
-        await function_call(call.data)
-
-    for service in _SERVICE_MAP:
-        hass.services.async_register(DOMAIN, service, execute_service)
+    async_setup_services(hass)
 
     # Load components
     for platform in PLATFORMS:
@@ -107,11 +87,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class KebaHandler(KebaKeContact):
     """Representation of a KEBA charging station connection."""
 
-    def __init__(self, hass, host, rfid, refresh_interval):
+    def __init__(
+        self, hass: HomeAssistant, host: str, rfid: str, refresh_interval: int
+    ) -> None:
         """Initialize charging station connection."""
         super().__init__(host, self.hass_callback)
 
-        self._update_listeners = []
+        self._update_listeners: list[Callable[[], None]] = []
         self._hass = hass
         self.rfid = rfid
         self.device_name = "keba"  # correct device name will be set in setup()
@@ -190,7 +172,7 @@ class KebaHandler(KebaKeContact):
     async def async_set_energy(self, param):
         """Set energy target in async way."""
         try:
-            energy = param["energy"]
+            energy = param[KebaServiceArgument.ENERGY]
             await self.set_energy(float(energy))
             self._set_fast_polling()
         except (KeyError, ValueError) as ex:
@@ -199,7 +181,7 @@ class KebaHandler(KebaKeContact):
     async def async_set_current(self, param):
         """Set current maximum in async way."""
         try:
-            current = param["current"]
+            current = param[KebaServiceArgument.CURRENT]
             await self.set_current(float(current))
             # No fast polling as this function might be called regularly
         except (KeyError, ValueError) as ex:
@@ -228,10 +210,10 @@ class KebaHandler(KebaKeContact):
     async def async_set_failsafe(self, param=None):
         """Set failsafe mode in async way."""
         try:
-            timeout = param[CONF_FS_TIMEOUT]
-            fallback = param[CONF_FS_FALLBACK]
-            persist = param[CONF_FS_PERSIST]
-            await self.set_failsafe(int(timeout), float(fallback), bool(persist))
+            timeout = param[KebaServiceArgument.FAILSAFE_TIMEOUT]
+            fallback = param[KebaServiceArgument.FAILSAFE_FALLBACK]
+            persist = param[KebaServiceArgument.FAILSAFE_PERSIST]
+            await self.set_failsafe(int(timeout), float(fallback), int(persist))
             self._set_fast_polling()
         except (KeyError, ValueError) as ex:
             _LOGGER.warning(

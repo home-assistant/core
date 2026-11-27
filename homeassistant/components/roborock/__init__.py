@@ -63,7 +63,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> None:
     """Set up roborock from a config entry."""
     await async_cleanup_map_storage(hass, entry.entry_id)
 
@@ -148,15 +148,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
 
     _remove_stale_devices(hass, entry, devices)
 
-    return True
-
 
 def _is_device_disabled(
     device_registry: dr.DeviceRegistry,
+    entry: RoborockConfigEntry,
     device: RoborockDevice,
 ) -> bool:
     """Check if a device is disabled in the device registry."""
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, device.duid)})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, device.duid), entry.entry_id
+    )
     return device_entry is not None and device_entry.disabled
 
 
@@ -183,13 +184,10 @@ def _remove_stale_devices(
             "Removing device: %s because it no longer exists in your account",
             device.name,
         )
-        device_registry.async_update_device(
-            device_id=device.id,
-            remove_config_entry_id=entry.entry_id,
-        )
+        device_registry.async_remove_device(device.id)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> None:
     """Migrate old configuration entries to the new format."""
     _LOGGER.debug(
         "Migrating configuration from version %s.%s",
@@ -208,8 +206,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -
             minor_version=2,
         )
 
-    return True
-
 
 async def async_setup_device(
     hass: HomeAssistant,
@@ -221,11 +217,11 @@ async def async_setup_device(
     if device.duid in entry.runtime_data:
         return
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_from_info(
         config_entry_id=entry.entry_id,
-        **get_device_info(device),
+        device_info=get_device_info(device),
     )
-    if _is_device_disabled(device_registry, device):
+    if _is_device_disabled(device_registry, entry, device):
         _LOGGER.debug("Device %s is disabled, skipping setup", device.duid)
         try:
             await device.close()
@@ -238,6 +234,7 @@ async def async_setup_device(
         RoborockDataUpdateCoordinator
         | RoborockDataUpdateCoordinatorA01
         | RoborockDataUpdateCoordinatorB01
+        | RoborockB01Q7UpdateCoordinator
         | RoborockB01Q10UpdateCoordinator
         | None
     ) = None
@@ -277,22 +274,27 @@ async def async_setup_device(
             _LOGGER.warning("Failed to close device %s: %s", device.duid, err)
         return
 
+    try:
+        await coordinator.async_refresh()
+    except RoborockException as err:
+        _LOGGER.error(
+            "Failed initial attempt to connect to device %s (%s): %s",
+            device.name,
+            device.duid,
+            err,
+        )
+
     entry.runtime_data.add(coordinator)
     async_dispatcher_send(
         hass,
         f"roborock_coordinator_added_{entry.entry_id}",
         coordinator,
     )
-    entry.async_create_background_task(
-        hass,
-        coordinator.async_refresh(),
-        name=f"roborock_coordinator_refresh_{coordinator.duid}",
-    )
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> None:
     """Handle removal of an entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> None:

@@ -1,0 +1,166 @@
+{
+  "application_credentials": {
+    "description": "Follow the [instructions]({more_info_url}) for [OAuth consent screen]({oauth_consent_url}) to give Home Assistant access to your Google Health data. You also need to create Application Credentials linked to your account:\n1. Go to [Credentials]({oauth_creds_url}) and select **Create Credentials**.\n1. From the drop-down list select **OAuth client ID**.\n1. Select **Web application** for the Application Type."
+  },
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "api_not_enabled": "The Google Health API is not enabled for your Google Cloud project. Enable it in the [Google Cloud Console]({url}), wait a few minutes for the change to propagate, then try again.",
+      "cannot_connect": "Failed to connect.",
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "missing_profile_scope": "Missing required Google Health profile read permission. Please try again and select the right permission.",
+      "wrong_account": "Wrong account: Please authenticate with the right account."
+    },
+    "create_entry": {
+      "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    },
+    "step": {
+      "pick_implementation": {
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      },
+      "reauth_confirm": {
+        "description": "The Google Health integration needs to re-authenticate your account",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "active_calories": {
+        "name": "Active calories"
+      },
+      "active_zone_minutes": {
+        "name": "Active zone minutes"
+      },
+      "body_fat": {
+        "name": "Body fat"
+      },
+      "body_mass_index": {
+        "name": "Body mass index"
+      },
+      "calories_consumed": {
+        "name": "Calories consumed"
+      },
+      "calories_from_fat": {
+        "name": "Calories from fat"
+      },
+      "cardio_active_zone_minutes": {
+        "name": "Cardio active zone minutes"
+      },
+      "dietary_fiber": {
+        "name": "Dietary fiber"
+      },
+      "elevation": {
+        "name": "Elevation"
+      },
+      "fat_burn_active_zone_minutes": {
+        "name": "Fat burn active zone minutes"
+      },
+      "floors": {
+        "name": "Floors"
+      },
+      "heart_rate_variability": {
+        "name": "Heart rate variability"
+      },
+      "height": {
+        "name": "Height"
+      },
+      "hydration": {
+        "name": "Water intake"
+      },
+      "last_sync_time": {
+        "name": "Last sync time"
+      },
+      "light_activity": {
+        "name": "Light activity"
+      },
+      "moderate_activity": {
+        "name": "Moderate activity"
+      },
+      "oxygen_saturation": {
+        "name": "Oxygen saturation"
+      },
+      "peak_active_zone_minutes": {
+        "name": "Peak active zone minutes"
+      },
+      "protein": {
+        "name": "Protein"
+      },
+      "respiratory_rate": {
+        "name": "Respiratory rate"
+      },
+      "resting_heart_rate": {
+        "name": "Resting heart rate"
+      },
+      "sedentary_time": {
+        "name": "Sedentary time"
+      },
+      "sleep_after_wakeup": {
+        "name": "Time after waking up"
+      },
+      "sleep_asleep": {
+        "name": "Time asleep"
+      },
+      "sleep_awake": {
+        "name": "Time awake"
+      },
+      "sleep_deep": {
+        "name": "Deep sleep"
+      },
+      "sleep_end_time": {
+        "name": "Sleep end time"
+      },
+      "sleep_in_bed": {
+        "name": "Time in bed"
+      },
+      "sleep_light": {
+        "name": "Light sleep"
+      },
+      "sleep_rem": {
+        "name": "REM sleep"
+      },
+      "sleep_start_time": {
+        "name": "Sleep start time"
+      },
+      "sleep_to_fall_asleep": {
+        "name": "Time to fall asleep"
+      },
+      "sodium": {
+        "name": "Sodium"
+      },
+      "steps": {
+        "name": "Steps",
+        "unit_of_measurement": "steps"
+      },
+      "sugar": {
+        "name": "Sugar"
+      },
+      "total_calories": {
+        "name": "Total calories"
+      },
+      "total_carbohydrate": {
+        "name": "Total carbohydrates"
+      },
+      "total_fat": {
+        "name": "Total fat"
+      },
+      "vigorous_activity": {
+        "name": "Vigorous activity"
+      },
+      "vo2_max": {
+        "name": "VO2 max"
+      }
+    }
+  },
+  "exceptions": {
+    "auth_error": {
+      "message": "Authentication or permission error talking to Google Health."
+    },
+    "communication_error": {
+      "message": "Error communicating with Google Health."
+    },
+    "missing_profile_scope": {
+      "message": "Missing required Google Health profile read permission."
+    }
+  }
+}

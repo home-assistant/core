@@ -1,31 +1,30 @@
 """Provides device automations for Lock."""
 
-import voluptuous as vol
+from typing import Any
+
+import probatio
 
 from homeassistant.components.device_automation import async_validate_entity_schema
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_ENTITY_ID,
     CONF_TYPE,
-    SERVICE_LOCK,
-    SERVICE_OPEN,
-    SERVICE_UNLOCK,
+    TargetKey,
 )
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from . import DOMAIN, LockEntityFeature
+from .const import DOMAIN, LockEntityFeature, LockService
 
 ACTION_TYPES = {"lock", "unlock", "open"}
 
 _ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_TYPE): vol.In(ACTION_TYPES),
-        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
+        probatio.Required(CONF_TYPE): probatio.In(ACTION_TYPES),
+        probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
     }
 )
 
@@ -74,14 +73,14 @@ async def async_call_action_from_config(
     context: Context | None,
 ) -> None:
     """Execute a device action."""
-    service_data = {ATTR_ENTITY_ID: config[CONF_ENTITY_ID]}
+    service_data: dict[str, Any] = {TargetKey.ENTITY_ID: config[CONF_ENTITY_ID]}
 
     if config[CONF_TYPE] == "lock":
-        service = SERVICE_LOCK
+        service = LockService.LOCK
     elif config[CONF_TYPE] == "unlock":
-        service = SERVICE_UNLOCK
+        service = LockService.UNLOCK
     elif config[CONF_TYPE] == "open":
-        service = SERVICE_OPEN
+        service = LockService.OPEN
 
     await hass.services.async_call(
         DOMAIN, service, service_data, blocking=True, context=context

@@ -7,22 +7,23 @@ import blebox_uniapi.error
 import blebox_uniapi.update
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.update import (
     ATTR_IN_PROGRESS,
     ATTR_INSTALLED_VERSION,
     ATTR_LATEST_VERSION,
     DOMAIN as UPDATE_DOMAIN,
-    SERVICE_INSTALL,
     UpdateDeviceClass,
     UpdateEntityFeature,
+    UpdateService,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
-    ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     STATE_OFF,
     STATE_ON,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -30,8 +31,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 
 from .conftest import async_setup_entity, mock_feature
-
-from tests.common import async_fire_time_changed
 
 
 @pytest.fixture(name="firmwareupdate")
@@ -48,6 +47,7 @@ def firmwareupdate_fixture() -> tuple[blebox_uniapi.update.Update, str]:
     product = feature.product
     type(product).name = PropertyMock(return_value="My airSensor")
     type(product).model = PropertyMock(return_value="airSensor")
+    type(product).product = PropertyMock(return_value="airSensor")
     return (feature, "update.my_airsensor_firmware")
 
 
@@ -175,8 +175,8 @@ async def test_install(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: entity_id},
+        UpdateService.INSTALL,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -205,8 +205,8 @@ async def test_install_error(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: entity_id},
+            UpdateService.INSTALL,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -240,8 +240,8 @@ async def test_poll_until_updated_success(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: entity_id},
+        UpdateService.INSTALL,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -279,8 +279,8 @@ async def test_poll_connection_error(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: entity_id},
+        UpdateService.INSTALL,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -331,8 +331,8 @@ async def test_poll_max_attempts(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: entity_id},
+        UpdateService.INSTALL,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -374,8 +374,8 @@ async def test_poll_other_error(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: entity_id},
+        UpdateService.INSTALL,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -411,8 +411,8 @@ async def test_remove_cancels_poll(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: entity_id},
+        UpdateService.INSTALL,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 

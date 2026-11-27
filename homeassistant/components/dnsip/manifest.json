@@ -1,10 +1,13 @@
 {
   "domain": "dnsip",
   "name": "DNS IP",
+  "categories": ["computers_network.routers_network"],
   "codeowners": ["@gjohansson-ST"],
   "config_flow": true,
+  "connectivity": ["cloud", "network"],
   "documentation": "https://www.home-assistant.io/integrations/dnsip",
   "integration_type": "service",
   "iot_class": "cloud_polling",
+  "quality_scale": "silver",
   "requirements": ["aiodns==4.0.4"]
 }

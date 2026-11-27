@@ -1,30 +1,37 @@
 """Constants for the LG webOS TV integration."""
 
-import asyncio
-
-import aiohttp
-from aiowebostv import WebOsTvCommandError
+from enum import StrEnum
+import logging
 
 from homeassistant.const import Platform
 
 DOMAIN = "webostv"
-PLATFORMS = [Platform.MEDIA_PLAYER]
+LOGGER = logging.getLogger(__package__)
+PLATFORMS = [Platform.MEDIA_PLAYER, Platform.SWITCH]
 DEFAULT_NAME = "LG webOS TV"
 
-ATTR_PAYLOAD = "payload"
+ATTR_ICON = "icon"
 ATTR_SOUND_OUTPUT = "sound_output"
 
 CONF_ON_ACTION = "turn_on_action"
 CONF_SOURCES = "sources"
 
-LIVE_TV_APP_ID = "com.webos.app.livetv"
 
-WEBOSTV_EXCEPTIONS = (
-    ConnectionResetError,
-    WebOsTvCommandError,
-    aiohttp.ClientConnectorError,
-    aiohttp.ServerDisconnectedError,
-    aiohttp.WSMessageTypeError,
-    asyncio.CancelledError,
-    asyncio.TimeoutError,
-)
+class WebOsTvService(StrEnum):
+    """Store keys for LG webOS TV services."""
+
+    BUTTON = "button"
+    COMMAND = "command"
+    SELECT_SOUND_OUTPUT = "select_sound_output"
+
+
+class WebOsTvServiceArgument(StrEnum):
+    """Store keys for LG webOS TV service arguments."""
+
+    BUTTON = "button"
+    COMMAND = "command"
+    PAYLOAD = "payload"
+    SOUND_OUTPUT = "sound_output"
+
+
+LIVE_TV_APP_ID = "com.webos.app.livetv"

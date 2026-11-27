@@ -1,8 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -34,7 +33,6 @@
   "entity": {
     "binary_sensor": {
       "motion": {
-        "name": "Motion",
         "state": {
           "off": "[%key:common::state::stopped%]",
           "on": "Moving"

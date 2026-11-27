@@ -28,7 +28,6 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_NAME,
@@ -773,7 +772,8 @@ class BrSensor(SensorEntity):
     def data_updated(self, data: BrData):
         """Handle data update."""
         self._data = data
-        if not self.hass:
+        # hass is None until the entity is added, not needed once on a coordinator
+        if not self.hass:  # type: ignore[truthy-bool]
             return
         self._update()
 
@@ -843,8 +843,8 @@ class BrSensor(SensorEntity):
                     _LOGGER.warning("No forecast for fcday=%s", fcday)
                     return False
 
-                if self.state is not None:
-                    self._attr_native_value = round(self.state * 3.6, 1)
+                if self._attr_native_value is not None:
+                    self._attr_native_value = round(self._attr_native_value * 3.6, 1)
                 return True
 
             # update all other sensors
@@ -899,23 +899,21 @@ class BrSensor(SensorEntity):
         if sensor_type == VISIBILITY:
             # hass wants visibility in km (not m), so convert:
             self._attr_native_value = data.get(sensor_type)
-            if self.state is not None:
-                self._attr_native_value = round(self.state / 1000, 1)
+            if self._attr_native_value is not None:
+                self._attr_native_value = round(self._attr_native_value / 1000, 1)
             return True
 
         # update all other sensors
         self._attr_native_value = data.get(sensor_type)
+        self._attr_attribution = data.get(ATTRIBUTION)
         if sensor_type.startswith(PRECIPITATION_FORECAST):
-            result = {ATTR_ATTRIBUTION: data.get(ATTRIBUTION)}
+            result = {}
             if self._timeframe is not None:
                 result[TIMEFRAME_LABEL] = f"{self._timeframe} min"
 
             self._attr_extra_state_attributes = result
 
-        result = {
-            ATTR_ATTRIBUTION: data.get(ATTRIBUTION),
-            STATIONNAME_LABEL: data.get(STATIONNAME),
-        }
+        result = {STATIONNAME_LABEL: data.get(STATIONNAME)}
         if self._measured is not None:
             # convert datetime (Europe/Amsterdam) into local datetime
             local_dt = dt_util.as_local(self._measured)

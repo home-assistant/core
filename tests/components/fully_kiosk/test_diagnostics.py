@@ -2,6 +2,10 @@
 
 from unittest.mock import MagicMock
 
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_device
+from pytest_homeassistant.typing import ClientSessionGenerator
+
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.components.fully_kiosk.const import DOMAIN
 from homeassistant.components.fully_kiosk.diagnostics import (
@@ -10,10 +14,6 @@ from homeassistant.components.fully_kiosk.diagnostics import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-
-from tests.common import MockConfigEntry
-from tests.components.diagnostics import get_diagnostics_for_device
-from tests.typing import ClientSessionGenerator
 
 
 async def test_diagnostics(
@@ -24,7 +24,9 @@ async def test_diagnostics(
     init_integration: MockConfigEntry,
 ) -> None:
     """Test Fully Kiosk diagnostics."""
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "abcdef-123456")})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "abcdef-123456"), init_integration.entry_id
+    )
 
     diagnostics = await get_diagnostics_for_device(
         hass, hass_client, init_integration, device

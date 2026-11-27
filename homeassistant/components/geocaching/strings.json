@@ -2,15 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
-      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
-      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
-      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
-      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
-      "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
-      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
-      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "create_entry": {
@@ -29,6 +21,37 @@
       "reauth_confirm": {
         "description": "The Geocaching integration needs to re-authenticate your account",
         "title": "[%key:common::config_flow::title::reauth%]"
+      }
+    }
+  },
+  "config_subentries": {
+    "tracked_cache": {
+      "abort": {
+        "already_configured": "This cache is already configured.",
+        "entry_not_loaded": "Cannot add a tracked cache while the configuration is not loaded.",
+        "too_many_caches": "A maximum of 50 caches can be tracked."
+      },
+      "entry_type": "Tracked cache",
+      "error": {
+        "already_configured": "This cache is already configured.",
+        "cache_not_found": "This geocache does not exist or is not accessible.",
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "invalid_cache_code": "Enter a valid geocache code."
+      },
+      "initiate_flow": {
+        "user": "Add tracked cache"
+      },
+      "step": {
+        "user": {
+          "data": {
+            "code": "Geocache code"
+          },
+          "data_description": {
+            "code": "Enter one geocache code, for example GC12345."
+          },
+          "description": "Add one geocache to track by entering its geocache code.",
+          "title": "Add tracked cache"
+        }
       }
     }
   },

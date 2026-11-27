@@ -1,5 +1,6 @@
 """Signal notification test helpers."""
 
+from collections.abc import Generator
 from http import HTTPStatus
 from unittest.mock import patch
 
@@ -20,14 +21,15 @@ URL_ATTACHMENT = f"{SIGNAL_BASE_URL}/image.jpg"
 
 
 @pytest.fixture
-def signal_notification_service(hass: HomeAssistant) -> SignalNotificationService:
+def signal_notification_service(
+    hass: HomeAssistant,
+) -> Generator[SignalNotificationService]:
     """Set up signal notification service."""
     hass.config.allowlist_external_urls.add(URL_ATTACHMENT)
     recipients = ["+435565656565"]
     number = "+43443434343"
     with patch.object(SignalCliRestApi, "mode", return_value="normal"):
-        client = SignalCliRestApi(SIGNAL_BASE_URL, number)
-    return SignalNotificationService(hass, recipients, client)
+        yield SignalNotificationService(hass, recipients, SIGNAL_BASE_URL, number)
 
 
 @pytest.fixture

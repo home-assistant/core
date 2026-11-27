@@ -5,10 +5,10 @@ from typing import Any, override
 
 from aioemonitor import Emonitor
 import aiohttp
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.device_registry import format_mac
@@ -63,8 +63,8 @@ class EmonitorConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {vol.Required("host", default=self.discovered_ip): str}
+            data_schema=probatio.Schema(
+                {probatio.Required("host", default=self.discovered_ip): str}
             ),
             errors=errors,
         )
@@ -83,7 +83,7 @@ class EmonitorConfigFlow(ConfigFlow, domain=DOMAIN):
             self.discovered_info = await fetch_mac_and_title(
                 self.hass, self.discovered_ip
             )
-        except Exception as ex:  # noqa: BLE001
+        except Exception as ex:
             _LOGGER.debug(
                 "Unable to fetch status, falling back to manual entry", exc_info=ex
             )
@@ -101,13 +101,12 @@ class EmonitorConfigFlow(ConfigFlow, domain=DOMAIN):
                 data={CONF_HOST: self.discovered_ip},
             )
 
-        self._set_confirm_only()
         self.context["title_placeholders"] = {"name": self.discovered_info["title"]}
         return self.async_show_form(
             step_id="confirm",
             description_placeholders={
-                CONF_HOST: self.discovered_ip,
-                CONF_NAME: self.discovered_info["title"],
+                "host": self.discovered_ip,
+                "name": self.discovered_info["title"],
             },
         )
 

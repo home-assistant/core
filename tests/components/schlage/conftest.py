@@ -1,19 +1,18 @@
 """Common fixtures for the Schlage tests."""
 
-from collections.abc import Generator
+from collections.abc import Awaitable, Callable, Generator
 from typing import Any
 from unittest.mock import AsyncMock, Mock, create_autospec, patch
 
 from pyschlage.lock import Lock
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.schlage.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from . import MockSchlageConfigEntry
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -32,42 +31,58 @@ def mock_config_entry() -> MockSchlageConfigEntry:
 
 @pytest.fixture
 async def mock_added_config_entry(
+    mock_add_config_entry: Callable[[], Awaitable[MockSchlageConfigEntry]],
+) -> MockSchlageConfigEntry:
+    """Return a mock ConfigEntry that has been added to and set up in Home Assistant."""
+    return await mock_add_config_entry()
+
+
+@pytest.fixture
+async def mock_add_config_entry(
     hass: HomeAssistant,
     mock_config_entry: MockSchlageConfigEntry,
     mock_pyschlage_auth: Mock,
     mock_schlage: Mock,
     mock_lock: Mock,
-) -> MockSchlageConfigEntry:
-    """Mock ConfigEntry that's been added to HA."""
-    mock_schlage.locks.return_value = [mock_lock]
-    mock_schlage.users.return_value = []
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert DOMAIN in hass.config_entries.async_domains()
-    return mock_config_entry
+) -> Callable[[], Awaitable[MockSchlageConfigEntry]]:
+    """Return a callable that adds and sets up the mock ConfigEntry in HA."""
+
+    async def callback() -> MockSchlageConfigEntry:
+        mock_schlage.locks.return_value = [mock_lock]
+        mock_schlage.users.return_value = []
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert DOMAIN in hass.config_entries.async_domains()
+        return mock_config_entry
+
+    return callback
 
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.schlage.async_setup_entry", return_value=True
+        "homeassistant.components.schlage.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
 
 @pytest.fixture
-def mock_schlage() -> Mock:
+def mock_schlage() -> Generator[Mock]:
     """Mock pyschlage.Schlage."""
-    with patch("pyschlage.Schlage", autospec=True) as mock_schlage:
+    with patch(
+        "homeassistant.components.schlage.pyschlage.Schlage", autospec=True
+    ) as mock_schlage:
         yield mock_schlage.return_value
 
 
 @pytest.fixture
-def mock_pyschlage_auth() -> Mock:
+def mock_pyschlage_auth() -> Generator[Mock]:
     """Mock pyschlage.Auth."""
-    with patch("pyschlage.Auth", autospec=True) as mock_auth:
+    with patch(
+        "homeassistant.components.schlage.pyschlage.Auth", autospec=True
+    ) as mock_auth:
         mock_auth.return_value.user_id = "abc123"
         yield mock_auth.return_value
 
@@ -80,6 +95,7 @@ def mock_lock(mock_lock_attrs: dict[str, Any]) -> Mock:
     mock_lock.logs.return_value = []
     mock_lock.last_changed_by.return_value = "thumbturn"
     mock_lock.keypad_disabled.return_value = False
+    mock_lock.auto_lock_times.return_value = (0, 15, 30, 60, 120, 240, 360, 600)
     return mock_lock
 
 
@@ -95,6 +111,7 @@ def mock_lock_attrs() -> dict[str, Any]:
         "battery_level": 20,
         "auto_lock_time": 15,
         "firmware_version": "1.0",
+        "serial_number": "d34db33f",
         "lock_and_leave_enabled": True,
         "beeper_enabled": True,
         "connected": True,

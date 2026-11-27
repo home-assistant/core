@@ -5,14 +5,13 @@ from __future__ import annotations
 from unittest.mock import AsyncMock
 
 from pajgps_api.models.device import Device
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.paj_gps.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_entity_device_info(
@@ -24,7 +23,9 @@ async def test_entity_device_info(
     """Test that device info is correctly set up."""
     await setup_integration(hass, mock_config_entry)
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "42_1")})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "42_1"), mock_config_entry.entry_id
+    )
     assert device is not None
     assert device.name == "Device 1"
     assert device.manufacturer == "PAJ GPS"
@@ -48,7 +49,9 @@ async def test_entity_device_info_with_model(
 
     await setup_integration(hass, mock_config_entry)
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "42_1")})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "42_1"), mock_config_entry.entry_id
+    )
     assert device is not None
     assert device.model == "ALLROUND Finder 4G"
 
@@ -66,7 +69,9 @@ async def test_entity_device_info_fallback_name(
 
     await setup_integration(hass, mock_config_entry)
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "42_1")})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "42_1"), mock_config_entry.entry_id
+    )
     assert device is not None
     assert device.name == "PAJ GPS 1"
 
@@ -84,6 +89,8 @@ async def test_entity_device_info_non_dict_device_models(
 
     await setup_integration(hass, mock_config_entry)
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "42_1")})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "42_1"), mock_config_entry.entry_id
+    )
     assert device is not None
     assert device.model is None

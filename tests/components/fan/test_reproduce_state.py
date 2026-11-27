@@ -1,21 +1,18 @@
 """Test reproduce state for Fan."""
 
 import pytest
+from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components.fan import (
-    ATTR_DIRECTION,
-    ATTR_OSCILLATING,
-    ATTR_PERCENTAGE,
-    ATTR_PRESET_MODE,
-    ATTR_PRESET_MODES,
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
     DOMAIN,
+    FanEntityCapabilityAttribute,
+    FanEntityStateAttribute,
+    FanServiceArgument,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.state import async_reproduce_state
-
-from tests.common import async_mock_service
 
 
 async def test_reproducing_states(
@@ -107,61 +104,61 @@ async def test_reproducing_states(
 
 MODERN_FAN_ENTITY = "fan.modern_fan"
 MODERN_FAN_OFF_PERCENTAGE10_STATE = {
-    ATTR_OSCILLATING: True,
-    ATTR_DIRECTION: DIRECTION_FORWARD,
-    ATTR_PERCENTAGE: 10,
-    ATTR_PRESET_MODES: ["Auto", "Eco"],
+    FanEntityStateAttribute.OSCILLATING: True,
+    FanEntityStateAttribute.DIRECTION: DIRECTION_FORWARD,
+    FanEntityStateAttribute.PERCENTAGE: 10,
+    FanEntityCapabilityAttribute.PRESET_MODES: ["Auto", "Eco"],
 }
 MODERN_FAN_OFF_PERCENTAGE15_STATE = {
-    ATTR_OSCILLATING: True,
-    ATTR_DIRECTION: DIRECTION_FORWARD,
-    ATTR_PERCENTAGE: 15,
-    ATTR_PRESET_MODES: ["Auto", "Eco"],
+    FanEntityStateAttribute.OSCILLATING: True,
+    FanEntityStateAttribute.DIRECTION: DIRECTION_FORWARD,
+    FanEntityStateAttribute.PERCENTAGE: 15,
+    FanEntityCapabilityAttribute.PRESET_MODES: ["Auto", "Eco"],
 }
 MODERN_FAN_ON_INVALID_STATE = {
-    ATTR_PRESET_MODES: ["Auto", "Eco"],
+    FanEntityCapabilityAttribute.PRESET_MODES: ["Auto", "Eco"],
 }
 MODERN_FAN_OFF_PPRESET_MODE_AUTO_STATE = {
-    ATTR_OSCILLATING: True,
-    ATTR_DIRECTION: DIRECTION_FORWARD,
-    ATTR_PRESET_MODE: "Auto",
-    ATTR_PRESET_MODES: ["Auto", "Eco"],
+    FanEntityStateAttribute.OSCILLATING: True,
+    FanEntityStateAttribute.DIRECTION: DIRECTION_FORWARD,
+    FanEntityStateAttribute.PRESET_MODE: "Auto",
+    FanEntityCapabilityAttribute.PRESET_MODES: ["Auto", "Eco"],
 }
 MODERN_FAN_OFF_PPRESET_MODE_ECO_STATE = {
-    ATTR_OSCILLATING: True,
-    ATTR_DIRECTION: DIRECTION_FORWARD,
-    ATTR_PRESET_MODE: "Eco",
-    ATTR_PRESET_MODES: ["Auto", "Eco"],
+    FanEntityStateAttribute.OSCILLATING: True,
+    FanEntityStateAttribute.DIRECTION: DIRECTION_FORWARD,
+    FanEntityStateAttribute.PRESET_MODE: "Eco",
+    FanEntityCapabilityAttribute.PRESET_MODES: ["Auto", "Eco"],
 }
 MODERN_FAN_ON_PERCENTAGE10_STATE = {
-    ATTR_OSCILLATING: True,
-    ATTR_DIRECTION: DIRECTION_FORWARD,
-    ATTR_PERCENTAGE: 10,
-    ATTR_PRESET_MODES: ["Auto", "Eco"],
+    FanEntityStateAttribute.OSCILLATING: True,
+    FanEntityStateAttribute.DIRECTION: DIRECTION_FORWARD,
+    FanEntityStateAttribute.PERCENTAGE: 10,
+    FanEntityCapabilityAttribute.PRESET_MODES: ["Auto", "Eco"],
 }
 MODERN_FAN_ON_PERCENTAGE15_STATE = {
-    ATTR_OSCILLATING: True,
-    ATTR_DIRECTION: DIRECTION_FORWARD,
-    ATTR_PERCENTAGE: 15,
-    ATTR_PRESET_MODES: ["Auto", "Eco"],
+    FanEntityStateAttribute.OSCILLATING: True,
+    FanEntityStateAttribute.DIRECTION: DIRECTION_FORWARD,
+    FanEntityStateAttribute.PERCENTAGE: 15,
+    FanEntityCapabilityAttribute.PRESET_MODES: ["Auto", "Eco"],
 }
 MODERN_FAN_ON_PRESET_MODE_AUTO_STATE = {
-    ATTR_OSCILLATING: True,
-    ATTR_DIRECTION: DIRECTION_FORWARD,
-    ATTR_PRESET_MODE: "Auto",
-    ATTR_PRESET_MODES: ["Auto", "Eco"],
+    FanEntityStateAttribute.OSCILLATING: True,
+    FanEntityStateAttribute.DIRECTION: DIRECTION_FORWARD,
+    FanEntityStateAttribute.PRESET_MODE: "Auto",
+    FanEntityCapabilityAttribute.PRESET_MODES: ["Auto", "Eco"],
 }
 MODERN_FAN_ON_PRESET_MODE_ECO_STATE = {
-    ATTR_OSCILLATING: True,
-    ATTR_DIRECTION: DIRECTION_FORWARD,
-    ATTR_PRESET_MODE: "Eco",
-    ATTR_PRESET_MODES: ["Auto", "Eco"],
+    FanEntityStateAttribute.OSCILLATING: True,
+    FanEntityStateAttribute.DIRECTION: DIRECTION_FORWARD,
+    FanEntityStateAttribute.PRESET_MODE: "Eco",
+    FanEntityCapabilityAttribute.PRESET_MODES: ["Auto", "Eco"],
 }
 MODERN_FAN_PRESET_MODE_AUTO_REVERSE_STATE = {
-    ATTR_OSCILLATING: True,
-    ATTR_DIRECTION: DIRECTION_REVERSE,
-    ATTR_PRESET_MODE: "Auto",
-    ATTR_PRESET_MODES: ["Auto", "Eco"],
+    FanEntityStateAttribute.OSCILLATING: True,
+    FanEntityStateAttribute.DIRECTION: DIRECTION_REVERSE,
+    FanEntityStateAttribute.PRESET_MODE: "Auto",
+    FanEntityCapabilityAttribute.PRESET_MODES: ["Auto", "Eco"],
 }
 
 
@@ -199,13 +196,13 @@ async def test_modern_turn_on_invalid(hass: HomeAssistant, start_state) -> None:
     assert set_direction_calls[0].domain == "fan"
     assert set_direction_calls[0].data == {
         "entity_id": MODERN_FAN_ENTITY,
-        ATTR_DIRECTION: None,
+        FanServiceArgument.DIRECTION: None,
     }
     assert len(oscillate_calls) == 1
     assert oscillate_calls[0].domain == "fan"
     assert oscillate_calls[0].data == {
         "entity_id": MODERN_FAN_ENTITY,
-        ATTR_OSCILLATING: None,
+        FanServiceArgument.OSCILLATING: None,
     }
     assert len(set_percentage_mode) == 0
     assert len(set_preset_mode) == 0
@@ -243,7 +240,7 @@ async def test_modern_turn_on_percentage_from_different_speed(
     assert turn_on_calls[0].domain == "fan"
     assert turn_on_calls[0].data == {
         "entity_id": MODERN_FAN_ENTITY,
-        ATTR_PERCENTAGE: 15,
+        FanServiceArgument.PERCENTAGE: 15,
     }
 
     assert len(turn_off_calls) == 0
@@ -275,7 +272,7 @@ async def test_modern_turn_on_percentage_from_same_speed(hass: HomeAssistant) ->
     assert turn_on_calls[0].domain == "fan"
     assert turn_on_calls[0].data == {
         "entity_id": MODERN_FAN_ENTITY,
-        ATTR_PERCENTAGE: 15,
+        FanServiceArgument.PERCENTAGE: 15,
     }
 
     assert len(turn_off_calls) == 0
@@ -317,7 +314,7 @@ async def test_modern_turn_on_preset_mode_from_different_speed(
     assert turn_on_calls[0].domain == "fan"
     assert turn_on_calls[0].data == {
         "entity_id": MODERN_FAN_ENTITY,
-        ATTR_PRESET_MODE: "Auto",
+        FanServiceArgument.PRESET_MODE: "Auto",
     }
 
     assert len(turn_off_calls) == 0
@@ -351,7 +348,7 @@ async def test_modern_turn_on_preset_mode_from_same_speed(hass: HomeAssistant) -
     assert turn_on_calls[0].domain == "fan"
     assert turn_on_calls[0].data == {
         "entity_id": MODERN_FAN_ENTITY,
-        ATTR_PRESET_MODE: "Auto",
+        FanServiceArgument.PRESET_MODE: "Auto",
     }
 
     assert len(turn_off_calls) == 0
@@ -394,13 +391,13 @@ async def test_modern_turn_on_preset_mode_reverse(
     assert turn_on_calls[0].domain == "fan"
     assert turn_on_calls[0].data == {
         "entity_id": MODERN_FAN_ENTITY,
-        ATTR_PRESET_MODE: "Auto",
+        FanServiceArgument.PRESET_MODE: "Auto",
     }
     assert len(set_direction_calls) == 1
     assert set_direction_calls[0].domain == "fan"
     assert set_direction_calls[0].data == {
         "entity_id": MODERN_FAN_ENTITY,
-        ATTR_DIRECTION: DIRECTION_REVERSE,
+        FanServiceArgument.DIRECTION: DIRECTION_REVERSE,
     }
 
     assert len(turn_off_calls) == 0
@@ -441,7 +438,7 @@ async def test_modern_to_preset(hass: HomeAssistant, start_state) -> None:
     assert set_preset_mode[0].domain == "fan"
     assert set_preset_mode[0].data == {
         "entity_id": MODERN_FAN_ENTITY,
-        ATTR_PRESET_MODE: "Auto",
+        FanServiceArgument.PRESET_MODE: "Auto",
     }
 
 
@@ -476,7 +473,7 @@ async def test_modern_to_percentage(hass: HomeAssistant, start_state) -> None:
     assert set_percentage_mode[0].domain == "fan"
     assert set_percentage_mode[0].data == {
         "entity_id": MODERN_FAN_ENTITY,
-        ATTR_PERCENTAGE: 15,
+        FanServiceArgument.PERCENTAGE: 15,
     }
     assert len(set_preset_mode) == 0
 
@@ -503,7 +500,7 @@ async def test_modern_direction(hass: HomeAssistant) -> None:
     assert set_direction_calls[0].domain == "fan"
     assert set_direction_calls[0].data == {
         "entity_id": MODERN_FAN_ENTITY,
-        ATTR_DIRECTION: DIRECTION_REVERSE,
+        FanServiceArgument.DIRECTION: DIRECTION_REVERSE,
     }
     assert len(oscillate_calls) == 0
     assert len(set_percentage_mode) == 0

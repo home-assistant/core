@@ -3,13 +3,12 @@
 from unittest.mock import AsyncMock
 
 from ccm15 import CCM15DeviceState, CCM15SlaveDevice
-import httpx
+import httpx2
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("ccm15_device")
@@ -66,7 +65,7 @@ async def test_setup_retry_on_connection_error(
     ccm15_device: AsyncMock,
 ) -> None:
     """Setup is retried when the controller cannot be reached."""
-    ccm15_device.side_effect = httpx.RequestError("Connection failed")
+    ccm15_device.side_effect = httpx2.RequestError("Connection failed")
     mock_config_entry.add_to_hass(hass)
 
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)

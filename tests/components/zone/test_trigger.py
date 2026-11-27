@@ -4,10 +4,24 @@ from datetime import timedelta
 from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.common import async_fire_time_changed, mock_component
+from pytest_homeassistant.components.common import (
+    TargetSupport,
+    TriggerStateDescription,
+    assert_trigger_behavior_all,
+    assert_trigger_behavior_each,
+    assert_trigger_behavior_first,
+    assert_trigger_options_supported,
+    assert_triggers_target_support,
+    parametrize_target_entities,
+    parametrize_trigger_states,
+    target_entities,
+)
 
 from homeassistant.components import automation, zone
+from homeassistant.components.zone.trigger import TRIGGERS
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ENTITY_MATCH_ALL,
@@ -19,18 +33,6 @@ from homeassistant.core import Context, HomeAssistant, ServiceCall
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.trigger import async_validate_trigger_config
 from homeassistant.setup import async_setup_component
-
-from tests.common import async_fire_time_changed, mock_component
-from tests.components.common import (
-    TriggerStateDescription,
-    assert_trigger_behavior_all,
-    assert_trigger_behavior_each,
-    assert_trigger_behavior_first,
-    assert_trigger_options_supported,
-    parametrize_target_entities,
-    parametrize_trigger_states,
-    target_entities,
-)
 
 
 @pytest.fixture(autouse=True)
@@ -51,6 +53,7 @@ async def setup_comp(hass: HomeAssistant) -> None:
     )
 
 
+@pytest.mark.usefixtures("improved_presence_detection")
 async def test_if_fires_on_zone_enter(
     hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
@@ -125,6 +128,7 @@ async def test_if_fires_on_zone_enter(
     assert len(service_calls) == 2
 
 
+@pytest.mark.usefixtures("improved_presence_detection")
 @pytest.mark.parametrize(
     "coords",
     [
@@ -176,6 +180,7 @@ async def test_if_fires_on_zone_enter_via_in_zones(
     assert len(service_calls) == 1
 
 
+@pytest.mark.usefixtures("improved_presence_detection")
 async def test_zone_enter_ignores_in_zones_for_other_domains(
     hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
@@ -227,6 +232,7 @@ async def test_zone_enter_ignores_in_zones_for_other_domains(
     assert len(service_calls) == 1
 
 
+@pytest.mark.usefixtures("improved_presence_detection")
 async def test_zone_trigger_skips_coordinateless_non_tracker(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
@@ -263,6 +269,7 @@ async def test_zone_trigger_skips_coordinateless_non_tracker(
     assert "has no 'latitude' attribute" not in caplog.text
 
 
+@pytest.mark.usefixtures("improved_presence_detection")
 async def test_if_fires_on_zone_enter_uuid(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -345,6 +352,7 @@ async def test_if_fires_on_zone_enter_uuid(
     assert len(service_calls) == 2
 
 
+@pytest.mark.usefixtures("improved_presence_detection")
 async def test_if_not_fires_for_enter_on_zone_leave(
     hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
@@ -378,6 +386,7 @@ async def test_if_not_fires_for_enter_on_zone_leave(
     assert len(service_calls) == 0
 
 
+@pytest.mark.usefixtures("improved_presence_detection")
 async def test_if_fires_on_zone_leave(
     hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
@@ -411,6 +420,7 @@ async def test_if_fires_on_zone_leave(
     assert len(service_calls) == 1
 
 
+@pytest.mark.usefixtures("improved_presence_detection")
 async def test_if_not_fires_for_leave_on_zone_enter(
     hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
@@ -444,6 +454,7 @@ async def test_if_not_fires_for_leave_on_zone_enter(
     assert len(service_calls) == 0
 
 
+@pytest.mark.usefixtures("improved_presence_detection")
 async def test_zone_condition(
     hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
@@ -474,6 +485,7 @@ async def test_zone_condition(
     assert len(service_calls) == 1
 
 
+@pytest.mark.usefixtures("improved_presence_detection")
 async def test_unknown_zone(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -516,6 +528,113 @@ async def test_unknown_zone(
     assert "Non-existing zone 'zone.no_such_zone' in a zone trigger" in caplog.text
 
 
+# Accuracy circles relative to zone.test (radius 250 m)
+LOCATION_CONTAINED = {
+    "latitude": 32.880837,
+    "longitude": -117.237561,
+    "gps_accuracy": 50,
+}
+# ~300 m from the zone center
+LOCATION_OVERLAPPING = {
+    "latitude": 32.883537,
+    "longitude": -117.237561,
+    "gps_accuracy": 100,
+}
+# ~1100 m from the zone center
+LOCATION_SEPARATED = {"latitude": 32.890837, "longitude": -117.237561}
+
+
+@pytest.mark.usefixtures("improved_presence_detection")
+async def test_zone_trigger_legacy_device_tracker_leave(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test leaving is detected when attached while a legacy tracker is inside.
+
+    Legacy device trackers report no in_zones attribute, and always use the
+    default overlap test.
+    """
+    hass.states.async_set("device_tracker.phone", "test", LOCATION_OVERLAPPING)
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "zone",
+                    "entity_id": "device_tracker.phone",
+                    "zone": "zone.test",
+                    "event": "leave",
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    hass.states.async_set("device_tracker.phone", "not_home", LOCATION_SEPARATED)
+    await hass.async_block_till_done()
+
+    assert len(service_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("improved_presence_detection", "event", "expected_calls"),
+    [
+        pytest.param(False, "enter", [1, 1, 1, 1, 2, 2], id="overlap-enter"),
+        pytest.param(True, "enter", [0, 1, 1, 1, 1, 1], id="containment-enter"),
+        pytest.param(False, "leave", [0, 0, 0, 1, 1, 2], id="overlap-leave"),
+        pytest.param(True, "leave", [0, 0, 0, 1, 1, 1], id="containment-leave"),
+    ],
+    indirect=["improved_presence_detection"],
+)
+@pytest.mark.usefixtures("improved_presence_detection")
+async def test_zone_trigger_location_accuracy(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    event: str,
+    expected_calls: list[int],
+) -> None:
+    """Test the legacy zone trigger with location accuracy.
+
+    With improved presence detection, an overlapping accuracy circle keeps the
+    previous zone match.
+    """
+    hass.states.async_set("test.entity", "hello", LOCATION_SEPARATED)
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "zone",
+                    "entity_id": "test.entity",
+                    "zone": "zone.test",
+                    "event": event,
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    calls = []
+    for location in (
+        LOCATION_OVERLAPPING,
+        LOCATION_CONTAINED,
+        LOCATION_OVERLAPPING,
+        LOCATION_SEPARATED,
+        LOCATION_OVERLAPPING,
+        LOCATION_SEPARATED,
+    ):
+        hass.states.async_set("test.entity", "hello", location)
+        await hass.async_block_till_done()
+        calls.append(len(service_calls))
+
+    assert calls == expected_calls
+
+
 # --- New-style zone trigger tests ---
 
 ZONE_HOME = "zone.home"
@@ -524,6 +643,15 @@ IN_ZONES_HOME = {"in_zones": [ZONE_HOME]}
 IN_ZONES_WORK = {"in_zones": [ZONE_WORK]}
 IN_ZONES_NONE: dict[str, list[str]] = {"in_zones": []}
 TRIGGER_ZONE = ZONE_HOME
+
+
+_TRIGGER_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "_": TargetSupport.NONE,
+    "entered": TargetSupport.STANDARD,
+    "left": TargetSupport.STANDARD,
+    "occupancy_detected": TargetSupport.NONE,
+    "occupancy_cleared": TargetSupport.NONE,
+}
 
 
 @pytest.mark.parametrize(
@@ -550,12 +678,17 @@ async def test_zone_trigger_options_validation(
     )
 
 
+def test_trigger_target_support() -> None:
+    """Certify the trigger registry matches its declared target support."""
+    assert_triggers_target_support(TRIGGERS, _TRIGGER_TARGET_SUPPORT)
+
+
 @pytest.mark.parametrize("trigger_key", ["zone.entered", "zone.left"])
 async def test_zone_trigger_rejects_non_zone_entity_id(
     hass: HomeAssistant, trigger_key: str
 ) -> None:
     """Test that the zone option must reference entities in the zone domain."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await async_validate_trigger_config(
             hass,
             [

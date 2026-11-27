@@ -1,9 +1,14 @@
 """Test Subaru diagnostics."""
 
-import json
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import async_load_json_object_fixture
+from pytest_homeassistant.components.diagnostics import (
+    get_diagnostics_for_config_entry,
+    get_diagnostics_for_device,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.subaru.const import DOMAIN
@@ -17,13 +22,6 @@ from .conftest import (
     MOCK_API_GET_RAW_DATA,
     advance_time_to_next_fetch,
 )
-
-from tests.common import async_load_fixture
-from tests.components.diagnostics import (
-    get_diagnostics_for_config_entry,
-    get_diagnostics_for_device,
-)
-from tests.typing import ClientSessionGenerator
 
 
 async def test_config_entry_diagnostics(
@@ -53,12 +51,12 @@ async def test_device_diagnostics(
 
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
 
-    reg_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_VIN_2_EV)},
+    reg_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_VIN_2_EV), config_entry.entry_id
     )
     assert reg_device is not None
 
-    raw_data = json.loads(await async_load_fixture(hass, "raw_api_data.json", DOMAIN))
+    raw_data = await async_load_json_object_fixture(hass, "raw_api_data.json", DOMAIN)
     with patch(MOCK_API_GET_RAW_DATA, return_value=raw_data) as mock_get_raw_data:
         assert (
             await get_diagnostics_for_device(
@@ -79,8 +77,8 @@ async def test_device_diagnostics_vehicle_not_found(
 
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
 
-    reg_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_VIN_2_EV)},
+    reg_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_VIN_2_EV), config_entry.entry_id
     )
     assert reg_device is not None
 

@@ -1,10 +1,11 @@
 """Config flow for PoolSense integration."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any, override
 
 from poolsense import PoolSense
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
@@ -39,6 +40,7 @@ class PoolSenseConfigFlow(ConfigFlow, domain=DOMAIN):
                 aiohttp_client.async_get_clientsession(self.hass),
                 user_input[CONF_EMAIL],
                 user_input[CONF_PASSWORD],
+                None,
             )
             api_key_valid = await poolsense.test_poolsense_credentials()
 
@@ -56,8 +58,47 @@ class PoolSenseConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_EMAIL): str, vol.Required(CONF_PASSWORD): str}
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(CONF_EMAIL): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
+                }
             ),
+            errors=errors,
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauthentication on an authentication error."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauthentication with a new password."""
+        errors = {}
+        reauth_entry = self._get_reauth_entry()
+
+        if user_input is not None:
+            poolsense = PoolSense(
+                aiohttp_client.async_get_clientsession(self.hass),
+                reauth_entry.data[CONF_EMAIL],
+                user_input[CONF_PASSWORD],
+                None,
+            )
+            if await poolsense.test_poolsense_credentials():
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
+                    data_updates={CONF_PASSWORD: user_input[CONF_PASSWORD]},
+                )
+            errors["base"] = "invalid_auth"
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_PASSWORD)): str}
+            ),
+            description_placeholders={"email": reauth_entry.data[CONF_EMAIL]},
             errors=errors,
         )

@@ -5,11 +5,12 @@ import sys
 from types import TracebackType
 from typing import Any, Self, override
 
-# httpx dynamically imports httpcore, so we need to import it
+# httpx2 dynamically imports httpcore2, so we need to import it
 # to avoid it being imported later when the event loop is running
-import httpcore  # noqa: F401
-import httpx
+import httpcore2  # noqa: F401
+import httpx2
 
+from homeassistant import config_entries
 from homeassistant.const import APPLICATION_NAME, EVENT_HOMEASSISTANT_CLOSE, __version__
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.util.hass_dict import HassKey
@@ -29,13 +30,13 @@ from .frame import warn_use
 # don't have to reconnect every time so we use 15s to match aiohttp.
 KEEP_ALIVE_TIMEOUT = 15
 # Shared httpx clients keyed by (verify_ssl, alpn_protocols)
-DATA_ASYNC_CLIENT: HassKey[dict[tuple[bool, SSLALPNProtocols], httpx.AsyncClient]] = (
+DATA_ASYNC_CLIENT: HassKey[dict[tuple[bool, SSLALPNProtocols], httpx2.AsyncClient]] = (
     HassKey("httpx_async_client")
 )
-DEFAULT_LIMITS = limits = httpx.Limits(keepalive_expiry=KEEP_ALIVE_TIMEOUT)
+DEFAULT_LIMITS = limits = httpx2.Limits(keepalive_expiry=KEEP_ALIVE_TIMEOUT)
 SERVER_SOFTWARE = (
     f"{APPLICATION_NAME}/{__version__} "
-    f"httpx/{httpx.__version__} Python/{sys.version_info[0]}.{sys.version_info[1]}"
+    f"httpx2/{httpx2.__version__} Python/{sys.version_info[0]}.{sys.version_info[1]}"
 )
 USER_AGENT = "User-Agent"
 
@@ -45,7 +46,7 @@ def get_async_client(
     hass: HomeAssistant,
     verify_ssl: bool = True,
     alpn_protocols: SSLALPNProtocols = SSL_ALPN_HTTP11,
-) -> httpx.AsyncClient:
+) -> httpx2.AsyncClient:
     """Return default httpx AsyncClient.
 
     This method must be run in the event loop.
@@ -58,14 +59,17 @@ def get_async_client(
     clients = hass.data.setdefault(DATA_ASYNC_CLIENT, {})
 
     if (client := clients.get(client_key)) is None:
-        client = clients[client_key] = create_async_httpx_client(
-            hass, verify_ssl, alpn_protocols=alpn_protocols
+        client = clients[client_key] = _create_async_httpx_client(
+            hass,
+            verify_ssl,
+            auto_cleanup_method=_async_register_default_async_client_shutdown,
+            alpn_protocols=alpn_protocols,
         )
 
     return client
 
 
-class HassHttpXAsyncClient(httpx.AsyncClient):
+class HassHttpXAsyncClient(httpx2.AsyncClient):
     """httpx AsyncClient that suppresses context management."""
 
     @override
@@ -91,19 +95,48 @@ def create_async_httpx_client(
     ssl_cipher_list: SSLCipherList = SSLCipherList.PYTHON_DEFAULT,
     alpn_protocols: SSLALPNProtocols = SSL_ALPN_HTTP11,
     **kwargs: Any,
-) -> httpx.AsyncClient:
-    """Create a new httpx.AsyncClient with kwargs, i.e. for cookies.
+) -> httpx2.AsyncClient:
+    """Create a new httpx2.AsyncClient with kwargs, i.e. for cookies.
 
-    If auto_cleanup is False, the client will be
-    automatically closed on homeassistant_stop.
+    If auto_cleanup is False, the client will not be closed automatically.
+    Default is True: the client will be automatically closed on
+    homeassistant_close or, when created during config entry setup, when the
+    config entry is unloaded.
 
     Pass alpn_protocols=SSL_ALPN_HTTP11_HTTP2 for HTTP/2 support (automatically
     enables httpx http2 mode).
 
     This method must be run in the event loop.
     """
+    auto_cleanup_method = None
+    if auto_cleanup:
+        auto_cleanup_method = _async_register_async_client_shutdown
+
+    return _create_async_httpx_client(
+        hass,
+        verify_ssl,
+        auto_cleanup_method=auto_cleanup_method,
+        ssl_cipher_list=ssl_cipher_list,
+        alpn_protocols=alpn_protocols,
+        **kwargs,
+    )
+
+
+@callback
+def _create_async_httpx_client(
+    hass: HomeAssistant,
+    verify_ssl: bool = True,
+    auto_cleanup_method: Callable[
+        [HomeAssistant, Callable[[], Coroutine[Any, Any, None]]], None
+    ]
+    | None = None,
+    ssl_cipher_list: SSLCipherList = SSLCipherList.PYTHON_DEFAULT,
+    alpn_protocols: SSLALPNProtocols = SSL_ALPN_HTTP11,
+    **kwargs: Any,
+) -> httpx2.AsyncClient:
+    """Create a new httpx2.AsyncClient with kwargs, i.e. for cookies."""
     # Use the requested ALPN protocols directly to ensure proper SSL context
-    # bucketing. httpx/httpcore mutates SSL contexts by calling set_alpn_protocols(),
+    # bucketing. httpx2/httpcore2 mutates SSL contexts by calling set_alpn_protocols(),
     # so we pre-set the correct protocols to prevent shared context corruption.
     ssl_context = (
         client_context(ssl_cipher_list, alpn_protocols)
@@ -129,8 +162,8 @@ def create_async_httpx_client(
         client.aclose, "closes the Home Assistant httpx client"
     )
 
-    if auto_cleanup:
-        _async_register_async_client_shutdown(hass, client, original_aclose)
+    if auto_cleanup_method:
+        auto_cleanup_method(hass, original_aclose)
 
     return client
 
@@ -138,10 +171,32 @@ def create_async_httpx_client(
 @callback
 def _async_register_async_client_shutdown(
     hass: HomeAssistant,
-    client: httpx.AsyncClient,
     original_aclose: Callable[[], Coroutine[Any, Any, None]],
 ) -> None:
-    """Register httpx AsyncClient aclose on Home Assistant shutdown.
+    """Register httpx AsyncClient aclose on Home Assistant shutdown or config entry unload.
+
+    This method must be run in the event loop.
+    """
+
+    async def _async_close_client(*_: Any) -> None:
+        """Close httpx client."""
+        await original_aclose()
+
+    unsub = hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, _async_close_client)
+
+    if not (config_entry := config_entries.current_entry.get()):
+        return
+
+    config_entry.async_on_unload(unsub)
+    config_entry.async_on_unload(_async_close_client)
+
+
+@callback
+def _async_register_default_async_client_shutdown(
+    hass: HomeAssistant,
+    original_aclose: Callable[[], Coroutine[Any, Any, None]],
+) -> None:
+    """Register default httpx AsyncClient aclose on Home Assistant shutdown.
 
     This method must be run in the event loop.
     """

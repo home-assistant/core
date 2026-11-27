@@ -3,34 +3,31 @@
 The idea was taken from https://github.com/KpaBap/hue-flux/
 """
 
-import datetime
+import datetime as dt
 import logging
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP_KELVIN,
-    ATTR_RGB_COLOR,
-    ATTR_TRANSITION,
-    ATTR_XY_COLOR,
     DOMAIN as LIGHT_DOMAIN,
     VALID_TRANSITION,
+    LightService,
+    LightServiceArgument,
     is_on,
 )
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchEntity
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_BRIGHTNESS,
     CONF_LIGHTS,
     CONF_MODE,
     CONF_NAME,
     CONF_PLATFORM,
-    SERVICE_TURN_ON,
+    CONF_UNIQUE_ID,
     STATE_ON,
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv, event
@@ -47,7 +44,6 @@ from homeassistant.util.dt import as_local, utcnow as dt_utcnow
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_UNIQUE_ID = "unique_id"
 
 CONF_START_TIME = "start_time"
 CONF_STOP_TIME = "stop_time"
@@ -56,38 +52,39 @@ CONF_SUNSET_CT = "sunset_colortemp"
 CONF_STOP_CT = "stop_colortemp"
 CONF_DISABLE_BRIGHTNESS_ADJUST = "disable_brightness_adjust"
 CONF_INTERVAL = "interval"
+CONF_TRANSITION = "transition"
 
 MODE_XY = "xy"
 MODE_MIRED = "mired"
 MODE_RGB = "rgb"
 DEFAULT_MODE = MODE_XY
 
-PLATFORM_SCHEMA = vol.Schema(
+PLATFORM_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_PLATFORM): "flux",
-        vol.Required(CONF_LIGHTS): cv.entity_ids,
-        vol.Optional(CONF_NAME, default="Flux"): cv.string,
-        vol.Optional(CONF_START_TIME): cv.time,
-        vol.Optional(CONF_STOP_TIME): cv.time,
-        vol.Optional(CONF_START_CT, default=4000): vol.All(
-            vol.Coerce(int), vol.Range(min=1000, max=40000)
+        probatio.Required(CONF_PLATFORM): "flux",
+        probatio.Required(CONF_LIGHTS): cv.entity_ids,
+        probatio.Optional(CONF_NAME, default="Flux"): cv.string,
+        probatio.Optional(CONF_START_TIME): cv.time,
+        probatio.Optional(CONF_STOP_TIME): cv.time,
+        probatio.Optional(CONF_START_CT, default=4000): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=1000, max=40000)
         ),
-        vol.Optional(CONF_SUNSET_CT, default=3000): vol.All(
-            vol.Coerce(int), vol.Range(min=1000, max=40000)
+        probatio.Optional(CONF_SUNSET_CT, default=3000): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=1000, max=40000)
         ),
-        vol.Optional(CONF_STOP_CT, default=1900): vol.All(
-            vol.Coerce(int), vol.Range(min=1000, max=40000)
+        probatio.Optional(CONF_STOP_CT, default=1900): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=1000, max=40000)
         ),
-        vol.Optional(CONF_BRIGHTNESS): vol.All(
-            vol.Coerce(int), vol.Range(min=0, max=255)
+        probatio.Optional(CONF_BRIGHTNESS): probatio.All(
+            probatio.Coerce(int), probatio.Byte()
         ),
-        vol.Optional(CONF_DISABLE_BRIGHTNESS_ADJUST): cv.boolean,
-        vol.Optional(CONF_MODE, default=DEFAULT_MODE): vol.Any(
+        probatio.Optional(CONF_DISABLE_BRIGHTNESS_ADJUST): cv.boolean,
+        probatio.Optional(CONF_MODE, default=DEFAULT_MODE): probatio.Any(
             MODE_XY, MODE_MIRED, MODE_RGB
         ),
-        vol.Optional(CONF_INTERVAL, default=30): cv.positive_int,
-        vol.Optional(ATTR_TRANSITION, default=30): VALID_TRANSITION,
-        vol.Optional(ATTR_UNIQUE_ID): cv.string,
+        probatio.Optional(CONF_INTERVAL, default=30): cv.positive_int,
+        probatio.Optional(CONF_TRANSITION, default=30): VALID_TRANSITION,
+        probatio.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -96,40 +93,46 @@ async def async_set_lights_xy(hass, lights, x_val, y_val, brightness, transition
     """Set color of array of lights."""
     for light in lights:
         if is_on(hass, light):
-            service_data = {ATTR_ENTITY_ID: light}
+            service_data = {TargetKey.ENTITY_ID: light}
             if x_val is not None and y_val is not None:
-                service_data[ATTR_XY_COLOR] = [x_val, y_val]
+                service_data[LightServiceArgument.XY_COLOR] = [x_val, y_val]
             if brightness is not None:
-                service_data[ATTR_BRIGHTNESS] = brightness
+                service_data[LightServiceArgument.BRIGHTNESS] = brightness
             if transition is not None:
-                service_data[ATTR_TRANSITION] = transition
-            await hass.services.async_call(LIGHT_DOMAIN, SERVICE_TURN_ON, service_data)
+                service_data[LightServiceArgument.TRANSITION] = transition
+            await hass.services.async_call(
+                LIGHT_DOMAIN, LightService.TURN_ON, service_data
+            )
 
 
 async def async_set_lights_temp(hass, lights, kelvin, brightness, transition):
     """Set color of array of lights."""
     for light in lights:
         if is_on(hass, light):
-            service_data = {ATTR_ENTITY_ID: light}
+            service_data = {TargetKey.ENTITY_ID: light}
             if kelvin is not None:
-                service_data[ATTR_COLOR_TEMP_KELVIN] = kelvin
+                service_data[LightServiceArgument.COLOR_TEMP_KELVIN] = kelvin
             if brightness is not None:
-                service_data[ATTR_BRIGHTNESS] = brightness
+                service_data[LightServiceArgument.BRIGHTNESS] = brightness
             if transition is not None:
-                service_data[ATTR_TRANSITION] = transition
-            await hass.services.async_call(LIGHT_DOMAIN, SERVICE_TURN_ON, service_data)
+                service_data[LightServiceArgument.TRANSITION] = transition
+            await hass.services.async_call(
+                LIGHT_DOMAIN, LightService.TURN_ON, service_data
+            )
 
 
 async def async_set_lights_rgb(hass, lights, rgb, transition):
     """Set color of array of lights."""
     for light in lights:
         if is_on(hass, light):
-            service_data = {ATTR_ENTITY_ID: light}
+            service_data = {TargetKey.ENTITY_ID: light}
             if rgb is not None:
-                service_data[ATTR_RGB_COLOR] = rgb
+                service_data[LightServiceArgument.RGB_COLOR] = rgb
             if transition is not None:
-                service_data[ATTR_TRANSITION] = transition
-            await hass.services.async_call(LIGHT_DOMAIN, SERVICE_TURN_ON, service_data)
+                service_data[LightServiceArgument.TRANSITION] = transition
+            await hass.services.async_call(
+                LIGHT_DOMAIN, LightService.TURN_ON, service_data
+            )
 
 
 async def async_setup_platform(
@@ -150,8 +153,8 @@ async def async_setup_platform(
     disable_brightness_adjust = config.get(CONF_DISABLE_BRIGHTNESS_ADJUST)
     mode = config.get(CONF_MODE)
     interval = config.get(CONF_INTERVAL)
-    transition = config.get(ATTR_TRANSITION)
-    unique_id = config.get(ATTR_UNIQUE_ID)
+    transition = config.get(CONF_TRANSITION)
+    unique_id = config.get(CONF_UNIQUE_ID)
     flux = FluxSwitch(
         name,
         hass,
@@ -175,6 +178,8 @@ async def async_setup_platform(
         await flux.async_flux_update()
 
     service_name = slugify(f"{name} update")
+    # Cannot be moved: action names come from the configuration
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.async_register(SWITCH_DOMAIN, service_name, async_update)
 
 
@@ -250,7 +255,7 @@ class FluxSwitch(SwitchEntity, RestoreEntity):
         self.unsub_tracker = event.async_track_time_interval(
             self.hass,
             self.async_flux_update,
-            datetime.timedelta(seconds=self._interval),
+            dt.timedelta(seconds=self._interval),
         )
 
         # Make initial update
@@ -282,10 +287,10 @@ class FluxSwitch(SwitchEntity, RestoreEntity):
             # stop_time does not happen in the same day as start_time
             if start_time < now:
                 # stop time is tomorrow
-                stop_time += datetime.timedelta(days=1)
+                stop_time += dt.timedelta(days=1)
         elif now < start_time:
             # stop_time was yesterday since the new start_time is not reached
-            stop_time -= datetime.timedelta(days=1)
+            stop_time -= dt.timedelta(days=1)
 
         if start_time < now < sunset:
             # Daytime
@@ -306,7 +311,7 @@ class FluxSwitch(SwitchEntity, RestoreEntity):
             if now < stop_time:
                 if stop_time < start_time and stop_time.day == sunset.day:
                     # we need to use yesterday's sunset time
-                    sunset_time = sunset - datetime.timedelta(days=1)
+                    sunset_time = sunset - dt.timedelta(days=1)
                 else:
                     sunset_time = sunset
 

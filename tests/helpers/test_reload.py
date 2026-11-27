@@ -3,8 +3,15 @@
 import logging
 from unittest.mock import AsyncMock, Mock, patch
 
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.common import (
+    MockModule,
+    MockPlatform,
+    get_fixture_path,
+    mock_integration,
+    mock_platform,
+)
 
 from homeassistant import config
 from homeassistant.const import SERVICE_RELOAD
@@ -19,14 +26,6 @@ from homeassistant.helpers.reload import (
     async_setup_reload_service,
 )
 from homeassistant.loader import async_get_integration
-
-from tests.common import (
-    MockModule,
-    MockPlatform,
-    get_fixture_path,
-    mock_integration,
-    mock_platform,
-)
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = "test_domain"
@@ -237,7 +236,7 @@ async def test_async_integration_failing_yaml_config(hass: HomeAssistant) -> Non
     In case an integration reloads its yaml configuration it should throw when
     the new config failed to load and raise_on_failure is set to True.
     """
-    schema_without_name_attr = vol.Schema({vol.Required("some_option"): str})
+    schema_without_name_attr = probatio.Schema({probatio.Required("some_option"): str})
 
     mock_integration(hass, MockModule(DOMAIN, config_schema=schema_without_name_attr))
 

@@ -1,0 +1,810 @@
+{
+  "chart": {
+    "range": {
+      "start_date": "2026-08-28T15:00:00+02:00",
+      "end_date": "2026-08-30T23:59:59+02:00"
+    },
+    "series": {
+      "prices": [
+        {
+          "start_date": "2026-08-28T13:00:00+00:00",
+          "end_date": "2026-08-28T14:00:00+00:00",
+          "price_tax_included": {
+            "amount": 2604541
+          },
+          "price_tax_excluded": {
+            "amount": 1496060
+          },
+          "tariff_group": "normal",
+          "sustainability_score": {
+            "permille": 1000
+          }
+        },
+        {
+          "start_date": "2026-08-28T14:00:00+00:00",
+          "end_date": "2026-08-28T15:00:00+00:00",
+          "price_tax_included": {
+            "amount": 2653304
+          },
+          "price_tax_excluded": {
+            "amount": 1544823
+          },
+          "tariff_group": "normal",
+          "sustainability_score": {
+            "permille": 1000
+          }
+        },
+        {
+          "start_date": "2026-08-28T15:00:00+00:00",
+          "end_date": "2026-08-28T16:00:00+00:00",
+          "price_tax_included": {
+            "amount": 2958497
+          },
+          "price_tax_excluded": {
+            "amount": 1850016
+          },
+          "tariff_group": "normal",
+          "sustainability_score": {
+            "permille": 1000
+          }
+        },
+        {
+          "start_date": "2026-08-28T16:00:00+00:00",
+          "end_date": "2026-08-28T17:00:00+00:00",
+          "price_tax_included": {
+            "amount": 3231866
+          },
+          "price_tax_excluded": {
+            "amount": 2123385
+          },
+          "tariff_group": "normal",
+          "sustainability_score": {
+            "permille": 1000
+          }
+        },
+        {
+          "start_date": "2026-08-28T17:00:00+00:00",
+          "end_date": "2026-08-28T18:00:00+00:00",
+          "price_tax_included": {
+            "amount": 3389680
+          },
+          "price_tax_excluded": {
+            "amount": 2281199
+          },
+          "tariff_group": "high",
+          "sustainability_score": {
+            "permille": 896
+          }
+        },
+        {
+          "start_date": "2026-08-28T18:00:00+00:00",
+          "end_date": "2026-08-28T19:00:00+00:00",
+          "price_tax_included": {
+            "amount": 3444160
+          },
+          "price_tax_excluded": {
+            "amount": 2335679
+          },
+          "tariff_group": "high",
+          "sustainability_score": {
+            "permille": 747
+          }
+        },
+        {
+          "start_date": "2026-08-28T19:00:00+00:00",
+          "end_date": "2026-08-28T20:00:00+00:00",
+          "price_tax_included": {
+            "amount": 3319348
+          },
+          "price_tax_excluded": {
+            "amount": 2210867
+          },
+          "tariff_group": "high",
+          "sustainability_score": {
+            "permille": 633
+          }
+        },
+        {
+          "start_date": "2026-08-28T20:00:00+00:00",
+          "end_date": "2026-08-28T21:00:00+00:00",
+          "price_tax_included": {
+            "amount": 3264990
+          },
+          "price_tax_excluded": {
+            "amount": 2156509
+          },
+          "tariff_group": "normal",
+          "sustainability_score": {
+            "permille": 689
+          }
+        },
+        {
+          "start_date": "2026-08-28T21:00:00+00:00",
+          "end_date": "2026-08-28T22:00:00+00:00",
+          "price_tax_included": {
+            "amount": 3030734
+          },
+          "price_tax_excluded": {
+            "amount": 1922253
+          },
+          "tariff_group": "normal",
+          "sustainability_score": {
+            "permille": 712
+          }
+        },
+        {
+          "start_date": "2026-08-28T22:00:00+00:00",
+          "end_date": "2026-08-28T23:00:00+00:00",
+          "price_tax_included": {
+            "amount": 2862300
+          },
+          "price_tax_excluded": {
+            "amount": 1753819
+          },
+          "tariff_group": "normal",
+          "sustainability_score": {
+            "permille": 729
+          }
+        },
+        {
+          "start_date": "2026-08-28T23:00:00+00:00",
+          "end_date": "2026-08-29T00:00:00+00:00",
+          "price_tax_included": {
+            "amount": 2659657
+          },
+          "price_tax_excluded": {
+            "amount": 1551176
+          },
+          "tariff_group": "normal",
+          "sustainability_score": {
+            "permille": 781
+          }
+        },
+        {
+          "start_date": "2026-08-29T00:00:00+00:00",
+          "end_date": "2026-08-29T01:00:00+00:00",
+          "price_tax_included": {
+            "amount": 2517542
+          },
+          "price_tax_excluded": {
+            "amount": 1409061
+          },
+          "tariff_group": "low",
+          "sustainability_score": {
+            "permille": 776
+          }
+        },
+        {
+          "start_date": "2026-08-29T01:00:00+00:00",
+          "end_date": "2026-08-29T02:00:00+00:00",
+          "price_tax_included": {
+            "amount": 2429031
+          },
+          "price_tax_excluded": {
+            "amount": 1320550
+          },
+          "tariff_group": "low",
+          "sustainability_score": {
+            "permille": 776
+          }
+        },
+        {
+          "start_date": "2026-08-29T02:00:00+00:00",
+          "end_date": "2026-08-29T03:00:00+00:00",
+          "price_tax_included": {
+            "amount": 2423344
+          },
+          "price_tax_excluded": {
+            "amount": 1314863
+          },
+          "tariff_group": "low",
+          "sustainability_score": {
+            "permille": 672
+          }
+        },
+        {
+          "start_date": "2026-08-29T03:00:00+00:00",
+          "end_date": "2026-08-29T04:00:00+00:00",
+          "price_tax_included": {
+            "amount": 2467116
+          },
+          "price_tax_excluded": {
+            "amount": 1358635
+          },
+          "tariff_group": "low",
+          "sustainability_score": {
+            "permille": 675
+          }
+        },
+        {
+          "start_date": "2026-08-29T04:00:00+00:00",
+          "end_date": "2026-08-29T05:00:00+00:00",
+          "price_tax_included": {
+            "amount": 2489380
+          },
+          "price_tax_excluded": {
+            "amount": 1380899
+          },
+          "tariff_group": "low",
+          "sustainability_score": {
+            "permille": 678
+          }
+        },
+        {
+          "start_date": "2026-08-29T05:00:00+00:00",
+          "end_date": "2026-08-29T06:00:00+00:00",
+          "price_tax_included": {
+            "amount": 2533696
+          },
+          "price_tax_excluded": {
+            "amount": 1425215
+          },
+          "tariff_group": "normal",
+          "sustainability_score": {
+            "permille": 674
+          }
+        },
+        {
+          "start_date": "2026-08-29T06:00:00+00:00",
+          "end_date": "2026-08-29T07:00:00+00:00",
+          "price_tax_included": {
+            "amount": 2043011
+          },
+          "price_tax_excluded": {
+            "amount": 934530
+          },
+          "tariff_group": "low",
+          "sustainability_score": {
+            "permille": 748
+          }
+        },
+        {
+          "start_date": "2026-08-29T07:00:00+00:00",
+          "end_date": "2026-08-29T08:00:00+00:00",
+          "price_tax_included": {
+            "amount": 1371491
+          },
+          "price_tax_excluded": {
+            "amount": 263010
+          },
+          "tariff_group": "low",
+          "sustainability_score": {
+            "permille": 993
+          }
+        },
+        {
+          "start_date": "2026-08-29T08:00:00+00:00",
+          "end_date": "2026-08-29T09:00:00+00:00",
+          "price_tax_included": {
+            "amount": 1310052
+          },
+          "price_tax_excluded": {
+            "amount": 201571
+          },
+          "tariff_group": "low",
+          "sustainability_score": {
+            "permille": 1000
+          }
+        },
+        {
+          "start_date": "2026-08-29T09:00:00+00:00",
+          "end_date": "2026-08-29T10:00:00+00:00",
+          "price_tax_included": {
+            "amount": 1301402
+          },
+          "price_tax_excluded": {
+            "amount": 192921
+          },
+          "tariff_group": "low",
+          "sustainability_score": {
+            "permille": 1000
+          }
+        },
+        {
+          "start_date": "2026-08-29T10:00:00+00:00",
+          "end_date": "2026-08-29T11:00:00+00:00",
+          "price_tax_included": {
+            "amount": 1292962
+          },
+          "price_tax_excluded": {
+            "amount": 184481
+          },
+          "tariff_group": "low",
+          "sustainability_score": {
+            "permille": 1000
+          }
+        },
+        {
+          "start_date": "2026-08-29T11:00:00+00:00",
+          "end_date": "2026-08-29T12:00:00+00:00",
+          "price_tax_included": {
+            "amount": 1289241
+          },
+          "price_tax_excluded": {
+            "amount": 180760
+          },
+          "tariff_group": "low",
+          "sustainability_score": {
+            "permille": 1000
+          }
+        },
+        {
+          "start_date": "2026-08-29T12:00:00+00:00",
+          "end_date": "2026-08-29T13:00:00+00:00",
+          "price_tax_included": {
+            "amount": 1302218
+          },
+          "price_tax_excluded": {
+            "amount": 193737
+          },
+          "tariff_group": "low",
+          "sustainability_score": {
+            "permille": 1000
+          }
+        },
+        {
+          "start_date": "2026-08-29T13:00:00+00:00",
+          "end_date": "2026-08-29T14:00:00+00:00",
+          "price_tax_included": {
+            "amount": 1344145
+          },
+          "price_tax_excluded": {
+            "amount": 235664
+          },
+          "tariff_group": "low",
+          "sustainability_score": {
+            "permille": 1000
+          }
+        },
+        {
+          "start_date": "2026-08-29T14:00:00+00:00",
+          "end_date": "2026-08-29T15:00:00+00:00",
+          "price_tax_included": {
+            "amount": 1591923
+          },
+          "price_tax_excluded": {
+            "amount": 483442
+          },
+          "tariff_group": "low",
+          "sustainability_score": {
+            "permille": 1000
+          }
+        },
+        {
+          "start_date": "2026-08-29T15:00:00+00:00",
+          "end_date": "2026-08-29T16:00:00+00:00",
+          "price_tax_included": {
+            "amount": 2542771
+          },
+          "price_tax_excluded": {
+            "amount": 1434290
+          },
+          "tariff_group": "normal",
+          "sustainability_score": {
+            "permille": 1000
+          }
+        },
+        {
+          "start_date": "2026-08-29T16:00:00+00:00",
+          "end_date": "2026-08-29T17:00:00+00:00",
+          "price_tax_included": {
+            "amount": 3139815
+          },
+          "price_tax_excluded": {
+            "amount": 2031334
+          },
+          "tariff_group": "normal",
+          "sustainability_score": {
+            "permille": 1000
+          }
+        },
+        {
+          "start_date": "2026-08-29T17:00:00+00:00",
+          "end_date": "2026-08-29T18:00:00+00:00",
+          "price_tax_included": {
+            "amount": 3558867
+          },
+          "price_tax_excluded": {
+            "amount": 2450386
+          },
+          "tariff_group": "high",
+          "sustainability_score": {
+            "permille": 815
+          }
+        },
+        {
+          "start_date": "2026-08-29T18:00:00+00:00",
+          "end_date": "2026-08-29T19:00:00+00:00",
+          "price_tax_included": {
+            "amount": 3581586
+          },
+          "price_tax_excluded": {
+            "amount": 2473105
+          },
+          "tariff_group": "high",
+          "sustainability_score": {
+            "permille": 681
+          }
+        },
+        {
+          "start_date": "2026-08-29T19:00:00+00:00",
+          "end_date": "2026-08-29T20:00:00+00:00",
+          "price_tax_included": {
+            "amount": 3388047
+          },
+          "price_tax_excluded": {
+            "amount": 2279566
+          },
+          "tariff_group": "high",
+          "sustainability_score": {
+            "permille": 612
+          }
+        },
+        {
+          "start_date": "2026-08-29T20:00:00+00:00",
+          "end_date": "2026-08-29T21:00:00+00:00",
+          "price_tax_included": {
+            "amount": 3227177
+          },
+          "price_tax_excluded": {
+            "amount": 2118696
+          },
+          "tariff_group": "normal",
+          "sustainability_score": {
+            "permille": 614
+          }
+        },
+        {
+          "start_date": "2026-08-29T21:00:00+00:00",
+          "end_date": "2026-08-29T22:00:00+00:00",
+          "price_tax_included": {
+            "amount": 3043166
+          },
+          "price_tax_excluded": {
+            "amount": 1934685
+          },
+          "tariff_group": "normal",
+          "sustainability_score": {
+            "permille": 648
+          }
+        },
+        {
+          "start_date": "2026-08-29T22:00:00+00:00",
+          "end_date": "2026-08-29T23:00:00+00:00",
+          "price_tax_included": {
+            "amount": 2725662
+          },
+          "price_tax_excluded": {
+            "amount": 1617181
+          },
+          "tariff_group": "normal",
+          "sustainability_score": {
+            "permille": 677
+          }
+        },
+        {
+          "start_date": "2026-08-29T23:00:00+00:00",
+          "end_date": "2026-08-30T00:00:00+00:00",
+          "price_tax_included": {
+            "amount": 2550545
+          },
+          "price_tax_excluded": {
+            "amount": 1442064
+          },
+          "tariff_group": "normal",
+          "sustainability_score": {
+            "permille": 756
+          }
+        },
+        {
+          "start_date": "2026-08-30T00:00:00+00:00",
+          "end_date": "2026-08-30T01:00:00+00:00",
+          "price_tax_included": {
+            "amount": 2351863
+          },
+          "price_tax_excluded": {
+            "amount": 1243382
+          },
+          "tariff_group": "low",
+          "sustainability_score": {
+            "permille": 780
+          }
+        },
+        {
+          "start_date": "2026-08-30T01:00:00+00:00",
+          "end_date": "2026-08-30T02:00:00+00:00",
+          "price_tax_included": {
+            "amount": 2233858
+          },
+          "price_tax_excluded": {
+            "amount": 1125377
+          },
+          "tariff_group": "low",
+          "sustainability_score": {
+            "permille": 824
+          }
+        },
+        {
+          "start_date": "2026-08-30T02:00:00+00:00",
+          "end_date": "2026-08-30T03:00:00+00:00",
+          "price_tax_included": {
+            "amount": 2131008
+          },
+          "price_tax_excluded": {
+            "amount": 1022527
+          },
+          "tariff_group": "low",
+          "sustainability_score": {
+            "permille": 835
+          }
+        },
+        {
+          "start_date": "2026-08-30T03:00:00+00:00",
+          "end_date": "2026-08-30T04:00:00+00:00",
+          "price_tax_included": {
+            "amount": 2172844
+          },
+          "price_tax_excluded": {
+            "amount": 1064363
+          },
+          "tariff_group": "low",
+          "sustainability_score": {
+            "permille": 846
+          }
+        },
+        {
+          "start_date": "2026-08-30T04:00:00+00:00",
+          "end_date": "2026-08-30T05:00:00+00:00",
+          "price_tax_included": {
+            "amount": 2173176
+          },
+          "price_tax_excluded": {
+            "amount": 1064695
+          },
+          "tariff_group": "low",
+          "sustainability_score": {
+            "permille": 860
+          }
+        },
+        {
+          "start_date": "2026-08-30T05:00:00+00:00",
+          "end_date": "2026-08-30T06:00:00+00:00",
+          "price_tax_included": {
+            "amount": 2024256
+          },
+          "price_tax_excluded": {
+            "amount": 915775
+          },
+          "tariff_group": "low",
+          "sustainability_score": {
+            "permille": 853
+          }
+        },
+        {
+          "start_date": "2026-08-30T06:00:00+00:00",
+          "end_date": "2026-08-30T07:00:00+00:00",
+          "price_tax_included": {
+            "amount": 1503924
+          },
+          "price_tax_excluded": {
+            "amount": 395443
+          },
+          "tariff_group": "low",
+          "sustainability_score": {
+            "permille": 889
+          }
+        },
+        {
+          "start_date": "2026-08-30T07:00:00+00:00",
+          "end_date": "2026-08-30T08:00:00+00:00",
+          "price_tax_included": {
+            "amount": 1311777
+          },
+          "price_tax_excluded": {
+            "amount": 203296
+          },
+          "tariff_group": "low",
+          "sustainability_score": {
+            "permille": 1000
+          }
+        },
+        {
+          "start_date": "2026-08-30T08:00:00+00:00",
+          "end_date": "2026-08-30T09:00:00+00:00",
+          "price_tax_included": {
+            "amount": 1307391
+          },
+          "price_tax_excluded": {
+            "amount": 198910
+          },
+          "tariff_group": "low",
+          "sustainability_score": {
+            "permille": 1000
+          }
+        },
+        {
+          "start_date": "2026-08-30T09:00:00+00:00",
+          "end_date": "2026-08-30T10:00:00+00:00",
+          "price_tax_included": {
+            "amount": 1306666
+          },
+          "price_tax_excluded": {
+            "amount": 198185
+          },
+          "tariff_group": "low",
+          "sustainability_score": {
+            "permille": 1000
+          }
+        },
+        {
+          "start_date": "2026-08-30T10:00:00+00:00",
+          "end_date": "2026-08-30T11:00:00+00:00",
+          "price_tax_included": {
+            "amount": 1299103
+          },
+          "price_tax_excluded": {
+            "amount": 190622
+          },
+          "tariff_group": "low",
+          "sustainability_score": {
+            "permille": 1000
+          }
+        },
+        {
+          "start_date": "2026-08-30T11:00:00+00:00",
+          "end_date": "2026-08-30T12:00:00+00:00",
+          "price_tax_included": {
+            "amount": 1295896
+          },
+          "price_tax_excluded": {
+            "amount": 187415
+          },
+          "tariff_group": "low",
+          "sustainability_score": {
+            "permille": 1000
+          }
+        },
+        {
+          "start_date": "2026-08-30T12:00:00+00:00",
+          "end_date": "2026-08-30T13:00:00+00:00",
+          "price_tax_included": {
+            "amount": 1296108
+          },
+          "price_tax_excluded": {
+            "amount": 187627
+          },
+          "tariff_group": "low",
+          "sustainability_score": {
+            "permille": 1000
+          }
+        },
+        {
+          "start_date": "2026-08-30T13:00:00+00:00",
+          "end_date": "2026-08-30T14:00:00+00:00",
+          "price_tax_included": {
+            "amount": 1307028
+          },
+          "price_tax_excluded": {
+            "amount": 198547
+          },
+          "tariff_group": "low",
+          "sustainability_score": {
+            "permille": 1000
+          }
+        },
+        {
+          "start_date": "2026-08-30T14:00:00+00:00",
+          "end_date": "2026-08-30T15:00:00+00:00",
+          "price_tax_included": {
+            "amount": 1314258
+          },
+          "price_tax_excluded": {
+            "amount": 205777
+          },
+          "tariff_group": "low",
+          "sustainability_score": {
+            "permille": 1000
+          }
+        },
+        {
+          "start_date": "2026-08-30T15:00:00+00:00",
+          "end_date": "2026-08-30T16:00:00+00:00",
+          "price_tax_included": {
+            "amount": 1994732
+          },
+          "price_tax_excluded": {
+            "amount": 886251
+          },
+          "tariff_group": "low",
+          "sustainability_score": {
+            "permille": 1000
+          }
+        },
+        {
+          "start_date": "2026-08-30T16:00:00+00:00",
+          "end_date": "2026-08-30T17:00:00+00:00",
+          "price_tax_included": {
+            "amount": 3208694
+          },
+          "price_tax_excluded": {
+            "amount": 2100213
+          },
+          "tariff_group": "normal",
+          "sustainability_score": {
+            "permille": 898
+          }
+        },
+        {
+          "start_date": "2026-08-30T17:00:00+00:00",
+          "end_date": "2026-08-30T18:00:00+00:00",
+          "price_tax_included": {
+            "amount": 3535576
+          },
+          "price_tax_excluded": {
+            "amount": 2427095
+          },
+          "tariff_group": "high",
+          "sustainability_score": {
+            "permille": 584
+          }
+        },
+        {
+          "start_date": "2026-08-30T18:00:00+00:00",
+          "end_date": "2026-08-30T19:00:00+00:00",
+          "price_tax_included": {
+            "amount": 3647561
+          },
+          "price_tax_excluded": {
+            "amount": 2539080
+          },
+          "tariff_group": "high",
+          "sustainability_score": {
+            "permille": 409
+          }
+        },
+        {
+          "start_date": "2026-08-30T19:00:00+00:00",
+          "end_date": "2026-08-30T20:00:00+00:00",
+          "price_tax_included": {
+            "amount": 3644536
+          },
+          "price_tax_excluded": {
+            "amount": 2536055
+          },
+          "tariff_group": "high",
+          "sustainability_score": {
+            "permille": 314
+          }
+        },
+        {
+          "start_date": "2026-08-30T20:00:00+00:00",
+          "end_date": "2026-08-30T21:00:00+00:00",
+          "price_tax_included": {
+            "amount": 3504570
+          },
+          "price_tax_excluded": {
+            "amount": 2396089
+          },
+          "tariff_group": "high",
+          "sustainability_score": {
+            "permille": 348
+          }
+        },
+        {
+          "start_date": "2026-08-30T21:00:00+00:00",
+          "end_date": "2026-08-30T22:00:00+00:00",
+          "price_tax_included": {
+            "amount": 3341552
+          },
+          "price_tax_excluded": {
+            "amount": 2233071
+          },
+          "tariff_group": "high",
+          "sustainability_score": {
+            "permille": 374
+          }
+        }
+      ]
+    }
+  }
+}

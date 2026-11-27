@@ -3,7 +3,7 @@
 from typing import Any, override
 
 from phone_modem import PhoneModem
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import usb
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -12,7 +12,7 @@ from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
 from .const import DEFAULT_NAME, DOMAIN, EXCEPTIONS
 
-DATA_SCHEMA = vol.Schema({"name": str, "device": str})
+DATA_SCHEMA = probatio.Schema({"name": str, "device": str})
 
 
 def _generate_unique_id(port: usb.USBDevice | usb.SerialDevice) -> str:
@@ -56,7 +56,6 @@ class PhoneModemFlowHandler(ConfigFlow, domain=DOMAIN):
                 title=user_input.get(CONF_NAME, DEFAULT_NAME),
                 data={CONF_DEVICE: self._device},
             )
-        self._set_confirm_only()
         return self.async_show_form(step_id="usb_confirm")
 
     @override
@@ -98,7 +97,9 @@ class PhoneModemFlowHandler(ConfigFlow, domain=DOMAIN):
                     data={CONF_DEVICE: dev_path},
                 )
         user_input = user_input or {}
-        schema = vol.Schema({vol.Required(CONF_DEVICE): vol.In(list(port_map))})
+        schema = probatio.Schema(
+            {probatio.Required(CONF_DEVICE): probatio.In(list(port_map))}
+        )
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
     async def validate_device_errors(

@@ -71,7 +71,13 @@ def setup_platform(
             SensorDeviceClass.HUMIDITY,
             SensorStateClass.MEASUREMENT,
         ],
-        ["Danfoss Air Fan Step", PERCENTAGE, ReadCommand.fan_step, None, None],
+        [
+            "Danfoss Air Fan Step",
+            PERCENTAGE,
+            ReadCommand.fan_speed_percent,
+            None,
+            None,
+        ],
         [
             "Danfoss Air Exhaust Fan Speed",
             REVOLUTIONS_PER_MINUTE,
@@ -124,6 +130,7 @@ class DanfossAir(SensorEntity):
         communication with the Air CCM.
         """
         self._data.update()
+        self._attr_available = self._data.available
 
         self._attr_native_value = self._data.get_value(self._type)
         if self._attr_native_value is None:

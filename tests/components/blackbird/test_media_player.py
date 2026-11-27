@@ -3,14 +3,13 @@
 from collections import defaultdict
 from unittest import mock
 
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.common import MockEntityPlatform
 
-from homeassistant.components.blackbird.const import DOMAIN, SERVICE_SETALLZONES
-from homeassistant.components.blackbird.media_player import (
-    DATA_BLACKBIRD,
-    PLATFORM_SCHEMA,
-)
+from homeassistant.components.blackbird.const import DATA_BLACKBIRD, DOMAIN
+from homeassistant.components.blackbird.media_player import PLATFORM_SCHEMA
+from homeassistant.components.blackbird.services import BlackbirdService
 from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
@@ -18,8 +17,6 @@ from homeassistant.components.media_player import (
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockEntityPlatform
 
 
 class AttrDict(dict):
@@ -166,7 +163,7 @@ def test_invalid_schemas() -> None:
         },
     )
     for value in schemas:
-        with pytest.raises(vol.MultipleInvalid):
+        with pytest.raises(probatio.MultipleInvalid):
             PLATFORM_SCHEMA(value)
 
 
@@ -218,7 +215,7 @@ def media_player_entity(
 async def test_setup_platform(hass: HomeAssistant) -> None:
     """Test setting up platform."""
     # One service must be registered
-    assert hass.services.has_service(DOMAIN, SERVICE_SETALLZONES)
+    assert hass.services.has_service(DOMAIN, BlackbirdService.SET_ALL_ZONES)
     assert len(hass.data[DATA_BLACKBIRD]) == 1
     assert hass.data[DATA_BLACKBIRD]["/dev/ttyUSB0-3"].name == "Zone name"
 
@@ -237,7 +234,7 @@ async def test_setallzones_service_call_with_entity_id(
     # Call set all zones service
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SETALLZONES,
+        BlackbirdService.SET_ALL_ZONES,
         {"entity_id": "media_player.zone_3", "source": "three"},
         blocking=True,
     )
@@ -261,7 +258,7 @@ async def test_setallzones_service_call_without_entity_id(
 
     # Call set all zones service
     await hass.services.async_call(
-        DOMAIN, SERVICE_SETALLZONES, {"source": "three"}, blocking=True
+        DOMAIN, BlackbirdService.SET_ALL_ZONES, {"source": "three"}, blocking=True
     )
 
     # Check that source was changed

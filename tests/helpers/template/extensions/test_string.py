@@ -1,5 +1,7 @@
 """Test string template extension."""
 
+import pytest
+
 from homeassistant.core import HomeAssistant
 
 from tests.helpers.template.helpers import render
@@ -52,6 +54,45 @@ def test_urlencode(hass: HomeAssistant) -> None:
         hass, "{% set string = 'the quick brown fox = true' %}{{ string | urlencode }}"
     )
     assert result == "the%20quick%20brown%20fox%20%3D%20true"
+
+
+@pytest.mark.parametrize(
+    ("template_str", "expected"),
+    [
+        pytest.param("{{ urlencode({'a': 'b c'}) }}", "a=b+c", id="only_node"),
+        pytest.param("?{{ urlencode({'a': 'b c'}) }}", "?a=b+c", id="concatenated"),
+        pytest.param(
+            "{{ urlencode({'foo': 'x&y', 'bar': 42}) }}",
+            "foo=x%26y&bar=42",
+            id="special_characters",
+        ),
+    ],
+)
+def test_urlencode_function(
+    hass: HomeAssistant, template_str: str, expected: str
+) -> None:
+    """Test the urlencode function renders a query string."""
+    assert render(hass, template_str, parse_result=False) == expected
+
+
+@pytest.mark.parametrize(
+    ("template_str", "expected"),
+    [
+        pytest.param("{{ urlencode({'a': 'b c'}) }}", "a=b+c", id="only_node"),
+        pytest.param(
+            "{{ urlencode({'foo': 'x&y', 'bar': 42}) }}",
+            "foo=x%26y&bar=42",
+            id="special_characters",
+        ),
+    ],
+)
+def test_urlencode_function_parse_result(
+    hass: HomeAssistant, template_str: str, expected: str
+) -> None:
+    """Test the urlencode function renders a str with the default parse_result."""
+    result = render(hass, template_str)
+    assert result == expected
+    assert type(result) is str
 
 
 def test_string_functions_with_non_string_input(hass: HomeAssistant) -> None:

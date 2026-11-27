@@ -4,14 +4,13 @@ from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.typing import RecorderInstanceGenerator
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder.db_schema import RecorderRuns
 from homeassistant.components.recorder.models import process_timestamp
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
-
-from tests.typing import RecorderInstanceGenerator
 
 
 @pytest.mark.usefixtures("recorder_mock")

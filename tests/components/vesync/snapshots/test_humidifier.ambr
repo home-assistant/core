@@ -3,8 +3,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -25,7 +25,6 @@
       'model_id': None,
       'name': 'Air Purifier 131s',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -40,8 +39,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -62,7 +61,6 @@
       'model_id': None,
       'name': 'Air Purifier 200s',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -77,8 +75,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -99,7 +97,6 @@
       'model_id': None,
       'name': 'Air Purifier 400s',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -114,8 +111,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -136,7 +133,6 @@
       'model_id': None,
       'name': 'Air Purifier 600s',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -147,12 +143,84 @@
   list([
   ])
 # ---
+# name: test_humidifier_state[Air Purifier Sprout][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          'sprout-purifier',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'LAP-B851S-WUS',
+      'model_id': None,
+      'name': 'Air Purifier Sprout',
+      'name_by_user': None,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_humidifier_state[Air Purifier Sprout][entities]
+  list([
+  ])
+# ---
+# name: test_humidifier_state[Air Purifier Vital 200S][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          'vital200s-purifier',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'LAP-V201S-WUS',
+      'model_id': None,
+      'name': 'Air Purifier Vital 200S',
+      'name_by_user': None,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_humidifier_state[Air Purifier Vital 200S][entities]
+  list([
+  ])
+# ---
 # name: test_humidifier_state[CS158-AF Air Fryer Cooking][devices]
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -173,7 +241,6 @@
       'model_id': None,
       'name': 'CS158-AF Air Fryer Cooking',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': None,
       'via_device_id': None,
@@ -188,8 +255,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -210,7 +277,6 @@
       'model_id': None,
       'name': 'CS158-AF Air Fryer Standby',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': None,
       'via_device_id': None,
@@ -221,12 +287,48 @@
   list([
   ])
 # ---
+# name: test_humidifier_state[CoreBreeze 432S][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          'corebreeze432s',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'LPF-R432S-AEU',
+      'model_id': None,
+      'name': 'CoreBreeze 432S',
+      'name_by_user': None,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_humidifier_state[CoreBreeze 432S][entities]
+  list([
+  ])
+# ---
 # name: test_humidifier_state[Dimmable Light][devices]
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -247,7 +349,6 @@
       'model_id': None,
       'name': 'Dimmable Light',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -262,8 +363,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -284,7 +385,6 @@
       'model_id': None,
       'name': 'Dimmer Switch',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -295,12 +395,48 @@
   list([
   ])
 # ---
+# name: test_humidifier_state[Dual Air Fryer][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          'CAFTF101S',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'CAF-TF101S',
+      'model_id': None,
+      'name': 'Dual Air Fryer',
+      'name_by_user': None,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_humidifier_state[Dual Air Fryer][entities]
+  list([
+  ])
+# ---
 # name: test_humidifier_state[Humidifier 200s][devices]
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -321,7 +457,6 @@
       'model_id': None,
       'name': 'Humidifier 200s',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -344,9 +479,9 @@
         <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 30,
       }),
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
-      'device_id': <ANY>,
+      'device_id': <DeviceEntry identifiers=[('vesync', '200s-humidifier4321')]>,
       'disabled_by': None,
       'domain': 'humidifier',
       'entity_category': None,
@@ -361,7 +496,7 @@
       'object_id_base': None,
       'options': dict({
       }),
-      'original_device_class': None,
+      'original_device_class': <HumidifierDeviceClass.HUMIDIFIER: 'humidifier'>,
       'original_icon': None,
       'original_name': None,
       'platform': 'vesync',
@@ -382,6 +517,7 @@
         'normal',
       ]),
       <HumidifierEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 35,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidifier',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier 200s',
       <HumidifierEntityStateAttribute.HUMIDITY: 'humidity'>: 40,
       <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 80,
@@ -401,8 +537,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -423,7 +559,6 @@
       'model_id': None,
       'name': 'Humidifier 6000s',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': None,
       'via_device_id': None,
@@ -448,9 +583,9 @@
         <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 30,
       }),
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
-      'device_id': <ANY>,
+      'device_id': <DeviceEntry identifiers=[('vesync', '6000s')]>,
       'disabled_by': None,
       'domain': 'humidifier',
       'entity_category': None,
@@ -465,7 +600,7 @@
       'object_id_base': None,
       'options': dict({
       }),
-      'original_device_class': None,
+      'original_device_class': <HumidifierDeviceClass.HUMIDIFIER: 'humidifier'>,
       'original_icon': None,
       'original_name': None,
       'platform': 'vesync',
@@ -488,6 +623,7 @@
         'sleep',
       ]),
       <HumidifierEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 36,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidifier',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier 6000s',
       <HumidifierEntityStateAttribute.HUMIDITY: 'humidity'>: 40,
       <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 80,
@@ -507,8 +643,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -529,7 +665,6 @@
       'model_id': None,
       'name': 'Humidifier 600S',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -553,9 +688,9 @@
         <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 30,
       }),
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
-      'device_id': <ANY>,
+      'device_id': <DeviceEntry identifiers=[('vesync', '600s-humidifier')]>,
       'disabled_by': None,
       'domain': 'humidifier',
       'entity_category': None,
@@ -570,7 +705,7 @@
       'object_id_base': None,
       'options': dict({
       }),
-      'original_device_class': None,
+      'original_device_class': <HumidifierDeviceClass.HUMIDIFIER: 'humidifier'>,
       'original_icon': None,
       'original_name': None,
       'platform': 'vesync',
@@ -592,6 +727,7 @@
         'sleep',
       ]),
       <HumidifierEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 35,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidifier',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier 600S',
       <HumidifierEntityStateAttribute.HUMIDITY: 'humidity'>: 40,
       <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 80,
@@ -607,12 +743,116 @@
     'state': 'on',
   })
 # ---
+# name: test_humidifier_state[Humidifier Sprout][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          'sprout-humidifier',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'LEH-B381S-WUS',
+      'model_id': None,
+      'name': 'Humidifier Sprout',
+      'name_by_user': None,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_humidifier_state[Humidifier Sprout][entities]
+  list([
+    EntityRegistryEntrySnapshot({
+      'aliases': list([
+        None,
+      ]),
+      'area_id': None,
+      'capabilities': dict({
+        <HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: 'available_modes'>: list([
+          'auto',
+          'normal',
+          'sleep',
+        ]),
+        <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 80,
+        <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 30,
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
+      'device_class': None,
+      'device_id': <DeviceEntry identifiers=[('vesync', 'sprout-humidifier')]>,
+      'disabled_by': None,
+      'domain': 'humidifier',
+      'entity_category': None,
+      'entity_id': 'humidifier.humidifier_sprout',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': None,
+      'options': dict({
+      }),
+      'original_device_class': <HumidifierDeviceClass.HUMIDIFIER: 'humidifier'>,
+      'original_icon': None,
+      'original_name': None,
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': <HumidifierEntityFeature: 1>,
+      'translation_key': 'vesync',
+      'unique_id': 'sprout-humidifier',
+      'unit_of_measurement': None,
+    }),
+  ])
+# ---
+# name: test_humidifier_state[Humidifier Sprout][humidifier.humidifier_sprout]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: 'available_modes'>: list([
+        'auto',
+        'normal',
+        'sleep',
+      ]),
+      <HumidifierEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 45,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidifier',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier Sprout',
+      <HumidifierEntityStateAttribute.HUMIDITY: 'humidity'>: 50,
+      <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 80,
+      <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 30,
+      <HumidifierEntityStateAttribute.MODE: 'mode'>: 'auto',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <HumidifierEntityFeature: 1>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'humidifier.humidifier_sprout',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_humidifier_state[Outlet][devices]
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -633,7 +873,6 @@
       'model_id': None,
       'name': 'Outlet',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -648,8 +887,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -670,7 +909,6 @@
       'model_id': None,
       'name': 'SmartTowerFan',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -685,8 +923,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -707,7 +945,6 @@
       'model_id': None,
       'name': 'Temperature Light',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -722,8 +959,8 @@
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
-      'config_entries': <ANY>,
-      'config_entries_subentries': <ANY>,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -744,7 +981,6 @@
       'model_id': None,
       'name': 'Wall Switch',
       'name_by_user': None,
-      'primary_config_entry': <ANY>,
       'serial_number': None,
       'sw_version': '1.0.0',
       'via_device_id': None,

@@ -1,5 +1,23 @@
 {
   "entity": {
+    "number": {
+      "power_on_brightness": {
+        "default": "mdi:brightness-percent"
+      },
+      "power_on_temperature": {
+        "default": "mdi:thermometer"
+      }
+    },
+    "select": {
+      "power_on_behavior": {
+        "default": "mdi:power-settings"
+      }
+    },
+    "sensor": {
+      "wifi_signal_strength": {
+        "default": "mdi:wifi"
+      }
+    },
     "switch": {
       "bypass": {
         "default": "mdi:battery-off-outline"

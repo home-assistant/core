@@ -3,20 +3,17 @@
 from collections.abc import Callable
 
 import pytest
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
-from homeassistant.components.siren import ATTR_DURATION, DOMAIN as SIREN_DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
+from homeassistant.components.siren import (
+    DOMAIN as SIREN_DOMAIN,
+    SirenService,
+    SirenServiceArgument,
 )
+from homeassistant.const import STATE_OFF, STATE_ON, TargetKey
 from homeassistant.core import HomeAssistant
 
 from .conftest import WebsocketDataType
-
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.mark.parametrize(
@@ -51,8 +48,8 @@ async def test_sirens(
 
     await hass.services.async_call(
         SIREN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "siren.warning_device"},
+        SirenService.TURN_ON,
+        {TargetKey.ENTITY_ID: "siren.warning_device"},
         blocking=True,
     )
     assert aioclient_mock.mock_calls[1][2] == {"alert": "lselect"}
@@ -61,8 +58,8 @@ async def test_sirens(
 
     await hass.services.async_call(
         SIREN_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "siren.warning_device"},
+        SirenService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "siren.warning_device"},
         blocking=True,
     )
     assert aioclient_mock.mock_calls[2][2] == {"alert": "none"}
@@ -71,8 +68,11 @@ async def test_sirens(
 
     await hass.services.async_call(
         SIREN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "siren.warning_device", ATTR_DURATION: 10},
+        SirenService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: "siren.warning_device",
+            SirenServiceArgument.DURATION: 10,
+        },
         blocking=True,
     )
     assert aioclient_mock.mock_calls[3][2] == {"alert": "lselect", "ontime": 100}

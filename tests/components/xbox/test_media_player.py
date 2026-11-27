@@ -1,14 +1,26 @@
 """Test the Xbox media_player platform."""
 
 from collections.abc import Generator
-from http import HTTPStatus
+from datetime import timedelta
 from typing import Any
 from unittest.mock import patch
 
-from httpx import HTTPStatusError, RequestError, TimeoutException
+from freezegun.api import FrozenDateTimeFactory
+from httpx2 import HTTPStatusError, RequestError, TimeoutException
 import pytest
+from pytest_homeassistant.common import (
+    AsyncMock,
+    Mock,
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
+from pytest_homeassistant.typing import MagicMock, WebSocketGenerator
 from pythonxbox.api.provider.catalog.models import CatalogResponse
 from pythonxbox.api.provider.smartglass.models import (
+    CommandResponse,
+    SmartglassConsoleList,
     SmartglassConsoleStatus,
     VolumeDirection,
 )
@@ -20,12 +32,12 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     SERVICE_PLAY_MEDIA,
+    MediaPlayerService,
     MediaType,
 )
 from homeassistant.components.xbox import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
@@ -35,20 +47,13 @@ from homeassistant.const import (
     SERVICE_VOLUME_DOWN,
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_UP,
+    STATE_UNAVAILABLE,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import (
-    AsyncMock,
-    Mock,
-    MockConfigEntry,
-    async_load_json_object_fixture,
-    snapshot_platform,
-)
-from tests.typing import MagicMock, WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -64,7 +69,9 @@ def media_player_only() -> Generator[None]:
 @pytest.fixture(autouse=True)
 def mock_token() -> Generator[MagicMock]:
     """Mock token generator."""
-    with patch("secrets.token_hex", return_value="mock_token") as token:
+    with patch(
+        "secrets.token_hex", return_value="mock_token_0123456789abcdef01234"
+    ) as token:
         yield token
 
 
@@ -106,6 +113,90 @@ async def test_media_players(
     assert config_entry.state is ConfigEntryState.LOADED
 
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
+
+
+async def test_media_player_added_before_console_status(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    xbox_live_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a console that appears before it has been polled for status.
+
+    The status coordinator only polls consoles an entity has registered for, so
+    a console added at runtime has no status data when its entity is created.
+    """
+
+    xbox_live_client.smartglass.get_console_list.return_value = SmartglassConsoleList(
+        **await async_load_json_object_fixture(
+            hass, "smartglass_console_list_empty.json", DOMAIN
+        )  # pyright: ignore[reportArgumentType]
+    )
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert not config_entry.runtime_data.status.data
+
+    xbox_live_client.smartglass.get_console_list.return_value = SmartglassConsoleList(
+        **await async_load_json_object_fixture(
+            hass, "smartglass_console_list.json", DOMAIN
+        )  # pyright: ignore[reportArgumentType]
+    )
+
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert "Error adding entity" not in caplog.text
+    assert entity_registry.async_get("media_player.xonex") is not None
+    assert (state := hass.states.get("media_player.xonex")) is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    freezer.tick(timedelta(seconds=15))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("media_player.xonex")) is not None
+    assert state.state != STATE_UNAVAILABLE
+
+
+async def test_media_player_unavailable_on_failed_update(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    xbox_live_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the media player becomes unavailable when a status update fails."""
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("media_player.xonex")) is not None
+    assert state.state != STATE_UNAVAILABLE
+
+    xbox_live_client.smartglass.get_console_status.side_effect = TimeoutException(
+        "timeout"
+    )
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (state := hass.states.get("media_player.xonex")) is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    xbox_live_client.smartglass.get_console_status.side_effect = None
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (state := hass.states.get("media_player.xonex")) is not None
+    assert state.state != STATE_UNAVAILABLE
 
 
 @pytest.mark.usefixtures("xbox_live_client")
@@ -222,7 +313,7 @@ async def test_media_player_actions(
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         service,
-        target={ATTR_ENTITY_ID: "media_player.xone", **service_args},
+        target={TargetKey.ENTITY_ID: "media_player.xone", **service_args},
         blocking=True,
     )
 
@@ -299,7 +390,7 @@ async def test_media_player_action_exceptions(
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
             service,
-            target={ATTR_ENTITY_ID: "media_player.xone", **service_args},
+            target={TargetKey.ENTITY_ID: "media_player.xone", **service_args},
             blocking=True,
         )
     assert e.value.translation_key == translation_key
@@ -318,17 +409,17 @@ async def test_media_player_turn_on_failed(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    xbox_live_client.smartglass.wake_up.side_effect = (
-        HTTPStatusError(
-            "", request=Mock(), response=Mock(status_code=HTTPStatus.NOT_FOUND)
-        ),
+    xbox_live_client.smartglass.wake_up.return_value = CommandResponse(
+        **await async_load_json_object_fixture(
+            hass, "smartglass_command_response_error.json", DOMAIN
+        )  # type: ignore[reportArgumentType]
     )
 
     with pytest.raises(HomeAssistantError) as e:
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_TURN_ON,
-            target={ATTR_ENTITY_ID: "media_player.xone"},
+            MediaPlayerService.TURN_ON,
+            target={TargetKey.ENTITY_ID: "media_player.xone"},
             blocking=True,
         )
     assert e.value.translation_key == "turn_on_failed"

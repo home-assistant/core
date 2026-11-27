@@ -5,6 +5,7 @@ import random
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohomeconnect.model import (
+    ApplianceType,
     ArrayOfEvents,
     ArrayOfSettings,
     Event,
@@ -31,6 +32,7 @@ from aiohomeconnect.model.program import (
 )
 from aiohomeconnect.model.setting import SettingConstraints
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.home_connect.const import DOMAIN
 from homeassistant.components.number import (
@@ -41,20 +43,13 @@ from homeassistant.components.number import (
     DEFAULT_MAX_VALUE,
     DEFAULT_MIN_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_RESTORED,
-    STATE_UNAVAILABLE,
-    Platform,
-)
+from homeassistant.const import ATTR_RESTORED, STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture
@@ -63,7 +58,7 @@ def platforms() -> list[Platform]:
     return [Platform.NUMBER]
 
 
-@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.WASHER], indirect=True)
 async def test_paired_depaired_devices_flow(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -88,7 +83,9 @@ async def test_paired_depaired_devices_flow(
     assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, appliance.ha_id), config_entry.entry_id
+    )
     assert device
     entity_entries = entity_registry.entities.get_entries_for_device_id(device.id)
     assert entity_entries
@@ -104,7 +101,9 @@ async def test_paired_depaired_devices_flow(
     )
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, appliance.ha_id), config_entry.entry_id
+    )
     assert not device
     for entity_entry in entity_entries:
         assert not entity_registry.async_get(entity_entry.entity_id)
@@ -121,16 +120,56 @@ async def test_paired_depaired_devices_flow(
     )
     await hass.async_block_till_done()
 
-    assert device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, appliance.ha_id), config_entry.entry_id
+    )
     for entity_entry in entity_entries:
         assert entity_registry.async_get(entity_entry.entity_id)
+
+
+@pytest.mark.parametrize("appliance", [ApplianceType.WASHER], indirect=True)
+async def test_unload_after_depaired_appliance(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+) -> None:
+    """Test the entry unloads after an appliance with option entities is depaired."""
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            ProgramKey.UNKNOWN,
+            options=[
+                ProgramDefinitionOption(
+                    OptionKey.BSH_COMMON_FINISH_IN_RELATIVE,
+                    "Integer",
+                )
+            ],
+        )
+    )
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    await client.add_events(
+        [
+            EventMessage(
+                appliance.ha_id,
+                EventType.DEPAIRED,
+                data=ArrayOfEvents([]),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 @pytest.mark.parametrize(
     ("appliance", "keys_to_check"),
     [
         (
-            "FridgeFreezer",
+            ApplianceType.FRIDGE_FREEZER,
             (
                 SettingKey.REFRIGERATION_FRIDGE_FREEZER_SETPOINT_TEMPERATURE_REFRIGERATOR,
             ),
@@ -167,7 +206,9 @@ async def test_connected_devices(
     assert config_entry.state is ConfigEntryState.LOADED
     client.get_settings = get_settings_original_mock
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, appliance.ha_id), config_entry.entry_id
+    )
     assert device
     for key in keys_to_check:
         assert not entity_registry.async_get_entity_id(
@@ -195,7 +236,7 @@ async def test_connected_devices(
         )
 
 
-@pytest.mark.parametrize("appliance", ["Oven"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.OVEN], indirect=True)
 async def test_number_entity_availability(
     hass: HomeAssistant,
     client: MagicMock,
@@ -262,7 +303,7 @@ async def test_number_entity_availability(
         assert state.state != STATE_UNAVAILABLE
 
 
-@pytest.mark.parametrize("appliance", ["FridgeFreezer"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.FRIDGE_FREEZER], indirect=True)
 @pytest.mark.parametrize(
     (
         "entity_id",
@@ -345,9 +386,9 @@ async def test_number_entity_functionality(
     )
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             SERVICE_ATTR_VALUE: value,
         },
     )
@@ -358,7 +399,7 @@ async def test_number_entity_functionality(
     assert hass.states.is_state(entity_id, str(float(value)))
 
 
-@pytest.mark.parametrize("appliance", ["FridgeFreezer"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.FRIDGE_FREEZER], indirect=True)
 @pytest.mark.parametrize("retry_after", [0, None])
 @pytest.mark.parametrize(
     (
@@ -494,9 +535,9 @@ async def test_number_entity_error(
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 SERVICE_ATTR_VALUE: DEFAULT_MIN_VALUE,
             },
             blocking=True,
@@ -527,7 +568,7 @@ async def test_number_entity_error(
     ("appliance", "entity_id", "option_key", "min", "max", "step_size", "unit"),
     [
         (
-            "Oven",
+            ApplianceType.OVEN,
             "number.oven_setpoint_temperature",
             OptionKey.COOKING_OVEN_SETPOINT_TEMPERATURE,
             50,
@@ -620,8 +661,8 @@ async def test_options_functionality(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: entity_id, SERVICE_ATTR_VALUE: 80},
+        NumberService.SET_VALUE,
+        {TargetKey.ENTITY_ID: entity_id, SERVICE_ATTR_VALUE: 80},
     )
     await hass.async_block_till_done()
 
@@ -634,7 +675,7 @@ async def test_options_functionality(
     assert hass.states.is_state(entity_id, "80.0")
 
 
-@pytest.mark.parametrize("appliance", ["Oven"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.OVEN], indirect=True)
 async def test_options_unavailable_when_option_is_missing(
     hass: HomeAssistant,
     client: MagicMock,
@@ -695,7 +736,7 @@ async def test_options_unavailable_when_option_is_missing(
     assert state.state == STATE_UNAVAILABLE
 
 
-@pytest.mark.parametrize("appliance", ["Oven"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.OVEN], indirect=True)
 @pytest.mark.parametrize(
     "event_key",
     [
@@ -764,7 +805,7 @@ async def test_options_available_when_program_is_null(
     assert state.state != STATE_UNAVAILABLE
 
 
-@pytest.mark.parametrize("appliance", ["Oven"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.OVEN], indirect=True)
 async def test_restore_option_entity(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,

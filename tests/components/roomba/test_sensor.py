@@ -1,15 +1,48 @@
 """Tests for IRobotEntity usage in Roomba sensor platform."""
 
+import copy
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import Platform
+from homeassistant.components.roomba.const import CONF_BLID, DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    CONF_HOST,
+    CONF_PASSWORD,
+    STATE_UNKNOWN,
+    Platform,
+    UnitOfArea,
+    UnitOfTime,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
-from tests.common import MockConfigEntry, snapshot_platform
+
+def _config_entry(blid: str) -> MockConfigEntry:
+    """Return a config entry for an additional robot."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.0.30",
+            CONF_BLID: blid,
+            CONF_PASSWORD: "pass123",
+        },
+        unique_id=blid,
+    )
+
+
+def _dock_tank_level_entities(hass: HomeAssistant) -> list[str]:
+    """Return every dock tank level entity currently set up."""
+    return sorted(
+        entity_id
+        for entity_id in hass.states.async_entity_ids(SENSOR_DOMAIN)
+        if "dock_tank_level" in entity_id
+    )
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -27,3 +60,296 @@ async def test_entities(
         await hass.async_block_till_done()
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+async def test_two_docked_robots_do_not_collide(
+    hass: HomeAssistant,
+    mock_roomba: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a second docked robot does not produce a duplicate dock sensor.
+
+    The dock sensors used to be appended to the module level SENSORS list, so
+    setting up a second docked robot appended them twice. The duplicate is
+    dropped by the entity platform, so the surviving entity count still looks
+    correct and only the logged error reveals the problem.
+    """
+    with patch("homeassistant.components.roomba.PLATFORMS", [Platform.SENSOR]):
+        for blid in ("blid_first", "blid_second"):
+            config_entry = _config_entry(blid)
+            config_entry.add_to_hass(hass)
+            await hass.config_entries.async_setup(config_entry.entry_id)
+            await hass.async_block_till_done()
+
+    assert "does not generate unique IDs" not in caplog.text
+    assert len(_dock_tank_level_entities(hass)) == 2
+
+
+async def test_robot_without_dock_has_no_dock_sensor(
+    hass: HomeAssistant,
+    mock_roomba: AsyncMock,
+) -> None:
+    """Test a robot without a dock does not get a dock sensor.
+
+    A robot reporting no dock used to inherit one when it was set up after a
+    robot that did have one.
+    """
+    docked_state = copy.deepcopy(mock_roomba.master_state)
+    dockless_state = copy.deepcopy(mock_roomba.master_state)
+    dockless_state["state"]["reported"]["dock"] = {}
+
+    with patch("homeassistant.components.roomba.PLATFORMS", [Platform.SENSOR]):
+        for blid, state in (
+            ("blid_docked", docked_state),
+            ("blid_dockless", dockless_state),
+        ):
+            mock_roomba.master_state = state
+            config_entry = _config_entry(blid)
+            config_entry.add_to_hass(hass)
+            await hass.config_entries.async_setup(config_entry.entry_id)
+            await hass.async_block_till_done()
+
+    assert len(_dock_tank_level_entities(hass)) == 1
+
+
+@pytest.mark.parametrize(
+    ("phase", "expected"),
+    [
+        pytest.param("run", "cleaning", id="run"),
+        pytest.param("hmMidMsn", "recharging", id="recharging"),
+        pytest.param("refill", "refilling", id="refill"),
+        pytest.param("", STATE_UNKNOWN, id="no_phase"),
+        pytest.param("someNewPhase", STATE_UNKNOWN, id="unknown_phase"),
+    ],
+)
+async def test_status(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_roomba: AsyncMock,
+    phase: str,
+    expected: str,
+) -> None:
+    """Test the status sensor maps the mission phase to a translated state."""
+    mock_roomba.master_state["state"]["reported"]["cleanMissionStatus"] = {
+        "cycle": "clean",
+        "phase": phase,
+    }
+    with patch("homeassistant.components.roomba.PLATFORMS", [Platform.SENSOR]):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.test_roomba_status").state == expected
+
+
+@pytest.mark.parametrize(
+    ("reported", "expected"),
+    [
+        pytest.param({"bbchg3": {"nLithChrg": 310}}, "310", id="lithium"),
+        pytest.param({"bbchg3": {"nNimhChrg": 42}}, "42", id="nimh"),
+        pytest.param(
+            {"bbchg3": {"estCap": 1698}, "batInfo": {"cCount": 70}},
+            "70",
+            id="battery_info",
+        ),
+        pytest.param(
+            {"bbchg3": {"nLithChrg": 310}, "batInfo": {"cCount": 70}},
+            "310",
+            id="charge_stats_precedence",
+        ),
+        pytest.param({"batInfo": {"cCount": 0}}, "0", id="new_battery"),
+        pytest.param(
+            {"bbchg3": {"nLithChrg": 0}, "batInfo": {"cCount": 70}},
+            "0",
+            id="zero_charge_stats_precedence",
+        ),
+        pytest.param({}, STATE_UNKNOWN, id="missing"),
+    ],
+)
+async def test_battery_cycles(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_roomba: AsyncMock,
+    reported: dict[str, dict[str, int]],
+    expected: str,
+) -> None:
+    """Test battery cycles falls back to the cycle count of the battery itself."""
+    mock_roomba.master_state["state"]["reported"].update(reported)
+
+    with patch("homeassistant.components.roomba.PLATFORMS", [Platform.SENSOR]):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.test_roomba_battery_cycles").state == expected
+
+
+async def test_rssi_refreshes_on_wifi_only_message(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_roomba: AsyncMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the RSSI sensor refreshes on a message that only carries signal.
+
+    IRobotEntity.new_state_filter drops messages whose only reported key is
+    "signal" so a Wi-Fi update does not wake every entity. The RSSI sensor
+    reads exactly that key, so it has to opt back in or it never updates.
+    """
+    entity_id = "sensor.test_roomba_signal_strength"
+    with patch("homeassistant.components.roomba.PLATFORMS", [Platform.SENSOR]):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    entity_registry.async_update_entity(entity_id, disabled_by=None)
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == "-47"
+
+    # A Wi-Fi only update, which is what the robot sends most often.
+    mock_roomba.master_state["state"]["reported"]["signal"]["rssi"] = -62
+    for call in mock_roomba.register_on_message_callback.call_args_list:
+        call.args[0]({"state": {"reported": {"signal": {"rssi": -62}}}})
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == "-62"
+
+
+async def test_total_cleaned_area_keeps_square_meters_for_existing_entity(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_roomba: AsyncMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test an entity registered before the square feet change is still in m²."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    mock_roomba.master_state["state"]["reported"]["bbrun"] = {"sqft": 716}
+    mock_config_entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        f"total_cleaned_area_{mock_config_entry.data[CONF_BLID]}",
+        suggested_object_id="test_roomba_total_cleaned_area",
+        config_entry=mock_config_entry,
+        unit_of_measurement=UnitOfArea.SQUARE_METERS,
+    )
+
+    with patch("homeassistant.components.roomba.PLATFORMS", [Platform.SENSOR]):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_roomba_total_cleaned_area")
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfArea.SQUARE_METERS
+    assert state.state == "6651.857664"
+
+
+@pytest.mark.parametrize(
+    ("bbrun", "runtime_stats"),
+    [
+        pytest.param(
+            {"hr": 120, "min": 35, "sqft": 250, "nScrubs": 1},
+            {},
+            id="legacy",
+        ),
+        pytest.param(
+            {
+                "nScrubs": 1,
+            },
+            {"hr": 120, "min": 35, "sqft": 250},
+            id="j755840",
+        ),
+        pytest.param(
+            {"hr": 120, "min": 35, "sqft": 250, "nScrubs": 1},
+            {"hr": 999, "min": 59, "sqft": 999, "nScrubs": 9},
+            id="bbrun_precedence",
+        ),
+    ],
+)
+async def test_lifetime_stats_from_run_report(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_roomba: AsyncMock,
+    entity_registry: er.EntityRegistry,
+    bbrun: dict[str, int],
+    runtime_stats: dict[str, int],
+) -> None:
+    """Test cumulative runtime and area are read and converted from run stats."""
+    reported = mock_roomba.master_state["state"]["reported"]
+    reported["bbrun"] = bbrun
+    reported["runtimeStats"] = runtime_stats
+
+    with patch("homeassistant.components.roomba.PLATFORMS", [Platform.SENSOR]):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    entity_registry.async_update_entity(
+        "sensor.test_roomba_total_cleaned_area", disabled_by=None
+    )
+    entity_registry.async_update_entity("sensor.test_roomba_scrubs", disabled_by=None)
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("sensor.test_roomba_total_cleaning_time").state
+        == "120.583333333333"
+    )
+    assert hass.states.get("sensor.test_roomba_total_cleaned_area").state == "2322.576"
+    assert hass.states.get("sensor.test_roomba_scrubs").state == "1"
+
+
+async def test_total_cleaning_time_keeps_hours_for_existing_entity(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_roomba: AsyncMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test an entity registered before the minutes change is still shown in hours."""
+    mock_roomba.master_state["state"]["reported"]["bbrun"] = {"hr": 214, "min": 52}
+    mock_config_entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        f"total_cleaning_time_{mock_config_entry.data[CONF_BLID]}",
+        suggested_object_id="test_roomba_total_cleaning_time",
+        config_entry=mock_config_entry,
+        unit_of_measurement=UnitOfTime.HOURS,
+    )
+
+    with patch("homeassistant.components.roomba.PLATFORMS", [Platform.SENSOR]):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_roomba_total_cleaning_time")
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTime.HOURS
+    assert state.state == "214.866666666667"
+
+
+@pytest.mark.parametrize(
+    ("bbrun", "expected"),
+    [
+        pytest.param(
+            {"hr": 214, "min": 52}, "214.866666666667", id="hours_and_minutes"
+        ),
+        pytest.param({"hr": 214}, "214.0", id="hours_only"),
+        pytest.param({"min": 52}, "0.866666666666667", id="minutes_only"),
+        pytest.param({}, STATE_UNKNOWN, id="missing"),
+    ],
+)
+async def test_total_cleaning_time(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_roomba: AsyncMock,
+    bbrun: dict[str, int],
+    expected: str,
+) -> None:
+    """Test total cleaning time combines the reported hours and minutes."""
+    mock_roomba.master_state["state"]["reported"]["bbrun"] = bbrun
+
+    with patch("homeassistant.components.roomba.PLATFORMS", [Platform.SENSOR]):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.test_roomba_total_cleaning_time").state == expected

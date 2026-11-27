@@ -52,7 +52,9 @@ class EsphomeFan(EsphomeEntity[FanInfo, FanState], FanEntity):
         await self._async_set_percentage(percentage)
 
     @convert_api_error_ha_error
-    async def _async_set_percentage(self, percentage: int | None) -> None:
+    async def _async_set_percentage(
+        self, percentage: int | None, preset_mode: str | None = None
+    ) -> None:
         if percentage == 0:
             await self.async_turn_off()
             return
@@ -70,6 +72,8 @@ class EsphomeFan(EsphomeEntity[FanInfo, FanState], FanEntity):
                     ORDERED_NAMED_FAN_SPEEDS, percentage
                 )
                 data["speed"] = named_speed
+        if preset_mode is not None:
+            data["preset_mode"] = preset_mode
         self._client.fan_command(**data, device_id=self._static_info.device_id)
 
     @override
@@ -80,7 +84,7 @@ class EsphomeFan(EsphomeEntity[FanInfo, FanState], FanEntity):
         **kwargs: Any,
     ) -> None:
         """Turn on the fan."""
-        await self._async_set_percentage(percentage)
+        await self._async_set_percentage(percentage, preset_mode)
 
     @convert_api_error_ha_error
     @override

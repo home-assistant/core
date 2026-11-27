@@ -1,5 +1,6 @@
 """The Nibe Heat Pump sensors."""
 
+from math import ceil, log10
 from typing import override
 
 from nibe.coil import Coil, CoilData
@@ -108,6 +109,12 @@ UNIT_DESCRIPTIONS = {
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.MEGA_WATT_HOUR,
     ),
+    "hrs": SensorEntityDescription(
+        key="hrs",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.HOURS,
+    ),
     "h": SensorEntityDescription(
         key="h",
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -164,6 +171,13 @@ UNIT_DESCRIPTIONS = {
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
     ),
+    "l/min": SensorEntityDescription(
+        key="l/min",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+    ),
     "m³/h": SensorEntityDescription(
         key="m³/h",
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -178,7 +192,31 @@ UNIT_DESCRIPTIONS = {
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
     ),
+    "DM": SensorEntityDescription(
+        key="DM",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement="DM",
+        icon="mdi:thermometer-lines",
+    ),
 }
+
+NATURE_TO_STATE_CLASS = {
+    "total": SensorStateClass.TOTAL,
+    "total_increasing": SensorStateClass.TOTAL_INCREASING,
+    "measurement": SensorStateClass.MEASUREMENT,
+    "measurement_angle": SensorStateClass.MEASUREMENT_ANGLE,
+}
+
+
+def _is_supported(coil: Coil) -> bool:
+    """Check if coil is supported by platform."""
+    if coil.is_boolean:
+        return False
+
+    if coil.is_writable and coil.nature is None:
+        return False
+
+    return True
 
 
 async def async_setup_entry(
@@ -193,7 +231,7 @@ async def async_setup_entry(
     async_add_entities(
         Sensor(coordinator, coil, UNIT_DESCRIPTIONS.get(coil.unit))
         for coil in coordinator.coils
-        if not coil.is_writable and not coil.is_boolean
+        if _is_supported(coil)
     )
 
 
@@ -213,6 +251,15 @@ class Sensor(CoilEntity, SensorEntity):
         else:
             self._attr_native_unit_of_measurement = coil.unit
             self._attr_entity_category = EntityCategory.DIAGNOSTIC
+
+        if state_class := NATURE_TO_STATE_CLASS.get(coil.nature):
+            self._attr_state_class = state_class
+
+        if coil.mappings:
+            self._attr_device_class = SensorDeviceClass.ENUM
+            self._attr_options = list(coil.mappings.values())
+        else:
+            self._attr_suggested_display_precision = ceil(log10(abs(coil.factor)))
 
     @override
     def _async_read_coil(self, data: CoilData):

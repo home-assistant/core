@@ -75,6 +75,23 @@ OPEN_DESCRIPTION = SwitchBotCloudBinarySensorEntityDescription(
 )
 
 
+OVERLOAD_DESCRIPTION = SwitchBotCloudBinarySensorEntityDescription(
+    key="overload",
+    name="Overload",
+    translation_key="overload",
+    device_class=BinarySensorDeviceClass.PROBLEM,
+    on_value="Warming",
+)
+
+OVERTEMPERATURE_DESCRIPTION = SwitchBotCloudBinarySensorEntityDescription(
+    key="overTemperature",
+    name="Overtemperature",
+    translation_key="over_temperature",
+    device_class=BinarySensorDeviceClass.PROBLEM,
+    on_value="Warming",
+)
+
+
 BINARY_SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
     "Smart Lock": (
         CALIBRATION_DESCRIPTION,
@@ -89,6 +106,10 @@ BINARY_SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
         DOOR_OPEN_DESCRIPTION,
     ),
     "Smart Lock Ultra": (
+        CALIBRATION_DESCRIPTION,
+        DOOR_OPEN_DESCRIPTION,
+    ),
+    "Smart Lock Ultra Max": (
         CALIBRATION_DESCRIPTION,
         DOOR_OPEN_DESCRIPTION,
     ),
@@ -114,6 +135,7 @@ BINARY_SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
     ),
     "Curtain": (CALIBRATION_DESCRIPTION,),
     "Curtain3": (CALIBRATION_DESCRIPTION,),
+    "Curtain4": (CALIBRATION_DESCRIPTION,),
     "Roller Shade": (CALIBRATION_DESCRIPTION,),
     "Blind Tilt": (CALIBRATION_DESCRIPTION,),
     "Garage Door Opener": (DOOR_OPEN_DESCRIPTION,),
@@ -124,12 +146,17 @@ BINARY_SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
         OPEN_DESCRIPTION,
     ),
     "Hub 3": (MOVE_DETECTED_DESCRIPTION,),
+    "Hub 4": (MOVE_DETECTED_DESCRIPTION,),
     "Water Detector": (LEAK_DESCRIPTION,),
     "Home Climate Panel": (
         IS_LIGHT_DESCRIPTION,
         MOVE_DETECTED_DESCRIPTION,
     ),
     "Presence Sensor": (MOVE_DETECTED_DESCRIPTION,),
+    "Plug Mini (EU)": (
+        OVERLOAD_DESCRIPTION,
+        OVERTEMPERATURE_DESCRIPTION,
+    ),
 }
 
 

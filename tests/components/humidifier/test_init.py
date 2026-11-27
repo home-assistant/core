@@ -3,20 +3,24 @@
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockEntity,
+    setup_test_component_platform,
+)
 
 from homeassistant.components.humidifier import (
-    ATTR_HUMIDITY,
     DOMAIN,
     MODE_ECO,
     MODE_NORMAL,
-    SERVICE_SET_HUMIDITY,
     HumidifierEntity,
     HumidifierEntityFeature,
+    HumidifierEntityStateAttribute,
+    HumidifierService,
+    HumidifierServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-
-from tests.common import MockConfigEntry, MockEntity, setup_test_component_platform
 
 
 class MockHumidifierEntity(MockEntity, HumidifierEntity):
@@ -83,7 +87,7 @@ async def test_humidity_validation(
     await hass.async_block_till_done()
 
     state = hass.states.get("humidifier.test")
-    assert state.attributes.get(ATTR_HUMIDITY) == 50
+    assert state.attributes.get(HumidifierEntityStateAttribute.HUMIDITY) == 50
 
     with pytest.raises(
         ServiceValidationError,
@@ -91,10 +95,10 @@ async def test_humidity_validation(
     ) as exc:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_HUMIDITY,
+            HumidifierService.SET_HUMIDITY,
             {
                 "entity_id": "humidifier.test",
-                ATTR_HUMIDITY: "1",
+                HumidifierServiceArgument.HUMIDITY: "1",
             },
             blocking=True,
         )
@@ -108,10 +112,10 @@ async def test_humidity_validation(
     ) as exc:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_HUMIDITY,
+            HumidifierService.SET_HUMIDITY,
             {
                 "entity_id": "humidifier.test",
-                ATTR_HUMIDITY: "70",
+                HumidifierServiceArgument.HUMIDITY: "70",
             },
             blocking=True,
         )

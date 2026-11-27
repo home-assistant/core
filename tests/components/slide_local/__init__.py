@@ -3,11 +3,11 @@
 from typing import Any
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
+
 from homeassistant.components.slide_local.const import DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 async def setup_platform(

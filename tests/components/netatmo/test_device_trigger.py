@@ -1,10 +1,18 @@
 """The tests for Netatmo device triggers."""
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_get_device_automations,
+)
 from pytest_unordered import unordered
 
 from homeassistant.components import automation
-from homeassistant.components.device_automation import DeviceAutomationType
+from homeassistant.components.device_automation import (
+    DeviceAutomationType,
+    InvalidDeviceAutomationConfig,
+)
 from homeassistant.components.netatmo import DOMAIN
 from homeassistant.components.netatmo.const import (
     CLIMATE_TRIGGERS,
@@ -12,17 +20,14 @@ from homeassistant.components.netatmo.const import (
     NETATMO_EVENT,
     OUTDOOR_CAMERA_TRIGGERS,
 )
-from homeassistant.components.netatmo.device_trigger import SUBTYPES
+from homeassistant.components.netatmo.device_trigger import (
+    SUBTYPES,
+    async_validate_trigger_config,
+)
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
-
-from tests.common import (
-    MockConfigEntry,
-    async_capture_events,
-    async_get_device_automations,
-)
 
 
 @pytest.mark.parametrize(
@@ -157,7 +162,9 @@ async def test_if_fires_on_event(
         },
     )
 
-    device = device_registry.async_get_device(connections={connection})
+    device = device_registry.async_get_device_by_connection(
+        connection, config_entry.entry_id
+    )
     assert device is not None
 
     # Fake that the entity is turning on.
@@ -242,7 +249,9 @@ async def test_if_fires_on_event_legacy(
         },
     )
 
-    device = device_registry.async_get_device(connections={connection})
+    device = device_registry.async_get_device_by_connection(
+        connection, config_entry.entry_id
+    )
     assert device is not None
 
     # Fake that the entity is turning on.
@@ -326,7 +335,9 @@ async def test_if_fires_on_event_with_subtype(
         },
     )
 
-    device = device_registry.async_get_device(connections={connection})
+    device = device_registry.async_get_device_by_connection(
+        connection, config_entry.entry_id
+    )
     assert device is not None
 
     # Fake that the entity is turning on.
@@ -403,3 +414,87 @@ async def test_if_invalid_device(
             ]
         },
     )
+
+
+async def test_validate_trigger_config(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test a trigger for a supported model and trigger type is valid."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "12:34:56:AB:CD:EF")},
+        model="Smart Thermostat",
+    )
+    config = {
+        "platform": "device",
+        "domain": DOMAIN,
+        "device_id": device_entry.id,
+        "entity_id": "climate.thermostat",
+        "type": CLIMATE_TRIGGERS[0],
+    }
+
+    assert await async_validate_trigger_config(hass, config) == config
+
+
+@pytest.mark.parametrize(
+    ("model", "trigger_type", "message"),
+    [
+        pytest.param(None, CLIMATE_TRIGGERS[0], "not found", id="no_model"),
+        pytest.param(
+            "NAPlug",
+            CLIMATE_TRIGGERS[0],
+            "Unsupported model NAPlug",
+            id="unsupported_model",
+        ),
+        pytest.param(
+            "Smart Thermostat",
+            INDOOR_CAMERA_TRIGGERS[0],
+            "Unsupported model Smart Thermostat",
+            id="unsupported_trigger",
+        ),
+    ],
+)
+async def test_validate_trigger_config_invalid(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    model: str | None,
+    trigger_type: str,
+    message: str,
+) -> None:
+    """Test a trigger is invalid for an unsupported model or trigger type."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "12:34:56:AB:CD:EF")},
+        model=model,
+    )
+
+    with pytest.raises(InvalidDeviceAutomationConfig, match=message):
+        await async_validate_trigger_config(
+            hass,
+            {
+                "platform": "device",
+                "domain": DOMAIN,
+                "device_id": device_entry.id,
+                "entity_id": "climate.thermostat",
+                "type": trigger_type,
+            },
+        )
+
+
+async def test_validate_trigger_config_unknown_device(hass: HomeAssistant) -> None:
+    """Test a trigger is invalid for an unknown device."""
+    with pytest.raises(InvalidDeviceAutomationConfig, match="not found"):
+        await async_validate_trigger_config(
+            hass,
+            {
+                "platform": "device",
+                "domain": DOMAIN,
+                "device_id": "unknown",
+                "entity_id": "climate.thermostat",
+                "type": CLIMATE_TRIGGERS[0],
+            },
+        )

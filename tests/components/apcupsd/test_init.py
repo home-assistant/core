@@ -4,6 +4,7 @@ import asyncio
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.apcupsd.const import DOMAIN
@@ -16,8 +17,6 @@ from homeassistant.helpers.entity_platform import async_get_platforms
 from homeassistant.util import slugify, utcnow
 
 from . import MOCK_MINIMAL_STATUS, MOCK_STATUS
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.parametrize("mock_config_entry", ["mocked-config-entry-id"], indirect=True)
@@ -53,8 +52,9 @@ async def test_async_setup_entry(
     status = mock_request_status.return_value
     entry = init_integration
 
-    identifiers = {(DOMAIN, entry.unique_id or entry.entry_id)}
-    device_entry = device_registry.async_get_device(identifiers=identifiers)
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, entry.unique_id or entry.entry_id), entry.entry_id
+    )
     name = f"device_{device_entry.name}_{status.get('SERIALNO', '<no serial>')}"
     assert device_entry == snapshot(name=name)
 

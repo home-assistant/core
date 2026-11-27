@@ -1,4 +1,4 @@
-"""Support for Xiaomi Mi Air Quality Monitor (PM2.5) and Humidifier."""
+"""Support for Xiaomi Miio sensors."""
 
 from collections.abc import Iterable
 from dataclasses import dataclass
@@ -46,8 +46,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
-from . import VacuumCoordinatorDataAttributes
+from . import VacuumCoordinatorData, VacuumCoordinatorDataAttributes
 from .const import (
+    ATTR_HUMIDITY,
     CONF_FLOW_TYPE,
     CONF_GATEWAY,
     DOMAIN,
@@ -113,7 +114,6 @@ ATTR_DUST_FILTER_LIFE_REMAINING_DAYS = "dust_filter_life_remaining_days"
 ATTR_UPPER_FILTER_LIFE_REMAINING = "upper_filter_life_remaining"
 ATTR_UPPER_FILTER_LIFE_REMAINING_DAYS = "upper_filter_life_remaining_days"
 ATTR_FILTER_USE = "filter_use"
-ATTR_HUMIDITY = "humidity"
 ATTR_ILLUMINANCE = "illuminance"
 ATTR_ILLUMINANCE_LUX = "illuminance_lux"
 ATTR_LOAD_POWER = "load_power"
@@ -734,7 +734,15 @@ def _setup_vacuum_sensors(
     """Set up the Xiaomi vacuum sensors."""
     device = config_entry.runtime_data.device
     coordinator = config_entry.runtime_data.device_coordinator
-    entities = []
+    # Keep battery registered even when its initial value is unknown.
+    entities: list[SensorEntity] = [
+        XiaomiMiioVacuumBatterySensor(
+            device,
+            config_entry,
+            f"{ATTR_BATTERY}_{config_entry.unique_id}",
+            coordinator,
+        )
+    ]
 
     for sensor, description in VACUUM_SENSORS.items():
         if TYPE_CHECKING:
@@ -853,6 +861,24 @@ async def async_setup_entry(
                 )
 
     async_add_entities(entities)
+
+
+class XiaomiMiioVacuumBatterySensor(
+    XiaomiCoordinatedMiioEntity[DataUpdateCoordinator[VacuumCoordinatorData]],
+    SensorEntity,
+):
+    """Representation of a Xiaomi vacuum battery sensor."""
+
+    entity_description = SENSOR_TYPES[ATTR_BATTERY]
+
+    @property
+    @override
+    def native_value(self) -> int | None:
+        """Return the battery level."""
+        try:
+            return self.coordinator.data.status.battery
+        except KeyError, TypeError, ValueError:
+            return None
 
 
 class XiaomiGenericSensor(

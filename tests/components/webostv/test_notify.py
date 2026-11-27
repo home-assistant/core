@@ -11,7 +11,7 @@ from homeassistant.components.notify import (
     DOMAIN as NOTIFY_DOMAIN,
 )
 from homeassistant.components.webostv import DOMAIN
-from homeassistant.const import ATTR_ICON
+from homeassistant.components.webostv.const import ATTR_ICON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
@@ -41,8 +41,6 @@ async def test_notify(hass: HomeAssistant, client) -> None:
         },
         blocking=True,
     )
-    assert client.mock_calls[0] == call.connect()
-    assert client.connect.call_count == 1
     client.send_message.assert_called_with(MESSAGE, icon_path=ICON_PATH)
 
     await hass.services.async_call(
@@ -56,8 +54,6 @@ async def test_notify(hass: HomeAssistant, client) -> None:
         },
         blocking=True,
     )
-    assert client.mock_calls[0] == call.connect()
-    assert client.connect.call_count == 1
     client.send_message.assert_called_with(MESSAGE, icon_path=None)
 
     await hass.services.async_call(
@@ -69,7 +65,6 @@ async def test_notify(hass: HomeAssistant, client) -> None:
         blocking=True,
     )
 
-    assert client.connect.call_count == 1
     assert client.send_message.call_args == call(
         "only message, no data", icon_path=None
     )

@@ -4,10 +4,10 @@ from collections.abc import Iterable
 import logging
 from typing import TYPE_CHECKING, Any
 
+from typing_extensions import Sentinel as sentinel
+
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     ATTR_PERSONS,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -32,7 +32,7 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
-_SENTINEL = object()
+_SENTINEL = sentinel("_SENTINEL")
 
 
 class StateExtension(BaseTemplateExtension):
@@ -41,8 +41,8 @@ class StateExtension(BaseTemplateExtension):
     def __init__(self, environment: TemplateEnvironment) -> None:
         """Initialize the state extension."""
         # Build the class-based instance functions only when hass is available.
-        # These use pass_context=False because they are callable class instances
-        # that should not be wrapped by _pass_context.
+        # The globals use pass_context=False because they are callable class
+        # instances that should not be wrapped by _pass_context.
         class_functions: list[TemplateFunction] = []
         if (hass := environment.hass) is not None:
             class_functions = [
@@ -50,28 +50,46 @@ class StateExtension(BaseTemplateExtension):
                     "state_attr_translated",
                     StateAttrTranslated(hass),
                     as_global=True,
+                    requires_hass=True,
+                    limited_ok=False,
+                    pass_context=False,
+                ),
+                TemplateFunction(
+                    "state_attr_translated",
+                    StateAttrTranslated(hass).__call__,
                     as_filter=True,
+                    requires_hass=True,
+                    limited_ok=False,
+                ),
+                TemplateFunction(
+                    "state_translated",
+                    StateTranslated(hass),
+                    as_global=True,
                     requires_hass=True,
                     limited_ok=False,
                     pass_context=False,
                 ),
                 TemplateFunction(
                     "state_translated",
-                    StateTranslated(hass),
-                    as_global=True,
+                    StateTranslated(hass).__call__,
                     as_filter=True,
+                    requires_hass=True,
+                    limited_ok=False,
+                ),
+                TemplateFunction(
+                    "states",
+                    AllStates(hass),
+                    as_global=True,
                     requires_hass=True,
                     limited_ok=False,
                     pass_context=False,
                 ),
                 TemplateFunction(
                     "states",
-                    AllStates(hass),
-                    as_global=True,
+                    AllStates(hass).__call__,
                     as_filter=True,
                     requires_hass=True,
                     limited_ok=False,
-                    pass_context=False,
                 ),
             ]
 
@@ -222,14 +240,14 @@ class StateExtension(BaseTemplateExtension):
             if point_state is None:
                 _LOGGER.warning("Closest:Unable to find state %s", args[0])
                 return None
-            if not loc_helper.has_location(point_state):
+            if (coordinates := loc_helper.get_state_coordinates(point_state)) is None:
                 _LOGGER.warning(
                     "Closest:State does not contain valid location: %s", point_state
                 )
                 return None
 
-            latitude = point_state.attributes[ATTR_LATITUDE]
-            longitude = point_state.attributes[ATTR_LONGITUDE]
+            latitude = coordinates.latitude
+            longitude = coordinates.longitude
 
             entities = args[1]
 
@@ -301,15 +319,17 @@ class StateExtension(BaseTemplateExtension):
                 longitude = longitude_to_process
 
             else:
-                if not loc_helper.has_location(point_state):
+                if (
+                    coordinates := loc_helper.get_state_coordinates(point_state)
+                ) is None:
                     _LOGGER.warning(
                         "Distance:State does not contain valid location: %s",
                         point_state,
                     )
                     return None
 
-                latitude = point_state.attributes[ATTR_LATITUDE]
-                longitude = point_state.attributes[ATTR_LONGITUDE]
+                latitude = coordinates.latitude
+                longitude = coordinates.longitude
 
             locations.append((latitude, longitude))
 

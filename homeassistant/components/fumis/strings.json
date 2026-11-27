@@ -1,9 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -14,7 +12,7 @@
     "step": {
       "dhcp_confirm": {
         "data": {
-          "pin": "[%key:component::fumis::config::step::user::data::pin%]"
+          "pin": "[%key:common::config_flow::data::pin%]"
         },
         "data_description": {
           "pin": "[%key:component::fumis::config::step::user::data_description::pin%]"
@@ -23,7 +21,7 @@
       },
       "reauth_confirm": {
         "data": {
-          "pin": "[%key:component::fumis::config::step::user::data::pin%]"
+          "pin": "[%key:common::config_flow::data::pin%]"
         },
         "data_description": {
           "pin": "[%key:component::fumis::config::step::user::data_description::pin%]"
@@ -32,7 +30,7 @@
       },
       "reconfigure": {
         "data": {
-          "pin": "[%key:component::fumis::config::step::user::data::pin%]"
+          "pin": "[%key:common::config_flow::data::pin%]"
         },
         "data_description": {
           "pin": "[%key:component::fumis::config::step::user::data_description::pin%]"
@@ -42,7 +40,7 @@
       "user": {
         "data": {
           "mac": "MAC address",
-          "pin": "PIN code"
+          "pin": "[%key:common::config_flow::data::pin%]"
         },
         "data_description": {
           "mac": "The MAC address is a unique code of letters and numbers that identifies your stove. You can find it on the label of the Fumis WiRCU Wi-Fi module connected to your stove.",
@@ -210,6 +208,18 @@
     },
     "unknown_error": {
       "message": "An unexpected error occurred while communicating with the Fumis online service: {error}"
+    }
+  },
+  "triggers": {
+    "fuel_became_low": {
+      "description": "Triggers when one or more stoves report that their fuel became low.",
+      "fields": {
+        "device_id": {
+          "description": "The stoves to watch.",
+          "name": "Stoves"
+        }
+      },
+      "name": "Fuel became low"
     }
   }
 }

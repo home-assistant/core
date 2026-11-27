@@ -1,22 +1,24 @@
 """Tests for the Tibber coordinators."""
 
 from datetime import date, datetime, timedelta
-from unittest.mock import MagicMock
+import logging
+from unittest.mock import AsyncMock, MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 import tibber
 
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.tibber.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from .conftest import create_tibber_home
-
-from tests.common import MockConfigEntry, async_fire_time_changed
+from .conftest import create_tibber_device, create_tibber_home
+from .test_common import CONSUMPTION_DATA_1
 
 
 def _prices_for_days(*days: str) -> dict[str, float]:
@@ -39,6 +41,28 @@ async def _async_setup_price_sensor(
     await hass.async_block_till_done()
 
     entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, home.home_id)
+    assert entity_id is not None
+    assert hass.states.get(entity_id) is not None
+    return entity_id
+
+
+async def _async_setup_data_api_sensor(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    data_api_client_mock: AsyncMock,
+    entity_registry: er.EntityRegistry,
+) -> str:
+    """Set up the Tibber config entry and return a Data API sensor entity id."""
+    device = create_tibber_device(state_of_charge=72.0)
+    data_api_client_mock.get_all_devices = AsyncMock(return_value={"device-id": device})
+    data_api_client_mock.update_devices = AsyncMock(return_value={"device-id": device})
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, "device-id_storage.stateOfCharge"
+    )
     assert entity_id is not None
     assert hass.states.get(entity_id) is not None
     return entity_id
@@ -208,6 +232,59 @@ async def test_price_fetch_refresh_handles_update_exceptions(
     assert state.state != STATE_UNAVAILABLE
 
 
+@pytest.mark.parametrize(
+    ("exception", "expected_message"),
+    [
+        pytest.param(
+            tibber.RetryableHttpExceptionError(500, "Internal Server Error"),
+            "Error communicating with API (Internal Server Error)",
+            id="retryable_http_error",
+        ),
+        pytest.param(
+            tibber.exceptions.HttpExceptionError(503, "Service unavailable"),
+            "Error communicating with API (Service unavailable)",
+            id="http_error",
+        ),
+        pytest.param(
+            tibber.exceptions.RateLimitExceededError(
+                429, "Too many requests", "RATE_LIMIT", 123
+            ),
+            "Rate limit exceeded, retry after 123 seconds",
+            id="rate_limit",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("recorder_mock", "setup_credentials")
+async def test_data_api_refresh_handles_update_exceptions(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    data_api_client_mock: AsyncMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    exception: Exception,
+    expected_message: str,
+) -> None:
+    """Test handled exceptions during Data API coordinator refresh."""
+    entity_id = await _async_setup_data_api_sensor(
+        hass, config_entry, data_api_client_mock, entity_registry
+    )
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+
+    data_api_client_mock.update_devices.side_effect = exception
+
+    await _async_fire_coordinator_update(hass, freezer, timedelta(minutes=1))
+
+    assert f"Error fetching {DOMAIN} Data API data: {expected_message}" in caplog.text
+    assert "Unexpected error fetching" not in caplog.text
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+
 async def test_price_sensor_unavailable_when_cached_prices_run_out(
     recorder_mock: Recorder,
     hass: HomeAssistant,
@@ -242,6 +319,138 @@ async def test_price_sensor_unavailable_when_cached_prices_run_out(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+
+
+def _consumption_backend_error() -> tibber.RetryableHttpExceptionError:
+    """Return the error pyTibber raises for a GraphQL "consumption" failure."""
+    return tibber.RetryableHttpExceptionError(
+        200,
+        "https://cost.example/homes/home-id/consumption/hour "
+        "Response code 500 (Internal Server Error)",
+        "INTERNAL_SERVER_ERROR",
+    )
+
+
+@pytest.mark.parametrize(
+    (
+        "consumption_side_effect",
+        "production_side_effect",
+        "statistics_side_effect",
+        "expected_message",
+    ),
+    [
+        pytest.param(
+            _consumption_backend_error(),
+            None,
+            None,
+            "Unable to update Tibber consumption data",
+            id="consumption",
+        ),
+        pytest.param(
+            None,
+            _consumption_backend_error(),
+            None,
+            "Unable to update Tibber production data",
+            id="production",
+        ),
+        pytest.param(
+            None,
+            None,
+            _consumption_backend_error(),
+            "Unable to update Tibber statistics",
+            id="statistics",
+        ),
+    ],
+)
+async def test_setup_loads_when_consumption_backend_fails(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    tibber_mock: MagicMock,
+    setup_credentials: None,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+    consumption_side_effect: Exception | None,
+    production_side_effect: Exception | None,
+    statistics_side_effect: Exception | None,
+    expected_message: str,
+) -> None:
+    """Test a Tibber backend error for consumption data doesn't block setup."""
+    home = create_tibber_home(current_price=1.25)
+    home.hourly_consumption_data = CONSUMPTION_DATA_1
+    home.get_historic_data = AsyncMock(
+        return_value=CONSUMPTION_DATA_1, side_effect=statistics_side_effect
+    )
+    tibber_mock.get_homes.return_value = [home]
+    tibber_mock.fetch_consumption_data_active_homes.side_effect = (
+        consumption_side_effect
+    )
+    tibber_mock.fetch_production_data_active_homes.side_effect = production_side_effect
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert expected_message in caplog.text
+    assert "Response code 500 (Internal Server Error)" in caplog.text
+    # The remaining steps still run
+    tibber_mock.fetch_consumption_data_active_homes.assert_awaited_once()
+    tibber_mock.fetch_production_data_active_homes.assert_awaited_once()
+    home.get_historic_data.assert_awaited()
+
+    # Other entities are still available
+    entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, home.home_id)
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert float(state.state) == 1.25
+
+
+async def test_consumption_backend_failure_is_logged_once_until_recovery(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    tibber_mock: MagicMock,
+    setup_credentials: None,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test repeated backend failures only log a warning once."""
+    caplog.set_level(logging.INFO)
+    config_entry.data["token"]["expires_at"] = dt_util.utcnow().timestamp() + 86400
+    tibber_mock.get_homes.return_value = [create_tibber_home()]
+    tibber_mock.fetch_consumption_data_active_homes.side_effect = (
+        _consumption_backend_error()
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert caplog.text.count("Unable to update Tibber consumption data") == 1
+    assert tibber_mock.fetch_consumption_data_active_homes.await_count == 1
+
+    # The update is retried but does not log the warning again
+    await _async_fire_coordinator_update(hass, freezer, timedelta(minutes=20))
+
+    assert tibber_mock.fetch_consumption_data_active_homes.await_count == 2
+    assert caplog.text.count("Unable to update Tibber consumption data") == 1
+    assert "recovered" not in caplog.text
+
+    # Once the backend works again this is logged
+    tibber_mock.fetch_consumption_data_active_homes.side_effect = None
+    await _async_fire_coordinator_update(hass, freezer, timedelta(minutes=20))
+
+    assert tibber_mock.fetch_consumption_data_active_homes.await_count == 3
+    assert "Updating Tibber consumption data recovered" in caplog.text
+
+    # A new failure is reported again
+    tibber_mock.fetch_consumption_data_active_homes.side_effect = (
+        _consumption_backend_error()
+    )
+    await _async_fire_coordinator_update(hass, freezer, timedelta(minutes=20))
+
+    assert caplog.text.count("Unable to update Tibber consumption data") == 2
 
 
 @pytest.fixture

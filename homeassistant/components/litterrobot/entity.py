@@ -58,11 +58,10 @@ def get_device_info(whisker_entity: Robot | Pet) -> DeviceInfo:
             serial_number=whisker_entity.serial,
             sw_version=getattr(whisker_entity, "firmware", None),
         )
-    breed = ", ".join(breed for breed in whisker_entity.breeds or [])
     return DeviceInfo(
         identifiers={(DOMAIN, whisker_entity.id)},
         manufacturer="Whisker",
-        model=f"{breed} {whisker_entity.pet_type}".strip().capitalize(),
+        model=f"{whisker_entity.breed} {whisker_entity.pet_type}".strip().capitalize(),
         name=whisker_entity.name,
     )
 

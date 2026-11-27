@@ -3,10 +3,10 @@
 from typing import Any, override
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
+    CoverServiceArgument,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -88,7 +88,9 @@ class FritzboxCover(FritzBoxDeviceEntity, CoverEntity):
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         await self.hass.async_add_executor_job(
-            self.data.set_level_percentage, 100 - kwargs[ATTR_POSITION], True
+            self.data.set_level_percentage,
+            100 - kwargs[CoverServiceArgument.POSITION],
+            True,
         )
 
     @override

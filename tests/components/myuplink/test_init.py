@@ -1,15 +1,25 @@
 """Tests for init module."""
 
+from datetime import timedelta
 import http
 import time
 from unittest.mock import MagicMock, patch
 
 from aiohttp import ClientConnectionError
+from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    load_fixture,
+)
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.myuplink.const import DOMAIN, OAUTH2_TOKEN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.config_entry_oauth2_flow import (
@@ -19,10 +29,6 @@ from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 from .const import UNIQUE_ID
-
-from tests.common import MockConfigEntry, load_fixture
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import WebSocketGenerator
 
 
 async def test_load_unload_entry(
@@ -216,25 +222,22 @@ async def test_device_remove_devices(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    device_entry = device_registry.async_get_device(
-        identifiers={
-            (
-                DOMAIN,
-                "batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff",
-            )
-        },
+    device_entry = device_registry.async_get_device_by_identifier(
+        (
+            DOMAIN,
+            "batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff",
+        ),
+        mock_config_entry.entry_id,
     )
     client = await hass_ws_client(hass)
-    response = await client.remove_device(device_entry.id, mock_config_entry.entry_id)
+    response = await client.remove_device(device_entry.id)
     assert not response["success"]
 
     old_device_entry = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={(DOMAIN, "OLD-DEVICE-UUID")},
     )
-    response = await client.remove_device(
-        old_device_entry.id, mock_config_entry.entry_id
-    )
+    response = await client.remove_device(old_device_entry.id)
     assert response["success"]
 
 
@@ -277,6 +280,52 @@ async def test_device_info(
 ) -> None:
     """Test device registry integration."""
     await setup_integration(hass, mock_config_entry)
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, device_id), mock_config_entry.entry_id
+    )
     assert device_entry is not None
     assert device_entry == snapshot
+
+
+@pytest.mark.parametrize(
+    ("platforms", "entity_id"),
+    [
+        pytest.param(
+            [Platform.BINARY_SENSOR],
+            "binary_sensor.gotham_city_pump_heating_medium_gp1",
+            id="binary_sensor",
+        ),
+        pytest.param(
+            [Platform.NUMBER],
+            "number.gotham_city_heating_offset_climate_system_1",
+            id="number",
+        ),
+        pytest.param([Platform.SELECT], "select.gotham_city_comfort_mode", id="select"),
+        pytest.param(
+            [Platform.SENSOR], "sensor.gotham_city_int_elec_add_heat", id="enum_sensor"
+        ),
+        pytest.param(
+            [Platform.SWITCH], "switch.gotham_city_temporary_lux", id="switch"
+        ),
+    ],
+)
+async def test_entity_unknown_when_point_is_missing(
+    hass: HomeAssistant,
+    mock_myuplink_client: MagicMock,
+    setup_platform: None,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    entity_id: str,
+) -> None:
+    """Test an entity is unknown when an update is missing its data point."""
+    assert (state := hass.states.get(entity_id))
+    assert state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+
+    mock_myuplink_client.async_get_device_points.return_value = []
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNKNOWN
+    assert "Unexpected error" not in caplog.text

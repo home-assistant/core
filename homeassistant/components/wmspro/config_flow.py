@@ -5,10 +5,15 @@ import logging
 from typing import Any, override
 
 import aiohttp
-import voluptuous as vol
+import probatio
 from wmspro.webcontrol import WebControlPro
 
-from homeassistant.config_entries import SOURCE_DHCP, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_DHCP,
+    SOURCE_IGNORE,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
@@ -18,9 +23,9 @@ from .const import DOMAIN, SUGGESTED_HOST
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
+        probatio.Required(CONF_HOST): str,
     }
 )
 
@@ -42,6 +47,8 @@ class WebControlProConfigFlow(ConfigFlow, domain=DOMAIN):
             DOMAIN, unique_id
         )
         if entry:
+            if entry.source == SOURCE_IGNORE:
+                return self.async_abort(reason="already_configured")
             try:  # Check if current host is a valid IP address
                 ipaddress.ip_address(entry.data[CONF_HOST])
             except ValueError:  # Do not touch name-based host

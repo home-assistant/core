@@ -1,10 +1,15 @@
 """The tests for the Met Office sensor component."""
 
-import datetime
+import datetime as dt
 import json
 import re
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_load_json_object_fixture,
+    get_sensor_display_state,
+)
 import requests_mock
 
 from homeassistant.components.metoffice.const import ATTRIBUTION, DOMAIN
@@ -13,31 +18,28 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import (
-    DEVICE_KEY_KINGSLYNN,
-    DEVICE_KEY_WAVERTREE,
     KINGSLYNN_SENSOR_RESULTS,
-    METOFFICE_CONFIG_KINGSLYNN,
-    METOFFICE_CONFIG_WAVERTREE,
+    TEST_COORDINATES_KINGSLYNN,
+    TEST_COORDINATES_WAVERTREE,
     TEST_DATETIME_STRING,
     TEST_LATITUDE_WAVERTREE,
     TEST_LONGITUDE_WAVERTREE,
     WAVERTREE_SENSOR_RESULTS,
 )
 
-from tests.common import MockConfigEntry, async_load_fixture, get_sensor_display_state
 
-
-@pytest.mark.freeze_time(datetime.datetime(2024, 11, 23, 12, tzinfo=datetime.UTC))
+@pytest.mark.freeze_time(dt.datetime(2024, 11, 23, 12, tzinfo=dt.UTC))
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_one_sensor_site_running(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     requests_mock: requests_mock.Mocker,
+    entry: MockConfigEntry,
 ) -> None:
     """Test the Met Office sensor platform."""
     # all metoffice test data encapsulated in here
-    mock_json = json.loads(await async_load_fixture(hass, "metoffice.json", DOMAIN))
+    mock_json = await async_load_json_object_fixture(hass, "metoffice.json", DOMAIN)
     wavertree_hourly = json.dumps(mock_json["wavertree_hourly"])
     wavertree_daily = json.dumps(mock_json["wavertree_daily"])
 
@@ -50,17 +52,13 @@ async def test_one_sensor_site_running(
         text=wavertree_daily,
     )
 
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=METOFFICE_CONFIG_WAVERTREE,
-    )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     assert len(device_registry.devices) == 1
-    device_wavertree = device_registry.async_get_device(
-        identifiers=DEVICE_KEY_WAVERTREE
+    device_wavertree = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_COORDINATES_WAVERTREE), entry.entry_id
     )
     assert device_wavertree.name == "Met Office Wavertree"
 
@@ -78,18 +76,20 @@ async def test_one_sensor_site_running(
         assert sensor.attributes.get("attribution") == ATTRIBUTION
 
 
-@pytest.mark.freeze_time(datetime.datetime(2024, 11, 23, 12, tzinfo=datetime.UTC))
+@pytest.mark.freeze_time(dt.datetime(2024, 11, 23, 12, tzinfo=dt.UTC))
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_two_sensor_sites_running(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     requests_mock: requests_mock.Mocker,
+    entry: MockConfigEntry,
+    entry2: MockConfigEntry,
 ) -> None:
     """Test we handle two sets of sensors running for two different sites."""
 
     # all metoffice test data encapsulated in here
-    mock_json = json.loads(await async_load_fixture(hass, "metoffice.json", DOMAIN))
+    mock_json = await async_load_json_object_fixture(hass, "metoffice.json", DOMAIN)
     wavertree_hourly = json.dumps(mock_json["wavertree_hourly"])
     wavertree_daily = json.dumps(mock_json["wavertree_daily"])
     kingslynn_hourly = json.dumps(mock_json["kingslynn_hourly"])
@@ -104,10 +104,6 @@ async def test_two_sensor_sites_running(
         text=wavertree_daily,
     )
 
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=METOFFICE_CONFIG_WAVERTREE,
-    )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
 
@@ -120,21 +116,17 @@ async def test_two_sensor_sites_running(
         text=kingslynn_daily,
     )
 
-    entry2 = MockConfigEntry(
-        domain=DOMAIN,
-        data=METOFFICE_CONFIG_KINGSLYNN,
-    )
     entry2.add_to_hass(hass)
     await hass.config_entries.async_setup(entry2.entry_id)
     await hass.async_block_till_done()
 
     assert len(device_registry.devices) == 2
-    device_kingslynn = device_registry.async_get_device(
-        identifiers=DEVICE_KEY_KINGSLYNN
+    device_kingslynn = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_COORDINATES_KINGSLYNN), entry2.entry_id
     )
     assert device_kingslynn.name == "Met Office King's Lynn"
-    device_wavertree = device_registry.async_get_device(
-        identifiers=DEVICE_KEY_WAVERTREE
+    device_wavertree = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_COORDINATES_WAVERTREE), entry.entry_id
     )
     assert device_wavertree.name == "Met Office Wavertree"
 
@@ -167,7 +159,7 @@ async def test_two_sensor_sites_running(
             assert sensor.attributes.get("attribution") == ATTRIBUTION
 
 
-@pytest.mark.freeze_time(datetime.datetime(2024, 11, 23, 12, tzinfo=datetime.UTC))
+@pytest.mark.freeze_time(dt.datetime(2024, 11, 23, 12, tzinfo=dt.UTC))
 @pytest.mark.parametrize(
     ("old_unique_id"),
     [
@@ -180,9 +172,10 @@ async def test_legacy_entities_are_removed(
     entity_registry: er.EntityRegistry,
     requests_mock: requests_mock.Mocker,
     old_unique_id: str,
+    entry: MockConfigEntry,
 ) -> None:
     """Test the expected entities are deleted."""
-    mock_json = json.loads(await async_load_fixture(hass, "metoffice.json", DOMAIN))
+    mock_json = await async_load_json_object_fixture(hass, "metoffice.json", DOMAIN)
     wavertree_hourly = json.dumps(mock_json["wavertree_hourly"])
     wavertree_daily = json.dumps(mock_json["wavertree_daily"])
 
@@ -202,10 +195,6 @@ async def test_legacy_entities_are_removed(
         suggested_object_id="met_office_wavertree_visibility_distance",
     )
 
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=METOFFICE_CONFIG_WAVERTREE,
-    )
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)

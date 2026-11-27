@@ -1,26 +1,74 @@
 """Tests for the Casper Glow integration."""
 
-from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
-from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import (
+from pycasperglow import MANUFACTURER_ID
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import (
     generate_advertisement_data,
     generate_ble_device,
     inject_bluetooth_service_info,
 )
 
+from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
+from homeassistant.core import HomeAssistant
+
+CASPER_GLOW_MANUFACTURER_DATA = {MANUFACTURER_ID: b"\x00"}
+
 CASPER_GLOW_DISCOVERY_INFO = BluetoothServiceInfoBleak(
     name="Jar",
     address="AA:BB:CC:DD:EE:FF",
     rssi=-60,
-    manufacturer_data={},
+    manufacturer_data=CASPER_GLOW_MANUFACTURER_DATA,
     service_uuids=[],
     service_data={},
     source="local",
     device=generate_ble_device(address="AA:BB:CC:DD:EE:FF", name="Jar"),
     advertisement=generate_advertisement_data(
+        local_name="Jar",
+        manufacturer_data=CASPER_GLOW_MANUFACTURER_DATA,
         service_uuids=[],
+    ),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+SAMSUNG_EARBUDS_ADDRESS = "72:B3:56:C4:12:B7"
+SAMSUNG_EARBUDS_NAME = "Evilpigs's Buds2 Pro"
+SAMSUNG_EARBUDS_MANUFACTURER_DATA = {
+    117: bytes.fromhex(
+        "020901000000150300000000000000000000000000000000000000030146015b4865616470686f6e655d20"
+    )
+}
+SAMSUNG_EARBUDS_SERVICE_UUIDS = [
+    "0000184e-0000-1000-8000-00805f9b34fb",
+    "0000184f-0000-1000-8000-00805f9b34fb",
+    "00001850-0000-1000-8000-00805f9b34fb",
+    "00001844-0000-1000-8000-00805f9b34fb",
+    "0000184d-0000-1000-8000-00805f9b34fb",
+]
+SAMSUNG_EARBUDS_SERVICE_DATA = {
+    "00002b51-0000-1000-8000-00805f9b34fb": bytes.fromhex("2a00"),
+    "00001853-0000-1000-8000-00805f9b34fb": bytes.fromhex("00"),
+    "0000184e-0000-1000-8000-00805f9b34fb": bytes.fromhex("006f006b0000"),
+    "a7a473e9-19c6-491b-aea6-7ea92b8f043a": bytes.fromhex("014652e70e"),
+}
+
+SAMSUNG_EARBUDS_DISCOVERY_INFO = BluetoothServiceInfoBleak(
+    name=SAMSUNG_EARBUDS_NAME,
+    address=SAMSUNG_EARBUDS_ADDRESS,
+    rssi=-82,
+    manufacturer_data=SAMSUNG_EARBUDS_MANUFACTURER_DATA,
+    service_uuids=SAMSUNG_EARBUDS_SERVICE_UUIDS,
+    service_data=SAMSUNG_EARBUDS_SERVICE_DATA,
+    source="local",
+    device=generate_ble_device(
+        address=SAMSUNG_EARBUDS_ADDRESS, name=SAMSUNG_EARBUDS_NAME
+    ),
+    advertisement=generate_advertisement_data(
+        local_name=SAMSUNG_EARBUDS_NAME,
+        manufacturer_data=SAMSUNG_EARBUDS_MANUFACTURER_DATA,
+        service_uuids=SAMSUNG_EARBUDS_SERVICE_UUIDS,
+        service_data=SAMSUNG_EARBUDS_SERVICE_DATA,
     ),
     time=0,
     connectable=True,
@@ -34,6 +82,23 @@ async def setup_integration(hass: HomeAssistant, entry: MockConfigEntry) -> None
     inject_bluetooth_service_info(hass, CASPER_GLOW_DISCOVERY_INFO)
     await hass.config_entries.async_setup(entry.entry_id)
 
+
+JAR_NAME_WITHOUT_MANUFACTURER_DISCOVERY_INFO = BluetoothServiceInfoBleak(
+    name="Jar",
+    address="4D:9F:F5:47:7D:E6",
+    rssi=-60,
+    manufacturer_data={117: b"\x01"},
+    service_uuids=[],
+    service_data={},
+    source="local",
+    device=generate_ble_device(address="4D:9F:F5:47:7D:E6", name="Jar"),
+    advertisement=generate_advertisement_data(
+        local_name="Jar", manufacturer_data={117: b"\x01"}
+    ),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
 
 NOT_CASPER_GLOW_DISCOVERY_INFO = BluetoothServiceInfoBleak(
     name="NotGlow",

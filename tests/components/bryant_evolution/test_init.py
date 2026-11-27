@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 
 from evolutionhttp import BryantEvolutionLocalClient
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.bryant_evolution.const import CONF_SYSTEM_ZONE, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -15,8 +16,6 @@ from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .conftest import DEFAULT_SYSTEM_ZONES
 from .test_climate import trigger_polling
-
-from tests.common import MockConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,6 +62,7 @@ async def test_setup_integration_client_returns_none(
 
 async def test_setup_multiple_systems_zones(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     mock_evolution_client_factory: AsyncMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
@@ -92,10 +92,8 @@ async def test_setup_multiple_systems_zones(
         assert state.attributes["current_temperature"] == zone
 
     # Check that the created devices are wired to each other as expected.
-    device_registry = dr.async_get(hass)
-
     def find_device(name):
-        return next(filter(lambda x: x.name == name, device_registry.devices.values()))
+        return next(filter(lambda x: x.name == name, device_registry.devices))
 
     sam = find_device("System Access Module")
     s1 = find_device("System 1")

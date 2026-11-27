@@ -2,8 +2,8 @@
 
 from typing import override
 
+import probatio
 import pyads
-import voluptuous as vol
 
 from homeassistant.components.valve import (
     DEVICE_CLASSES_SCHEMA as VALVE_DEVICE_CLASSES_SCHEMA,
@@ -26,17 +26,17 @@ DEFAULT_NAME = "ADS valve"
 
 PLATFORM_SCHEMA = VALVE_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ADS_VAR): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_DEVICE_CLASS): VALVE_DEVICE_CLASSES_SCHEMA,
+        probatio.Required(CONF_ADS_VAR): cv.string,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_DEVICE_CLASS): VALVE_DEVICE_CLASSES_SCHEMA,
     }
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up an ADS valve device."""
@@ -48,7 +48,7 @@ def setup_platform(
 
     entity = AdsValve(ads_hub, ads_var, name, device_class)
 
-    add_entities([entity])
+    async_add_entities([entity])
 
 
 class AdsValve(AdsEntity, ValveEntity):

@@ -3,16 +3,16 @@
 import asyncio
 import logging
 
-from httpx import RequestError
+from httpx2 import RequestError
 from wolf_comm.models import Device
 from wolf_comm.wolf_client import FetchFailed, WolfClient
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.httpx_client import create_async_httpx_client
+from homeassistant.helpers.typing import Undefined
 
 from .const import DOMAIN, MANUFACTURER
 from .coordinator import WolflinkConfigEntry, WolfLinkCoordinator
@@ -22,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: WolflinkConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: WolflinkConfigEntry) -> None:
     """Set up Wolf SmartSet Service from a config entry."""
     wolf_client = WolfClient(
         entry.data[CONF_USERNAME],
@@ -67,15 +67,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: WolflinkConfigEntry) -> 
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: WolflinkConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: WolflinkConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: WolflinkConfigEntry) -> None:
     """Migrate old entry.
 
     v1.1 → v1.2: convert unique_id from int to string.
@@ -103,10 +101,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         _migrate_v1_to_v2(hass, entry)
 
-    return True
 
-
-def _migrate_v1_to_v2(hass: HomeAssistant, entry: ConfigEntry) -> None:
+def _migrate_v1_to_v2(hass: HomeAssistant, entry: WolflinkConfigEntry) -> None:
     """Migrate a v1 device-oriented entry to v2.2 hub.
 
     Multiple v1 entries for the same account are merged into a single hub
@@ -154,8 +150,8 @@ def _migrate_v1_to_v2(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
 def _reattach_device_to_hub(
     hass: HomeAssistant,
-    hub_entry: ConfigEntry,
-    source_entry: ConfigEntry,
+    hub_entry: WolflinkConfigEntry,
+    source_entry: WolflinkConfigEntry,
     device_id: int,
 ) -> None:
     """Move device and entity registry rows from source_entry to hub_entry.
@@ -167,26 +163,27 @@ def _reattach_device_to_hub(
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, str(device_id))})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, str(device_id)), source_entry.entry_id
+    )
     if device is None:
         return
 
-    device_disabled_by = device.disabled_by
-    if device_disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY:
+    # The device registry will set the disabled_by flag to None when moving a
+    # device disabled by CONFIG_ENTRY to an enabled config entry, but we want
+    # to set it to USER instead.
+    device_disabled_by: dr.DeviceEntryDisabler | Undefined = Undefined
+    if (
+        device.disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY
+        and hub_entry.disabled_by is None
+    ):
         device_disabled_by = dr.DeviceEntryDisabler.USER
 
-    if source_entry.entry_id != hub_entry.entry_id:
-        device_registry.async_update_device(
-            device.id,
-            disabled_by=device_disabled_by,
-            add_config_entry_id=hub_entry.entry_id,
-            remove_config_entry_id=source_entry.entry_id,
-        )
-    else:
-        device_registry.async_update_device(
-            device.id,
-            disabled_by=device_disabled_by,
-        )
+    device_registry.async_update_device(
+        device.id,
+        disabled_by=device_disabled_by,
+        new_config_entry_id=hub_entry.entry_id,
+    )
 
     for entity_entry in er.async_entries_for_device(
         entity_registry, device.id, include_disabled_entities=True

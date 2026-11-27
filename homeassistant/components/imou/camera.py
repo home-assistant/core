@@ -1,19 +1,30 @@
 """Support for Imou camera entities."""
 
-from typing import override
+from collections.abc import Callable
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+from typing import TYPE_CHECKING, override
 
 from pyimouapi.const import PARAM_HD, PARAM_MOTION_DETECT, PARAM_STATE
-from pyimouapi.exceptions import ImouException
 from pyimouapi.ha_device import ImouHaDevice
 
-from homeassistant.components.camera import Camera, CameraEntityFeature
+from homeassistant.components.camera import (
+    Camera,
+    CameraEntityDescription,
+    CameraEntityFeature,
+)
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.util import dt as dt_util
 
 from .const import PARAM_HEADER_DETECT, imou_device_identifier
 from .coordinator import ImouConfigEntry, ImouDataUpdateCoordinator
 from .entity import ImouEntity
+from .helpers import async_wrap_imou_command
+
+if TYPE_CHECKING:
+    from homeassistant.components.stream import Stream
 
 PARALLEL_UPDATES = 0
 
@@ -23,9 +34,35 @@ CAMERA_STREAM_RESOLUTION_SD = "SD"
 PYIMOUAPI_LIVE_PROTOCOL = "https"
 PYIMOUAPI_SNAPSHOT_WAIT_SECONDS = 3
 
-CAMERA_TYPES = (
-    ("camera_sd", CAMERA_STREAM_RESOLUTION_SD),
-    ("camera_hd", PARAM_HD),
+# An established pull keeps the cloud ticket valid. About 10s after the last
+# viewer, drop the cached Stream so the next open fetches a new URL.
+STREAM_IDLE_CHECK = timedelta(seconds=10)
+# Matches homeassistant.components.stream.const.OUTPUT_STARTUP_TIMEOUT (60).
+_STREAM_OUTPUT_STARTUP_TIMEOUT = 60
+STREAM_IDLE_MAX_RESCHEDULES = max(
+    1, _STREAM_OUTPUT_STARTUP_TIMEOUT // int(STREAM_IDLE_CHECK.total_seconds())
+)
+
+
+@dataclass(frozen=True, kw_only=True)
+class ImouCameraEntityDescription(CameraEntityDescription):
+    """Describes an Imou camera entity."""
+
+    resolution: str
+
+
+CAMERA_TYPES: tuple[ImouCameraEntityDescription, ...] = (
+    ImouCameraEntityDescription(
+        key="camera_sd",
+        translation_key="camera_sd",
+        resolution=CAMERA_STREAM_RESOLUTION_SD,
+    ),
+    ImouCameraEntityDescription(
+        key="camera_hd",
+        translation_key="camera_hd",
+        resolution=PARAM_HD,
+        entity_registry_enabled_default=False,
+    ),
 )
 
 
@@ -40,65 +77,107 @@ async def async_setup_entry(
     def _add_cameras(new_devices: list[ImouHaDevice]) -> None:
         device_keys = {imou_device_identifier(device) for device in new_devices}
         async_add_entities(
-            ImouCamera(coordinator, entity_type, device, resolution)
+            ImouCamera(coordinator, description, device)
             for device in coordinator.devices
             if device.channel_id is not None
             if imou_device_identifier(device) in device_keys
-            for entity_type, resolution in CAMERA_TYPES
+            for description in CAMERA_TYPES
         )
 
-    coordinator.new_device_callbacks.append(_add_cameras)
-
-    @callback
-    def _remove_new_device_callback() -> None:
-        if _add_cameras in coordinator.new_device_callbacks:
-            coordinator.new_device_callbacks.remove(_add_cameras)
-
-    entry.async_on_unload(_remove_new_device_callback)
+    entry.async_on_unload(coordinator.register_new_device_callback(_add_cameras))
     _add_cameras(coordinator.devices)
 
 
 class ImouCamera(ImouEntity, Camera):
     """Representation of an Imou camera stream."""
 
+    entity_description: ImouCameraEntityDescription
     _attr_supported_features = CameraEntityFeature.STREAM
 
     def __init__(
         self,
         coordinator: ImouDataUpdateCoordinator,
-        entity_type: str,
+        description: ImouCameraEntityDescription,
         device: ImouHaDevice,
-        resolution: str,
     ) -> None:
         """Initialize the camera entity."""
-        self._resolution = resolution
         Camera.__init__(self)
-        super().__init__(coordinator, entity_type, device)
+        super().__init__(coordinator, description, device)
+        self._idle_unsub: Callable[[], None] | None = None
+        self._idle_output_reschedules = 0
 
     @override
+    async def async_added_to_hass(self) -> None:
+        """Cancel the idle check when the entity is removed."""
+        await super().async_added_to_hass()
+        self.async_on_remove(self._cancel_idle_check)
+
+    @override
+    @async_wrap_imou_command("get_stream_failed")
     async def stream_source(self) -> str | None:
-        """Return the live stream URL from the Imou cloud."""
-        try:
-            return await self.coordinator.device_manager.async_get_device_stream(
-                self.device,
-                self._resolution,
-                PYIMOUAPI_LIVE_PROTOCOL,
-            )
-        except ImouException as err:
-            raise HomeAssistantError(str(err)) from err
+        """Return a live stream URL and watch for the last viewer leaving."""
+        url = await self.coordinator.device_manager.async_get_device_stream(
+            self.device,
+            self.entity_description.resolution,
+            PYIMOUAPI_LIVE_PROTOCOL,
+        )
+        self._idle_output_reschedules = 0
+        self._schedule_idle_check()
+        return url
+
+    def _schedule_idle_check(self) -> None:
+        """Check later whether anyone is still pulling this stream."""
+        self._cancel_idle_check()
+        self._idle_unsub = async_track_point_in_utc_time(
+            self.hass,
+            self._async_handle_idle_check,
+            dt_util.utcnow() + STREAM_IDLE_CHECK,
+        )
+
+    @callback
+    def _cancel_idle_check(self) -> None:
+        """Drop a pending idle check, if any."""
+        if self._idle_unsub is not None:
+            self._idle_unsub()
+            self._idle_unsub = None
+
+    async def _async_handle_idle_check(self, _now: datetime) -> None:
+        """Keep the URL while someone is watching; drop it when they leave."""
+        self._idle_unsub = None
+        stream = self.stream
+        if stream is not None and self._should_keep_stream(stream):
+            self._schedule_idle_check()
+            return
+        if stream is not None:
+            # Clear before awaiting stop so a concurrent create_stream does not
+            # reuse this instance (and its expired RTSP URL) while shutdown yields.
+            self._idle_output_reschedules = 0
+            self.stream = None
+            await stream.stop()
+
+    def _should_keep_stream(self, stream: Stream) -> bool:
+        """Return whether an idle timer should wait before dropping the stream."""
+        if stream.dynamic_stream_settings.preload_stream:
+            return True
+        outputs = stream.outputs()
+        if not outputs:
+            return False
+        if any(output.last_segment is not None for output in outputs.values()):
+            self._idle_output_reschedules = 0
+            return True
+        self._idle_output_reschedules += 1
+        return self._idle_output_reschedules <= STREAM_IDLE_MAX_RESCHEDULES
 
     @override
+    @async_wrap_imou_command("get_image_failed")
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return bytes of camera image."""
-        try:
-            return await self.coordinator.device_manager.async_get_device_image(
-                self.device,
-                PYIMOUAPI_SNAPSHOT_WAIT_SECONDS,
-            )
-        except ImouException as err:
-            raise HomeAssistantError(str(err)) from err
+        return await self.coordinator.device_manager.async_get_device_image(
+            self.device,
+            PYIMOUAPI_SNAPSHOT_WAIT_SECONDS,
+        )
 
     @property
     @override

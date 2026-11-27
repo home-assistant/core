@@ -4,16 +4,19 @@
   "bluetooth": [
     {
       "connectable": true,
-      "local_name": "Jar*"
+      "local_name": "Jar*",
+      "manufacturer_id": 65535
     }
   ],
+  "categories": ["lighting.bulbs_lamps", "health_wellbeing"],
   "codeowners": ["@mikeodr"],
   "config_flow": true,
+  "connectivity": ["bluetooth"],
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/casper_glow",
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["pycasperglow"],
   "quality_scale": "platinum",
-  "requirements": ["pycasperglow==1.2.0"]
+  "requirements": ["pycasperglow==1.3.0"]
 }

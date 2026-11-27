@@ -8,10 +8,8 @@ from datetime import timedelta
 from typing import Any, override
 
 from homeassistant.components.notify import (
-    ATTR_DATA,
-    ATTR_MESSAGE,
-    ATTR_TITLE,
     DOMAIN as NOTIFY_DOMAIN,
+    NotifyServiceArgument,
 )
 from homeassistant.const import STATE_IDLE, STATE_OFF, STATE_ON
 from homeassistant.core import Event, EventStateChangedData, HassJob, HomeAssistant
@@ -22,7 +20,7 @@ from homeassistant.helpers.event import (
     async_track_state_change_event,
 )
 from homeassistant.helpers.template import Template
-from homeassistant.util.dt import now
+from homeassistant.util.dt import utcnow
 
 from .const import DOMAIN, LOGGER
 
@@ -72,11 +70,23 @@ class AlertEntity(Entity):
         self._ack = False
         self._cancel: Callable[[], None] | None = None
         self._send_done_message = False
+        self._watched_entity_id = watched_entity_id
         self.entity_id = f"{DOMAIN}.{entity_id}"
 
         async_track_state_change_event(
             hass, [watched_entity_id], self.watched_entity_change
         )
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Start alerting if the watched entity is already in the alert state."""
+        await super().async_added_to_hass()
+        if (
+            (state := self.hass.states.get(self._watched_entity_id)) is not None
+            and state.state == self._alert_state
+            and not self._firing
+        ):
+            await self.begin_alerting()
 
     @property
     @override
@@ -128,7 +138,7 @@ class AlertEntity(Entity):
     async def _schedule_notify(self) -> None:
         """Schedule a notification."""
         delay = self._delay[self._next_delay]
-        next_msg = now() + delay
+        next_msg = utcnow() + delay
         self._cancel = async_track_point_in_time(
             self.hass,
             HassJob(
@@ -171,13 +181,13 @@ class AlertEntity(Entity):
         if not self._notifiers:
             return
 
-        msg_payload = {ATTR_MESSAGE: message}
+        msg_payload: dict[str, Any] = {NotifyServiceArgument.MESSAGE: message}
 
         if self._title_template is not None:
             title = self._title_template.async_render(parse_result=False)
-            msg_payload[ATTR_TITLE] = title
+            msg_payload[NotifyServiceArgument.TITLE] = title
         if self._data:
-            msg_payload[ATTR_DATA] = self._data
+            msg_payload[NotifyServiceArgument.DATA] = self._data
 
         LOGGER.debug(msg_payload)
 

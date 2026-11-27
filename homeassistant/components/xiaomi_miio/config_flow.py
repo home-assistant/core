@@ -7,7 +7,7 @@ from typing import Any, override
 
 from micloud import MiCloud
 from micloud.micloudexception import MiCloudAccessDenied
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     ConfigFlow,
@@ -42,18 +42,24 @@ from .typing import XiaomiMiioConfigEntry
 _LOGGER = logging.getLogger(__name__)
 
 DEVICE_SETTINGS = {
-    vol.Required(CONF_TOKEN): vol.All(str, vol.Length(min=32, max=32)),
+    probatio.Required(probatio.Secret(CONF_TOKEN)): probatio.All(
+        str, probatio.Length(min=32, max=32)
+    ),
 }
-DEVICE_CONFIG = vol.Schema({vol.Required(CONF_HOST): str}).extend(DEVICE_SETTINGS)
-DEVICE_MODEL_CONFIG = vol.Schema({vol.Required(CONF_MODEL): vol.In(MODELS_ALL)})
-DEVICE_CLOUD_CONFIG = vol.Schema(
+DEVICE_CONFIG = probatio.Schema({probatio.Required(CONF_HOST): str}).extend(
+    DEVICE_SETTINGS
+)
+DEVICE_MODEL_CONFIG = probatio.Schema(
+    {probatio.Required(CONF_MODEL): probatio.In(MODELS_ALL)}
+)
+DEVICE_CLOUD_CONFIG = probatio.Schema(
     {
-        vol.Optional(CONF_CLOUD_USERNAME): str,
-        vol.Optional(CONF_CLOUD_PASSWORD): str,
-        vol.Optional(CONF_CLOUD_COUNTRY, default=DEFAULT_CLOUD_COUNTRY): vol.In(
-            SERVER_COUNTRY_CODES
-        ),
-        vol.Optional(CONF_MANUAL, default=False): bool,
+        probatio.Optional(CONF_CLOUD_USERNAME): str,
+        probatio.Optional(probatio.Secret(CONF_CLOUD_PASSWORD)): str,
+        probatio.Optional(
+            CONF_CLOUD_COUNTRY, default=DEFAULT_CLOUD_COUNTRY
+        ): probatio.In(SERVER_COUNTRY_CODES),
+        probatio.Optional(CONF_MANUAL, default=False): bool,
     }
 )
 
@@ -85,9 +91,9 @@ class OptionsFlowHandler(OptionsFlowWithReload):
             if not errors:
                 return self.async_create_entry(title="", data=user_input)
 
-        settings_schema = vol.Schema(
+        settings_schema = probatio.Schema(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_CLOUD_SUBDEVICES,
                     default=self.config_entry.options.get(CONF_CLOUD_SUBDEVICES, False),
                 ): bool
@@ -314,12 +320,55 @@ class XiaomiMiioFlowHandler(ConfigFlow, domain=DOMAIN):
             self.extract_cloud_info(cloud_device)
             return await self.async_step_connect()
 
-        select_schema = vol.Schema(
-            {vol.Required("select_device"): vol.In(list(self.cloud_devices))}
+        select_schema = probatio.Schema(
+            {probatio.Required("select_device"): probatio.In(list(self.cloud_devices))}
         )
 
         return self.async_show_form(
             step_id="select", data_schema=select_schema, errors=errors
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the device host and token."""
+        errors: dict[str, str] = {}
+        entry = self._get_reconfigure_entry()
+        if user_input is not None:
+            connect_device_class = ConnectXiaomiDevice(self.hass)
+            try:
+                await connect_device_class.async_connect_device(
+                    user_input[CONF_HOST], user_input[CONF_TOKEN]
+                )
+            except AuthException:
+                errors["base"] = "wrong_token"
+            except SetupException:
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected exception in connect Xiaomi device")
+                errors["base"] = "unknown"
+            else:
+                mac = format_mac(connect_device_class.device_info.mac_address)
+                await self.async_set_unique_id(mac)
+                # Entries set up with a manually selected model have no unique ID;
+                # keep it that way, as entity and device IDs are derived from it
+                if entry.unique_id is None:
+                    self._abort_if_unique_id_configured()
+                else:
+                    self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    entry, data_updates=user_input
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                DEVICE_CONFIG, {CONF_HOST: (user_input or entry.data)[CONF_HOST]}
+            ),
+            errors=errors,
+            description_placeholders={
+                "retrieving_token_url": "https://www.home-assistant.io/integrations/xiaomi_miio#retrieving-the-access-token",
+            },
         )
 
     async def async_step_manual(
@@ -335,7 +384,7 @@ class XiaomiMiioFlowHandler(ConfigFlow, domain=DOMAIN):
             return await self.async_step_connect()
 
         if self.host:
-            schema = vol.Schema(DEVICE_SETTINGS)
+            schema = probatio.Schema(DEVICE_SETTINGS)
         else:
             schema = DEVICE_CONFIG
 

@@ -57,7 +57,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: GuardianConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: GuardianConfigEntry) -> None:
     """Set up Elexa Guardian from a config entry."""
     client = Client(entry.data[CONF_IP_ADDRESS], port=entry.data[CONF_PORT])
 
@@ -115,15 +115,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: GuardianConfigEntry) -> 
         paired_sensor_manager=paired_sensor_manager,
     )
 
+    # Register the valve controller device up front so paired sensors can resolve
+    # it as their via device when they are added:
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, entry.data[CONF_UID])},
+        manufacturer="Elexa",
+        name=f"Guardian valve controller {entry.data[CONF_UID]}",
+        sw_version=valve_controller_coordinators[API_SYSTEM_DIAGNOSTICS].data[
+            "firmware"
+        ],
+    )
+
     # Set up all of the Guardian entity platforms:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: GuardianConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: GuardianConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 class PairedSensorManager:
@@ -217,6 +228,7 @@ class PairedSensorManager:
         # clean up entities and the entity registry):
         dev_reg = dr.async_get(self._hass)
         device = dev_reg.async_get_or_create(
-            config_entry_id=self._entry.entry_id, identifiers={(DOMAIN, uid)}
+            config_entry_id=self._entry.entry_id,
+            identifiers={(DOMAIN, uid)},
         )
         dev_reg.async_remove_device(device.id)

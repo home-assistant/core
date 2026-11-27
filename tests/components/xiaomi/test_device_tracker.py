@@ -4,6 +4,7 @@ from http import HTTPStatus
 import logging
 from unittest.mock import MagicMock, call, patch
 
+import pytest
 import requests
 
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
@@ -16,6 +17,8 @@ _LOGGER = logging.getLogger(__name__)
 
 INVALID_USERNAME = "bob"
 TOKEN_TIMEOUT_USERNAME = "tok"
+ERROR_STATUS_USERNAME = "err"
+PASSWORD = "passwordTest"
 URL_AUTHORIZE = "http://192.168.0.1/cgi-bin/luci/api/xqsystem/login"
 URL_LIST_END = "api/misystem/devicelist"
 
@@ -51,6 +54,9 @@ def mocked_requests(*args, **kwargs):
     # pylint: disable-next=global-statement
     global FIRST_CALL  # noqa: PLW0603
 
+    if data and data.get("username", None) == ERROR_STATUS_USERNAME:
+        # deliver a response the router could not serve
+        return MockResponse({}, HTTPStatus.INTERNAL_SERVER_ERROR)
     if data and data.get("username", None) == INVALID_USERNAME:
         # deliver an invalid token
         return MockResponse({"code": "401", "msg": "Invalid token"}, 200)
@@ -258,3 +264,52 @@ async def test_token_timed_out(mock_get, mock_post, hass: HomeAssistant) -> None
     assert len(scanner.scan_devices()) == 2
     assert scanner.get_device_name("23:83:BF:F6:38:A0") == "Device1"
     assert scanner.get_device_name("1D:98:EC:5E:D5:A6") == "Device2"
+
+
+@patch("requests.get", side_effect=mocked_requests)
+@patch("requests.post", side_effect=mocked_requests)
+async def test_rejected_login_does_not_log_password(
+    mock_get: MagicMock,
+    mock_post: MagicMock,
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that a router refusing the login keeps the password out of the log."""
+    config = {
+        DEVICE_TRACKER_DOMAIN: xiaomi.PLATFORM_SCHEMA(
+            {
+                CONF_PLATFORM: DEVICE_TRACKER_DOMAIN,
+                CONF_HOST: "192.168.0.1",
+                CONF_USERNAME: INVALID_USERNAME,
+                CONF_PASSWORD: PASSWORD,
+            }
+        )
+    }
+
+    assert get_scanner(hass, config) is None
+
+    assert "Xiaomi token cannot be refreshed" in caplog.text
+    assert PASSWORD not in caplog.text
+
+
+@patch("requests.get", side_effect=mocked_requests)
+@patch("requests.post", side_effect=mocked_requests)
+async def test_error_response_does_not_log_password(
+    mock_get, mock_post, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test that a non-OK response keeps the password out of the log."""
+    config = {
+        DEVICE_TRACKER_DOMAIN: xiaomi.PLATFORM_SCHEMA(
+            {
+                CONF_PLATFORM: DEVICE_TRACKER_DOMAIN,
+                CONF_HOST: "192.168.0.1",
+                CONF_USERNAME: ERROR_STATUS_USERNAME,
+                CONF_PASSWORD: PASSWORD,
+            }
+        )
+    }
+
+    assert get_scanner(hass, config) is None
+
+    assert "Invalid response" in caplog.text
+    assert PASSWORD not in caplog.text

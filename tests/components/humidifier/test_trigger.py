@@ -3,43 +3,53 @@
 from contextlib import AbstractContextManager, nullcontext as does_not_raise
 from typing import Any
 
+import probatio
 import pytest
-import voluptuous as vol
-
-from homeassistant.components.humidifier.const import (
-    ATTR_ACTION,
-    HumidifierAction,
-    HumidifierEntityFeature,
-)
-from homeassistant.const import (
-    ATTR_MODE,
-    ATTR_SUPPORTED_FEATURES,
-    CONF_ENTITY_ID,
-    CONF_MODE,
-    CONF_OPTIONS,
-    CONF_TARGET,
-    STATE_OFF,
-    STATE_ON,
-)
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.trigger import async_validate_trigger_config
-
-from tests.components.common import (
+from pytest_homeassistant.components.common import (
+    TargetSupport,
     TriggerStateDescription,
     assert_trigger_behavior_all,
     assert_trigger_behavior_each,
     assert_trigger_behavior_first,
     assert_trigger_options_supported,
+    assert_triggers_target_support,
     parametrize_target_entities,
     parametrize_trigger_states,
     target_entities,
 )
+
+from homeassistant.components.humidifier import HumidifierEntityStateAttribute
+from homeassistant.components.humidifier.const import (
+    HumidifierAction,
+    HumidifierEntityFeature,
+)
+from homeassistant.components.humidifier.trigger import TRIGGERS
+from homeassistant.const import (
+    CONF_MODE,
+    CONF_OPTIONS,
+    CONF_TARGET,
+    STATE_OFF,
+    STATE_ON,
+    EntityStateAttribute,
+    TargetKey,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.trigger import async_validate_trigger_config
 
 
 @pytest.fixture
 async def target_humidifiers(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple humidifier entities associated with different targets."""
     return await target_entities(hass, "humidifier")
+
+
+_TRIGGER_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "mode_changed": TargetSupport.STANDARD,
+    "started_drying": TargetSupport.STANDARD,
+    "started_humidifying": TargetSupport.STANDARD,
+    "turned_off": TargetSupport.STANDARD,
+    "turned_on": TargetSupport.STANDARD,
+}
 
 
 @pytest.mark.parametrize(
@@ -67,6 +77,11 @@ async def test_humidifier_trigger_options_validation(
         supports_behavior=supports_behavior,
         supports_duration=supports_duration,
     )
+
+
+def test_trigger_target_support() -> None:
+    """Certify the trigger registry matches its declared target support."""
+    assert_triggers_target_support(TRIGGERS, _TRIGGER_TARGET_SUPPORT)
 
 
 @pytest.mark.parametrize(
@@ -120,26 +135,48 @@ async def test_humidifier_state_trigger_behavior_each(
     [
         *parametrize_trigger_states(
             trigger="humidifier.started_drying",
-            target_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.DRYING})],
-            other_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.IDLE})],
+            target_states=[
+                (
+                    STATE_ON,
+                    {HumidifierEntityStateAttribute.ACTION: HumidifierAction.DRYING},
+                )
+            ],
+            other_states=[
+                (
+                    STATE_ON,
+                    {HumidifierEntityStateAttribute.ACTION: HumidifierAction.IDLE},
+                )
+            ],
         ),
         *parametrize_trigger_states(
             trigger="humidifier.started_humidifying",
-            target_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.HUMIDIFYING})],
-            other_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.IDLE})],
+            target_states=[
+                (
+                    STATE_ON,
+                    {
+                        HumidifierEntityStateAttribute.ACTION: HumidifierAction.HUMIDIFYING
+                    },
+                )
+            ],
+            other_states=[
+                (
+                    STATE_ON,
+                    {HumidifierEntityStateAttribute.ACTION: HumidifierAction.IDLE},
+                )
+            ],
         ),
         *parametrize_trigger_states(
             trigger="humidifier.mode_changed",
             trigger_options={CONF_MODE: ["eco", "sleep"]},
             target_states=[
-                (STATE_ON, {ATTR_MODE: "eco"}),
-                (STATE_ON, {ATTR_MODE: "sleep"}),
+                (STATE_ON, {HumidifierEntityStateAttribute.MODE: "eco"}),
+                (STATE_ON, {HumidifierEntityStateAttribute.MODE: "sleep"}),
             ],
             other_states=[
-                (STATE_ON, {ATTR_MODE: "normal"}),
+                (STATE_ON, {HumidifierEntityStateAttribute.MODE: "normal"}),
             ],
             required_filter_attributes={
-                ATTR_SUPPORTED_FEATURES: HumidifierEntityFeature.MODES
+                EntityStateAttribute.SUPPORTED_FEATURES: HumidifierEntityFeature.MODES
             },
             trigger_from_none=False,
         ),
@@ -219,26 +256,48 @@ async def test_humidifier_state_trigger_behavior_first(
     [
         *parametrize_trigger_states(
             trigger="humidifier.started_drying",
-            target_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.DRYING})],
-            other_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.IDLE})],
+            target_states=[
+                (
+                    STATE_ON,
+                    {HumidifierEntityStateAttribute.ACTION: HumidifierAction.DRYING},
+                )
+            ],
+            other_states=[
+                (
+                    STATE_ON,
+                    {HumidifierEntityStateAttribute.ACTION: HumidifierAction.IDLE},
+                )
+            ],
         ),
         *parametrize_trigger_states(
             trigger="humidifier.started_humidifying",
-            target_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.HUMIDIFYING})],
-            other_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.IDLE})],
+            target_states=[
+                (
+                    STATE_ON,
+                    {
+                        HumidifierEntityStateAttribute.ACTION: HumidifierAction.HUMIDIFYING
+                    },
+                )
+            ],
+            other_states=[
+                (
+                    STATE_ON,
+                    {HumidifierEntityStateAttribute.ACTION: HumidifierAction.IDLE},
+                )
+            ],
         ),
         *parametrize_trigger_states(
             trigger="humidifier.mode_changed",
             trigger_options={CONF_MODE: ["eco", "sleep"]},
             target_states=[
-                (STATE_ON, {ATTR_MODE: "eco"}),
-                (STATE_ON, {ATTR_MODE: "sleep"}),
+                (STATE_ON, {HumidifierEntityStateAttribute.MODE: "eco"}),
+                (STATE_ON, {HumidifierEntityStateAttribute.MODE: "sleep"}),
             ],
             other_states=[
-                (STATE_ON, {ATTR_MODE: "normal"}),
+                (STATE_ON, {HumidifierEntityStateAttribute.MODE: "normal"}),
             ],
             required_filter_attributes={
-                ATTR_SUPPORTED_FEATURES: HumidifierEntityFeature.MODES
+                EntityStateAttribute.SUPPORTED_FEATURES: HumidifierEntityFeature.MODES
             },
             trigger_from_none=False,
         ),
@@ -318,26 +377,48 @@ async def test_humidifier_state_trigger_behavior_all(
     [
         *parametrize_trigger_states(
             trigger="humidifier.started_drying",
-            target_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.DRYING})],
-            other_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.IDLE})],
+            target_states=[
+                (
+                    STATE_ON,
+                    {HumidifierEntityStateAttribute.ACTION: HumidifierAction.DRYING},
+                )
+            ],
+            other_states=[
+                (
+                    STATE_ON,
+                    {HumidifierEntityStateAttribute.ACTION: HumidifierAction.IDLE},
+                )
+            ],
         ),
         *parametrize_trigger_states(
             trigger="humidifier.started_humidifying",
-            target_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.HUMIDIFYING})],
-            other_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.IDLE})],
+            target_states=[
+                (
+                    STATE_ON,
+                    {
+                        HumidifierEntityStateAttribute.ACTION: HumidifierAction.HUMIDIFYING
+                    },
+                )
+            ],
+            other_states=[
+                (
+                    STATE_ON,
+                    {HumidifierEntityStateAttribute.ACTION: HumidifierAction.IDLE},
+                )
+            ],
         ),
         *parametrize_trigger_states(
             trigger="humidifier.mode_changed",
             trigger_options={CONF_MODE: ["eco", "sleep"]},
             target_states=[
-                (STATE_ON, {ATTR_MODE: "eco"}),
-                (STATE_ON, {ATTR_MODE: "sleep"}),
+                (STATE_ON, {HumidifierEntityStateAttribute.MODE: "eco"}),
+                (STATE_ON, {HumidifierEntityStateAttribute.MODE: "sleep"}),
             ],
             other_states=[
-                (STATE_ON, {ATTR_MODE: "normal"}),
+                (STATE_ON, {HumidifierEntityStateAttribute.MODE: "normal"}),
             ],
             required_filter_attributes={
-                ATTR_SUPPORTED_FEATURES: HumidifierEntityFeature.MODES
+                EntityStateAttribute.SUPPORTED_FEATURES: HumidifierEntityFeature.MODES
             },
             trigger_from_none=False,
         ),
@@ -385,13 +466,13 @@ async def test_humidifier_state_attribute_trigger_behavior_all(
             "humidifier.mode_changed",
             # Empty mode list
             {CONF_MODE: []},
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
         (
             "humidifier.mode_changed",
             # Missing CONF_MODE
             {},
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
     ],
 )
@@ -408,7 +489,7 @@ async def test_humidifier_mode_changed_trigger_validation(
             [
                 {
                     "platform": trigger,
-                    CONF_TARGET: {CONF_ENTITY_ID: "humidifier.test"},
+                    CONF_TARGET: {TargetKey.ENTITY_ID: "humidifier.test"},
                     CONF_OPTIONS: trigger_options,
                 }
             ],

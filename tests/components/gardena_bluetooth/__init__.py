@@ -3,14 +3,13 @@
 from unittest.mock import patch
 
 from gardena_bluetooth.parse import ManufacturerData
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
 
 from homeassistant.components.gardena_bluetooth.const import CONF_PRODUCT_TYPE, DOMAIN
 from homeassistant.const import CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
-
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import inject_bluetooth_service_info
 
 WATER_TIMER_SERVICE_INFO = BluetoothServiceInfo(
     name="Timer",
@@ -42,6 +41,18 @@ AQUA_CONTOUR_SERVICE_INFO = BluetoothServiceInfo(
     rssi=-63,
     service_data={},
     manufacturer_data={1062: b"\x02\x05\x00\x04\x06\x12\x10\x01"},
+    service_uuids=["98bd0001-0b0e-421a-84e5-ddbf75dc6de4"],
+    source="local",
+)
+
+PRESSURE_TANK_SERVICE_INFO = BluetoothServiceInfo(
+    name="GARDENA PTU",
+    address="00000000-0000-0000-0000-000000000004",
+    rssi=-63,
+    service_data={},
+    manufacturer_data={
+        1062: b"\x05\x04\x80\x20\x00\x00\x02\x05\x01\x04\x06\x11\x02\x01"
+    },
     service_uuids=["98bd0001-0b0e-421a-84e5-ddbf75dc6de4"],
     source="local",
 )

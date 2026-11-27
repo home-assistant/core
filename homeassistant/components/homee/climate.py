@@ -33,13 +33,14 @@ ROOM_THERMOSTATS = {
 
 
 async def add_climate_entities(
+    hass: HomeAssistant,
     config_entry: HomeeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
     nodes: list[HomeeNode],
 ) -> None:
     """Add homee climate entities."""
     async_add_entities(
-        HomeeClimate(node, config_entry)
+        HomeeClimate(hass, node, config_entry)
         for node in nodes
         if node.profile in CLIMATE_PROFILES
     )
@@ -52,7 +53,9 @@ async def async_setup_entry(
 ) -> None:
     """Add the Homee platform for the climate component."""
 
-    await setup_homee_platform(add_climate_entities, async_add_entities, config_entry)
+    await setup_homee_platform(
+        hass, add_climate_entities, async_add_entities, config_entry
+    )
 
 
 class HomeeClimate(HomeeNodeEntity, ClimateEntity):
@@ -61,9 +64,11 @@ class HomeeClimate(HomeeNodeEntity, ClimateEntity):
     _attr_name = None
     _attr_translation_key = DOMAIN
 
-    def __init__(self, node: HomeeNode, entry: HomeeConfigEntry) -> None:
+    def __init__(
+        self, hass: HomeAssistant, node: HomeeNode, entry: HomeeConfigEntry
+    ) -> None:
         """Initialize a Homee climate entity."""
-        super().__init__(node, entry)
+        super().__init__(hass, node, entry)
 
         (
             self._attr_supported_features,
@@ -75,7 +80,9 @@ class HomeeClimate(HomeeNodeEntity, ClimateEntity):
             AttributeType.TARGET_TEMPERATURE
         )
         assert self._target_temp is not None
-        self._attr_temperature_unit = str(HOMEE_UNIT_TO_HA_UNIT[self._target_temp.unit])
+        self._attr_native_temperature_unit = str(
+            HOMEE_UNIT_TO_HA_UNIT[self._target_temp.unit]
+        )
         self._attr_target_temperature_step = self._target_temp.step_value
         self._attr_unique_id = f"{self._attr_unique_id}-{self._target_temp.id}"
 
@@ -113,7 +120,7 @@ class HomeeClimate(HomeeNodeEntity, ClimateEntity):
             self._valve_position is not None and self._valve_position.current_value == 0
         ) or (
             self._temperature is not None
-            and self._temperature.current_value >= self.target_temperature
+            and self._temperature.current_value >= self.native_target_temperature
         ):
             return HVACAction.IDLE
 
@@ -137,7 +144,7 @@ class HomeeClimate(HomeeNodeEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         if self._temperature is not None:
             return self._temperature.current_value
@@ -145,7 +152,7 @@ class HomeeClimate(HomeeNodeEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float:
+    def native_target_temperature(self) -> float:
         """Return the temperature we try to reach."""
         assert self._target_temp is not None
         return self._target_temp.current_value

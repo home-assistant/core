@@ -3,13 +3,12 @@
 from typing import Any
 from unittest.mock import AsyncMock
 
+from pytest_homeassistant.common import async_load_fixture
 from volvocarsapi.models import VolvoCarsValueField
 
 from homeassistant.components.volvo.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.util.json import JsonObjectType, json_loads_object
-
-from tests.common import async_load_fixture
 
 _MODEL_SPECIFIC_RESPONSES = {
     "ex30_2024": ["energy_capabilities", "energy_state", "statistics", "vehicle"],

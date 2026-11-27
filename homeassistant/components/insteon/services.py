@@ -22,11 +22,12 @@ from pyinsteon.x10_address import create as create_x10_address
 
 from homeassistant.const import (
     CONF_ADDRESS,
-    CONF_ENTITY_ID,
     CONF_PLATFORM,
     ENTITY_MATCH_ALL,
+    CommonServiceArgument,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -53,22 +54,9 @@ from .const import (
     SIGNAL_REMOVE_INSTEON_DEVICE,
     SIGNAL_REMOVE_X10_DEVICE,
     SIGNAL_SAVE_DEVICES,
-    SRV_ADD_ALL_LINK,
-    SRV_ADD_DEFAULT_LINKS,
-    SRV_ALL_LINK_GROUP,
-    SRV_ALL_LINK_MODE,
     SRV_CONTROLLER,
-    SRV_DEL_ALL_LINK,
-    SRV_HOUSECODE,
-    SRV_LOAD_ALDB,
-    SRV_LOAD_DB_RELOAD,
-    SRV_PRINT_ALDB,
-    SRV_PRINT_IM_ALDB,
-    SRV_SCENE_OFF,
-    SRV_SCENE_ON,
-    SRV_X10_ALL_LIGHTS_OFF,
-    SRV_X10_ALL_LIGHTS_ON,
-    SRV_X10_ALL_UNITS_OFF,
+    InsteonService,
+    InsteonServiceArgument,
 )
 from .schemas import (
     ADD_ALL_LINK_SCHEMA,
@@ -85,6 +73,15 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @callback
+def _async_check_loaded(hass: HomeAssistant) -> None:
+    """Raise if the Insteon config entry is not loaded."""
+    if not hass.config_entries.async_loaded_entries(DOMAIN):
+        raise ServiceValidationError(
+            translation_domain=DOMAIN, translation_key="not_loaded"
+        )
+
+
+@callback
 def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
     """Register services used by insteon component."""
 
@@ -92,20 +89,23 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
 
     async def async_srv_add_all_link(service: ServiceCall) -> None:
         """Add an INSTEON All-Link between two devices."""
-        group = service.data[SRV_ALL_LINK_GROUP]
-        mode = service.data[SRV_ALL_LINK_MODE]
+        _async_check_loaded(hass)
+        group = service.data[InsteonServiceArgument.GROUP]
+        mode = service.data[InsteonServiceArgument.MODE]
         link_mode = mode.lower() == SRV_CONTROLLER
         await async_enter_linking_mode(link_mode, group)
 
     async def async_srv_del_all_link(service: ServiceCall) -> None:
         """Delete an INSTEON All-Link between two devices."""
-        group = service.data.get(SRV_ALL_LINK_GROUP)
+        _async_check_loaded(hass)
+        group = service.data.get(InsteonServiceArgument.GROUP)
         await async_enter_unlinking_mode(group)
 
     async def async_srv_load_aldb(service: ServiceCall) -> None:
         """Load the device All-Link database."""
-        entity_id = service.data[CONF_ENTITY_ID]
-        reload = service.data[SRV_LOAD_DB_RELOAD]
+        _async_check_loaded(hass)
+        entity_id = service.data[CommonServiceArgument.ENTITY_ID]
+        reload = service.data[InsteonServiceArgument.RELOAD]
         if entity_id.lower() == ENTITY_MATCH_ALL:
             await async_srv_load_aldb_all(reload)
         else:
@@ -129,47 +129,55 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
 
     def print_aldb(service: ServiceCall) -> None:
         """Print the All-Link Database for a device."""
+        _async_check_loaded(hass)
         # For now this sends logs to the log file.
         # Future direction is to create an INSTEON control panel.
-        entity_id = service.data[CONF_ENTITY_ID]
+        entity_id = service.data[CommonServiceArgument.ENTITY_ID]
         signal = f"{entity_id}_{SIGNAL_PRINT_ALDB}"
         dispatcher_send(hass, signal)
 
     def print_im_aldb(service: ServiceCall) -> None:
         """Print the All-Link Database for a device."""
+        _async_check_loaded(hass)
         # For now this sends logs to the log file.
         # Future direction is to create an INSTEON control panel.
         print_aldb_to_log(devices.modem.aldb)
 
     async def async_srv_x10_all_units_off(service: ServiceCall) -> None:
         """Send the X10 All Units Off command."""
-        housecode = service.data.get(SRV_HOUSECODE)
+        _async_check_loaded(hass)
+        housecode = service.data.get(InsteonServiceArgument.HOUSECODE)
         await async_x10_all_units_off(housecode)
 
     async def async_srv_x10_all_lights_off(service: ServiceCall) -> None:
         """Send the X10 All Lights Off command."""
-        housecode = service.data.get(SRV_HOUSECODE)
+        _async_check_loaded(hass)
+        housecode = service.data.get(InsteonServiceArgument.HOUSECODE)
         await async_x10_all_lights_off(housecode)
 
     async def async_srv_x10_all_lights_on(service: ServiceCall) -> None:
         """Send the X10 All Lights On command."""
-        housecode = service.data.get(SRV_HOUSECODE)
+        _async_check_loaded(hass)
+        housecode = service.data.get(InsteonServiceArgument.HOUSECODE)
         await async_x10_all_lights_on(housecode)
 
     async def async_srv_scene_on(service: ServiceCall) -> None:
         """Trigger an INSTEON scene ON."""
-        group = service.data.get(SRV_ALL_LINK_GROUP)
+        _async_check_loaded(hass)
+        group = service.data.get(InsteonServiceArgument.GROUP)
         await async_trigger_scene_on(group)
 
     async def async_srv_scene_off(service: ServiceCall) -> None:
         """Trigger an INSTEON scene ON."""
-        group = service.data.get(SRV_ALL_LINK_GROUP)
+        _async_check_loaded(hass)
+        group = service.data.get(InsteonServiceArgument.GROUP)
         await async_trigger_scene_off(group)
 
     @callback
     def async_add_default_links(service: ServiceCall) -> None:
         """Add the default All-Link entries to a device."""
-        entity_id = service.data[CONF_ENTITY_ID]
+        _async_check_loaded(hass)
+        entity_id = service.data[CommonServiceArgument.ENTITY_ID]
         signal = f"{entity_id}_{SIGNAL_ADD_DEFAULT_LINKS}"
         async_dispatcher_send(hass, signal)
 
@@ -217,7 +225,10 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         signal = f"{address.id}_{SIGNAL_REMOVE_ENTITY}"
         async_dispatcher_send(hass, signal)
         dev_registry = dr.async_get(hass)
-        device = dev_registry.async_get_device(identifiers={(DOMAIN, str(address))})
+        config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+        device = dev_registry.async_get_device_by_identifier(
+            (DOMAIN, str(address)), config_entry.entry_id
+        )
         if device:
             dev_registry.async_remove_device(device.id)
 
@@ -233,53 +244,64 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
     async_register_admin_service(
         hass,
         DOMAIN,
-        SRV_ADD_ALL_LINK,
+        InsteonService.ADD_ALL_LINK,
         async_srv_add_all_link,
         schema=ADD_ALL_LINK_SCHEMA,
     )
     async_register_admin_service(
         hass,
         DOMAIN,
-        SRV_DEL_ALL_LINK,
+        InsteonService.DELETE_ALL_LINK,
         async_srv_del_all_link,
         schema=DEL_ALL_LINK_SCHEMA,
     )
     hass.services.async_register(
-        DOMAIN, SRV_LOAD_ALDB, async_srv_load_aldb, schema=LOAD_ALDB_SCHEMA
+        DOMAIN,
+        InsteonService.LOAD_ALL_LINK_DATABASE,
+        async_srv_load_aldb,
+        schema=LOAD_ALDB_SCHEMA,
     )
-    hass.services.async_register(
-        DOMAIN, SRV_PRINT_ALDB, print_aldb, schema=PRINT_ALDB_SCHEMA
-    )
-    hass.services.async_register(DOMAIN, SRV_PRINT_IM_ALDB, print_im_aldb, schema=None)
     hass.services.async_register(
         DOMAIN,
-        SRV_X10_ALL_UNITS_OFF,
+        InsteonService.PRINT_ALL_LINK_DATABASE,
+        print_aldb,
+        schema=PRINT_ALDB_SCHEMA,
+    )
+    hass.services.async_register(
+        DOMAIN, InsteonService.PRINT_IM_ALL_LINK_DATABASE, print_im_aldb, schema=None
+    )
+    hass.services.async_register(
+        DOMAIN,
+        InsteonService.X10_ALL_UNITS_OFF,
         async_srv_x10_all_units_off,
         schema=X10_HOUSECODE_SCHEMA,
     )
     hass.services.async_register(
         DOMAIN,
-        SRV_X10_ALL_LIGHTS_OFF,
+        InsteonService.X10_ALL_LIGHTS_OFF,
         async_srv_x10_all_lights_off,
         schema=X10_HOUSECODE_SCHEMA,
     )
     hass.services.async_register(
         DOMAIN,
-        SRV_X10_ALL_LIGHTS_ON,
+        InsteonService.X10_ALL_LIGHTS_ON,
         async_srv_x10_all_lights_on,
         schema=X10_HOUSECODE_SCHEMA,
     )
     hass.services.async_register(
-        DOMAIN, SRV_SCENE_ON, async_srv_scene_on, schema=TRIGGER_SCENE_SCHEMA
+        DOMAIN, InsteonService.SCENE_ON, async_srv_scene_on, schema=TRIGGER_SCENE_SCHEMA
     )
     hass.services.async_register(
-        DOMAIN, SRV_SCENE_OFF, async_srv_scene_off, schema=TRIGGER_SCENE_SCHEMA
+        DOMAIN,
+        InsteonService.SCENE_OFF,
+        async_srv_scene_off,
+        schema=TRIGGER_SCENE_SCHEMA,
     )
 
     async_register_admin_service(
         hass,
         DOMAIN,
-        SRV_ADD_DEFAULT_LINKS,
+        InsteonService.ADD_DEFAULT_LINKS,
         async_add_default_links,
         schema=ADD_DEFAULT_LINKS_SCHEMA,
     )

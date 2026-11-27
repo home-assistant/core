@@ -1,15 +1,25 @@
 ---
+# PR-triggered runs have no fixed head branch, so the CTR-021 workflow_run branch filter cannot be satisfied.
+strict: false
 on:
   workflow_run:
     workflows: ["Check requirements (deterministic)"]
     types: [completed]
+  # On workflow_run the actor is the PR author, so the default role gate
+  # (admin/maintainer/write) skips every PR from an outside contributor — which is
+  # exactly who this review is for. The job is read-only and its single safe-output
+  # is a sanitized comment on the PR recorded in the trusted upstream artifact.
+  roles: all
 permissions:
   contents: read
   actions: read
   pull-requests: read
+  copilot-requests: write
 network:
   allowed:
     - python
+    - gitlab.com
+    - codeberg.org
 tools:
   web-fetch: {}
   github:
@@ -39,7 +49,7 @@ jobs:
     steps:
       - name: Download deterministic-results artifact
         id: download
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: check-requirements-deterministic
           path: /tmp/deterministic
@@ -50,33 +60,31 @@ jobs:
         run: |
           echo "skip=$(jq -r '.skip_aw' /tmp/deterministic/results.json)" >> "${GITHUB_OUTPUT}"
           echo "pr_number=$(jq -r '.pr_number' /tmp/deterministic/results.json)" >> "${GITHUB_OUTPUT}"
+  verify_comment:
+    needs: [prepare, safe_outputs]
+    if: always() && github.event.workflow_run.conclusion == 'success' && needs.prepare.outputs.skip != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify the agent posted a review comment
+        env:
+          COMMENT_ID: ${{ needs.safe_outputs.outputs.comment_id }}
+        run: |
+          if [ -z "${COMMENT_ID}" ]; then
+            echo "::error::Agent did not emit an add_comment safe-output; no review comment was posted to the PR."
+            exit 1
+          fi
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.workflow_run.id }}
   cancel-in-progress: true
 steps:
   - name: Download deterministic-results artifact
     if: github.event.workflow_run.conclusion == 'success'
-    uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+    uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
     with:
       name: check-requirements-deterministic
       path: /tmp/gh-aw/deterministic
       run-id: ${{ github.event.workflow_run.id }}
       github-token: ${{ secrets.GITHUB_TOKEN }}
-post-steps:
-  - name: Verify agent produced an add_comment safe-output
-    if: always() && github.event.workflow_run.conclusion == 'success'
-    run: |
-      OUTPUT=/tmp/gh-aw/agent_output.json
-      if [ ! -f "${OUTPUT}" ]; then
-        echo "::error::Agent output file ${OUTPUT} is missing; the agent did not run to completion."
-        exit 1
-      fi
-      if ! grep -q '"add_comment"' "${OUTPUT}"; then
-        echo "::error::Agent did not emit an add_comment safe-output; no review comment was posted to the PR."
-        echo "Agent output:"
-        cat "${OUTPUT}"
-        exit 1
-      fi
 description: >
   Resolves the deterministic-stage artifact's NEEDS_AGENT checks for changed
   Python package requirements on PRs targeting the core repo, then posts the
@@ -192,6 +200,10 @@ rubric:
      promising file by name, fetch its contents.
    - GitLab: fetch `.gitlab-ci.yml` from the default ref via
      `https://gitlab.com/api/v4/projects/{id}/repository/files/.gitlab-ci.yml/raw?ref=HEAD`.
+   - Codeberg (Forgejo): list `.forgejo/workflows/` (Forgejo Actions) — also
+     check `.gitea/workflows/` and `.woodpecker.yml` — via
+     `https://codeberg.org/api/v1/repos/{owner}/{repo}/contents/{path}?ref=HEAD`,
+     then fetch the promising file's `download_url`.
    - Other hosts: `web-fetch` an obvious CI config
      (`.circleci/config.yml`, `bitbucket-pipelines.yml`, etc.).
 2. Apply this rubric:
@@ -203,8 +215,10 @@ rubric:
    - **No bypass**: no ungated `twine upload` / `pip upload`.
 3. Verdict:
    - ✅ — OIDC + sane triggers + no bypass.
-   - ⚠️ — static token on a bump, details unclear, or
-     non-GitHub/GitLab host with limited CI visibility.
+   - ⚠️ — static token on a bump, details unclear, or a host with
+     limited CI visibility. Codeberg has no PyPI Trusted Publisher
+     support, so a static `PYPI_TOKEN` there is the expected best case
+     on a bump — ⚠️ rather than ❌.
    - ❌ — static token on a new package, or manual-only triggers
      without environment protection.
 
@@ -237,10 +251,13 @@ wrap calls in an executor.` (Same verdict for both modes.)
 - New package: grep public modules for `async def`, inspect each
   async body and transitive helpers.
 - Bump: fetch the compare diff
-  (`/repos/{owner}/{repo}/compare/{old}...{new}` on GitHub, equivalent
-  on GitLab/other hosts). Only flag patterns on **added** lines that
-  are inside or reachable from `async def`. If no tag format resolves,
-  fall back to a full review and note that the diff was unavailable.
+  (`/repos/{owner}/{repo}/compare/{old}...{new}` on GitHub,
+  `/api/v4/projects/{id}/repository/compare?from={old}&to={new}` on
+  GitLab, `/api/v1/repos/{owner}/{repo}/compare/{old}...{new}` on
+  Codeberg, equivalent on other hosts). Only flag patterns on **added**
+  lines that are inside or reachable from `async def`. If no tag format
+  resolves, fall back to a full review and note that the diff was
+  unavailable.
 
 **Blocking patterns to flag inside `async def`:**
 
@@ -291,7 +308,12 @@ Locate the source from `package.repo_url`.
 - GitHub: resolve the default branch (`GET /repos/{owner}/{repo}`), list
   the tree (`GET /repos/{owner}/{repo}/git/trees/{branch}?recursive=1`),
   find the module dir (`{name}/` or `src/{name}/`, normalising `-` ↔ `_`).
-- GitLab: equivalent REST calls. Other hosts: `web-fetch` raw file URLs.
+- GitLab: equivalent REST calls (`/api/v4/projects/{id}/repository/tree`).
+- Codeberg (Forgejo): `GET /api/v1/repos/{owner}/{repo}` for the default
+  branch, `GET /api/v1/repos/{owner}/{repo}/git/trees/{branch}?recursive=1`
+  for the tree, then `/api/v1/repos/{owner}/{repo}/contents/{path}?ref={branch}`
+  per file for its `download_url` — tree entries carry no `download_url`.
+- Other hosts: `web-fetch` raw file URLs.
 
 Fetch the **raw contents** of `setup.py` (install-time code runs on every
 consumer), `pyproject.toml` (`[build-system]` / custom backend), the
@@ -313,8 +335,10 @@ that did not exist when this was written) the same way.
 
 For every finding include the file path, line number, a snippet
 (≤ 120 chars), a permalink
-(`https://github.com/{owner}/{repo}/blob/{sha}/{path}#L{line}` or the
-GitLab equivalent), and one sentence on why it is out of scope.
+(`https://github.com/{owner}/{repo}/blob/{sha}/{path}#L{line}`, or the
+GitLab (`/-/blob/{sha}/{path}#L{line}`) / Codeberg
+(`/src/commit/{sha}/{path}#L{line}`) equivalent), and one sentence on why
+it is out of scope.
 
 1. **Reaches into Home Assistant internals.** A library should touch HA
    only through its documented Python API — never the `config_dir`

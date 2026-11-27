@@ -7,50 +7,61 @@ from aioamazondevices.exceptions import (
     CannotAuthenticate,
     CannotConnect,
     CannotRetrieveData,
+    InvalidInputError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.alexa_devices.const import DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SERVICE_TURN_ON
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, Platform
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
+from homeassistant.const import STATE_OFF, Platform, TargetKey
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
 from .const import TEST_DEVICE_1_SN
 
-from tests.common import MockConfigEntry
-
 ENTITY_ID = "switch.echo_test_do_not_disturb"
 
 
 @pytest.mark.parametrize(
-    ("side_effect", "key", "error"),
+    ("side_effect", "expected_error", "key", "placeholders"),
     [
         pytest.param(
             CannotAuthenticate,
+            HomeAssistantError,
             "invalid_auth",
-            "CannotAuthenticate()",
+            {"error": "CannotAuthenticate()"},
             id="cannot_authenticate",
         ),
         pytest.param(
             CannotConnect,
+            HomeAssistantError,
             "cannot_connect_with_error",
-            "CannotConnect()",
+            {"error": "CannotConnect()"},
             id="cannot_connect",
         ),
         pytest.param(
             CannotRetrieveData,
+            HomeAssistantError,
             "cannot_retrieve_data_with_error",
-            "CannotRetrieveData()",
+            {"error": "CannotRetrieveData()"},
             id="cannot_retrieve_data",
         ),
         pytest.param(
             ValueError,
+            HomeAssistantError,
             "cannot_retrieve_data_with_error",
-            "ValueError()",
+            {"error": "ValueError()"},
             id="value_error",
+        ),
+        pytest.param(
+            InvalidInputError,
+            ServiceValidationError,
+            "invalid_user_input",
+            None,
+            id="invalid_input",
         ),
     ],
 )
@@ -59,8 +70,9 @@ async def test_alexa_api_call_exceptions(
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     side_effect: type[Exception],
+    expected_error: type[HomeAssistantError],
     key: str,
-    error: str,
+    placeholders: dict[str, str] | None,
 ) -> None:
     """Test alexa_api_call decorator for exceptions."""
 
@@ -72,17 +84,17 @@ async def test_alexa_api_call_exceptions(
     mock_amazon_devices_client.set_do_not_disturb.side_effect = side_effect
 
     # Call API
-    with pytest.raises(HomeAssistantError) as exc_info:
+    with pytest.raises(expected_error) as exc_info:
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: ENTITY_ID},
+            SwitchService.TURN_ON,
+            {TargetKey.ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
 
     assert exc_info.value.translation_domain == DOMAIN
     assert exc_info.value.translation_key == key
-    assert exc_info.value.translation_placeholders == {"error": error}
+    assert exc_info.value.translation_placeholders == placeholders
 
 
 async def test_alexa_unique_id_migration(

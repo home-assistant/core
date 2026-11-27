@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from redgtech_api.api import RedgtechAuthError, RedgtechConnectionError
 
 from homeassistant.components.redgtech.const import DOMAIN
@@ -11,39 +12,9 @@ from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
-
 TEST_EMAIL = "test@example.com"
 TEST_PASSWORD = "123456"
 FAKE_TOKEN = "fake_token"
-
-
-@pytest.mark.parametrize(
-    ("side_effect", "expected_error"),
-    [
-        (RedgtechAuthError, "invalid_auth"),
-        (RedgtechConnectionError, "cannot_connect"),
-        (Exception("Generic error"), "unknown"),
-    ],
-)
-async def test_user_step_errors(
-    hass: HomeAssistant,
-    mock_redgtech_api: MagicMock,
-    side_effect: type[Exception],
-    expected_error: str,
-) -> None:
-    """Test user step with various errors."""
-    user_input = {CONF_EMAIL: TEST_EMAIL, CONF_PASSWORD: TEST_PASSWORD}
-    mock_redgtech_api.login.side_effect = side_effect
-    mock_redgtech_api.login.return_value = None
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=user_input
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"]["base"] == expected_error
-    mock_redgtech_api.login.assert_called_once_with(TEST_EMAIL, TEST_PASSWORD)
 
 
 async def test_user_step_creates_entry(
@@ -57,7 +28,14 @@ async def test_user_step_creates_entry(
     mock_redgtech_api.login.side_effect = None
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=user_input
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=user_input
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -82,7 +60,14 @@ async def test_user_step_duplicate_entry(
     user_input = {CONF_EMAIL: TEST_EMAIL, CONF_PASSWORD: TEST_PASSWORD}
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=user_input
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=user_input
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -115,7 +100,14 @@ async def test_user_step_error_recovery(
     # First attempt fails with error
     mock_redgtech_api.login.side_effect = side_effect
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=user_input
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=user_input
     )
 
     assert result["type"] is FlowResultType.FORM

@@ -59,10 +59,7 @@ class EnergyFlipUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]
             # Note: TimeoutError and aiohttp.ClientError are already
             # handled by the data update coordinator.
             async with asyncio.timeout(FETCH_TIMEOUT):
-                if not self._energyflip.is_authenticated():
-                    _LOGGER.warning("EnergyFlip is unauthenticated. Reauthenticating")
-                    await self._energyflip.authenticate()
-
+                # Invalidated authentications are handled by current_measurements itself
                 current_measurements = await self._energyflip.current_measurements()
 
                 return {

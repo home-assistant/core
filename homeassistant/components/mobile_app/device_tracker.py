@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import logging
 from typing import Any, Self, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_tracker import (
     ATTR_BATTERY,
@@ -13,20 +13,21 @@ from homeassistant.components.device_tracker import (
     ATTR_IN_ZONES,
     ATTR_LOCATION_NAME,
     TrackerEntity,
+    TrackerEntityStateAttribute,
 )
 from homeassistant.components.zone import (
     DOMAIN as ZONE_DOMAIN,
     ENTITY_ID_FORMAT as ZONE_ENTITY_ID_FORMAT,
     HOME_ZONE,
+    async_is_improved_presence_detection_enabled,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_ID,
     ATTR_GPS_ACCURACY,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     STATE_HOME,
+    EntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
@@ -39,6 +40,8 @@ from .const import (
     ATTR_ALTITUDE,
     ATTR_COURSE,
     ATTR_DEVICE_NAME,
+    ATTR_RAW_GPS,
+    ATTR_RAW_GPS_ACCURACY,
     ATTR_SPEED,
     ATTR_VERTICAL_ACCURACY,
     SIGNAL_LOCATION_UPDATE,
@@ -49,19 +52,23 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_KEYS = (ATTR_ALTITUDE, ATTR_COURSE, ATTR_SPEED, ATTR_VERTICAL_ACCURACY)
 
-LOCATION_UPDATE_SCHEMA = vol.All(
+LOCATION_UPDATE_SCHEMA = probatio.All(
     cv.key_dependency(ATTR_GPS, ATTR_GPS_ACCURACY),
-    vol.Schema(
+    probatio.Schema(
         {
-            vol.Optional(ATTR_LOCATION_NAME): cv.string,
-            vol.Optional(ATTR_GPS): cv.gps,
-            vol.Optional(ATTR_GPS_ACCURACY): cv.positive_float,
-            vol.Optional(ATTR_BATTERY): cv.positive_int,
-            vol.Optional(ATTR_SPEED): cv.positive_int,
-            vol.Optional(ATTR_ALTITUDE): vol.Coerce(float),
-            vol.Optional(ATTR_COURSE): cv.positive_int,
-            vol.Optional(ATTR_VERTICAL_ACCURACY): cv.positive_int,
-            vol.Optional(ATTR_IN_ZONES): cv.entities_domain(ZONE_DOMAIN),
+            probatio.Optional(ATTR_LOCATION_NAME): cv.string,
+            probatio.Optional(ATTR_GPS): cv.gps,
+            probatio.Optional(ATTR_GPS_ACCURACY): cv.positive_float,
+            probatio.Optional(ATTR_BATTERY): cv.positive_int,
+            probatio.Optional(ATTR_SPEED): cv.positive_int,
+            probatio.Optional(ATTR_ALTITUDE): probatio.Coerce(float),
+            probatio.Optional(ATTR_COURSE): cv.positive_int,
+            probatio.Optional(ATTR_VERTICAL_ACCURACY): cv.positive_int,
+            probatio.Optional(ATTR_IN_ZONES): cv.entities_domain(ZONE_DOMAIN),
+            # The fix before the app adjusted gps to agree with a zone event,
+            # used by improved presence detection
+            probatio.Optional(ATTR_RAW_GPS): cv.gps,
+            probatio.Optional(ATTR_RAW_GPS_ACCURACY): cv.positive_float,
         },
     ),
 )
@@ -85,7 +92,7 @@ class MobileAppDeviceTrackerExtraStoredData(ExtraStoredData):
             return None
         try:
             validated = LOCATION_UPDATE_SCHEMA(data)
-        except vol.Invalid as err:
+        except probatio.Invalid as err:
             _LOGGER.debug("Discarding invalid restored device tracker data: %s", err)
             return None
         return cls(validated)
@@ -139,17 +146,32 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
         """Return the zones the device is currently in."""
         return self._data.get(ATTR_IN_ZONES)
 
+    def _location(self) -> tuple[tuple[float, float] | None, float]:
+        """Return the reported location and its accuracy.
+
+        The app may adjust the location to agree with a zone event, which
+        defeats improved presence detection, so the raw fix is used instead
+        when the feature is enabled and the app sent one.
+        """
+        if (
+            ATTR_RAW_GPS in self._data
+            and ATTR_RAW_GPS_ACCURACY in self._data
+            and async_is_improved_presence_detection_enabled(self.hass)
+        ):
+            return self._data[ATTR_RAW_GPS], self._data[ATTR_RAW_GPS_ACCURACY]
+        return self._data.get(ATTR_GPS), self._data.get(ATTR_GPS_ACCURACY, 0)
+
     @property
     @override
     def location_accuracy(self) -> float:
         """Return the gps accuracy of the device."""
-        return self._data.get(ATTR_GPS_ACCURACY, 0)
+        return self._location()[1]
 
     @property
     @override
     def latitude(self) -> float | None:
         """Return latitude value of the device."""
-        if (gps := self._data.get(ATTR_GPS)) is None:
+        if (gps := self._location()[0]) is None:
             return None
 
         return gps[0]
@@ -158,7 +180,7 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
     @override
     def longitude(self) -> float | None:
         """Return longitude value of the device."""
-        if (gps := self._data.get(ATTR_GPS)) is None:
+        if (gps := self._location()[0]) is None:
             return None
 
         return gps[1]
@@ -221,8 +243,11 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
 
         attr = state.attributes
         data = {
-            ATTR_GPS: (attr.get(ATTR_LATITUDE), attr.get(ATTR_LONGITUDE)),
-            ATTR_GPS_ACCURACY: attr.get(ATTR_GPS_ACCURACY),
+            ATTR_GPS: (
+                attr.get(EntityStateAttribute.LATITUDE),
+                attr.get(EntityStateAttribute.LONGITUDE),
+            ),
+            ATTR_GPS_ACCURACY: attr.get(TrackerEntityStateAttribute.GPS_ACCURACY),
             ATTR_BATTERY: attr.get(ATTR_BATTERY_LEVEL),
         }
         data.update({key: attr[key] for key in attr if key in ATTR_KEYS})

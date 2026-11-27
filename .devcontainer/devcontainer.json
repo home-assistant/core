@@ -1,7 +1,9 @@
 {
   "name": "Home Assistant Dev",
-  "context": "..",
-  "dockerFile": "../Dockerfile.dev",
+  "build": {
+    "dockerfile": "../Dockerfile.dev",
+    "context": ".."
+  },
   "postCreateCommand": "git config --global --add safe.directory ${containerWorkspaceFolder} && script/setup",
   "postStartCommand": "script/bootstrap",
   "containerEnv": {

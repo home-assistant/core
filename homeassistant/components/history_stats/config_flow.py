@@ -4,14 +4,19 @@ from collections.abc import Mapping
 from datetime import timedelta
 from typing import Any, cast, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.components.sensor import CONF_STATE_CLASS, SensorStateClass
 from homeassistant.const import CONF_ENTITY_ID, CONF_NAME, CONF_STATE, CONF_TYPE
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import section
+from homeassistant.data_entry_flow import Optional, Required, section
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.field_visibility import (
+    ConditionOperator,
+    FieldCondition,
+    get_hidden_fields,
+)
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
     SchemaConfigFlowHandler,
@@ -26,6 +31,8 @@ from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
+    StateClassSelector,
+    StateClassSelectorConfig,
     StateSelector,
     StateSelectorConfig,
     TemplateSelector,
@@ -37,6 +44,7 @@ from .const import (
     CONF_DURATION,
     CONF_END,
     CONF_MIN_STATE_DURATION,
+    CONF_PERIOD,
     CONF_PERIOD_KEYS,
     CONF_START,
     CONF_TYPE_KEYS,
@@ -45,33 +53,59 @@ from .const import (
     DEFAULT_NAME,
     DOMAIN,
     SECTION_ADDITIONAL_SETTINGS,
+    Period,
 )
 from .coordinator import HistoryStatsUpdateCoordinator
 from .data import HistoryStats
+from .helpers import resolve_period_config
 from .sensor import HistoryStatsSensor
 
+VISIBLE_IF_CUSTOM: FieldCondition = {"field": CONF_PERIOD, "value": Period.CUSTOM}
+VISIBLE_IF_DURATION: FieldCondition = {
+    "field": CONF_PERIOD,
+    "operator": ConditionOperator.IN,
+    "value": [Period.ROLLING_WINDOW, Period.CUSTOM],
+}
 
-def _validate_two_period_keys(user_input: dict[str, Any]) -> None:
-    if sum(param in user_input for param in CONF_PERIOD_KEYS) != 2:
-        raise SchemaFlowError("only_two_keys_allowed")
+
+def _validate_period(user_input: dict[str, Any]) -> None:
+    period = user_input[CONF_PERIOD]
+    if period == Period.CUSTOM:
+        if sum(param in user_input for param in CONF_PERIOD_KEYS) != 2:
+            raise SchemaFlowError("only_two_keys_allowed")
+    elif period == Period.ROLLING_WINDOW and not user_input.get(CONF_DURATION):
+        raise SchemaFlowError("duration_required")
+
+
+def _remove_hidden_fields(
+    data_schema: probatio.Schema, user_input: dict[str, Any]
+) -> dict[str, Any]:
+    """Remove the input of fields hidden by their visible condition."""
+    visible_by_field = {
+        key.schema: visible
+        for key in data_schema.schema
+        if (visible := getattr(key, "visible", None)) is not None
+    }
+    hidden = get_hidden_fields(visible_by_field, user_input)
+    return {key: value for key, value in user_input.items() if key not in hidden}
 
 
 async def validate_options(
     handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
 ) -> dict[str, Any]:
     """Validate options selected."""
-    _validate_two_period_keys(user_input)
+    _validate_period(user_input)
 
     handler.parent_handler._async_abort_entries_match({**handler.options, **user_input})  # noqa: SLF001
 
     return user_input
 
 
-DATA_SCHEMA_SETUP = vol.Schema(
+DATA_SCHEMA_SETUP = probatio.Schema(
     {
-        vol.Required(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
-        vol.Required(CONF_ENTITY_ID): EntitySelector(),
-        vol.Required(CONF_TYPE, default=CONF_TYPE_TIME): SelectSelector(
+        probatio.Required(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
+        probatio.Required(CONF_ENTITY_ID): EntitySelector(),
+        probatio.Required(CONF_TYPE, default=CONF_TYPE_TIME): SelectSelector(
             SelectSelectorConfig(
                 options=CONF_TYPE_KEYS,
                 mode=SelectSelectorMode.DROPDOWN,
@@ -82,16 +116,16 @@ DATA_SCHEMA_SETUP = vol.Schema(
 )
 
 
-async def get_state_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
+async def get_state_schema(handler: SchemaCommonFlowHandler) -> probatio.Schema:
     """Return schema for state step."""
     entity_id = handler.options[CONF_ENTITY_ID]
 
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Optional(CONF_ENTITY_ID): EntitySelector(
+            probatio.Optional(CONF_ENTITY_ID): EntitySelector(
                 EntitySelectorConfig(read_only=True)
             ),
-            vol.Required(CONF_STATE): StateSelector(
+            probatio.Required(CONF_STATE): StateSelector(
                 StateSelectorConfig(
                     multiple=True,
                     entity_id=entity_id,
@@ -101,14 +135,14 @@ async def get_state_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
     )
 
 
-async def get_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
+async def get_options_schema(handler: SchemaCommonFlowHandler) -> probatio.Schema:
     """Return schema for options step."""
     entity_id = handler.options[CONF_ENTITY_ID]
     conf_type = handler.options[CONF_TYPE]
     return _get_options_schema_with_entity_id(entity_id, conf_type)
 
 
-def _get_options_schema_with_entity_id(entity_id: str, type: str) -> vol.Schema:
+def _get_options_schema_with_entity_id(entity_id: str, type: str) -> probatio.Schema:
     state_class_options = (
         [SensorStateClass.MEASUREMENT]
         if type == CONF_TYPE_RATIO
@@ -117,19 +151,19 @@ def _get_options_schema_with_entity_id(entity_id: str, type: str) -> vol.Schema:
             SensorStateClass.TOTAL_INCREASING,
         ]
     )
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Optional(CONF_ENTITY_ID): EntitySelector(
+            probatio.Optional(CONF_ENTITY_ID): EntitySelector(
                 EntitySelectorConfig(read_only=True)
             ),
-            vol.Optional(CONF_STATE): StateSelector(
+            probatio.Optional(CONF_STATE): StateSelector(
                 StateSelectorConfig(
                     multiple=True,
                     entity_id=entity_id,
                     read_only=True,
                 )
             ),
-            vol.Optional(CONF_TYPE): SelectSelector(
+            probatio.Optional(CONF_TYPE): SelectSelector(
                 SelectSelectorConfig(
                     options=CONF_TYPE_KEYS,
                     mode=SelectSelectorMode.DROPDOWN,
@@ -137,22 +171,25 @@ def _get_options_schema_with_entity_id(entity_id: str, type: str) -> vol.Schema:
                     read_only=True,
                 )
             ),
-            vol.Optional(CONF_START): TemplateSelector(),
-            vol.Optional(CONF_END): TemplateSelector(),
-            vol.Optional(CONF_DURATION): DurationSelector(
+            Required(CONF_PERIOD, default=Period.TODAY): SelectSelector(
+                SelectSelectorConfig(
+                    options=list(Period),
+                    mode=SelectSelectorMode.DROPDOWN,
+                    translation_key=CONF_PERIOD,
+                )
+            ),
+            Optional(CONF_START, visible=VISIBLE_IF_CUSTOM): TemplateSelector(),
+            Optional(CONF_END, visible=VISIBLE_IF_CUSTOM): TemplateSelector(),
+            Optional(CONF_DURATION, visible=VISIBLE_IF_DURATION): DurationSelector(
                 DurationSelectorConfig(enable_day=True, allow_negative=False),
             ),
-            vol.Optional(CONF_STATE_CLASS): SelectSelector(
-                SelectSelectorConfig(
-                    options=state_class_options,
-                    translation_key=CONF_STATE_CLASS,
-                    mode=SelectSelectorMode.DROPDOWN,
-                ),
+            Optional(CONF_STATE_CLASS, visible=VISIBLE_IF_CUSTOM): StateClassSelector(
+                StateClassSelectorConfig(state_classes=state_class_options),
             ),
-            vol.Optional(SECTION_ADDITIONAL_SETTINGS): section(
-                vol.Schema(
+            probatio.Optional(SECTION_ADDITIONAL_SETTINGS): section(
+                probatio.Schema(
                     {
-                        vol.Optional(CONF_MIN_STATE_DURATION): DurationSelector(
+                        probatio.Optional(CONF_MIN_STATE_DURATION): DurationSelector(
                             DurationSelectorConfig(
                                 enable_day=True, allow_negative=False
                             )
@@ -190,11 +227,13 @@ class HistoryStatsConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     """Handle a config flow for History stats."""
 
     VERSION = 2
+    MINOR_VERSION = 2
 
     config_flow = CONFIG_FLOW
     options_flow = OPTIONS_FLOW
     options_flow_reloads = True
 
+    @callback
     @override
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
@@ -207,12 +246,18 @@ class HistoryStatsConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
         websocket_api.async_register_command(hass, ws_start_preview)
 
 
+PREVIEW_ERRORS = {
+    "only_two_keys_allowed": f"Exactly two of {', '.join(CONF_PERIOD_KEYS)} required",
+    "duration_required": "Duration is required for a rolling window",
+}
+
+
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "history_stats/start_preview",
-        vol.Required("flow_id"): str,
-        vol.Required("flow_type"): vol.Any("config_flow", "options_flow"),
-        vol.Required("user_input"): dict,
+        probatio.Required("type"): "history_stats/start_preview",
+        probatio.Required("flow_id"): str,
+        probatio.Required("flow_type"): probatio.Any("config_flow", "options_flow"),
+        probatio.Required("user_input"): dict,
     }
 )
 @websocket_api.async_response
@@ -266,54 +311,47 @@ async def ws_start_preview(
         if param in msg["user_input"] and not bool(msg["user_input"][param]):
             del msg["user_input"][param]  # Remove falsy values before counting keys
 
+    # The preview bypasses the flow manager, which drops hidden fields on submit
+    data_schema = _get_options_schema_with_entity_id(entity_id, conf_type)
     validated_data: Any = None
     try:
-        validated_data = (_get_options_schema_with_entity_id(entity_id, conf_type))(
-            msg["user_input"]
+        validated_data = data_schema(
+            _remove_hidden_fields(data_schema, msg["user_input"])
         )
-    except vol.Invalid as ex:
+    except probatio.Invalid as ex:
         connection.send_error(msg["id"], "invalid_schema", str(ex))
         return
 
     try:
-        _validate_two_period_keys(validated_data)
-    except SchemaFlowError:
-        connection.send_error(
-            msg["id"],
-            "invalid_schema",
-            f"Exactly two of {', '.join(CONF_PERIOD_KEYS)} required",
-        )
+        _validate_period(validated_data)
+    except SchemaFlowError as err:
+        connection.send_error(msg["id"], "invalid_schema", PREVIEW_ERRORS[str(err)])
         return
 
     sensor_type = validated_data.get(CONF_TYPE)
     entity_states = validated_data.get(CONF_STATE)
-    start = validated_data.get(CONF_START)
-    end = validated_data.get(CONF_END)
-    duration = validated_data.get(CONF_DURATION)
     additional_settings = validated_data.get(SECTION_ADDITIONAL_SETTINGS, {})
     min_state_duration = additional_settings.get(CONF_MIN_STATE_DURATION)
-    state_class = validated_data.get(CONF_STATE_CLASS)
+    period_config = resolve_period_config(validated_data, conf_type)
 
     history_stats = HistoryStats(
         hass,
         entity_id,
         entity_states,
-        Template(start, hass) if start else None,
-        Template(end, hass) if end else None,
-        timedelta(**duration) if duration else None,
+        Template(period_config.start, hass) if period_config.start else None,
+        Template(period_config.end, hass) if period_config.end else None,
+        period_config.duration,
         timedelta(**min_state_duration) if min_state_duration else timedelta(0),
         True,
     )
     coordinator = HistoryStatsUpdateCoordinator(hass, history_stats, None, name, True)
     await coordinator.async_refresh()
     preview_entity = HistoryStatsSensor(
-        hass,
         coordinator=coordinator,
         sensor_type=sensor_type,
         name=name,
         unique_id=None,
-        source_entity_id=entity_id,
-        state_class=state_class,
+        state_class=period_config.state_class,
     )
     preview_entity.hass = hass
 

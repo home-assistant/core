@@ -1,0 +1,89 @@
+{
+  "version": 2,
+  "minor_version": 4,
+  "key": "knx/config_store.json",
+  "data": {
+    "entities": {
+      "weather": {
+        "knx_es_01KCXYT0WEJEQQ13SGCY1NHCYW": {
+          "entity": {
+            "name": "test",
+            "device_info": null,
+            "entity_category": null
+          },
+          "knx": {
+            "ga_temperature": {
+              "write": null,
+              "state": "1/1/11",
+              "passive": []
+            },
+            "ga_humidity": {
+              "write": null,
+              "state": "1/1/4",
+              "passive": []
+            },
+            "ga_air_pressure": {
+              "write": null,
+              "state": "1/1/13",
+              "passive": []
+            },
+            "ga_wind_speed": {
+              "write": null,
+              "state": "1/1/9",
+              "passive": []
+            },
+            "ga_wind_bearing": {
+              "write": null,
+              "state": "1/1/10",
+              "passive": []
+            },
+            "ga_brightness_east": {
+              "write": null,
+              "state": "1/1/5",
+              "passive": []
+            },
+            "ga_brightness_south": {
+              "write": null,
+              "state": "1/1/6",
+              "passive": []
+            },
+            "ga_brightness_west": {
+              "write": null,
+              "state": "1/1/7",
+              "passive": []
+            },
+            "ga_brightness_north": {
+              "write": null,
+              "state": "1/1/8",
+              "passive": []
+            },
+            "ga_rain_alarm": {
+              "write": null,
+              "state": "1/1/2",
+              "passive": []
+            },
+            "ga_frost_alarm": {
+              "write": null,
+              "state": "1/1/3",
+              "passive": []
+            },
+            "ga_wind_alarm": {
+              "write": null,
+              "state": "1/1/1",
+              "passive": []
+            },
+            "ga_day_night": {
+              "write": null,
+              "state": "1/1/12",
+              "passive": []
+            },
+            "invert_day_night": false,
+            "sync_state": true
+          }
+        }
+      }
+    },
+    "expose": {},
+    "time_server": {}
+  }
+}

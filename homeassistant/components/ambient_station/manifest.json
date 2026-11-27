@@ -1,8 +1,10 @@
 {
   "domain": "ambient_station",
   "name": "Ambient Weather Station",
+  "categories": ["weather_alerts", "sensors.temperature_humidity"],
   "codeowners": ["@bachya"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/ambient_station",
   "integration_type": "hub",
   "iot_class": "cloud_push",

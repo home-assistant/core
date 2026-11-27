@@ -4,26 +4,18 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, MockUser
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant import setup
 from homeassistant.components import device_tracker, zone
-from homeassistant.components.zone import ATTR_RADIUS, DOMAIN
-from homeassistant.const import (
-    ATTR_EDITABLE,
-    ATTR_FRIENDLY_NAME,
-    ATTR_ICON,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-    ATTR_NAME,
-    ATTR_PERSONS,
-    SERVICE_RELOAD,
-)
+from homeassistant.components.zone import DOMAIN, _zone_relation
+from homeassistant.components.zone.const import ZoneEntityStateAttribute, ZoneRelation
+from homeassistant.components.zone.services import ZoneService
+from homeassistant.const import CONF_NAME, STATE_UNAVAILABLE, EntityStateAttribute
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, MockUser
-from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture
@@ -110,6 +102,7 @@ async def test_setup_name_can_be_same_on_multiple_zones(hass: HomeAssistant) -> 
     assert len(hass.states.async_entity_ids(DOMAIN)) == 3
 
 
+@pytest.mark.usefixtures("improved_presence_detection")
 async def test_active_zone_skips_passive_zones(hass: HomeAssistant) -> None:
     """Test active and passive zones."""
     assert await setup.async_setup_component(
@@ -135,6 +128,7 @@ async def test_active_zone_skips_passive_zones(hass: HomeAssistant) -> None:
     assert in_zones == ["zone.passive_zone"]
 
 
+@pytest.mark.usefixtures("improved_presence_detection")
 async def test_active_zone_skips_passive_zones_2(hass: HomeAssistant) -> None:
     """Test active and passive zones."""
     assert await setup.async_setup_component(
@@ -159,6 +153,7 @@ async def test_active_zone_skips_passive_zones_2(hass: HomeAssistant) -> None:
     assert in_zones == ["zone.active_zone"]
 
 
+@pytest.mark.usefixtures("improved_presence_detection")
 async def test_active_zone_prefers_smaller_zone_if_same_distance(
     hass: HomeAssistant,
 ) -> None:
@@ -193,6 +188,7 @@ async def test_active_zone_prefers_smaller_zone_if_same_distance(
     assert in_zones == ["zone.small_zone", "zone.big_zone"]
 
 
+@pytest.mark.usefixtures("improved_presence_detection")
 async def test_active_zone_prefers_smaller_zone_if_same_distance_2(
     hass: HomeAssistant,
 ) -> None:
@@ -221,6 +217,7 @@ async def test_active_zone_prefers_smaller_zone_if_same_distance_2(
     assert in_zones == ["zone.smallest_zone"]
 
 
+@pytest.mark.usefixtures("improved_presence_detection")
 async def test_active_zone_prefers_smaller_zone_over_closer_zone(
     hass: HomeAssistant,
 ) -> None:
@@ -262,6 +259,7 @@ async def test_active_zone_prefers_smaller_zone_over_closer_zone(
     assert in_zones == ["zone.small_zone", "zone.big_zone"]
 
 
+@pytest.mark.usefixtures("improved_presence_detection")
 async def test_in_zone_works_for_passive_zones(hass: HomeAssistant) -> None:
     """Test working in passive zones."""
     latitude = 32.880600
@@ -285,8 +283,30 @@ async def test_in_zone_works_for_passive_zones(hass: HomeAssistant) -> None:
     assert zone.in_zone(hass.states.get("zone.passive_zone"), latitude, longitude)
 
 
+@pytest.mark.parametrize(
+    ("improved_presence_detection", "expected_active_zone", "expected_in_zones"),
+    [
+        pytest.param(
+            False,
+            "zone.home",
+            ["zone.home", "zone.small_zone", "zone.big_zone"],
+            id="overlap",
+        ),
+        # The accuracy circle only overlaps the home zone
+        pytest.param(
+            True,
+            "zone.small_zone",
+            ["zone.small_zone", "zone.big_zone"],
+            id="containment",
+        ),
+    ],
+    indirect=["improved_presence_detection"],
+)
+@pytest.mark.usefixtures("improved_presence_detection")
 async def test_async_active_zone_with_non_zero_radius(
     hass: HomeAssistant,
+    expected_active_zone: str,
+    expected_in_zones: list[str],
 ) -> None:
     """Test async_active_zone with a non-zero radius."""
     latitude = 32.880600
@@ -319,16 +339,166 @@ async def test_async_active_zone_with_non_zero_radius(
     assert home_state.attributes["longitude"] == -117.22743
 
     active_zone = zone.async_active_zone(hass, latitude, longitude, 5000)
-    assert active_zone.entity_id == "zone.home"
+    assert active_zone.entity_id == expected_active_zone
     active_zone, in_zones = zone.async_in_zones(hass, latitude, longitude, 5000)
-    assert active_zone.entity_id == "zone.home"
-    assert in_zones == ["zone.home", "zone.small_zone", "zone.big_zone"]
+    assert active_zone.entity_id == expected_active_zone
+    assert in_zones == expected_in_zones
 
     active_zone = zone.async_active_zone(hass, latitude, longitude, 0)
     assert active_zone.entity_id == "zone.small_zone"
     active_zone, in_zones = zone.async_in_zones(hass, latitude, longitude, 0)
     assert active_zone.entity_id == "zone.small_zone"
     assert in_zones == ["zone.small_zone", "zone.big_zone"]
+
+
+@pytest.mark.parametrize(
+    ("latitude", "radius", "expected_relation"),
+    [
+        pytest.param(0.0, 500, ZoneRelation.CONTAINED, id="contained"),
+        pytest.param(0.0, 0, ZoneRelation.CONTAINED, id="contained_point"),
+        pytest.param(0.0, None, ZoneRelation.CONTAINED, id="contained_no_accuracy"),
+        pytest.param(0.0, 1500, ZoneRelation.OVERLAPPING, id="circle_larger_than_zone"),
+        pytest.param(0.018, 1500, ZoneRelation.OVERLAPPING, id="overlapping"),
+        pytest.param(0.018, 500, ZoneRelation.SEPARATED, id="separated"),
+        pytest.param(0.018, None, ZoneRelation.SEPARATED, id="separated_no_accuracy"),
+    ],
+)
+async def test_zone_relation(
+    hass: HomeAssistant,
+    latitude: float,
+    radius: float | None,
+    expected_relation: ZoneRelation,
+) -> None:
+    """Test the relation between an accuracy circle and a zone."""
+    assert await setup.async_setup_component(
+        hass,
+        zone.DOMAIN,
+        {"zone": [{"name": "Test", "latitude": 0, "longitude": 0, "radius": 1000}]},
+    )
+    zone_state = hass.states.get("zone.test")
+
+    assert zone.zone_relation(zone_state, latitude, 0, radius) is expected_relation
+
+
+@pytest.mark.parametrize(
+    ("zone_dist", "radius", "expected_relation"),
+    [
+        pytest.param(600, 400, ZoneRelation.CONTAINED, id="tangent_inside"),
+        pytest.param(1400, 400, ZoneRelation.SEPARATED, id="tangent_outside"),
+        pytest.param(1000, 0, ZoneRelation.SEPARATED, id="point_on_edge"),
+        pytest.param(999, 0, ZoneRelation.CONTAINED, id="point_inside"),
+        pytest.param(999, -50, ZoneRelation.CONTAINED, id="negative_radius_inside"),
+        pytest.param(1001, -50, ZoneRelation.SEPARATED, id="negative_radius_outside"),
+    ],
+)
+def test_zone_relation_boundaries(
+    zone_dist: float, radius: float, expected_relation: ZoneRelation
+) -> None:
+    """Test the relation at the zone boundary of a zone with radius 1000."""
+    assert _zone_relation(zone_dist, 1000, radius) is expected_relation
+
+
+async def test_zone_relation_unavailable_zone(hass: HomeAssistant) -> None:
+    """Test the relation to an unavailable zone can't be calculated."""
+    hass.states.async_set("zone.test", STATE_UNAVAILABLE, {})
+
+    assert zone.zone_relation(hass.states.get("zone.test"), 0, 0, 0) is None
+
+
+@pytest.mark.parametrize(
+    (
+        "improved_presence_detection",
+        "latitude",
+        "radius",
+        "previous_in_zones",
+        "expected_in_zones",
+    ),
+    [
+        pytest.param(False, 0.0, 500, [], ["zone.test"], id="overlap-contained"),
+        pytest.param(True, 0.0, 500, [], ["zone.test"], id="containment-contained"),
+        pytest.param(
+            False, 0.018, 500, ["zone.test"], [], id="overlap-separated_was_inside"
+        ),
+        pytest.param(
+            True, 0.018, 500, ["zone.test"], [], id="containment-separated_was_inside"
+        ),
+        pytest.param(
+            False, 0.018, 1500, [], ["zone.test"], id="overlap-overlapping_was_outside"
+        ),
+        pytest.param(
+            True, 0.018, 1500, [], [], id="containment-overlapping_was_outside"
+        ),
+        pytest.param(
+            False,
+            0.018,
+            1500,
+            ["zone.test"],
+            ["zone.test"],
+            id="overlap-overlapping_was_inside",
+        ),
+        pytest.param(
+            True,
+            0.018,
+            1500,
+            ["zone.test"],
+            ["zone.test"],
+            id="containment-overlapping_was_inside",
+        ),
+        pytest.param(
+            True,
+            0.0,
+            1500,
+            ["zone.test"],
+            ["zone.test"],
+            id="containment-circle_larger_than_zone_was_inside",
+        ),
+    ],
+    indirect=["improved_presence_detection"],
+)
+@pytest.mark.usefixtures("improved_presence_detection")
+async def test_async_in_zones_previous_in_zones(
+    hass: HomeAssistant,
+    latitude: float,
+    radius: float,
+    previous_in_zones: list[str],
+    expected_in_zones: list[str],
+) -> None:
+    """Test an overlapping accuracy circle keeps the previous zones."""
+    assert await setup.async_setup_component(
+        hass,
+        zone.DOMAIN,
+        {"zone": [{"name": "Test", "latitude": 0, "longitude": 0, "radius": 1000}]},
+    )
+
+    active_zone, in_zones = zone.async_in_zones(
+        hass, latitude, 0, radius, previous_in_zones
+    )
+
+    assert in_zones == expected_in_zones
+    # zone.test is the only zone near the location, so a zone the location is
+    # in is also the active zone
+    assert [z.entity_id for z in (active_zone,) if z] == expected_in_zones
+
+
+@pytest.mark.usefixtures("improved_presence_detection")
+async def test_async_in_zones_force_overlap(hass: HomeAssistant) -> None:
+    """Test force_overlap uses the default overlap test with both methods."""
+    assert await setup.async_setup_component(
+        hass,
+        zone.DOMAIN,
+        {"zone": [{"name": "Test", "latitude": 0, "longitude": 0, "radius": 1000}]},
+    )
+
+    # The accuracy circle only overlaps the zone
+    active_zone, in_zones = zone.async_in_zones(
+        hass, 0.018, 0, 1500, force_overlap=True
+    )
+    assert active_zone.entity_id == "zone.test"
+    assert in_zones == ["zone.test"]
+    assert (
+        zone.async_active_zone(hass, 0.018, 0, 1500, force_overlap=True).entity_id
+        == "zone.test"
+    )
 
 
 async def test_core_config_update(hass: HomeAssistant) -> None:
@@ -398,13 +568,13 @@ async def test_reload(
         with pytest.raises(Unauthorized):
             await hass.services.async_call(
                 DOMAIN,
-                SERVICE_RELOAD,
+                ZoneService.RELOAD,
                 blocking=True,
                 context=Context(user_id=hass_read_only_user.id),
             )
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_RELOAD,
+            ZoneService.RELOAD,
             blocking=True,
             context=Context(user_id=hass_admin_user.id),
         )
@@ -431,7 +601,7 @@ async def test_load_from_storage(hass: HomeAssistant, storage_setup) -> None:
     state = hass.states.get(f"{DOMAIN}.from_storage")
     assert state.state == "0"
     assert state.name == "from storage"
-    assert state.attributes.get(ATTR_EDITABLE)
+    assert state.attributes.get(ZoneEntityStateAttribute.EDITABLE)
 
 
 async def test_editable_state_attribute(hass: HomeAssistant, storage_setup) -> None:
@@ -442,12 +612,12 @@ async def test_editable_state_attribute(hass: HomeAssistant, storage_setup) -> N
 
     state = hass.states.get(f"{DOMAIN}.from_storage")
     assert state.state == "0"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "from storage"
-    assert state.attributes.get(ATTR_EDITABLE)
+    assert state.attributes.get(EntityStateAttribute.FRIENDLY_NAME) == "from storage"
+    assert state.attributes.get(ZoneEntityStateAttribute.EDITABLE)
 
     state = hass.states.get(f"{DOMAIN}.yaml_option")
     assert state.state == "0"
-    assert not state.attributes.get(ATTR_EDITABLE)
+    assert not state.attributes.get(ZoneEntityStateAttribute.EDITABLE)
 
 
 async def test_ws_list(
@@ -471,7 +641,7 @@ async def test_ws_list(
     assert len(result) == 1
     assert storage_ent in result
     assert yaml_ent not in result
-    assert result[storage_ent][ATTR_NAME] == "from storage"
+    assert result[storage_ent][CONF_NAME] == "from storage"
 
 
 async def test_ws_delete(
@@ -610,11 +780,11 @@ async def test_import_config_entry(hass: HomeAssistant) -> None:
 
     state = hass.states.get("zone.from_config_entry")
     assert state is not None
-    assert state.attributes[zone.ATTR_LATITUDE] == 1
-    assert state.attributes[zone.ATTR_LONGITUDE] == 2
+    assert state.attributes[EntityStateAttribute.LATITUDE] == 1
+    assert state.attributes[EntityStateAttribute.LONGITUDE] == 2
     assert state.attributes[zone.ATTR_RADIUS] == 3
     assert state.attributes[zone.ATTR_PASSIVE] is False
-    assert state.attributes[ATTR_ICON] == "mdi:from-config-entry"
+    assert state.attributes[EntityStateAttribute.ICON] == "mdi:from-config-entry"
 
 
 async def test_zone_empty_setup(hass: HomeAssistant) -> None:
@@ -622,6 +792,7 @@ async def test_zone_empty_setup(hass: HomeAssistant) -> None:
     assert await setup.async_setup_component(hass, DOMAIN, {"zone": {}})
 
 
+@pytest.mark.usefixtures("improved_presence_detection")
 async def test_unavailable_zone(hass: HomeAssistant) -> None:
     """Test active zone with unavailable zones.
 
@@ -831,18 +1002,126 @@ async def test_async_get_enclosing_zones_skips_unavailable_other(
         "zone.bigger",
         "unavailable",
         {
-            ATTR_LATITUDE: latitude,
-            ATTR_LONGITUDE: longitude,
-            ATTR_RADIUS: 1000,
-            "restored": True,
+            EntityStateAttribute.LATITUDE: latitude,
+            EntityStateAttribute.LONGITUDE: longitude,
+            ZoneEntityStateAttribute.RADIUS: 1000,
+            EntityStateAttribute.RESTORED: True,
         },
     )
 
     assert zone.async_get_enclosing_zones(hass, "zone.inner") == []
 
 
-async def test_state(hass: HomeAssistant) -> None:
-    """Test the state of a zone."""
+@pytest.mark.parametrize(
+    (
+        "tracked_domain",
+        "tracked_attr",
+        "untracked_attr",
+        "test_zone_states",
+        "home_states",
+    ),
+    [
+        pytest.param(
+            "person",
+            ZoneEntityStateAttribute.PERSONS,
+            ZoneEntityStateAttribute.DEVICE_TRACKERS,
+            ["0", "1", "2", "1", "2", "1", "0"],
+            ["0", "0", "0", "1", "1", "0", "0"],
+            id="person",
+        ),
+        pytest.param(
+            "device_tracker",
+            ZoneEntityStateAttribute.DEVICE_TRACKERS,
+            ZoneEntityStateAttribute.PERSONS,
+            # Device trackers are not counted towards the zone state.
+            ["0", "0", "0", "0", "0", "0", "0"],
+            ["0", "0", "0", "0", "0", "0", "0"],
+            id="device_tracker",
+        ),
+    ],
+)
+async def test_state(
+    hass: HomeAssistant,
+    tracked_domain: str,
+    tracked_attr: ZoneEntityStateAttribute,
+    untracked_attr: ZoneEntityStateAttribute,
+    test_zone_states: list[str],
+    home_states: list[str],
+) -> None:
+    """Test the state and the persons / device_trackers attributes of a zone."""
+    one = f"{tracked_domain}.one"
+    two = f"{tracked_domain}.two"
+
+    info = {
+        "name": "Test Zone",
+        "latitude": 32.880837,
+        "longitude": -117.237561,
+        "radius": 250,
+        "passive": False,
+    }
+    assert await setup.async_setup_component(hass, zone.DOMAIN, {"zone": info})
+    assert len(hass.states.async_entity_ids(DOMAIN)) == 2
+
+    def assert_zone(
+        entity_id: str, expected_state: str, expected_tracked: list[str]
+    ) -> None:
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == expected_state
+        assert sorted(state.attributes[tracked_attr]) == expected_tracked
+        # The other collection must stay empty, they are tracked independently.
+        assert state.attributes[untracked_attr] == []
+
+    assert_zone("zone.test_zone", test_zone_states[0], [])
+    assert_zone("zone.home", home_states[0], [])
+
+    # Entity enters the zone
+    hass.states.async_set(
+        one, "Test Zone", {device_tracker.ATTR_IN_ZONES: ["zone.test_zone"]}
+    )
+    await hass.async_block_till_done()
+    assert_zone("zone.test_zone", test_zone_states[1], [one])
+    assert_zone("zone.home", home_states[1], [])
+
+    # A second entity enters the zone (case insensitive state)
+    hass.states.async_set(
+        two, "TEST zone", {device_tracker.ATTR_IN_ZONES: ["zone.test_zone"]}
+    )
+    await hass.async_block_till_done()
+    assert_zone("zone.test_zone", test_zone_states[2], sorted([one, two]))
+    assert_zone("zone.home", home_states[2], [])
+
+    # The first entity moves to another zone
+    hass.states.async_set(one, "home", {device_tracker.ATTR_IN_ZONES: ["zone.home"]})
+    await hass.async_block_till_done()
+    assert_zone("zone.test_zone", test_zone_states[3], [two])
+    assert_zone("zone.home", home_states[3], [one])
+
+    # The first entity is in two zones
+    hass.states.async_set(
+        one, "home", {device_tracker.ATTR_IN_ZONES: ["zone.home", "zone.test_zone"]}
+    )
+    await hass.async_block_till_done()
+    assert_zone("zone.test_zone", test_zone_states[4], sorted([one, two]))
+    assert_zone("zone.home", home_states[4], [one])
+
+    # The first entity enters not_home
+    hass.states.async_set(one, "not_home", {device_tracker.ATTR_IN_ZONES: []})
+    await hass.async_block_till_done()
+    assert_zone("zone.test_zone", test_zone_states[5], [two])
+    assert_zone("zone.home", home_states[5], [])
+
+    # The second entity is removed
+    hass.states.async_remove(two)
+    await hass.async_block_till_done()
+    assert_zone("zone.test_zone", test_zone_states[6], [])
+    assert_zone("zone.home", home_states[6], [])
+
+
+async def test_persons_and_device_trackers_tracked_independently(
+    hass: HomeAssistant,
+) -> None:
+    """Test persons and device trackers in the same zone don't interfere."""
     info = {
         "name": "Test Zone",
         "latitude": 32.880837,
@@ -852,14 +1131,13 @@ async def test_state(hass: HomeAssistant) -> None:
     }
     assert await setup.async_setup_component(hass, zone.DOMAIN, {"zone": info})
 
-    assert len(hass.states.async_entity_ids(DOMAIN)) == 2
-    state = hass.states.get("zone.test_zone")
-    assert state.state == "0"
-    assert state.attributes[ATTR_PERSONS] == []
-
-    # Person entity enters zone
     hass.states.async_set(
         "person.person1",
+        "Test Zone",
+        {device_tracker.ATTR_IN_ZONES: ["zone.test_zone"]},
+    )
+    hass.states.async_set(
+        "device_tracker.tracker1",
         "Test Zone",
         {device_tracker.ATTR_IN_ZONES: ["zone.test_zone"]},
     )
@@ -867,97 +1145,41 @@ async def test_state(hass: HomeAssistant) -> None:
 
     state = hass.states.get("zone.test_zone")
     assert state
+    # Only persons are counted towards the state.
     assert state.state == "1"
-    assert state.attributes[ATTR_PERSONS] == ["person.person1"]
+    assert state.attributes[ZoneEntityStateAttribute.PERSONS] == ["person.person1"]
+    assert state.attributes[ZoneEntityStateAttribute.DEVICE_TRACKERS] == [
+        "device_tracker.tracker1"
+    ]
 
-    state = hass.states.get("zone.home")
-    assert state
-    assert state.state == "0"
-    assert state.attributes[ATTR_PERSONS] == []
 
-    # Person entity enters zone (case insensitive)
+async def test_trackers_present_before_zone_setup(hass: HomeAssistant) -> None:
+    """Test persons and device trackers already in a zone at setup are picked up."""
     hass.states.async_set(
-        "person.person2",
-        "TEST zone",
+        "person.person1",
+        "Test Zone",
         {device_tracker.ATTR_IN_ZONES: ["zone.test_zone"]},
     )
+    hass.states.async_set(
+        "device_tracker.tracker1",
+        "Test Zone",
+        {device_tracker.ATTR_IN_ZONES: ["zone.test_zone"]},
+    )
+
+    info = {
+        "name": "Test Zone",
+        "latitude": 32.880837,
+        "longitude": -117.237561,
+        "radius": 250,
+        "passive": False,
+    }
+    assert await setup.async_setup_component(hass, zone.DOMAIN, {"zone": info})
     await hass.async_block_till_done()
 
     state = hass.states.get("zone.test_zone")
     assert state
-    assert state.state == "2"
-    assert sorted(state.attributes[ATTR_PERSONS]) == [
-        "person.person1",
-        "person.person2",
+    assert state.state == "1"
+    assert state.attributes[ZoneEntityStateAttribute.PERSONS] == ["person.person1"]
+    assert state.attributes[ZoneEntityStateAttribute.DEVICE_TRACKERS] == [
+        "device_tracker.tracker1"
     ]
-
-    state = hass.states.get("zone.home")
-    assert state
-    assert state.state == "0"
-    assert state.attributes[ATTR_PERSONS] == []
-
-    # Person entity enters another zone
-    hass.states.async_set(
-        "person.person1",
-        "home",
-        {device_tracker.ATTR_IN_ZONES: ["zone.home"]},
-    )
-    await hass.async_block_till_done()
-
-    state = hass.states.get("zone.test_zone")
-    assert state
-    assert state.state == "1"
-    assert state.attributes[ATTR_PERSONS] == ["person.person2"]
-
-    state = hass.states.get("zone.home")
-    assert state
-    assert state.state == "1"
-    assert state.attributes[ATTR_PERSONS] == ["person.person1"]
-
-    # Person entity is in two zones
-    hass.states.async_set(
-        "person.person1",
-        "home",
-        {device_tracker.ATTR_IN_ZONES: ["zone.home", "zone.test_zone"]},
-    )
-    await hass.async_block_till_done()
-
-    state = hass.states.get("zone.test_zone")
-    assert state
-    assert state.state == "2"
-    assert sorted(state.attributes[ATTR_PERSONS]) == [
-        "person.person1",
-        "person.person2",
-    ]
-
-    state = hass.states.get("zone.home")
-    assert state
-    assert state.state == "1"
-    assert state.attributes[ATTR_PERSONS] == ["person.person1"]
-
-    # Person entity enters not_home
-    hass.states.async_set(
-        "person.person1",
-        "not_home",
-        {device_tracker.ATTR_IN_ZONES: []},
-    )
-    await hass.async_block_till_done()
-
-    state = hass.states.get("zone.test_zone")
-    assert state
-    assert state.state == "1"
-    assert state.attributes[ATTR_PERSONS] == ["person.person2"]
-
-    # Person entity removed
-    hass.states.async_remove("person.person2")
-    await hass.async_block_till_done()
-
-    state = hass.states.get("zone.test_zone")
-    assert state
-    assert state.state == "0"
-    assert state.attributes[ATTR_PERSONS] == []
-
-    state = hass.states.get("zone.home")
-    assert state
-    assert state.state == "0"
-    assert state.attributes[ATTR_PERSONS] == []

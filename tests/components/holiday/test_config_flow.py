@@ -1,15 +1,18 @@
 """Test the Holiday config flow."""
 
 from datetime import datetime
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from holidays import UNOFFICIAL
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
 
 from homeassistant import config_entries
 from homeassistant.components.holiday.const import (
     CONF_CATEGORIES,
+    CONF_INCLUDE_SUNDAYS,
+    CONF_ISLAMIC_SHOW_ESTIMATED,
     CONF_PROVINCE,
     DOMAIN,
 )
@@ -17,8 +20,6 @@ from homeassistant.const import CONF_COUNTRY, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry
 
 
 async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
@@ -56,6 +57,41 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
+async def test_form_subdivisions_without_aliases(hass: HomeAssistant) -> None:
+    """Test the province options fall back to the plain subdivisions."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    with patch("holidays.HolidayBase.get_subdivision_aliases", return_value={}):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_COUNTRY: "DE",
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    province_selector = result["data_schema"].schema[CONF_PROVINCE]
+    assert "BW" in province_selector.config["options"]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_PROVINCE: "BW",
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Germany, BW"
+    assert result["data"] == {
+        "country": "DE",
+        "province": "BW",
+    }
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_no_subdivision(hass: HomeAssistant) -> None:
     """Test we get the forms correctly without subdivision."""
     result = await hass.config_entries.flow.async_init(
@@ -66,15 +102,15 @@ async def test_form_no_subdivision(hass: HomeAssistant) -> None:
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_COUNTRY: "AL",
+            CONF_COUNTRY: "AG",
         },
     )
     await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Albania"
+    assert result2["title"] == "Antigua & Barbuda"
     assert result2["data"] == {
-        "country": "AL",
+        "country": "AG",
     }
 
 
@@ -90,52 +126,59 @@ async def test_form_translated_title(hass: HomeAssistant) -> None:
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_COUNTRY: "AL",
+            CONF_COUNTRY: "AG",
         },
     )
     await hass.async_block_till_done()
 
-    assert result2["title"] == "Albanien"
+    assert result2["title"] == "Antigua und Barbuda"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_single_combination_country_province(hass: HomeAssistant) -> None:
     """Test that configuring more than one instance is rejected."""
-    data_de = {
+    data_de_step_1 = {
         CONF_COUNTRY: "DE",
+    }
+    data_de_step_2 = {
         CONF_PROVINCE: "BW",
     }
     data_al = {
-        CONF_COUNTRY: "AL",
+        CONF_COUNTRY: "AG",
     }
-    MockConfigEntry(domain=DOMAIN, data=data_de).add_to_hass(hass)
+    MockConfigEntry(
+        domain=DOMAIN, data={**data_de_step_1, **data_de_step_2}
+    ).add_to_hass(hass)
     MockConfigEntry(domain=DOMAIN, data=data_al).add_to_hass(hass)
 
     # Test for country without subdivisions
     result_al = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data=data_al,
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result_al = await hass.config_entries.flow.async_configure(
+        result_al["flow_id"],
+        data_al,
     )
     assert result_al["type"] is FlowResultType.ABORT
     assert result_al["reason"] == "already_configured"
 
     # Test for country with subdivisions
-    result_de_step1 = await hass.config_entries.flow.async_init(
+    result_de = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
-        data=data_de,
     )
-    assert result_de_step1["type"] is FlowResultType.FORM
+    result_de = await hass.config_entries.flow.async_configure(
+        result_de["flow_id"],
+        data_de_step_1,
+    )
+    assert result_de["type"] is FlowResultType.FORM
 
-    result_de_step2 = await hass.config_entries.flow.async_configure(
-        result_de_step1["flow_id"],
-        {
-            CONF_PROVINCE: data_de[CONF_PROVINCE],
-        },
+    result_de = await hass.config_entries.flow.async_configure(
+        result_de["flow_id"],
+        data_de_step_2,
     )
-    assert result_de_step2["type"] is FlowResultType.ABORT
-    assert result_de_step2["reason"] == "already_configured"
+    assert result_de["type"] is FlowResultType.ABORT
+    assert result_de["reason"] == "already_configured"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -150,12 +193,12 @@ async def test_form_babel_unresolved_language(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_COUNTRY: "AL",
+            CONF_COUNTRY: "AG",
         },
     )
     await hass.async_block_till_done()
 
-    assert result["title"] == "Albania"
+    assert result["title"] == "Antigua & Barbuda"
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -197,12 +240,12 @@ async def test_form_babel_replace_dash_with_underscore(hass: HomeAssistant) -> N
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_COUNTRY: "AL",
+            CONF_COUNTRY: "AG",
         },
     )
     await hass.async_block_till_done()
 
-    assert result["title"] == "Albania"
+    assert result["title"] == "Antigua & Barbuda"
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -430,8 +473,8 @@ async def test_options_abort_no_categories(hass: HomeAssistant) -> None:
     """Test the options flow abort if no categories to select."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_COUNTRY: "AL"},
-        title="Albania",
+        data={CONF_COUNTRY: "AG"},
+        title="Antigua & Barbuda",
     )
     config_entry.add_to_hass(hass)
 
@@ -441,3 +484,149 @@ async def test_options_abort_no_categories(hass: HomeAssistant) -> None:
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_categories"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_options_entry_exists(hass: HomeAssistant) -> None:
+    """Test options flow stops if other entry already exist."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="United States, TX",
+        data={CONF_COUNTRY: "US", CONF_PROVINCE: "TX"},
+    )
+    entry.add_to_hass(hass)
+    entry2 = MockConfigEntry(
+        domain=DOMAIN,
+        title="United States, TX",
+        data={CONF_COUNTRY: "US", CONF_PROVINCE: "TX"},
+        options={CONF_CATEGORIES: [UNOFFICIAL]},
+    )
+    entry2.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {CONF_CATEGORIES: [UNOFFICIAL]},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.options == {}
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_form_country_options(hass: HomeAssistant) -> None:
+    """Test the country specific options are stored and used to find duplicates."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        title="Sweden",
+        data={CONF_COUNTRY: "SE"},
+        options={CONF_INCLUDE_SUNDAYS: False},
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_COUNTRY: "SE"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "options"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_INCLUDE_SUNDAYS: True},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_COUNTRY: "SE"}
+    assert result["options"] == {CONF_INCLUDE_SUNDAYS: True}
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_COUNTRY: "SE"},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_INCLUDE_SUNDAYS: False},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_options_country_options(hass: HomeAssistant) -> None:
+    """Test the options flow for a country with options but no categories."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_COUNTRY: "AL"},
+        title="Albania",
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {CONF_ISLAMIC_SHOW_ESTIMATED: False},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.options == {CONF_ISLAMIC_SHOW_ESTIMATED: False}
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_shows_saved_options(hass: HomeAssistant) -> None:
+    """Test the reconfigure form shows the saved country options."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Sweden",
+        data={CONF_COUNTRY: "SE"},
+        options={CONF_INCLUDE_SUNDAYS: True},
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert (
+        get_schema_suggested_value(result["data_schema"].schema, CONF_INCLUDE_SUNDAYS)
+        is True
+    )
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_form_duplicate_of_entry_without_options(hass: HomeAssistant) -> None:
+    """Test an entry from before the country options is found as a duplicate."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Sweden",
+        data={CONF_COUNTRY: "SE"},
+        version=1,
+        minor_version=1,
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_COUNTRY: "SE"},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_INCLUDE_SUNDAYS: False},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"

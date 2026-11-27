@@ -112,7 +112,7 @@ class IronOSLiveDataCoordinator(IronOSBaseCoordinator[LiveDataResponse]):
 
         except CommunicationError:
             _LOGGER.debug("Cannot connect to device", exc_info=True)
-            return self.data or LiveDataResponse()
+            return self.data_or_none or LiveDataResponse()
 
     @property
     def has_tip(self) -> bool:
@@ -140,8 +140,9 @@ class IronOSLiveDataCoordinator(IronOSBaseCoordinator[LiveDataResponse]):
         device_registry = dr.async_get(self.hass)
         if TYPE_CHECKING:
             assert self.config_entry.unique_id
-        device = device_registry.async_get_device(
-            connections={(CONNECTION_BLUETOOTH, self.config_entry.unique_id)}
+        device = device_registry.async_get_device_by_connection(
+            (CONNECTION_BLUETOOTH, self.config_entry.unique_id),
+            self.config_entry.entry_id,
         )
         if device is None:
             return

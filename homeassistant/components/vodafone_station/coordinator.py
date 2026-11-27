@@ -25,11 +25,11 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util import dt as dt_util
 
 from .const import (
-    _LOGGER,
     CONF_DEVICE_DETAILS,
     DEVICE_TYPE,
     DEVICE_URL,
     DOMAIN,
+    LOGGER,
     SCAN_INTERVAL,
 )
 from .helpers import cleanup_device_tracker
@@ -77,7 +77,7 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
 
         super().__init__(
             hass=hass,
-            logger=_LOGGER,
+            logger=LOGGER,
             name=f"{DOMAIN}-{config_entry.data[CONF_HOST]}-coordinator",
             update_interval=timedelta(seconds=SCAN_INTERVAL),
             config_entry=config_entry,
@@ -109,7 +109,7 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             return utc_point_in_time, True
 
         if (
-            (data := self.data)
+            (data := self.data_or_none)
             and (stored_device := data.devices.get(device.mac))
             and (update_time := stored_device.update_time)
         ):
@@ -123,21 +123,37 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
 
         return None, False
 
+    async def _fetch_data(
+        self,
+    ) -> tuple[dict[str, VodafoneStationDevice], dict[str, Any], dict[str, Any]]:
+        """Fetch devices, sensors and Wi-Fi data from the router."""
+        return (
+            await self.api.get_devices_data(),
+            await self.api.get_sensor_data(),
+            await self.api.get_wifi_data(),
+        )
+
     @override
     async def _async_update_data(self) -> UpdateCoordinatorDataType:
         """Update router data."""
-        _LOGGER.debug("Polling Vodafone Station host: %s", self.api.base_url.host)
+        LOGGER.debug("Polling Vodafone Station host: %s", self.api.base_url.host)
 
         try:
             if not self._session.cookie_jar.filter_cookies(self.api.base_url):
-                _LOGGER.debug(
+                LOGGER.debug(
                     "Session cookies missing for host %s, re-login",
                     self.api.base_url.host,
                 )
                 await self.api.login()
-            raw_data_devices = await self.api.get_devices_data()
-            data_sensors = await self.api.get_sensor_data()
-            data_wifi = await self.api.get_wifi_data()
+            try:
+                raw_data_devices, data_sensors, data_wifi = await self._fetch_data()
+            except exceptions.CannotAuthenticate:
+                # Router may expire the session while its cookie is still in the jar
+                LOGGER.debug(
+                    "Session expired for host %s, re-login", self.api.base_url.host
+                )
+                await self.api.login()
+                raw_data_devices, data_sensors, data_wifi = await self._fetch_data()
         except exceptions.CannotAuthenticate as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
@@ -152,7 +168,7 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 # Plain html response (usually occurs after
                 # a firmware update), requiring session
                 # reinitialization
-                _LOGGER.info("Stale session detected, reinitializing API session")
+                LOGGER.info("Stale session detected, reinitializing API session")
                 await self.initialize_api()
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -171,11 +187,11 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             for dev_info in (raw_data_devices).values()
         }
         current_devices = set(data_devices)
-        _LOGGER.debug(
+        LOGGER.debug(
             "Loaded current %s devices: %s", len(current_devices), current_devices
         )
         if stale_devices := self.previous_devices - current_devices:
-            _LOGGER.debug(
+            LOGGER.debug(
                 "Found %s stale devices: %s", len(stale_devices), stale_devices
             )
             await cleanup_device_tracker(self.hass, self.config_entry, data_devices)

@@ -25,12 +25,12 @@ from homeassistant.helpers.update_coordinator import (
 
 from . import get_hub
 from .const import (
-    _LOGGER,
     CONF_SCALE,
     CONF_SLAVE_COUNT,
     CONF_VIRTUAL_COUNT,
     DEFAULT_OFFSET,
     DEFAULT_SCALE,
+    LOGGER,
 )
 from .entity import ModbusStructEntity
 from .modbus import ModbusHub
@@ -100,7 +100,7 @@ class ModbusRegisterSensor(ModbusStructEntity, RestoreSensor, SensorEntity):
         name = self._attr_name or "modbus_sensor"
         self._coordinator = DataUpdateCoordinator(
             hass,
-            _LOGGER,
+            LOGGER,
             config_entry=None,
             name=name,
         )
@@ -163,12 +163,6 @@ class SlaveSensor(
 ):
     """Modbus slave register sensor."""
 
-    @property
-    @override
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._attr_available
-
     def __init__(
         self,
         coordinator: DataUpdateCoordinator[list[float | None] | None],
@@ -187,6 +181,12 @@ class SlaveSensor(
         self._attr_device_class = entry.get(CONF_DEVICE_CLASS)
         self._attr_available = False
         super().__init__(coordinator)
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self._attr_available
 
     @override
     async def async_added_to_hass(self) -> None:

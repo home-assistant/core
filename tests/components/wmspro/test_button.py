@@ -4,22 +4,21 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 from wmspro.destination import Action
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
 from homeassistant.components.wmspro.number import SCAN_INTERVAL
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 
 from . import setup_config_entry
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.parametrize(
@@ -33,14 +32,13 @@ async def test_button_update(
     mock_hub_ping: AsyncMock,
     mock_hub_configuration: AsyncMock,
     mock_hub_status: AsyncMock,
-    mock_action_call: AsyncMock,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test that a button entity is created and updated correctly."""
     assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
     assert len(mock_hub_configuration.mock_calls) == 1
-    assert len(mock_hub_status.mock_calls) == 2
+    assert len(mock_hub_status.mock_calls) == len(mock_hub_configuration.destinations)
 
     entity = hass.states.get("button.terrasse_markise_identify")
     assert entity is not None
@@ -63,27 +61,32 @@ async def test_button_press(
     """Test that a button entity is pressed correctly."""
 
     assert await setup_config_entry(hass, mock_config_entry)
+    assert len(mock_hub_ping.mock_calls) == 1
+    assert len(mock_hub_configuration.mock_calls) == 1
+    assert len(mock_hub_status.mock_calls) == len(mock_hub_configuration.destinations)
 
     with patch(
         "wmspro.destination.Destination.refresh",
         return_value=True,
     ):
-        before = len(mock_hub_status.mock_calls)
+        before_status = len(mock_hub_status.mock_calls)
+        before_action = len(mock_action_call.mock_calls)
         entity = hass.states.get("button.terrasse_markise_identify")
         assert entity is not None
         before_state = entity.state
 
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: entity.entity_id},
+            ButtonService.PRESS,
+            {TargetKey.ENTITY_ID: entity.entity_id},
             blocking=True,
         )
 
         entity = hass.states.get("button.terrasse_markise_identify")
         assert entity is not None
         assert entity.state != before_state
-        assert len(mock_hub_status.mock_calls) == before
+        assert len(mock_hub_status.mock_calls) == before_status
+        assert len(mock_action_call.mock_calls) == before_action + 1
 
 
 @pytest.mark.parametrize(
@@ -114,7 +117,6 @@ async def test_button_rotation_reset_press(
     mock_hub_ping: AsyncMock,
     mock_hub_configuration: AsyncMock,
     mock_hub_status: AsyncMock,
-    mock_action_call: AsyncMock,
     freezer: FrozenDateTimeFactory,
     button_entity_id: str,
     range_entity_id: str,
@@ -125,7 +127,7 @@ async def test_button_rotation_reset_press(
     assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
     assert len(mock_hub_configuration.mock_calls) == 1
-    assert len(mock_hub_status.mock_calls) >= 1
+    assert len(mock_hub_status.mock_calls) == len(mock_hub_configuration.destinations)
 
     entity = hass.states.get(range_entity_id)
     assert entity is not None
@@ -139,8 +141,11 @@ async def test_button_rotation_reset_press(
     ) as mock_action_setitem:
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: range_entity_id, ATTR_VALUE: target_value},
+            NumberService.SET_VALUE,
+            {
+                TargetKey.ENTITY_ID: range_entity_id,
+                NumberServiceArgument.VALUE: target_value,
+            },
             blocking=True,
         )
         assert len(mock_action_setitem.mock_calls) == 1
@@ -163,8 +168,8 @@ async def test_button_rotation_reset_press(
     ) as mock_action_delitem:
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: button_entity_id},
+            ButtonService.PRESS,
+            {TargetKey.ENTITY_ID: button_entity_id},
             blocking=True,
         )
         assert len(mock_action_delitem.mock_calls) == 2

@@ -3,15 +3,15 @@
 from typing import Any, override
 
 from homeassistant.components.climate import (
-    ATTR_HVAC_MODE,
     PRESET_BOOST,
     PRESET_COMFORT,
     PRESET_ECO,
     ClimateEntity,
     ClimateEntityFeature,
+    ClimateServiceArgument,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, UnitOfTemperature
+from homeassistant.const import PRECISION_HALVES, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -80,7 +80,7 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
     _attr_max_temp = MAX_TEMPERATURE
     _attr_min_temp = MIN_TEMPERATURE
     _attr_precision = PRECISION_HALVES
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = "thermostat"
 
     def __init__(
@@ -112,7 +112,7 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float:
+    def native_current_temperature(self) -> float:
         """Return the current temperature."""
         if self.data.has_temperature_sensor and self.data.temperature is not None:
             return self.data.temperature  # type: ignore [no-any-return]
@@ -120,7 +120,7 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if self.data.target_temperature in [ON_API_TEMPERATURE, OFF_API_TEMPERATURE]:
             return None
@@ -135,9 +135,11 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         self.check_active_or_lock_mode()
-        if kwargs.get(ATTR_HVAC_MODE) is HVACMode.OFF:
+        if kwargs.get(ClimateServiceArgument.HVAC_MODE) is HVACMode.OFF:
             await self.async_set_hkr_state("off")
-        elif (target_temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
+        elif (
+            target_temp := kwargs.get(ClimateServiceArgument.TEMPERATURE)
+        ) is not None:
             await self.hass.async_add_executor_job(
                 self.data.set_target_temperature, target_temp, True
             )

@@ -1,4 +1,14 @@
 {
+  "entity": {
+    "light": {
+      "light": {
+        "default": "mdi:lightbulb-group",
+        "state": {
+          "off": "mdi:lightbulb-group-off"
+        }
+      }
+    }
+  },
   "services": {
     "reload": {
       "service": "mdi:reload"

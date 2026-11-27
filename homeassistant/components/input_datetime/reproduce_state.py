@@ -5,11 +5,16 @@ from collections.abc import Iterable
 import logging
 from typing import Any
 
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import TargetKey
 from homeassistant.core import Context, HomeAssistant, State
 from homeassistant.util import dt as dt_util
 
-from . import ATTR_DATE, ATTR_DATETIME, ATTR_TIME, CONF_HAS_DATE, CONF_HAS_TIME, DOMAIN
+from .const import (
+    DOMAIN,
+    InputDatetimeEntityCapabilityAttribute,
+    InputDatetimeService,
+    InputDatetimeServiceArgument,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,8 +49,8 @@ async def _async_reproduce_state(
         _LOGGER.warning("Unable to find entity %s", state.entity_id)
         return
 
-    has_time = cur_state.attributes.get(CONF_HAS_TIME)
-    has_date = cur_state.attributes.get(CONF_HAS_DATE)
+    has_time = cur_state.attributes.get(InputDatetimeEntityCapabilityAttribute.HAS_TIME)
+    has_date = cur_state.attributes.get(InputDatetimeEntityCapabilityAttribute.HAS_DATE)
 
     if not (
         (is_valid_datetime(state.state) and has_date and has_time)
@@ -61,17 +66,21 @@ async def _async_reproduce_state(
     if cur_state.state == state.state:
         return
 
-    service_data = {ATTR_ENTITY_ID: state.entity_id}
+    service_data: dict[str, Any] = {TargetKey.ENTITY_ID: state.entity_id}
 
     if has_time and has_date:
-        service_data[ATTR_DATETIME] = state.state
+        service_data[InputDatetimeServiceArgument.DATETIME] = state.state
     elif has_time:
-        service_data[ATTR_TIME] = state.state
+        service_data[InputDatetimeServiceArgument.TIME] = state.state
     elif has_date:
-        service_data[ATTR_DATE] = state.state
+        service_data[InputDatetimeServiceArgument.DATE] = state.state
 
     await hass.services.async_call(
-        DOMAIN, "set_datetime", service_data, context=context, blocking=True
+        DOMAIN,
+        InputDatetimeService.SET,
+        service_data,
+        context=context,
+        blocking=True,
     )
 
 

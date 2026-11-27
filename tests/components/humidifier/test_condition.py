@@ -3,33 +3,15 @@
 from contextlib import AbstractContextManager, nullcontext as does_not_raise
 from typing import Any
 
+import probatio
 import pytest
-import voluptuous as vol
-
-from homeassistant.components.humidifier.const import (
-    ATTR_ACTION,
-    ATTR_HUMIDITY,
-    HumidifierAction,
-    HumidifierEntityFeature,
-)
-from homeassistant.const import (
-    ATTR_MODE,
-    ATTR_SUPPORTED_FEATURES,
-    CONF_ENTITY_ID,
-    CONF_MODE,
-    CONF_OPTIONS,
-    CONF_TARGET,
-    STATE_OFF,
-    STATE_ON,
-)
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.condition import async_validate_condition_config
-
-from tests.components.common import (
+from pytest_homeassistant.components.common import (
     ConditionStateDescription,
+    TargetSupport,
     assert_condition_behavior_all,
     assert_condition_behavior_any,
     assert_condition_options_supported,
+    assert_conditions_target_support,
     parametrize_condition_states_all,
     parametrize_condition_states_any,
     parametrize_numerical_attribute_condition_above_below_all,
@@ -37,6 +19,24 @@ from tests.components.common import (
     parametrize_target_entities,
     target_entities,
 )
+
+from homeassistant.components.humidifier import HumidifierEntityStateAttribute
+from homeassistant.components.humidifier.condition import CONDITIONS
+from homeassistant.components.humidifier.const import (
+    HumidifierAction,
+    HumidifierEntityFeature,
+)
+from homeassistant.const import (
+    CONF_MODE,
+    CONF_OPTIONS,
+    CONF_TARGET,
+    STATE_OFF,
+    STATE_ON,
+    EntityStateAttribute,
+    TargetKey,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.condition import async_validate_condition_config
 
 
 @pytest.fixture
@@ -46,6 +46,16 @@ async def target_humidifiers(hass: HomeAssistant) -> dict[str, list[str]]:
 
 
 _HUMIDITY_THRESHOLD = {"threshold": {"type": "above", "value": {"number": 50}}}
+
+
+_CONDITION_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "is_off": TargetSupport.STANDARD,
+    "is_on": TargetSupport.STANDARD,
+    "is_drying": TargetSupport.STANDARD,
+    "is_humidifying": TargetSupport.STANDARD,
+    "is_mode": TargetSupport.STANDARD,
+    "is_target_humidity": TargetSupport.STANDARD,
+}
 
 
 @pytest.mark.parametrize(
@@ -74,6 +84,11 @@ async def test_humidifier_condition_options_validation(
         supports_behavior=supports_behavior,
         supports_duration=supports_duration,
     )
+
+
+def test_condition_target_support() -> None:
+    """Certify the condition registry matches its declared target support."""
+    assert_conditions_target_support(CONDITIONS, _CONDITION_TARGET_SUPPORT)
 
 
 @pytest.mark.parametrize(
@@ -169,26 +184,48 @@ async def test_humidifier_state_condition_behavior_all(
     [
         *parametrize_condition_states_any(
             condition="humidifier.is_drying",
-            target_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.DRYING})],
-            other_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.IDLE})],
+            target_states=[
+                (
+                    STATE_ON,
+                    {HumidifierEntityStateAttribute.ACTION: HumidifierAction.DRYING},
+                )
+            ],
+            other_states=[
+                (
+                    STATE_ON,
+                    {HumidifierEntityStateAttribute.ACTION: HumidifierAction.IDLE},
+                )
+            ],
         ),
         *parametrize_condition_states_any(
             condition="humidifier.is_humidifying",
-            target_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.HUMIDIFYING})],
-            other_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.IDLE})],
+            target_states=[
+                (
+                    STATE_ON,
+                    {
+                        HumidifierEntityStateAttribute.ACTION: HumidifierAction.HUMIDIFYING
+                    },
+                )
+            ],
+            other_states=[
+                (
+                    STATE_ON,
+                    {HumidifierEntityStateAttribute.ACTION: HumidifierAction.IDLE},
+                )
+            ],
         ),
         *parametrize_condition_states_any(
             condition="humidifier.is_mode",
             condition_options={CONF_MODE: ["eco", "sleep"]},
             target_states=[
-                (STATE_ON, {ATTR_MODE: "eco"}),
-                (STATE_ON, {ATTR_MODE: "sleep"}),
+                (STATE_ON, {HumidifierEntityStateAttribute.MODE: "eco"}),
+                (STATE_ON, {HumidifierEntityStateAttribute.MODE: "sleep"}),
             ],
             other_states=[
-                (STATE_ON, {ATTR_MODE: "normal"}),
+                (STATE_ON, {HumidifierEntityStateAttribute.MODE: "normal"}),
             ],
             required_filter_attributes={
-                ATTR_SUPPORTED_FEATURES: HumidifierEntityFeature.MODES
+                EntityStateAttribute.SUPPORTED_FEATURES: HumidifierEntityFeature.MODES
             },
         ),
     ],
@@ -225,26 +262,48 @@ async def test_humidifier_attribute_condition_behavior_any(
     [
         *parametrize_condition_states_all(
             condition="humidifier.is_drying",
-            target_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.DRYING})],
-            other_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.IDLE})],
+            target_states=[
+                (
+                    STATE_ON,
+                    {HumidifierEntityStateAttribute.ACTION: HumidifierAction.DRYING},
+                )
+            ],
+            other_states=[
+                (
+                    STATE_ON,
+                    {HumidifierEntityStateAttribute.ACTION: HumidifierAction.IDLE},
+                )
+            ],
         ),
         *parametrize_condition_states_all(
             condition="humidifier.is_humidifying",
-            target_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.HUMIDIFYING})],
-            other_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.IDLE})],
+            target_states=[
+                (
+                    STATE_ON,
+                    {
+                        HumidifierEntityStateAttribute.ACTION: HumidifierAction.HUMIDIFYING
+                    },
+                )
+            ],
+            other_states=[
+                (
+                    STATE_ON,
+                    {HumidifierEntityStateAttribute.ACTION: HumidifierAction.IDLE},
+                )
+            ],
         ),
         *parametrize_condition_states_all(
             condition="humidifier.is_mode",
             condition_options={CONF_MODE: ["eco", "sleep"]},
             target_states=[
-                (STATE_ON, {ATTR_MODE: "eco"}),
-                (STATE_ON, {ATTR_MODE: "sleep"}),
+                (STATE_ON, {HumidifierEntityStateAttribute.MODE: "eco"}),
+                (STATE_ON, {HumidifierEntityStateAttribute.MODE: "sleep"}),
             ],
             other_states=[
-                (STATE_ON, {ATTR_MODE: "normal"}),
+                (STATE_ON, {HumidifierEntityStateAttribute.MODE: "normal"}),
             ],
             required_filter_attributes={
-                ATTR_SUPPORTED_FEATURES: HumidifierEntityFeature.MODES
+                EntityStateAttribute.SUPPORTED_FEATURES: HumidifierEntityFeature.MODES
             },
         ),
     ],
@@ -281,7 +340,7 @@ async def test_humidifier_attribute_condition_behavior_all(
     parametrize_numerical_attribute_condition_above_below_any(
         "humidifier.is_target_humidity",
         STATE_ON,
-        ATTR_HUMIDITY,
+        HumidifierEntityStateAttribute.HUMIDITY,
         attribute_required=True,
     ),
 )
@@ -317,7 +376,7 @@ async def test_humidifier_numerical_condition_behavior_any(
     parametrize_numerical_attribute_condition_above_below_all(
         "humidifier.is_target_humidity",
         STATE_ON,
-        ATTR_HUMIDITY,
+        HumidifierEntityStateAttribute.HUMIDITY,
         attribute_required=True,
     ),
 )
@@ -363,13 +422,13 @@ async def test_humidifier_numerical_condition_behavior_all(
             "humidifier.is_mode",
             # Empty mode list
             {CONF_MODE: []},
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
         (
             "humidifier.is_mode",
             # Missing CONF_MODE
             {},
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
     ],
 )
@@ -385,7 +444,7 @@ async def test_humidifier_is_mode_condition_validation(
             hass,
             {
                 "condition": condition,
-                CONF_TARGET: {CONF_ENTITY_ID: "humidifier.test"},
+                CONF_TARGET: {TargetKey.ENTITY_ID: "humidifier.test"},
                 CONF_OPTIONS: condition_options,
             },
         )

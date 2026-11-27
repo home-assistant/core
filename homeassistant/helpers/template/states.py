@@ -8,8 +8,9 @@ from typing import Any, override
 
 from lru import LRU
 from propcache.api import under_cached_property
+from typing_extensions import Sentinel as sentinel
 
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, STATE_UNKNOWN
+from homeassistant.const import STATE_UNKNOWN, EntityStateAttribute
 from homeassistant.core import (
     Context,
     HomeAssistant,
@@ -27,7 +28,7 @@ from homeassistant.util.read_only_dict import ReadOnlyDict
 
 from .render_info import render_info_cv
 
-_SENTINEL = object()
+_SENTINEL = sentinel("_SENTINEL")
 
 _RESERVED_NAMES = {
     "contextfunction",
@@ -127,11 +128,11 @@ class AllStates:
     __getitem__ = __getattr__
 
     def _collect_all(self) -> None:
-        if (render_info := render_info_cv.get()) is not None:
+        if (render_info := render_info_cv.get()) is not None and render_info.collecting:
             render_info.all_states = True
 
     def _collect_all_lifecycle(self) -> None:
-        if (render_info := render_info_cv.get()) is not None:
+        if (render_info := render_info_cv.get()) is not None and render_info.collecting:
             render_info.all_states_lifecycle = True
 
     def __iter__(self) -> Generator[TemplateState]:
@@ -147,7 +148,7 @@ class AllStates:
     def __call__(
         self,
         entity_id: str,
-        rounded: bool | object = _SENTINEL,
+        rounded: bool | _SENTINEL = _SENTINEL,
         with_unit: bool = False,
     ) -> str:
         """Return the states."""
@@ -157,7 +158,7 @@ class AllStates:
         if rounded is _SENTINEL:
             rounded = with_unit
         if rounded or with_unit:
-            return state.format_state(rounded, with_unit)  # type: ignore[arg-type]
+            return state.format_state(rounded, with_unit)
         return state.state
 
     @override
@@ -182,7 +183,7 @@ class StateTranslated:
 
         state_value = state.state
         domain = state.domain
-        device_class = state.attributes.get("device_class")
+        device_class = state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
         entry = er.async_get(self._hass).async_get(entity_id)
         platform = None if entry is None else entry.platform
         translation_key = None if entry is None else entry.translation_key
@@ -219,7 +220,7 @@ class StateAttrTranslated:
             return attr_value
 
         domain = state.domain
-        device_class = state.attributes.get("device_class")
+        device_class = state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
         entry = er.async_get(self._hass).async_get(entity_id)
         platform = None if entry is None else entry.platform
         translation_key = None if entry is None else entry.translation_key
@@ -262,11 +263,15 @@ class DomainStates:
     __getitem__ = __getattr__
 
     def _collect_domain(self) -> None:
-        if (entity_collect := render_info_cv.get()) is not None:
+        if (
+            entity_collect := render_info_cv.get()
+        ) is not None and entity_collect.collecting:
             entity_collect.domains.add(self._domain)  # type: ignore[attr-defined]
 
     def _collect_domain_lifecycle(self) -> None:
-        if (entity_collect := render_info_cv.get()) is not None:
+        if (
+            entity_collect := render_info_cv.get()
+        ) is not None and entity_collect.collecting:
             entity_collect.domains_lifecycle.add(self._domain)  # type: ignore[attr-defined]
 
     def __iter__(self) -> Generator[TemplateState]:
@@ -305,7 +310,11 @@ class TemplateStateBase(State):
         self._cache: dict[str, Any] = {}
 
     def _collect_state(self) -> None:
-        if self._collect and (render_info := render_info_cv.get()):
+        if (
+            self._collect
+            and (render_info := render_info_cv.get())
+            and render_info.collecting
+        ):
             render_info.entities.add(self._entity_id)  # type: ignore[attr-defined]
 
     # Jinja will try __getitem__ first and it avoids the need
@@ -314,7 +323,11 @@ class TemplateStateBase(State):
         """Return a property as an attribute for jinja."""
         if item in _COLLECTABLE_STATE_ATTRIBUTES:
             # _collect_state inlined here for performance
-            if self._collect and (render_info := render_info_cv.get()):
+            if (
+                self._collect
+                and (render_info := render_info_cv.get())
+                and render_info.collecting
+            ):
                 render_info.entities.add(self._entity_id)  # type: ignore[attr-defined]
             return getattr(self._state, item)
         if item == "entity_id":
@@ -413,7 +426,9 @@ class TemplateStateBase(State):
             state = async_rounded_state(self._hass, self._entity_id, self._state)
         else:
             state = self._state.state
-        if with_unit and (unit := self._state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)):
+        if with_unit and (
+            unit := self._state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
+        ):
             return f"{state} {unit}"
         return state
 
@@ -470,7 +485,9 @@ _create_template_state_no_collect = partial(TemplateState, collect=False)
 
 
 def _collect_state(hass: HomeAssistant, entity_id: str) -> None:
-    if (entity_collect := render_info_cv.get()) is not None:
+    if (
+        entity_collect := render_info_cv.get()
+    ) is not None and entity_collect.collecting:
         entity_collect.entities.add(entity_id)  # type: ignore[attr-defined]
 
 

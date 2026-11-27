@@ -50,6 +50,7 @@ PORT_5555 = 5555
 # update method V2 models
 MODELS_V2 = [
     "Orbi",
+    "RBE",
     "RBK",
     "RBR",
     "RBS",

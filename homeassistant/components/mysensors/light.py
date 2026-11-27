@@ -2,14 +2,7 @@
 
 from typing import Any, cast, override
 
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_RGB_COLOR,
-    ATTR_RGBW_COLOR,
-    ColorMode,
-    LightEntity,
-)
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.light import ColorMode, LightEntity, LightServiceArgument
 from homeassistant.const import STATE_ON, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -19,11 +12,12 @@ from homeassistant.util.color import rgb_hex_to_rgb_list
 from . import setup_mysensors_platform
 from .const import MYSENSORS_DISCOVERY, DiscoveryInfo, SensorType
 from .entity import MySensorsChildEntity
+from .models import MySensorsConfigEntry
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MySensorsConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up this platform for a specific ConfigEntry(==Gateway)."""
@@ -36,11 +30,11 @@ async def async_setup_entry(
     async def async_discover(discovery_info: DiscoveryInfo) -> None:
         """Discover and add a MySensors light."""
         setup_mysensors_platform(
-            hass,
+            config_entry,
             Platform.LIGHT,
             discovery_info,
             device_class_map,
-            async_add_entities=async_add_entities,
+            async_add_entities,
         )
 
     config_entry.async_on_unload(
@@ -81,12 +75,12 @@ class MySensorsLight(MySensorsChildEntity, LightEntity):
         set_req = self.gateway.const.SetReq
 
         if (
-            ATTR_BRIGHTNESS not in kwargs
-            or kwargs[ATTR_BRIGHTNESS] == self._attr_brightness
+            LightServiceArgument.BRIGHTNESS not in kwargs
+            or kwargs[LightServiceArgument.BRIGHTNESS] == self._attr_brightness
             or set_req.V_DIMMER not in self._values
         ):
             return
-        brightness: int = kwargs[ATTR_BRIGHTNESS]
+        brightness: int = kwargs[LightServiceArgument.BRIGHTNESS]
         percent = round(100 * brightness / 255)
         self.gateway.set_child_value(
             self.node_id, self.child_id, set_req.V_DIMMER, percent, ack=1
@@ -151,7 +145,9 @@ class MySensorsLightRGB(MySensorsLight):
     def _turn_on_rgb(self, **kwargs: Any) -> None:
         """Turn on RGB child device."""
         hex_color = self._values.get(self.value_type)
-        new_rgb: tuple[int, int, int] | None = kwargs.get(ATTR_RGB_COLOR)
+        new_rgb: tuple[int, int, int] | None = kwargs.get(
+            LightServiceArgument.RGB_COLOR
+        )
         if new_rgb is None:
             return
         red, green, blue = new_rgb
@@ -194,7 +190,9 @@ class MySensorsLightRGBW(MySensorsLightRGB):
     def _turn_on_rgbw(self, **kwargs: Any) -> None:
         """Turn on RGBW child device."""
         hex_color = self._values.get(self.value_type)
-        new_rgbw: tuple[int, int, int, int] | None = kwargs.get(ATTR_RGBW_COLOR)
+        new_rgbw: tuple[int, int, int, int] | None = kwargs.get(
+            LightServiceArgument.RGBW_COLOR
+        )
         if new_rgbw is None:
             return
         red, green, blue, white = new_rgbw

@@ -8,6 +8,7 @@ from typing import Any, override
 from tplink_omada_client import (
     GatewayPortSettings,
     OmadaSiteClient,
+    OmadaVpnPolicy,
     PortProfileOverrides,
     SwitchPortSettings,
 )
@@ -26,17 +27,25 @@ from tplink_omada_client.devices import (
     OmadaSwitch,
     OmadaSwitchPortDetails,
 )
+from tplink_omada_client.exceptions import OmadaClientException
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import Undefined
 
 from . import OmadaConfigEntry
-from .controller import OmadaGatewayCoordinator, OmadaSwitchPortCoordinator
-from .coordinator import OmadaCoordinator
-from .entity import OmadaDeviceEntity
+from .const import DOMAIN
+from .coordinator import (
+    OmadaCoordinator,
+    OmadaGatewayCoordinator,
+    OmadaSwitchPortCoordinator,
+    OmadaVpnPoliciesCoordinator,
+)
+from .entity import OmadaDeviceEntity, get_switch_port_base_name
 
 PARALLEL_UPDATES = 0
 
@@ -56,7 +65,7 @@ async def async_setup_entry(
         omada_client = controller.omada_client
         switch = await omada_client.get_switch(device)
         coordinator = controller.get_switch_port_coordinator(switch)
-        await coordinator.async_request_refresh()
+        await coordinator.async_refresh()
 
         entities: list[Entity] = []
         entities.extend(
@@ -68,7 +77,7 @@ async def async_setup_entry(
                 port,
                 port.port_id,
                 desc,
-                port_name=_get_switch_port_base_name(port),
+                port_name=get_switch_port_base_name(port),
             )
             for port in coordinator.data.values()
             for desc in SWITCH_PORT_DETAILS_SWITCHES
@@ -119,13 +128,31 @@ async def async_setup_entry(
         entity_callback=_create_gateway_port_entities,
     )
 
+    gateway_coordinator = controller.gateway_coordinator
+    vpn_coordinator = controller.vpn_policies_coordinator
+    if gateway_coordinator and vpn_coordinator:
+        gateway = next(iter(gateway_coordinator.data.values()))
+        known_policy_keys: set[str] = set()
 
-def _get_switch_port_base_name(port: OmadaSwitchPortDetails) -> str:
-    """Get display name for a switch port."""
+        @callback
+        def _async_add_vpn_entities() -> None:
+            new_policies = [
+                policy
+                for policy_key, policy in vpn_coordinator.data.items()
+                if policy_key not in known_policy_keys
+            ]
+            if not new_policies:
+                return
+            known_policy_keys.update(policy.unique_id for policy in new_policies)
+            async_add_entities(
+                OmadaVpnSwitch(vpn_coordinator, gateway, policy)
+                for policy in new_policies
+            )
 
-    if port.name == f"Port{port.port}":
-        return str(port.port)
-    return f"{port.port} ({port.name})"
+        config_entry.async_on_unload(
+            vpn_coordinator.async_add_listener(_async_add_vpn_entities)
+        )
+        _async_add_vpn_entities()
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -301,9 +328,18 @@ class OmadaDevicePortSwitchEntity[
         self._do_update()
 
     async def _async_turn_on_off(self, enable: bool) -> None:
-        updated_details = await self.entity_description.set_func(
-            self.coordinator.omada_client, self._device, self._port_details, enable
-        )
+        try:
+            updated_details = await self.entity_description.set_func(
+                self.coordinator.omada_client,
+                self._device,
+                self._port_details,
+                enable,
+            )
+        except OmadaClientException as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="switch_action_failed",
+            ) from ex
 
         if updated_details:
             self._port_details = updated_details
@@ -347,3 +383,73 @@ class OmadaDevicePortSwitchEntity[
         """Handle updated data from the coordinator."""
         self._do_update()
         self.async_write_ha_state()
+
+
+class OmadaVpnSwitch(
+    OmadaDeviceEntity[OmadaVpnPoliciesCoordinator],
+    SwitchEntity,
+):
+    """Switch entity for enabling and disabling an Omada VPN policy."""
+
+    _attr_translation_key = "vpn_policy"
+
+    def __init__(
+        self,
+        coordinator: OmadaVpnPoliciesCoordinator,
+        gateway: OmadaGateway,
+        policy: OmadaVpnPolicy,
+    ) -> None:
+        """Initialize the VPN policy switch."""
+        super().__init__(coordinator, gateway)
+        self._policy_id = policy.policy_id
+        self._policy_key = policy.unique_id
+        self._attr_unique_id = f"{gateway.mac}_vpn_{policy.unique_id}"
+        self._attr_name = policy.name
+        self._attr_is_on = policy.enabled
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return true if the VPN policy still exists on the controller."""
+        return super().available and self._policy_key in self.coordinator.data
+
+    @property
+    @override
+    def name(self) -> str | Undefined | None:
+        """Return the current name of the VPN policy."""
+        if policy := self.coordinator.data.get(self._policy_key):
+            return policy.name
+        return super().name
+
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        if policy := self.coordinator.data.get(self._policy_key):
+            self._attr_is_on = policy.enabled
+        super()._handle_coordinator_update()
+
+    @override
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Enable the VPN policy."""
+        await self._async_set_enabled(True)
+
+    @override
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Disable the VPN policy."""
+        await self._async_set_enabled(False)
+
+    async def _async_set_enabled(self, enabled: bool) -> None:
+        try:
+            await self.coordinator.omada_client.set_vpn_policy_enabled(
+                self._policy_id, enabled
+            )
+        except OmadaClientException as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="switch_action_failed",
+            ) from ex
+
+        self._attr_is_on = enabled
+        self.async_write_ha_state()
+        await self.coordinator.async_request_refresh()

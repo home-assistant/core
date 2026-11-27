@@ -1,11 +1,10 @@
 """Test DROP switch entities."""
 
-from homeassistant.components.switch import (
-    DOMAIN as SWITCH_DOMAIN,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-)
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNKNOWN
+from pytest_homeassistant.common import async_fire_mqtt_message
+from pytest_homeassistant.typing import MqttMockHAClient
+
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN, TargetKey
 from homeassistant.core import HomeAssistant
 
 from .common import (
@@ -26,9 +25,6 @@ from .common import (
     config_entry_protection_valve,
     config_entry_softener,
 )
-
-from tests.common import async_fire_mqtt_message
-from tests.typing import MqttMockHAClient
 
 
 async def test_switches_hub(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> None:
@@ -56,8 +52,8 @@ async def test_switches_hub(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) ->
     mqtt_mock.async_publish.reset_mock()
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: water_supply_switch_name},
+        SwitchService.TURN_OFF,
+        {TargetKey.ENTITY_ID: water_supply_switch_name},
         blocking=True,
     )
     assert len(mqtt_mock.async_publish.mock_calls) == 1
@@ -71,8 +67,8 @@ async def test_switches_hub(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) ->
     mqtt_mock.async_publish.reset_mock()
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: water_supply_switch_name},
+        SwitchService.TURN_ON,
+        {TargetKey.ENTITY_ID: water_supply_switch_name},
         blocking=True,
     )
     assert len(mqtt_mock.async_publish.mock_calls) == 1
@@ -86,8 +82,8 @@ async def test_switches_hub(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) ->
     mqtt_mock.async_publish.reset_mock()
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: bypass_switch_name},
+        SwitchService.TURN_ON,
+        {TargetKey.ENTITY_ID: bypass_switch_name},
         blocking=True,
     )
     assert len(mqtt_mock.async_publish.mock_calls) == 1
@@ -101,8 +97,8 @@ async def test_switches_hub(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) ->
     mqtt_mock.async_publish.reset_mock()
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: bypass_switch_name},
+        SwitchService.TURN_OFF,
+        {TargetKey.ENTITY_ID: bypass_switch_name},
         blocking=True,
     )
     assert len(mqtt_mock.async_publish.mock_calls) == 1
@@ -140,8 +136,8 @@ async def test_switches_protection_valve(
     mqtt_mock.async_publish.reset_mock()
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: water_supply_switch_name},
+        SwitchService.TURN_OFF,
+        {TargetKey.ENTITY_ID: water_supply_switch_name},
         blocking=True,
     )
     assert len(mqtt_mock.async_publish.mock_calls) == 1
@@ -157,8 +153,8 @@ async def test_switches_protection_valve(
     mqtt_mock.async_publish.reset_mock()
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: water_supply_switch_name},
+        SwitchService.TURN_ON,
+        {TargetKey.ENTITY_ID: water_supply_switch_name},
         blocking=True,
     )
     assert len(mqtt_mock.async_publish.mock_calls) == 1
@@ -194,8 +190,8 @@ async def test_switches_softener(
     mqtt_mock.async_publish.reset_mock()
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: bypass_switch_name},
+        SwitchService.TURN_ON,
+        {TargetKey.ENTITY_ID: bypass_switch_name},
         blocking=True,
     )
     assert len(mqtt_mock.async_publish.mock_calls) == 1
@@ -209,8 +205,8 @@ async def test_switches_softener(
     mqtt_mock.async_publish.reset_mock()
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: bypass_switch_name},
+        SwitchService.TURN_OFF,
+        {TargetKey.ENTITY_ID: bypass_switch_name},
         blocking=True,
     )
     assert len(mqtt_mock.async_publish.mock_calls) == 1
@@ -244,8 +240,8 @@ async def test_switches_filter(
     mqtt_mock.async_publish.reset_mock()
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: bypass_switch_name},
+        SwitchService.TURN_ON,
+        {TargetKey.ENTITY_ID: bypass_switch_name},
         blocking=True,
     )
     assert len(mqtt_mock.async_publish.mock_calls) == 1
@@ -259,8 +255,8 @@ async def test_switches_filter(
     mqtt_mock.async_publish.reset_mock()
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: bypass_switch_name},
+        SwitchService.TURN_OFF,
+        {TargetKey.ENTITY_ID: bypass_switch_name},
         blocking=True,
     )
     assert len(mqtt_mock.async_publish.mock_calls) == 1

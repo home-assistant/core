@@ -3,25 +3,26 @@
 from contextlib import AbstractContextManager, nullcontext as does_not_raise
 from typing import Any
 
+import probatio
 import pytest
-import voluptuous as vol
-
-from homeassistant.components.select.condition import CONF_OPTION
-from homeassistant.const import CONF_ENTITY_ID, CONF_OPTIONS, CONF_TARGET
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.condition import async_validate_condition_config
-
-from tests.components.common import (
+from pytest_homeassistant.components.common import (
     ConditionStateDescription,
+    TargetSupport,
     assert_condition_behavior_all,
     assert_condition_behavior_any,
     assert_condition_options_supported,
+    assert_conditions_target_support,
     create_target_condition,
     parametrize_condition_states_all,
     parametrize_condition_states_any,
     parametrize_target_entities,
     target_entities,
 )
+
+from homeassistant.components.select.condition import CONDITIONS, CONF_OPTION
+from homeassistant.const import CONF_OPTIONS, CONF_TARGET, TargetKey
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.condition import async_validate_condition_config
 
 
 @pytest.fixture
@@ -34,6 +35,11 @@ async def target_selects(hass: HomeAssistant) -> dict[str, list[str]]:
 async def target_input_selects(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple input_select entities associated with different targets."""
     return await target_entities(hass, "input_select")
+
+
+_CONDITION_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "is_option_selected": TargetSupport.STANDARD,
+}
 
 
 @pytest.mark.parametrize(
@@ -57,6 +63,11 @@ async def test_select_condition_options_validation(
         supports_behavior=supports_behavior,
         supports_duration=supports_duration,
     )
+
+
+def test_condition_target_support() -> None:
+    """Certify the condition registry matches its declared target support."""
+    assert_conditions_target_support(CONDITIONS, _CONDITION_TARGET_SUPPORT)
 
 
 @pytest.mark.parametrize(
@@ -220,7 +231,7 @@ async def test_select_condition_evaluates_both_domains(
     cond = await create_target_condition(
         hass,
         condition="select.is_option_selected",
-        target={CONF_ENTITY_ID: [entity_id_select, entity_id_input_select]},
+        target={TargetKey.ENTITY_ID: [entity_id_select, entity_id_input_select]},
         behavior="any",
         condition_options={CONF_OPTION: ["option_a", "option_b"]},
     )
@@ -262,13 +273,13 @@ async def test_select_condition_evaluates_both_domains(
             "select.is_option_selected",
             # Empty option list
             {CONF_OPTION: []},
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
         (
             "select.is_option_selected",
             # Missing CONF_OPTION
             {},
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
     ],
 )
@@ -284,7 +295,7 @@ async def test_select_is_option_selected_condition_validation(
             hass,
             {
                 "condition": condition,
-                CONF_TARGET: {CONF_ENTITY_ID: "select.test"},
+                CONF_TARGET: {TargetKey.ENTITY_ID: "select.test"},
                 CONF_OPTIONS: condition_options,
             },
         )

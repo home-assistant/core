@@ -3,7 +3,6 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
-import math
 from typing import Any, override
 
 from prana_local_api_client.models.prana_state import FanState
@@ -137,11 +136,14 @@ class PranaFan(PranaBaseEntity, FanEntity):
             await self.async_turn_off()
             return
         await self.coordinator.api_client.set_speed(
-            math.ceil(
-                percentage_to_ranged_value(
-                    self.entity_description.speed_range(self.coordinator),
-                    percentage,
-                )
+            max(
+                1,
+                round(
+                    percentage_to_ranged_value(
+                        self.entity_description.speed_range(self.coordinator),
+                        percentage,
+                    )
+                ),
             )
             * PRANA_SPEED_MULTIPLIER,
             self._api_target_key,

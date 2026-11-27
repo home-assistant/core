@@ -24,5 +24,5 @@ def normalize_descriptor(descriptor: PriceDescriptor | None) -> str | None:
 
 
 def format_cents_to_dollars(cents: float) -> float:
-    """Return a formatted conversion from cents to dollars."""
-    return round(cents / 100, 2)
+    """Convert cents per kWh to dollars per kWh."""
+    return cents / 100

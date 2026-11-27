@@ -4,27 +4,30 @@ from datetime import timedelta
 from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
-import voluptuous as vol
-
-from homeassistant.components.zone import condition as zone_condition
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConditionError
-from homeassistant.helpers import condition, config_validation as cv
-
-from tests.components.common import (
+from pytest_homeassistant.components.common import (
     ConditionStateDescription,
+    TargetSupport,
     assert_condition_behavior_all,
     assert_condition_behavior_any,
     assert_condition_options_supported,
+    assert_conditions_target_support,
     parametrize_condition_states_all,
     parametrize_condition_states_any,
     parametrize_target_entities,
     target_entities,
 )
 
+from homeassistant.components.zone import condition as zone_condition
+from homeassistant.components.zone.condition import CONDITIONS
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConditionError
+from homeassistant.helpers import condition, config_validation as cv
 
+
+@pytest.mark.usefixtures("improved_presence_detection")
 async def test_zone_raises(hass: HomeAssistant) -> None:
     """Test that zone raises ConditionError on errors."""
     config = {
@@ -112,6 +115,7 @@ async def test_zone_raises(hass: HomeAssistant) -> None:
     assert test.async_check()
 
 
+@pytest.mark.usefixtures("improved_presence_detection")
 async def test_zone_multiple_entities(hass: HomeAssistant) -> None:
     """Test with multiple entities in condition."""
     config = {
@@ -174,6 +178,7 @@ async def test_zone_multiple_entities(hass: HomeAssistant) -> None:
     assert not test.async_check()
 
 
+@pytest.mark.usefixtures("improved_presence_detection")
 async def test_multiple_zones(hass: HomeAssistant) -> None:
     """Test with multiple entities in condition."""
     config = {
@@ -225,6 +230,7 @@ async def test_multiple_zones(hass: HomeAssistant) -> None:
     assert not test.async_check()
 
 
+@pytest.mark.usefixtures("improved_presence_detection")
 @pytest.mark.parametrize("entity_id", ["device_tracker.cat", "person.bob"])
 async def test_zone_condition_prefers_in_zones_over_coordinates(
     hass: HomeAssistant, entity_id: str
@@ -265,6 +271,7 @@ async def test_zone_condition_prefers_in_zones_over_coordinates(
     assert zone_condition.zone(hass, "zone.home", entity_id) is False
 
 
+@pytest.mark.usefixtures("improved_presence_detection")
 async def test_zone_condition_ignores_in_zones_for_other_domains(
     hass: HomeAssistant,
 ) -> None:
@@ -296,6 +303,7 @@ async def test_zone_condition_ignores_in_zones_for_other_domains(
     assert zone_condition.zone(hass, "zone.home", "sensor.tracker") is True
 
 
+@pytest.mark.usefixtures("improved_presence_detection")
 async def test_zone_condition_falls_back_to_coordinates(hass: HomeAssistant) -> None:
     """Test the legacy zone condition uses coordinates without an in_zones attr.
 
@@ -324,6 +332,134 @@ async def test_zone_condition_falls_back_to_coordinates(hass: HomeAssistant) -> 
     assert zone_condition.zone(hass, "zone.home", "geo_location.quake") is False
 
 
+@pytest.mark.parametrize(
+    ("attributes", "expected"),
+    [
+        pytest.param(
+            {"latitude": 2.1, "longitude": 1.1, "gps_accuracy": 5},
+            True,
+            id="contained",
+        ),
+        pytest.param(
+            {"latitude": 2.1, "longitude": 1.1, "gps_accuracy": 50},
+            True,
+            id="overlapping",
+        ),
+        pytest.param(
+            {"latitude": 50.0, "longitude": 50.0, "gps_accuracy": 50},
+            False,
+            id="separated",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("improved_presence_detection")
+async def test_zone_condition_legacy_device_tracker(
+    hass: HomeAssistant, attributes: dict[str, Any], expected: bool
+) -> None:
+    """Test a legacy device tracker always uses the default overlap test.
+
+    Legacy device trackers report no in_zones attribute.
+    """
+    hass.states.async_set(
+        "zone.home",
+        "zoning",
+        {"name": "home", "latitude": 2.1, "longitude": 1.1, "radius": 10},
+    )
+    hass.states.async_set("device_tracker.phone", "not_home", attributes)
+
+    assert zone_condition.zone(hass, "zone.home", "device_tracker.phone") is expected
+
+
+@pytest.mark.parametrize(
+    ("improved_presence_detection", "attributes", "previous_match", "expected"),
+    [
+        pytest.param(
+            False,
+            {"latitude": 2.1, "longitude": 1.1, "gps_accuracy": 5},
+            False,
+            True,
+            id="overlap-contained",
+        ),
+        pytest.param(
+            True,
+            {"latitude": 2.1, "longitude": 1.1, "gps_accuracy": 5},
+            False,
+            True,
+            id="containment-contained",
+        ),
+        pytest.param(
+            False,
+            {"latitude": 2.1, "longitude": 1.1, "gps_accuracy": 50},
+            False,
+            True,
+            id="overlap-overlapping",
+        ),
+        pytest.param(
+            True,
+            {"latitude": 2.1, "longitude": 1.1, "gps_accuracy": 50},
+            False,
+            False,
+            id="containment-overlapping_previous_no_match",
+        ),
+        pytest.param(
+            True,
+            {"latitude": 2.1, "longitude": 1.1, "gps_accuracy": 50},
+            True,
+            True,
+            id="containment-overlapping_previous_match",
+        ),
+        pytest.param(
+            False,
+            {"latitude": 2.1, "longitude": 1.1, "gps_accuracy": None},
+            False,
+            True,
+            id="overlap-no_accuracy",
+        ),
+        pytest.param(
+            True,
+            {"latitude": 2.1, "longitude": 1.1, "gps_accuracy": None},
+            False,
+            True,
+            id="containment-no_accuracy",
+        ),
+        pytest.param(
+            False,
+            {"latitude": 50.0, "longitude": 50.0, "gps_accuracy": 50},
+            True,
+            False,
+            id="overlap-separated",
+        ),
+        pytest.param(
+            True,
+            {"latitude": 50.0, "longitude": 50.0, "gps_accuracy": 50},
+            True,
+            False,
+            id="containment-separated",
+        ),
+    ],
+    indirect=["improved_presence_detection"],
+)
+@pytest.mark.usefixtures("improved_presence_detection")
+async def test_zone_condition_location_accuracy(
+    hass: HomeAssistant,
+    attributes: dict[str, Any],
+    previous_match: bool,
+    expected: bool,
+) -> None:
+    """Test the legacy zone condition uses the location accuracy."""
+    hass.states.async_set(
+        "zone.home",
+        "zoning",
+        {"name": "home", "latitude": 2.1, "longitude": 1.1, "radius": 10},
+    )
+    hass.states.async_set("geo_location.quake", "1.0", attributes)
+
+    assert (
+        zone_condition.zone(hass, "zone.home", "geo_location.quake", previous_match)
+        is expected
+    )
+
+
 # --- New-style zone condition tests ---
 
 ZONE_HOME = "zone.home"
@@ -332,6 +468,15 @@ IN_ZONES_HOME = {"in_zones": [ZONE_HOME]}
 IN_ZONES_WORK = {"in_zones": [ZONE_WORK]}
 IN_ZONES_NONE: dict[str, list[str]] = {"in_zones": []}
 TARGET_ZONE = ZONE_HOME
+
+
+_CONDITION_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "_": TargetSupport.NONE,
+    "in_zone": TargetSupport.STANDARD,
+    "not_in_zone": TargetSupport.STANDARD,
+    "occupancy_is_detected": TargetSupport.NONE,
+    "occupancy_is_not_detected": TargetSupport.NONE,
+}
 
 
 @pytest.mark.parametrize(
@@ -368,6 +513,11 @@ async def test_zone_condition_options_validation(
     )
 
 
+def test_condition_target_support() -> None:
+    """Certify the condition registry matches its declared target support."""
+    assert_conditions_target_support(CONDITIONS, _CONDITION_TARGET_SUPPORT)
+
+
 @pytest.mark.parametrize(
     ("condition_key", "config"),
     [
@@ -393,7 +543,7 @@ async def test_zone_condition_rejects_non_zone_entity_id(
     hass: HomeAssistant, condition_key: str, config: dict[str, Any]
 ) -> None:
     """Test that the zone option must reference entities in the zone domain."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await condition.async_validate_condition_config(
             hass,
             {"condition": condition_key, **config},

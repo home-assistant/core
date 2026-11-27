@@ -7,7 +7,9 @@ from tesla_fleet_api.const import Scope
 from tesla_fleet_api.tesla.energysite import EnergySite
 from tesla_fleet_api.tesla.vehicle.fleet import VehicleFleet
 
+from homeassistant.core import callback
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -84,6 +86,7 @@ class TeslaFleetEntity[_ApiT: VehicleFleet | EnergySite](
         """Return True if a specific value is in coordinator data."""
         return self.key in self.coordinator.data
 
+    @callback
     @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
@@ -205,7 +208,11 @@ class TeslaFleetWallConnectorEntity(
             identifiers={(DOMAIN, din)},
             manufacturer="Tesla",
             name="Wall Connector",
-            via_device=(DOMAIN, str(data.id)),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                data.live_coordinator.hass,
+                (DOMAIN, str(data.id)),
+                config_entry_id=data.live_coordinator.config_entry.entry_id,
+            ),
             serial_number=din.rsplit("-", maxsplit=1)[-1],
             model=model,
         )
@@ -214,7 +221,7 @@ class TeslaFleetWallConnectorEntity(
 
     @property
     @override
-    def _value(self) -> int:
+    def _value(self) -> Any | None:
         """Return a specific wall connector value from coordinator data."""
         return (
             self.coordinator.data.get("wall_connectors", {})

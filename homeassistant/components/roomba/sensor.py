@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import override
 
-from roombapy import Roomba
+from roombapy import RoombaClient
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -12,12 +12,19 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfArea, UnitOfTime
+from homeassistant.const import (
+    PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    EntityCategory,
+    UnitOfArea,
+    UnitOfTime,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .entity import IRobotEntity, roomba_reported_state
+from . import roomba_reported_state
+from .entity import IRobotEntity
 from .models import RoombaConfigEntry
 
 
@@ -26,6 +33,52 @@ class RoombaSensorEntityDescription(SensorEntityDescription):
     """Immutable class for describing Roomba data."""
 
     value_fn: Callable[[IRobotEntity], StateType]
+
+    # IRobotEntity.new_state_filter drops messages whose only reported key is
+    # "signal", so that a Wi-Fi update does not wake every entity. Sensors that
+    # actually read "signal" have to opt back in or they never refresh.
+    refresh_on_signal: bool = False
+
+
+PHASE_TO_STATUS = {
+    "charge": "charging",
+    "chargingerror": "charging_error",
+    "evac": "emptying",
+    "hmMidMsn": "recharging",
+    "hmPostMsn": "returning_finished",
+    "hmUsrDock": "returning_canceled",
+    "pause": "paused",
+    "refill": "refilling",
+    "run": "cleaning",
+    "spot": "spot_cleaning",
+    "stop": "stopped",
+    "stuck": "stuck",
+}
+
+
+def _battery_cycles(entity: IRobotEntity) -> int | None:
+    """Return the battery cycles, falling back to the battery's own count."""
+    return next(
+        (
+            value
+            for value in (
+                entity.battery_stats.get("nLithChrg"),
+                entity.battery_stats.get("nNimhChrg"),
+                entity.battery_info.get("cCount"),
+            )
+            if value is not None
+        ),
+        None,
+    )
+
+
+def _total_cleaning_minutes(entity: IRobotEntity) -> int | None:
+    """Return the lifetime cleaning time in minutes."""
+    hours = entity.run_stats.get("hr")
+    minutes = entity.run_stats.get("min")
+    if hours is None and minutes is None:
+        return None
+    return (hours or 0) * 60 + (minutes or 0)
 
 
 DOCK_SENSORS: list[RoombaSensorEntityDescription] = [
@@ -58,16 +111,18 @@ SENSORS: list[RoombaSensorEntityDescription] = [
         translation_key="battery_cycles",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda self: (
-            self.battery_stats.get("nLithChrg") or self.battery_stats.get("nNimhChrg")
-        ),
+        value_fn=_battery_cycles,
     ),
     RoombaSensorEntityDescription(
         key="total_cleaning_time",
         translation_key="total_cleaning_time",
-        native_unit_of_measurement=UnitOfTime.HOURS,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        suggested_display_precision=1,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda self: self.run_stats.get("hr"),
+        value_fn=_total_cleaning_minutes,
     ),
     RoombaSensorEntityDescription(
         key="average_mission_time",
@@ -120,10 +175,13 @@ SENSORS: list[RoombaSensorEntityDescription] = [
     RoombaSensorEntityDescription(
         key="total_cleaned_area",
         translation_key="total_cleaned_area",
-        native_unit_of_measurement=UnitOfArea.SQUARE_METERS,
+        device_class=SensorDeviceClass.AREA,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfArea.SQUARE_FEET,
         entity_category=EntityCategory.DIAGNOSTIC,
+        # Reported in hundreds of square feet
         value_fn=lambda self: (
-            None if (sqft := self.run_stats.get("sqft")) is None else sqft * 9.29
+            None if (sqft := self.run_stats.get("sqft")) is None else sqft * 100
         ),
         suggested_display_precision=0,
         entity_registry_enabled_default=False,
@@ -135,6 +193,26 @@ SENSORS: list[RoombaSensorEntityDescription] = [
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda self: self.last_mission,
         entity_registry_enabled_default=False,
+    ),
+    RoombaSensorEntityDescription(
+        key="status",
+        translation_key="status",
+        device_class=SensorDeviceClass.ENUM,
+        options=list(PHASE_TO_STATUS.values()),
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda self: PHASE_TO_STATUS.get(
+            self.vacuum_state.get("cleanMissionStatus", {}).get("phase")
+        ),
+    ),
+    RoombaSensorEntityDescription(
+        key="rssi",
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        refresh_on_signal=True,
+        value_fn=lambda self: self.vacuum_state.get("signal", {}).get("rssi"),
     ),
 ]
 
@@ -149,7 +227,7 @@ async def async_setup_entry(
     roomba = domain_data.roomba
     blid = domain_data.blid
 
-    sensor_list: list[RoombaSensorEntityDescription] = SENSORS
+    sensor_list: list[RoombaSensorEntityDescription] = list(SENSORS)
 
     has_dock: bool = len(roomba_reported_state(roomba).get("dock", {})) > 0
 
@@ -169,13 +247,20 @@ class RoombaSensor(IRobotEntity, SensorEntity):
 
     def __init__(
         self,
-        roomba: Roomba,
+        roomba: RoombaClient,
         blid: str,
         entity_description: RoombaSensorEntityDescription,
     ) -> None:
         """Initialize Roomba sensor."""
         super().__init__(roomba, blid)
         self.entity_description = entity_description
+
+    @override
+    def new_state_filter(self, new_state):
+        """Also accept Wi-Fi only messages for sensors that read them."""
+        if self.entity_description.refresh_on_signal and "signal" in new_state:
+            return True
+        return super().new_state_filter(new_state)
 
     @property
     @override

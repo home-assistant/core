@@ -3,15 +3,17 @@
 import asyncio
 import threading
 import time
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from PyTado.http import Http
+import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.tado import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
+from homeassistant.helpers import device_registry as dr
 
 
 async def test_v1_migration(hass: HomeAssistant) -> None:
@@ -30,6 +32,25 @@ async def test_v1_migration(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert entry.version == 2
     assert CONF_USERNAME not in entry.data
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_device_via_device_links(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test that child devices link to the bridge via via_device_id."""
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+
+    bridge_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "IB1234"), config_entry.entry_id
+    )
+    assert bridge_device is not None
+
+    child_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "WR1"), config_entry.entry_id
+    )
+    assert child_device is not None
+    assert child_device.via_device_id == bridge_device.id
 
 
 async def test_refresh_token_threading_lock(hass: HomeAssistant) -> None:
@@ -64,3 +85,19 @@ async def test_refresh_token_threading_lock(hass: HomeAssistant) -> None:
     assert start2 >= end1, (
         f"Second refresh started before first ended: start2={start2}, end1={end1}."
     )
+
+
+async def test_tado_x_home_is_rejected_error(
+    hass: HomeAssistant,
+    mock_tado_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a Tado X (LINE_X generation) home aborts setup with a clear error."""
+    mock_tado_api.get_me.return_value = {
+        "homes": [{"name": "x home", "id": 1, "generation": "LINE_X"}]
+    }
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR

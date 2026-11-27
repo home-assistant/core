@@ -1,10 +1,11 @@
 """Common methods for Sense."""
 
 from collections.abc import Generator
-import datetime
+import datetime as dt
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from sense_energy import Scale
 
 from homeassistant.components.sense.binary_sensor import SenseDevice
@@ -23,14 +24,12 @@ from .const import (
     MONITOR_ID,
 )
 
-from tests.common import MockConfigEntry
-
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.sense.async_setup_entry", return_value=True
+        "homeassistant.components.sense.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -60,7 +59,7 @@ def mock_sense() -> Generator[MagicMock]:
         type(gateway).active_solar_power = PropertyMock(return_value=500)
         type(gateway).active_voltage = PropertyMock(return_value=[120, 240])
         gateway.get_stat.return_value = 15
-        gateway.trend_start.return_value = datetime.datetime.fromisoformat(
+        gateway.trend_start.return_value = dt.datetime.fromisoformat(
             "2024-01-01 01:01:00+00:00"
         )
 

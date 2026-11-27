@@ -80,7 +80,6 @@ class RecorderPool(SingletonThreadPool, NullPool):
         """Close the connection."""
         if (
             threading.get_ident() in self.recorder_and_worker_thread_ids
-            and self._conn
             and hasattr(self._conn, "current")
             and (conn := self._conn.current())
         ):
@@ -158,6 +157,24 @@ class MutexPool(StaticPool):
                 trace_msg,
             )
         MutexPool.pool_lock.release()
+
+    @override
+    def dispose(self) -> None:
+        """Dispose of the shared connection under the pool lock.
+
+        StaticPool.dispose() closes the single in-memory connection directly.
+        Without the lock it can close it while another thread has it checked
+        out and is mid-query, freeing the sqlite3 handle underneath a running
+        statement -> segfault. Holding pool_lock makes dispose wait for the
+        in-flight checkout to return first.
+        """
+        # pylint: disable-next=consider-using-with
+        got_lock = MutexPool.pool_lock.acquire(timeout=10)
+        try:
+            super().dispose()
+        finally:
+            if got_lock:
+                MutexPool.pool_lock.release()
 
     @override
     def _do_get(self) -> ConnectionPoolEntry:

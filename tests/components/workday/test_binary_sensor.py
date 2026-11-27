@@ -5,9 +5,9 @@ from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.workday.binary_sensor import SERVICE_CHECK_DATE
 from homeassistant.components.workday.const import (
     DEFAULT_EXCLUDES,
     DEFAULT_NAME,
@@ -15,6 +15,7 @@ from homeassistant.components.workday.const import (
     DEFAULT_WORKDAYS,
     DOMAIN,
 )
+from homeassistant.components.workday.services import WorkdayService
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -52,8 +53,6 @@ from . import (
     init_integration,
 )
 
-from tests.common import async_fire_time_changed
-
 
 @pytest.mark.parametrize(
     ("config", "expected_state", "expected_state_weekend"),
@@ -88,8 +87,8 @@ async def test_setup(
     name = "Workday Sensor"
     if config.get("country"):
         name += f" {config['country']}"
-    if config.get("province"):
-        name += f" {config['province']}"
+    if province := config.get("country_settings", {}).get("province"):
+        name += f" {province}"
     slug_name = slugify(name)
 
     state = hass.states.get(f"binary_sensor.{slug_name}")
@@ -140,6 +139,40 @@ async def test_setup_with_working_holiday(
     state = hass.states.get("binary_sensor.workday_sensor_de_bw")
     assert state is not None
     assert state.state == "on"
+
+
+@pytest.mark.parametrize(
+    ("country", "include_sundays", "expected_state"),
+    [
+        pytest.param("SE", True, "off", id="sundays_included"),
+        pytest.param("SE", False, "on", id="sundays_not_included"),
+        pytest.param("DE", True, "on", id="option_not_supported_by_country"),
+    ],
+)
+async def test_setup_country_options(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    country: str,
+    include_sundays: bool,
+    expected_state: str,
+) -> None:
+    """Test country specific options are only used when the country supports them."""
+    freezer.move_to(datetime(2024, 11, 17, 12, tzinfo=UTC))  # Sunday
+    await init_integration(
+        hass,
+        {
+            "country": country,
+            "excludes": ["holiday"],
+            "days_offset": DEFAULT_OFFSET,
+            "workdays": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
+            "custom_holidays": {"add_holidays": [], "remove_holidays": []},
+            "country_settings": {"include_sundays": include_sundays},
+        },
+    )
+
+    state = hass.states.get(f"binary_sensor.workday_sensor_{country.lower()}")
+    assert state is not None
+    assert state.state == expected_state
 
 
 async def test_setup_add_holiday(
@@ -346,6 +379,41 @@ async def test_setup_date_range(
     assert state.state == "on"
 
 
+@pytest.mark.parametrize(
+    "check_date",
+    [
+        pytest.param(date(2026, 1, 1), id="this_year"),
+        pytest.param(date(2027, 1, 1), id="next_year"),
+    ],
+)
+async def test_remove_named_holiday_without_language(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    check_date: date,
+) -> None:
+    """Test a holiday removed by name stays removed next year without a language."""
+    freezer.move_to(datetime(2026, 6, 1, 12, tzinfo=UTC))
+    await init_integration(
+        hass,
+        {
+            "country": "DE",
+            "excludes": DEFAULT_EXCLUDES,
+            "days_offset": DEFAULT_OFFSET,
+            "workdays": DEFAULT_WORKDAYS,
+            "custom_holidays": {"add_holidays": [], "remove_holidays": ["Neujahr"]},
+        },
+    )
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        WorkdayService.CHECK_DATE,
+        {"entity_id": "binary_sensor.workday_sensor_de", "check_date": check_date},
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {"binary_sensor.workday_sensor_de": {"workday": True}}
+
+
 async def test_check_date_service(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -359,7 +427,7 @@ async def test_check_date_service(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_CHECK_DATE,
+        WorkdayService.CHECK_DATE,
         {
             "entity_id": "binary_sensor.workday_sensor_de_bw",
             "check_date": date(2022, 12, 25),  # Christmas Day
@@ -371,7 +439,7 @@ async def test_check_date_service(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_CHECK_DATE,
+        WorkdayService.CHECK_DATE,
         {
             "entity_id": "binary_sensor.workday_sensor_de_bw",
             "check_date": date(2022, 12, 23),  # Normal Friday
@@ -383,7 +451,7 @@ async def test_check_date_service(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_CHECK_DATE,
+        WorkdayService.CHECK_DATE,
         {
             "entity_id": "binary_sensor.workday_sensor_de_bw",
             "check_date": date(2022, 12, 17),  # Saturday (no workday)
@@ -449,18 +517,26 @@ async def test_only_repairs_for_current_next_year(
     config = {
         "name": DEFAULT_NAME,
         "country": "DE",
-        "province": "BW",
+        "country_settings": {
+            "province": "BW",
+            "language": "de",
+        },
         "excludes": DEFAULT_EXCLUDES,
         "days_offset": DEFAULT_OFFSET,
         "workdays": DEFAULT_WORKDAYS,
-        "add_holidays": [],
-        "remove_holidays": remove_dates,
-        "language": "de",
+        "custom_holidays": {
+            "add_holidays": [],
+            "remove_holidays": remove_dates,
+        },
     }
-    await init_integration(hass, config)
+    entry = await init_integration(hass, config)
 
     assert len(issue_registry.issues) == 2
     assert issue_registry.issues == snapshot
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+    assert len(issue_registry.issues) == 0
 
 
 async def test_missing_language(
@@ -469,17 +545,21 @@ async def test_missing_language(
 ) -> None:
     """Test when language exist but is empty."""
     config = {
-        "add_holidays": [],
+        "custom_holidays": {
+            "add_holidays": [],
+            "remove_holidays": [
+                "Labour Day",
+            ],
+        },
         "country": "AU",
         "days_offset": 0,
         "excludes": ["sat", "sun", "holiday"],
-        "language": None,
+        "country_settings": {
+            "language": None,
+            "province": "QLD",
+        },
         "name": "Workday Sensor",
         "platform": "workday",
-        "province": "QLD",
-        "remove_holidays": [
-            "Labour Day",
-        ],
         "workdays": ["mon", "tue", "wed", "thu", "fri"],
     }
     await init_integration(hass, config)
@@ -492,17 +572,21 @@ async def test_incorrect_english_variant(
 ) -> None:
     """Test when language exist but is empty."""
     config = {
-        "add_holidays": [],
+        "custom_holidays": {
+            "add_holidays": [],
+            "remove_holidays": [
+                "Labour Day",
+            ],
+        },
         "country": "AU",
         "days_offset": 0,
         "excludes": ["sat", "sun", "holiday"],
-        "language": "en_UK",  # Incorrect variant
+        "country_settings": {
+            "language": "en_UK",
+            "province": "QLD",
+        },
         "name": "Workday Sensor",
         "platform": "workday",
-        "province": "QLD",
-        "remove_holidays": [
-            "Labour Day",
-        ],
         "workdays": ["mon", "tue", "wed", "thu", "fri"],
     }
     await init_integration(hass, config)

@@ -2,13 +2,13 @@
 
 from unittest.mock import MagicMock
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.motionmount import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import format_mac
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_entry_with_mac(
@@ -25,8 +25,8 @@ async def test_setup_entry_with_mac(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
     mac = format_mac(mock_motionmount.mac.hex())
-    device = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, mac), mock_config_entry.entry_id
     )
     assert device
     assert device.name == mock_config_entry.title
@@ -47,8 +47,8 @@ async def test_setup_entry_without_mac(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_config_entry.entry_id)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
     )
     assert device
     assert device.name == mock_config_entry.title

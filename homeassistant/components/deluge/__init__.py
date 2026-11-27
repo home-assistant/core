@@ -23,7 +23,7 @@ PLATFORMS = [Platform.SENSOR, Platform.SWITCH]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: DelugeConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: DelugeConfigEntry) -> None:
     """Set up Deluge from a config entry."""
     host = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
@@ -33,8 +33,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: DelugeConfigEntry) -> bo
         DelugeRPCClient, host, port, username, password
     )
     api.web_port = entry.data[CONF_WEB_PORT]
+    daemon_version: str | None = None
     try:
-        await hass.async_add_executor_job(api.connect)
+        daemon_version = await hass.async_add_executor_job(_connect, api)
     except (ConnectionRefusedError, TimeoutError, SSLError) as ex:
         raise ConfigEntryNotReady("Connection to Deluge Daemon failed") from ex
     except Exception as ex:
@@ -44,14 +45,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: DelugeConfigEntry) -> bo
             ) from ex
         _LOGGER.error("Unknown error connecting to Deluge: %s", ex)
 
-    coordinator = DelugeDataUpdateCoordinator(hass, api, entry)
+    coordinator = DelugeDataUpdateCoordinator(hass, api, entry, daemon_version)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
+
+def _connect(api: DelugeRPCClient) -> str:
+    """Connect to the daemon and return its version."""
+    api.connect()
+    return api.call("daemon.info").decode()
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: DelugeConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: DelugeConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

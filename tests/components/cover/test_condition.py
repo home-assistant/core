@@ -3,22 +3,24 @@
 from typing import Any
 
 import pytest
-
-from homeassistant.components.cover import ATTR_IS_CLOSED, CoverState
-from homeassistant.const import ATTR_DEVICE_CLASS, CONF_ENTITY_ID
-from homeassistant.core import HomeAssistant
-
-from tests.components.common import (
+from pytest_homeassistant.components.common import (
     ConditionStateDescription,
+    TargetSupport,
     assert_condition_behavior_all,
     assert_condition_behavior_any,
     assert_condition_options_supported,
+    assert_conditions_target_support,
     create_target_condition,
     parametrize_condition_states_all,
     parametrize_condition_states_any,
     parametrize_target_entities,
     target_entities,
 )
+
+from homeassistant.components.cover import CoverEntityStateAttribute, CoverState
+from homeassistant.components.cover.condition import CONDITIONS
+from homeassistant.const import EntityStateAttribute, TargetKey
+from homeassistant.core import HomeAssistant
 
 DEVICE_CLASS_CONDITIONS = [
     ("awning", "cover.awning_is_open", "cover.awning_is_closed"),
@@ -33,6 +35,20 @@ DEVICE_CLASS_CONDITIONS = [
 async def target_covers(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple cover entities associated with different targets."""
     return await target_entities(hass, "cover")
+
+
+_CONDITION_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "awning_is_closed": TargetSupport.STANDARD,
+    "awning_is_open": TargetSupport.STANDARD,
+    "blind_is_closed": TargetSupport.STANDARD,
+    "blind_is_open": TargetSupport.STANDARD,
+    "curtain_is_closed": TargetSupport.STANDARD,
+    "curtain_is_open": TargetSupport.STANDARD,
+    "shade_is_closed": TargetSupport.STANDARD,
+    "shade_is_open": TargetSupport.STANDARD,
+    "shutter_is_closed": TargetSupport.STANDARD,
+    "shutter_is_open": TargetSupport.STANDARD,
+}
 
 
 @pytest.mark.parametrize(
@@ -67,6 +83,11 @@ async def test_cover_condition_options_validation(
     )
 
 
+def test_condition_target_support() -> None:
+    """Certify the condition registry matches its declared target support."""
+    assert_conditions_target_support(CONDITIONS, _CONDITION_TARGET_SUPPORT)
+
+
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("cover"),
@@ -80,28 +101,32 @@ async def test_cover_condition_options_validation(
             *parametrize_condition_states_any(
                 condition=is_open_key,
                 target_states=[
-                    (CoverState.OPEN, {ATTR_IS_CLOSED: False}),
-                    (CoverState.OPENING, {ATTR_IS_CLOSED: False}),
-                    (CoverState.CLOSING, {ATTR_IS_CLOSED: False}),
+                    (CoverState.OPEN, {CoverEntityStateAttribute.IS_CLOSED: False}),
+                    (CoverState.OPENING, {CoverEntityStateAttribute.IS_CLOSED: False}),
+                    (CoverState.CLOSING, {CoverEntityStateAttribute.IS_CLOSED: False}),
                 ],
                 other_states=[
-                    (CoverState.CLOSED, {ATTR_IS_CLOSED: True}),
-                    (CoverState.CLOSING, {ATTR_IS_CLOSED: True}),
+                    (CoverState.CLOSED, {CoverEntityStateAttribute.IS_CLOSED: True}),
+                    (CoverState.CLOSING, {CoverEntityStateAttribute.IS_CLOSED: True}),
                 ],
-                required_filter_attributes={ATTR_DEVICE_CLASS: device_class},
+                required_filter_attributes={
+                    EntityStateAttribute.DEVICE_CLASS: device_class
+                },
             ),
             *parametrize_condition_states_any(
                 condition=is_closed_key,
                 target_states=[
-                    (CoverState.CLOSED, {ATTR_IS_CLOSED: True}),
-                    (CoverState.CLOSING, {ATTR_IS_CLOSED: True}),
+                    (CoverState.CLOSED, {CoverEntityStateAttribute.IS_CLOSED: True}),
+                    (CoverState.CLOSING, {CoverEntityStateAttribute.IS_CLOSED: True}),
                 ],
                 other_states=[
-                    (CoverState.OPEN, {ATTR_IS_CLOSED: False}),
-                    (CoverState.OPENING, {ATTR_IS_CLOSED: False}),
-                    (CoverState.CLOSING, {ATTR_IS_CLOSED: False}),
+                    (CoverState.OPEN, {CoverEntityStateAttribute.IS_CLOSED: False}),
+                    (CoverState.OPENING, {CoverEntityStateAttribute.IS_CLOSED: False}),
+                    (CoverState.CLOSING, {CoverEntityStateAttribute.IS_CLOSED: False}),
                 ],
-                required_filter_attributes={ATTR_DEVICE_CLASS: device_class},
+                required_filter_attributes={
+                    EntityStateAttribute.DEVICE_CLASS: device_class
+                },
             ),
         )
     ],
@@ -142,28 +167,32 @@ async def test_cover_condition_behavior_any(
             *parametrize_condition_states_all(
                 condition=is_open_key,
                 target_states=[
-                    (CoverState.OPEN, {ATTR_IS_CLOSED: False}),
-                    (CoverState.OPENING, {ATTR_IS_CLOSED: False}),
-                    (CoverState.CLOSING, {ATTR_IS_CLOSED: False}),
+                    (CoverState.OPEN, {CoverEntityStateAttribute.IS_CLOSED: False}),
+                    (CoverState.OPENING, {CoverEntityStateAttribute.IS_CLOSED: False}),
+                    (CoverState.CLOSING, {CoverEntityStateAttribute.IS_CLOSED: False}),
                 ],
                 other_states=[
-                    (CoverState.CLOSED, {ATTR_IS_CLOSED: True}),
-                    (CoverState.CLOSING, {ATTR_IS_CLOSED: True}),
+                    (CoverState.CLOSED, {CoverEntityStateAttribute.IS_CLOSED: True}),
+                    (CoverState.CLOSING, {CoverEntityStateAttribute.IS_CLOSED: True}),
                 ],
-                required_filter_attributes={ATTR_DEVICE_CLASS: device_class},
+                required_filter_attributes={
+                    EntityStateAttribute.DEVICE_CLASS: device_class
+                },
             ),
             *parametrize_condition_states_all(
                 condition=is_closed_key,
                 target_states=[
-                    (CoverState.CLOSED, {ATTR_IS_CLOSED: True}),
-                    (CoverState.CLOSING, {ATTR_IS_CLOSED: True}),
+                    (CoverState.CLOSED, {CoverEntityStateAttribute.IS_CLOSED: True}),
+                    (CoverState.CLOSING, {CoverEntityStateAttribute.IS_CLOSED: True}),
                 ],
                 other_states=[
-                    (CoverState.OPEN, {ATTR_IS_CLOSED: False}),
-                    (CoverState.OPENING, {ATTR_IS_CLOSED: False}),
-                    (CoverState.CLOSING, {ATTR_IS_CLOSED: False}),
+                    (CoverState.OPEN, {CoverEntityStateAttribute.IS_CLOSED: False}),
+                    (CoverState.OPENING, {CoverEntityStateAttribute.IS_CLOSED: False}),
+                    (CoverState.CLOSING, {CoverEntityStateAttribute.IS_CLOSED: False}),
                 ],
-                required_filter_attributes={ATTR_DEVICE_CLASS: device_class},
+                required_filter_attributes={
+                    EntityStateAttribute.DEVICE_CLASS: device_class
+                },
             ),
         )
     ],
@@ -244,15 +273,18 @@ async def test_cover_condition_excludes_non_matching_device_class(
     hass.states.async_set(
         entity_id_matching,
         matching_state,
-        {ATTR_DEVICE_CLASS: device_class, ATTR_IS_CLOSED: matching_is_closed},
+        {
+            EntityStateAttribute.DEVICE_CLASS: device_class,
+            CoverEntityStateAttribute.IS_CLOSED: matching_is_closed,
+        },
     )
     # Set wrong device class entity to matching state too
     hass.states.async_set(
         entity_id_wrong,
         matching_state,
         {
-            ATTR_DEVICE_CLASS: wrong_device_class,
-            ATTR_IS_CLOSED: matching_is_closed,
+            EntityStateAttribute.DEVICE_CLASS: wrong_device_class,
+            CoverEntityStateAttribute.IS_CLOSED: matching_is_closed,
         },
     )
     await hass.async_block_till_done()
@@ -260,7 +292,7 @@ async def test_cover_condition_excludes_non_matching_device_class(
     condition_any = await create_target_condition(
         hass,
         condition=condition_key,
-        target={CONF_ENTITY_ID: [entity_id_matching, entity_id_wrong]},
+        target={TargetKey.ENTITY_ID: [entity_id_matching, entity_id_wrong]},
         behavior="any",
     )
 
@@ -271,7 +303,10 @@ async def test_cover_condition_excludes_non_matching_device_class(
     hass.states.async_set(
         entity_id_matching,
         non_matching_state,
-        {ATTR_DEVICE_CLASS: device_class, ATTR_IS_CLOSED: non_matching_is_closed},
+        {
+            EntityStateAttribute.DEVICE_CLASS: device_class,
+            CoverEntityStateAttribute.IS_CLOSED: non_matching_is_closed,
+        },
     )
     await hass.async_block_till_done()
 

@@ -9,7 +9,7 @@ from apple_weatherkit.client import (
     WeatherKitApiClientCommunicationError,
     WeatherKitApiClientError,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
@@ -30,16 +30,27 @@ from .const import (
     LOGGER,
 )
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_LOCATION): LocationSelector(
+        probatio.Required(CONF_LOCATION): LocationSelector(
             LocationSelectorConfig(radius=False, icon="")
         ),
         # Auth
-        vol.Required(CONF_KEY_ID): str,
-        vol.Required(CONF_SERVICE_ID): str,
-        vol.Required(CONF_TEAM_ID): str,
-        vol.Required(CONF_KEY_PEM): TextSelector(
+        probatio.Required(CONF_KEY_ID): str,
+        probatio.Required(CONF_SERVICE_ID): str,
+        probatio.Required(CONF_TEAM_ID): str,
+        probatio.Required(CONF_KEY_PEM): TextSelector(
+            TextSelectorConfig(
+                multiline=True,
+            )
+        ),
+    }
+)
+
+REAUTH_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_KEY_ID): str,
+        probatio.Required(probatio.Secret(CONF_KEY_PEM)): TextSelector(
             TextSelectorConfig(
                 multiline=True,
             )
@@ -102,6 +113,57 @@ class WeatherKitFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=data_schema,
+            errors=errors,
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauthentication when the WeatherKit key is no longer valid."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Ask for a new key ID and private key."""
+        reauth_entry = self._get_reauth_entry()
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            data_updates = {
+                CONF_KEY_ID: user_input[CONF_KEY_ID],
+                CONF_KEY_PEM: self._fix_key_input(user_input[CONF_KEY_PEM]),
+            }
+            try:
+                await self._test_config(
+                    {
+                        **reauth_entry.data,
+                        **data_updates,
+                        CONF_LOCATION: {
+                            CONF_LATITUDE: reauth_entry.data[CONF_LATITUDE],
+                            CONF_LONGITUDE: reauth_entry.data[CONF_LONGITUDE],
+                        },
+                    }
+                )
+            except WeatherKitUnsupportedLocationError:
+                errors["base"] = "unsupported_location"
+            except WeatherKitApiClientAuthenticationError:
+                errors["base"] = "invalid_auth"
+            except WeatherKitApiClientCommunicationError:
+                errors["base"] = "cannot_connect"
+            except WeatherKitApiClientError:
+                LOGGER.exception("Unexpected error")
+                errors["base"] = "unknown"
+            else:
+                return self.async_update_reload_and_abort(
+                    reauth_entry, data_updates=data_updates
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=self.add_suggested_values_to_schema(
+                REAUTH_SCHEMA,
+                {CONF_KEY_ID: (user_input or reauth_entry.data)[CONF_KEY_ID]},
+            ),
             errors=errors,
         )
 

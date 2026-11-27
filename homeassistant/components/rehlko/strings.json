@@ -1,8 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -85,8 +84,8 @@
       "last_exercise": {
         "name": "Last exercise"
       },
-      "last_maintainance": {
-        "name": "Last maintainance"
+      "last_maintenance": {
+        "name": "Last maintenance"
       },
       "last_run": {
         "name": "Last run"
@@ -97,8 +96,8 @@
       "next_exercise": {
         "name": "Next exercise"
       },
-      "next_maintainance": {
-        "name": "Next maintainance"
+      "next_maintenance": {
+        "name": "Next maintenance"
       },
       "power_source": {
         "name": "Power source"

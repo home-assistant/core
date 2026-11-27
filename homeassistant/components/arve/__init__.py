@@ -12,7 +12,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ArveConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: ArveConfigEntry) -> None:
     """Migrate entry."""
     _LOGGER.debug("Migrating from version %s.%s", entry.version, entry.minor_version)
 
@@ -26,10 +26,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ArveConfigEntry) -> bo
 
     _LOGGER.debug("Migration successful")
 
-    return True
 
-
-async def async_setup_entry(hass: HomeAssistant, entry: ArveConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ArveConfigEntry) -> None:
     """Set up Arve from a config entry."""
 
     coordinator = ArveCoordinator(hass, entry)
@@ -40,9 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ArveConfigEntry) -> bool
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ArveConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ArveConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

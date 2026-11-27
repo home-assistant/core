@@ -3,24 +3,21 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.exceptions import VehicleOffline
 
 from homeassistant.components.cover import (
     DOMAIN as COVER_DOMAIN,
-    SERVICE_CLOSE_COVER,
-    SERVICE_OPEN_COVER,
-    SERVICE_STOP_COVER,
+    CoverService,
     CoverState,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import assert_entities, setup_platform
 from .const import COMMAND_OK, VEHICLE_DATA_ALT
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -94,8 +91,8 @@ async def test_cover_services(
     ) as call:
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: [entity_id]},
+            CoverService.OPEN,
+            {TargetKey.ENTITY_ID: [entity_id]},
             blocking=True,
         )
         call.assert_called_once()
@@ -106,8 +103,8 @@ async def test_cover_services(
         call.reset_mock()
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_CLOSE_COVER,
-            {ATTR_ENTITY_ID: ["cover.test_windows"]},
+            CoverService.CLOSE,
+            {TargetKey.ENTITY_ID: ["cover.test_windows"]},
             blocking=True,
         )
         call.assert_called_once()
@@ -123,8 +120,8 @@ async def test_cover_services(
     ) as call:
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: [entity_id]},
+            CoverService.OPEN,
+            {TargetKey.ENTITY_ID: [entity_id]},
             blocking=True,
         )
         call.assert_called_once()
@@ -138,8 +135,8 @@ async def test_cover_services(
     ) as call:
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_CLOSE_COVER,
-            {ATTR_ENTITY_ID: [entity_id]},
+            CoverService.CLOSE,
+            {TargetKey.ENTITY_ID: [entity_id]},
             blocking=True,
         )
         call.assert_called_once()
@@ -155,8 +152,8 @@ async def test_cover_services(
     ) as call:
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: [entity_id]},
+            CoverService.OPEN,
+            {TargetKey.ENTITY_ID: [entity_id]},
             blocking=True,
         )
         call.assert_called_once()
@@ -172,8 +169,8 @@ async def test_cover_services(
     ) as call:
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: [entity_id]},
+            CoverService.OPEN,
+            {TargetKey.ENTITY_ID: [entity_id]},
             blocking=True,
         )
         call.assert_called_once()
@@ -184,8 +181,8 @@ async def test_cover_services(
         call.reset_mock()
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_CLOSE_COVER,
-            {ATTR_ENTITY_ID: [entity_id]},
+            CoverService.CLOSE,
+            {TargetKey.ENTITY_ID: [entity_id]},
             blocking=True,
         )
         call.assert_called_once()
@@ -201,8 +198,8 @@ async def test_cover_services(
     ) as call:
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: [entity_id]},
+            CoverService.OPEN,
+            {TargetKey.ENTITY_ID: [entity_id]},
             blocking=True,
         )
         call.assert_called_once()
@@ -213,8 +210,8 @@ async def test_cover_services(
         call.reset_mock()
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_STOP_COVER,
-            {ATTR_ENTITY_ID: [entity_id]},
+            CoverService.STOP,
+            {TargetKey.ENTITY_ID: [entity_id]},
             blocking=True,
         )
         call.assert_called_once()
@@ -225,8 +222,8 @@ async def test_cover_services(
         call.reset_mock()
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_CLOSE_COVER,
-            {ATTR_ENTITY_ID: [entity_id]},
+            CoverService.CLOSE,
+            {TargetKey.ENTITY_ID: [entity_id]},
             blocking=True,
         )
         call.assert_called_once()

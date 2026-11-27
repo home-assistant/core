@@ -1,15 +1,13 @@
 """Text to speech support for OpenAI."""
 
 from collections.abc import Mapping
-import logging
 from typing import TYPE_CHECKING, Any, Literal, override
 
 from openai import OpenAIError
 from propcache.api import cached_property
 
 from homeassistant.components.tts import (
-    ATTR_PREFERRED_FORMAT,
-    ATTR_VOICE,
+    TextToSpeechCommonOption,
     TextToSpeechEntity,
     TtsAudioType,
     Voice,
@@ -26,7 +24,8 @@ from .entity import OpenAIBaseLLMEntity
 if TYPE_CHECKING:
     from . import OpenAIConfigEntry
 
-_LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -48,7 +47,10 @@ async def async_setup_entry(
 class OpenAITTSEntity(TextToSpeechEntity, OpenAIBaseLLMEntity):
     """OpenAI TTS entity."""
 
-    _attr_supported_options = [ATTR_VOICE, ATTR_PREFERRED_FORMAT]
+    _attr_supported_options = [
+        TextToSpeechCommonOption.VOICE,
+        TextToSpeechCommonOption.PREFERRED_FORMAT,
+    ]
     # https://platform.openai.com/docs/guides/text-to-speech#supported-languages
     # The model may also generate the audio in different
     # languages but with lower quality
@@ -155,8 +157,8 @@ class OpenAITTSEntity(TextToSpeechEntity, OpenAIBaseLLMEntity):
     def default_options(self) -> Mapping[str, Any]:
         """Return a mapping with the default options."""
         return {
-            ATTR_VOICE: self._supported_voices[0].voice_id,
-            ATTR_PREFERRED_FORMAT: "mp3",
+            TextToSpeechCommonOption.VOICE: self._supported_voices[0].voice_id,
+            TextToSpeechCommonOption.PREFERRED_FORMAT: "mp3",
         }
 
     @override
@@ -168,13 +170,15 @@ class OpenAITTSEntity(TextToSpeechEntity, OpenAIBaseLLMEntity):
         options = {**self.subentry.data, **options}
         client = self.entry.runtime_data
 
-        response_format = options[ATTR_PREFERRED_FORMAT]
+        response_format = options[TextToSpeechCommonOption.PREFERRED_FORMAT]
         if response_format in ("ogg", "oga"):
             codec: Literal["mp3", "opus", "aac", "flac", "wav", "pcm"] = "opus"
         elif response_format == "raw":
             response_format = codec = "pcm"
         elif response_format not in self._supported_formats:
-            response_format = self.default_options[ATTR_PREFERRED_FORMAT]
+            response_format = self.default_options[
+                TextToSpeechCommonOption.PREFERRED_FORMAT
+            ]
             codec = response_format
         else:
             codec = response_format
@@ -182,7 +186,7 @@ class OpenAITTSEntity(TextToSpeechEntity, OpenAIBaseLLMEntity):
         try:
             async with client.audio.speech.with_streaming_response.create(
                 model=options[CONF_CHAT_MODEL],
-                voice=options[ATTR_VOICE],
+                voice=options[TextToSpeechCommonOption.VOICE],
                 input=message,
                 instructions=str(options.get(CONF_PROMPT)),
                 speed=options.get(CONF_TTS_SPEED, RECOMMENDED_TTS_SPEED),
@@ -192,7 +196,6 @@ class OpenAITTSEntity(TextToSpeechEntity, OpenAIBaseLLMEntity):
                 async for chunk in response.iter_bytes():
                     response_data.extend(chunk)
         except OpenAIError as exc:
-            _LOGGER.exception("Error during TTS")
             raise HomeAssistantError(exc) from exc
 
         return response_format, bytes(response_data)

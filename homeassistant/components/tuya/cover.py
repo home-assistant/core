@@ -8,16 +8,11 @@ from tuya_device_handlers.definition.cover import (
     get_default_definition,
 )
 from tuya_device_handlers.device_wrapper.cover import (
-    ControlBackModePercentageMappingWrapper,
     CoverClosedEnumWrapper,
     CoverInstructionEnumWrapper,
     CoverInstructionSpecialEnumWrapper,
 )
-from tuya_device_handlers.device_wrapper.extended import (
-    DPCodeInvertedBooleanWrapper,
-    DPCodeInvertedPercentageWrapper,
-    DPCodePercentageWrapper,
-)
+from tuya_device_handlers.device_wrapper.extended import DPCodeInvertedBooleanWrapper
 from tuya_device_handlers.helpers.homeassistant import TuyaCoverAction
 from tuya_sharing import CustomerDevice, Manager
 
@@ -35,11 +30,11 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .coordinator import TuyaConfigEntry
-from .entity import TuyaEntity
+from .entity import TuyaEntity, TuyaEntityDescription
 
 
 @dataclass(frozen=True)
-class TuyaCoverEntityDescription(CoverEntityDescription):
+class TuyaCoverEntityDescription(TuyaEntityDescription, CoverEntityDescription):
     """Describe a Tuya cover entity."""
 
     current_state: DPCode | tuple[DPCode, ...] | None = None
@@ -48,7 +43,6 @@ class TuyaCoverEntityDescription(CoverEntityDescription):
     ] = CoverClosedEnumWrapper
     current_position: DPCode | tuple[DPCode, ...] | None = None
     instruction_wrapper: type[CoverInstructionEnumWrapper] = CoverInstructionEnumWrapper
-    position_wrapper: type[DPCodePercentageWrapper] = DPCodeInvertedPercentageWrapper
     set_position: DPCode | None = None
 
 
@@ -127,7 +121,6 @@ COVERS: dict[DeviceCategory, tuple[TuyaCoverEntityDescription, ...]] = {
             key=DPCode.CONTROL,
             translation_key="curtain",
             current_position=DPCode.PERCENT_CONTROL,
-            position_wrapper=ControlBackModePercentageMappingWrapper,
             set_position=DPCode.PERCENT_CONTROL,
             device_class=CoverDeviceClass.CURTAIN,
         ),
@@ -136,7 +129,6 @@ COVERS: dict[DeviceCategory, tuple[TuyaCoverEntityDescription, ...]] = {
             translation_key="indexed_curtain",
             translation_placeholders={"index": "2"},
             current_position=DPCode.PERCENT_CONTROL_2,
-            position_wrapper=ControlBackModePercentageMappingWrapper,
             set_position=DPCode.PERCENT_CONTROL_2,
             device_class=CoverDeviceClass.CURTAIN,
         ),
@@ -179,7 +171,6 @@ async def async_setup_entry(
                             current_state_wrapper=description.current_state_wrapper,
                             instruction_dpcode=description.key,
                             instruction_wrapper=description.instruction_wrapper,
-                            position_wrapper=description.position_wrapper,
                             set_position_dpcode=description.set_position,
                         )
                     )

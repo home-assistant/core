@@ -5,12 +5,14 @@ from unittest.mock import AsyncMock
 from pysmartthings import Attribute, Capability, Command, Status
 from pysmartthings.models import HealthStatus
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
-    ATTR_POSITION,
     DOMAIN as COVER_DOMAIN,
+    CoverService,
+    CoverServiceArgument,
 )
 from homeassistant.components.smartthings.const import MAIN
 from homeassistant.const import (
@@ -18,11 +20,11 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
-    SERVICE_SET_COVER_POSITION,
     STATE_OPEN,
     STATE_OPENING,
     STATE_UNAVAILABLE,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -33,8 +35,6 @@ from . import (
     trigger_health_update,
     trigger_update,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_all_entities(
@@ -93,8 +93,8 @@ async def test_cover_set_position(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: "cover.curtain_1a", ATTR_POSITION: 25},
+        CoverService.SET_POSITION,
+        {TargetKey.ENTITY_ID: "cover.curtain_1a", CoverServiceArgument.POSITION: 25},
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(

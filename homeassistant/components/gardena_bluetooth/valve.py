@@ -9,7 +9,7 @@ from homeassistant.components.valve import (
     ValveEntity,
     ValveEntityFeature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import GardenaBluetoothConfigEntry, GardenaBluetoothCoordinator
@@ -53,10 +53,11 @@ class GardenaBluetoothValve(GardenaBluetoothEntity, ValveEntity):
     ) -> None:
         """Initialize the switch."""
         super().__init__(
-            coordinator, {Valve.state.uuid, Valve.manual_watering_time.uuid}
+            coordinator, {Valve.state.unique_id, Valve.manual_watering_time.unique_id}
         )
         self._attr_unique_id = f"{coordinator.address}-{Valve.state.unique_id}"
 
+    @callback
     @override
     def _handle_coordinator_update(self) -> None:
         self._attr_is_closed = not self.coordinator.get_cached(Valve.state)

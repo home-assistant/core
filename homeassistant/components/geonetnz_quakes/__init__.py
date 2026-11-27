@@ -1,10 +1,9 @@
 """The GeoNet NZ Quakes integration."""
 
-from datetime import timedelta
 import logging
 
 from aio_geojson_geonetnz_quakes import GeonetnzQuakesFeedManager
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
@@ -14,10 +13,11 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     UnitOfLength,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.unit_conversion import DistanceConverter
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
@@ -36,26 +36,28 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Inclusive(CONF_LATITUDE, "coordinates"): cv.latitude,
-                vol.Inclusive(CONF_LONGITUDE, "coordinates"): cv.longitude,
-                vol.Optional(CONF_MMI, default=DEFAULT_MMI): vol.All(
-                    vol.Coerce(int), vol.Range(min=-1, max=8)
+                probatio.Inclusive(CONF_LATITUDE, "coordinates"): cv.latitude,
+                probatio.Inclusive(CONF_LONGITUDE, "coordinates"): cv.longitude,
+                probatio.Optional(CONF_MMI, default=DEFAULT_MMI): probatio.All(
+                    probatio.Coerce(int), probatio.Range(min=-1, max=8)
                 ),
-                vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS): vol.Coerce(float),
-                vol.Optional(
+                probatio.Optional(CONF_RADIUS, default=DEFAULT_RADIUS): probatio.Coerce(
+                    float
+                ),
+                probatio.Optional(
                     CONF_MINIMUM_MAGNITUDE, default=DEFAULT_MINIMUM_MAGNITUDE
                 ): cv.positive_float,
-                vol.Optional(
+                probatio.Optional(
                     CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
                 ): cv.time_period,
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 type GeonetnzQuakesConfigEntry = ConfigEntry[GeonetnzQuakesFeedEntityManager]
@@ -65,12 +67,24 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the GeoNet NZ Quakes component."""
     if DOMAIN not in config:
         return True
-
+    async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2027.4.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "GeoNet NZ Quakes",
+        },
+    )
     conf = config[DOMAIN]
     latitude = conf.get(CONF_LATITUDE, hass.config.latitude)
     longitude = conf.get(CONF_LONGITUDE, hass.config.longitude)
     mmi = conf[CONF_MMI]
-    scan_interval = conf[CONF_SCAN_INTERVAL]
 
     hass.async_create_task(
         hass.config_entries.flow.async_init(
@@ -82,7 +96,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 CONF_RADIUS: conf[CONF_RADIUS],
                 CONF_MINIMUM_MAGNITUDE: conf[CONF_MINIMUM_MAGNITUDE],
                 CONF_MMI: mmi,
-                CONF_SCAN_INTERVAL: scan_interval,
             },
         )
     )
@@ -92,7 +105,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: GeonetnzQuakesConfigEntry
-) -> bool:
+) -> None:
     """Set up the GeoNet NZ Quakes component as config entry."""
     radius = config_entry.data[CONF_RADIUS]
     if hass.config.units is US_CUSTOMARY_SYSTEM:
@@ -104,15 +117,14 @@ async def async_setup_entry(
     config_entry.runtime_data = manager
     _LOGGER.debug("Feed entity manager added for %s", config_entry.entry_id)
     await manager.async_init()
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: GeonetnzQuakesConfigEntry
-) -> bool:
+) -> None:
     """Unload an GeoNet NZ Quakes component config entry."""
     await entry.runtime_data.async_stop()
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 class GeonetnzQuakesFeedEntityManager:
@@ -140,7 +152,6 @@ class GeonetnzQuakesFeedEntityManager:
             status_callback=self._status_update,
         )
         self._config_entry_id = config_entry.entry_id
-        self._scan_interval = timedelta(seconds=config_entry.data[CONF_SCAN_INTERVAL])
         self._track_time_remove_callback = None
         self._status_info = None
         self.listeners = []
@@ -158,7 +169,7 @@ class GeonetnzQuakesFeedEntityManager:
 
         # Trigger updates at regular intervals.
         self._track_time_remove_callback = async_track_time_interval(
-            self._hass, update, self._scan_interval
+            self._hass, update, DEFAULT_SCAN_INTERVAL
         )
 
         _LOGGER.debug("Feed entity manager initialized")

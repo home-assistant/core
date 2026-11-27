@@ -14,15 +14,14 @@ from .helpers.deprecation import (
 )
 from .util.event_type import EventType
 from .util.hass_dict import HassKey
-from .util.signal_type import SignalType
 
 if TYPE_CHECKING:
     from .core import EventStateChangedData, EventStateReportedData
     from .helpers.typing import NoEventData
 
 APPLICATION_NAME: Final = "HomeAssistant"
-MAJOR_VERSION: Final = 2026
-MINOR_VERSION: Final = 8
+MAJOR_VERSION: Final = 2027
+MINOR_VERSION: Final = 1
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -47,6 +46,9 @@ ENTITY_MATCH_ANY: Final = "any"
 
 # If no name is specified
 DEVICE_DEFAULT_NAME: Final = "Unnamed Device"
+
+# Default radius of the Home Zone (in meters)
+DEFAULT_RADIUS: Final = 100
 
 # Max characters for data stored in the recorder (changes to these limits would require
 # a database migration)
@@ -363,8 +365,6 @@ ATTR_FRIENDLY_NAME: Final = "friendly_name"
 # A picture to represent entity
 ATTR_ENTITY_PICTURE: Final = "entity_picture"
 
-ATTR_IDENTIFIERS: Final = "identifiers"
-
 # Icon to use in the frontend
 ATTR_ICON: Final = "icon"
 
@@ -384,17 +384,22 @@ ATTR_LOCATION: Final = "location"
 
 ATTR_MODE: Final = "mode"
 
-ATTR_CONFIGURATION_URL: Final = "configuration_url"
-ATTR_CONNECTIONS: Final = "connections"
-ATTR_DEFAULT_NAME: Final = "default_name"
-ATTR_MANUFACTURER: Final = "manufacturer"
-ATTR_MODEL: Final = "model"
-ATTR_MODEL_ID: Final = "model_id"
-ATTR_SERIAL_NUMBER: Final = "serial_number"
-ATTR_SUGGESTED_AREA: Final = "suggested_area"
-ATTR_SW_VERSION: Final = "sw_version"
-ATTR_HW_VERSION: Final = "hw_version"
-ATTR_VIA_DEVICE: Final = "via_device"
+_DEPRECATED_ATTR_CONFIGURATION_URL = DeprecatedConstant(
+    "configuration_url", None, "2027.12"
+)
+_DEPRECATED_ATTR_CONNECTIONS = DeprecatedConstant("connections", None, "2027.12")
+_DEPRECATED_ATTR_DEFAULT_NAME = DeprecatedConstant("default_name", None, "2027.12")
+_DEPRECATED_ATTR_HW_VERSION = DeprecatedConstant("hw_version", None, "2027.12")
+_DEPRECATED_ATTR_IDENTIFIERS = DeprecatedConstant("identifiers", None, "2027.12")
+_DEPRECATED_ATTR_MANUFACTURER = DeprecatedConstant("manufacturer", None, "2027.12")
+_DEPRECATED_ATTR_MODEL = DeprecatedConstant("model", None, "2027.12")
+_DEPRECATED_ATTR_MODEL_ID = DeprecatedConstant("model_id", None, "2027.12")
+_DEPRECATED_ATTR_SERIAL_NUMBER = DeprecatedConstant("serial_number", None, "2027.12")
+_DEPRECATED_ATTR_SUGGESTED_AREA = DeprecatedConstant("suggested_area", None, "2027.12")
+_DEPRECATED_ATTR_SW_VERSION = DeprecatedConstant("sw_version", None, "2027.12")
+_DEPRECATED_ATTR_VIA_DEVICE = DeprecatedConstant(
+    "via_device", "via_device_id", "2027.8"
+)
 
 ATTR_BATTERY_CHARGING: Final = "battery_charging"
 ATTR_BATTERY_LEVEL: Final = "battery_level"
@@ -456,6 +461,24 @@ ATTR_TEMPERATURE: Final = "temperature"
 ATTR_PERSONS: Final = "persons"
 
 
+class CommonServiceArgument(StrEnum):
+    """Action fields shared by many integrations; target keys use TargetKey."""
+
+    CONFIG_ENTRY_ID = "config_entry_id"
+    DEVICE_ID = "device_id"
+    ENTITY_ID = "entity_id"
+
+
+class TargetKey(StrEnum):
+    """Keys that select the entities of an action, condition or trigger target."""
+
+    ENTITY_ID = "entity_id"
+    DEVICE_ID = "device_id"
+    AREA_ID = "area_id"
+    FLOOR_ID = "floor_id"
+    LABEL_ID = "label_id"
+
+
 class EntityCapabilityAttribute(StrEnum):
     """Capability attributes shared by all entities."""
 
@@ -471,6 +494,8 @@ class EntityStateAttribute(StrEnum):
     ENTITY_PICTURE = "entity_picture"
     FRIENDLY_NAME = "friendly_name"
     ICON = "icon"
+    LATITUDE = "latitude"
+    LONGITUDE = "longitude"
     RESTORED = "restored"
     SUPPORTED_FEATURES = "supported_features"
     UNIT_OF_MEASUREMENT = "unit_of_measurement"
@@ -526,6 +551,7 @@ class UnitOfEnergy(StrEnum):
     KILO_CALORIE = "kcal"
     MEGA_CALORIE = "Mcal"
     GIGA_CALORIE = "Gcal"
+    THERM = "thm"
 
 
 # Reactive energy units
@@ -640,6 +666,7 @@ class UnitOfPressure(StrEnum):
     INHG = "inHg"
     INH2O = "inH₂O"
     PSI = "psi"
+    ATM = "atm"
 
 
 # Sound pressure units
@@ -677,6 +704,7 @@ class UnitOfVolumeFlowRate(StrEnum):
     CUBIC_METERS_PER_HOUR = "m³/h"
     CUBIC_METERS_PER_MINUTE = "m³/min"
     CUBIC_METERS_PER_SECOND = "m³/s"
+    CUBIC_FEET_PER_HOUR = "ft³/h"
     CUBIC_FEET_PER_MINUTE = "ft³/min"
     LITERS_PER_HOUR = "L/h"
     LITERS_PER_MINUTE = "L/min"
@@ -984,6 +1012,7 @@ HTTP_BASIC_AUTHENTICATION: Final = "basic"
 HTTP_BEARER_AUTHENTICATION: Final = "bearer_token"
 HTTP_DIGEST_AUTHENTICATION: Final = "digest"
 
+HTTP_HEADER_HA_DEVICE_ID: Final = "Home-Assistant-Device-Id"
 HTTP_HEADER_X_REQUESTED_WITH: Final = "X-Requested-With"
 
 CONTENT_TYPE_JSON: Final = "application/json"
@@ -1039,10 +1068,6 @@ CAST_APP_ID_HOMEASSISTANT_LOVELACE: Final = "A078F6B0"
 
 # User used by Supervisor
 HASSIO_USER_NAME = "Supervisor"
-
-SIGNAL_BOOTSTRAP_INTEGRATIONS: SignalType[dict[str, float]] = SignalType(
-    "bootstrap_integrations"
-)
 
 
 # hass.data keys for logging information.

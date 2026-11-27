@@ -5,10 +5,7 @@
       "addon_info_failed": "Failed get info for the {addon} app.",
       "addon_install_failed": "Failed to install the {addon} app.",
       "addon_start_failed": "Failed to start the {addon} app.",
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     },
     "error": {
       "bad_birth": "Invalid birth topic",
@@ -18,10 +15,19 @@
       "bad_discovery_prefix": "Invalid discovery prefix",
       "bad_will": "Invalid will topic",
       "bad_ws_headers": "Supply valid HTTP headers as a JSON object",
+      "ca_certificate_missing": "Upload a custom CA certificate or enter its file path, or select another broker certificate validation option",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "cannot_load_certificates": "The certificates cannot be loaded. Check that the certificate files exist and are readable, and that the private key matches the client certificate",
+      "cannot_read_certificate_file": "The custom CA certificate file cannot be read, check the file path",
+      "cannot_read_client_cert_file": "The client certificate file cannot be read, check the file path",
+      "cannot_read_client_key_file": "The private key file cannot be read, check the file path",
+      "client_certificate_missing": "Upload a client certificate and private key or enter their file paths, or turn off using a client certificate",
       "client_key_error": "Invalid private key file or invalid password supplied",
+      "client_key_password_with_file": "A private key password can only be used with an uploaded private key file. Enter the path of an unencrypted private key file, or upload the private key file instead",
+      "file_path_not_absolute": "Enter an absolute file path, for example `/ssl/mqtt/client.crt`",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "invalid_inclusion": "The client certificate and private key must be configured together"
+      "invalid_inclusion": "The client certificate and private key must be configured together, both uploaded or both as a file path",
+      "upload_and_file_path": "Upload a certificate or private key file, or enter its file path, but not both"
     },
     "step": {
       "broker": {
@@ -44,9 +50,12 @@
           "other_settings": {
             "data": {
               "certificate": "Upload custom CA certificate file",
+              "certificate_file": "Custom CA certificate file path",
               "client_cert": "Upload client certificate file",
+              "client_cert_file": "Client certificate file path",
               "client_id": "Client ID (leave empty for a randomly generated one)",
               "client_key": "Upload private key file",
+              "client_key_file": "Private key file path",
               "client_key_password": "[%key:common::config_flow::data::password%]",
               "keepalive": "The time between sending keep alive messages",
               "set_ca_cert": "Broker certificate validation",
@@ -58,13 +67,16 @@
             },
             "data_description": {
               "certificate": "The custom CA certificate file to validate your MQTT broker's certificate.",
+              "certificate_file": "The path to a PEM encoded custom CA certificate file, for example `/ssl/mqtt/ca.crt`. Leave empty when uploading a custom CA certificate or using automatic broker validation. The file is checked once a day.",
               "client_cert": "The client certificate to authenticate against your MQTT broker.",
+              "client_cert_file": "The path to a PEM encoded client certificate file, for example `/ssl/mqtt/client.crt`. Leave empty when uploading a client certificate. The file is checked once a day, and you are warned before the certificate expires.",
               "client_id": "The unique ID to identify the Home Assistant MQTT API as MQTT client. It is recommended to leave this option blank.",
               "client_key": "The private key file that belongs to your client certificate.",
+              "client_key_file": "The path to the PEM encoded unencrypted private key file that belongs to your client certificate, for example `/ssl/mqtt/client.key`. Leave empty when uploading a private key file. The file is checked once a day.",
               "client_key_password": "The password for the private key file (if set).",
               "keepalive": "A value less than 90 seconds is advised. Defaults to 60 seconds.",
-              "set_ca_cert": "When already set to **Custom**, a custom CA validation certificate is configured. Select **Auto** for automatic CA validation, or upload a custom CA certificate, to allow validating your MQTT broker's certificate.",
-              "set_client_cert": "When already selected, client certificate authentication is enabled. Upload a client certificate and key to enable.",
+              "set_ca_cert": "When already set to **Custom**, a custom CA validation certificate is configured. Select **Auto** for automatic CA validation, or upload a custom CA certificate or enter its file path, to allow validating your MQTT broker's certificate.",
+              "set_client_cert": "When already selected, client certificate authentication is enabled. Upload a client certificate and key, or enter their file paths, to enable.",
               "tls_insecure": "Option to ignore validation of your MQTT broker's certificate.",
               "transport": "The transport to be used for the connection to your MQTT broker.",
               "ws_headers": "The WebSocket headers to pass through the WebSocket-based connection to your MQTT broker.",
@@ -107,9 +119,6 @@
   },
   "config_subentries": {
     "device": {
-      "abort": {
-        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
-      },
       "create_entry": {
         "default": "MQTT device with {platform} entity \"{entity}\" was set up successfully.\n\nNote that you can reconfigure the MQTT device at any time, e.g. to add more entities."
       },
@@ -274,7 +283,7 @@
             "climate_feature_target_humidity": "The climate supports setting the target humidity.",
             "climate_feature_target_temperature": "The climate supports setting the target temperature.",
             "device_class": "The device class of the {platform} entity. [Learn more.]({url}#device_class)",
-            "entity_category": "Allows marking an entity as device configuration or diagnostics. An entity with a category will not be exposed to cloud, Alexa, or Google Assistant components, nor included in indirect action calls to devices or areas. Sensor entities cannot be assigned a device configuration class. [Learn more.]({registry_properties_url})",
+            "entity_category": "Allows marking an entity as device configuration or diagnostics. An entity with a category will not be exposed to cloud, Alexa, or Google Home components, nor included in indirect action calls to devices or areas. Sensor entities cannot be assigned a device configuration class. [Learn more.]({registry_properties_url})",
             "fan_feature_direction": "The fan supports direction.",
             "fan_feature_oscillation": "The fan supports oscillation.",
             "fan_feature_preset_modes": "The fan supports preset modes.",
@@ -473,7 +482,7 @@
               },
               "data_description": {
                 "action_template": "A [template]({value_templating_url}) to render the value received on the action topic with.",
-                "action_topic": "The MQTT topic to subscribe for changes of the current action. If this is set, the climate graph uses the value received as data source. A \"None\" payload resets the current action state. An empty payload is ignored. Valid action values are: \"off\", \"heating\", \"cooling\", \"drying\", \"idle\" and \"fan\".  [Learn more.]({url}#action_topic)"
+                "action_topic": "The MQTT topic to subscribe for changes of the current action. If this is set, the climate graph uses the value received as data source. A \"None\" payload resets the current action state. An empty payload is ignored. Valid action values are: \"off\", \"heating\", \"cooling\", \"drying\", \"idle\" and \"fan\". [Learn more.]({url}#action_topic)"
               },
               "name": "Current action settings"
             },
@@ -928,7 +937,7 @@
                 "command_off_template": "Command \"off\" template"
               },
               "data_description": {
-                "command_off_template": "The [template]({command_templating_url}) for \"off\" state changes. By default the \"[Command template]({url}#command_template)\" will be used.  [Learn more.]({url}#command_off_template)"
+                "command_off_template": "The [template]({command_templating_url}) for \"off\" state changes. By default the \"[Command template]({url}#command_template)\" will be used. [Learn more.]({url}#command_off_template)"
               },
               "name": "Other siren settings"
             },
@@ -1098,6 +1107,9 @@
     "addon_start_failed": {
       "message": "Failed to correctly start {addon} app."
     },
+    "cannot_load_certificates": {
+      "message": "Unable to load the certificates to connect to MQTT broker {broker}. Check that the certificate files exist and are readable, and that the private key matches the client certificate."
+    },
     "command_template_error": {
       "message": "Parsing template `{command_template}` for entity `{entity_id}` failed with error: {error}."
     },
@@ -1136,8 +1148,51 @@
     }
   },
   "issues": {
+    "ca_certificate_file_invalid": {
+      "description": "The client certificate that is loaded from `{client_cert_file}` to connect to MQTT broker {broker} expires on {expiry}. The installed CA certificate file `{ca_cert_file}` cannot be read, or does not contain a valid PEM encoded CA certificate. MQTT keeps using the certificates that were loaded, but might not start correctly after a restart. Install a valid CA certificate in `{ca_cert_file}`. The files are checked once a day. To check them right away after fixing them, reload the MQTT integration.",
+      "title": "Invalid MQTT CA certificate file installed"
+    },
+    "client_certificate_expired": {
+      "description": "The client certificate that is used to connect to MQTT broker {broker} expired on {expiry}. Home Assistant cannot connect to your MQTT broker again with this certificate. Replace the client certificate and private key files with renewed ones, or upload them by reconfiguring the MQTT integration. When files are replaced, reload the MQTT integration to use the renewed certificate.",
+      "title": "MQTT client certificate has expired"
+    },
+    "client_certificate_expiring": {
+      "description": "The client certificate that is used to connect to MQTT broker {broker} expires on {expiry}. Upload a renewed client certificate and private key by reconfiguring the MQTT integration, to make sure Home Assistant can keep connecting to your MQTT broker.",
+      "title": "MQTT client certificate needs renewal"
+    },
+    "client_certificate_file_expiring": {
+      "description": "The client certificate that is loaded from `{client_cert_file}` to connect to MQTT broker {broker} expires on {expiry}, but no renewed certificate was found in this file. Replace the client certificate and private key files with renewed ones, to make sure Home Assistant can keep connecting to your MQTT broker. The files are checked once a day, and when a renewed certificate is found, you will be offered to reload MQTT. You can also reload the MQTT integration right after replacing the files.",
+      "title": "[%key:component::mqtt::issues::client_certificate_expiring::title%]"
+    },
+    "client_certificate_file_invalid": {
+      "description": "The client certificate that is loaded from `{client_cert_file}` to connect to MQTT broker {broker} expires on {expiry}. The installed client certificate file `{client_cert_file}` cannot be read, or does not contain a valid PEM encoded certificate. MQTT keeps using the certificate that was loaded, but might not start correctly after a restart. Install a valid renewed client certificate in `{client_cert_file}`. The files are checked once a day. To check them right away after fixing them, reload the MQTT integration.",
+      "title": "Invalid MQTT client certificate file installed"
+    },
+    "client_certificate_key_mismatch": {
+      "description": "The client certificate that is loaded from `{client_cert_file}` to connect to MQTT broker {broker} expires on {expiry}. The installed client certificate in `{client_cert_file}` does not belong to the installed private key in `{client_key_file}`. MQTT keeps using the certificate that was loaded, but might not start correctly after a restart. Install the private key that belongs to the client certificate in `{client_key_file}`. The files are checked once a day. To check them right away after fixing them, reload the MQTT integration.",
+      "title": "Installed MQTT client certificate and private key do not match"
+    },
+    "client_certificate_renewed": {
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "The client certificate that is used to connect to MQTT broker {broker} expires on {expiry}, but a renewed certificate is available in `{client_cert_file}`. Select **Submit** to reload MQTT and use the renewed certificate.",
+            "title": "[%key:component::mqtt::issues::client_certificate_renewed::title%]"
+          }
+        }
+      },
+      "title": "Renewed MQTT client certificate available"
+    },
+    "client_key_file_invalid": {
+      "description": "The client certificate that is loaded from `{client_cert_file}` to connect to MQTT broker {broker} expires on {expiry}. The installed private key file `{client_key_file}` cannot be read, or does not contain a valid unencrypted PEM encoded private key. MQTT keeps using the certificate that was loaded, but might not start correctly after a restart. Install a valid private key in `{client_key_file}`. The files are checked once a day. To check them right away after fixing them, reload the MQTT integration.",
+      "title": "Invalid MQTT private key file installed"
+    },
+    "deprecated_tilt_values": {
+      "description": "The manually configured MQTT cover `{entity_id}` uses the `tilt_opened_value` or `tilt_closed_value` option. These options are deprecated and will stop working in Home Assistant {breaks_in_ha_version}.\n\nDescribe the slats with `tilt_start_angle` and `tilt_end_angle`, the angles of the slats at `tilt_min` and `tilt_max`, from -90 to 90 degrees. If the angles are not known, set `open_tilt_position` and `closed_tilt_positions` as a percentage instead. Then remove `tilt_opened_value` and `tilt_closed_value` from the YAML configuration and [reload](/config/tools/yaml) the manually configured MQTT items or restart Home Assistant to fix this issue.",
+      "title": "MQTT cover uses deprecated tilt options"
+    },
     "invalid_platform_config": {
-      "description": "Home Assistant detected an invalid config for a manually configured item.\n\nPlatform domain: **{domain}**\nConfiguration file: **{config_file}**\nNear line: **{line}**\nConfiguration found:\n```yaml\n{config}\n```\nError: **{error}**.\n\nMake sure the configuration is valid and [reload](/config/developer-tools/yaml) the manually configured MQTT items or restart Home Assistant to fix this issue.",
+      "description": "Home Assistant detected an invalid config for a manually configured item.\n\nPlatform domain: **{domain}**\nConfiguration file: **{config_file}**\nNear line: **{line}**\nConfiguration found:\n```yaml\n{config}\n```\nError: **{error}**.\n\nMake sure the configuration is valid and [reload](/config/tools/yaml) the manually configured MQTT items or restart Home Assistant to fix this issue.",
       "title": "Invalid config found for MQTT {domain} item"
     },
     "protocol_5_migration": {
@@ -1250,135 +1305,6 @@
         "off": "[%key:common::state::off%]"
       }
     },
-    "device_class_binary_sensor": {
-      "options": {
-        "battery": "[%key:component::binary_sensor::entity_component::battery::name%]",
-        "battery_charging": "[%key:component::binary_sensor::entity_component::battery_charging::name%]",
-        "carbon_monoxide": "[%key:component::binary_sensor::entity_component::carbon_monoxide::name%]",
-        "cold": "[%key:component::binary_sensor::entity_component::cold::name%]",
-        "connectivity": "[%key:component::binary_sensor::entity_component::connectivity::name%]",
-        "door": "[%key:component::binary_sensor::entity_component::door::name%]",
-        "garage_door": "[%key:component::binary_sensor::entity_component::garage_door::name%]",
-        "gas": "[%key:component::binary_sensor::entity_component::gas::name%]",
-        "heat": "[%key:component::binary_sensor::entity_component::heat::name%]",
-        "light": "[%key:component::binary_sensor::entity_component::light::name%]",
-        "lock": "[%key:component::binary_sensor::entity_component::lock::name%]",
-        "moisture": "[%key:component::binary_sensor::entity_component::moisture::name%]",
-        "motion": "[%key:component::binary_sensor::entity_component::motion::name%]",
-        "moving": "[%key:component::binary_sensor::entity_component::moving::name%]",
-        "occupancy": "[%key:component::binary_sensor::entity_component::occupancy::name%]",
-        "opening": "[%key:component::binary_sensor::entity_component::opening::name%]",
-        "plug": "[%key:component::binary_sensor::entity_component::plug::name%]",
-        "power": "[%key:component::binary_sensor::entity_component::power::name%]",
-        "presence": "[%key:component::binary_sensor::entity_component::presence::name%]",
-        "problem": "[%key:component::binary_sensor::entity_component::problem::name%]",
-        "running": "[%key:component::binary_sensor::entity_component::running::name%]",
-        "safety": "[%key:component::binary_sensor::entity_component::safety::name%]",
-        "smoke": "[%key:component::binary_sensor::entity_component::smoke::name%]",
-        "sound": "[%key:component::binary_sensor::entity_component::sound::name%]",
-        "tamper": "[%key:component::binary_sensor::entity_component::tamper::name%]",
-        "update": "[%key:component::binary_sensor::entity_component::update::name%]",
-        "vibration": "[%key:component::binary_sensor::entity_component::vibration::name%]",
-        "window": "[%key:component::binary_sensor::entity_component::window::name%]"
-      }
-    },
-    "device_class_button": {
-      "options": {
-        "identify": "[%key:component::button::entity_component::identify::name%]",
-        "restart": "[%key:common::action::restart%]",
-        "update": "[%key:component::button::entity_component::update::name%]"
-      }
-    },
-    "device_class_cover": {
-      "options": {
-        "awning": "[%key:component::cover::entity_component::awning::name%]",
-        "blind": "[%key:component::cover::entity_component::blind::name%]",
-        "curtain": "[%key:component::cover::entity_component::curtain::name%]",
-        "damper": "[%key:component::cover::entity_component::damper::name%]",
-        "door": "[%key:component::cover::entity_component::door::name%]",
-        "garage": "[%key:component::cover::entity_component::garage::name%]",
-        "gate": "[%key:component::cover::entity_component::gate::name%]",
-        "shade": "[%key:component::cover::entity_component::shade::name%]",
-        "shutter": "[%key:component::cover::entity_component::shutter::name%]",
-        "window": "[%key:component::cover::entity_component::window::name%]"
-      }
-    },
-    "device_class_sensor": {
-      "options": {
-        "absolute_humidity": "[%key:component::sensor::entity_component::absolute_humidity::name%]",
-        "apparent_power": "[%key:component::sensor::entity_component::apparent_power::name%]",
-        "aqi": "[%key:component::sensor::entity_component::aqi::name%]",
-        "area": "[%key:component::sensor::entity_component::area::name%]",
-        "atmospheric_pressure": "[%key:component::sensor::entity_component::atmospheric_pressure::name%]",
-        "battery": "[%key:component::sensor::entity_component::battery::name%]",
-        "blood_glucose_concentration": "[%key:component::sensor::entity_component::blood_glucose_concentration::name%]",
-        "carbon_dioxide": "[%key:component::sensor::entity_component::carbon_dioxide::name%]",
-        "carbon_monoxide": "[%key:component::sensor::entity_component::carbon_monoxide::name%]",
-        "conductivity": "[%key:component::sensor::entity_component::conductivity::name%]",
-        "current": "[%key:component::sensor::entity_component::current::name%]",
-        "data_rate": "[%key:component::sensor::entity_component::data_rate::name%]",
-        "data_size": "[%key:component::sensor::entity_component::data_size::name%]",
-        "date": "[%key:component::sensor::entity_component::date::name%]",
-        "distance": "[%key:component::sensor::entity_component::distance::name%]",
-        "duration": "[%key:component::sensor::entity_component::duration::name%]",
-        "energy": "[%key:component::sensor::entity_component::energy::name%]",
-        "energy_distance": "[%key:component::sensor::entity_component::energy_distance::name%]",
-        "energy_storage": "[%key:component::sensor::entity_component::energy_storage::name%]",
-        "enum": "Enumeration",
-        "frequency": "[%key:component::sensor::entity_component::frequency::name%]",
-        "gas": "[%key:component::sensor::entity_component::gas::name%]",
-        "humidity": "[%key:component::sensor::entity_component::humidity::name%]",
-        "illuminance": "[%key:component::sensor::entity_component::illuminance::name%]",
-        "irradiance": "[%key:component::sensor::entity_component::irradiance::name%]",
-        "moisture": "[%key:component::sensor::entity_component::moisture::name%]",
-        "monetary": "[%key:component::sensor::entity_component::monetary::name%]",
-        "nitrogen_dioxide": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]",
-        "nitrogen_monoxide": "[%key:component::sensor::entity_component::nitrogen_monoxide::name%]",
-        "nitrous_oxide": "[%key:component::sensor::entity_component::nitrous_oxide::name%]",
-        "ozone": "[%key:component::sensor::entity_component::ozone::name%]",
-        "ph": "[%key:component::sensor::entity_component::ph::name%]",
-        "pm1": "[%key:component::sensor::entity_component::pm1::name%]",
-        "pm10": "[%key:component::sensor::entity_component::pm10::name%]",
-        "pm25": "[%key:component::sensor::entity_component::pm25::name%]",
-        "pm4": "[%key:component::sensor::entity_component::pm4::name%]",
-        "power": "[%key:component::sensor::entity_component::power::name%]",
-        "power_factor": "[%key:component::sensor::entity_component::power_factor::name%]",
-        "precipitation": "[%key:component::sensor::entity_component::precipitation::name%]",
-        "precipitation_intensity": "[%key:component::sensor::entity_component::precipitation_intensity::name%]",
-        "pressure": "[%key:component::sensor::entity_component::pressure::name%]",
-        "reactive_energy": "[%key:component::sensor::entity_component::reactive_energy::name%]",
-        "reactive_power": "[%key:component::sensor::entity_component::reactive_power::name%]",
-        "signal_strength": "[%key:component::sensor::entity_component::signal_strength::name%]",
-        "sound_pressure": "[%key:component::sensor::entity_component::sound_pressure::name%]",
-        "speed": "[%key:component::sensor::entity_component::speed::name%]",
-        "sulphur_dioxide": "[%key:component::sensor::entity_component::sulphur_dioxide::name%]",
-        "temperature": "[%key:component::sensor::entity_component::temperature::name%]",
-        "temperature_delta": "[%key:component::sensor::entity_component::temperature_delta::name%]",
-        "timestamp": "[%key:component::sensor::entity_component::timestamp::name%]",
-        "volatile_organic_compounds": "[%key:component::sensor::entity_component::volatile_organic_compounds::name%]",
-        "volatile_organic_compounds_parts": "[%key:component::sensor::entity_component::volatile_organic_compounds_parts::name%]",
-        "voltage": "[%key:component::sensor::entity_component::voltage::name%]",
-        "volume": "[%key:component::sensor::entity_component::volume::name%]",
-        "volume_flow_rate": "[%key:component::sensor::entity_component::volume_flow_rate::name%]",
-        "volume_storage": "[%key:component::sensor::entity_component::volume_storage::name%]",
-        "water": "[%key:component::sensor::entity_component::water::name%]",
-        "weight": "[%key:component::sensor::entity_component::weight::name%]",
-        "wind_direction": "[%key:component::sensor::entity_component::wind_direction::name%]",
-        "wind_speed": "[%key:component::sensor::entity_component::wind_speed::name%]"
-      }
-    },
-    "device_class_switch": {
-      "options": {
-        "outlet": "[%key:component::switch::entity_component::outlet::name%]",
-        "switch": "[%key:component::switch::title%]"
-      }
-    },
-    "device_class_valve": {
-      "options": {
-        "gas": "[%key:component::valve::entity_component::gas::name%]",
-        "water": "[%key:component::valve::entity_component::water::name%]"
-      }
-    },
     "entity_category": {
       "options": {
         "config": "Config",
@@ -1448,14 +1374,6 @@
         "auto": "[%key:common::state::auto%]",
         "custom": "Custom",
         "off": "[%key:common::state::off%]"
-      }
-    },
-    "state_class": {
-      "options": {
-        "measurement": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::measurement%]",
-        "measurement_angle": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::measurement_angle%]",
-        "total": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::total%]",
-        "total_increasing": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::total_increasing%]"
       }
     },
     "supported_color_modes": {

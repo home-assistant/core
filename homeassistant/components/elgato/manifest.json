@@ -1,8 +1,10 @@
 {
   "domain": "elgato",
   "name": "Elgato Light",
+  "categories": ["lighting.bulbs_lamps"],
   "codeowners": ["@frenck"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dhcp": [
     {
       "registered_devices": true
@@ -12,6 +14,6 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "quality_scale": "platinum",
-  "requirements": ["elgato==5.1.2"],
+  "requirements": ["elgato==6.1.1"],
   "zeroconf": ["_elg._tcp.local."]
 }

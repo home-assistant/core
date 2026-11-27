@@ -1,8 +1,9 @@
 """Test the Home Assistant Yellow integration."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, MockModule, mock_integration
 
 from homeassistant.components import zha
 from homeassistant.components.hassio import DOMAIN as HASSIO_DOMAIN, HassioNotReadyError
@@ -24,7 +25,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, MockModule, mock_integration
 from tests.components.usb import patch_scanned_serial_ports
 
 
@@ -262,6 +262,58 @@ async def test_setup_entry_wrong_board(hass: HomeAssistant) -> None:
     assert len(hass.config_entries.async_entries()) == 0
 
 
+@pytest.mark.parametrize(
+    ("hassio", "board", "reason"),
+    [
+        pytest.param(
+            False,
+            None,
+            "Home Assistant is not running on Home Assistant OS, the Home Assistant"
+            " Yellow entry will be removed",
+            id="no_hassio",
+        ),
+        pytest.param(
+            True,
+            "generic-x86-64",
+            "Home Assistant is not running on a Home Assistant Yellow"
+            " (generic-x86-64), the Home Assistant Yellow entry will be removed",
+            id="wrong_board",
+        ),
+    ],
+)
+async def test_setup_entry_error_reason(
+    hass: HomeAssistant, hassio: bool, board: str | None, reason: str
+) -> None:
+    """Test the setup error reason when the entry is about to be removed."""
+    config_entry = MockConfigEntry(
+        data={"firmware": ApplicationType.EZSP},
+        domain=DOMAIN,
+        options={},
+        title="Home Assistant Yellow",
+        version=1,
+        minor_version=2,
+    )
+    config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.homeassistant_yellow.is_hassio",
+            return_value=hassio,
+        ),
+        patch(
+            "homeassistant.components.homeassistant_yellow.get_os_info",
+            return_value={"board": board},
+        ),
+        patch.object(hass.config_entries, "async_remove", AsyncMock()) as mock_remove,
+    ):
+        assert not await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert config_entry.reason == reason
+    mock_remove.assert_awaited_once_with(config_entry.entry_id)
+
+
 async def test_setup_entry_wait_hassio(hass: HomeAssistant) -> None:
     """Test setup of a config entry when hassio has not fetched os_info."""
     mock_integration(hass, MockModule("hassio"))
@@ -416,7 +468,18 @@ async def test_multi_pan_migration_issue_created_for_addon(
     assert issue.translation_key == ISSUE_MULTI_PAN_MIGRATION
     assert issue.translation_placeholders == {"hardware_name": "Home Assistant Yellow"}
     assert issue.data == {"entry_id": config_entry.entry_id}
+    assert issue.config_entry_id == config_entry.entry_id
     assert issue.is_fixable
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert (
+        issue_registry.async_get_issue(
+            domain=DOMAIN,
+            issue_id=f"{ISSUE_MULTI_PAN_MIGRATION}_{config_entry.entry_id}",
+        )
+        is None
+    )
 
 
 async def test_multi_pan_migration_issue_deleted_for_ezsp(

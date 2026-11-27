@@ -5,16 +5,14 @@ import logging
 import math
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import fan
 from homeassistant.components.fan import (
-    ATTR_DIRECTION,
-    ATTR_OSCILLATING,
-    ATTR_PERCENTAGE,
-    ATTR_PRESET_MODE,
     FanEntity,
+    FanEntityCapabilityAttribute,
     FanEntityFeature,
+    FanEntityStateAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -22,7 +20,6 @@ from homeassistant.const import (
     CONF_OPTIMISTIC,
     CONF_PAYLOAD_OFF,
     CONF_PAYLOAD_ON,
-    CONF_STATE,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
@@ -91,12 +88,12 @@ DEFAULT_NAME = "MQTT Fan"
 
 MQTT_FAN_ATTRIBUTES_BLOCKED = frozenset(
     {
-        fan.ATTR_DIRECTION,
-        fan.ATTR_OSCILLATING,
-        fan.ATTR_PERCENTAGE_STEP,
-        fan.ATTR_PERCENTAGE,
-        fan.ATTR_PRESET_MODE,
-        fan.ATTR_PRESET_MODES,
+        FanEntityStateAttribute.DIRECTION,
+        FanEntityStateAttribute.OSCILLATING,
+        FanEntityStateAttribute.PERCENTAGE_STEP,
+        FanEntityStateAttribute.PERCENTAGE,
+        FanEntityStateAttribute.PRESET_MODE,
+        FanEntityCapabilityAttribute.PRESET_MODES,
     }
 )
 
@@ -106,80 +103,98 @@ _LOGGER = logging.getLogger(__name__)
 def valid_speed_range_configuration(config: ConfigType) -> ConfigType:
     """Validate that the fan speed_range configuration is valid, throws if it isn't."""
     if config[CONF_SPEED_RANGE_MIN] == 0:
-        raise vol.Invalid("speed_range_min must be > 0")
+        raise probatio.Invalid("speed_range_min must be > 0")
     if config[CONF_SPEED_RANGE_MIN] >= config[CONF_SPEED_RANGE_MAX]:
-        raise vol.Invalid("speed_range_max must be > speed_range_min")
+        raise probatio.Invalid("speed_range_max must be > speed_range_min")
     return config
 
 
 def valid_preset_mode_configuration(config: ConfigType) -> ConfigType:
     """Validate that the preset mode reset payload is not one of the preset modes."""
     if config[CONF_PAYLOAD_RESET_PRESET_MODE] in config[CONF_PRESET_MODES_LIST]:
-        raise vol.Invalid("preset_modes must not contain payload_reset_preset_mode")
+        raise probatio.Invalid(
+            "preset_modes must not contain payload_reset_preset_mode"
+        )
     return config
 
 
 _PLATFORM_SCHEMA_BASE = MQTT_RW_SCHEMA.extend(
     {
-        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
-        vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_DIRECTION_COMMAND_TOPIC): valid_publish_topic,
-        vol.Optional(CONF_DIRECTION_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_DIRECTION_STATE_TOPIC): valid_subscribe_topic,
-        vol.Optional(CONF_DIRECTION_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_OSCILLATION_COMMAND_TOPIC): valid_publish_topic,
-        vol.Optional(CONF_OSCILLATION_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_OSCILLATION_STATE_TOPIC): valid_subscribe_topic,
-        vol.Optional(CONF_OSCILLATION_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_PERCENTAGE_COMMAND_TOPIC): valid_publish_topic,
-        vol.Optional(CONF_PERCENTAGE_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_PERCENTAGE_STATE_TOPIC): valid_subscribe_topic,
-        vol.Optional(CONF_PERCENTAGE_VALUE_TEMPLATE): cv.template,
+        probatio.Optional(CONF_NAME): probatio.Any(cv.string, None),
+        probatio.Optional(CONF_COMMAND_TEMPLATE): cv.template,
+        probatio.Optional(CONF_DIRECTION_COMMAND_TOPIC): valid_publish_topic,
+        probatio.Optional(CONF_DIRECTION_COMMAND_TEMPLATE): cv.template,
+        probatio.Optional(CONF_DIRECTION_STATE_TOPIC): valid_subscribe_topic,
+        probatio.Optional(CONF_DIRECTION_VALUE_TEMPLATE): cv.template,
+        probatio.Optional(CONF_OSCILLATION_COMMAND_TOPIC): valid_publish_topic,
+        probatio.Optional(CONF_OSCILLATION_COMMAND_TEMPLATE): cv.template,
+        probatio.Optional(CONF_OSCILLATION_STATE_TOPIC): valid_subscribe_topic,
+        probatio.Optional(CONF_OSCILLATION_VALUE_TEMPLATE): cv.template,
+        probatio.Optional(CONF_PERCENTAGE_COMMAND_TOPIC): valid_publish_topic,
+        probatio.Optional(CONF_PERCENTAGE_COMMAND_TEMPLATE): cv.template,
+        probatio.Optional(CONF_PERCENTAGE_STATE_TOPIC): valid_subscribe_topic,
+        probatio.Optional(CONF_PERCENTAGE_VALUE_TEMPLATE): cv.template,
         # CONF_PRESET_MODE_COMMAND_TOPIC and CONF_PRESET_MODES_LIST
         # must be used together
-        vol.Inclusive(
+        probatio.Inclusive(
             CONF_PRESET_MODE_COMMAND_TOPIC, "preset_modes"
         ): valid_publish_topic,
-        vol.Inclusive(
+        probatio.Inclusive(
             CONF_PRESET_MODES_LIST, "preset_modes", default=[]
-        ): cv.ensure_list,
-        vol.Optional(CONF_PRESET_MODE_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_PRESET_MODE_STATE_TOPIC): valid_subscribe_topic,
-        vol.Optional(CONF_PRESET_MODE_VALUE_TEMPLATE): cv.template,
-        vol.Optional(
+        ): probatio.EnsureList(),
+        probatio.Optional(CONF_PRESET_MODE_COMMAND_TEMPLATE): cv.template,
+        probatio.Optional(CONF_PRESET_MODE_STATE_TOPIC): valid_subscribe_topic,
+        probatio.Optional(CONF_PRESET_MODE_VALUE_TEMPLATE): cv.template,
+        probatio.Optional(
             CONF_SPEED_RANGE_MIN, default=DEFAULT_SPEED_RANGE_MIN
         ): cv.positive_int,
-        vol.Optional(
+        probatio.Optional(
             CONF_SPEED_RANGE_MAX, default=DEFAULT_SPEED_RANGE_MAX
         ): cv.positive_int,
-        vol.Optional(
+        probatio.Optional(
             CONF_PAYLOAD_RESET_PERCENTAGE, default=DEFAULT_PAYLOAD_RESET
         ): cv.string,
-        vol.Optional(
+        probatio.Optional(
             CONF_PAYLOAD_RESET_PRESET_MODE, default=DEFAULT_PAYLOAD_RESET
         ): cv.string,
-        vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
-        vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
-        vol.Optional(
+        probatio.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
+        probatio.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
+        probatio.Optional(
             CONF_PAYLOAD_OSCILLATION_OFF, default=DEFAULT_PAYLOAD_OSCILLATE_OFF
         ): cv.string,
-        vol.Optional(
+        probatio.Optional(
             CONF_PAYLOAD_OSCILLATION_ON, default=DEFAULT_PAYLOAD_OSCILLATE_ON
         ): cv.string,
-        vol.Optional(CONF_STATE_VALUE_TEMPLATE): cv.template,
+        probatio.Optional(CONF_STATE_VALUE_TEMPLATE): cv.template,
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-PLATFORM_SCHEMA_MODERN = vol.All(
+PLATFORM_SCHEMA_MODERN = probatio.All(
     _PLATFORM_SCHEMA_BASE,
     valid_speed_range_configuration,
     valid_preset_mode_configuration,
 )
 
-DISCOVERY_SCHEMA = vol.All(
-    _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
+DISCOVERY_SCHEMA = probatio.All(
+    _PLATFORM_SCHEMA_BASE.extend({}, extra=probatio.REMOVE_EXTRA),
     valid_speed_range_configuration,
     valid_preset_mode_configuration,
+)
+
+
+COMMAND_TEMPLATE_KEYS = (
+    CONF_COMMAND_TEMPLATE,
+    CONF_DIRECTION_COMMAND_TEMPLATE,
+    CONF_OSCILLATION_COMMAND_TEMPLATE,
+    CONF_PERCENTAGE_COMMAND_TEMPLATE,
+    CONF_PRESET_MODE_COMMAND_TEMPLATE,
+)
+VALUE_TEMPLATE_KEYS = (
+    CONF_DIRECTION_VALUE_TEMPLATE,
+    CONF_OSCILLATION_VALUE_TEMPLATE,
+    CONF_PERCENTAGE_VALUE_TEMPLATE,
+    CONF_PRESET_MODE_VALUE_TEMPLATE,
+    CONF_STATE_VALUE_TEMPLATE,
 )
 
 
@@ -306,11 +321,7 @@ class MqttFan(MqttEntity, FanEntity):
             self._attr_supported_features |= FanEntityFeature.PRESET_MODE
 
         command_templates: dict[str, Template | None] = {
-            CONF_STATE: config.get(CONF_COMMAND_TEMPLATE),
-            ATTR_DIRECTION: config.get(CONF_DIRECTION_COMMAND_TEMPLATE),
-            ATTR_PERCENTAGE: config.get(CONF_PERCENTAGE_COMMAND_TEMPLATE),
-            ATTR_PRESET_MODE: config.get(CONF_PRESET_MODE_COMMAND_TEMPLATE),
-            ATTR_OSCILLATING: config.get(CONF_OSCILLATION_COMMAND_TEMPLATE),
+            key: config.get(key) for key in COMMAND_TEMPLATE_KEYS
         }
         self._command_templates = {
             key: MqttCommandTemplate(tpl, entity=self).async_render
@@ -318,11 +329,7 @@ class MqttFan(MqttEntity, FanEntity):
         }
 
         value_templates: dict[str, Template | None] = {
-            CONF_STATE: config.get(CONF_STATE_VALUE_TEMPLATE),
-            ATTR_DIRECTION: config.get(CONF_DIRECTION_VALUE_TEMPLATE),
-            ATTR_PERCENTAGE: config.get(CONF_PERCENTAGE_VALUE_TEMPLATE),
-            ATTR_PRESET_MODE: config.get(CONF_PRESET_MODE_VALUE_TEMPLATE),
-            ATTR_OSCILLATING: config.get(CONF_OSCILLATION_VALUE_TEMPLATE),
+            key: config.get(key) for key in VALUE_TEMPLATE_KEYS
         }
         self._value_templates = {
             key: MqttValueTemplate(
@@ -334,7 +341,7 @@ class MqttFan(MqttEntity, FanEntity):
     @callback
     def _state_received(self, msg: ReceiveMessage) -> None:
         """Handle new received MQTT message."""
-        payload = self._value_templates[CONF_STATE](msg.payload)
+        payload = self._value_templates[CONF_STATE_VALUE_TEMPLATE](msg.payload)
         if not payload:
             _LOGGER.debug("Ignoring empty state from '%s'", msg.topic)
             return
@@ -348,9 +355,9 @@ class MqttFan(MqttEntity, FanEntity):
     @callback
     def _percentage_received(self, msg: ReceiveMessage) -> None:
         """Handle new received MQTT message for the percentage."""
-        rendered_percentage_payload = self._value_templates[ATTR_PERCENTAGE](
-            msg.payload
-        )
+        rendered_percentage_payload = self._value_templates[
+            CONF_PERCENTAGE_VALUE_TEMPLATE
+        ](msg.payload)
         if not rendered_percentage_payload:
             _LOGGER.debug("Ignoring empty speed from '%s'", msg.topic)
             return
@@ -388,7 +395,9 @@ class MqttFan(MqttEntity, FanEntity):
     @callback
     def _preset_mode_received(self, msg: ReceiveMessage) -> None:
         """Handle new received MQTT message for preset mode."""
-        preset_mode = str(self._value_templates[ATTR_PRESET_MODE](msg.payload))
+        preset_mode = str(
+            self._value_templates[CONF_PRESET_MODE_VALUE_TEMPLATE](msg.payload)
+        )
         if preset_mode == self._payload["PRESET_MODE_RESET"]:
             self._attr_preset_mode = None
             return
@@ -409,7 +418,7 @@ class MqttFan(MqttEntity, FanEntity):
     @callback
     def _oscillation_received(self, msg: ReceiveMessage) -> None:
         """Handle new received MQTT message for the oscillation."""
-        payload = self._value_templates[ATTR_OSCILLATING](msg.payload)
+        payload = self._value_templates[CONF_OSCILLATION_VALUE_TEMPLATE](msg.payload)
         if not payload:
             _LOGGER.debug("Ignoring empty oscillation from '%s'", msg.topic)
             return
@@ -421,7 +430,7 @@ class MqttFan(MqttEntity, FanEntity):
     @callback
     def _direction_received(self, msg: ReceiveMessage) -> None:
         """Handle new received MQTT message for the direction."""
-        direction = self._value_templates[ATTR_DIRECTION](msg.payload)
+        direction = self._value_templates[CONF_DIRECTION_VALUE_TEMPLATE](msg.payload)
         if not direction:
             _LOGGER.debug("Ignoring empty direction from '%s'", msg.topic)
             return
@@ -475,7 +484,9 @@ class MqttFan(MqttEntity, FanEntity):
 
         This method is a coroutine.
         """
-        mqtt_payload = self._command_templates[CONF_STATE](self._payload["STATE_ON"])
+        mqtt_payload = self._command_templates[CONF_COMMAND_TEMPLATE](
+            self._payload["STATE_ON"]
+        )
         await self.async_publish_with_config(
             self._config[CONF_COMMAND_TOPIC], mqtt_payload
         )
@@ -493,7 +504,9 @@ class MqttFan(MqttEntity, FanEntity):
 
         This method is a coroutine.
         """
-        mqtt_payload = self._command_templates[CONF_STATE](self._payload["STATE_OFF"])
+        mqtt_payload = self._command_templates[CONF_COMMAND_TEMPLATE](
+            self._payload["STATE_OFF"]
+        )
         await self.async_publish_with_config(
             self._config[CONF_COMMAND_TOPIC], mqtt_payload
         )
@@ -510,7 +523,9 @@ class MqttFan(MqttEntity, FanEntity):
         percentage_payload = math.ceil(
             percentage_to_ranged_value(self._speed_range, percentage)
         )
-        mqtt_payload = self._command_templates[ATTR_PERCENTAGE](percentage_payload)
+        mqtt_payload = self._command_templates[CONF_PERCENTAGE_COMMAND_TEMPLATE](
+            percentage_payload
+        )
         await self.async_publish_with_config(
             self._config[CONF_PERCENTAGE_COMMAND_TOPIC], mqtt_payload
         )
@@ -524,7 +539,9 @@ class MqttFan(MqttEntity, FanEntity):
 
         This method is a coroutine.
         """
-        mqtt_payload = self._command_templates[ATTR_PRESET_MODE](preset_mode)
+        mqtt_payload = self._command_templates[CONF_PRESET_MODE_COMMAND_TEMPLATE](
+            preset_mode
+        )
         await self.async_publish_with_config(
             self._config[CONF_PRESET_MODE_COMMAND_TOPIC], mqtt_payload
         )
@@ -539,11 +556,11 @@ class MqttFan(MqttEntity, FanEntity):
         This method is a coroutine.
         """
         if oscillating:
-            mqtt_payload = self._command_templates[ATTR_OSCILLATING](
+            mqtt_payload = self._command_templates[CONF_OSCILLATION_COMMAND_TEMPLATE](
                 self._payload["OSCILLATE_ON_PAYLOAD"]
             )
         else:
-            mqtt_payload = self._command_templates[ATTR_OSCILLATING](
+            mqtt_payload = self._command_templates[CONF_OSCILLATION_COMMAND_TEMPLATE](
                 self._payload["OSCILLATE_OFF_PAYLOAD"]
             )
         await self.async_publish_with_config(
@@ -559,7 +576,9 @@ class MqttFan(MqttEntity, FanEntity):
 
         This method is a coroutine.
         """
-        mqtt_payload = self._command_templates[ATTR_DIRECTION](direction)
+        mqtt_payload = self._command_templates[CONF_DIRECTION_COMMAND_TEMPLATE](
+            direction
+        )
         await self.async_publish_with_config(
             self._config[CONF_DIRECTION_COMMAND_TOPIC], mqtt_payload
         )

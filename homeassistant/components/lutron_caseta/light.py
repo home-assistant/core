@@ -20,7 +20,6 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -30,7 +29,7 @@ from .const import (
     DEVICE_TYPE_WHITE_TUNE,
 )
 from .entity import LutronCasetaUpdatableEntity
-from .models import LutronCasetaData
+from .models import LutronCasetaConfigEntry, LutronCasetaData
 
 SUPPORTED_COLOR_MODE_DICT = {
     DEVICE_TYPE_SPECTRUM_TUNE: {
@@ -65,7 +64,7 @@ def to_hass_level(level):
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: LutronCasetaConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Lutron Caseta light platform.
@@ -77,7 +76,7 @@ async def async_setup_entry(
     bridge = data.bridge
     light_devices = bridge.get_devices_by_domain(LIGHT_DOMAIN)
     async_add_entities(
-        LutronCasetaLight(light_device, data) for light_device in light_devices
+        LutronCasetaLight(hass, light_device, data) for light_device in light_devices
     )
 
 
@@ -90,9 +89,11 @@ class LutronCasetaLight(LutronCasetaUpdatableEntity, LightEntity):
     _attr_supported_features = LightEntityFeature.TRANSITION
     _prev_brightness: int | None = None
 
-    def __init__(self, light: dict[str, Any], data: LutronCasetaData) -> None:
+    def __init__(
+        self, hass: HomeAssistant, light: dict[str, Any], data: LutronCasetaData
+    ) -> None:
         """Initialize the light and set the supported color modes."""
-        super().__init__(light, data)
+        super().__init__(hass, light, data)
 
         self._attr_min_color_temp_kelvin = self._get_min_color_temp_kelvin(light)
         self._attr_max_color_temp_kelvin = self._get_max_color_temp_kelvin(light)
@@ -186,7 +187,7 @@ class LutronCasetaLight(LutronCasetaUpdatableEntity, LightEntity):
             brightness = to_lutron_level(brightness)
 
         await self._smartbridge.set_warm_dim(
-            self.device_id, brightness, **set_warm_dim_kwargs
+            self.device_id, True, value=brightness, **set_warm_dim_kwargs
         )
 
     @override
@@ -197,7 +198,7 @@ class LutronCasetaLight(LutronCasetaUpdatableEntity, LightEntity):
             # Only remember non-zero levels (see brightness handling below)
             if white_color:
                 self._prev_brightness = white_color
-            await self._async_set_warm_dim(white_color)
+            await self._async_set_warm_dim(white_color, **kwargs)
             return
 
         # Parse the color first, so a color-only call can leave brightness alone

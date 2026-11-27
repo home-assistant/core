@@ -5,8 +5,16 @@ import threading
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    MockPlatform,
+    assert_setup_component,
+    mock_integration,
+    mock_platform,
+)
 
 from homeassistant import config_entries, loader, setup
 from homeassistant.config_entries import ConfigEntry
@@ -26,15 +34,6 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.issue_registry import IssueRegistry
 from homeassistant.helpers.typing import ConfigType
 
-from .common import (
-    MockConfigEntry,
-    MockModule,
-    MockPlatform,
-    assert_setup_component,
-    mock_integration,
-    mock_platform,
-)
-
 
 @pytest.fixture
 def mock_handlers():
@@ -51,7 +50,7 @@ def mock_handlers():
 
 async def test_validate_component_config(hass: HomeAssistant) -> None:
     """Test validating component configuration."""
-    config_schema = vol.Schema({"comp_conf": {"hello": str}}, required=True)
+    config_schema = probatio.Schema({"comp_conf": {"hello": str}}, required=True)
     mock_integration(hass, MockModule("comp_conf", config_schema=config_schema))
 
     with assert_setup_component(0):
@@ -337,6 +336,63 @@ async def test_component_not_setup_twice_if_loaded_during_other_setup(
     assert len(result) == 1
 
 
+async def test_component_setup_concurrent_waiter_cancelled(
+    hass: HomeAssistant,
+) -> None:
+    """Test cancelling a concurrent setup caller does not break the setup."""
+    setup_started = asyncio.Event()
+    setup_stall = asyncio.Event()
+
+    async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+        setup_started.set()
+        await setup_stall.wait()
+        return True
+
+    mock_integration(hass, MockModule("comp", async_setup=async_setup))
+
+    setup_task1 = asyncio.create_task(setup.async_setup_component(hass, "comp", {}))
+    await setup_started.wait()
+    setup_future = hass.data[setup._DATA_SETUP]["comp"]
+    setup_task2 = asyncio.create_task(setup.async_setup_component(hass, "comp", {}))
+    await asyncio.sleep(0)
+    setup_task2.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await setup_task2
+    setup_stall.set()
+
+    assert await setup_task1 is True
+    assert setup_future.result() is True
+
+
+async def test_component_setup_dependency_waiter_cancelled(
+    hass: HomeAssistant,
+) -> None:
+    """Test cancelling a component setup does not break its dependency setup."""
+    setup_started = asyncio.Event()
+    setup_stall = asyncio.Event()
+
+    async def async_setup_dep(hass: HomeAssistant, config: ConfigType) -> bool:
+        setup_started.set()
+        await setup_stall.wait()
+        return True
+
+    mock_integration(hass, MockModule("dep", async_setup=async_setup_dep))
+    mock_integration(hass, MockModule("comp", dependencies=["dep"]))
+
+    dep_task = asyncio.create_task(setup.async_setup_component(hass, "dep", {}))
+    await setup_started.wait()
+    setup_future = hass.data[setup._DATA_SETUP]["dep"]
+    comp_task = asyncio.create_task(setup.async_setup_component(hass, "comp", {}))
+    await hass.async_block_till_done()
+    comp_task.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await comp_task
+    setup_stall.set()
+
+    assert await dep_task is True
+    assert setup_future.result() is True
+
+
 async def test_component_not_setup_missing_dependencies(hass: HomeAssistant) -> None:
     """Test we do not set up a component if not all dependencies loaded."""
     deps = ["maybe_existing"]
@@ -389,10 +445,9 @@ async def test_component_setup_dependencies_with_config_entry(
     """Test we wait for a dependency with config entry."""
     calls: list[str] = []
 
-    async def mock_async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    async def mock_async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         await asyncio.sleep(0)
         calls.append("entry")
-        return True
 
     mock_integration(hass, MockModule("comp", async_setup_entry=mock_async_setup_entry))
     mock_platform(hass, "comp.config_flow", None)
@@ -551,6 +606,46 @@ async def test_component_setup_after_dependencies(hass: HomeAssistant) -> None:
     assert "dep" in hass.config.components
 
 
+@pytest.mark.parametrize(
+    ("manifest", "expected_result"),
+    [
+        pytest.param({"dependencies": ["dep"]}, False, id="dependency"),
+        pytest.param({"after_dependencies": ["dep"]}, True, id="after_dependency"),
+        pytest.param(
+            {"dependencies": ["dep"], "after_dependencies": ["dep"]},
+            False,
+            id="dependency_and_after_dependency",
+        ),
+    ],
+)
+async def test_component_setup_failing_dependency(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    manifest: dict[str, list[str]],
+    expected_result: bool,
+) -> None:
+    """Test a failing dependency fails the component, a failing after dependency does not."""
+
+    async def mock_dep_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+        return False
+
+    mock_integration(hass, MockModule("dep", async_setup=mock_dep_setup))
+    mock_integration(hass, MockModule("comp", partial_manifest=manifest))
+    setup.async_set_domains_to_be_loaded(hass, {"comp", "dep"})
+
+    assert await setup.async_setup_component(hass, "comp", {}) is expected_result
+    assert ("comp" in hass.config.components) is expected_result
+    assert "dep" not in hass.config.components
+    assert "Setup failed for 'dep'" in caplog.text
+    assert (
+        "Unable to set up dependencies of 'comp'. "
+        "Setup failed for dependencies: ['dep']" in caplog.text
+    ) is not expected_result
+    assert (
+        "Ignoring failed after dependency 'dep' of 'comp'" in caplog.text
+    ) is expected_result
+
+
 async def test_component_setup_with_validation_and_dependency(
     hass: HomeAssistant,
 ) -> None:
@@ -584,7 +679,7 @@ async def test_component_setup_with_validation_and_dependency(
 async def test_platform_specific_config_validation(hass: HomeAssistant) -> None:
     """Test platform that specifies config."""
     platform_schema = cv.PLATFORM_SCHEMA.extend(
-        {"valid": True}, extra=vol.PREVENT_EXTRA
+        {"valid": True}, extra=probatio.PREVENT_EXTRA
     )
 
     mock_setup = Mock(spec_set=True)
@@ -838,12 +933,11 @@ async def test_parallel_entry_setup(hass: HomeAssistant, mock_handlers) -> None:
 
     calls = []
 
-    async def mock_async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    async def mock_async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Mock setting up an entry."""
         calls.append(entry.data["value"])
         await asyncio.sleep(0)
         calls.append(entry.data["value"])
-        return True
 
     mock_integration(
         hass,
@@ -930,7 +1024,7 @@ async def test_integration_only_setup_entry(hass: HomeAssistant) -> None:
         MockModule(
             "test_integration_only_entry",
             setup=False,
-            async_setup_entry=AsyncMock(return_value=True),
+            async_setup_entry=AsyncMock(return_value=None),
         ),
     )
     assert await setup.async_setup_component(hass, "test_integration_only_entry", {})
@@ -1156,6 +1250,222 @@ async def test_async_start_setup_config_entry_platform_wait(
     }
 
 
+async def test_async_start_setup_config_entry_sequential_waits(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test every wait in a config entry setup is subtracted, not just the last."""
+    hass.set_state(CoreState.not_running)
+    setup_time = setup._setup_times(hass)
+
+    with setup.async_start_setup(
+        hass,
+        integration="august",
+        group="entry_id",
+        phase=setup.SetupPhases.CONFIG_ENTRY_SETUP,
+    ):
+        # Two calls to async_forward_entry_setups, each importing its platforms
+        with setup.async_pause_setup(hass, setup.SetupPhases.WAIT_IMPORT_PLATFORMS):
+            freezer.tick(100)
+        freezer.tick(5)
+        with setup.async_pause_setup(hass, setup.SetupPhases.WAIT_IMPORT_PLATFORMS):
+            freezer.tick(10)
+        freezer.tick(5)
+
+    assert setup_time["august"] == {
+        "entry_id": {
+            setup.SetupPhases.WAIT_IMPORT_PLATFORMS: -110.0,
+            setup.SetupPhases.CONFIG_ENTRY_SETUP: 120.0,
+        },
+    }
+    assert setup.async_get_setup_timings(hass) == {"august": 10.0}
+
+
+async def test_async_start_setup_config_entry_overlapping_waits(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test waits that overlap, as for platforms forwarded together, count once."""
+    hass.set_state(CoreState.not_running)
+    setup_time = setup._setup_times(hass)
+    first_waiting = asyncio.Event()
+    second_waiting = asyncio.Event()
+    first_done = asyncio.Event()
+
+    async def first_platform() -> None:
+        with setup.async_pause_setup(hass, setup.SetupPhases.WAIT_BASE_PLATFORM_SETUP):
+            first_waiting.set()
+            await second_waiting.wait()
+            freezer.tick(30)
+        first_done.set()
+
+    async def second_platform() -> None:
+        await first_waiting.wait()
+        with setup.async_pause_setup(hass, setup.SetupPhases.WAIT_IMPORT_PLATFORMS):
+            second_waiting.set()
+            await first_done.wait()
+            freezer.tick(20)
+
+    with setup.async_start_setup(
+        hass,
+        integration="august",
+        group="entry_id",
+        phase=setup.SetupPhases.CONFIG_ENTRY_SETUP,
+    ):
+        await asyncio.gather(first_platform(), second_platform())
+        freezer.tick(10)
+
+    # The two waits overlap for 30 seconds of the 50 spent waiting
+    assert setup_time["august"] == {
+        "entry_id": {
+            setup.SetupPhases.WAIT_BASE_PLATFORM_SETUP: -30.0,
+            setup.SetupPhases.WAIT_IMPORT_PLATFORMS: -20.0,
+            setup.SetupPhases.CONFIG_ENTRY_SETUP: 60.0,
+        },
+    }
+    assert setup.async_get_setup_timings(hass) == {"august": 10.0}
+
+
+@pytest.mark.parametrize(
+    ("measurements", "expected_times", "expected_timing"),
+    [
+        pytest.param(
+            [(10, 1), (10, 1)],
+            {
+                setup.SetupPhases.CONFIG_ENTRY_PLATFORM_SETUP: 11.0,
+                setup.SetupPhases.WAIT_BASE_PLATFORM_SETUP: -10.0,
+            },
+            1.0,
+            id="same_time",
+        ),
+        pytest.param(
+            [(10, 1), (0, 5)],
+            {
+                setup.SetupPhases.CONFIG_ENTRY_PLATFORM_SETUP: 5.0,
+                setup.SetupPhases.WAIT_BASE_PLATFORM_SETUP: 0.0,
+            },
+            5.0,
+            id="later_is_longer",
+        ),
+        pytest.param(
+            [(0, 5), (10, 1)],
+            {
+                setup.SetupPhases.CONFIG_ENTRY_PLATFORM_SETUP: 5.0,
+                setup.SetupPhases.WAIT_BASE_PLATFORM_SETUP: 0.0,
+            },
+            5.0,
+            id="earlier_is_longer",
+        ),
+    ],
+)
+async def test_async_start_setup_repeated_phase_waits(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    measurements: list[tuple[int, int]],
+    expected_times: dict[setup.SetupPhases, float],
+    expected_timing: float,
+) -> None:
+    """Test waits are only subtracted from the setup of a phase they belong to."""
+    hass.set_state(CoreState.not_running)
+    setup_time = setup._setup_times(hass)
+
+    # Late platform forwards, each measured separately for the same entry
+    for wait, work in measurements:
+        with setup.async_start_setup(
+            hass,
+            integration="august",
+            group="entry_id",
+            phase=setup.SetupPhases.CONFIG_ENTRY_PLATFORM_SETUP,
+        ):
+            with setup.async_pause_setup(
+                hass, setup.SetupPhases.WAIT_BASE_PLATFORM_SETUP
+            ):
+                freezer.tick(wait)
+            freezer.tick(work)
+
+    assert setup_time["august"] == {"entry_id": expected_times}
+    assert setup.async_get_setup_timings(hass) == {"august": expected_timing}
+
+
+async def test_async_start_setup_wait_finishing_after_setup(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test a wait finishing after its setup is timed does not change the times."""
+    hass.set_state(CoreState.not_running)
+    setup_time = setup._setup_times(hass)
+    waiting = asyncio.Event()
+    release = asyncio.Event()
+
+    async def late_wait() -> None:
+        with setup.async_pause_setup(hass, setup.SetupPhases.WAIT_BASE_PLATFORM_SETUP):
+            waiting.set()
+            await release.wait()
+            freezer.tick(10)
+
+    with setup.async_start_setup(
+        hass,
+        integration="august",
+        group="entry_id",
+        phase=setup.SetupPhases.CONFIG_ENTRY_PLATFORM_SETUP,
+    ):
+        task = asyncio.create_task(late_wait())
+        await waiting.wait()
+        freezer.tick(1)
+
+    # The wait started during the first setup but finishes after it
+    release.set()
+    await task
+
+    with setup.async_start_setup(
+        hass,
+        integration="august",
+        group="entry_id",
+        phase=setup.SetupPhases.CONFIG_ENTRY_PLATFORM_SETUP,
+    ):
+        freezer.tick(5)
+
+    assert setup_time["august"] == {
+        "entry_id": {setup.SetupPhases.CONFIG_ENTRY_PLATFORM_SETUP: 5.0},
+    }
+    assert setup.async_get_setup_timings(hass) == {"august": 5.0}
+
+
+async def test_async_start_setup_wait_overlapping_unfinished_wait(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test a wait is subtracted when it overlaps a wait still running in a task."""
+    hass.set_state(CoreState.not_running)
+    setup_time = setup._setup_times(hass)
+    waiting = asyncio.Event()
+    release = asyncio.Event()
+
+    async def unawaited_wait() -> None:
+        with setup.async_pause_setup(hass, setup.SetupPhases.WAIT_BASE_PLATFORM_SETUP):
+            waiting.set()
+            await release.wait()
+
+    with setup.async_start_setup(
+        hass,
+        integration="august",
+        group="entry_id",
+        phase=setup.SetupPhases.CONFIG_ENTRY_SETUP,
+    ):
+        task = asyncio.create_task(unawaited_wait())
+        await waiting.wait()
+        with setup.async_pause_setup(hass, setup.SetupPhases.WAIT_IMPORT_PLATFORMS):
+            freezer.tick(100)
+        freezer.tick(1)
+
+    release.set()
+    await task
+
+    assert setup_time["august"] == {
+        "entry_id": {
+            setup.SetupPhases.WAIT_IMPORT_PLATFORMS: -100.0,
+            setup.SetupPhases.CONFIG_ENTRY_SETUP: 101.0,
+        },
+    }
+    assert setup.async_get_setup_timings(hass) == {"august": 1.0}
+
+
 async def test_async_start_setup_top_level_yaml(hass: HomeAssistant) -> None:
     """Test setup started tracks setup times with modern yaml."""
     hass.set_state(CoreState.not_running)
@@ -1247,7 +1557,7 @@ async def test_async_start_setup_simple_integration_end_to_end(
         MockModule(
             "test_integration_no_platforms",
             setup=False,
-            async_setup_entry=AsyncMock(return_value=True),
+            async_setup_entry=AsyncMock(return_value=None),
         ),
     )
     assert await setup.async_setup_component(hass, "test_integration_no_platforms", {})
@@ -1324,7 +1634,7 @@ async def test_setup_config_entry_from_yaml(
         MockModule(
             "test_integration_only_entry",
             setup=False,
-            async_setup_entry=AsyncMock(return_value=True),
+            async_setup_entry=AsyncMock(return_value=None),
         ),
     )
 
@@ -1411,6 +1721,55 @@ async def test_async_prepare_setup_platform(
     assert button_platform is not None
 
 
+async def test_async_get_setup_results(hass: HomeAssistant) -> None:
+    """Test _async_get_setup_results."""
+    setup_started = asyncio.Event()
+    setup_stall = asyncio.Event()
+
+    async def mock_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+        setup_started.set()
+        await setup_stall.wait()
+        return True
+
+    async def mock_setup_failed(hass: HomeAssistant, config: ConfigType) -> bool:
+        return False
+
+    mock_integration(hass, MockModule("test_scheduled"))
+    mock_integration(hass, MockModule("test_slow", async_setup=mock_setup))
+    mock_integration(hass, MockModule("test_failed", async_setup=mock_setup_failed))
+    domains = {"test_scheduled", "test_slow", "test_failed", "test_unknown"}
+
+    # Nothing is set up, and nothing is scheduled to be
+    assert setup._async_get_setup_results(hass, domains) == dict.fromkeys(
+        domains, False
+    )
+
+    setup.async_set_domains_to_be_loaded(hass, {"test_scheduled"})
+    setup_task = hass.async_create_task(
+        setup.async_setup_component(hass, "test_slow", {})
+    )
+    await setup_started.wait()
+    assert await setup.async_setup_component(hass, "test_failed", {}) is False
+
+    assert setup._async_get_setup_results(hass, domains) == {
+        "test_scheduled": None,
+        "test_slow": None,
+        "test_failed": False,
+        "test_unknown": False,
+    }
+
+    setup_stall.set()
+    assert await setup_task is True
+    assert await setup.async_setup_component(hass, "test_scheduled", {}) is True
+
+    assert setup._async_get_setup_results(hass, domains) == {
+        "test_scheduled": True,
+        "test_slow": True,
+        "test_failed": False,
+        "test_unknown": False,
+    }
+
+
 async def test_async_wait_component(hass: HomeAssistant) -> None:
     """Test async_wait_component."""
     setup_stall = asyncio.Event()
@@ -1449,3 +1808,30 @@ async def test_async_wait_component(hass: HomeAssistant) -> None:
     # Clear the event, then call again to make sure we don't block
     setup_stall.clear()
     assert await setup.async_wait_component(hass, "test") is True
+
+
+async def test_async_wait_component_waiter_cancelled(hass: HomeAssistant) -> None:
+    """Test cancelling async_wait_component does not break the setup."""
+    setup_started = asyncio.Event()
+    setup_stall = asyncio.Event()
+
+    async def mock_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+        setup_started.set()
+        await setup_stall.wait()
+        return True
+
+    mock_integration(hass, MockModule("test", async_setup=mock_setup))
+    setup.async_set_domains_to_be_loaded(hass, {"test"})
+    setup_done_future = hass.data[setup._DATA_SETUP_DONE]["test"]
+
+    setup_task = asyncio.create_task(setup.async_setup_component(hass, "test", {}))
+    await setup_started.wait()
+    wait_task = asyncio.create_task(setup.async_wait_component(hass, "test"))
+    await asyncio.sleep(0)
+    wait_task.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await wait_task
+    setup_stall.set()
+
+    assert await setup_task is True
+    assert setup_done_future.result() is True

@@ -2,17 +2,18 @@
 
 from typing import Any, Unpack, cast, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_tracker import (
-    ATTR_IN_ZONES,
     DOMAIN as DEVICE_TRACKER_DOMAIN,
+    DeviceTrackerEntityStateAttribute,
 )
-from homeassistant.components.person import DOMAIN as PERSON_DOMAIN
+from homeassistant.components.person import (
+    DOMAIN as PERSON_DOMAIN,
+    PersonEntityStateAttribute,
+)
 from homeassistant.const import (
     ATTR_GPS_ACCURACY,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     CONF_ENTITY_ID,
     CONF_FOR,
     CONF_OPTIONS,
@@ -20,6 +21,7 @@ from homeassistant.const import (
     CONF_ZONE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import ConditionErrorContainer, ConditionErrorMessage
@@ -39,24 +41,28 @@ from homeassistant.helpers.condition import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from . import in_zone
-from .const import DOMAIN
+from . import async_is_improved_presence_detection_enabled, in_zone, zone_relation
+from .const import DOMAIN, ZoneRelation
+from .helpers import get_in_zones_attribute
 
-_OPTIONS_SCHEMA_DICT: dict[vol.Marker, Any] = {
-    vol.Required(CONF_ENTITY_ID): cv.entity_ids,
-    vol.Required("zone"): cv.entity_ids,
+_OPTIONS_SCHEMA_DICT: dict[probatio.Marker, Any] = {
+    probatio.Required(CONF_ENTITY_ID): cv.entity_ids,
+    probatio.Required("zone"): cv.entity_ids,
 }
-_CONDITION_SCHEMA = vol.Schema({CONF_OPTIONS: _OPTIONS_SCHEMA_DICT})
-
-_IN_ZONES_DOMAINS = {DEVICE_TRACKER_DOMAIN, PERSON_DOMAIN}
+_CONDITION_SCHEMA = probatio.Schema({CONF_OPTIONS: _OPTIONS_SCHEMA_DICT})
 
 
 def zone(
     hass: HomeAssistant,
     zone_ent: str | State | None,
     entity: str | State | None,
+    previous_match: bool = False,
 ) -> bool:
     """Test if zone-condition matches.
+
+    If improved presence detection is enabled and the entity's accuracy circle
+    only overlaps the zone, previous_match is returned. Legacy device
+    trackers always use the default overlap test.
 
     Async friendly.
     """
@@ -88,14 +94,13 @@ def zone(
 
     # Prefer the in_zones attribute reported by the entity (e.g. person,
     # device_tracker) over recomputing membership from coordinates.
-    if (
-        entity.domain in _IN_ZONES_DOMAINS
-        and (in_zones := entity.attributes.get(ATTR_IN_ZONES)) is not None
-    ):
+    if (in_zones_attr := get_in_zones_attribute(entity)) is not None and (
+        in_zones := entity.attributes.get(in_zones_attr)
+    ) is not None:
         return zone_ent.entity_id in in_zones
 
-    latitude = entity.attributes.get(ATTR_LATITUDE)
-    longitude = entity.attributes.get(ATTR_LONGITUDE)
+    latitude = entity.attributes.get(EntityStateAttribute.LATITUDE)
+    longitude = entity.attributes.get(EntityStateAttribute.LONGITUDE)
 
     if latitude is None:
         raise ConditionErrorMessage(
@@ -107,9 +112,19 @@ def zone(
             "zone", f"entity {entity_id} has no 'longitude' attribute"
         )
 
-    return in_zone(
-        zone_ent, latitude, longitude, entity.attributes.get(ATTR_GPS_ACCURACY, 0)
-    )
+    radius = entity.attributes.get(ATTR_GPS_ACCURACY)
+    # Legacy device trackers, which don't report in_zones, don't support
+    # improved presence detection
+    if (
+        entity.domain == DEVICE_TRACKER_DOMAIN
+        or not async_is_improved_presence_detection_enabled(hass)
+    ):
+        return in_zone(zone_ent, latitude, longitude, radius)
+
+    relation = zone_relation(zone_ent, latitude, longitude, radius)
+    if relation is ZoneRelation.OVERLAPPING:
+        return previous_match
+    return relation is ZoneRelation.CONTAINED
 
 
 class ZoneCondition(Condition):
@@ -178,14 +193,16 @@ class ZoneCondition(Condition):
 
 
 _DOMAIN_SPECS: dict[str, DomainSpec] = {
-    "person": DomainSpec(value_source=ATTR_IN_ZONES),
-    "device_tracker": DomainSpec(value_source=ATTR_IN_ZONES),
+    PERSON_DOMAIN: DomainSpec(value_source=PersonEntityStateAttribute.IN_ZONES),
+    DEVICE_TRACKER_DOMAIN: DomainSpec(
+        value_source=DeviceTrackerEntityStateAttribute.IN_ZONES
+    ),
 }
 
 _ZONE_CONDITION_SCHEMA = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
     {
-        vol.Required(CONF_OPTIONS): {
-            vol.Required(CONF_ZONE): cv.entity_domain(DOMAIN),
+        probatio.Required(CONF_OPTIONS): {
+            probatio.Required(CONF_ZONE): cv.entity_domain(DOMAIN),
         },
     }
 )
@@ -205,8 +222,11 @@ class _ZoneTargetConditionBase(EntityConditionBase):
 
     def _in_target_zone(self, entity_state: State) -> bool:
         """Check if the entity is currently in the selected zone."""
-        in_zones = entity_state.attributes.get(ATTR_IN_ZONES) or ()
-        return self._zone in in_zones
+        if (in_zones_attr := get_in_zones_attribute(entity_state)) and (
+            in_zones := entity_state.attributes.get(in_zones_attr)
+        ):
+            return self._zone in in_zones
+        return False
 
 
 class InZoneCondition(_ZoneTargetConditionBase):
@@ -227,11 +247,11 @@ class NotInZoneCondition(_ZoneTargetConditionBase):
         return not self._in_target_zone(entity_state)
 
 
-_OCCUPANCY_CONDITION_SCHEMA = vol.Schema(
+_OCCUPANCY_CONDITION_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_OPTIONS, default={}): {
-            vol.Required(CONF_ZONE): cv.entity_domain(DOMAIN),
-            vol.Optional(CONF_FOR): cv.positive_time_period,
+        probatio.Required(CONF_OPTIONS, default={}): {
+            probatio.Required(CONF_ZONE): cv.entity_domain(DOMAIN),
+            probatio.Optional(CONF_FOR): cv.positive_time_period,
         },
     }
 )

@@ -7,21 +7,17 @@ from fritzconnection.core.exceptions import (
     FritzConnectionException,
     FritzServiceError,
 )
+from probatio import MultipleInvalid
 import pytest
-from voluptuous import MultipleInvalid
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.fritz.const import DOMAIN
-from homeassistant.components.fritz.services import (
-    SERVICE_DIAL,
-    SERVICE_SET_GUEST_WIFI_PW,
-)
+from homeassistant.components.fritz.services import FritzService
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from .const import MOCK_SERIAL_NUMBER, MOCK_USER_DATA
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_services(hass: HomeAssistant) -> None:
@@ -31,8 +27,8 @@ async def test_setup_services(hass: HomeAssistant) -> None:
 
     services = hass.services.async_services_for_domain(DOMAIN)
     assert services
-    assert SERVICE_SET_GUEST_WIFI_PW in services
-    assert SERVICE_DIAL in services
+    assert FritzService.SET_GUEST_WIFI_PASSWORD in services
+    assert FritzService.DIAL in services
 
 
 async def test_service_set_guest_wifi_password(
@@ -49,15 +45,15 @@ async def test_service_set_guest_wifi_password(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_SERIAL_NUMBER)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL_NUMBER), entry.entry_id
     )
     assert device
     with patch(
         "homeassistant.components.fritz.coordinator.AvmWrapper.async_trigger_set_guest_password"
     ) as mock_async_trigger_set_guest_password:
         await hass.services.async_call(
-            DOMAIN, SERVICE_SET_GUEST_WIFI_PW, {"device_id": device.id}
+            DOMAIN, FritzService.SET_GUEST_WIFI_PASSWORD, {"device_id": device.id}
         )
         assert mock_async_trigger_set_guest_password.called
 
@@ -77,8 +73,8 @@ async def test_service_set_guest_wifi_password_unknown_parameter(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_SERIAL_NUMBER)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL_NUMBER), entry.entry_id
     )
     assert device
 
@@ -87,7 +83,7 @@ async def test_service_set_guest_wifi_password_unknown_parameter(
         side_effect=FritzServiceError("boom"),
     ) as mock_async_trigger_set_guest_password:
         await hass.services.async_call(
-            DOMAIN, SERVICE_SET_GUEST_WIFI_PW, {"device_id": device.id}
+            DOMAIN, FritzService.SET_GUEST_WIFI_PASSWORD, {"device_id": device.id}
         )
         assert mock_async_trigger_set_guest_password.called
         assert "HomeAssistantError: Action or parameter unknown" in caplog.text
@@ -108,8 +104,8 @@ async def test_service_set_guest_wifi_password_service_not_supported(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_SERIAL_NUMBER)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL_NUMBER), entry.entry_id
     )
     assert device
 
@@ -118,7 +114,7 @@ async def test_service_set_guest_wifi_password_service_not_supported(
         side_effect=FritzConnectionException("boom"),
     ) as mock_async_trigger_set_guest_password:
         await hass.services.async_call(
-            DOMAIN, SERVICE_SET_GUEST_WIFI_PW, {"device_id": device.id}
+            DOMAIN, FritzService.SET_GUEST_WIFI_PASSWORD, {"device_id": device.id}
         )
         assert mock_async_trigger_set_guest_password.called
         assert "HomeAssistantError: Action not supported" in caplog.text
@@ -136,7 +132,7 @@ async def test_service_set_guest_wifi_password_unloaded(
         "homeassistant.components.fritz.coordinator.AvmWrapper.async_trigger_set_guest_password"
     ) as mock_async_trigger_set_guest_password:
         await hass.services.async_call(
-            DOMAIN, SERVICE_SET_GUEST_WIFI_PW, {"device_id": "12345678"}
+            DOMAIN, FritzService.SET_GUEST_WIFI_PASSWORD, {"device_id": "12345678"}
         )
         assert not mock_async_trigger_set_guest_password.called
         assert (
@@ -161,8 +157,8 @@ async def test_service_dial(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_SERIAL_NUMBER)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL_NUMBER), entry.entry_id
     )
     assert device
     with patch(
@@ -170,7 +166,7 @@ async def test_service_dial(
     ) as mock_async_trigger_dial:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_DIAL,
+            FritzService.DIAL,
             {"device_id": device.id, "number": "1234567890", "max_ring_seconds": 10},
         )
         assert mock_async_trigger_dial.called
@@ -193,8 +189,8 @@ async def test_service_dial_unknown_parameter(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_SERIAL_NUMBER)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL_NUMBER), entry.entry_id
     )
     assert device
 
@@ -204,7 +200,7 @@ async def test_service_dial_unknown_parameter(
     ) as mock_async_trigger_dial:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_DIAL,
+            FritzService.DIAL,
             {"device_id": device.id, "number": "1234567890", "max_ring_seconds": 10},
         )
         assert mock_async_trigger_dial.called
@@ -226,8 +222,8 @@ async def test_service_dial_wrong_parameter(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_SERIAL_NUMBER)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL_NUMBER), entry.entry_id
     )
     assert device
 
@@ -237,7 +233,7 @@ async def test_service_dial_wrong_parameter(
         with pytest.raises(MultipleInvalid):
             await hass.services.async_call(
                 DOMAIN,
-                SERVICE_DIAL,
+                FritzService.DIAL,
                 {
                     "device_id": device.id,
                     "number": "1234567890",
@@ -251,7 +247,7 @@ async def test_service_dial_wrong_parameter(
         with pytest.raises(MultipleInvalid):
             await hass.services.async_call(
                 DOMAIN,
-                SERVICE_DIAL,
+                FritzService.DIAL,
                 {
                     "device_id": device.id,
                     "number": "1234567890",
@@ -276,8 +272,8 @@ async def test_service_dial_service_not_supported(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_SERIAL_NUMBER)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL_NUMBER), entry.entry_id
     )
     assert device
 
@@ -287,7 +283,7 @@ async def test_service_dial_service_not_supported(
     ) as mock_async_trigger_dial:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_DIAL,
+            FritzService.DIAL,
             {"device_id": device.id, "number": "1234567890", "max_ring_seconds": 10},
         )
         assert mock_async_trigger_dial.called
@@ -309,8 +305,8 @@ async def test_service_dial_failed(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_SERIAL_NUMBER)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL_NUMBER), entry.entry_id
     )
     assert device
 
@@ -320,7 +316,7 @@ async def test_service_dial_failed(
     ) as mock_async_trigger_dial:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_DIAL,
+            FritzService.DIAL,
             {"device_id": device.id, "number": "1234567890", "max_ring_seconds": 10},
         )
         assert mock_async_trigger_dial.called
@@ -344,12 +340,12 @@ async def test_service_dial_unloaded(
     ) as mock_async_trigger_dial:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_DIAL,
+            FritzService.DIAL,
             {"device_id": "12345678", "number": "1234567890", "max_ring_seconds": 10},
         )
         assert not mock_async_trigger_dial.called
         assert (
             "ServiceValidationError: Failed to perform action"
-            f' "{SERVICE_DIAL}".'
+            f' "{FritzService.DIAL}".'
             " Config entry for target not found" in caplog.text
         )

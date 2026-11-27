@@ -17,6 +17,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .entity import LutronCasetaUpdatableEntity
 from .models import LutronCasetaConfigEntry
 
+OPEN_TILT_POSITION = 50
+
 
 class ShadeMovementDirection(Enum):
     """Enum for shade movement direction."""
@@ -118,6 +120,8 @@ class LutronCasetaTiltOnlyBlind(LutronCasetaUpdatableEntity, CoverEntity):
         | CoverEntityFeature.OPEN_TILT
     )
     _attr_device_class = CoverDeviceClass.BLIND
+    _attr_tilt_start_angle = -90
+    _attr_tilt_end_angle = 90
 
     @property
     @override
@@ -141,7 +145,7 @@ class LutronCasetaTiltOnlyBlind(LutronCasetaUpdatableEntity, CoverEntity):
     @override
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the blind."""
-        await self._smartbridge.set_tilt(self.device_id, 50)
+        await self._smartbridge.set_tilt(self.device_id, OPEN_TILT_POSITION)
         await self.async_update()
         self.async_write_ha_state()
 
@@ -149,6 +153,34 @@ class LutronCasetaTiltOnlyBlind(LutronCasetaUpdatableEntity, CoverEntity):
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the blind to a specific tilt."""
         await self._smartbridge.set_tilt(self.device_id, kwargs[ATTR_TILT_POSITION])
+
+
+class LutronCasetaOpenCloseStopCover(LutronCasetaUpdatableEntity, CoverEntity):
+    """Representation of a Lutron cover with open, close and stop only."""
+
+    _attr_supported_features = (
+        CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
+    )
+    _attr_is_closed = None
+
+    @override
+    async def async_open_cover(self, **kwargs: Any) -> None:
+        """Open the cover."""
+        await self._smartbridge.raise_cover(self.device_id)
+        await self.async_update()
+        self.async_write_ha_state()
+
+    @override
+    async def async_close_cover(self, **kwargs: Any) -> None:
+        """Close the cover."""
+        await self._smartbridge.lower_cover(self.device_id)
+        await self.async_update()
+        self.async_write_ha_state()
+
+    @override
+    async def async_stop_cover(self, **kwargs: Any) -> None:
+        """Stop the cover."""
+        await self._smartbridge.stop_cover(self.device_id)
 
 
 PYLUTRON_TYPE_TO_CLASSES = {
@@ -163,6 +195,7 @@ PYLUTRON_TYPE_TO_CLASSES = {
     "Shade": LutronCasetaShade,
     "PalladiomWireFreeShade": LutronCasetaShade,
     "SerenaEssentialsRollerShade": LutronCasetaShade,
+    "OpenCloseStop": LutronCasetaOpenCloseStopCover,
 }
 
 
@@ -183,7 +216,7 @@ async def async_setup_entry(
         # default to standard LutronCasetaCover type if the
         # pylutron type is not yet mapped
         PYLUTRON_TYPE_TO_CLASSES.get(cover_device["type"], LutronCasetaShade)(
-            cover_device, data
+            hass, cover_device, data
         )
         for cover_device in cover_devices
     )

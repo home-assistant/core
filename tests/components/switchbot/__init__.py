@@ -2,12 +2,15 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import (
+    generate_advertisement_data,
+    generate_ble_device,
+)
+
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
 
 DOMAIN = "switchbot"
 
@@ -28,8 +31,8 @@ USER_INPUT_INVALID = {
 }
 
 
-def patch_async_setup_entry(return_value=True):
-    """Patch async setup entry to return True."""
+def patch_async_setup_entry(return_value=None):
+    """Patch async setup entry to return None."""
     return patch(
         "homeassistant.components.switchbot.async_setup_entry",
         return_value=return_value,
@@ -215,6 +218,30 @@ NOT_SWITCHBOT_INFO = BluetoothServiceInfoBleak(
 )
 
 
+WOMETERTHP_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="WoTHP",
+    manufacturer_data={
+        2409: b"\xb0\xe9\xfeT2\x15\xb7\xe4\x07\x9b\xa4\x007\x02\xd5\x00"
+    },
+    service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"4\x00d"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="WoTHP",
+        manufacturer_data={
+            2409: b"\xb0\xe9\xfeT2\x15\xb7\xe4\x07\x9b\xa4\x007\x02\xd5\x00"
+        },
+        service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"4\x00d"},
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "WoTHP"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
 WOMETERTHPC_SERVICE_INFO = BluetoothServiceInfoBleak(
     name="WoTHPc",
     manufacturer_data={
@@ -368,6 +395,25 @@ WOCURTAIN3_SERVICE_INFO = BluetoothServiceInfoBleak(
         service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
     ),
     device=generate_ble_device("AA:BB:CC:DD:EE:FF", "WoCurtain3"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+
+# As heard by a passive scanner, which never receives the scan response.
+WOCURTAIN3_PASSIVE_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="AA:BB:CC:DD:EE:FF",
+    address="AA:BB:CC:DD:EE:FF",
+    manufacturer_data={2409: b"\xaa\xbb\xcc\xdd\xee\xff\x07\x03S\x11\x04\x01d"},
+    service_data={},
+    service_uuids=[],
+    rssi=-50,
+    source="passive_proxy",
+    advertisement=generate_advertisement_data(
+        manufacturer_data={2409: b"\xaa\xbb\xcc\xdd\xee\xff\x07\x03S\x11\x04\x01d"},
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", None),
     time=0,
     connectable=True,
     tx_power=-127,
@@ -589,6 +635,58 @@ CIRCULATOR_FAN_SERVICE_INFO = BluetoothServiceInfoBleak(
 )
 
 
+CIRCULATOR_FAN_PRO_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="Circulator Fan Pro",
+    manufacturer_data={
+        2409: b"\xb0\xe9\xfe\xfd\xc0\xb1\x9a\xd9\x98\x0b\x00\x00\x00\x00\x00\x00",
+    },
+    service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00Y\x00\x11\xb3@"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="Circulator Fan Pro",
+        manufacturer_data={
+            2409: b"\xb0\xe9\xfe\xfd\xc0\xb1\x9a\xd9\x98\x0b\x00\x00\x00\x00\x00\x00",
+        },
+        service_data={
+            "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00Y\x00\x11\xb3@"
+        },
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Circulator Fan Pro"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+
+UNIVERSAL_REMOTE_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="Universal Remote",
+    manufacturer_data={
+        2409: b"\xaa\xbb\xcc\xdd\xee\xff\x00\x50\x00\x00\x00\x00\x00\x00\x00\x00"
+    },
+    service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"'\x00"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="Universal Remote",
+        manufacturer_data={
+            2409: b"\xaa\xbb\xcc\xdd\xee\xff\x00\x50\x00\x00\x00\x00\x00\x00\x00\x00"
+        },
+        service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"'\x00"},
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Universal Remote"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+
 K20_VACUUM_SERVICE_INFO = BluetoothServiceInfoBleak(
     name="K20 Vacuum",
     manufacturer_data={
@@ -740,6 +838,32 @@ HUB3_SERVICE_INFO = BluetoothServiceInfoBleak(
     tx_power=-127,
 )
 
+HUB4_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="Hub4",
+    manufacturer_data={
+        2409: b"\xb0\xe9\xfen^)\x00\xffh&\xd6d\x94\x03\x994\x80",
+    },
+    service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00d\x00\x12\x82\x48"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="Hub4",
+        manufacturer_data={
+            2409: b"\xb0\xe9\xfen^)\x00\xffh&\xd6d\x94\x03\x994\x80",
+        },
+        service_data={
+            "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00d\x00\x12\x82\x48"
+        },
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Hub4"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
 
 LOCK_LITE_SERVICE_INFO = BluetoothServiceInfoBleak(
     name="Lock Lite",
@@ -854,6 +978,31 @@ LOCK_PRO_WIFI_SERVICE_INFO = BluetoothServiceInfoBleak(
         service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
     ),
     device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Lock Pro Wifi"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+
+LOCK_ULTRA_MAX_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="Lock Ultra Max",
+    manufacturer_data={2409: b"\xb0\xe9\xfe\x11\x22\x33\x2a\x88\x18\x64\x00\x91"},
+    service_data={
+        "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x80\x64\x00\x11\x9f\xb8"
+    },
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="Lock Ultra Max",
+        manufacturer_data={2409: b"\xb0\xe9\xfe\x11\x22\x33\x2a\x88\x18\x64\x00\x91"},
+        service_data={
+            "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x80\x64\x00\x11\x9f\xb8"
+        },
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Lock Ultra Max"),
     time=0,
     connectable=True,
     tx_power=-127,
@@ -1182,6 +1331,35 @@ RGBICWW_STRIP_LIGHT_SERVICE_INFO = BluetoothServiceInfoBleak(
 )
 
 
+RGBICWW_LIGHT_BARS_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="RGBICWW Light Bars",
+    manufacturer_data={
+        2409: b'(7/L\x94\xb2\x0c\x9e"\x00\x11:\x00',
+    },
+    service_data={
+        "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00\x00\x00\x11\xbe\xf8"
+    },
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="RGBICWW Light Bars",
+        manufacturer_data={
+            2409: b'(7/L\x94\xb2\x0c\x9e"\x00\x11:\x00',
+        },
+        service_data={
+            "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00\x00\x00\x11\xbe\xf8"
+        },
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "RGBICWW Light Bars"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+
 RGBICWW_FLOOR_LAMP_SERVICE_INFO = BluetoothServiceInfoBleak(
     name="RGBICWW Floor Lamp",
     manufacturer_data={
@@ -1257,6 +1435,34 @@ PLUG_MINI_EU_SERVICE_INFO = BluetoothServiceInfoBleak(
         service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
     ),
     device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Plug Mini (EU)"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+PLUG_MINI_IT_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="Plug Mini (IT)",
+    manufacturer_data={
+        2409: b"\x94\xa9\x90T\x85^?\xa1\x00\x00\x04\xe6\x00\x00\x00\x00",
+    },
+    service_data={
+        "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00\x00\x00\x12\x43\xc8\x15"
+    },
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="Plug Mini (IT)",
+        manufacturer_data={
+            2409: b"\x94\xa9\x90T\x85^?\xa1\x00\x00\x04\xe6\x00\x00\x00\x00",
+        },
+        service_data={
+            "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00\x00\x00\x12\x43\xc8\x15"
+        },
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Plug Mini (IT)"),
     time=0,
     connectable=True,
     tx_power=-127,
@@ -1513,7 +1719,7 @@ KEYPAD_VISION_INFO = BluetoothServiceInfoBleak(
 
 KEYPAD_VISION_PRO_INFO = BluetoothServiceInfoBleak(
     name="Keypad Vision Pro",
-    manufacturer_data={2409: b"\xb0\xe9\xfe\xde\xb6\x8c+`\x00\x00\x00\x00\x00\x002"},
+    manufacturer_data={2409: b"\xb0\xe9\xfe\xde\xb6\x8c+`\xc5\x00\x00\x00\x00\x002"},
     service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00`\x01\x11Q\x98"},
     service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
     address="AA:BB:CC:DD:EE:FF",
@@ -1522,7 +1728,7 @@ KEYPAD_VISION_PRO_INFO = BluetoothServiceInfoBleak(
     advertisement=generate_advertisement_data(
         local_name="Keypad Vision Pro",
         manufacturer_data={
-            2409: b"\xb0\xe9\xfe\xde\xb6\x8c+`\x00\x00\x00\x00\x00\x002"
+            2409: b"\xb0\xe9\xfe\xde\xb6\x8c+`\xc5\x00\x00\x00\x00\x002"
         },
         service_data={
             "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00`\x01\x11Q\x98"

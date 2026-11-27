@@ -1,8 +1,10 @@
 {
   "domain": "android_ip_webcam",
   "name": "Android IP Webcam",
+  "categories": ["security_safety.cameras"],
   "codeowners": ["@engrbm87"],
   "config_flow": true,
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/android_ip_webcam",
   "integration_type": "device",
   "iot_class": "local_polling",

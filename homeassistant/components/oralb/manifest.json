@@ -6,12 +6,14 @@
       "manufacturer_id": 220
     }
   ],
+  "categories": ["health_wellbeing"],
   "codeowners": ["@bdraco", "@Lash-L"],
   "config_flow": true,
+  "connectivity": ["bluetooth"],
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/oralb",
   "integration_type": "device",
   "iot_class": "local_push",
   "loggers": ["oralb_ble"],
-  "requirements": ["oralb-ble==1.1.0"]
+  "requirements": ["oralb-ble==1.1.3"]
 }

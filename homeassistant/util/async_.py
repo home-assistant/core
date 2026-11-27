@@ -8,6 +8,7 @@ from asyncio import (
     TimerHandle,
     gather,
     get_running_loop,
+    wait,
 )
 from collections.abc import Awaitable, Callable, Coroutine
 import concurrent.futures
@@ -47,6 +48,17 @@ def cancelling(task: Future[Any]) -> bool:
     return bool((cancelling_ := getattr(task, "cancelling", None)) and cancelling_())
 
 
+async def wait_shared_future[_T](future: Future[_T]) -> _T:
+    """Wait for a future shared with other callers without cancelling it.
+
+    Awaiting a shared future directly cancels it when the waiter is cancelled,
+    which breaks the other waiters and makes the owner's set_result raise.
+    """
+    if not future.done():
+        await wait((future,))
+    return future.result()
+
+
 def run_callback_threadsafe[_T, *_Ts](
     loop: AbstractEventLoop, callback: Callable[[*_Ts], _T], *args: *_Ts
 ) -> concurrent.futures.Future[_T]:
@@ -63,7 +75,7 @@ def run_callback_threadsafe[_T, *_Ts](
         """Run callback and store result."""
         try:
             future.set_result(callback(*args))
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             if future.set_running_or_notify_cancel():
                 future.set_exception(exc)
             else:

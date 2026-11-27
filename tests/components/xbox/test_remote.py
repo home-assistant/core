@@ -1,32 +1,30 @@
 """Test the Xbox remote platform."""
 
 from collections.abc import Generator
-from http import HTTPStatus
 from unittest.mock import AsyncMock, patch
 
-from httpx import HTTPStatusError, RequestError, TimeoutException
+from httpx2 import HTTPStatusError, RequestError, TimeoutException
 import pytest
-from pythonxbox.api.provider.smartglass.models import InputKeyType
+from pytest_homeassistant.common import (
+    Mock,
+    MockConfigEntry,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
+from pythonxbox.api.provider.smartglass.models import CommandResponse, InputKeyType
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.remote import (
-    ATTR_DELAY_SECS,
     DOMAIN as REMOTE_DOMAIN,
-    SERVICE_SEND_COMMAND,
+    RemoteService,
+    RemoteServiceArgument,
 )
+from homeassistant.components.xbox.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import (
-    ATTR_COMMAND,
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    Platform,
-)
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import Mock, MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -90,9 +88,9 @@ async def test_send_button_command(
 
     await hass.services.async_call(
         REMOTE_DOMAIN,
-        SERVICE_SEND_COMMAND,
-        {ATTR_COMMAND: button, ATTR_DELAY_SECS: 0},
-        target={ATTR_ENTITY_ID: "remote.xone"},
+        RemoteService.SEND_COMMAND,
+        {RemoteServiceArgument.COMMAND: button, RemoteServiceArgument.DELAY_SECS: 0},
+        target={TargetKey.ENTITY_ID: "remote.xone"},
         blocking=True,
     )
 
@@ -134,9 +132,9 @@ async def test_send_command(
 
     await hass.services.async_call(
         REMOTE_DOMAIN,
-        SERVICE_SEND_COMMAND,
-        {ATTR_COMMAND: command, ATTR_DELAY_SECS: 0},
-        target={ATTR_ENTITY_ID: "remote.xone"},
+        RemoteService.SEND_COMMAND,
+        {RemoteServiceArgument.COMMAND: command, RemoteServiceArgument.DELAY_SECS: 0},
+        target={TargetKey.ENTITY_ID: "remote.xone"},
         blocking=True,
     )
 
@@ -144,10 +142,13 @@ async def test_send_command(
     call.assert_called_once_with("HIJKLMN")
 
 
+@pytest.mark.parametrize(("text", "expected"), [("Hello", "Hello"), ("text:A", "A")])
 async def test_send_text(
     hass: HomeAssistant,
     xbox_live_client: AsyncMock,
     config_entry: MockConfigEntry,
+    text: str,
+    expected: str,
 ) -> None:
     """Test remote send text."""
 
@@ -159,13 +160,13 @@ async def test_send_text(
 
     await hass.services.async_call(
         REMOTE_DOMAIN,
-        SERVICE_SEND_COMMAND,
-        {ATTR_COMMAND: "Hello", ATTR_DELAY_SECS: 0},
-        target={ATTR_ENTITY_ID: "remote.xone"},
+        RemoteService.SEND_COMMAND,
+        {RemoteServiceArgument.COMMAND: text, RemoteServiceArgument.DELAY_SECS: 0},
+        target={TargetKey.ENTITY_ID: "remote.xone"},
         blocking=True,
     )
 
-    xbox_live_client.smartglass.insert_text.assert_called_once_with("HIJKLMN", "Hello")
+    xbox_live_client.smartglass.insert_text.assert_called_once_with("HIJKLMN", expected)
 
 
 async def test_turn_on(
@@ -183,8 +184,8 @@ async def test_turn_on(
 
     await hass.services.async_call(
         REMOTE_DOMAIN,
-        SERVICE_TURN_ON,
-        target={ATTR_ENTITY_ID: "remote.xone"},
+        RemoteService.TURN_ON,
+        target={TargetKey.ENTITY_ID: "remote.xone"},
         blocking=True,
     )
 
@@ -206,8 +207,8 @@ async def test_turn_off(
 
     await hass.services.async_call(
         REMOTE_DOMAIN,
-        SERVICE_TURN_OFF,
-        target={ATTR_ENTITY_ID: "remote.xone"},
+        RemoteService.TURN_OFF,
+        target={TargetKey.ENTITY_ID: "remote.xone"},
         blocking=True,
     )
 
@@ -251,12 +252,67 @@ async def test_send_command_exceptions(
     with pytest.raises(HomeAssistantError) as e:
         await hass.services.async_call(
             REMOTE_DOMAIN,
-            SERVICE_SEND_COMMAND,
-            {ATTR_COMMAND: command, ATTR_DELAY_SECS: 0},
-            target={ATTR_ENTITY_ID: "remote.xone"},
+            RemoteService.SEND_COMMAND,
+            {
+                RemoteServiceArgument.COMMAND: command,
+                RemoteServiceArgument.DELAY_SECS: 0,
+            },
+            target={TargetKey.ENTITY_ID: "remote.xone"},
             blocking=True,
         )
     assert e.value.translation_key == translation_key
+
+
+@pytest.mark.parametrize(
+    ("command", "call_method"),
+    [
+        ("WakeUp", "wake_up"),
+        ("TurnOff", "turn_off"),
+        ("Reboot", "reboot"),
+        ("Mute", "mute"),
+        ("Unmute", "unmute"),
+        ("Play", "play"),
+        ("Pause", "pause"),
+        ("Previous", "previous"),
+        ("Next", "next"),
+        ("GoHome", "go_home"),
+        ("GoBack", "go_back"),
+        ("ShowGuideTab", "show_guide_tab"),
+        ("ShowGuide", "show_tv_guide"),
+    ],
+)
+async def test_send_command_failed(
+    hass: HomeAssistant,
+    xbox_live_client: AsyncMock,
+    config_entry: MockConfigEntry,
+    command: str,
+    call_method: str,
+) -> None:
+    """Test remote send command failed error."""
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    getattr(xbox_live_client.smartglass, call_method).return_value = CommandResponse(
+        **await async_load_json_object_fixture(
+            hass, "smartglass_command_response_error.json", DOMAIN
+        )  # type: ignore[reportArgumentType]
+    )
+    with pytest.raises(HomeAssistantError) as e:
+        await hass.services.async_call(
+            REMOTE_DOMAIN,
+            RemoteService.SEND_COMMAND,
+            {
+                RemoteServiceArgument.COMMAND: command,
+                RemoteServiceArgument.DELAY_SECS: 0,
+            },
+            target={TargetKey.ENTITY_ID: "remote.xone"},
+            blocking=True,
+        )
+    assert e.value.translation_key == "command_failed"
 
 
 @pytest.mark.parametrize(
@@ -265,12 +321,6 @@ async def test_send_command_exceptions(
         (TimeoutException(""), "timeout_exception"),
         (RequestError("", request=Mock()), "request_exception"),
         (HTTPStatusError("", request=Mock(), response=Mock()), "request_exception"),
-        (
-            HTTPStatusError(
-                "", request=Mock(), response=Mock(status_code=HTTPStatus.NOT_FOUND)
-            ),
-            "turn_on_failed",
-        ),
     ],
 )
 async def test_turn_on_exceptions(
@@ -289,14 +339,43 @@ async def test_turn_on_exceptions(
     assert config_entry.state is ConfigEntryState.LOADED
 
     xbox_live_client.smartglass.wake_up.side_effect = exception
+
     with pytest.raises(HomeAssistantError) as e:
         await hass.services.async_call(
             REMOTE_DOMAIN,
-            SERVICE_TURN_ON,
-            target={ATTR_ENTITY_ID: "remote.xone"},
+            RemoteService.TURN_ON,
+            target={TargetKey.ENTITY_ID: "remote.xone"},
             blocking=True,
         )
     assert e.value.translation_key == translation_key
+
+
+async def test_turn_on_failed(
+    hass: HomeAssistant,
+    xbox_live_client: AsyncMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test remote turn on exceptions."""
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    xbox_live_client.smartglass.wake_up.return_value = CommandResponse(
+        **await async_load_json_object_fixture(
+            hass, "smartglass_command_response_error.json", DOMAIN
+        )  # type: ignore[reportArgumentType]
+    )
+    with pytest.raises(HomeAssistantError) as e:
+        await hass.services.async_call(
+            REMOTE_DOMAIN,
+            RemoteService.TURN_ON,
+            target={TargetKey.ENTITY_ID: "remote.xone"},
+            blocking=True,
+        )
+    assert e.value.translation_key == "turn_on_failed"
 
 
 @pytest.mark.parametrize(
@@ -326,8 +405,8 @@ async def test_turn_off_exceptions(
     with pytest.raises(HomeAssistantError) as e:
         await hass.services.async_call(
             REMOTE_DOMAIN,
-            SERVICE_TURN_OFF,
-            target={ATTR_ENTITY_ID: "remote.xone"},
+            RemoteService.TURN_OFF,
+            target={TargetKey.ENTITY_ID: "remote.xone"},
             blocking=True,
         )
     assert e.value.translation_key == translation_key

@@ -4,14 +4,13 @@ from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.remote import (
-    ATTR_COMMAND,
-    ATTR_DELAY_SECS,
-    ATTR_NUM_REPEATS,
     DOMAIN as REMOTE_DOMAIN,
-    SERVICE_SEND_COMMAND,
+    RemoteService,
+    RemoteServiceArgument,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -19,6 +18,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
@@ -27,8 +27,6 @@ from homeassistant.util import slugify
 
 from .conftest import setup_integration
 from .const import NAME
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 REMOTE_ENTITY_ID = f"{REMOTE_DOMAIN}.{slugify(NAME)}"
 
@@ -68,7 +66,7 @@ async def test_remote_is_off_when_device_off(
 ) -> None:
     """Test remote state is off when device is off."""
     with patch(
-        "homeassistant.components.vizio.VizioAsync.get_power_state",
+        "homeassistant.components.vizio.Vizio.get_power_state",
         return_value=False,
     ):
         await setup_integration(hass, mock_speaker_config_entry)
@@ -79,8 +77,8 @@ async def test_remote_is_off_when_device_off(
 @pytest.mark.parametrize(
     ("service", "mock_method"),
     [
-        (SERVICE_TURN_ON, "pow_on"),
-        (SERVICE_TURN_OFF, "pow_off"),
+        (SERVICE_TURN_ON, "power_on"),
+        (SERVICE_TURN_OFF, "power_off"),
     ],
 )
 @pytest.mark.usefixtures("vizio_connect", "vizio_update")
@@ -93,7 +91,7 @@ async def test_turn_on_off(
     """Test turning on/off the remote sends the correct power command."""
     await setup_integration(hass, mock_speaker_config_entry)
     with patch(
-        f"homeassistant.components.vizio.VizioAsync.{mock_method}",
+        f"homeassistant.components.vizio.Vizio.{mock_method}",
     ) as mock_power:
         await hass.services.async_call(
             REMOTE_DOMAIN,
@@ -101,7 +99,7 @@ async def test_turn_on_off(
             {ATTR_ENTITY_ID: REMOTE_ENTITY_ID},
             blocking=True,
         )
-        mock_power.assert_called_once_with(log_api_exception=False)
+        mock_power.assert_called_once_with()
 
 
 @pytest.mark.parametrize(
@@ -110,6 +108,12 @@ async def test_turn_on_off(
         ("BACK", "BACK"),
         ("ch_up", "CH_UP"),
         ("SMARTCAST", "SMARTCAST"),
+        # Aliases
+        ("next_input", "INPUT_NEXT"),
+        ("channel_up", "CH_UP"),
+        ("enter", "OK"),
+        ("volume_down", "VOL_DOWN"),
+        ("VoLuMe_DoWn", "VOL_DOWN"),
     ],
 )
 @pytest.mark.usefixtures("vizio_connect", "vizio_update")
@@ -122,18 +126,18 @@ async def test_send_command_tv_valid(
     """Test send_command resolves valid TV commands."""
     await setup_integration(hass, mock_tv_config_entry)
     with patch(
-        "homeassistant.components.vizio.VizioAsync.remote",
+        "homeassistant.components.vizio.Vizio.send_key",
     ) as mock_remote:
         await hass.services.async_call(
             REMOTE_DOMAIN,
-            SERVICE_SEND_COMMAND,
+            RemoteService.SEND_COMMAND,
             {
-                ATTR_ENTITY_ID: REMOTE_ENTITY_ID,
-                ATTR_COMMAND: [command],
+                TargetKey.ENTITY_ID: REMOTE_ENTITY_ID,
+                RemoteServiceArgument.COMMAND: [command],
             },
             blocking=True,
         )
-        mock_remote.assert_called_once_with(expected_key, log_api_exception=False)
+        mock_remote.assert_called_once_with(expected_key)
 
 
 @pytest.mark.parametrize("command", ["INVALID_KEY", "not_a_key"])
@@ -148,10 +152,10 @@ async def test_send_command_tv_invalid(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             REMOTE_DOMAIN,
-            SERVICE_SEND_COMMAND,
+            RemoteService.SEND_COMMAND,
             {
-                ATTR_ENTITY_ID: REMOTE_ENTITY_ID,
-                ATTR_COMMAND: [command],
+                TargetKey.ENTITY_ID: REMOTE_ENTITY_ID,
+                RemoteServiceArgument.COMMAND: [command],
             },
             blocking=True,
         )
@@ -160,9 +164,13 @@ async def test_send_command_tv_invalid(
 @pytest.mark.parametrize(
     ("command", "expected_key"),
     [
+        # Native keys (one lowercase variant tested)
         ("MUTE_TOGGLE", "MUTE_TOGGLE"),
         ("pause", "PAUSE"),
         ("VOL_UP", "VOL_UP"),
+        # Aliases (only those whose target is a speaker key)
+        ("mute", "MUTE_TOGGLE"),
+        ("volume_down", "VOL_DOWN"),
     ],
 )
 @pytest.mark.usefixtures("vizio_connect", "vizio_update")
@@ -175,21 +183,31 @@ async def test_send_command_speaker_valid(
     """Test send_command resolves valid speaker commands."""
     await setup_integration(hass, mock_speaker_config_entry)
     with patch(
-        "homeassistant.components.vizio.VizioAsync.remote",
+        "homeassistant.components.vizio.Vizio.send_key",
     ) as mock_remote:
         await hass.services.async_call(
             REMOTE_DOMAIN,
-            SERVICE_SEND_COMMAND,
+            RemoteService.SEND_COMMAND,
             {
-                ATTR_ENTITY_ID: REMOTE_ENTITY_ID,
-                ATTR_COMMAND: [command],
+                TargetKey.ENTITY_ID: REMOTE_ENTITY_ID,
+                RemoteServiceArgument.COMMAND: [command],
             },
             blocking=True,
         )
-        mock_remote.assert_called_once_with(expected_key, log_api_exception=False)
+        mock_remote.assert_called_once_with(expected_key)
 
 
-@pytest.mark.parametrize("command", ["MENU", "CH_UP", "INVALID_KEY"])
+@pytest.mark.parametrize(
+    "command",
+    [
+        "MENU",
+        "CH_UP",
+        # TV-only alias
+        "channel_up",
+        # Completely invalid
+        "INVALID_KEY",
+    ],
+)
 @pytest.mark.usefixtures("vizio_connect", "vizio_update")
 async def test_send_command_speaker_invalid(
     hass: HomeAssistant,
@@ -201,10 +219,10 @@ async def test_send_command_speaker_invalid(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             REMOTE_DOMAIN,
-            SERVICE_SEND_COMMAND,
+            RemoteService.SEND_COMMAND,
             {
-                ATTR_ENTITY_ID: REMOTE_ENTITY_ID,
-                ATTR_COMMAND: [command],
+                TargetKey.ENTITY_ID: REMOTE_ENTITY_ID,
+                RemoteServiceArgument.COMMAND: [command],
             },
             blocking=True,
         )
@@ -217,20 +235,20 @@ async def test_send_command_multiple(
     """Test send_command with multiple commands in one call."""
     await setup_integration(hass, mock_tv_config_entry)
     with patch(
-        "homeassistant.components.vizio.VizioAsync.remote",
+        "homeassistant.components.vizio.Vizio.send_key",
     ) as mock_remote:
         await hass.services.async_call(
             REMOTE_DOMAIN,
-            SERVICE_SEND_COMMAND,
+            RemoteService.SEND_COMMAND,
             {
-                ATTR_ENTITY_ID: REMOTE_ENTITY_ID,
-                ATTR_COMMAND: ["UP", "OK"],
+                TargetKey.ENTITY_ID: REMOTE_ENTITY_ID,
+                RemoteServiceArgument.COMMAND: ["UP", "OK"],
             },
             blocking=True,
         )
         assert mock_remote.call_count == 2
-        mock_remote.assert_any_call("UP", log_api_exception=False)
-        mock_remote.assert_any_call("OK", log_api_exception=False)
+        mock_remote.assert_any_call("UP")
+        mock_remote.assert_any_call("OK")
 
 
 @pytest.mark.usefixtures("vizio_connect", "vizio_update")
@@ -241,16 +259,16 @@ async def test_send_command_invalid_skips_valid(
     await setup_integration(hass, mock_tv_config_entry)
     with (
         patch(
-            "homeassistant.components.vizio.VizioAsync.remote",
+            "homeassistant.components.vizio.Vizio.send_key",
         ) as mock_remote,
         pytest.raises(ServiceValidationError),
     ):
         await hass.services.async_call(
             REMOTE_DOMAIN,
-            SERVICE_SEND_COMMAND,
+            RemoteService.SEND_COMMAND,
             {
-                ATTR_ENTITY_ID: REMOTE_ENTITY_ID,
-                ATTR_COMMAND: ["UP", "INVALID_KEY"],
+                TargetKey.ENTITY_ID: REMOTE_ENTITY_ID,
+                RemoteServiceArgument.COMMAND: ["UP", "INVALID_KEY"],
             },
             blocking=True,
         )
@@ -265,7 +283,7 @@ async def test_send_command_delay_between_repeats(
     await setup_integration(hass, mock_tv_config_entry)
     with (
         patch(
-            "homeassistant.components.vizio.VizioAsync.remote",
+            "homeassistant.components.vizio.Vizio.send_key",
         ) as mock_remote,
         patch(
             "homeassistant.components.vizio.remote.asyncio.sleep",
@@ -273,12 +291,12 @@ async def test_send_command_delay_between_repeats(
     ):
         await hass.services.async_call(
             REMOTE_DOMAIN,
-            SERVICE_SEND_COMMAND,
+            RemoteService.SEND_COMMAND,
             {
-                ATTR_ENTITY_ID: REMOTE_ENTITY_ID,
-                ATTR_COMMAND: ["UP"],
-                ATTR_NUM_REPEATS: 3,
-                ATTR_DELAY_SECS: 0.5,
+                TargetKey.ENTITY_ID: REMOTE_ENTITY_ID,
+                RemoteServiceArgument.COMMAND: ["UP"],
+                RemoteServiceArgument.NUM_REPEATS: 3,
+                RemoteServiceArgument.DELAY_SECS: 0.5,
             },
             blocking=True,
         )

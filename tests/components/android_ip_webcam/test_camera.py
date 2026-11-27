@@ -3,12 +3,11 @@
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.android_ip_webcam.const import DOMAIN
 from homeassistant.components.camera import async_get_stream_source
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("aioclient_mock_fixture")

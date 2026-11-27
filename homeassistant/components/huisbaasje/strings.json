@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "wrong_account": "The credentials belong to a different EnergyFlip account than the one configured."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -9,6 +10,16 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "The current password of your EnergyFlip account."
+        },
+        "description": "The password for {username} is no longer valid. Enter the current password.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
       "user": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
@@ -24,18 +35,6 @@
       },
       "current_power": {
         "name": "Current power"
-      },
-      "current_power_off_peak": {
-        "name": "Current power in off-peak"
-      },
-      "current_power_out_off_peak": {
-        "name": "Current power out off-peak"
-      },
-      "current_power_out_peak": {
-        "name": "Current power out peak"
-      },
-      "current_power_peak": {
-        "name": "Current power in peak"
       },
       "energy_consumption_off_peak_today": {
         "name": "Energy consumption off-peak today"
@@ -73,6 +72,14 @@
       "gas_year": {
         "name": "Gas this year"
       }
+    }
+  },
+  "exceptions": {
+    "authentication_failed": {
+      "message": "Authentication failed"
+    },
+    "customer_overview_failed": {
+      "message": "Getting customer ID failed"
     }
   }
 }

@@ -7,9 +7,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_volume_dashy_config')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -59,9 +59,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_volume_dashy_config')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -107,7 +107,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0029296875',
+    'state': 'unknown',
   })
 # ---
 # name: test_all_entities[sensor.dashy_containers-entry]
@@ -120,9 +120,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_stack_2')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -174,9 +174,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -202,7 +202,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cpu_usage_total',
-    'unique_id': 'portainer_test_entry_123_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_cpu_usage_total',
+    'unique_id': 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_cpu_usage_total',
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
@@ -221,6 +221,68 @@
     'state': '0.0',
   })
 # ---
+# name: test_all_entities[sensor.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_health-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'healthy',
+        'unhealthy',
+        'starting',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_health',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Health',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Health',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'container_health_state',
+    'unique_id': 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_container_health_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_health-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05 Health',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'healthy',
+        'unhealthy',
+        'starting',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_health',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'healthy',
+  })
+# ---
 # name: test_all_entities[sensor.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_image-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -229,9 +291,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -254,7 +316,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'image',
-    'unique_id': 'portainer_test_entry_123_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_image',
+    'unique_id': 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_image',
     'unit_of_measurement': None,
   })
 # ---
@@ -271,6 +333,56 @@
     'state': 'docker.io/lissy93/dashy:latest',
   })
 # ---
+# name: test_all_entities[sensor.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_last_exit_code-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_last_exit_code',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Last exit code',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Last exit code',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'container_exit_code',
+    'unique_id': 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_container_exit_code',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_last_exit_code-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05 Last exit code',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_last_exit_code',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_all_entities[sensor.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_memory_limit-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -281,9 +393,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -312,7 +424,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_limit',
-    'unique_id': 'portainer_test_entry_123_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_memory_limit',
+    'unique_id': 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_memory_limit',
     'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
   })
 # ---
@@ -342,9 +454,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -373,7 +485,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_usage',
-    'unique_id': 'portainer_test_entry_123_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_memory_usage',
+    'unique_id': 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_memory_usage',
     'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
   })
 # ---
@@ -403,9 +515,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -431,7 +543,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_usage_percentage',
-    'unique_id': 'portainer_test_entry_123_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_memory_usage_percentage',
+    'unique_id': 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_memory_usage_percentage',
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
@@ -450,6 +562,110 @@
     'state': '9.7412109375',
   })
 # ---
+# name: test_all_entities[sensor.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_restart_count-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_restart_count',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Restart count',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Restart count',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'container_restart_count',
+    'unique_id': 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_container_restart_count',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_restart_count-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05 Restart count',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_restart_count',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_all_entities[sensor.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_started-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_started',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Started',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Started',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'container_started_at',
+    'unique_id': 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_container_started_at',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_started-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05 Started',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_started',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2020-01-06T09:06:59+00:00',
+  })
+# ---
 # name: test_all_entities[sensor.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -458,18 +674,19 @@
     'area_id': None,
     'capabilities': dict({
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'running',
-        'exited',
-        'paused',
-        'restarting',
         'created',
+        'restarting',
+        'running',
+        'removing',
+        'paused',
+        'exited',
         'dead',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -492,7 +709,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container_state',
-    'unique_id': 'portainer_test_entry_123_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_container_state',
+    'unique_id': 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_container_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -502,11 +719,12 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05 State',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'running',
-        'exited',
-        'paused',
-        'restarting',
         'created',
+        'restarting',
+        'running',
+        'removing',
+        'paused',
+        'exited',
         'dead',
       ]),
     }),
@@ -516,6 +734,57 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'running',
+  })
+# ---
+# name: test_all_entities[sensor.dashy_last_deployed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_stack_2')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.dashy_last_deployed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Last deployed',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last deployed',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'stack_last_deployed',
+    'unique_id': 'portainer_test_entry_123_2_stack_last_deployed',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.dashy_last_deployed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'dashy Last deployed',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dashy_last_deployed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-02-16T12:46:40+00:00',
   })
 # ---
 # name: test_all_entities[sensor.dashy_type-entry]
@@ -532,9 +801,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_stack_2')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -588,9 +857,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_volume_db_data')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -640,9 +909,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_volume_db_data')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -701,9 +970,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_focused_einstein')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -729,7 +998,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cpu_usage_total',
-    'unique_id': 'portainer_test_entry_123_focused_einstein_cpu_usage_total',
+    'unique_id': 'portainer_test_entry_123_1_focused_einstein_cpu_usage_total',
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
@@ -748,6 +1017,68 @@
     'state': '0.0',
   })
 # ---
+# name: test_all_entities[sensor.focused_einstein_health-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'healthy',
+        'unhealthy',
+        'starting',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_focused_einstein')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.focused_einstein_health',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Health',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Health',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'container_health_state',
+    'unique_id': 'portainer_test_entry_123_1_focused_einstein_container_health_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.focused_einstein_health-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'focused_einstein Health',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'healthy',
+        'unhealthy',
+        'starting',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.focused_einstein_health',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'healthy',
+  })
+# ---
 # name: test_all_entities[sensor.focused_einstein_image-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -756,9 +1087,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_focused_einstein')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -781,7 +1112,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'image',
-    'unique_id': 'portainer_test_entry_123_focused_einstein_image',
+    'unique_id': 'portainer_test_entry_123_1_focused_einstein_image',
     'unit_of_measurement': None,
   })
 # ---
@@ -798,6 +1129,56 @@
     'state': 'docker.io/library/redis:7',
   })
 # ---
+# name: test_all_entities[sensor.focused_einstein_last_exit_code-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_focused_einstein')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.focused_einstein_last_exit_code',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Last exit code',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Last exit code',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'container_exit_code',
+    'unique_id': 'portainer_test_entry_123_1_focused_einstein_container_exit_code',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.focused_einstein_last_exit_code-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'focused_einstein Last exit code',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.focused_einstein_last_exit_code',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_all_entities[sensor.focused_einstein_memory_limit-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -808,9 +1189,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_focused_einstein')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -839,7 +1220,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_limit',
-    'unique_id': 'portainer_test_entry_123_focused_einstein_memory_limit',
+    'unique_id': 'portainer_test_entry_123_1_focused_einstein_memory_limit',
     'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
   })
 # ---
@@ -869,9 +1250,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_focused_einstein')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -900,7 +1281,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_usage',
-    'unique_id': 'portainer_test_entry_123_focused_einstein_memory_usage',
+    'unique_id': 'portainer_test_entry_123_1_focused_einstein_memory_usage',
     'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
   })
 # ---
@@ -930,9 +1311,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_focused_einstein')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -958,7 +1339,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_usage_percentage',
-    'unique_id': 'portainer_test_entry_123_focused_einstein_memory_usage_percentage',
+    'unique_id': 'portainer_test_entry_123_1_focused_einstein_memory_usage_percentage',
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
@@ -977,6 +1358,110 @@
     'state': '9.7412109375',
   })
 # ---
+# name: test_all_entities[sensor.focused_einstein_restart_count-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_focused_einstein')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.focused_einstein_restart_count',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Restart count',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Restart count',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'container_restart_count',
+    'unique_id': 'portainer_test_entry_123_1_focused_einstein_container_restart_count',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.focused_einstein_restart_count-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'focused_einstein Restart count',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.focused_einstein_restart_count',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_all_entities[sensor.focused_einstein_started-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_focused_einstein')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.focused_einstein_started',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Started',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Started',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'container_started_at',
+    'unique_id': 'portainer_test_entry_123_1_focused_einstein_container_started_at',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.focused_einstein_started-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'focused_einstein Started',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.focused_einstein_started',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2020-01-06T09:06:59+00:00',
+  })
+# ---
 # name: test_all_entities[sensor.focused_einstein_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -985,18 +1470,19 @@
     'area_id': None,
     'capabilities': dict({
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'running',
-        'exited',
-        'paused',
-        'restarting',
         'created',
+        'restarting',
+        'running',
+        'removing',
+        'paused',
+        'exited',
         'dead',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_focused_einstein')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1019,7 +1505,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container_state',
-    'unique_id': 'portainer_test_entry_123_focused_einstein_container_state',
+    'unique_id': 'portainer_test_entry_123_1_focused_einstein_container_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -1029,11 +1515,12 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'focused_einstein State',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'running',
-        'exited',
-        'paused',
-        'restarting',
         'created',
+        'restarting',
+        'running',
+        'removing',
+        'paused',
+        'exited',
         'dead',
       ]),
     }),
@@ -1055,9 +1542,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_funny_chatelet')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -1083,7 +1570,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cpu_usage_total',
-    'unique_id': 'portainer_test_entry_123_funny_chatelet_cpu_usage_total',
+    'unique_id': 'portainer_test_entry_123_1_funny_chatelet_cpu_usage_total',
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
@@ -1102,6 +1589,68 @@
     'state': '0.0',
   })
 # ---
+# name: test_all_entities[sensor.funny_chatelet_health-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'healthy',
+        'unhealthy',
+        'starting',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_funny_chatelet')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.funny_chatelet_health',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Health',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Health',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'container_health_state',
+    'unique_id': 'portainer_test_entry_123_1_funny_chatelet_container_health_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.funny_chatelet_health-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'funny_chatelet Health',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'healthy',
+        'unhealthy',
+        'starting',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.funny_chatelet_health',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'healthy',
+  })
+# ---
 # name: test_all_entities[sensor.funny_chatelet_image-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1110,9 +1659,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_funny_chatelet')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1135,7 +1684,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'image',
-    'unique_id': 'portainer_test_entry_123_funny_chatelet_image',
+    'unique_id': 'portainer_test_entry_123_1_funny_chatelet_image',
     'unit_of_measurement': None,
   })
 # ---
@@ -1152,6 +1701,56 @@
     'state': 'docker.io/library/ubuntu:latest',
   })
 # ---
+# name: test_all_entities[sensor.funny_chatelet_last_exit_code-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_funny_chatelet')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.funny_chatelet_last_exit_code',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Last exit code',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Last exit code',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'container_exit_code',
+    'unique_id': 'portainer_test_entry_123_1_funny_chatelet_container_exit_code',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.funny_chatelet_last_exit_code-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'funny_chatelet Last exit code',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.funny_chatelet_last_exit_code',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_all_entities[sensor.funny_chatelet_memory_limit-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1162,9 +1761,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_funny_chatelet')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -1193,7 +1792,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_limit',
-    'unique_id': 'portainer_test_entry_123_funny_chatelet_memory_limit',
+    'unique_id': 'portainer_test_entry_123_1_funny_chatelet_memory_limit',
     'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
   })
 # ---
@@ -1223,9 +1822,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_funny_chatelet')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -1254,7 +1853,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_usage',
-    'unique_id': 'portainer_test_entry_123_funny_chatelet_memory_usage',
+    'unique_id': 'portainer_test_entry_123_1_funny_chatelet_memory_usage',
     'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
   })
 # ---
@@ -1284,9 +1883,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_funny_chatelet')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -1312,7 +1911,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_usage_percentage',
-    'unique_id': 'portainer_test_entry_123_funny_chatelet_memory_usage_percentage',
+    'unique_id': 'portainer_test_entry_123_1_funny_chatelet_memory_usage_percentage',
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
@@ -1331,6 +1930,110 @@
     'state': '9.7412109375',
   })
 # ---
+# name: test_all_entities[sensor.funny_chatelet_restart_count-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_funny_chatelet')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.funny_chatelet_restart_count',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Restart count',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Restart count',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'container_restart_count',
+    'unique_id': 'portainer_test_entry_123_1_funny_chatelet_container_restart_count',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.funny_chatelet_restart_count-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'funny_chatelet Restart count',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.funny_chatelet_restart_count',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_all_entities[sensor.funny_chatelet_started-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_funny_chatelet')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.funny_chatelet_started',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Started',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Started',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'container_started_at',
+    'unique_id': 'portainer_test_entry_123_1_funny_chatelet_container_started_at',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.funny_chatelet_started-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'funny_chatelet Started',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.funny_chatelet_started',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2020-01-06T09:06:59+00:00',
+  })
+# ---
 # name: test_all_entities[sensor.funny_chatelet_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1339,18 +2042,19 @@
     'area_id': None,
     'capabilities': dict({
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'running',
-        'exited',
-        'paused',
-        'restarting',
         'created',
+        'restarting',
+        'running',
+        'removing',
+        'paused',
+        'exited',
         'dead',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_funny_chatelet')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1373,7 +2077,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container_state',
-    'unique_id': 'portainer_test_entry_123_funny_chatelet_container_state',
+    'unique_id': 'portainer_test_entry_123_1_funny_chatelet_container_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -1383,11 +2087,12 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'funny_chatelet State',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'running',
-        'exited',
-        'paused',
-        'restarting',
         'created',
+        'restarting',
+        'running',
+        'removing',
+        'paused',
+        'exited',
         'dead',
       ]),
     }),
@@ -1407,9 +2112,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -1457,9 +2162,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -1509,9 +2214,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -1562,9 +2267,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -1623,9 +2328,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -1684,9 +2389,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -1737,9 +2442,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -1790,9 +2495,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -1841,9 +2546,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -1893,9 +2598,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -1946,9 +2651,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -2007,9 +2712,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -2066,9 +2771,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -2116,9 +2821,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -2166,9 +2871,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -2218,9 +2923,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -2271,9 +2976,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -2332,9 +3037,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -2391,9 +3096,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_volume_myvolume')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -2443,9 +3148,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_volume_myvolume')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -2504,9 +3209,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_practical_morse')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -2532,7 +3237,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cpu_usage_total',
-    'unique_id': 'portainer_test_entry_123_practical_morse_cpu_usage_total',
+    'unique_id': 'portainer_test_entry_123_1_practical_morse_cpu_usage_total',
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
@@ -2551,6 +3256,68 @@
     'state': '0.0',
   })
 # ---
+# name: test_all_entities[sensor.practical_morse_health-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'healthy',
+        'unhealthy',
+        'starting',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_practical_morse')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.practical_morse_health',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Health',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Health',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'container_health_state',
+    'unique_id': 'portainer_test_entry_123_1_practical_morse_container_health_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.practical_morse_health-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'practical_morse Health',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'healthy',
+        'unhealthy',
+        'starting',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.practical_morse_health',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'healthy',
+  })
+# ---
 # name: test_all_entities[sensor.practical_morse_image-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -2559,9 +3326,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_practical_morse')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -2584,7 +3351,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'image',
-    'unique_id': 'portainer_test_entry_123_practical_morse_image',
+    'unique_id': 'portainer_test_entry_123_1_practical_morse_image',
     'unit_of_measurement': None,
   })
 # ---
@@ -2601,6 +3368,56 @@
     'state': 'docker.io/library/python:3.13-slim',
   })
 # ---
+# name: test_all_entities[sensor.practical_morse_last_exit_code-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_practical_morse')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.practical_morse_last_exit_code',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Last exit code',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Last exit code',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'container_exit_code',
+    'unique_id': 'portainer_test_entry_123_1_practical_morse_container_exit_code',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.practical_morse_last_exit_code-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'practical_morse Last exit code',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.practical_morse_last_exit_code',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_all_entities[sensor.practical_morse_memory_limit-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -2611,9 +3428,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_practical_morse')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -2642,7 +3459,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_limit',
-    'unique_id': 'portainer_test_entry_123_practical_morse_memory_limit',
+    'unique_id': 'portainer_test_entry_123_1_practical_morse_memory_limit',
     'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
   })
 # ---
@@ -2672,9 +3489,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_practical_morse')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -2703,7 +3520,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_usage',
-    'unique_id': 'portainer_test_entry_123_practical_morse_memory_usage',
+    'unique_id': 'portainer_test_entry_123_1_practical_morse_memory_usage',
     'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
   })
 # ---
@@ -2733,9 +3550,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_practical_morse')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -2761,7 +3578,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_usage_percentage',
-    'unique_id': 'portainer_test_entry_123_practical_morse_memory_usage_percentage',
+    'unique_id': 'portainer_test_entry_123_1_practical_morse_memory_usage_percentage',
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
@@ -2780,6 +3597,110 @@
     'state': '9.7412109375',
   })
 # ---
+# name: test_all_entities[sensor.practical_morse_restart_count-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_practical_morse')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.practical_morse_restart_count',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Restart count',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Restart count',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'container_restart_count',
+    'unique_id': 'portainer_test_entry_123_1_practical_morse_container_restart_count',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.practical_morse_restart_count-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'practical_morse Restart count',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.practical_morse_restart_count',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_all_entities[sensor.practical_morse_started-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_practical_morse')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.practical_morse_started',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Started',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Started',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'container_started_at',
+    'unique_id': 'portainer_test_entry_123_1_practical_morse_container_started_at',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.practical_morse_started-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'practical_morse Started',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.practical_morse_started',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2020-01-06T09:06:59+00:00',
+  })
+# ---
 # name: test_all_entities[sensor.practical_morse_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -2788,18 +3709,19 @@
     'area_id': None,
     'capabilities': dict({
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'running',
-        'exited',
-        'paused',
-        'restarting',
         'created',
+        'restarting',
+        'running',
+        'removing',
+        'paused',
+        'exited',
         'dead',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_practical_morse')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -2822,7 +3744,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container_state',
-    'unique_id': 'portainer_test_entry_123_practical_morse_container_state',
+    'unique_id': 'portainer_test_entry_123_1_practical_morse_container_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -2832,11 +3754,12 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'practical_morse State',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'running',
-        'exited',
-        'paused',
-        'restarting',
         'created',
+        'restarting',
+        'running',
+        'removing',
+        'paused',
+        'exited',
         'dead',
       ]),
     }),
@@ -2858,9 +3781,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_serene_banach')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -2886,7 +3809,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cpu_usage_total',
-    'unique_id': 'portainer_test_entry_123_serene_banach_cpu_usage_total',
+    'unique_id': 'portainer_test_entry_123_1_serene_banach_cpu_usage_total',
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
@@ -2905,6 +3828,68 @@
     'state': '0.0',
   })
 # ---
+# name: test_all_entities[sensor.serene_banach_health-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'healthy',
+        'unhealthy',
+        'starting',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_serene_banach')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.serene_banach_health',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Health',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Health',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'container_health_state',
+    'unique_id': 'portainer_test_entry_123_1_serene_banach_container_health_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.serene_banach_health-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'serene_banach Health',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'healthy',
+        'unhealthy',
+        'starting',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.serene_banach_health',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'healthy',
+  })
+# ---
 # name: test_all_entities[sensor.serene_banach_image-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -2913,9 +3898,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_serene_banach')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -2938,7 +3923,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'image',
-    'unique_id': 'portainer_test_entry_123_serene_banach_image',
+    'unique_id': 'portainer_test_entry_123_1_serene_banach_image',
     'unit_of_measurement': None,
   })
 # ---
@@ -2955,6 +3940,157 @@
     'state': 'docker.io/library/nginx:latest',
   })
 # ---
+# name: test_all_entities[sensor.serene_banach_image_created-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_serene_banach')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.serene_banach_image_created',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Image created',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Image created',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'image_created',
+    'unique_id': 'portainer_test_entry_123_1_serene_banach_image_created',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.serene_banach_image_created-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'serene_banach Image created',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.serene_banach_image_created',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2026-05-02T14:31:00+00:00',
+  })
+# ---
+# name: test_all_entities[sensor.serene_banach_image_version-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_serene_banach')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.serene_banach_image_version',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Image version',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Image version',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'image_version',
+    'unique_id': 'portainer_test_entry_123_1_serene_banach_image_version',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.serene_banach_image_version-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'serene_banach Image version',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.serene_banach_image_version',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.29.3',
+  })
+# ---
+# name: test_all_entities[sensor.serene_banach_last_exit_code-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_serene_banach')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.serene_banach_last_exit_code',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Last exit code',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Last exit code',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'container_exit_code',
+    'unique_id': 'portainer_test_entry_123_1_serene_banach_container_exit_code',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.serene_banach_last_exit_code-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'serene_banach Last exit code',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.serene_banach_last_exit_code',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_all_entities[sensor.serene_banach_memory_limit-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -2965,9 +4101,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_serene_banach')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -2996,7 +4132,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_limit',
-    'unique_id': 'portainer_test_entry_123_serene_banach_memory_limit',
+    'unique_id': 'portainer_test_entry_123_1_serene_banach_memory_limit',
     'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
   })
 # ---
@@ -3026,9 +4162,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_serene_banach')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -3057,7 +4193,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_usage',
-    'unique_id': 'portainer_test_entry_123_serene_banach_memory_usage',
+    'unique_id': 'portainer_test_entry_123_1_serene_banach_memory_usage',
     'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
   })
 # ---
@@ -3087,9 +4223,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_serene_banach')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -3115,7 +4251,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_usage_percentage',
-    'unique_id': 'portainer_test_entry_123_serene_banach_memory_usage_percentage',
+    'unique_id': 'portainer_test_entry_123_1_serene_banach_memory_usage_percentage',
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
@@ -3134,6 +4270,110 @@
     'state': '9.7412109375',
   })
 # ---
+# name: test_all_entities[sensor.serene_banach_restart_count-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_serene_banach')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.serene_banach_restart_count',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Restart count',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Restart count',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'container_restart_count',
+    'unique_id': 'portainer_test_entry_123_1_serene_banach_container_restart_count',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.serene_banach_restart_count-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'serene_banach Restart count',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.serene_banach_restart_count',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_all_entities[sensor.serene_banach_started-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_serene_banach')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.serene_banach_started',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Started',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Started',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'container_started_at',
+    'unique_id': 'portainer_test_entry_123_1_serene_banach_container_started_at',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.serene_banach_started-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'serene_banach Started',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.serene_banach_started',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2020-01-06T09:06:59+00:00',
+  })
+# ---
 # name: test_all_entities[sensor.serene_banach_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -3142,18 +4382,19 @@
     'area_id': None,
     'capabilities': dict({
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'running',
-        'exited',
-        'paused',
-        'restarting',
         'created',
+        'restarting',
+        'running',
+        'removing',
+        'paused',
+        'exited',
         'dead',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_serene_banach')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -3176,7 +4417,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container_state',
-    'unique_id': 'portainer_test_entry_123_serene_banach_container_state',
+    'unique_id': 'portainer_test_entry_123_1_serene_banach_container_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -3186,11 +4427,12 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'serene_banach State',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'running',
-        'exited',
-        'paused',
-        'restarting',
         'created',
+        'restarting',
+        'running',
+        'removing',
+        'paused',
+        'exited',
         'dead',
       ]),
     }),
@@ -3212,9 +4454,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_stoic_turing')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -3240,7 +4482,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cpu_usage_total',
-    'unique_id': 'portainer_test_entry_123_stoic_turing_cpu_usage_total',
+    'unique_id': 'portainer_test_entry_123_1_stoic_turing_cpu_usage_total',
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
@@ -3259,6 +4501,68 @@
     'state': '0.0',
   })
 # ---
+# name: test_all_entities[sensor.stoic_turing_health-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'healthy',
+        'unhealthy',
+        'starting',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_stoic_turing')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.stoic_turing_health',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Health',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Health',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'container_health_state',
+    'unique_id': 'portainer_test_entry_123_1_stoic_turing_container_health_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.stoic_turing_health-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'stoic_turing Health',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'healthy',
+        'unhealthy',
+        'starting',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.stoic_turing_health',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'healthy',
+  })
+# ---
 # name: test_all_entities[sensor.stoic_turing_image-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -3267,9 +4571,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_stoic_turing')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -3292,7 +4596,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'image',
-    'unique_id': 'portainer_test_entry_123_stoic_turing_image',
+    'unique_id': 'portainer_test_entry_123_1_stoic_turing_image',
     'unit_of_measurement': None,
   })
 # ---
@@ -3309,6 +4613,157 @@
     'state': 'docker.io/library/postgres:15',
   })
 # ---
+# name: test_all_entities[sensor.stoic_turing_image_created-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_stoic_turing')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.stoic_turing_image_created',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Image created',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Image created',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'image_created',
+    'unique_id': 'portainer_test_entry_123_1_stoic_turing_image_created',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.stoic_turing_image_created-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'stoic_turing Image created',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.stoic_turing_image_created',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[sensor.stoic_turing_image_version-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_stoic_turing')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.stoic_turing_image_version',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Image version',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Image version',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'image_version',
+    'unique_id': 'portainer_test_entry_123_1_stoic_turing_image_version',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.stoic_turing_image_version-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'stoic_turing Image version',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.stoic_turing_image_version',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '15.14',
+  })
+# ---
+# name: test_all_entities[sensor.stoic_turing_last_exit_code-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_stoic_turing')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.stoic_turing_last_exit_code',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Last exit code',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Last exit code',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'container_exit_code',
+    'unique_id': 'portainer_test_entry_123_1_stoic_turing_container_exit_code',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.stoic_turing_last_exit_code-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'stoic_turing Last exit code',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.stoic_turing_last_exit_code',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '137',
+  })
+# ---
 # name: test_all_entities[sensor.stoic_turing_memory_limit-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -3319,9 +4774,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_stoic_turing')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -3350,7 +4805,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_limit',
-    'unique_id': 'portainer_test_entry_123_stoic_turing_memory_limit',
+    'unique_id': 'portainer_test_entry_123_1_stoic_turing_memory_limit',
     'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
   })
 # ---
@@ -3380,9 +4835,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_stoic_turing')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -3411,7 +4866,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_usage',
-    'unique_id': 'portainer_test_entry_123_stoic_turing_memory_usage',
+    'unique_id': 'portainer_test_entry_123_1_stoic_turing_memory_usage',
     'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
   })
 # ---
@@ -3441,9 +4896,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_stoic_turing')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -3469,7 +4924,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_usage_percentage',
-    'unique_id': 'portainer_test_entry_123_stoic_turing_memory_usage_percentage',
+    'unique_id': 'portainer_test_entry_123_1_stoic_turing_memory_usage_percentage',
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
@@ -3488,6 +4943,110 @@
     'state': '9.7412109375',
   })
 # ---
+# name: test_all_entities[sensor.stoic_turing_restart_count-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_stoic_turing')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.stoic_turing_restart_count',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Restart count',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Restart count',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'container_restart_count',
+    'unique_id': 'portainer_test_entry_123_1_stoic_turing_container_restart_count',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.stoic_turing_restart_count-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'stoic_turing Restart count',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.stoic_turing_restart_count',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_all_entities[sensor.stoic_turing_started-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_stoic_turing')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.stoic_turing_started',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Started',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Started',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'container_started_at',
+    'unique_id': 'portainer_test_entry_123_1_stoic_turing_container_started_at',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.stoic_turing_started-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'stoic_turing Started',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.stoic_turing_started',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2020-01-06T09:06:59+00:00',
+  })
+# ---
 # name: test_all_entities[sensor.stoic_turing_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -3496,18 +5055,19 @@
     'area_id': None,
     'capabilities': dict({
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'running',
-        'exited',
-        'paused',
-        'restarting',
         'created',
+        'restarting',
+        'running',
+        'removing',
+        'paused',
+        'exited',
         'dead',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_stoic_turing')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -3530,7 +5090,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container_state',
-    'unique_id': 'portainer_test_entry_123_stoic_turing_container_state',
+    'unique_id': 'portainer_test_entry_123_1_stoic_turing_container_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -3540,11 +5100,12 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'stoic_turing State',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'running',
-        'exited',
-        'paused',
-        'restarting',
         'created',
+        'restarting',
+        'running',
+        'removing',
+        'paused',
+        'exited',
         'dead',
       ]),
     }),
@@ -3566,9 +5127,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_stack_1')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -3610,6 +5171,57 @@
     'state': '2',
   })
 # ---
+# name: test_all_entities[sensor.webstack_last_deployed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_stack_1')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.webstack_last_deployed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Last deployed',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last deployed',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'stack_last_deployed',
+    'unique_id': 'portainer_test_entry_123_1_stack_last_deployed',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.webstack_last_deployed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'webstack Last deployed',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.webstack_last_deployed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-02-17T13:46:40+00:00',
+  })
+# ---
 # name: test_all_entities[sensor.webstack_type-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -3624,9 +5236,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_stack_1')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,

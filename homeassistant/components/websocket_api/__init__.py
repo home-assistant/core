@@ -7,8 +7,8 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, VolSchemaType
 
 from . import commands, connection, const, decorators, http, messages  # noqa: F401
-from .connection import ActiveConnection, current_connection  # noqa: F401
-from .const import (  # noqa: F401
+from .connection import ActiveConnection, current_connection
+from .const import (
     ERR_HOME_ASSISTANT_ERROR,
     ERR_INVALID_FORMAT,
     ERR_NOT_ALLOWED,
@@ -24,13 +24,13 @@ from .const import (  # noqa: F401
     AsyncWebSocketCommandHandler,
     WebSocketCommandHandler,
 )
-from .decorators import (  # noqa: F401
+from .decorators import (
     async_response,
     require_admin,
     websocket_command,
     ws_require_user,
 )
-from .messages import (  # noqa: F401
+from .messages import (
     BASE_COMMAND_MESSAGE_SCHEMA,
     error_message,
     event_message,
@@ -42,6 +42,35 @@ DOMAIN: Final = const.DOMAIN
 DEPENDENCIES: Final[tuple[str]] = ("http",)
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
+__all__ = [
+    "BASE_COMMAND_MESSAGE_SCHEMA",
+    "DOMAIN",
+    "ERR_HOME_ASSISTANT_ERROR",
+    "ERR_INVALID_FORMAT",
+    "ERR_NOT_ALLOWED",
+    "ERR_NOT_FOUND",
+    "ERR_NOT_SUPPORTED",
+    "ERR_SERVICE_VALIDATION_ERROR",
+    "ERR_TEMPLATE_ERROR",
+    "ERR_TIMEOUT",
+    "ERR_UNAUTHORIZED",
+    "ERR_UNKNOWN_COMMAND",
+    "ERR_UNKNOWN_ERROR",
+    "TYPE_RESULT",
+    "ActiveConnection",
+    "AsyncWebSocketCommandHandler",
+    "WebSocketCommandHandler",
+    "async_register_command",
+    "async_response",
+    "current_connection",
+    "error_message",
+    "event_message",
+    "require_admin",
+    "result_message",
+    "websocket_command",
+    "ws_require_user",
+]
 
 
 @callback

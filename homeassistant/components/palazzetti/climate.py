@@ -19,6 +19,8 @@ from .const import DOMAIN, FAN_AUTO, FAN_HIGH, FAN_MODES
 from .coordinator import PalazzettiConfigEntry, PalazzettiDataUpdateCoordinator
 from .entity import PalazzettiEntity
 
+PARALLEL_UPDATES = 1
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -36,7 +38,7 @@ class PalazzettiClimateEntity(PalazzettiEntity, ClimateEntity):
     _attr_name = None
     _attr_translation_key = DOMAIN
     _attr_target_temperature_step = 1.0
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.FAN_MODE
@@ -94,13 +96,13 @@ class PalazzettiClimateEntity(PalazzettiEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return current temperature."""
         return self.coordinator.client.room_temperature
 
     @property
     @override
-    def target_temperature(self) -> int | None:
+    def native_target_temperature(self) -> int | None:
         """Return the temperature."""
         return self.coordinator.client.target_temperature
 

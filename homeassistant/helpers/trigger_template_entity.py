@@ -1,11 +1,12 @@
 """TemplateEntity utility class."""
 
+from collections.abc import Mapping
 import itertools
 import logging
 from typing import Any, override
 
 import jinja2
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
@@ -14,18 +15,14 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
 )
-from homeassistant.components.sensor.helpers import (  # pylint: disable=home-assistant-component-root-import
-    async_parse_date_datetime,
-)
+from homeassistant.components.sensor.helpers import async_parse_date_datetime  # pylint: disable=home-assistant-component-root-import
 from homeassistant.const import (
-    ATTR_ENTITY_PICTURE,
-    ATTR_FRIENDLY_NAME,
-    ATTR_ICON,
     CONF_DEVICE_CLASS,
     CONF_ICON,
     CONF_NAME,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
+    EntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
@@ -43,34 +40,36 @@ from .template import (
 from .template.context import render_with_context
 from .typing import ConfigType
 
+_LOGGER = logging.getLogger(__name__)
+
 CONF_AVAILABILITY = "availability"
 CONF_ATTRIBUTES = "attributes"
 CONF_PICTURE = "picture"
 
 CONF_TO_ATTRIBUTE = {
-    CONF_ICON: ATTR_ICON,
-    CONF_NAME: ATTR_FRIENDLY_NAME,
-    CONF_PICTURE: ATTR_ENTITY_PICTURE,
+    CONF_ICON: EntityStateAttribute.ICON,
+    CONF_NAME: EntityStateAttribute.FRIENDLY_NAME,
+    CONF_PICTURE: EntityStateAttribute.ENTITY_PICTURE,
 }
 
-TEMPLATE_ENTITY_BASE_SCHEMA = vol.Schema(
+TEMPLATE_ENTITY_BASE_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_ICON): cv.template,
-        vol.Optional(CONF_NAME): cv.template,
-        vol.Optional(CONF_PICTURE): cv.template,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
+        probatio.Optional(CONF_ICON): cv.template,
+        probatio.Optional(CONF_NAME): cv.template,
+        probatio.Optional(CONF_PICTURE): cv.template,
+        probatio.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
 
-def make_template_entity_base_schema(default_name: str) -> vol.Schema:
+def make_template_entity_base_schema(default_name: str) -> probatio.Schema:
     """Return a schema with default name."""
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Optional(CONF_ICON): cv.template,
-            vol.Optional(CONF_NAME, default=default_name): cv.template,
-            vol.Optional(CONF_PICTURE): cv.template,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
+            probatio.Optional(CONF_ICON): cv.template,
+            probatio.Optional(CONF_NAME, default=default_name): cv.template,
+            probatio.Optional(CONF_PICTURE): cv.template,
+            probatio.Optional(CONF_UNIQUE_ID): cv.string,
         }
     )
 
@@ -96,11 +95,11 @@ def log_triggered_template_error(
     )
 
 
-TEMPLATE_SENSOR_BASE_SCHEMA = vol.Schema(
+TEMPLATE_SENSOR_BASE_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+        probatio.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+        probatio.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
+        probatio.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     }
 ).extend(TEMPLATE_ENTITY_BASE_SCHEMA.schema)
 
@@ -246,7 +245,9 @@ class TriggerBaseEntity(Entity):
         """Set unique id."""
         self._unique_id = unique_id
 
-    def _template_variables(self, run_variables: dict[str, Any] | None = None) -> dict:
+    def _template_variables(
+        self, run_variables: Mapping[str, Any] | None = None
+    ) -> dict:
         """Render template variables."""
         return {
             "this": TemplateStateFromEntityId(self.hass, self.entity_id),
@@ -395,6 +396,32 @@ class ManualTriggerSensorEntity(ManualTriggerEntity, SensorEntity):
         ManualTriggerEntity.__init__(self, hass, config)
         self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
         self._attr_state_class = config.get(CONF_STATE_CLASS)
+        self._non_numeric_logged = False
+
+    @callback
+    def _is_invalid_numeric_value(self, value: Any) -> bool:
+        """Return True if a numeric state is expected but value is not a number.
+
+        Logs a warning once until a valid value is set again, instead of the
+        state write raising on every update.
+        """
+        if value is None or not self._numeric_state_expected:
+            return False
+        try:
+            float(value)
+        except TypeError, ValueError:
+            if not self._non_numeric_logged:
+                _LOGGER.warning(
+                    "Sensor %s has a numeric device class, state class or unit but"
+                    " the value template returned the non-numeric value '%s',"
+                    " setting the state to unknown",
+                    self.entity_id,
+                    value,
+                )
+                self._non_numeric_logged = True
+            return True
+        self._non_numeric_logged = False
+        return False
 
     @callback
     def _set_native_value_with_possible_timestamp(self, value: Any) -> None:
@@ -403,11 +430,17 @@ class ManualTriggerSensorEntity(ManualTriggerEntity, SensorEntity):
         If self.device_class is `date`, `timestamp`, or `uptime`,
         it will try to parse the value to a date/datetime object.
         """
-        if self.device_class not in (
+        # Value templates render to strings, so a template rendering none gives "None"
+        if value == "None":
+            self._attr_native_value = None
+        elif self.device_class not in (
             SensorDeviceClass.DATE,
             SensorDeviceClass.TIMESTAMP,
             SensorDeviceClass.UPTIME,
         ):
+            if self._is_invalid_numeric_value(value):
+                self._attr_native_value = None
+                return
             self._attr_native_value = value
         elif value is not None:
             self._attr_native_value = async_parse_date_datetime(

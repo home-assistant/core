@@ -7,13 +7,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyomie.model import OMIEResults, SpotData
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.omie.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
 from . import price_enc, spot_price_fetcher
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -29,7 +29,7 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.omie.async_setup_entry", return_value=True
+        "homeassistant.components.omie.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -85,7 +85,77 @@ def mock_omie_results_jan15() -> OMIEResults:
         ],
     )
     return OMIEResults(
-        updated_at=dt.datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
+        updated_at=dt_util.now(),
+        market_date=test_date,
+        contents=spot_data,
+        raw=json.dumps(spot_data),
+    )
+
+
+@pytest.fixture
+def mock_omie_results_oct15() -> OMIEResults:
+    """Return mock OMIEResults for 2025-10-15."""
+    test_date = dt.date(2025, 10, 15)
+    spot_data = SpotData(
+        url="https://example.com?date=2025-10-15",
+        market_date=test_date.isoformat(),
+        header="Test Data Oct 15",
+        es_pt_total_power=[],
+        es_purchases_power=[],
+        pt_purchases_power=[],
+        es_sales_power=[],
+        pt_sales_power=[],
+        es_pt_power=[],
+        es_to_pt_exports_power=[],
+        es_from_pt_imports_power=[],
+        es_spot_price=[
+            price_enc(country=34, day=15, hour=h, minute=m)
+            for h in range(24)
+            for m in (0, 15, 30, 45)
+        ],
+        pt_spot_price=[
+            price_enc(country=351, day=15, hour=h, minute=m)
+            for h in range(24)
+            for m in (0, 15, 30, 45)
+        ],
+    )
+    return OMIEResults(
+        updated_at=dt_util.now(),
+        market_date=test_date,
+        contents=spot_data,
+        raw=json.dumps(spot_data),
+    )
+
+
+@pytest.fixture
+def mock_omie_results_oct26_dst() -> OMIEResults:
+    """Return mock OMIEResults for 2025-10-26, the 25-hour CET DST fall-back day."""
+    test_date = dt.date(2025, 10, 26)
+    spot_data = SpotData(
+        url="https://example.com?date=2025-10-26",
+        market_date=test_date.isoformat(),
+        header="Test Data Oct 26",
+        es_pt_total_power=[],
+        es_purchases_power=[],
+        pt_purchases_power=[],
+        es_sales_power=[],
+        pt_sales_power=[],
+        es_pt_power=[],
+        es_to_pt_exports_power=[],
+        es_from_pt_imports_power=[],
+        es_spot_price=[
+            price_enc(country=34, day=26, hour=h, minute=m)
+            for h in range(25)
+            for m in (0, 15, 30, 45)
+        ],
+        pt_spot_price=[
+            price_enc(country=351, day=26, hour=h, minute=m)
+            for h in range(25)
+            for m in (0, 15, 30, 45)
+        ],
+    )
+    return OMIEResults(
+        updated_at=dt_util.now(),
         market_date=test_date,
         contents=spot_data,
         raw=json.dumps(spot_data),
@@ -120,7 +190,7 @@ def mock_omie_results_jan16() -> OMIEResults:
         ],
     )
     return OMIEResults(
-        updated_at=dt.datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
+        updated_at=dt_util.now(),
         market_date=test_date,
         contents=spot_data,
         raw=json.dumps(spot_data),

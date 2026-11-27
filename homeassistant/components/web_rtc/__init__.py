@@ -3,7 +3,7 @@
 from collections.abc import Callable, Iterable
 from typing import Any
 
-import voluptuous as vol
+import probatio
 from webrtc_models import RTCIceServer
 
 from homeassistant.components import websocket_api
@@ -25,20 +25,22 @@ __all__ = [
 
 DOMAIN = "web_rtc"
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Required(CONF_ICE_SERVERS): vol.All(
-                    cv.ensure_list,
+                probatio.Required(CONF_ICE_SERVERS): probatio.All(
+                    probatio.EnsureList(),
                     [
-                        vol.Schema(
+                        probatio.Schema(
                             {
-                                vol.Required(CONF_URL): vol.All(
-                                    cv.ensure_list, [validate_stun_or_turn_url]
+                                probatio.Required(CONF_URL): probatio.All(
+                                    probatio.EnsureList(), [validate_stun_or_turn_url]
                                 ),
-                                vol.Optional(CONF_USERNAME): cv.string,
-                                vol.Optional(CONF_CREDENTIAL): cv.string,
+                                probatio.Optional(CONF_USERNAME): cv.string,
+                                probatio.Optional(
+                                    probatio.Secret(CONF_CREDENTIAL)
+                                ): cv.string,
                             }
                         )
                     ],
@@ -46,7 +48,7 @@ CONFIG_SCHEMA = vol.Schema(
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 DATA_ICE_SERVERS_USER: HassKey[Iterable[RTCIceServer]] = HassKey(

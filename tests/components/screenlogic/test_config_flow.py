@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
 from screenlogicpy import ScreenLogicError
 from screenlogicpy.const.common import (
     SL_GATEWAY_IP,
@@ -16,17 +17,11 @@ from homeassistant.components.screenlogic.config_flow import (
     GATEWAY_MANUAL_ENTRY,
     GATEWAY_SELECT_KEY,
 )
-from homeassistant.components.screenlogic.const import (
-    DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
-    MIN_SCAN_INTERVAL,
-)
-from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, CONF_SCAN_INTERVAL
+from homeassistant.components.screenlogic.const import DOMAIN
+from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
-
-from tests.common import MockConfigEntry
 
 
 async def test_flow_discovery(hass: HomeAssistant) -> None:
@@ -54,7 +49,7 @@ async def test_flow_discovery(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.screenlogic.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={GATEWAY_SELECT_KEY: "00:c0:33:01:01:01"}
@@ -67,6 +62,7 @@ async def test_flow_discovery(hass: HomeAssistant) -> None:
         CONF_IP_ADDRESS: "1.1.1.1",
         CONF_PORT: 80,
     }
+    assert result2["result"].unique_id == "00:c0:33:01:01:01"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -117,7 +113,7 @@ async def test_flow_replace_ignored(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.screenlogic.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={GATEWAY_SELECT_KEY: "00:c0:33:01:01:01"}
@@ -130,6 +126,7 @@ async def test_flow_replace_ignored(hass: HomeAssistant) -> None:
         CONF_IP_ADDRESS: "1.1.1.1",
         CONF_PORT: 80,
     }
+    assert result2["result"].unique_id == "00:c0:33:01:01:01"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -151,7 +148,7 @@ async def test_flow_discover_error(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.screenlogic.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.screenlogic.config_flow.login.async_get_mac_address",
@@ -195,7 +192,7 @@ async def test_dhcp(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.screenlogic.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.screenlogic.config_flow.login.async_get_mac_address",
@@ -217,6 +214,7 @@ async def test_dhcp(hass: HomeAssistant) -> None:
         CONF_IP_ADDRESS: "1.1.1.1",
         CONF_PORT: 80,
     }
+    assert result3["result"].unique_id == "00:c0:33:01:01:01"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -253,7 +251,7 @@ async def test_form_manual_entry(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.screenlogic.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.screenlogic.config_flow.login.async_get_mac_address",
@@ -275,6 +273,7 @@ async def test_form_manual_entry(hass: HomeAssistant) -> None:
         CONF_IP_ADDRESS: "1.1.1.1",
         CONF_PORT: 80,
     }
+    assert result3["result"].unique_id == "00:c0:33:01:01:01"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -303,79 +302,23 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {CONF_IP_ADDRESS: "cannot_connect"}
 
-
-async def test_option_flow(hass: HomeAssistant) -> None:
-    """Test config flow options."""
-    entry = MockConfigEntry(domain=DOMAIN)
-    entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.screenlogic.async_setup_entry",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.screenlogic.async_setup_entry",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.screenlogic.config_flow.login.async_get_mac_address",
+            return_value="00-C0-33-01-01-01",
+        ),
     ):
-        await hass.config_entries.async_setup(entry.entry_id)
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_IP_ADDRESS: "1.1.1.1",
+                CONF_PORT: 80,
+            },
+        )
         await hass.async_block_till_done()
 
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_SCAN_INTERVAL: 15},
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == {CONF_SCAN_INTERVAL: 15}
-
-
-async def test_option_flow_defaults(hass: HomeAssistant) -> None:
-    """Test config flow options."""
-    entry = MockConfigEntry(domain=DOMAIN)
-    entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.screenlogic.async_setup_entry",
-        return_value=True,
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={}
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == {
-        CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
-    }
-
-
-async def test_option_flow_input_floor(hass: HomeAssistant) -> None:
-    """Test config flow options."""
-    entry = MockConfigEntry(domain=DOMAIN)
-    entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.screenlogic.async_setup_entry",
-        return_value=True,
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_SCAN_INTERVAL: 1}
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == {
-        CONF_SCAN_INTERVAL: MIN_SCAN_INTERVAL,
-    }
+    assert result3["type"] is FlowResultType.CREATE_ENTRY

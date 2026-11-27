@@ -1,14 +1,16 @@
 """Common fixtures for the SolarEdge tests."""
 
 from collections.abc import Generator
+from datetime import datetime
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
+from solaredge_web import EnergyData
 
 from homeassistant.components.solaredge.const import CONF_SITE_ID, DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME
-
-from tests.common import MockConfigEntry, load_json_object_fixture
+from homeassistant.util import dt as dt_util
 
 SITE_ID = "1a2b3c4d5e6f7g8h"
 API_KEY = "a1b2c3d4e5f6g7h8"
@@ -21,7 +23,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.solaredge.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -102,7 +104,13 @@ def mock_solaredge_web_api_fixture() -> Generator[AsyncMock]:
         api = mock_web_api_flow.return_value
         mock_web_api_coord.return_value = api
         api.async_get_equipment.return_value = {
-            1001: {"displayName": "1.1"},
-            1002: {"displayName": "1.2"},
+            "7A012345-CA": {"name": "Optimizer 1.1", "type": "OPTIMIZER"},
+            "7A012346-CA": {"name": "Optimizer 1.2", "type": "OPTIMIZER"},
         }
+        api.async_get_energy_data.return_value = [
+            EnergyData(
+                start_time=dt_util.as_utc(datetime(2025, 1, 1, 10, 0)),
+                values={"7A012345-CA": 10.0, "7A012346-CA": 20.0},
+            ),
+        ]
         yield api

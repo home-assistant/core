@@ -1,35 +1,18 @@
 """The tests for the event integration."""
 
 from collections.abc import Generator
+from datetime import timedelta
+from types import ModuleType
 from typing import Any
 
 from freezegun import freeze_time
 import pytest
-
-from homeassistant.components.event import (
-    ATTR_EVENT_TYPE,
-    ATTR_EVENT_TYPES,
-    DOMAIN,
-    DoorbellEventType,
-    EventDeviceClass,
-    EventEntity,
-    EventEntityDescription,
-)
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
-from homeassistant.const import CONF_PLATFORM, STATE_UNKNOWN, Platform
-from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
-from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
-
-from .const import TEST_DOMAIN
-
-from tests.common import (
+from pytest_homeassistant.common import (
     MockConfigEntry,
     MockModule,
     MockPlatform,
     async_mock_restore_state_shutdown_restart,
+    import_and_test_deprecated_constant,
     mock_config_flow,
     mock_integration,
     mock_platform,
@@ -38,6 +21,30 @@ from tests.common import (
     setup_test_component_platform,
 )
 
+from homeassistant.components import event
+from homeassistant.components.event import (
+    DOMAIN,
+    DoorbellEventType,
+    EventDeviceClass,
+    EventEntity,
+    EventEntityCapabilityAttribute,
+    EventEntityDescription,
+    EventEntityStateAttribute,
+    const as event_const,
+)
+from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.const import CONF_PLATFORM, STATE_UNKNOWN, Platform
+from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    async_get_platforms,
+)
+from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
+from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
+
+from .const import TEST_DOMAIN
+
 
 async def test_event() -> None:
     """Test the event entity."""
@@ -45,7 +52,7 @@ async def test_event() -> None:
     event.entity_id = "event.doorbell"
     # Test event with no data at all
     assert event.state is None
-    assert event.state_attributes == {ATTR_EVENT_TYPE: None}
+    assert event.state_attributes == {EventEntityStateAttribute.EVENT_TYPE: None}
     assert not event.extra_state_attributes
     assert event.device_class is None
 
@@ -77,17 +84,21 @@ async def test_event() -> None:
         event._trigger_event("long_press")
 
         assert event.state == now.isoformat(timespec="milliseconds")
-        assert event.state_attributes == {ATTR_EVENT_TYPE: "long_press"}
+        assert event.state_attributes == {
+            EventEntityStateAttribute.EVENT_TYPE: "long_press"
+        }
         assert not event.extra_state_attributes
 
-    # Test triggering an event, with extra attribute data
-    now = dt_util.utcnow()
-    with freeze_time(now):
+    # Test triggering an event, with extra attribute data. Use a later time so
+    # the assertion is not affected by the strictly-increasing timestamp
+    # guarantee (which only kicks in within the same millisecond).
+    later = now + timedelta(seconds=1)
+    with freeze_time(later):
         event._trigger_event("short_press", {"hello": "world"})
 
-        assert event.state == now.isoformat(timespec="milliseconds")
+        assert event.state == later.isoformat(timespec="milliseconds")
         assert event.state_attributes == {
-            ATTR_EVENT_TYPE: "short_press",
+            EventEntityStateAttribute.EVENT_TYPE: "short_press",
             "hello": "world",
         }
 
@@ -96,6 +107,36 @@ async def test_event() -> None:
         ValueError, match="^Invalid event type unknown_event for event.doorbell$"
     ):
         event._trigger_event("unknown_event")
+
+
+async def test_trigger_event_strictly_increasing_timestamp() -> None:
+    """Test events within the same millisecond get strictly increasing states.
+
+    The event state is a millisecond timestamp; state triggers such as
+    event.received detect a new event by the state value changing. Multiple
+    events fired within one millisecond (e.g. several items handled in a single
+    coordinator poll) must therefore not collapse onto one timestamp.
+    """
+    event = EventEntity()
+    event.entity_id = "event.test"
+    event._attr_event_types = ["ping"]
+
+    states: list[str | None] = []
+    with freeze_time("2026-01-01T00:00:00+00:00"):
+        for _ in range(3):
+            event._trigger_event("ping")
+            states.append(event.state)
+
+    assert states == [
+        "2026-01-01T00:00:00.000+00:00",
+        "2026-01-01T00:00:00.001+00:00",
+        "2026-01-01T00:00:00.002+00:00",
+    ]
+
+    # A later real event keeps its true timestamp rather than an artificial bump.
+    with freeze_time("2026-01-01T00:00:05+00:00"):
+        event._trigger_event("ping")
+    assert event.state == "2026-01-01T00:00:05.000+00:00"
 
 
 @pytest.mark.usefixtures("enable_custom_integrations", "mock_event_platform")
@@ -109,8 +150,8 @@ async def test_restore_state(hass: HomeAssistant) -> None:
                     "event.doorbell",
                     "2021-01-01T23:59:59.123+00:00",
                     attributes={
-                        ATTR_EVENT_TYPE: "ignored",
-                        ATTR_EVENT_TYPES: [
+                        EventEntityStateAttribute.EVENT_TYPE: "ignored",
+                        EventEntityCapabilityAttribute.EVENT_TYPES: [
                             "single_press",
                             "double_press",
                             "do",
@@ -136,9 +177,56 @@ async def test_restore_state(hass: HomeAssistant) -> None:
     state = hass.states.get("event.doorbell")
     assert state
     assert state.state == "2021-01-01T23:59:59.123+00:00"
-    assert state.attributes[ATTR_EVENT_TYPES] == ["short_press", "long_press"]
-    assert state.attributes[ATTR_EVENT_TYPE] == "double_press"
+    assert state.attributes[EventEntityCapabilityAttribute.EVENT_TYPES] == [
+        "short_press",
+        "long_press",
+    ]
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == "double_press"
     assert state.attributes["hello"] == "world"
+
+
+@pytest.mark.usefixtures("enable_custom_integrations", "mock_event_platform")
+async def test_restore_state_naive_timestamp(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test a restored naive timestamp is discarded instead of breaking events."""
+    mock_restore_cache_with_extra_data(
+        hass,
+        (
+            (
+                State(
+                    "event.doorbell",
+                    "2021-01-01T23:59:59.123",
+                ),
+                {
+                    "last_event_type": "double_press",
+                    "last_event_attributes": {
+                        "hello": "world",
+                    },
+                },
+            ),
+        ),
+    )
+
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
+
+    assert "restored timestamp without timezone" in caplog.text
+
+    state = hass.states.get("event.doorbell")
+    assert state
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == "double_press"
+
+    platform = async_get_platforms(hass, DOMAIN)[0]
+    entity = platform.domain_entities["event.doorbell"]
+    entity._trigger_event("short_press")
+    entity.async_write_ha_state()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("event.doorbell")
+    assert state
+    assert dt_util.parse_datetime(state.state) is not None
 
 
 @pytest.mark.usefixtures("enable_custom_integrations", "mock_event_platform")
@@ -168,8 +256,11 @@ async def test_invalid_extra_restore_state(hass: HomeAssistant) -> None:
     state = hass.states.get("event.doorbell")
     assert state
     assert state.state == STATE_UNKNOWN
-    assert state.attributes[ATTR_EVENT_TYPES] == ["short_press", "long_press"]
-    assert state.attributes[ATTR_EVENT_TYPE] is None
+    assert state.attributes[EventEntityCapabilityAttribute.EVENT_TYPES] == [
+        "short_press",
+        "long_press",
+    ]
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] is None
     assert "hello" not in state.attributes
 
 
@@ -183,11 +274,11 @@ async def test_no_extra_restore_state(hass: HomeAssistant) -> None:
                 "event.doorbell",
                 "2021-01-01T23:59:59.123+00:00",
                 attributes={
-                    ATTR_EVENT_TYPES: [
+                    EventEntityCapabilityAttribute.EVENT_TYPES: [
                         "single_press",
                         "double_press",
                     ],
-                    ATTR_EVENT_TYPE: "double_press",
+                    EventEntityStateAttribute.EVENT_TYPE: "double_press",
                     "hello": "world",
                 },
             ),
@@ -200,8 +291,11 @@ async def test_no_extra_restore_state(hass: HomeAssistant) -> None:
     state = hass.states.get("event.doorbell")
     assert state
     assert state.state == STATE_UNKNOWN
-    assert state.attributes[ATTR_EVENT_TYPES] == ["short_press", "long_press"]
-    assert state.attributes[ATTR_EVENT_TYPE] is None
+    assert state.attributes[EventEntityCapabilityAttribute.EVENT_TYPES] == [
+        "short_press",
+        "long_press",
+    ]
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] is None
     assert "hello" not in state.attributes
 
 
@@ -254,12 +348,11 @@ async def test_name(hass: HomeAssistant) -> None:
 
     async def async_setup_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setups(
             config_entry, [Platform.EVENT]
         )
-        return True
 
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
     mock_integration(
@@ -357,12 +450,11 @@ async def test_doorbell_missing_ring_event_type(
 
     async def async_setup_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setups(
             config_entry, [Platform.EVENT]
         )
-        return True
 
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
     mock_integration(
@@ -414,3 +506,18 @@ async def test_doorbell_missing_ring_event_type(
     assert get_error_message("event.doorbell_without_ring") in caplog.text
     assert get_error_message("event.doorbell_with_ring") not in caplog.text
     assert get_error_message("event.button") not in caplog.text
+
+
+@pytest.mark.parametrize("module", [event, event_const])
+def test_deprecated_attr_multi_press_count(
+    caplog: pytest.LogCaptureFixture, module: ModuleType
+) -> None:
+    """Test ATTR_MULTI_PRESS_COUNT deprecation in favor of ATTR_PRESS_COUNT."""
+    import_and_test_deprecated_constant(
+        caplog,
+        module,
+        "ATTR_MULTI_PRESS_COUNT",
+        "ATTR_PRESS_COUNT",
+        "multi_press_count",
+        "2027.5.0",
+    )

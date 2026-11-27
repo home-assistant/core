@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 import aiohttp
 from aiohue import LinkButtonNotPressed, create_app_key
@@ -10,8 +10,8 @@ from aiohue.discovery import DiscoveredHueBridge, discover_bridge, discover_nupn
 from aiohue.errors import AiohueException
 from aiohue.util import normalize_bridge_id
 from aiohue.v2 import HueBridgeV2
+import probatio
 import slugify as unicode_slug
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_API_KEY, CONF_API_VERSION, CONF_HOST
@@ -43,11 +43,16 @@ HUE_MANUAL_BRIDGE_ID = "manual"
 BSB002_MODEL_ID = "BSB002"
 BSB003_MODEL_ID = "BSB003"
 
+LINK_TIMEOUT = 60
+LINK_POLL_INTERVAL = 1
+LINK_REQUEST_TIMEOUT = 10
+
 
 class HueFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Hue config flow."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     @staticmethod
     @callback
@@ -64,6 +69,9 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize the Hue flow."""
         self.bridge: DiscoveredHueBridge | None = None
         self.discovered_bridges: dict[str, DiscoveredHueBridge] | None = None
+        self.link_task: asyncio.Task[str] | None = None
+        self.link_error: str | None = None
+        self.app_key: str | None = None
 
     @override
     async def async_step_user(
@@ -144,9 +152,9 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required("id"): vol.In(
+                    probatio.Required("id"): probatio.In(
                         {
                             **{bridge.id: bridge.host for bridge in bridges},
                             HUE_MANUAL_BRIDGE_ID: "Manually add a Hue Bridge",
@@ -163,7 +171,7 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(
                 step_id="manual",
-                data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
+                data_schema=probatio.Schema({probatio.Required(CONF_HOST): str}),
             )
 
         self._async_abort_entries_match({"host": user_input["host"]})
@@ -175,42 +183,101 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_step_link(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Attempt to link with the Hue bridge.
-
-        Given a configured host, will ask the user to press the link button
-        to connect to the bridge.
-        """
+        """Ask the user to start linking with the Hue bridge."""
         if user_input is None:
-            return self.async_show_form(step_id="link")
+            if TYPE_CHECKING:
+                assert self.bridge is not None
+            errors = {"base": self.link_error} if self.link_error else None
+            return self.async_show_form(
+                step_id="link",
+                description_placeholders={"host": self.bridge.host},
+                errors=errors,
+            )
 
+        self.link_task = None
+        self.link_error = None
+        return await self.async_step_wait_for_button()
+
+    async def _async_wait_for_button(self) -> str:
+        """Poll the bridge until the link button is pressed and return the app key."""
         bridge = self.bridge
-        assert bridge is not None
-        errors = {}
+        if TYPE_CHECKING:
+            assert bridge is not None
         device_name = unicode_slug.slugify(
             self.hass.config.location_name, max_length=19
         )
+        websession = aiohttp_client.async_get_clientsession(self.hass, verify_ssl=False)
+        # The deadline is only checked after the bridge answers, so a request
+        # that hangs is reported as a connection failure, not a missed press
+        deadline = self.hass.loop.time() + LINK_TIMEOUT
+        while True:
+            try:
+                async with asyncio.timeout(LINK_REQUEST_TIMEOUT):
+                    return await create_app_key(
+                        bridge.host,
+                        f"home-assistant#{device_name}",
+                        websession=websession,
+                    )
+            except LinkButtonNotPressed:
+                if self.hass.loop.time() >= deadline:
+                    raise TimeoutError from None
+                await asyncio.sleep(LINK_POLL_INTERVAL)
+            except TimeoutError as err:
+                raise CannotConnect from err
 
-        try:
-            app_key = await create_app_key(
-                bridge.host,
-                f"home-assistant#{device_name}",
-                websession=aiohttp_client.async_get_clientsession(
-                    self.hass, verify_ssl=False
-                ),
+    async def async_step_wait_for_button(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Wait for the user to press the link button on the Hue bridge."""
+        if self.link_task is None:
+            # Not started eagerly, so the next step never receives the link form input
+            self.link_task = self.hass.async_create_background_task(
+                self._async_wait_for_button(),
+                "hue_config_flow_wait_for_button",
+                eager_start=False,
             )
-        except LinkButtonNotPressed:
-            errors["base"] = "register_failed"
-        except CannotConnect:
+
+        bridge = self.bridge
+        if TYPE_CHECKING:
+            assert bridge is not None
+
+        if not self.link_task.done():
+            return self.async_show_progress(
+                step_id="wait_for_button",
+                progress_action="wait_for_button",
+                description_placeholders={"host": bridge.host},
+                progress_task=self.link_task,
+            )
+        try:
+            self.app_key = self.link_task.result()
+        except TimeoutError:
+            self.link_error = "register_failed"
+            return self.async_show_progress_done(next_step_id="link")
+        except aiohttp.ClientError, CannotConnect:
             LOGGER.error("Error connecting to the Hue bridge at %s", bridge.host)
-            return self.async_abort(reason="cannot_connect")
+            return self.async_show_progress_done(next_step_id="cannot_connect")
         except Exception:
             LOGGER.exception(
                 "Unknown error connecting with Hue bridge at %s", bridge.host
             )
-            errors["base"] = "linking"
+            self.link_error = "linking"
+            return self.async_show_progress_done(next_step_id="link")
+        return self.async_show_progress_done(next_step_id="finish_link")
 
-        if errors:
-            return self.async_show_form(step_id="link", errors=errors)
+    async def async_step_cannot_connect(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Abort the flow when the bridge could not be reached while linking."""
+        return self.async_abort(reason="cannot_connect")
+
+    async def async_step_finish_link(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Create the config entry after linking with the Hue bridge."""
+        bridge = self.bridge
+        if TYPE_CHECKING:
+            assert bridge is not None
+            assert self.app_key is not None
 
         # Can happen if we come from import or manual entry
         if self.unique_id is None:
@@ -222,7 +289,7 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
             title=f"Hue Bridge {bridge.id}",
             data={
                 CONF_HOST: bridge.host,
-                CONF_API_KEY: app_key,
+                CONF_API_KEY: self.app_key,
                 CONF_API_VERSION: 2 if bridge.supports_v2 else 1,
             },
         )
@@ -334,8 +401,8 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
             )
             # also update the bridge device
             dev_reg = dr.async_get(self.hass)
-            if bridge_device := dev_reg.async_get_device(
-                identifiers={(DOMAIN, old_bridge_id)}
+            if bridge_device := dev_reg.async_get_device_by_identifier(
+                (DOMAIN, old_bridge_id), conf_entry.entry_id
             ):
                 dev_reg.async_update_device(
                     bridge_device.id,
@@ -362,15 +429,15 @@ class HueV1OptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_ALLOW_HUE_GROUPS,
                         default=self.config_entry.options.get(
                             CONF_ALLOW_HUE_GROUPS, DEFAULT_ALLOW_HUE_GROUPS
                         ),
                     ): bool,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_ALLOW_UNREACHABLE,
                         default=self.config_entry.options.get(
                             CONF_ALLOW_UNREACHABLE, DEFAULT_ALLOW_UNREACHABLE
@@ -410,9 +477,9 @@ class HueV2OptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_IGNORE_AVAILABILITY,
                         default=cur_ids,
                     ): cv.multi_select(dev_ids),

@@ -2,7 +2,7 @@
 
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api import ActiveConnection
@@ -10,34 +10,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, label_registry as lr
 from homeassistant.helpers.label_registry import LabelEntry
 
-SUPPORTED_LABEL_THEME_COLORS = {
-    "primary",
-    "accent",
-    "disabled",
-    "red",
-    "pink",
-    "purple",
-    "deep-purple",
-    "indigo",
-    "blue",
-    "light-blue",
-    "cyan",
-    "teal",
-    "green",
-    "light-green",
-    "lime",
-    "yellow",
-    "amber",
-    "orange",
-    "deep-orange",
-    "brown",
-    "light-grey",
-    "grey",
-    "dark-grey",
-    "blue-grey",
-    "black",
-    "white",
-}
+from .const import SUPPORTED_LABEL_THEME_COLORS
 
 
 @callback
@@ -52,7 +25,7 @@ def async_setup(hass: HomeAssistant) -> bool:
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "config/label_registry/list",
+        probatio.Required("type"): "config/label_registry/list",
     }
 )
 @callback
@@ -69,13 +42,13 @@ def websocket_list_labels(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "config/label_registry/create",
-        vol.Required("name"): str,
-        vol.Optional("color"): vol.Any(
-            cv.color_hex, vol.In(SUPPORTED_LABEL_THEME_COLORS), None
+        probatio.Required("type"): "config/label_registry/create",
+        probatio.Required("name"): str,
+        probatio.Optional("color"): probatio.Any(
+            cv.color_hex, probatio.In(SUPPORTED_LABEL_THEME_COLORS), None
         ),
-        vol.Optional("description"): vol.Any(str, None),
-        vol.Optional("icon"): vol.Any(cv.icon, None),
+        probatio.Optional("description"): probatio.Any(str, None),
+        probatio.Optional("icon"): probatio.Any(cv.icon, None),
     }
 )
 @websocket_api.require_admin
@@ -100,8 +73,8 @@ def websocket_create_label(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "config/label_registry/delete",
-        vol.Required("label_id"): str,
+        probatio.Required("type"): "config/label_registry/delete",
+        probatio.Required("label_id"): str,
     }
 )
 @websocket_api.require_admin
@@ -122,14 +95,14 @@ def websocket_delete_label(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "config/label_registry/update",
-        vol.Required("label_id"): str,
-        vol.Optional("color"): vol.Any(
-            cv.color_hex, vol.In(SUPPORTED_LABEL_THEME_COLORS), None
+        probatio.Required("type"): "config/label_registry/update",
+        probatio.Required("label_id"): str,
+        probatio.Optional("color"): probatio.Any(
+            cv.color_hex, probatio.In(SUPPORTED_LABEL_THEME_COLORS), None
         ),
-        vol.Optional("description"): vol.Any(str, None),
-        vol.Optional("icon"): vol.Any(cv.icon, None),
-        vol.Optional("name"): str,
+        probatio.Optional("description"): probatio.Any(str, None),
+        probatio.Optional("icon"): probatio.Any(cv.icon, None),
+        probatio.Optional("name"): str,
     }
 )
 @websocket_api.require_admin

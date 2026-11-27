@@ -11,8 +11,11 @@ from aioairzone.const import (
     API_ACS_SET_POINT,
     API_ACS_TEMP,
     API_AIR_DEMAND,
+    API_ANTI_FREEZE,
     API_BATTERY,
+    API_CLOUD_CONNECTED,
     API_COLD_ANGLE,
+    API_COLD_DEMAND,
     API_COLD_STAGE,
     API_COLD_STAGES,
     API_COOL_MAX_TEMP,
@@ -20,15 +23,18 @@ from aioairzone.const import (
     API_COOL_SET_POINT,
     API_COVERAGE,
     API_DATA,
+    API_ECO_ADAPT,
     API_ERRORS,
     API_FLOOR_DEMAND,
     API_HEAT_ANGLE,
+    API_HEAT_DEMAND,
     API_HEAT_MAX_TEMP,
     API_HEAT_MIN_TEMP,
     API_HEAT_SET_POINT,
     API_HEAT_STAGE,
     API_HEAT_STAGES,
     API_HUMIDITY,
+    API_INTERFACE,
     API_MAC,
     API_MASTER_ZONE_ID,
     API_MAX_TEMP,
@@ -48,6 +54,7 @@ from aioairzone.const import (
     API_SYSTEM_ID,
     API_SYSTEM_TYPE,
     API_SYSTEMS,
+    API_TEMP_STEP,
     API_THERMOS_FIRMWARE,
     API_THERMOS_RADIO,
     API_THERMOS_TYPE,
@@ -60,12 +67,12 @@ from aioairzone.const import (
     API_ZONE_ID,
     DEFAULT_SYSTEM_ID,
 )
+from aioairzone.exceptions import IaqSensorNotAvailable
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.airzone.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_ID, CONF_PORT
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 USER_INPUT = {
     CONF_HOST: "192.168.1.100",
@@ -96,6 +103,7 @@ HVAC_MOCK = {
                     API_ON: 0,
                     API_MAX_TEMP: 30,
                     API_MIN_TEMP: 15,
+                    API_TEMP_STEP: 1,
                     API_SET_POINT: 19.1,
                     API_ROOM_TEMP: 19.6,
                     API_SLEEP: 0,
@@ -140,6 +148,10 @@ HVAC_MOCK = {
                     API_ERRORS: [],
                     API_AIR_DEMAND: 1,
                     API_FLOOR_DEMAND: 1,
+                    API_COLD_DEMAND: 0,
+                    API_HEAT_DEMAND: 1,
+                    API_ANTI_FREEZE: 0,
+                    API_ECO_ADAPT: "off",
                     API_HEAT_ANGLE: 1,
                     API_COLD_ANGLE: 2,
                     API_SPEED: 0,
@@ -170,6 +182,10 @@ HVAC_MOCK = {
                     API_ERRORS: [],
                     API_AIR_DEMAND: 0,
                     API_FLOOR_DEMAND: 0,
+                    API_COLD_DEMAND: 0,
+                    API_HEAT_DEMAND: 0,
+                    API_ANTI_FREEZE: 1,
+                    API_ECO_ADAPT: "a_p",
                     API_HEAT_ANGLE: 0,
                     API_COLD_ANGLE: 0,
                 },
@@ -202,6 +218,10 @@ HVAC_MOCK = {
                     ],
                     API_AIR_DEMAND: 0,
                     API_FLOOR_DEMAND: 0,
+                    API_COLD_DEMAND: 0,
+                    API_HEAT_DEMAND: 0,
+                    API_ANTI_FREEZE: 0,
+                    API_ECO_ADAPT: "off",
                     API_HEAT_ANGLE: 0,
                     API_COLD_ANGLE: 0,
                 },
@@ -230,6 +250,10 @@ HVAC_MOCK = {
                     API_ERRORS: [],
                     API_AIR_DEMAND: 0,
                     API_FLOOR_DEMAND: 0,
+                    API_COLD_DEMAND: 0,
+                    API_HEAT_DEMAND: 0,
+                    API_ANTI_FREEZE: 0,
+                    API_ECO_ADAPT: "off",
                     API_HEAT_ANGLE: 0,
                     API_COLD_ANGLE: 0,
                     API_MASTER_ZONE_ID: None,
@@ -288,6 +312,10 @@ HVAC_MOCK = {
                     API_ERRORS: [],
                     API_AIR_DEMAND: 1,
                     API_FLOOR_DEMAND: 0,
+                    API_COLD_DEMAND: 0,
+                    API_HEAT_DEMAND: 0,
+                    API_ANTI_FREEZE: 0,
+                    API_ECO_ADAPT: "off",
                 },
             ]
         },
@@ -319,6 +347,10 @@ HVAC_MOCK = {
                     API_ERRORS: [],
                     API_AIR_DEMAND: 0,
                     API_FLOOR_DEMAND: 0,
+                    API_COLD_DEMAND: 0,
+                    API_HEAT_DEMAND: 0,
+                    API_ANTI_FREEZE: 0,
+                    API_ECO_ADAPT: "off",
                 },
             ]
         },
@@ -364,6 +396,8 @@ HVAC_VERSION_MOCK = {
 }
 
 HVAC_WEBSERVER_MOCK = {
+    API_CLOUD_CONNECTED: 0,
+    API_INTERFACE: "ethernet",
     API_MAC: "11:22:33:44:55:66",
     API_WS_TYPE: API_WS_AZ,
     API_WIFI_CHANNEL: 6,
@@ -397,6 +431,10 @@ async def async_init_integration(
         patch(
             "homeassistant.components.airzone.AirzoneLocalApi.get_hvac_systems",
             return_value=HVAC_SYSTEMS_MOCK,
+        ),
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_iaq",
+            side_effect=IaqSensorNotAvailable(),
         ),
         patch(
             "homeassistant.components.airzone.AirzoneLocalApi.get_version",

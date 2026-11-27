@@ -4,6 +4,7 @@ import asyncio
 from collections.abc import Mapping
 from typing import Any, override
 
+import probatio
 from pyairvisual.cloud_api import (
     CloudAPI,
     InvalidKeyError,
@@ -12,14 +13,8 @@ from pyairvisual.cloud_api import (
     UnauthorizedError,
 )
 from pyairvisual.errors import AirVisualError
-import voluptuous as vol
 
-from homeassistant.config_entries import (
-    SOURCE_REAUTH,
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-)
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_COUNTRY,
@@ -44,18 +39,21 @@ from .const import (
     INTEGRATION_TYPE_GEOGRAPHY_NAME,
     LOGGER,
 )
+from .coordinator import AirVisualConfigEntry
 
-API_KEY_DATA_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): cv.string})
+API_KEY_DATA_SCHEMA = probatio.Schema(
+    {probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string}
+)
 GEOGRAPHY_NAME_SCHEMA = API_KEY_DATA_SCHEMA.extend(
     {
-        vol.Required(CONF_CITY): cv.string,
-        vol.Required(CONF_STATE): cv.string,
-        vol.Required(CONF_COUNTRY): cv.string,
+        probatio.Required(CONF_CITY): cv.string,
+        probatio.Required(CONF_STATE): cv.string,
+        probatio.Required(CONF_COUNTRY): cv.string,
     }
 )
-PICK_INTEGRATION_TYPE_SCHEMA = vol.Schema(
+PICK_INTEGRATION_TYPE_SCHEMA = probatio.Schema(
     {
-        vol.Required("type"): vol.In(
+        probatio.Required("type"): probatio.In(
             [
                 INTEGRATION_TYPE_GEOGRAPHY_COORDS,
                 INTEGRATION_TYPE_GEOGRAPHY_NAME,
@@ -64,8 +62,8 @@ PICK_INTEGRATION_TYPE_SCHEMA = vol.Schema(
     }
 )
 
-OPTIONS_SCHEMA = vol.Schema(
-    {vol.Required(CONF_SHOW_ON_MAP): bool},
+OPTIONS_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_SHOW_ON_MAP): bool},
 )
 OPTIONS_FLOW = {
     "init": SchemaFlowFormStep(OPTIONS_SCHEMA),
@@ -83,14 +81,14 @@ class AirVisualFlowHandler(ConfigFlow, domain=DOMAIN):
         self._geo_id: str | None = None
 
     @property
-    def geography_coords_schema(self) -> vol.Schema:
+    def geography_coords_schema(self) -> probatio.Schema:
         """Return the data schema for the cloud API."""
         return API_KEY_DATA_SCHEMA.extend(
             {
-                vol.Required(
+                probatio.Required(
                     CONF_LATITUDE, default=self.hass.config.latitude
                 ): cv.latitude,
-                vol.Required(
+                probatio.Required(
                     CONF_LONGITUDE, default=self.hass.config.longitude
                 ): cv.longitude,
             }
@@ -171,7 +169,9 @@ class AirVisualFlowHandler(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     @override
-    def async_get_options_flow(config_entry: ConfigEntry) -> SchemaOptionsFlowHandler:
+    def async_get_options_flow(
+        config_entry: AirVisualConfigEntry,
+    ) -> SchemaOptionsFlowHandler:
         """Define the config flow to handle options."""
         return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)
 

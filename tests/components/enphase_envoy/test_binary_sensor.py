@@ -2,22 +2,27 @@
 
 from unittest.mock import AsyncMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.enphase_envoy.const import Platform
-from homeassistant.const import STATE_ON
+from homeassistant.components.enphase_envoy.coordinator import SCAN_INTERVAL
+from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, snapshot_platform
-
 
 @pytest.mark.parametrize(
     ("mock_envoy"),
-    ["envoy_eu_batt", "envoy_metered_batt_relay"],
+    ["envoy_eu_batt", "envoy_metered_batt_relay", "envoy_acb_batt"],
     indirect=["mock_envoy"],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -52,7 +57,7 @@ async def test_no_binary_sensor(
     config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test switch platform entities are not created."""
+    """Test binary_sensor platform entities are not created."""
     with patch(
         "homeassistant.components.enphase_envoy.PLATFORMS", [Platform.BINARY_SENSOR]
     ):
@@ -89,3 +94,100 @@ async def test_binary_sensor_data(
         assert entity_state.state == STATE_ON
         assert (entity_state := hass.states.get(f"{entity_base}_{sn}_dc_switch"))
         assert entity_state.state == STATE_ON
+
+    sn = mock_envoy.serial_number
+    entity_base = f"{Platform.BINARY_SENSOR}.generator_{sn}"
+    assert (entity_state := hass.states.get(f"{entity_base}_present"))
+    assert entity_state.state == STATE_ON
+    assert (entity_state := hass.states.get(f"{entity_base}_schedule_enabled"))
+    assert entity_state.state == STATE_ON
+
+
+@pytest.mark.parametrize("mock_envoy", ["envoy_acb_batt"], indirect=True)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_acb_battery_removed_from_inventory(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_envoy: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test ACB binary sensor is unknown when its serial leaves the inventory."""
+    with patch(
+        "homeassistant.components.enphase_envoy.PLATFORMS", [Platform.BINARY_SENSOR]
+    ):
+        await setup_integration(hass, config_entry)
+
+    entity_id = "binary_sensor.ac_battery_121000000001_communicating"
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
+
+    mock_envoy.data.acb_inventory.pop("121000000001")
+    mock_envoy.data.raw = {"changed": True}
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize("mock_envoy", ["envoy_acb_batt"], indirect=True)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_acb_inventory_becomes_none(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_envoy: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test ACB binary sensor is unknown when the inventory disappears."""
+    with patch(
+        "homeassistant.components.enphase_envoy.PLATFORMS", [Platform.BINARY_SENSOR]
+    ):
+        await setup_integration(hass, config_entry)
+
+    entity_id = "binary_sensor.ac_battery_121000000001_communicating"
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
+
+    mock_envoy.data.acb_inventory = None
+    mock_envoy.data.raw = {"changed": True}
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    ("mock_envoy"), ["envoy_metered_batt_relay"], indirect=["mock_envoy"]
+)
+async def test_generator_becomes_none(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test binary sensor entities generator becomes none."""
+    with patch(
+        "homeassistant.components.enphase_envoy.PLATFORMS", [Platform.BINARY_SENSOR]
+    ):
+        await setup_integration(hass, config_entry)
+
+    sn = mock_envoy.serial_number
+    entity_base = f"{Platform.BINARY_SENSOR}.generator_{sn}"
+    assert (entity_state := hass.states.get(f"{entity_base}_present"))
+    assert entity_state.state == STATE_ON
+    assert (entity_state := hass.states.get(f"{entity_base}_schedule_enabled"))
+    assert entity_state.state == STATE_ON
+
+    mock_envoy.data.generator = None
+    mock_envoy.data.raw = {"changed": True}
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (entity_state := hass.states.get(f"{entity_base}_present"))
+    assert entity_state.state == STATE_UNAVAILABLE
+    assert (entity_state := hass.states.get(f"{entity_base}_schedule_enabled"))
+    assert entity_state.state == STATE_UNAVAILABLE

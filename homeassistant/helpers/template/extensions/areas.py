@@ -3,7 +3,7 @@
 from collections.abc import Iterable
 from typing import TYPE_CHECKING
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.helpers import (
     area_registry as ar,
@@ -92,7 +92,7 @@ class AreaExtension(BaseTemplateExtension):
 
         try:
             cv.entity_id(lookup_value)
-        except vol.Invalid:
+        except probatio.Invalid:
             pass
         else:
             if entity := ent_reg.async_get(lookup_value):
@@ -105,12 +105,14 @@ class AreaExtension(BaseTemplateExtension):
                 if (
                     entity.device_id
                     and (device := dev_reg.async_get(entity.device_id))
-                    and device.area_id
+                    and (area_id := dr.async_get_effective_area_id(self.hass, device))
                 ):
-                    return self._get_area_name(area_reg, device.area_id)
+                    return self._get_area_name(area_reg, area_id)
 
-        if (device := dev_reg.async_get(lookup_value)) and device.area_id:
-            return self._get_area_name(area_reg, device.area_id)
+        if (device := dev_reg.async_get(lookup_value)) and (
+            area_id := dr.async_get_effective_area_id(self.hass, device)
+        ):
+            return self._get_area_name(area_reg, area_id)
 
         return None
 

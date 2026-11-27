@@ -20,6 +20,9 @@
       "poe_control": {
         "default": "mdi:ethernet"
       },
+      "vpn_policy": {
+        "default": "mdi:vpn"
+      },
       "wan_connect_ipv4": {
         "default": "mdi:wan"
       },
@@ -31,6 +34,9 @@
   "services": {
     "reconnect_client": {
       "service": "mdi:sync"
+    },
+    "set_client_name": {
+      "service": "mdi:rename-box"
     }
   }
 }

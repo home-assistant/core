@@ -18,6 +18,7 @@ RUSSOUND_RIO_EXCEPTIONS = (
 )
 
 CONF_BAUDRATE = "baudrate"
+CONF_ZONE_SOURCE_EXCLUSION = "zone_source_exclusion"
 TYPE_TCP = "tcp"
 TYPE_SERIAL = "serial"
 DEFAULT_BAUDRATE = 19200

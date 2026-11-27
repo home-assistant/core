@@ -2,8 +2,9 @@
 
 from unittest.mock import MagicMock, Mock, patch
 
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.homekit.const import (
     BRIDGE_NAME,
@@ -47,10 +48,15 @@ from homeassistant.components.homekit.const import (
     FEATURE_ON_OFF,
     FEATURE_PLAY_PAUSE,
     TYPE_FAUCET,
+    TYPE_HEATER_COOLER,
     TYPE_OUTLET,
+    TYPE_SET_TOP_BOX,
     TYPE_SHOWER,
     TYPE_SPRINKLER,
+    TYPE_STREAMING_STICK,
     TYPE_SWITCH,
+    TYPE_TELEVISION,
+    TYPE_THERMOSTAT,
     TYPE_VALVE,
 )
 from homeassistant.components.homekit.models import HomeKitEntryData
@@ -84,8 +90,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, State
 
 from .util import async_init_integration
-
-from tests.common import MockConfigEntry
 
 
 def _mock_socket(failure_attempts: int = 0) -> MagicMock:
@@ -129,34 +133,42 @@ def test_validate_entity_config() -> None:
                 ]
             }
         },
+        {"media_player.test": {CONF_TYPE: "invalid_type"}},
+        {"media_player.test": {CONF_TYPE: TYPE_OUTLET}},
         {"switch.test": {CONF_TYPE: "invalid_type"}},
         {
             "switch.test": {
                 CONF_TYPE: "sprinkler",
-                # Must be input_number entity
-                CONF_LINKED_VALVE_DURATION: "number.valve_duration",
+                # Must be input_number or number entity
+                CONF_LINKED_VALVE_DURATION: "sensor.valve_duration",
+            }
+        },
+        {
+            "switch.test": {
+                CONF_TYPE: "sprinkler",
                 # Must be sensor (timestamp) entity
                 CONF_LINKED_VALVE_END_TIME: "datetime.valve_end_time",
             }
         },
         {"fan.test": {CONF_TYPE: "invalid_type"}},
+        {"climate.test": {CONF_TYPE: "invalid_type"}},
+        {
+            "valve.test": {
+                # Must be input_number or number entity
+                CONF_LINKED_VALVE_DURATION: "sensor.valve_duration",
+            }
+        },
         {
             "valve.test": {
                 # Must be sensor (timestamp) entity
                 CONF_LINKED_VALVE_END_TIME: "datetime.valve_end_time",
-                # Must be input_number
-                CONF_LINKED_VALVE_DURATION: "number.valve_duration",
             }
         },
-        {
-            "valve.test": {
-                CONF_TYPE: "sprinkler",  # Extra keys not allowed
-            }
-        },
+        {"valve.test": {CONF_TYPE: "invalid_type"}},
     ]
 
     for conf in configs:
-        with pytest.raises(vol.Invalid):
+        with pytest.raises(probatio.Invalid):
             vec(conf)
 
     assert vec({}) == {}
@@ -218,6 +230,19 @@ def test_validate_entity_config() -> None:
         }
     }
 
+    for media_player_type in (
+        TYPE_SET_TOP_BOX,
+        TYPE_STREAMING_STICK,
+        TYPE_TELEVISION,
+    ):
+        assert vec({"media_player.demo": {CONF_TYPE: media_player_type}}) == {
+            "media_player.demo": {
+                CONF_FEATURE_LIST: {},
+                CONF_LOW_BATTERY_THRESHOLD: 20,
+                CONF_TYPE: media_player_type,
+            }
+        }
+
     assert vec({"switch.demo": {CONF_TYPE: TYPE_FAUCET}}) == {
         "switch.demo": {CONF_TYPE: TYPE_FAUCET, CONF_LOW_BATTERY_THRESHOLD: 20}
     }
@@ -236,6 +261,12 @@ def test_validate_entity_config() -> None:
     assert vec({"switch.demo": {CONF_TYPE: TYPE_VALVE}}) == {
         "switch.demo": {CONF_TYPE: TYPE_VALVE, CONF_LOW_BATTERY_THRESHOLD: 20}
     }
+    assert vec({"climate.demo": {CONF_TYPE: TYPE_HEATER_COOLER}}) == {
+        "climate.demo": {CONF_TYPE: TYPE_HEATER_COOLER, CONF_LOW_BATTERY_THRESHOLD: 20}
+    }
+    assert vec({"climate.demo": {CONF_TYPE: TYPE_THERMOSTAT}}) == {
+        "climate.demo": {CONF_TYPE: TYPE_THERMOSTAT, CONF_LOW_BATTERY_THRESHOLD: 20}
+    }
     config = {
         CONF_TYPE: TYPE_SPRINKLER,
         CONF_LINKED_VALVE_DURATION: "input_number.valve_duration",
@@ -245,6 +276,17 @@ def test_validate_entity_config() -> None:
         "switch.sprinkler": {
             CONF_TYPE: TYPE_SPRINKLER,
             CONF_LINKED_VALVE_DURATION: "input_number.valve_duration",
+            CONF_LINKED_VALVE_END_TIME: "sensor.valve_end_time",
+            CONF_LOW_BATTERY_THRESHOLD: DEFAULT_LOW_BATTERY_THRESHOLD,
+        }
+    }
+    config = {
+        CONF_LINKED_VALVE_DURATION: "number.valve_duration",
+        CONF_LINKED_VALVE_END_TIME: "sensor.valve_end_time",
+    }
+    assert vec({"valve.sprinkler": config}) == {
+        "valve.sprinkler": {
+            CONF_LINKED_VALVE_DURATION: "number.valve_duration",
             CONF_LINKED_VALVE_END_TIME: "sensor.valve_end_time",
             CONF_LOW_BATTERY_THRESHOLD: DEFAULT_LOW_BATTERY_THRESHOLD,
         }
@@ -282,12 +324,27 @@ def test_validate_entity_config() -> None:
         }
     }
     config = {
+        CONF_TYPE: TYPE_SPRINKLER,
         CONF_LINKED_VALVE_DURATION: "input_number.valve_duration",
         CONF_LINKED_VALVE_END_TIME: "sensor.valve_end_time",
     }
     assert vec({"valve.demo": config}) == {
         "valve.demo": {
+            CONF_TYPE: TYPE_SPRINKLER,
             CONF_LINKED_VALVE_DURATION: "input_number.valve_duration",
+            CONF_LINKED_VALVE_END_TIME: "sensor.valve_end_time",
+            CONF_LOW_BATTERY_THRESHOLD: DEFAULT_LOW_BATTERY_THRESHOLD,
+        }
+    }
+    config = {
+        CONF_TYPE: TYPE_SPRINKLER,
+        CONF_LINKED_VALVE_DURATION: "number.valve_duration",
+        CONF_LINKED_VALVE_END_TIME: "sensor.valve_end_time",
+    }
+    assert vec({"switch.sprinkler": config}) == {
+        "switch.sprinkler": {
+            CONF_TYPE: TYPE_SPRINKLER,
+            CONF_LINKED_VALVE_DURATION: "number.valve_duration",
             CONF_LINKED_VALVE_END_TIME: "sensor.valve_end_time",
             CONF_LOW_BATTERY_THRESHOLD: DEFAULT_LOW_BATTERY_THRESHOLD,
         }

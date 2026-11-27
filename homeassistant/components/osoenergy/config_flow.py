@@ -5,7 +5,7 @@ import logging
 from typing import Any, override
 
 from apyosoenergyapi import OSOEnergy
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY
@@ -14,9 +14,10 @@ from homeassistant.helpers import aiohttp_client
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-_SCHEMA_STEP_USER = vol.Schema({vol.Required(CONF_API_KEY): str})
+_SCHEMA_STEP_USER = probatio.Schema(
+    {probatio.Required(probatio.Secret(CONF_API_KEY)): str}
+)
 
-CONF_PORTAL_URL = "portal_url"
 OSOENERGY_PORTAL_URL = "https://portal.osoenergy.no/"
 
 
@@ -49,7 +50,7 @@ class OSOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=_SCHEMA_STEP_USER,
             errors=errors,
-            description_placeholders={CONF_PORTAL_URL: OSOENERGY_PORTAL_URL},
+            description_placeholders={"portal_url": OSOENERGY_PORTAL_URL},
         )
 
     async def get_user_email(self, subscription_key: str) -> str | None:
@@ -66,10 +67,11 @@ class OSOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Re Authenticate a user."""
+        # pylint: disable-next=home-assistant-step_id-match-method
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
                 _SCHEMA_STEP_USER, self._get_reauth_entry().data
             ),
-            description_placeholders={CONF_PORTAL_URL: OSOENERGY_PORTAL_URL},
+            description_placeholders={"portal_url": OSOENERGY_PORTAL_URL},
         )

@@ -1,10 +1,12 @@
 """Tests for Verisure integration setup and session handling."""
 
+from copy import deepcopy
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from verisure import (
     AuthenticationError,
     CookieReadError,
@@ -16,6 +18,7 @@ from verisure import (
 )
 
 from homeassistant.components.verisure.const import (
+    CONF_GIID,
     COOKIE_REFRESH_INTERVAL,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
@@ -24,18 +27,25 @@ from homeassistant.components.verisure.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import update_coordinator
+from homeassistant.helpers import device_registry as dr, update_coordinator
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from .conftest import OVERVIEW
 
 ALARM_ENTITY_ID = "alarm_control_panel.verisure_alarm"
+ETHERNET_ENTITY_ID = "binary_sensor.verisure_alarm_ethernet_status"
+LOCK_ENTITY_ID = "lock.front_door"
 
 
-async def _async_setup(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -> None:
+async def _async_setup(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    platforms: list[Platform] | None = None,
+) -> None:
     """Set up the Verisure integration."""
     mock_config_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.verisure.PLATFORMS", [Platform.ALARM_CONTROL_PANEL]
+        "homeassistant.components.verisure.PLATFORMS",
+        platforms or [Platform.ALARM_CONTROL_PANEL],
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -67,6 +77,30 @@ async def test_setup_success(
     mock_verisure.login_cookie.assert_called_once()
     mock_verisure.set_giid.assert_called_once()
     assert hass.states.get(ALARM_ENTITY_ID).state == "disarmed"
+
+
+@pytest.mark.usefixtures("mock_verisure")
+async def test_child_device_links_to_alarm_via_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Child devices link to the alarm (VBox) device via via_device_id."""
+    mock_config_entry.add_to_hass(hass)
+    with patch("homeassistant.components.verisure.PLATFORMS", [Platform.SWITCH]):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    giid = mock_config_entry.data[CONF_GIID]
+    alarm_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, giid), mock_config_entry.entry_id
+    )
+    plug_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "plug-1"), mock_config_entry.entry_id
+    )
+    assert alarm_device is not None
+    assert plug_device is not None
+    assert plug_device.via_device_id == alarm_device.id
 
 
 @pytest.mark.parametrize(
@@ -546,3 +580,87 @@ async def test_update_session_refresh_transient(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert hass.states.get(ALARM_ENTITY_ID).state == STATE_UNAVAILABLE
+
+
+def _overview_without(*keys: str) -> list[dict]:
+    """Return a batched response where the queries for keys failed."""
+    overview = deepcopy(OVERVIEW)
+    for key in keys:
+        del overview[0]["data"]["installation"][key]
+    overview.append(
+        {
+            "data": {"installation": None},
+            "errors": [{"message": "Request failed with status code 502"}],
+        }
+    )
+    return overview
+
+
+@pytest.mark.parametrize(
+    ("missing", "partial_states"),
+    [
+        pytest.param(
+            "armState",
+            {
+                ALARM_ENTITY_ID: STATE_UNAVAILABLE,
+                ETHERNET_ENTITY_ID: "on",
+                LOCK_ENTITY_ID: "locked",
+            },
+            id="arm_state",
+        ),
+        pytest.param(
+            "broadband",
+            {
+                ALARM_ENTITY_ID: "disarmed",
+                ETHERNET_ENTITY_ID: STATE_UNAVAILABLE,
+                LOCK_ENTITY_ID: "locked",
+            },
+            id="broadband",
+        ),
+        pytest.param(
+            "smartLocks",
+            {
+                ALARM_ENTITY_ID: "disarmed",
+                ETHERNET_ENTITY_ID: "on",
+                LOCK_ENTITY_ID: STATE_UNAVAILABLE,
+            },
+            id="smart_locks",
+        ),
+    ],
+)
+async def test_update_partial_response(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_verisure: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    missing: str,
+    partial_states: dict[str, str],
+) -> None:
+    """A partial overview marks only the affected entity unavailable."""
+    await _async_setup(
+        hass,
+        mock_config_entry,
+        [Platform.ALARM_CONTROL_PANEL, Platform.BINARY_SENSOR, Platform.LOCK],
+    )
+
+    expected = {
+        ALARM_ENTITY_ID: "disarmed",
+        ETHERNET_ENTITY_ID: "on",
+        LOCK_ENTITY_ID: "locked",
+    }
+    for entity_id, state in expected.items():
+        assert hass.states.get(entity_id).state == state
+
+    mock_verisure.request.return_value = _overview_without(missing)
+    await _async_trigger_coordinator_update(hass, freezer)
+
+    assert "Unexpected error" not in caplog.text
+    for entity_id, state in partial_states.items():
+        assert hass.states.get(entity_id).state == state
+
+    mock_verisure.request.return_value = OVERVIEW
+    await _async_trigger_coordinator_update(hass, freezer)
+
+    for entity_id, state in expected.items():
+        assert hass.states.get(entity_id).state == state

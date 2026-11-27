@@ -3,8 +3,15 @@
 import logging
 from unittest.mock import Mock, patch
 
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.common import (
+    MockModule,
+    MockPlatform,
+    mock_integration,
+    mock_platform,
+    patch_yaml_files,
+)
 
 from homeassistant.config import YAML_CONFIG_FILE
 from homeassistant.core import HomeAssistant
@@ -18,14 +25,6 @@ from homeassistant.helpers.check_config import (
 from homeassistant.helpers.condition import CONDITIONS
 from homeassistant.helpers.trigger import TRIGGERS
 from homeassistant.requirements import RequirementsNotFound
-
-from tests.common import (
-    MockModule,
-    MockPlatform,
-    mock_integration,
-    mock_platform,
-    patch_yaml_files,
-)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,7 +83,8 @@ async def test_bad_core_config(hass: HomeAssistant) -> None:
         error = CheckConfigError(
             (
                 f"Invalid config for 'homeassistant' at {YAML_CONFIG_FILE}, line 2:"
-                " not a valid value for dictionary value 'unit_system', got 'bad'"
+                " expected 'metric' or 'us_customary' or 'imperial' for dictionary"
+                " value 'unit_system', got 'bad'"
             ),
             "homeassistant",
             {"unit_system": "bad"},
@@ -315,8 +315,10 @@ async def test_platform_schema_error(
     config: dict | None,
 ) -> None:
     """Test schema error in platform."""
-    comp_platform_schema = cv.PLATFORM_SCHEMA.extend({vol.Remove("old"): str})
-    comp_platform_schema_base = comp_platform_schema.extend({}, extra=vol.ALLOW_EXTRA)
+    comp_platform_schema = cv.PLATFORM_SCHEMA.extend({probatio.Remove("old"): str})
+    comp_platform_schema_base = comp_platform_schema.extend(
+        {}, extra=probatio.ALLOW_EXTRA
+    )
     mock_integration(
         hass,
         MockModule("blah", platform_schema_base=comp_platform_schema_base),
@@ -453,7 +455,7 @@ async def test_package_definition_invalid_dict(hass: HomeAssistant) -> None:
             (
                 "Setup of package 'not_a_dict' failed: Invalid"
                 " package definition 'not_a_dict': expected a"
-                " dictionary. Package will not be initialized"
+                " mapping. Package will not be initialized"
             ),
             "homeassistant.packages.not_a_dict",
             [{"group": ["a"]}],
@@ -477,7 +479,7 @@ async def test_package_schema_invalid(hass: HomeAssistant) -> None:
         error = CheckConfigError(
             (
                 f"Invalid config for 'homeassistant' at {YAML_CONFIG_FILE}, line 2:"
-                " expected a dictionary for dictionary value"
+                " expected a mapping for dictionary value"
                 " 'packages', got"
                 " ['must', 'not', 'be', 'a', 'list']"
             ),

@@ -2,7 +2,7 @@
 
 from typing import Any, cast, override
 
-from aiocomelit import ComelitSerialBridgeObject
+from aiocomelit import ComelitDeviceObject
 from aiocomelit.const import IRRIGATION, OTHER, STATE_OFF, STATE_ON
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
@@ -51,7 +51,7 @@ class ComelitSwitchEntity(ComelitBridgeBaseEntity, SwitchEntity):
     def __init__(
         self,
         coordinator: ComelitSerialBridge,
-        device: ComelitSerialBridgeObject,
+        device: ComelitDeviceObject,
         config_entry_entry_id: str,
     ) -> None:
         """Init switch entity."""

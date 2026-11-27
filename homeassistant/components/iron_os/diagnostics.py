@@ -5,7 +5,7 @@ from typing import Any
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 
-from . import IronOSConfigEntry
+from .coordinator import IronOSConfigEntry
 
 
 async def async_get_config_entry_diagnostics(

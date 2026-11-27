@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 from azure.eventhub.exceptions import EventHubError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.azure_event_hub.const import (
@@ -28,8 +29,6 @@ from .const import (
     SAS_CONFIG_FULL,
     UPDATE_OPTIONS,
 )
-
-from tests.common import MockConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,7 +54,15 @@ async def test_form(
 ) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=None
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=None,
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
@@ -133,9 +140,15 @@ async def test_connection_error_sas(
 ) -> None:
     """Test we handle connection errors."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data=BASE_CONFIG_SAS.copy(),
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=BASE_CONFIG_SAS.copy(),
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
@@ -147,6 +160,13 @@ async def test_connection_error_sas(
     )
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": error_message}
+
+    mock_get_eventhub_properties.side_effect = None
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        SAS_CONFIG.copy(),
+    )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -162,9 +182,15 @@ async def test_connection_error_cs(
 ) -> None:
     """Test we handle connection errors."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data=BASE_CONFIG_CS.copy(),
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=BASE_CONFIG_CS.copy(),
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
@@ -177,6 +203,13 @@ async def test_connection_error_cs(
     )
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": error_message}
+
+    mock_from_connection_string.return_value.get_eventhub_properties.side_effect = None
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        CS_CONFIG.copy(),
+    )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_options_flow(hass: HomeAssistant, entry: MockConfigEntry) -> None:

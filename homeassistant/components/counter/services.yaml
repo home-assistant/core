@@ -24,6 +24,6 @@ set_value:
       required: true
       selector:
         number:
-          min: 0
+          min: -9223372036854775808
           max: 9223372036854775807
           mode: box

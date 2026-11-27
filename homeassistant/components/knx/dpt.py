@@ -4,9 +4,17 @@ from collections.abc import Mapping
 from functools import cache
 from typing import Literal, NotRequired, TypedDict, cast
 
-from xknx.dpt import DPTBase, DPTComplex, DPTComplexFieldSchema, DPTEnum, DPTNumeric
+from xknx.dpt import (
+    DPTBase,
+    DPTBinary,
+    DPTComplex,
+    DPTComplexFieldSchema,
+    DPTEnum,
+    DPTNumeric,
+)
 from xknx.dpt.dpt_16 import DPTString
 
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import UnitOfReactiveEnergy
 
@@ -63,6 +71,17 @@ def get_supported_dpts() -> Mapping[str, DPTInfo]:
             _add_complex_details(info, cast(type[DPTComplex], dpt_class))
         dpts[dpt_number_str] = info
     return dpts
+
+
+def raw_payload_length(dpt_cls: type[DPTBase]) -> int:
+    """Return the payload length to use for a `RawValue` of a DPT.
+
+    DPT 1, 2 and 3 are integrated in the APDU header. Their transcoders report a
+    bit count while `RawValue` uses `0` to mark such binary payloads.
+    """
+    if dpt_cls.payload_type is DPTBinary:
+        return 0
+    return dpt_cls.payload_length
 
 
 def _ha_dpt_class(dpt_cls: type[DPTBase]) -> HaDptClass:
@@ -149,6 +168,14 @@ _sensor_device_classes: Mapping[str, SensorDeviceClass] = {
     "29.012": SensorDeviceClass.REACTIVE_ENERGY,
 }
 
+_binary_sensor_device_classes: Mapping[str, BinarySensorDeviceClass] = {
+    "1.005": BinarySensorDeviceClass.PROBLEM,  # DPTAlarm
+    "1.010": BinarySensorDeviceClass.RUNNING,  # DPTStart
+    "1.011": BinarySensorDeviceClass.RUNNING,  # DPTState
+    "1.018": BinarySensorDeviceClass.OCCUPANCY,  # DPTOccupancy
+    "1.019": BinarySensorDeviceClass.OPENING,  # DPTWindowDoor
+}
+
 _sensor_state_class_overrides: Mapping[str, SensorStateClass | None] = {
     "5.003": SensorStateClass.MEASUREMENT_ANGLE,  # DPTAngle
     "5.006": None,  # DPTTariff
@@ -184,6 +211,13 @@ _sensor_unit_overrides: Mapping[str, str] = {
     # DPTReactiveEnergy8Byte (VARh in KNX)
     "29.012": UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR,
 }
+
+
+def get_binary_sensor_device_class(
+    transcoder: type[DPTBase],
+) -> BinarySensorDeviceClass | None:
+    """Return the default binary sensor device class for a DPT."""
+    return _binary_sensor_device_classes.get(transcoder.dpt_number_str())
 
 
 def _get_sensor_state_class(

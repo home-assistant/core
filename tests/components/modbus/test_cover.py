@@ -3,7 +3,11 @@
 from pymodbus.exceptions import ModbusException
 import pytest
 
-from homeassistant.components.cover import DOMAIN as COVER_DOMAIN, CoverState
+from homeassistant.components.cover import (
+    DOMAIN as COVER_DOMAIN,
+    CoverService,
+    CoverState,
+)
 from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
 from homeassistant.components.modbus.const import (
     CALL_TYPE_COIL,
@@ -26,9 +30,9 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_SCAN_INTERVAL,
     CONF_SLAVE,
-    SERVICE_CLOSE_COVER,
-    SERVICE_OPEN_COVER,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    TargetKey,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, State
 from homeassistant.setup import async_setup_component
@@ -202,48 +206,108 @@ async def test_service_cover_update(hass: HomeAssistant, mock_modbus_ha) -> None
     assert hass.states.get(ENTITY_ID).state == CoverState.OPEN
 
 
-# Due to fact that modbus now reads imidiatly after connect and the
-# fixture do not return until connected, it is not possible to
-# test the restore.
-# THIS IS WORK TBD.
-@pytest.mark.skip
-@pytest.mark.parametrize(
-    "mock_test_state",
-    [
-        (State(ENTITY_ID, CoverState.CLOSED),),
-        (State(ENTITY_ID, CoverState.CLOSING),),
-        (State(ENTITY_ID, CoverState.OPENING),),
-        (State(ENTITY_ID, CoverState.OPEN),),
-    ],
-    indirect=True,
-)
-@pytest.mark.parametrize(
-    "do_config",
-    [
+STATUS_REGISTER_COVER_CONFIG = {
+    CONF_COVERS: [
         {
-            CONF_COVERS: [
-                {
-                    CONF_NAME: TEST_ENTITY_NAME,
-                    CONF_INPUT_TYPE: CALL_TYPE_COIL,
-                    CONF_ADDRESS: 1234,
-                    CONF_STATE_OPEN: 1,
-                    CONF_STATE_CLOSED: 0,
-                    CONF_STATE_OPENING: 2,
-                    CONF_STATE_CLOSING: 3,
-                    CONF_STATUS_REGISTER: 1234,
-                    CONF_STATUS_REGISTER_TYPE: CALL_TYPE_REGISTER_HOLDING,
-                    CONF_SCAN_INTERVAL: 0,
-                }
-            ]
-        },
+            CONF_NAME: TEST_ENTITY_NAME,
+            CONF_INPUT_TYPE: CALL_TYPE_COIL,
+            CONF_ADDRESS: 1234,
+            CONF_STATE_OPEN: 1,
+            CONF_STATE_CLOSED: 0,
+            CONF_STATE_OPENING: 2,
+            CONF_STATE_CLOSING: 3,
+            CONF_STATUS_REGISTER: 1234,
+            CONF_STATUS_REGISTER_TYPE: CALL_TYPE_REGISTER_HOLDING,
+            CONF_SCAN_INTERVAL: 0,
+        }
+    ]
+}
+COIL_COVER_CONFIG = {
+    CONF_COVERS: [
+        {
+            CONF_NAME: TEST_ENTITY_NAME,
+            CONF_INPUT_TYPE: CALL_TYPE_COIL,
+            CONF_ADDRESS: 1234,
+            CONF_SCAN_INTERVAL: 0,
+        }
+    ]
+}
+
+
+@pytest.mark.parametrize(
+    ("do_config", "mock_test_state", "expected"),
+    [
+        pytest.param(
+            STATUS_REGISTER_COVER_CONFIG,
+            (State(ENTITY_ID, CoverState.CLOSED),),
+            CoverState.CLOSED,
+            id="status-register-closed",
+        ),
+        pytest.param(
+            STATUS_REGISTER_COVER_CONFIG,
+            (State(ENTITY_ID, CoverState.CLOSING),),
+            CoverState.CLOSING,
+            id="status-register-closing",
+        ),
+        pytest.param(
+            STATUS_REGISTER_COVER_CONFIG,
+            (State(ENTITY_ID, CoverState.OPENING),),
+            CoverState.OPENING,
+            id="status-register-opening",
+        ),
+        pytest.param(
+            STATUS_REGISTER_COVER_CONFIG,
+            (State(ENTITY_ID, CoverState.OPEN),),
+            CoverState.OPEN,
+            id="status-register-open",
+        ),
+        pytest.param(
+            STATUS_REGISTER_COVER_CONFIG,
+            (State(ENTITY_ID, STATE_UNAVAILABLE),),
+            STATE_UNKNOWN,
+            id="status-register-unavailable",
+        ),
+        pytest.param(
+            STATUS_REGISTER_COVER_CONFIG,
+            (State(ENTITY_ID, STATE_UNKNOWN),),
+            STATE_UNKNOWN,
+            id="status-register-unknown",
+        ),
+        pytest.param(
+            COIL_COVER_CONFIG,
+            (State(ENTITY_ID, CoverState.CLOSED),),
+            CoverState.CLOSED,
+            id="coil-closed",
+        ),
+        pytest.param(
+            COIL_COVER_CONFIG,
+            (State(ENTITY_ID, CoverState.OPEN),),
+            CoverState.OPEN,
+            id="coil-open",
+        ),
+        pytest.param(
+            COIL_COVER_CONFIG,
+            (State(ENTITY_ID, STATE_UNAVAILABLE),),
+            STATE_UNKNOWN,
+            id="coil-unavailable",
+        ),
+        pytest.param(
+            COIL_COVER_CONFIG,
+            (State(ENTITY_ID, STATE_UNKNOWN),),
+            STATE_UNKNOWN,
+            id="coil-unknown",
+        ),
     ],
+    indirect=["mock_test_state"],
 )
 async def test_restore_state_cover(
-    hass: HomeAssistant, mock_test_state, mock_modbus
+    hass: HomeAssistant, mock_test_state, expected, mock_modbus_to_test_errors_config
 ) -> None:
-    """Run test for cover restore state."""
-    test_state = mock_test_state[0].state
-    assert hass.states.get(ENTITY_ID).state == test_state
+    """Run test for cover restore state, before the first read.
+
+    A coil cover without status register has no opening/closing states.
+    """
+    assert hass.states.get(ENTITY_ID).state == expected
 
 
 @pytest.mark.parametrize(
@@ -272,27 +336,36 @@ async def test_service_cover_move(hass: HomeAssistant, mock_modbus_ha) -> None:
 
     mock_modbus_ha.read_holding_registers.return_value = ReadResult([0x01])
     await hass.services.async_call(
-        COVER_DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        COVER_DOMAIN, CoverService.OPEN, {TargetKey.ENTITY_ID: ENTITY_ID}, blocking=True
     )
     assert hass.states.get(ENTITY_ID).state == CoverState.OPEN
 
     mock_modbus_ha.read_holding_registers.return_value = ReadResult([0x00])
     await hass.services.async_call(
-        COVER_DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        COVER_DOMAIN,
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
+        blocking=True,
     )
     assert hass.states.get(ENTITY_ID).state == CoverState.CLOSED
 
     await mock_modbus_ha.reset()
     mock_modbus_ha.read_holding_registers.side_effect = ModbusException("fail write_")
     await hass.services.async_call(
-        COVER_DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        COVER_DOMAIN,
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
+        blocking=True,
     )
     assert mock_modbus_ha.read_holding_registers.called
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
     mock_modbus_ha.read_coils.side_effect = ModbusException("fail write_")
     await hass.services.async_call(
-        COVER_DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: ENTITY_ID2}, blocking=True
+        COVER_DOMAIN,
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: ENTITY_ID2},
+        blocking=True,
     )
     assert hass.states.get(ENTITY_ID2).state == STATE_UNAVAILABLE
 

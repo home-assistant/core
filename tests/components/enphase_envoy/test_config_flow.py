@@ -2,12 +2,16 @@
 
 from ipaddress import ip_address
 import logging
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
-from pyenphase import EnvoyAuthenticationError, EnvoyError
+from pyenphase import Envoy, EnvoyAuthenticationError, EnvoyError, EnvoyTokenAuth
+from pyenphase.const import EnvoyOptions
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.enphase_envoy.const import (
+    CONF_MANUAL_TOKEN,
+    CONF_NO_SOLAR,
     DOMAIN,
     OPTION_DIAGNOSTICS_INCLUDE_FIXTURES,
     OPTION_DIAGNOSTICS_INCLUDE_FIXTURES_DEFAULT_VALUE,
@@ -15,14 +19,18 @@ from homeassistant.components.enphase_envoy.const import (
     OPTION_DISABLE_KEEP_ALIVE_DEFAULT_VALUE,
 )
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_TOKEN,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from . import setup_integration
-
-from tests.common import MockConfigEntry
+from . import envoy_token, setup_integration
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,6 +60,9 @@ async def test_form(hass: HomeAssistant, mock_envoy: AsyncMock) -> None:
         CONF_NAME: "Envoy 1234",
         CONF_USERNAME: "test-username",
         CONF_PASSWORD: "test-password",
+        CONF_MANUAL_TOKEN: False,
+        CONF_TOKEN: mock_envoy.auth.token,
+        CONF_NO_SOLAR: False,
     }
 
 
@@ -83,6 +94,10 @@ async def test_user_no_serial_number(
         CONF_NAME: "Envoy",
         CONF_USERNAME: "test-username",
         CONF_PASSWORD: "test-password",
+        CONF_MANUAL_TOKEN: False,
+        # mock always fills token
+        CONF_TOKEN: mock_envoy.auth.token,
+        CONF_NO_SOLAR: False,
     }
 
 
@@ -186,6 +201,9 @@ async def test_zeroconf(
         CONF_NAME: "Envoy 1234",
         CONF_USERNAME: "test-username",
         CONF_PASSWORD: "test-password",
+        CONF_MANUAL_TOKEN: False,
+        CONF_TOKEN: mock_envoy.auth.token,
+        CONF_NO_SOLAR: False,
     }
 
 
@@ -246,6 +264,7 @@ async def test_form_host_already_exists(
     assert config_entry.data[CONF_HOST] == "1.1.1.2"
     assert config_entry.data[CONF_USERNAME] == "test-username"
     assert config_entry.data[CONF_PASSWORD] == "changed-password"
+    assert not config_entry.data[CONF_NO_SOLAR]
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -630,6 +649,7 @@ async def test_reconfigure(
     assert config_entry.data[CONF_HOST] == "1.1.1.2"
     assert config_entry.data[CONF_USERNAME] == "test-username2"
     assert config_entry.data[CONF_PASSWORD] == "test-password2"
+    assert not config_entry.data[CONF_NO_SOLAR]
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -664,6 +684,7 @@ async def test_reconfigure_nochange(
     assert config_entry.data[CONF_HOST] == "1.1.1.1"
     assert config_entry.data[CONF_USERNAME] == "test-username"
     assert config_entry.data[CONF_PASSWORD] == "test-password"
+    assert not config_entry.data[CONF_NO_SOLAR]
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -757,6 +778,7 @@ async def test_reconfigure_auth_failure(
     assert config_entry.data[CONF_HOST] == "1.1.1.2"
     assert config_entry.data[CONF_USERNAME] == "test-username"
     assert config_entry.data[CONF_PASSWORD] == "changed-password"
+    assert not config_entry.data[CONF_NO_SOLAR]
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -809,8 +831,558 @@ async def test_reconfigure_change_ip_to_existing(
     assert config_entry.data[CONF_HOST] == "1.1.1.2"
     assert config_entry.data[CONF_USERNAME] == "test-username"
     assert config_entry.data[CONF_PASSWORD] == "test-password2"
+    assert not config_entry.data[CONF_NO_SOLAR]
 
     # unchanged other entry
     assert other_entry.data[CONF_HOST] == "1.1.1.2"
     assert other_entry.data[CONF_USERNAME] == "other-username"
     assert other_entry.data[CONF_PASSWORD] == "other-password"
+    assert CONF_NO_SOLAR not in other_entry.data
+
+
+async def test_form_configure_manual_token(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_envoy: AsyncMock,
+) -> None:
+    """Test user step selecting to use manual token entry."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    # user opts for manual token entry
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "1.1.1.1",
+            CONF_MANUAL_TOKEN: True,
+        },
+    )
+    await hass.async_block_till_done()
+    # no config update only form mode switch
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    # in manual token mode user enters host, token with error and leaves manual_token on
+    token = envoy_token()
+    wrong_token = "wrongtoken"
+    mock_envoy.auth = EnvoyTokenAuth(
+        "127.0.0.1", token=wrong_token, envoy_serial="1234"
+    )
+    mock_envoy.authenticate.side_effect = EnvoyAuthenticationError("Failing test")
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "1.1.1.1", CONF_MANUAL_TOKEN: True, CONF_TOKEN: wrong_token},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "invalid_auth"}
+
+    # user input to update manual token
+    mock_envoy.auth = EnvoyTokenAuth("127.0.0.1", token=token, envoy_serial="1234")
+    mock_envoy.authenticate.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "1.1.1.1", CONF_TOKEN: token, CONF_MANUAL_TOKEN: True},
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Envoy 1234"
+    assert result["result"].unique_id == "1234"
+    assert result["data"] == {
+        CONF_HOST: "1.1.1.1",
+        CONF_NAME: "Envoy 1234",
+        CONF_MANUAL_TOKEN: True,
+        CONF_TOKEN: token,
+        CONF_NO_SOLAR: False,
+    }
+
+
+async def test_form_switch_between_token_modes(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_envoy: AsyncMock,
+) -> None:
+    """Test user step selecting to use automatic token entry."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    # user opts for manual token entry
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "1.1.1.1",
+            CONF_MANUAL_TOKEN: True,
+        },
+    )
+    await hass.async_block_till_done()
+    # no config update only form mode switch
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    # in manual token mode user opts to switch back to automatic_token
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "1.1.1.1", CONF_MANUAL_TOKEN: False},
+    )
+    await hass.async_block_till_done()
+    # no config update only form mode switch
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    # user enters credentials and leaves manual_token off
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "1.1.1.1",
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+            CONF_MANUAL_TOKEN: False,
+        },
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Envoy 1234"
+    assert result["result"].unique_id == "1234"
+    assert result["data"] == {
+        CONF_HOST: "1.1.1.1",
+        CONF_NAME: "Envoy 1234",
+        CONF_USERNAME: "test-username",
+        CONF_PASSWORD: "test-password",
+        CONF_MANUAL_TOKEN: False,
+        # in auto mode the verification will retrieve token from envoy
+        CONF_TOKEN: mock_envoy.auth.token,
+        CONF_NO_SOLAR: False,
+    }
+
+
+async def test_reauth_switch_to_manual_token(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
+    mock_envoy: AsyncMock,
+) -> None:
+    """Test reauth switch to manual token mode."""
+    await setup_integration(hass, config_entry)
+    result = await config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {}
+
+    # user opts to switch to manual token
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_MANUAL_TOKEN: True,
+        },
+    )
+    await hass.async_block_till_done()
+    # no config update only form mode switch
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "reauth_confirm"
+    assert result2["errors"] == {}
+
+    # user enters token
+    token = envoy_token()
+    mock_envoy.auth = EnvoyTokenAuth("127.0.0.1", token=token, envoy_serial="1234")
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {
+            CONF_TOKEN: token,
+            CONF_MANUAL_TOKEN: True,
+        },
+    )
+    await hass.async_block_till_done()
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reauth_successful"
+    assert config_entry.data[CONF_HOST] == "1.1.1.1"
+    assert config_entry.data[CONF_TOKEN] == token
+    assert config_entry.data[CONF_MANUAL_TOKEN]
+
+
+@pytest.mark.parametrize(
+    ("config_entry"),
+    [("manual")],
+    indirect=True,
+)
+async def test_reauth_manual_token(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_envoy: AsyncMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test reauth in manual token mode."""
+    await setup_integration(hass, config_entry)
+    result = await config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {}
+
+    # user input to update manual token with token error
+    next_token = envoy_token(300)
+    wrong_token = "wrongtoken"
+    mock_envoy.auth = EnvoyTokenAuth(
+        "127.0.0.1", token=wrong_token, envoy_serial="1234"
+    )
+    mock_envoy.authenticate.side_effect = EnvoyAuthenticationError("Failing test")
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_MANUAL_TOKEN: True, CONF_TOKEN: wrong_token},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": "invalid_auth"}
+
+    # user input to update manual token
+    mock_envoy.auth = EnvoyTokenAuth("127.0.0.1", token=next_token, envoy_serial="1234")
+    mock_envoy.authenticate.side_effect = None
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_TOKEN: next_token,
+            CONF_MANUAL_TOKEN: True,
+        },
+    )
+    await hass.async_block_till_done()
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reauth_successful"
+    assert config_entry.data[CONF_MANUAL_TOKEN]
+    assert config_entry.data[CONF_TOKEN] == next_token
+
+
+@pytest.mark.parametrize(
+    ("config_entry"),
+    [("auto")],
+    indirect=True,
+)
+async def test_reconfigure_switch_to_manual_token(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
+    mock_envoy: AsyncMock,
+) -> None:
+    """Test reconfigure form switching from automatic to manual token entry."""
+    await setup_integration(hass, config_entry)
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {}
+
+    # user input to switch to manual token entry
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "1.1.1.1", CONF_MANUAL_TOKEN: True},
+    )
+    await hass.async_block_till_done()
+    # no config update, only form mode switch
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "reconfigure"
+    assert result2["errors"] == {}
+
+    # in manual token mode user enters host, token and manual_token option
+    token = envoy_token()
+    mock_envoy.auth = EnvoyTokenAuth("127.0.0.1", token=token, envoy_serial="1234")
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "1.1.1.1", CONF_TOKEN: token, CONF_MANUAL_TOKEN: True},
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    # Now we should have token and manual_token mode on
+    assert config_entry.data[CONF_HOST] == "1.1.1.1"
+    assert config_entry.data[CONF_USERNAME] == ""
+    assert config_entry.data[CONF_PASSWORD] == ""
+    assert config_entry.data[CONF_TOKEN] == token
+    assert config_entry.data[CONF_MANUAL_TOKEN]
+
+
+@pytest.mark.parametrize(
+    ("config_entry"),
+    [("manual")],
+    indirect=True,
+)
+async def test_reconfigure_manual_token(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_envoy: AsyncMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure in manual token mode."""
+    await setup_integration(hass, config_entry)
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {}
+
+    # user input to update manual token with token error
+    next_token = envoy_token(300)
+    wrong_token = "wrongtoken"
+    mock_envoy.auth = EnvoyTokenAuth(
+        "127.0.0.1", token=wrong_token, envoy_serial="1234"
+    )
+    mock_envoy.authenticate.side_effect = EnvoyAuthenticationError("Failing test")
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "1.1.1.1", CONF_MANUAL_TOKEN: True, CONF_TOKEN: wrong_token},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": "invalid_auth"}
+
+    # user input to update manual token
+    mock_envoy.auth = EnvoyTokenAuth("127.0.0.1", token=next_token, envoy_serial="1234")
+    mock_envoy.authenticate.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "1.1.1.1", CONF_MANUAL_TOKEN: True, CONF_TOKEN: next_token},
+    )
+
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    assert config_entry.data[CONF_HOST] == "1.1.1.1"
+    assert config_entry.data[CONF_USERNAME] == ""
+    assert config_entry.data[CONF_PASSWORD] == ""
+    assert config_entry.data[CONF_TOKEN] == next_token
+    assert config_entry.data[CONF_MANUAL_TOKEN]
+
+
+@pytest.mark.parametrize(
+    ("config_entry"),
+    [("manual")],
+    indirect=True,
+)
+async def test_reconfigure_switch_from_token(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_envoy: AsyncMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure switching back to automatic token mode."""
+    await setup_integration(hass, config_entry)
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {}
+
+    # user input to switch from manual to automatic token entry
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "1.1.1.1", CONF_MANUAL_TOKEN: False},
+    )
+
+    await hass.async_block_till_done()
+    # no config update, only switch to other form mode
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "reconfigure"
+    assert result2["errors"] == {}
+
+    # user updates username & pw
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {
+            CONF_HOST: "1.1.1.1",
+            CONF_USERNAME: "test-username1",
+            CONF_PASSWORD: "test-password2",
+        },
+    )
+    await hass.async_block_till_done()
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reconfigure_successful"
+
+    # # token should be automatic again and manual_token false
+    assert config_entry.data[CONF_HOST] == "1.1.1.1"
+    assert config_entry.data[CONF_USERNAME] == "test-username1"
+    assert config_entry.data[CONF_PASSWORD] == "test-password2"
+    assert config_entry.data[CONF_TOKEN] == mock_envoy.auth.token
+    assert not config_entry.data[CONF_MANUAL_TOKEN]
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_to_no_solar_on(
+    hass: HomeAssistant, config_entry: MockConfigEntry, mock_envoy: AsyncMock
+) -> None:
+    """Test we get the reconfigure form and apply NO SOLAR mode."""
+    await setup_integration(hass, config_entry)
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {}
+
+    # original entry
+    assert config_entry.data[CONF_HOST] == "1.1.1.1"
+    assert config_entry.data[CONF_USERNAME] == "test-username"
+    assert config_entry.data[CONF_PASSWORD] == "test-password"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "1.1.1.1",
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+            CONF_NO_SOLAR: True,
+        },
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    # unchanged original entry
+    assert config_entry.data[CONF_HOST] == "1.1.1.1"
+    assert config_entry.data[CONF_USERNAME] == "test-username"
+    assert config_entry.data[CONF_PASSWORD] == "test-password"
+    assert config_entry.data[CONF_NO_SOLAR]
+
+
+async def test_reauth_manual_token_switch_to_no_solar_on(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
+    mock_envoy: AsyncMock,
+) -> None:
+    """Test reauth in manual token mode switch no solar on."""
+    await setup_integration(hass, config_entry)
+    result = await config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {}
+
+    # user opts to switch to manual token
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_MANUAL_TOKEN: True,
+        },
+    )
+    await hass.async_block_till_done()
+    # no config update only form mode switch
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "reauth_confirm"
+    assert result2["errors"] == {}
+
+    # user enters token and enables NO SOLAR
+    token = envoy_token()
+    mock_envoy.auth = EnvoyTokenAuth("127.0.0.1", token=token, envoy_serial="1234")
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {
+            CONF_TOKEN: token,
+            CONF_MANUAL_TOKEN: True,
+            CONF_NO_SOLAR: True,
+        },
+    )
+    await hass.async_block_till_done()
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reauth_successful"
+    assert config_entry.data[CONF_HOST] == "1.1.1.1"
+    assert config_entry.data[CONF_TOKEN] == token
+    assert config_entry.data[CONF_MANUAL_TOKEN]
+    assert config_entry.data[CONF_NO_SOLAR]
+
+
+@patch(
+    "homeassistant.components.enphase_envoy.config_flow.Envoy",
+    autospec=True,
+    side_effect=EnvoyAuthenticationError("fail authentication"),
+)
+async def test_form_configure_no_solar_on(
+    mocked_envoy: Envoy,
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test user step no solar mode passed to Envoy setup."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    # setup fails, we only are testing Envoy parameters passed to instantiation
+    with pytest.raises(EnvoyAuthenticationError):
+        # test user enabling no_solar mode
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "1.1.1.1",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+                CONF_NO_SOLAR: True,
+            },
+        )
+    await hass.async_block_till_done()
+
+    args, kwargs = mocked_envoy.call_args
+    assert args[0] == "1.1.1.1"
+    assert kwargs["envoy_options"] == EnvoyOptions.NO_SOLAR | EnvoyOptions.V2_ACB_MODE
+
+    assert (
+        f"Validating Envoy with host: 1.1.1.1 and options: {EnvoyOptions.V2_ACB_MODE.name} {EnvoyOptions.NO_SOLAR.name}"
+        in caplog.text
+    )
+
+    caplog.clear()
+    mocked_envoy.reset_mock()
+
+    # setup fails, we only are testing Envoy parameters passed to instantiation
+    with pytest.raises(EnvoyAuthenticationError):
+        # test user enabling no_solar mode
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "1.1.1.1",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+                CONF_NO_SOLAR: False,
+            },
+        )
+    await hass.async_block_till_done()
+
+    args, kwargs = mocked_envoy.call_args
+    assert args[0] == "1.1.1.1"
+    assert kwargs["envoy_options"] == EnvoyOptions.V2_ACB_MODE
+
+    assert (
+        f"Validating Envoy with host: 1.1.1.1 and options: {EnvoyOptions.V2_ACB_MODE.name}"
+        in caplog.text
+    )
+
+    caplog.clear()
+    mocked_envoy.reset_mock()
+
+    # setup fails, we only are testing Envoy parameters passed to instantiation
+    with pytest.raises(EnvoyAuthenticationError):
+        # test user enabling no_solar mode
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "1.1.1.1",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+            },
+        )
+    await hass.async_block_till_done()
+
+    args, kwargs = mocked_envoy.call_args
+    assert args[0] == "1.1.1.1"
+    assert kwargs["envoy_options"] == EnvoyOptions.V2_ACB_MODE
+
+    assert (
+        f"Validating Envoy with host: 1.1.1.1 and options: {EnvoyOptions.V2_ACB_MODE.name}"
+        in caplog.text
+    )

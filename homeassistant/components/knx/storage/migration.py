@@ -2,9 +2,9 @@
 
 from typing import Any
 
-from homeassistant.const import Platform
+from homeassistant.const import CONF_ENTITY_CATEGORY, EntityCategory, Platform
 
-from ..const import CONF_RESPOND_TO_READ
+from ..const import CONF_RESPOND_TO_READ, PLATFORMS_WITHOUT_CONFIG_CATEGORY
 from . import const as store_const
 
 
@@ -60,3 +60,14 @@ def migrate_2_2_to_2_3(data: dict[str, Any]) -> None:
 def migrate_2_3_to_2_4(data: dict[str, Any]) -> None:
     """Migrate from schema 2.3 to schema 2.4."""
     data.setdefault("expose", {})
+
+
+def migrate_2_4_to_2_5(data: dict[str, Any]) -> None:
+    """Migrate from schema 2.4 to schema 2.5."""
+    for platform in PLATFORMS_WITHOUT_CONFIG_CATEGORY:
+        for entity in data.get("entities", {}).get(platform, {}).values():
+            # `EntityCategory.CONFIG` is not valid for these platforms
+            #  so these entities were never set up
+            entity_data = entity[store_const.CONF_ENTITY]
+            if entity_data.get(CONF_ENTITY_CATEGORY) == EntityCategory.CONFIG:
+                entity_data[CONF_ENTITY_CATEGORY] = EntityCategory.DIAGNOSTIC

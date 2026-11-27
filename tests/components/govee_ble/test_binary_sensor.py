@@ -1,5 +1,8 @@
 """Test the Govee BLE binary_sensor."""
 
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
+
 from homeassistant.components.govee_ble.const import CONF_DEVICE_TYPE, DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
@@ -11,9 +14,6 @@ from . import (
     GVH5127_MOTION_SERVICE_INFO,
     GVH5127_PRESENT_SERVICE_INFO,
 )
-
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import inject_bluetooth_service_info
 
 
 async def test_window_sensor(hass: HomeAssistant) -> None:

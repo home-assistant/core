@@ -1,8 +1,9 @@
 """Data update coordinator for the Ouman EH-800 integration."""
 
+from dataclasses import dataclass, replace
 from datetime import timedelta
 import logging
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from ouman_eh_800_api import (
     ControllableEndpoint,
@@ -10,6 +11,7 @@ from ouman_eh_800_api import (
     L2BaseEndpoints,
     OumanClientAuthenticationError,
     OumanClientCommunicationError,
+    OumanClientError,
     OumanEh800Client,
     OumanEndpoint,
     OumanRegistrySet,
@@ -20,12 +22,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
-    ConfigEntryError,
+    ConfigEntryAuthFailed,
     ConfigEntryNotReady,
     HomeAssistantError,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import ChildDeviceInfo, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_SCAN_INTERVAL_SECONDS, DOMAIN, OumanDevice
@@ -35,7 +37,15 @@ _LOGGER = logging.getLogger(__name__)
 type OumanEh800ConfigEntry = ConfigEntry[OumanEh800Coordinator]
 
 
-class OumanEh800Coordinator(DataUpdateCoordinator[dict[OumanEndpoint, OumanValues]]):
+@dataclass
+class OumanEh800Data:
+    """Data fetched from the device on each update."""
+
+    values: dict[OumanEndpoint, OumanValues]
+    l1_summer_function_active: bool
+
+
+class OumanEh800Coordinator(DataUpdateCoordinator[OumanEh800Data]):
     """Ouman EH-800 data update coordinator."""
 
     _registry_set: OumanRegistrySet
@@ -62,28 +72,19 @@ class OumanEh800Coordinator(DataUpdateCoordinator[dict[OumanEndpoint, OumanValue
             address=config_entry.data[CONF_URL],
         )
 
-        entry_id = config_entry.entry_id
-        main_device_identifier = (DOMAIN, entry_id)
-        self.device_info: dict[OumanDevice, DeviceInfo] = {
-            OumanDevice.MAIN: DeviceInfo(
-                identifiers={main_device_identifier},
-                manufacturer="Ouman",
-                model="EH-800",
-                configuration_url=config_entry.data[CONF_URL],
-            ),
-            OumanDevice.L1: DeviceInfo(
-                identifiers={(DOMAIN, f"{entry_id}_{OumanDevice.L1}")},
-                translation_key="heating_circuit",
-                translation_placeholders={"circuit_number": "1"},
-                via_device=main_device_identifier,
-            ),
-            OumanDevice.L2: DeviceInfo(
-                identifiers={(DOMAIN, f"{entry_id}_{OumanDevice.L2}")},
-                translation_key="heating_circuit",
-                translation_placeholders={"circuit_number": "2"},
-                via_device=main_device_identifier,
-            ),
-        }
+        self.main_device_info = DeviceInfo(
+            identifiers={(DOMAIN, config_entry.entry_id)},
+            manufacturer="Ouman",
+            model="EH-800",
+            configuration_url=config_entry.data[CONF_URL],
+        )
+        self._circuit_device_info: dict[OumanDevice, ChildDeviceInfo] = {}
+
+    def device_info(self, device: OumanDevice) -> DeviceInfo | ChildDeviceInfo:
+        """Return the device info for a logical device."""
+        if device is OumanDevice.MAIN:
+            return self.main_device_info
+        return self._circuit_device_info[device]
 
     @override
     async def _async_setup(self) -> None:
@@ -93,17 +94,23 @@ class OumanEh800Coordinator(DataUpdateCoordinator[dict[OumanEndpoint, OumanValue
             await self.client.login()
             self._registry_set = await self.client.get_active_registries()
         except OumanClientAuthenticationError as err:
-            raise ConfigEntryError("Invalid credentials") from err
+            raise ConfigEntryAuthFailed("Invalid credentials") from err
         except OumanClientCommunicationError as err:
             raise ConfigEntryNotReady("Error communicating with API") from err
 
     @override
-    async def _async_update_data(self) -> dict[OumanEndpoint, OumanValues]:
-        """Fetch registry values from the device."""
+    async def _async_update_data(self) -> OumanEh800Data:
+        """Fetch registry values and the summer function state from the device."""
         try:
-            return await self.client.get_values(self._registry_set)
+            values = await self.client.get_values(self._registry_set)
+            summer_function_active = (
+                await self.client.get_is_l1_summer_function_active()
+            )
         except OumanClientCommunicationError as err:
             raise UpdateFailed("Error communicating with API") from err
+        except OumanClientError as err:
+            raise UpdateFailed("Unexpected response from device") from err
+        return OumanEh800Data(values, summer_function_active)
 
     async def async_set_endpoint_value(
         self, endpoint: ControllableEndpoint, value: OumanValues | int
@@ -112,29 +119,45 @@ class OumanEh800Coordinator(DataUpdateCoordinator[dict[OumanEndpoint, OumanValue
         try:
             result = await self.client.set_endpoint_value(endpoint, value)
         except OumanClientAuthenticationError as err:
+            # Reload the config entry; setup re-validates the credentials and
+            # starts a reauth flow if they are no longer valid.
+            self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
             raise HomeAssistantError("Authentication failed") from err
         except OumanClientCommunicationError as err:
             raise HomeAssistantError("Error communicating with API") from err
+        except OumanClientError as err:
+            raise HomeAssistantError("Unexpected response from device") from err
 
-        self.async_set_updated_data({**self.data, endpoint: result})
+        self.async_set_updated_data(
+            replace(self.data, values={**self.data.values, endpoint: result})
+        )
         # Separate refresh on all endpoints to catch cascading changes.
         await self.async_request_refresh()
 
-    def sync_circuit_device_names(self) -> None:
-        """Set the device-reported circuit names for the L1/L2 sub-device names.
+    def set_up_circuit_devices(self, parent_device_id: str) -> None:
+        """Build child device infos for the active circuits.
 
-        Should be called after the data update so that platforms register
-        L1/L2 devices with the resolved names.
+        The devices are named after the reported circuit names, so this must
+        be called after the first data update and before the platforms are
+        set up.
         """
         for device, endpoint, circuit_number in (
             (OumanDevice.L1, L1BaseEndpoints.CIRCUIT_NAME, "1"),
             (OumanDevice.L2, L2BaseEndpoints.CIRCUIT_NAME, "2"),
         ):
-            if circuit_name := self.data.get(endpoint):
+            # An absent circuit name means the circuit is inactive.
+            if (circuit_name := self.data.values.get(endpoint)) is None:
+                continue
+            if TYPE_CHECKING:
                 assert isinstance(circuit_name, str)
-                device_info = self.device_info[device]
-                device_info["translation_key"] = "heating_circuit_with_name"
-                device_info["translation_placeholders"] = {
-                    "circuit_number": circuit_number,
-                    "circuit_name": circuit_name,
-                }
+            translation_key = "heating_circuit"
+            translation_placeholders = {"circuit_number": circuit_number}
+            if circuit_name:
+                translation_key = "heating_circuit_with_name"
+                translation_placeholders["circuit_name"] = circuit_name
+            self._circuit_device_info[device] = ChildDeviceInfo(
+                identifiers={(DOMAIN, f"{self.config_entry.entry_id}_{device}")},
+                parent_device_id=parent_device_id,
+                translation_key=translation_key,
+                translation_placeholders=translation_placeholders,
+            )

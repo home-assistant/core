@@ -8,11 +8,13 @@ from dataclasses import dataclass
 from enum import IntEnum
 import json
 import logging
+import os
 from ssl import PROTOCOL_TLS_CLIENT, SSLContext, SSLError
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, cast, override
 from uuid import uuid4
 
+from cryptography.exceptions import UnsupportedAlgorithm
 from cryptography.hazmat.primitives.serialization import (
     Encoding,
     NoEncryption,
@@ -21,11 +23,9 @@ from cryptography.hazmat.primitives.serialization import (
     load_pem_private_key,
 )
 from cryptography.x509 import load_der_x509_certificate, load_pem_x509_certificate
-import voluptuous as vol
+import probatio
 import yaml
 
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.components.button import ButtonDeviceClass
 from homeassistant.components.climate import (
     DEFAULT_MAX_HUMIDITY,
     DEFAULT_MAX_TEMP,
@@ -33,7 +33,6 @@ from homeassistant.components.climate import (
     DEFAULT_MIN_TEMP,
     PRESET_NONE,
 )
-from homeassistant.components.cover import CoverDeviceClass
 from homeassistant.components.file_upload import process_uploaded_file
 from homeassistant.components.hassio import AddonError, AddonManager, AddonState
 from homeassistant.components.image import DEFAULT_CONTENT_TYPE
@@ -48,7 +47,6 @@ from homeassistant.components.number import (
     DEFAULT_MIN_VALUE,
     DEFAULT_STEP,
     DEVICE_CLASS_UNITS as NUMBER_DEVICE_CLASS_UNITS,
-    NumberDeviceClass,
     NumberMode,
 )
 from homeassistant.components.sensor import (
@@ -56,10 +54,8 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_UNITS,
     STATE_CLASS_UNITS,
     SensorDeviceClass,
-    SensorStateClass,
 )
-from homeassistant.components.switch import SwitchDeviceClass
-from homeassistant.components.valve import ValveDeviceClass, ValveState
+from homeassistant.components.valve import ValveState
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
     ConfigEntry,
@@ -113,6 +109,8 @@ from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.selector import (
     BooleanSelector,
+    DeviceClassSelector,
+    DeviceClassSelectorConfig,
     DurationSelector,
     DurationSelectorConfig,
     FileSelector,
@@ -125,11 +123,14 @@ from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
+    StateClassSelector,
     TemplateSelector,
     TemplateSelectorConfig,
     TextSelector,
     TextSelectorConfig,
     TextSelectorType,
+    UnitOfMeasurementSelector,
+    UnitOfMeasurementSelectorConfig,
 )
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
@@ -158,8 +159,11 @@ from .const import (
     CONF_BRIGHTNESS_VALUE_TEMPLATE,
     CONF_BROKER,
     CONF_CERTIFICATE,
+    CONF_CERTIFICATE_FILE,
     CONF_CLIENT_CERT,
+    CONF_CLIENT_CERT_FILE,
     CONF_CLIENT_KEY,
+    CONF_CLIENT_KEY_FILE,
     CONF_CODE_ARM_REQUIRED,
     CONF_CODE_DISARM_REQUIRED,
     CONF_CODE_FORMAT,
@@ -480,7 +484,7 @@ _CODE_VALIDATION_MODE = {
 EXCLUDE_FROM_CONFIG_IF_NONE = {CONF_ENTITY_CATEGORY, CONF_UNIT_OF_MEASUREMENT}
 PWD_NOT_CHANGED = "__**password_not_changed**__"
 
-DEVELOPER_DOCUMENTATION_URL = "https://developers.home-assistant.io/"
+DEVELOPER_DOCUMENTATION_URL = "https://contributors.home-assistant.io/"
 USER_DOCUMENTATION_URL = "https://www.home-assistant.io/"
 TZ_ZONE_ABBR_URL = (
     "https://en.wikipedia.org/wiki/List_of_tz_database_time_zones"
@@ -492,11 +496,11 @@ TEMPLATING_URL = f"{USER_DOCUMENTATION_URL}docs/configuration/templating/"
 COMMAND_TEMPLATING_URL = f"{TEMPLATING_URL}#using-command-templates-with-mqtt"
 VALUE_TEMPLATING_URL = f"{TEMPLATING_URL}#using-value-templates-with-mqtt"
 AVAILABLE_STATE_CLASSES_URL = (
-    f"{DEVELOPER_DOCUMENTATION_URL}docs/core/entity/sensor/#available-state-classes"
+    f"{DEVELOPER_DOCUMENTATION_URL}core/entities/sensor/#state-classes"
 )
 NAMING_ENTITIES_URL = f"{INTEGRATION_URL}#naming-of-mqtt-entities"
 REGISTRY_PROPERTIES_URL = (
-    f"{DEVELOPER_DOCUMENTATION_URL}docs/core/entity/#registry-properties"
+    f"{DEVELOPER_DOCUMENTATION_URL}core/entities/registry/#entity-categories"
 )
 
 TRANSLATION_DESCRIPTION_PLACEHOLDERS = {
@@ -547,17 +551,17 @@ CERT_KEY_UPLOAD_SELECTOR = FileSelector(
 CERT_UPLOAD_SELECTOR = FileSelector(
     FileSelectorConfig(accept=".pem,.crt,.cer,.der,application/x-x509-user-cert")
 )
-KEEPALIVE_SELECTOR = vol.All(
+KEEPALIVE_SELECTOR = probatio.All(
     NumberSelector(
         NumberSelectorConfig(
             mode=NumberSelectorMode.BOX, min=15, step="any", unit_of_measurement="sec"
         )
     ),
-    vol.Coerce(int),
+    probatio.Coerce(int),
 )
-PORT_SELECTOR = vol.All(
+PORT_SELECTOR = probatio.All(
     NumberSelector(NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=1, max=65535)),
-    vol.Coerce(int),
+    probatio.Coerce(int),
 )
 PROTOCOL_SELECTOR = SelectSelector(
     SelectSelectorConfig(
@@ -589,14 +593,14 @@ ENTITY_CATEGORY_SELECTOR = SelectSelector(
         sort=True,
     )
 )
-SUBENTRY_AVAILABILITY_SCHEMA = vol.Schema(
+SUBENTRY_AVAILABILITY_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_AVAILABILITY_TOPIC): TEXT_SELECTOR,
-        vol.Optional(CONF_AVAILABILITY_TEMPLATE): TEMPLATE_SELECTOR,
-        vol.Optional(
+        probatio.Optional(CONF_AVAILABILITY_TOPIC): TEXT_SELECTOR,
+        probatio.Optional(CONF_AVAILABILITY_TEMPLATE): TEMPLATE_SELECTOR,
+        probatio.Optional(
             CONF_PAYLOAD_AVAILABLE, default=DEFAULT_PAYLOAD_AVAILABLE
         ): TEXT_SELECTOR,
-        vol.Optional(
+        probatio.Optional(
             CONF_PAYLOAD_NOT_AVAILABLE, default=DEFAULT_PAYLOAD_NOT_AVAILABLE
         ): TEXT_SELECTOR,
     }
@@ -629,21 +633,11 @@ ALARM_CONTROL_PANEL_CODE_MODE = SelectSelector(
         translation_key="alarm_control_panel_code_mode",
     )
 )
-BINARY_SENSOR_DEVICE_CLASS_SELECTOR = SelectSelector(
-    SelectSelectorConfig(
-        options=[device_class.value for device_class in BinarySensorDeviceClass],
-        mode=SelectSelectorMode.DROPDOWN,
-        translation_key="device_class_binary_sensor",
-        sort=True,
-    )
+BINARY_SENSOR_DEVICE_CLASS_SELECTOR = DeviceClassSelector(
+    DeviceClassSelectorConfig(domain=Platform.BINARY_SENSOR)
 )
-BUTTON_DEVICE_CLASS_SELECTOR = SelectSelector(
-    SelectSelectorConfig(
-        options=[device_class.value for device_class in ButtonDeviceClass],
-        mode=SelectSelectorMode.DROPDOWN,
-        translation_key="device_class_button",
-        sort=True,
-    )
+BUTTON_DEVICE_CLASS_SELECTOR = DeviceClassSelector(
+    DeviceClassSelectorConfig(domain=Platform.BUTTON)
 )
 CLIMATE_MODE_SELECTOR = SelectSelector(
     SelectSelectorConfig(
@@ -652,21 +646,16 @@ CLIMATE_MODE_SELECTOR = SelectSelector(
         translation_key="climate_modes",
     )
 )
-COVER_DEVICE_CLASS_SELECTOR = SelectSelector(
-    SelectSelectorConfig(
-        options=[device_class.value for device_class in CoverDeviceClass],
-        mode=SelectSelectorMode.DROPDOWN,
-        translation_key="device_class_cover",
-        sort=True,
-    )
+COVER_DEVICE_CLASS_SELECTOR = DeviceClassSelector(
+    DeviceClassSelectorConfig(domain=Platform.COVER)
 )
-FAN_SPEED_RANGE_MIN_SELECTOR = vol.All(
+FAN_SPEED_RANGE_MIN_SELECTOR = probatio.All(
     NumberSelector(NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=1)),
-    vol.Coerce(int),
+    probatio.Coerce(int),
 )
-FAN_SPEED_RANGE_MAX_SELECTOR = vol.All(
+FAN_SPEED_RANGE_MAX_SELECTOR = probatio.All(
     NumberSelector(NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=2)),
-    vol.Coerce(int),
+    probatio.Coerce(int),
 )
 FLASH_TIME_SELECTOR = NumberSelector(
     NumberSelectorConfig(
@@ -674,11 +663,11 @@ FLASH_TIME_SELECTOR = NumberSelector(
         min=1,
     )
 )
-HUMIDITY_SELECTOR = vol.All(
+HUMIDITY_SELECTOR = probatio.All(
     NumberSelector(
         NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=0, max=100, step=1)
     ),
-    vol.Coerce(int),
+    probatio.Coerce(int),
 )
 IMAGE_CONTENT_TYPE_SELECTOR = SelectSelector(
     SelectSelectorConfig(
@@ -733,14 +722,8 @@ LIGHT_SCHEMA_SELECTOR = SelectSelector(
     )
 )
 MIN_MAX_SELECTOR = NumberSelector(NumberSelectorConfig(step=1e-3))
-NUMBER_DEVICE_CLASS_SELECTOR = SelectSelector(
-    SelectSelectorConfig(
-        options=[device_class.value for device_class in NumberDeviceClass],
-        mode=SelectSelectorMode.DROPDOWN,
-        # The number device classes are all shared with the sensor device classes
-        translation_key="device_class_sensor",
-        sort=True,
-    )
+NUMBER_DEVICE_CLASS_SELECTOR = DeviceClassSelector(
+    DeviceClassSelectorConfig(domain=Platform.NUMBER)
 )
 NUMBER_MODE_SELECTOR = SelectSelector(
     SelectSelectorConfig(
@@ -774,13 +757,8 @@ SCALE_SELECTOR = NumberSelector(
         step=1,
     )
 )
-SENSOR_DEVICE_CLASS_SELECTOR = SelectSelector(
-    SelectSelectorConfig(
-        options=[device_class.value for device_class in SensorDeviceClass],
-        mode=SelectSelectorMode.DROPDOWN,
-        translation_key="device_class_sensor",
-        sort=True,
-    )
+SENSOR_DEVICE_CLASS_SELECTOR = DeviceClassSelector(
+    DeviceClassSelectorConfig(domain=Platform.SENSOR)
 )
 SENSOR_ENTITY_CATEGORY_SELECTOR = SelectSelector(
     SelectSelectorConfig(
@@ -790,11 +768,16 @@ SENSOR_ENTITY_CATEGORY_SELECTOR = SelectSelector(
         sort=True,
     )
 )
-SENSOR_STATE_CLASS_SELECTOR = SelectSelector(
-    SelectSelectorConfig(
-        options=[device_class.value for device_class in SensorStateClass],
-        mode=SelectSelectorMode.DROPDOWN,
-        translation_key=CONF_STATE_CLASS,
+SENSOR_STATE_CLASS_SELECTOR = StateClassSelector()
+NUMBER_UNIT_OF_MEASUREMENT_SELECTOR = UnitOfMeasurementSelector(
+    UnitOfMeasurementSelectorConfig(context={"filter_device_class": CONF_DEVICE_CLASS})
+)
+SENSOR_UNIT_OF_MEASUREMENT_SELECTOR = UnitOfMeasurementSelector(
+    UnitOfMeasurementSelectorConfig(
+        context={
+            "filter_device_class": CONF_DEVICE_CLASS,
+            "filter_state_class": CONF_STATE_CLASS,
+        }
     )
 )
 STEP_SELECTOR = NumberSelector(NumberSelectorConfig(min=1e-3, step=1e-3))
@@ -807,12 +790,8 @@ SUPPORTED_COLOR_MODES_SELECTOR = SelectSelector(
         sort=True,
     )
 )
-SWITCH_DEVICE_CLASS_SELECTOR = SelectSelector(
-    SelectSelectorConfig(
-        options=[device_class.value for device_class in SwitchDeviceClass],
-        mode=SelectSelectorMode.DROPDOWN,
-        translation_key="device_class_switch",
-    )
+SWITCH_DEVICE_CLASS_SELECTOR = DeviceClassSelector(
+    DeviceClassSelectorConfig(domain=Platform.SWITCH)
 )
 TARGET_TEMPERATURE_FEATURE_SELECTOR = SelectSelector(
     SelectSelectorConfig(
@@ -840,12 +819,8 @@ TEXT_MODE_SELECTOR = SelectSelector(
 TEXT_SIZE_SELECTOR = NumberSelector(
     NumberSelectorConfig(min=0, max=255, step=1, mode=NumberSelectorMode.BOX)
 )
-VALVE_DEVICE_CLASS_SELECTOR = SelectSelector(
-    SelectSelectorConfig(
-        options=[device_class.value for device_class in ValveDeviceClass],
-        mode=SelectSelectorMode.DROPDOWN,
-        translation_key="device_class_valve",
-    )
+VALVE_DEVICE_CLASS_SELECTOR = DeviceClassSelector(
+    DeviceClassSelectorConfig(domain=Platform.VALVE)
 )
 VALVE_POSITION_SELECTOR = NumberSelector(
     NumberSelectorConfig(mode=NumberSelectorMode.BOX, step=1)
@@ -911,7 +886,7 @@ def default_precision(config: dict[str, Any]) -> str:
 def no_empty_list(value: list[Any]) -> list[Any]:
     """Validate a selector returns at least one item."""
     if not value:
-        raise vol.Invalid("empty_list_not_allowed")
+        raise probatio.Invalid("empty_list_not_allowed")
     return value
 
 
@@ -961,49 +936,6 @@ def temperature_step_selector(config: dict[str, Any]) -> Selector:
 
 
 @callback
-def unit_of_measurement_selector(user_data: dict[str, Any | None]) -> Selector:
-    """Return a context based unit of measurement selector."""
-
-    if (state_class := user_data.get(CONF_STATE_CLASS)) in STATE_CLASS_UNITS:
-        return SelectSelector(
-            SelectSelectorConfig(
-                options=[str(uom) for uom in STATE_CLASS_UNITS[state_class]],
-                sort=True,
-                custom_value=True,
-            )
-        )
-
-    if (
-        device_class := user_data.get(CONF_DEVICE_CLASS)
-    ) is None or device_class not in DEVICE_CLASS_UNITS:
-        return TEXT_SELECTOR
-    return SelectSelector(
-        SelectSelectorConfig(
-            options=[str(uom) for uom in DEVICE_CLASS_UNITS[device_class]],
-            sort=True,
-            custom_value=True,
-        )
-    )
-
-
-@callback
-def number_unit_of_measurement_selector(user_data: dict[str, Any | None]) -> Selector:
-    """Return a context based unit of measurement selector for number entities."""
-
-    if (
-        device_class := user_data.get(CONF_DEVICE_CLASS)
-    ) is None or device_class not in NUMBER_DEVICE_CLASS_UNITS:
-        return TEXT_SELECTOR
-    return SelectSelector(
-        SelectSelectorConfig(
-            options=[str(uom) for uom in NUMBER_DEVICE_CLASS_UNITS[device_class]],
-            sort=True,
-            custom_value=True,
-        )
-    )
-
-
-@callback
 def validate(validator: Callable[[Any], Any]) -> Callable[[Any], Any]:
     """Run validator, then return the unmodified input."""
 
@@ -1027,7 +959,7 @@ def validate_field(
         return
     try:
         user_input[field] = validator(user_input[field])
-    except ValueError, vol.Error, vol.Invalid:
+    except ValueError, probatio.Error, probatio.Invalid:
         errors[field] = error
 
 
@@ -1138,6 +1070,7 @@ def validate_number_platform_config(config: dict[str, Any]) -> dict[str, str]:
         errors[CONF_MIN] = "max_below_min"
         errors[CONF_MAX] = "max_below_min"
 
+    # Existing subentries can still hold the legacy "None" string
     if (unit_of_measurement := config.get(CONF_UNIT_OF_MEASUREMENT)) == "None":
         unit_of_measurement = None
 
@@ -1173,19 +1106,18 @@ def validate_sensor_platform_config(
     ):
         errors[CONF_OPTIONS] = "options_with_enum_device_class"
 
-    unit_of_measurement: str | None = None
-    if (
-        device_class in DEVICE_CLASS_UNITS
-        and (unit_of_measurement := config.get(CONF_UNIT_OF_MEASUREMENT)) is None
-        and errors is not None
-    ):
-        # Do not allow an empty unit of measurement in a subentry data flow
-        errors[CONF_UNIT_OF_MEASUREMENT] = "uom_required_for_device_class"
-        return errors
-
-    if unit_of_measurement == "None":
+    # Existing subentries can still hold the legacy "None" string
+    if (unit_of_measurement := config.get(CONF_UNIT_OF_MEASUREMENT)) == "None":
         unit_of_measurement = None
         config.pop(CONF_UNIT_OF_MEASUREMENT)
+
+    if (
+        device_class in DEVICE_CLASS_UNITS
+        and unit_of_measurement is None
+        and None not in DEVICE_CLASS_UNITS[device_class]
+    ):
+        errors[CONF_UNIT_OF_MEASUREMENT] = "uom_required_for_device_class"
+        return errors
 
     if (
         device_class is not None
@@ -1262,12 +1194,14 @@ ENTITY_CONFIG_VALIDATOR: dict[
 class PlatformField:
     """Stores a platform config field schema, required flag and validator."""
 
-    selector: Selector[Any] | Callable[[dict[str, Any]], Selector[Any]]
+    selector: (
+        Selector[Any] | probatio.All[Any] | Callable[[dict[str, Any]], Selector[Any]]
+    )
     required: bool
     validator: Callable[[Any], Any] | None = None
     error: str | None = None
-    default: Any | None | Callable[[dict[str, Any]], Any] | vol.Undefined = (
-        vol.UNDEFINED
+    default: Any | Callable[[dict[str, Any]], Any] | probatio.Undefined | None = (
+        probatio.UNDEFINED
     )
     is_schema_default: bool = False
     include_in_config: bool = False
@@ -1482,9 +1416,8 @@ PLATFORM_ENTITY_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             required=False,
         ),
         CONF_UNIT_OF_MEASUREMENT: PlatformField(
-            selector=number_unit_of_measurement_selector,
+            selector=NUMBER_UNIT_OF_MEASUREMENT_SELECTOR,
             required=False,
-            custom_filtering=True,
         ),
     },
     Platform.SELECT: {},
@@ -1496,9 +1429,8 @@ PLATFORM_ENTITY_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             selector=SENSOR_STATE_CLASS_SELECTOR, required=False
         ),
         CONF_UNIT_OF_MEASUREMENT: PlatformField(
-            selector=unit_of_measurement_selector,
+            selector=SENSOR_UNIT_OF_MEASUREMENT_SELECTOR,
             required=False,
-            custom_filtering=True,
         ),
         CONF_SUGGESTED_DISPLAY_PRECISION: PlatformField(
             selector=SUGGESTED_DISPLAY_PRECISION_SELECTOR,
@@ -3861,7 +3793,7 @@ def data_schema_from_fields(
     component_data: dict[str, Any] | None = None,
     user_input: dict[str, Any] | None = None,
     device_data: MqttDeviceData | None = None,
-) -> vol.Schema:
+) -> probatio.Schema:
     """Generate custom data schema from platform fields or device data."""
 
     def get_default(field_details: PlatformField) -> Any:
@@ -3904,13 +3836,13 @@ def data_schema_from_fields(
         # Getting the default value may update the subentry data,
         # even when and option is filtered out
         data_schema_element = {
-            vol.Required(field_name, default=defaults[field_name])
+            probatio.Required(field_name, default=defaults[field_name])
             if field_details.required
-            else vol.Optional(
+            else probatio.Optional(
                 field_name,
                 default=defaults[field_name]
                 if field_details.default is not None
-                else vol.UNDEFINED,
+                else probatio.UNDEFINED,
             ): field_details.selector(component_data_with_user_input or {})
             if callable(field_details.selector) and field_details.custom_filtering
             else field_details.selector
@@ -3937,7 +3869,8 @@ def data_schema_from_fields(
         # Collapse if no values are changed and no required fields need to be set
         collapsed = (
             not any(
-                (default := data_schema_fields[str(option)].default) is vol.UNDEFINED
+                (default := data_schema_fields[str(option)].default)
+                is probatio.UNDEFINED
                 or (
                     str(option) in component_data_with_user_input
                     and component_data_with_user_input[str(option)] != default
@@ -3952,8 +3885,9 @@ def data_schema_from_fields(
             if component_data_with_user_input is not None
             else True
         )
-        data_schema[vol.Optional(schema_section)] = section(
-            vol.Schema(data_schema_element), SectionConfig({"collapsed": collapsed})
+        data_schema[probatio.Optional(schema_section)] = section(
+            probatio.Schema(data_schema_element),
+            SectionConfig({"collapsed": collapsed}),
         )
 
     # Reset all fields from the component_data not in the schema
@@ -3968,7 +3902,7 @@ def data_schema_from_fields(
                 and not data_schema_fields[field].include_in_config
             ):
                 del component_data[field]
-    return vol.Schema(data_schema)
+    return probatio.Schema(data_schema)
 
 
 @callback
@@ -3995,7 +3929,7 @@ def validate_user_input(
             merged_user_input[field] = (
                 validator(value) if validator is not None else value
             )
-        except ValueError, vol.Error, vol.Invalid:
+        except ValueError, probatio.Error, probatio.Invalid:
             data_schema_field = data_schema_fields[field]
             errors[data_schema_field.section or field] = (
                 data_schema_field.error or "invalid_input"
@@ -4026,7 +3960,7 @@ def subentry_schema_default_data_from_fields(
         if _check_conditions(field, component_data)
         and (
             field.is_schema_default
-            or (field.default is not vol.UNDEFINED and key not in component_data)
+            or (field.default is not probatio.UNDEFINED and key not in component_data)
         )
     }
 
@@ -4052,37 +3986,42 @@ def update_password_from_user_input(
         user_input[CONF_PASSWORD] = password
 
 
-REAUTH_SCHEMA = vol.Schema(
+REAUTH_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): TEXT_SELECTOR,
-        vol.Required(CONF_PASSWORD): PASSWORD_SELECTOR,
+        probatio.Required(CONF_USERNAME): TEXT_SELECTOR,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): PASSWORD_SELECTOR,
     }
 )
 
-OTHER_SETTINGS_SCHEMA = vol.Schema(
+OTHER_SETTINGS_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_CLIENT_ID): TEXT_SELECTOR,
-        vol.Optional(CONF_KEEPALIVE): KEEPALIVE_SELECTOR,
-        vol.Required(SET_CLIENT_CERT): BOOLEAN_SELECTOR,
-        vol.Optional(CONF_CLIENT_CERT): CERT_UPLOAD_SELECTOR,
-        vol.Optional(CONF_CLIENT_KEY): CERT_KEY_UPLOAD_SELECTOR,
-        vol.Optional(CONF_CLIENT_KEY_PASSWORD): PASSWORD_SELECTOR,
-        vol.Required(SET_CA_CERT): BROKER_VERIFICATION_SELECTOR,
-        vol.Optional(CONF_CERTIFICATE): CA_CERT_UPLOAD_SELECTOR,
-        vol.Optional(CONF_TLS_INSECURE): BOOLEAN_SELECTOR,
-        vol.Required(CONF_TRANSPORT, default=DEFAULT_TRANSPORT): TRANSPORT_SELECTOR,
-        vol.Optional(CONF_WS_PATH): TEXT_SELECTOR,
-        vol.Optional(CONF_WS_HEADERS): WS_HEADERS_SELECTOR,
+        probatio.Optional(CONF_CLIENT_ID): TEXT_SELECTOR,
+        probatio.Optional(CONF_KEEPALIVE): KEEPALIVE_SELECTOR,
+        probatio.Required(SET_CLIENT_CERT): BOOLEAN_SELECTOR,
+        probatio.Optional(CONF_CLIENT_CERT): CERT_UPLOAD_SELECTOR,
+        probatio.Optional(CONF_CLIENT_CERT_FILE): TEXT_SELECTOR,
+        probatio.Optional(probatio.Secret(CONF_CLIENT_KEY)): CERT_KEY_UPLOAD_SELECTOR,
+        probatio.Optional(CONF_CLIENT_KEY_FILE): TEXT_SELECTOR,
+        probatio.Optional(probatio.Secret(CONF_CLIENT_KEY_PASSWORD)): PASSWORD_SELECTOR,
+        probatio.Required(SET_CA_CERT): BROKER_VERIFICATION_SELECTOR,
+        probatio.Optional(CONF_CERTIFICATE): CA_CERT_UPLOAD_SELECTOR,
+        probatio.Optional(CONF_CERTIFICATE_FILE): TEXT_SELECTOR,
+        probatio.Optional(CONF_TLS_INSECURE): BOOLEAN_SELECTOR,
+        probatio.Required(
+            CONF_TRANSPORT, default=DEFAULT_TRANSPORT
+        ): TRANSPORT_SELECTOR,
+        probatio.Optional(CONF_WS_PATH): TEXT_SELECTOR,
+        probatio.Optional(CONF_WS_HEADERS): WS_HEADERS_SELECTOR,
     }
 )
-CONFIG_DATAFLOW_SCHEMA = vol.Schema(
+CONFIG_DATAFLOW_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_BROKER): TEXT_SELECTOR,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): PORT_SELECTOR,
-        vol.Required(CONF_PROTOCOL, default=DEFAULT_PROTOCOL): PROTOCOL_SELECTOR,
-        vol.Optional(CONF_USERNAME): TEXT_SELECTOR,
-        vol.Optional(CONF_PASSWORD): PASSWORD_SELECTOR,
-        vol.Required(OTHER_SETTINGS): section(
+        probatio.Required(CONF_BROKER): TEXT_SELECTOR,
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): PORT_SELECTOR,
+        probatio.Required(CONF_PROTOCOL, default=DEFAULT_PROTOCOL): PROTOCOL_SELECTOR,
+        probatio.Optional(CONF_USERNAME): TEXT_SELECTOR,
+        probatio.Optional(probatio.Secret(CONF_PASSWORD)): PASSWORD_SELECTOR,
+        probatio.Required(OTHER_SETTINGS): section(
             OTHER_SETTINGS_SCHEMA, SectionConfig({"collapsed": True})
         ),
     }
@@ -4342,13 +4281,19 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 reauth_entry.data.get(CONF_PASSWORD), substituted_used_data
             )
             new_entry_data = {**reauth_entry.data, **substituted_used_data}
-            if await self.hass.async_add_executor_job(
-                try_connection,
-                new_entry_data,
-            ):
-                return self.async_update_and_abort(reauth_entry, data=new_entry_data)
-
-            errors["base"] = "invalid_auth"
+            try:
+                can_connect = await self.hass.async_add_executor_job(
+                    try_connection,
+                    new_entry_data,
+                )
+            except OSError:
+                errors["base"] = "cannot_load_certificates"
+            else:
+                if can_connect:
+                    return self.async_update_and_abort(
+                        reauth_entry, data=new_entry_data
+                    )
+                errors["base"] = "invalid_auth"
 
         schema = self.add_suggested_values_to_schema(
             REAUTH_SCHEMA,
@@ -4372,9 +4317,9 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             for key in OTHER_SETTINGS_SCHEMA.schema
             if key in data
         }
-        other_settings[SET_CLIENT_CERT] = (CONF_CLIENT_CERT in other_settings) and (
-            CONF_CLIENT_KEY in other_settings
-        )
+        other_settings[SET_CLIENT_CERT] = bool(
+            {CONF_CLIENT_CERT, CONF_CLIENT_CERT_FILE} & other_settings.keys()
+        ) and bool({CONF_CLIENT_KEY, CONF_CLIENT_KEY_FILE} & other_settings.keys())
         other_settings.pop(CONF_CLIENT_CERT, None)
         other_settings.pop(CONF_CLIENT_KEY, None)
         conf_cert = other_settings.pop(CONF_CERTIFICATE, None)
@@ -4382,7 +4327,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             "auto"
             if conf_cert == "auto"
             else "custom"
-            if conf_cert is not None
+            if conf_cert is not None or CONF_CERTIFICATE_FILE in other_settings
             else "off"
         )
         if CONF_WS_HEADERS in other_settings:
@@ -4420,6 +4365,13 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             errors,
         ):
             if is_reconfigure:
+                # The update listener that reloads MQTT is only registered
+                # when the client was set up
+                if not reconfigure_entry.update_listeners:
+                    return self.async_update_reload_and_abort(
+                        reconfigure_entry,
+                        data=entry_config_update,
+                    )
                 return self.async_update_and_abort(
                     reconfigure_entry,
                     data=entry_config_update,
@@ -4527,7 +4479,7 @@ class MQTTOptionsFlowHandler(OptionsFlow):
             try:
                 option_values = schema(values)
                 options_config[field] = option_values
-            except vol.Invalid:
+            except probatio.Invalid:
                 errors["base"] = error_code
                 bad_input = True
 
@@ -4577,62 +4529,62 @@ class MQTTOptionsFlowHandler(OptionsFlow):
         discovery_qos = options_config.get(CONF_DISCOVERY_QOS, DEFAULT_QOS)
 
         # build form
-        fields: OrderedDict[vol.Marker, Any] = OrderedDict()
-        fields[vol.Optional(CONF_DISCOVERY, default=discovery)] = BOOLEAN_SELECTOR
-        fields[vol.Optional(CONF_DISCOVERY_PREFIX, default=discovery_prefix)] = (
+        fields: OrderedDict[probatio.Marker, Any] = OrderedDict()
+        fields[probatio.Optional(CONF_DISCOVERY, default=discovery)] = BOOLEAN_SELECTOR
+        fields[probatio.Optional(CONF_DISCOVERY_PREFIX, default=discovery_prefix)] = (
             PUBLISH_TOPIC_SELECTOR
         )
-        fields[vol.Optional("discovery_qos", default=discovery_qos)] = QOS_SELECTOR
+        fields[probatio.Optional("discovery_qos", default=discovery_qos)] = QOS_SELECTOR
 
         # Birth message is disabled if CONF_BIRTH_MESSAGE = {}
         fields[
-            vol.Optional(
+            probatio.Optional(
                 "birth_enable",
                 default=CONF_BIRTH_MESSAGE not in options_config
                 or options_config[CONF_BIRTH_MESSAGE] != {},
             )
         ] = BOOLEAN_SELECTOR
         fields[
-            vol.Optional(
+            probatio.Optional(
                 "birth_topic", description={"suggested_value": birth[ATTR_TOPIC]}
             )
         ] = PUBLISH_TOPIC_SELECTOR
         fields[
-            vol.Optional(
+            probatio.Optional(
                 "birth_payload", description={"suggested_value": birth[CONF_PAYLOAD]}
             )
         ] = TEXT_SELECTOR
-        fields[vol.Optional("birth_qos", default=birth[ATTR_QOS])] = QOS_SELECTOR
-        fields[vol.Optional("birth_retain", default=birth[ATTR_RETAIN])] = (
+        fields[probatio.Optional("birth_qos", default=birth[ATTR_QOS])] = QOS_SELECTOR
+        fields[probatio.Optional("birth_retain", default=birth[ATTR_RETAIN])] = (
             BOOLEAN_SELECTOR
         )
 
         # Will message is disabled if CONF_WILL_MESSAGE = {}
         fields[
-            vol.Optional(
+            probatio.Optional(
                 "will_enable",
                 default=CONF_WILL_MESSAGE not in options_config
                 or options_config[CONF_WILL_MESSAGE] != {},
             )
         ] = BOOLEAN_SELECTOR
         fields[
-            vol.Optional(
+            probatio.Optional(
                 "will_topic", description={"suggested_value": will[ATTR_TOPIC]}
             )
         ] = PUBLISH_TOPIC_SELECTOR
         fields[
-            vol.Optional(
+            probatio.Optional(
                 "will_payload", description={"suggested_value": will[CONF_PAYLOAD]}
             )
         ] = TEXT_SELECTOR
-        fields[vol.Optional("will_qos", default=will[ATTR_QOS])] = QOS_SELECTOR
-        fields[vol.Optional("will_retain", default=will[ATTR_RETAIN])] = (
+        fields[probatio.Optional("will_qos", default=will[ATTR_QOS])] = QOS_SELECTOR
+        fields[probatio.Optional("will_retain", default=will[ATTR_RETAIN])] = (
             BOOLEAN_SELECTOR
         )
 
         return self.async_show_form(
             step_id="options",
-            data_schema=vol.Schema(fields),
+            data_schema=probatio.Schema(fields),
             errors=errors,
             last_step=True,
         )
@@ -4685,7 +4637,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
 
     @callback
     def get_suggested_values_from_component(
-        self, data_schema: vol.Schema
+        self, data_schema: probatio.Schema
     ) -> dict[str, Any]:
         """Get suggestions from component data based on the data schema."""
         if TYPE_CHECKING:
@@ -4700,7 +4652,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
 
     @callback
     def get_suggested_values_from_device_data(
-        self, data_schema: vol.Schema
+        self, data_schema: probatio.Schema
     ) -> dict[str, Any]:
         """Get suggestions from device data based on the data schema."""
         device_data = deepcopy(self._subentry_data["device"])
@@ -4822,9 +4774,9 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             )
             for key, component_data in self._subentry_data["components"].items()
         ]
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required("component"): SelectSelector(
+                probatio.Required("component"): SelectSelector(
                     SelectSelectorConfig(
                         options=entities,
                         mode=SelectSelectorMode.LIST,
@@ -5014,7 +4966,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             title=self._subentry_data[CONF_DEVICE][CONF_NAME],
             description_placeholders={
                 "entity": full_entity_name,
-                CONF_PLATFORM: platform,
+                "platform": platform,
             },
         )
 
@@ -5162,9 +5114,9 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             mqtt_yaml_config.append({platform: component_config})
 
         yaml_config = yaml.dump(mqtt_yaml_config_base)
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Optional("yaml"): TEMPLATE_SELECTOR_READ_ONLY,
+                probatio.Optional("yaml"): TEMPLATE_SELECTOR_READ_ONLY,
             }
         )
         data_schema = self.add_suggested_values_to_schema(
@@ -5212,10 +5164,10 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
                     component_config.pop(field)
             discovery_payload["cmps"][component_id] = component_config
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Optional("discovery_topic"): TEXT_SELECTOR_READ_ONLY,
-                vol.Optional("discovery_payload"): TEMPLATE_SELECTOR_READ_ONLY,
+                probatio.Optional("discovery_topic"): TEXT_SELECTOR_READ_ONLY,
+                probatio.Optional("discovery_payload"): TEMPLATE_SELECTOR_READ_ONLY,
             }
         )
         data_schema = self.add_suggested_values_to_schema(
@@ -5305,6 +5257,52 @@ async def _get_uploaded_file(hass: HomeAssistant, id: str) -> bytes:
     return await hass.async_add_executor_job(_proces_uploaded_file)
 
 
+def _validate_certificate_settings(
+    other_settings: dict[str, Any], file_paths: dict[str, str]
+) -> str | None:
+    """Validate the uploaded certificates and certificate file paths."""
+    if any(
+        other_settings.get(upload) and file_path in file_paths
+        for upload, file_path in (
+            (CONF_CERTIFICATE, CONF_CERTIFICATE_FILE),
+            (CONF_CLIENT_CERT, CONF_CLIENT_CERT_FILE),
+            (CONF_CLIENT_KEY, CONF_CLIENT_KEY_FILE),
+        )
+    ):
+        return "upload_and_file_path"
+    # A relative path would resolve against the working directory of the process
+    if not all(os.path.isabs(file_path) for file_path in file_paths.values()):
+        return "file_path_not_absolute"
+    if CONF_CLIENT_KEY_FILE in file_paths and other_settings.get(
+        CONF_CLIENT_KEY_PASSWORD
+    ):
+        return "client_key_password_with_file"
+    # The client certificate and key must both be uploaded, or both be files
+    if bool(other_settings.get(CONF_CLIENT_CERT)) != bool(
+        other_settings.get(CONF_CLIENT_KEY)
+    ) or (CONF_CLIENT_CERT_FILE in file_paths) != (CONF_CLIENT_KEY_FILE in file_paths):
+        return "invalid_inclusion"
+    return None
+
+
+def _missing_certificate_error(
+    entry_config_update: dict[str, Any], set_ca_cert: str, set_client_cert: bool
+) -> str | None:
+    """Return an error when a selected certificate is not configured."""
+    # Without a certificate TLS or client authentication would be disabled silently
+    if set_ca_cert == "custom" and not (
+        CONF_CERTIFICATE in entry_config_update
+        or CONF_CERTIFICATE_FILE in entry_config_update
+    ):
+        return "ca_certificate_missing"
+    if set_client_cert and not (
+        CONF_CLIENT_CERT in entry_config_update
+        or CONF_CLIENT_CERT_FILE in entry_config_update
+    ):
+        return "client_certificate_missing"
+    return None
+
+
 async def async_validate_broker_settings(
     flow: FlowHandler,
     entry_config: MappingProxyType[str, Any] | None,
@@ -5361,14 +5359,41 @@ async def async_validate_broker_settings(
         CONF_CLIENT_CERT,
         CONF_CLIENT_KEY,
         CONF_CLIENT_KEY_PASSWORD,
+        CONF_CERTIFICATE_FILE,
+        CONF_CLIENT_CERT_FILE,
+        CONF_CLIENT_KEY_FILE,
     ):
         entry_config_update.pop(key, None)
 
-    # Get current CA certificate settings from config entry
-    if (set_ca_cert := user_input[OTHER_SETTINGS][SET_CA_CERT]) == "auto":
+    other_settings: dict[str, Any] = user_input[OTHER_SETTINGS]
+    set_ca_cert = other_settings[SET_CA_CERT]
+    set_client_cert = other_settings[SET_CLIENT_CERT]
+    # The form is pre-filled with the file paths, so ignore them when disabled
+    file_paths: dict[str, str] = {
+        key: file_path
+        for key, enabled in (
+            (CONF_CERTIFICATE_FILE, set_ca_cert == "custom"),
+            (CONF_CLIENT_CERT_FILE, set_client_cert),
+            (CONF_CLIENT_KEY_FILE, set_client_cert),
+        )
+        if enabled and (file_path := other_settings.get(key))
+    }
+    if error := _validate_certificate_settings(other_settings, file_paths):
+        errors["base"] = error
+        return False
+
+    entry_config_update |= file_paths
+    certificate_file = file_paths.get(CONF_CERTIFICATE_FILE)
+    client_cert_file = file_paths.get(CONF_CLIENT_CERT_FILE)
+    client_key_file = file_paths.get(CONF_CLIENT_KEY_FILE)
+
+    # Get current CA certificate settings from config entry,
+    # a CA certificate file takes precedence
+    if set_ca_cert == "auto":
         entry_config_update[CONF_CERTIFICATE] = "auto"
     elif (
-        entry_config is not None
+        not certificate_file
+        and entry_config is not None
         and set_ca_cert == "custom"
         and (current_cert := entry_config.get(CONF_CERTIFICATE))
     ):
@@ -5376,19 +5401,10 @@ async def async_validate_broker_settings(
 
     # Prepare entry update with uploaded certificate files
     # converted to PEM format
-    new_client_certificate: str | None = user_input[OTHER_SETTINGS].get(
-        CONF_CLIENT_CERT
-    )
-    new_client_key: str | None = user_input[OTHER_SETTINGS].get(CONF_CLIENT_KEY)
-    set_client_cert = user_input[OTHER_SETTINGS][SET_CLIENT_CERT]
+    new_client_certificate: str | None = other_settings.get(CONF_CLIENT_CERT)
+    new_client_key: str | None = other_settings.get(CONF_CLIENT_KEY)
 
-    if (new_client_certificate and not new_client_key) or (
-        not new_client_certificate and new_client_key
-    ):
-        errors["base"] = "invalid_inclusion"
-        return False
-
-    if new_certificate := user_input[OTHER_SETTINGS].get(CONF_CERTIFICATE):
+    if new_certificate := other_settings.get(CONF_CERTIFICATE):
         if not await _async_process_file_upload(
             new_certificate, CONF_CERTIFICATE, PEMType.CERTIFICATE, "bad_certificate"
         ):
@@ -5403,7 +5419,8 @@ async def async_validate_broker_settings(
         ):
             return False
     elif (
-        entry_config is not None
+        not client_cert_file
+        and entry_config is not None
         and set_client_cert
         and (client_cert := entry_config.get(CONF_CLIENT_CERT))
     ):
@@ -5419,17 +5436,24 @@ async def async_validate_broker_settings(
         ):
             return False
     elif (
-        entry_config is not None
+        not client_key_file
+        and entry_config is not None
         and set_client_cert
         and (client_key := entry_config.get(CONF_CLIENT_KEY))
     ):
         entry_config_update[CONF_CLIENT_KEY] = client_key
 
+    if error := _missing_certificate_error(
+        entry_config_update, set_ca_cert, set_client_cert
+    ):
+        errors["base"] = error
+        return False
+
     # We temporarily create the current and new uploaded certificate files
     # and we check the certificate chain.
     await async_create_certificate_temp_files(hass, entry_config_update)
     if error := await hass.async_add_executor_job(
-        check_certicate_chain,
+        check_certicate_chain, entry_config_update
     ):
         errors["base"] = error
         return False
@@ -5443,9 +5467,9 @@ async def async_validate_broker_settings(
             entry_config_update[CONF_WS_HEADERS] = json_loads(
                 user_input[OTHER_SETTINGS].get(CONF_WS_HEADERS, "{}")
             )
-            schema = vol.Schema({str: str})
+            schema = probatio.Schema({str: str})
             schema(entry_config_update[CONF_WS_HEADERS])
-        except (*JSON_DECODE_EXCEPTIONS, vol.MultipleInvalid):
+        except (*JSON_DECODE_EXCEPTIONS, probatio.MultipleInvalid):
             errors["base"] = "bad_ws_headers"
             return False
 
@@ -5454,44 +5478,73 @@ async def async_validate_broker_settings(
         update_password_from_user_input(
             entry_config.get(CONF_PASSWORD), entry_config_update
         )
-    if await hass.async_add_executor_job(
-        try_connection,
-        entry_config_update,
-    ):
+    return await _async_test_connection(hass, entry_config_update, errors)
+
+
+async def _async_test_connection(
+    hass: HomeAssistant, entry_config_update: dict[str, Any], errors: dict[str, str]
+) -> bool:
+    """Test the connection to the MQTT broker."""
+    try:
+        can_connect = await hass.async_add_executor_job(
+            try_connection,
+            entry_config_update,
+        )
+    except OSError:
+        # The certificate files can be replaced after they were checked
+        errors["base"] = "cannot_load_certificates"
+        return False
+    if can_connect:
         return True
 
     errors["base"] = "cannot_connect"
     return False
 
 
-def check_certicate_chain() -> str | None:
+def check_certicate_chain(config: dict[str, Any]) -> str | None:
     """Check the MQTT certificates."""
-    if client_certificate := get_file_path(CONF_CLIENT_CERT):
+    client_certificate = config.get(CONF_CLIENT_CERT_FILE) or get_file_path(
+        CONF_CLIENT_CERT
+    )
+    private_key = config.get(CONF_CLIENT_KEY_FILE) or get_file_path(CONF_CLIENT_KEY)
+    ca_cert = config.get(CONF_CERTIFICATE_FILE) or get_file_path(CONF_CERTIFICATE)
+    if ca_cert and not (os.path.isfile(ca_cert) and os.access(ca_cert, os.R_OK)):
+        return "cannot_read_certificate_file"
+
+    if client_certificate:
         try:
             with open(client_certificate, "rb") as client_certificate_file:
-                load_pem_x509_certificate(client_certificate_file.read())
+                data = client_certificate_file.read()
+        except OSError:
+            return "cannot_read_client_cert_file"
+        try:
+            load_pem_x509_certificate(data)
         except ValueError:
             return "bad_client_cert"
     # Check we can serialize the private key file
-    if private_key := get_file_path(CONF_CLIENT_KEY):
+    if private_key:
         try:
             with open(private_key, "rb") as client_key_file:
-                load_pem_private_key(client_key_file.read(), password=None)
-        except TypeError, ValueError:
+                data = client_key_file.read()
+        except OSError:
+            return "cannot_read_client_key_file"
+        try:
+            load_pem_private_key(data, password=None)
+        except TypeError, ValueError, UnsupportedAlgorithm:
             return "client_key_error"
     # Check the certificate chain
     context = SSLContext(PROTOCOL_TLS_CLIENT)
     if client_certificate and private_key:
         try:
             context.load_cert_chain(client_certificate, private_key)
-        except SSLError:
+        except OSError:
             return "bad_client_cert_key"
     # try to load the custom CA file
-    if (ca_cert := get_file_path(CONF_CERTIFICATE)) is None:
+    if ca_cert is None:
         return None
 
     try:
         context.load_verify_locations(ca_cert)
-    except SSLError:
+    except OSError:
         return "bad_certificate"
     return None

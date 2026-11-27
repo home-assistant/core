@@ -7,13 +7,11 @@ from aiohomekit.model.services import Service, ServicesTypes
 from propcache.api import cached_property
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP_KELVIN,
-    ATTR_HS_COLOR,
     DEFAULT_MAX_KELVIN,
     DEFAULT_MIN_KELVIN,
     ColorMode,
     LightEntity,
+    LightServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -21,8 +19,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import color as color_util
 
-from . import KNOWN_DEVICES
 from .connection import HKDevice
+from .const import KNOWN_DEVICES
 from .entity import HomeKitEntity
 
 
@@ -181,15 +179,18 @@ class HomeKitLight(HomeKitEntity, LightEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the specified light on."""
-        hs_color = kwargs.get(ATTR_HS_COLOR)
-        temperature_kelvin = kwargs.get(ATTR_COLOR_TEMP_KELVIN)
-        brightness = kwargs.get(ATTR_BRIGHTNESS)
+        hs_color = kwargs.get(LightServiceArgument.HS_COLOR)
+        temperature_kelvin = kwargs.get(LightServiceArgument.COLOR_TEMP_KELVIN)
+        brightness = kwargs.get(LightServiceArgument.BRIGHTNESS)
 
         characteristics: dict[str, Any] = {}
 
         if brightness is not None:
-            characteristics[CharacteristicsTypes.BRIGHTNESS] = int(
-                brightness * 100 / 255
+            # Some devices such as Nanoleaf Essentials treat brightness 0
+            # with on as full brightness; a real brightness 0 is handled
+            # as turn_off by the light component.
+            characteristics[CharacteristicsTypes.BRIGHTNESS] = max(
+                1, int(brightness * 100 / 255)
             )
 
         # If they send both temperature and hs_color, and the device

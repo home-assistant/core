@@ -43,3 +43,23 @@ async def test_resolving_non_existing_camera(
         await media_source.async_resolve_media(
             hass, "media-source://image/image.non_existing", None
         )
+
+
+@pytest.mark.usefixtures("mock_image_platform")
+async def test_get_media_image(hass: HomeAssistant) -> None:
+    """Test getting the image of an image entity."""
+    assert await media_source.async_get_media_image(
+        hass, "media-source://image/image.test"
+    ) == media_source.MediaImage(b"Test", "image/jpeg")
+
+
+@pytest.mark.usefixtures("mock_image_platform")
+async def test_get_media_image_non_existing_image(hass: HomeAssistant) -> None:
+    """Test getting the image of a non existing image entity."""
+    with pytest.raises(
+        media_source.Unresolvable,
+        match="Could not resolve media item: image.non_existing",
+    ):
+        await media_source.async_get_media_image(
+            hass, "media-source://image/image.non_existing"
+        )

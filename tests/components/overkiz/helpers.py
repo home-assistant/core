@@ -6,21 +6,27 @@ from typing import Any
 from freezegun.api import FrozenDateTimeFactory
 from pyoverkiz.enums import DataType, EventName, ExecutionState
 from pyoverkiz.models import (
+    Action,
+    Command,
     DeviceAvailableEvent,
+    DeviceCreatedEvent,
     DeviceRemovedEvent,
     DeviceStateChangedEvent,
     DeviceUnavailableEvent,
+    DeviceUpdatedEvent,
     Event,
     EventState,
+    ExecutionRegisteredEvent,
     ExecutionStateChangedEvent,
+    GatewayAliveEvent,
+    GatewayDownEvent,
 )
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.overkiz.const import UPDATE_INTERVAL
 from homeassistant.core import HomeAssistant
 
 from .conftest import MockOverkizClient
-
-from tests.common import async_fire_time_changed
 
 
 def assert_command_call(
@@ -80,6 +86,48 @@ def device_state_changed_event(
     )
 
 
+def oven_local_control_event(device_url: str) -> DeviceStateChangedEvent:
+    """Build an event where the oven blocks remote control (localControl)."""
+    return device_state_changed_event(
+        device_url,
+        [
+            {
+                "name": "ogp:UnavailableFeaturesState",
+                "type": 10,
+                "value": [
+                    {
+                        "feature": "*",
+                        "commands": ["*"],
+                        "states": ["*"],
+                        "cause": "localControl",
+                    }
+                ],
+            }
+        ],
+    )
+
+
+def oven_remote_control_event(device_url: str) -> DeviceStateChangedEvent:
+    """Build an event where the oven only advertises modeConstraint blocks."""
+    return device_state_changed_event(
+        device_url,
+        [
+            {
+                "name": "ogp:UnavailableFeaturesState",
+                "type": 10,
+                "value": [
+                    {
+                        "feature": "recipeControl",
+                        "commands": ["*"],
+                        "states": ["*"],
+                        "cause": "modeConstraint",
+                    }
+                ],
+            }
+        ],
+    )
+
+
 def device_available_event(device_url: str) -> DeviceAvailableEvent:
     """Build a DEVICE_AVAILABLE event for the given device."""
     return DeviceAvailableEvent(name=EventName.DEVICE_AVAILABLE, device_url=device_url)
@@ -97,6 +145,34 @@ def device_removed_event(device_url: str) -> DeviceRemovedEvent:
     return DeviceRemovedEvent(name=EventName.DEVICE_REMOVED, device_url=device_url)
 
 
+def device_created_event(device_url: str) -> DeviceCreatedEvent:
+    """Build a DEVICE_CREATED event for the given device."""
+    return DeviceCreatedEvent(name=EventName.DEVICE_CREATED, device_url=device_url)
+
+
+def device_updated_event(device_url: str) -> DeviceUpdatedEvent:
+    """Build a DEVICE_UPDATED event for the given device."""
+    return DeviceUpdatedEvent(name=EventName.DEVICE_UPDATED, device_url=device_url)
+
+
+def execution_registered_event(
+    exec_id: str,
+    device_url: str,
+    command_name: str,
+    *,
+    label: str = "Home Assistant",
+    source: str | None = None,
+) -> ExecutionRegisteredEvent:
+    """Build an EXECUTION_REGISTERED event for a single device command."""
+    return ExecutionRegisteredEvent(
+        name=EventName.EXECUTION_REGISTERED,
+        exec_id=exec_id,
+        label=label,
+        source=source,
+        actions=[Action(device_url=device_url, commands=[Command(name=command_name)])],
+    )
+
+
 def execution_state_changed_event(
     exec_id: str, new_state: ExecutionState, old_state: ExecutionState
 ) -> ExecutionStateChangedEvent:
@@ -107,6 +183,16 @@ def execution_state_changed_event(
         new_state=new_state,
         old_state=old_state,
     )
+
+
+def gateway_down_event(gateway_id: str) -> GatewayDownEvent:
+    """Build a GATEWAY_DOWN event for the given gateway."""
+    return GatewayDownEvent(name=EventName.GATEWAY_DOWN, gateway_id=gateway_id)
+
+
+def gateway_alive_event(gateway_id: str) -> GatewayAliveEvent:
+    """Build a GATEWAY_ALIVE event for the given gateway."""
+    return GatewayAliveEvent(name=EventName.GATEWAY_ALIVE, gateway_id=gateway_id)
 
 
 async def async_deliver_events(

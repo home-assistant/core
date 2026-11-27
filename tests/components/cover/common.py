@@ -2,9 +2,9 @@
 
 from typing import Any
 
-from homeassistant.components.cover import CoverEntity, CoverEntityFeature, CoverState
+from pytest_homeassistant.common import MockEntity
 
-from tests.common import MockEntity
+from homeassistant.components.cover import CoverEntity, CoverEntityFeature, CoverState
 
 
 class MockCover(MockEntity, CoverEntity):
@@ -21,6 +21,8 @@ class MockCover(MockEntity, CoverEntity):
             if reports_opening_closing is not None
             else CoverEntityFeature.STOP in self.supported_features
         )
+        self.last_kwargs: dict[str, Any] | None = None
+        self.last_tilt_service: str | None = None
 
     @property
     def is_closed(self):
@@ -48,6 +50,7 @@ class MockCover(MockEntity, CoverEntity):
 
     def open_cover(self, **kwargs) -> None:
         """Open cover."""
+        self.last_kwargs = kwargs
         if self._reports_opening_closing:
             self._values["state"] = CoverState.OPENING
         else:
@@ -55,10 +58,23 @@ class MockCover(MockEntity, CoverEntity):
 
     def close_cover(self, **kwargs) -> None:
         """Close cover."""
+        self.last_kwargs = kwargs
         if self._reports_opening_closing:
             self._values["state"] = CoverState.CLOSING
         else:
             self._values["state"] = CoverState.CLOSED
+
+    def set_cover_position(self, **kwargs) -> None:
+        """Set cover position."""
+        self.last_kwargs = kwargs
+
+    def open_cover_tilt(self, **kwargs) -> None:
+        """Open cover tilt."""
+        self.last_tilt_service = "open"
+
+    def close_cover_tilt(self, **kwargs) -> None:
+        """Close cover tilt."""
+        self.last_tilt_service = "close"
 
     def stop_cover(self, **kwargs) -> None:
         """Stop cover."""
@@ -74,3 +90,28 @@ class MockCover(MockEntity, CoverEntity):
     def current_cover_tilt_position(self):
         """Return current position of cover tilt."""
         return self._handle("current_cover_tilt_position")
+
+    @property
+    def supported_speeds(self):
+        """Return supported speeds of cover."""
+        return self._handle("supported_speeds")
+
+    @property
+    def open_tilt_position(self):
+        """Return the open tilt position of cover."""
+        return self._handle("open_tilt_position")
+
+    @property
+    def closed_tilt_positions(self):
+        """Return the closed tilt positions of cover."""
+        return self._handle("closed_tilt_positions")
+
+    @property
+    def tilt_start_angle(self):
+        """Return the angle of the slats at tilt 0."""
+        return self._handle("tilt_start_angle")
+
+    @property
+    def tilt_end_angle(self):
+        """Return the angle of the slats at tilt 100."""
+        return self._handle("tilt_end_angle")

@@ -3,6 +3,13 @@
 from collections.abc import Awaitable, Callable
 from unittest.mock import patch
 
+import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_mqtt_message,
+    snapshot_platform,
+)
+from pytest_homeassistant.typing import MqttMockHAClient
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.light import (
@@ -11,15 +18,13 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     DOMAIN as LIGHT_DOMAIN,
     EFFECT_OFF,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
+    LightService,
+    LightServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
+from homeassistant.components.qbus.const import DOMAIN
+from homeassistant.const import STATE_OFF, STATE_ON, Platform, TargetKey
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, async_fire_mqtt_message, snapshot_platform
-from tests.typing import MqttMockHAClient
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 # 186 = 73% (rounded)
 _BRIGHTNESS = 186
@@ -95,6 +100,8 @@ _TOPIC_COLOR_SET_STATE = "cloudapp/QBUSMQTTGW/UL1/UL100/setState"
 _DIMMER_ENTITY_ID = "light.media_room_media_room"
 _COLOR_ENTITY_ID = "light.media_room_tv"
 
+_CONTROLLER_MAC = "001122334455"
+
 
 async def test_light(
     hass: HomeAssistant,
@@ -111,6 +118,29 @@ async def test_light(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.usefixtures("setup_integration")
+async def test_light_via_device_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the light's device links to the controller device via via_device_id."""
+    entity_entry = entity_registry.async_get(_DIMMER_ENTITY_ID)
+    assert entity_entry
+    assert entity_entry.device_id
+
+    device = device_registry.async_get(entity_entry.device_id)
+    assert device
+
+    controller_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, dr.format_mac(_CONTROLLER_MAC)), mock_config_entry.entry_id
+    )
+    assert controller_device
+
+    assert device.via_device_id == controller_device.id
+
+
 async def test_dimmer(
     hass: HomeAssistant,
     mqtt_mock: MqttMockHAClient,
@@ -122,8 +152,8 @@ async def test_dimmer(
     mqtt_mock.reset_mock()
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: _DIMMER_ENTITY_ID},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: _DIMMER_ENTITY_ID},
         blocking=True,
     )
 
@@ -138,10 +168,10 @@ async def test_dimmer(
     mqtt_mock.reset_mock()
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: _DIMMER_ENTITY_ID,
-            ATTR_BRIGHTNESS: _BRIGHTNESS,
+            TargetKey.ENTITY_ID: _DIMMER_ENTITY_ID,
+            LightServiceArgument.BRIGHTNESS: _BRIGHTNESS,
         },
         blocking=True,
     )
@@ -161,8 +191,8 @@ async def test_dimmer(
     mqtt_mock.reset_mock()
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: _DIMMER_ENTITY_ID},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: _DIMMER_ENTITY_ID},
         blocking=True,
     )
 
@@ -184,8 +214,8 @@ async def test_dimmer_ignore_missing_percentage(
     mqtt_mock.reset_mock()
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: _DIMMER_ENTITY_ID},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: _DIMMER_ENTITY_ID},
         blocking=True,
     )
 
@@ -218,8 +248,8 @@ async def test_color(
     mqtt_mock.reset_mock()
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: _COLOR_ENTITY_ID},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: _COLOR_ENTITY_ID},
         blocking=True,
     )
 
@@ -234,10 +264,10 @@ async def test_color(
     mqtt_mock.reset_mock()
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: _COLOR_ENTITY_ID,
-            ATTR_BRIGHTNESS: _BRIGHTNESS,
+            TargetKey.ENTITY_ID: _COLOR_ENTITY_ID,
+            LightServiceArgument.BRIGHTNESS: _BRIGHTNESS,
         },
         blocking=True,
     )
@@ -257,10 +287,10 @@ async def test_color(
     mqtt_mock.reset_mock()
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: _COLOR_ENTITY_ID,
-            ATTR_EFFECT: _EFFECT,
+            TargetKey.ENTITY_ID: _COLOR_ENTITY_ID,
+            LightServiceArgument.EFFECT: _EFFECT,
         },
         blocking=True,
     )
@@ -280,10 +310,10 @@ async def test_color(
     mqtt_mock.reset_mock()
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: _COLOR_ENTITY_ID,
-            ATTR_EFFECT: EFFECT_OFF,
+            TargetKey.ENTITY_ID: _COLOR_ENTITY_ID,
+            LightServiceArgument.EFFECT: EFFECT_OFF,
         },
         blocking=True,
     )
@@ -303,10 +333,10 @@ async def test_color(
     mqtt_mock.reset_mock()
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: _COLOR_ENTITY_ID,
-            ATTR_HS_COLOR: _HS_COLOR,
+            TargetKey.ENTITY_ID: _COLOR_ENTITY_ID,
+            LightServiceArgument.HS_COLOR: _HS_COLOR,
         },
         blocking=True,
     )
@@ -324,8 +354,8 @@ async def test_color(
     mqtt_mock.reset_mock()
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: _COLOR_ENTITY_ID},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: _COLOR_ENTITY_ID},
         blocking=True,
     )
 

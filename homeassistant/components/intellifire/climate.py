@@ -53,7 +53,7 @@ class IntellifireClimate(IntellifireEntity, ClimateEntity):
         | ClimateEntityFeature.TURN_ON
     )
     _attr_target_temperature_step = 1.0
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     last_temp = DEFAULT_THERMOSTAT_TEMP
 
     def __init__(
@@ -94,13 +94,13 @@ class IntellifireClimate(IntellifireEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float:
+    def native_current_temperature(self) -> float:
         """Return the current temperature."""
         return float(self.coordinator.read_api.data.temperature_c)
 
     @property
     @override
-    def target_temperature(self) -> float:
+    def native_target_temperature(self) -> float:
         """Return target temperature."""
         return float(self.coordinator.read_api.data.thermostat_setpoint_c)
 

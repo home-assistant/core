@@ -13,7 +13,7 @@
           "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of your Roth Touchline controller."
+          "host": "The URL of your Roth Touchline controller, for example `http://192.168.1.1`."
         }
       }
     }
@@ -33,14 +33,21 @@
       }
     }
   },
-  "issues": {
-    "deprecated_yaml_import_issue_cannot_connect": {
-      "description": "Home Assistant could not connect to the Roth Touchline controller while importing your YAML configuration. Remove the YAML configuration for Roth Touchline from configuration.yaml and set up the integration again from the Home Assistant UI.",
-      "title": "Roth Touchline YAML configuration import failed"
+  "exceptions": {
+    "cannot_connect": {
+      "message": "The Touchline controller at {url} cannot be reached."
     },
-    "deprecated_yaml_import_issue_unknown": {
-      "description": "An unknown error occurred while importing your Roth Touchline YAML configuration. Remove the YAML configuration for Roth Touchline from configuration.yaml and set up the integration again from the Home Assistant UI.",
-      "title": "Roth Touchline YAML configuration import issue"
+    "communication_error": {
+      "message": "An error occurred while communicating with the Touchline controller at {url}."
+    },
+    "error_set_preset": {
+      "message": "An error occurred while setting the preset mode."
+    },
+    "error_set_temperature": {
+      "message": "An error occurred while setting the temperature."
+    },
+    "missing_device_id": {
+      "message": "The Touchline controller at {url} returned no ID for thermostat {index}."
     }
   }
 }

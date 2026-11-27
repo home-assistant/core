@@ -33,7 +33,6 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     MediaPlayerState,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -77,7 +76,7 @@ class EpsonProjectorMediaPlayer(MediaPlayerEntity):
     )
 
     def __init__(
-        self, projector: Projector, unique_id: str, entry: ConfigEntry
+        self, projector: Projector, unique_id: str, entry: EpsonConfigEntry
     ) -> None:
         """Initialize entity to control Epson projector."""
         self._projector = projector
@@ -106,7 +105,9 @@ class EpsonProjectorMediaPlayer(MediaPlayerEntity):
             if old_entity_id is not None:
                 ent_reg.async_update_entity(old_entity_id, new_unique_id=uid)
             dev_reg = dr.async_get(self.hass)
-            device = dev_reg.async_get_device({(DOMAIN, self._entry.entry_id)})
+            device = dev_reg.async_get_device_by_identifier(
+                (DOMAIN, self._entry.entry_id), self._entry.entry_id
+            )
             if device is not None:
                 dev_reg.async_update_device(device.id, new_identifiers={(DOMAIN, uid)})
             self.hass.async_create_task(

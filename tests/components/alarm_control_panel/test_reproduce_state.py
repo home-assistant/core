@@ -1,21 +1,15 @@
 """Test reproduce state for Alarm control panel."""
 
 import pytest
+from pytest_homeassistant.common import async_mock_service
 
-from homeassistant.components.alarm_control_panel import DOMAIN, AlarmControlPanelState
-from homeassistant.const import (
-    SERVICE_ALARM_ARM_AWAY,
-    SERVICE_ALARM_ARM_CUSTOM_BYPASS,
-    SERVICE_ALARM_ARM_HOME,
-    SERVICE_ALARM_ARM_NIGHT,
-    SERVICE_ALARM_ARM_VACATION,
-    SERVICE_ALARM_DISARM,
-    SERVICE_ALARM_TRIGGER,
+from homeassistant.components.alarm_control_panel import (
+    DOMAIN,
+    AlarmControlPanelService,
+    AlarmControlPanelState,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.state import async_reproduce_state
-
-from tests.common import async_mock_service
 
 
 async def test_reproducing_states(
@@ -56,15 +50,19 @@ async def test_reproducing_states(
         {},
     )
 
-    arm_away_calls = async_mock_service(hass, DOMAIN, SERVICE_ALARM_ARM_AWAY)
+    arm_away_calls = async_mock_service(hass, DOMAIN, AlarmControlPanelService.ARM_AWAY)
     arm_custom_bypass_calls = async_mock_service(
-        hass, DOMAIN, SERVICE_ALARM_ARM_CUSTOM_BYPASS
+        hass, DOMAIN, AlarmControlPanelService.ARM_CUSTOM_BYPASS
     )
-    arm_home_calls = async_mock_service(hass, DOMAIN, SERVICE_ALARM_ARM_HOME)
-    arm_night_calls = async_mock_service(hass, DOMAIN, SERVICE_ALARM_ARM_NIGHT)
-    arm_vacation_calls = async_mock_service(hass, DOMAIN, SERVICE_ALARM_ARM_VACATION)
-    disarm_calls = async_mock_service(hass, DOMAIN, SERVICE_ALARM_DISARM)
-    trigger_calls = async_mock_service(hass, DOMAIN, SERVICE_ALARM_TRIGGER)
+    arm_home_calls = async_mock_service(hass, DOMAIN, AlarmControlPanelService.ARM_HOME)
+    arm_night_calls = async_mock_service(
+        hass, DOMAIN, AlarmControlPanelService.ARM_NIGHT
+    )
+    arm_vacation_calls = async_mock_service(
+        hass, DOMAIN, AlarmControlPanelService.ARM_VACATION
+    )
+    disarm_calls = async_mock_service(hass, DOMAIN, AlarmControlPanelService.DISARM)
+    trigger_calls = async_mock_service(hass, DOMAIN, AlarmControlPanelService.TRIGGER)
 
     # These calls should do nothing as entities already in desired state
     await async_reproduce_state(

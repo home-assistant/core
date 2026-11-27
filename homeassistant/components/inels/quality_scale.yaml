@@ -57,10 +57,7 @@ rules:
     status: done
     comment: |
       available property.
-  action-exceptions:
-    status: exempt
-    comment: |
-      No custom actions are defined.
+  action-exceptions: done
   reauthentication-flow: todo
   parallel-updates:
     status: todo
@@ -121,4 +118,4 @@ rules:
     status: exempt
     comment: |
       The integration is not making any HTTP requests.
-  strict-typing: todo
+  strict-typing: done
