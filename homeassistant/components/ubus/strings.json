@@ -94,6 +94,10 @@
       "description": "The OpenWrt (ubus) entry for `{host}` was moved to the main entry, but the main entry could not be reloaded afterwards. Its routers may be untracked and the moved tracker ids may not be normalized; reload the main OpenWrt (ubus) entry to finish the migration.",
       "title": "Failed to reload main entry for router {host}"
     },
+    "migration_polling_enabled": {
+      "description": "The OpenWrt (ubus) entry for `{host}` had polling disabled, but the main entry polls every router on it, so `{host}` is polled now. Subentries cannot carry a polling setting; delete the `{host}` subentry if the router should not be polled.",
+      "title": "Router {host} is now polled"
+    },
     "migration_removal_failed": {
       "description": "The OpenWrt (ubus) entry for `{host}` was moved to the main entry, but the old entry could not be deleted. It has been emptied, so it no longer polls the router; its client trackers are kept on the main entry. To complete the migration:\n\n1. Confirm the router is tracked on the main OpenWrt (ubus) entry.\n2. Delete the OpenWrt (ubus) entry for `{host}`.",
       "title": "Failed to remove old entry for router {host}"

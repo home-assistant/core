@@ -166,6 +166,11 @@ async def _async_migrate(hass: HomeAssistant) -> None:
     Entries on a schema newer than the config flow's version were written
     by a newer release; after a rollback this migration must not downgrade
     or remove them, so they are left in place.
+
+    A disabled entry is never the hub. The hub's polling preference
+    acts on every router, so it keeps polling when any entry polled on
+    its own entry; a router whose entry had polling disabled starts
+    polling, with a warning per transferred subentry.
     """
     entries = [
         entry
@@ -177,6 +182,13 @@ async def _async_migrate(hass: HomeAssistant) -> None:
         return
     hubs = [e for e in hub_candidates if not e.data]
     hub = min(hubs or hub_candidates, key=lambda e: e.entry_id)
+    # Polling is one entry-level preference, so the hub keeps polling
+    # when any entry polled on its own entry; an entry which did not
+    # poll starts polling, warned per transferred subentry below.
+    if hub.pref_disable_polling and any(
+        not candidate.pref_disable_polling for candidate in hub_candidates
+    ):
+        hass.config_entries.async_update_entry(hub, pref_disable_polling=False)
     _async_convert_own_data(hass, hub)
     for other in sorted((e for e in entries if e is not hub), key=lambda e: e.entry_id):
         await _async_migrate_other(hass, hub, other)
@@ -187,7 +199,6 @@ def _async_transfer_to_hub(
     hass: HomeAssistant,
     hub: UbusConfigEntry,
     entry: ConfigEntry,
-    host: str,
 ) -> list[str]:
     """Re-parent this entry's trackers and routers to the hub, then empty it.
 
@@ -229,37 +240,31 @@ def _async_transfer_to_hub(
             collision_hosts.append(data[CONF_HOST])
         else:
             created_subentries.append(new_subentry)
-    if (
-        entry.disabled_by is not None
-        and (
-            disabled_subentry := next(
-                (
-                    created
-                    for created in created_subentries
-                    if created.unique_id == host
-                ),
-                None,
+    # Subentries cannot be disabled or set to not poll, so a router
+    # whose entry had either off starts being polled by the hub;
+    # deleting the subentry reproduces the old behavior, and clears
+    # the warning which is linked to it. A colliding host has no new
+    # subentry, so there is nothing to delete.
+    translation_key: str | None = None
+    if entry.disabled_by is not None:
+        translation_key = "migration_disabled_entry"
+    elif entry.pref_disable_polling and not hub.pref_disable_polling:
+        translation_key = "migration_polling_enabled"
+    if translation_key is not None:
+        for created in created_subentries:
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                f"{translation_key}_{created.subentry_id}",
+                config_entry_id=hub.entry_id,
+                config_subentry_id=created.subentry_id,
+                is_fixable=False,
+                is_persistent=True,
+                issue_domain=DOMAIN,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key=translation_key,
+                translation_placeholders={"host": created.title},
             )
-        )
-        is not None
-    ):
-        # Subentries cannot be disabled; deleting the subentry
-        # reproduces the old "off" behavior, and clears the
-        # warning which is linked to it. A colliding host has no
-        # new subentry, so there is nothing to delete.
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            f"migration_disabled_entry_{entry.entry_id}",
-            config_entry_id=hub.entry_id,
-            config_subentry_id=disabled_subentry.subentry_id,
-            is_fixable=False,
-            is_persistent=True,
-            issue_domain=DOMAIN,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="migration_disabled_entry",
-            translation_placeholders={"host": host},
-        )
     # The entry is a shell now: its routers are tracked on the hub,
     # so clearing its subentries and data means a failed removal
     # cannot leave a duplicate poller behind.
@@ -304,7 +309,7 @@ async def _async_migrate_other(
     transferred = False
     try:
         if holding_setup_lock:
-            collision_hosts = _async_transfer_to_hub(hass, hub, entry, host)
+            collision_hosts = _async_transfer_to_hub(hass, hub, entry)
             transferred = True
             # The hub already normalized its own tracker ids, before
             # the merge moved this entry's over; reload it so the
@@ -343,7 +348,7 @@ async def _async_migrate_other(
                         translation_placeholders={"host": host},
                     )
                     return False
-                collision_hosts = _async_transfer_to_hub(hass, hub, entry, host)
+                collision_hosts = _async_transfer_to_hub(hass, hub, entry)
             transferred = True
             # The entry was unloaded above, so the removal cannot leave live
             # trackers behind.
