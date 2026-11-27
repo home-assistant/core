@@ -64,11 +64,6 @@ RELEASE_NOTES_MESSAGE_DO_NOT_INTERRUPT = UpdateReleaseNotesMessage(
     severity=UpdateReleaseNotesMessageSeverity.WARNING,
 )
 
-MANUAL_ACTION_CONFIRM_ON_DEVICE = UpdateManualAction(
-    translation_domain=DOMAIN,
-    translation_key="confirm_on_device",
-)
-
 
 __all__ = [
     "ATTR_AUTO_UPDATE",
@@ -85,7 +80,6 @@ __all__ = [
     "ATTR_VERSION",
     "DEVICE_CLASSES_SCHEMA",
     "DOMAIN",
-    "MANUAL_ACTION_CONFIRM_ON_DEVICE",
     "PLATFORM_SCHEMA",
     "PLATFORM_SCHEMA_BASE",
     "RELEASE_NOTES_MESSAGE_DO_NOT_INTERRUPT",

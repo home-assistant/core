@@ -4,7 +4,6 @@ import asyncio
 from typing import Any, override
 
 from homeassistant.components.update import (
-    MANUAL_ACTION_CONFIRM_ON_DEVICE,
     UpdateDeviceClass,
     UpdateEntity,
     UpdateEntityFeature,
@@ -95,24 +94,6 @@ async def async_setup_entry(
                 update_steps=1000,
             ),
             DemoUpdate(
-                unique_id="update_install_phases",
-                device_name="Demo Update with Install Phases",
-                title="Awesomesoft Inc.",
-                installed_version="1.0.0",
-                latest_version="1.1.0",
-                support_progress=True,
-                update_steps=10,
-                install_phases=(
-                    UpdateInstallPhase.PREPARING,
-                    UpdateInstallPhase.BACKING_UP,
-                    UpdateInstallPhase.WAITING,
-                    UpdateInstallPhase.DOWNLOADING,
-                    UpdateInstallPhase.INSTALLING,
-                    UpdateInstallPhase.RESTARTING,
-                    UpdateInstallPhase.FINISHING,
-                ),
-            ),
-            DemoUpdate(
                 unique_id="update_manual_action",
                 device_name="Demo Update with Manual Action",
                 title="Awesomesoft Inc.",
@@ -120,37 +101,8 @@ async def async_setup_entry(
                 latest_version="1.1.0",
                 support_progress=True,
                 update_steps=10,
-                install_phases=(
-                    UpdateInstallPhase.PREPARING,
-                    UpdateInstallPhase.BACKING_UP,
-                    UpdateInstallPhase.WAITING,
-                    UpdateInstallPhase.DOWNLOADING,
-                    UpdateInstallPhase.WAITING_FOR_USER,
-                    UpdateInstallPhase.INSTALLING,
-                    UpdateInstallPhase.RESTARTING,
-                    UpdateInstallPhase.FINISHING,
-                ),
-                manual_action=MANUAL_ACTION_CONFIRM_ON_DEVICE,
-            ),
-            DemoUpdate(
-                unique_id="update_power_cycle",
-                device_name="Demo Hallway Bulb",
-                title="Philips Lamps Firmware",
-                installed_version="1.94.2",
-                latest_version="1.95.0",
-                support_progress=True,
-                device_class=UpdateDeviceClass.FIRMWARE,
-                update_steps=10,
-                install_phases=(
-                    UpdateInstallPhase.DOWNLOADING,
-                    UpdateInstallPhase.INSTALLING,
-                    UpdateInstallPhase.WAITING_FOR_USER,
-                    UpdateInstallPhase.FINISHING,
-                ),
                 manual_action=UpdateManualAction(
-                    translation_domain=DOMAIN,
-                    translation_key="power_cycle",
-                    translation_placeholders={"device_name": "Demo Hallway Bulb"},
+                    translation_domain=DOMAIN, translation_key="confirm_on_device"
                 ),
             ),
         ]
@@ -185,7 +137,6 @@ class DemoUpdate(UpdateEntity):
         device_class: UpdateDeviceClass | None = None,
         display_precision: int = 0,
         update_steps: int = 100,
-        install_phases: tuple[UpdateInstallPhase, ...] = (),
         manual_action: UpdateManualAction | None = None,
     ) -> None:
         """Initialize the Demo select entity."""
@@ -203,7 +154,6 @@ class DemoUpdate(UpdateEntity):
         )
         self._attr_manual_action = manual_action
         self._update_steps = update_steps
-        self._install_phases = install_phases
         if support_install:
             self._attr_supported_features |= (
                 UpdateEntityFeature.INSTALL
@@ -221,7 +171,7 @@ class DemoUpdate(UpdateEntity):
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install an update."""
-        if self._install_phases:
+        if self.manual_action is not None:
             await self._async_install_in_phases(backup)
         elif self.supported_features & UpdateEntityFeature.PROGRESS:
             self._attr_in_progress = True
@@ -238,20 +188,22 @@ class DemoUpdate(UpdateEntity):
         self.async_write_ha_state()
 
     async def _async_install_in_phases(self, backup: bool) -> None:
-        """Fake an install that goes through the phases of a real one."""
+        """Fake an install that waits for someone to confirm it on the device."""
         self._attr_in_progress = True
-        for phase in self._install_phases:
-            if phase is UpdateInstallPhase.BACKING_UP and not backup:
-                continue
-            if phase is UpdateInstallPhase.DOWNLOADING:
-                for step in range(self._update_steps):
-                    self._attr_update_percentage = step * 100 / self._update_steps
-                    await self._async_fake_phase(phase)
-                self._attr_update_percentage = None
-            elif phase is UpdateInstallPhase.WAITING_FOR_USER:
-                await self._async_fake_phase(phase, FAKE_WAITING_FOR_USER_STEPS)
-            else:
-                await self._async_fake_phase(phase)
+        await self._async_fake_phase(UpdateInstallPhase.PREPARING)
+        if backup:
+            await self._async_fake_phase(UpdateInstallPhase.BACKING_UP)
+        await self._async_fake_phase(UpdateInstallPhase.WAITING)
+        for step in range(self._update_steps):
+            self._attr_update_percentage = step * 100 / self._update_steps
+            await self._async_fake_phase(UpdateInstallPhase.DOWNLOADING)
+        self._attr_update_percentage = None
+        await self._async_fake_phase(
+            UpdateInstallPhase.WAITING_FOR_USER, FAKE_WAITING_FOR_USER_STEPS
+        )
+        await self._async_fake_phase(UpdateInstallPhase.INSTALLING)
+        await self._async_fake_phase(UpdateInstallPhase.RESTARTING)
+        await self._async_fake_phase(UpdateInstallPhase.FINISHING)
 
     async def _async_fake_phase(
         self, phase: UpdateInstallPhase, steps: int = 1

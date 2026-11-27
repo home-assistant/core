@@ -22,7 +22,6 @@ from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.update import (
     DOMAIN,
-    MANUAL_ACTION_CONFIRM_ON_DEVICE,
     RELEASE_NOTES_MESSAGE_DO_NOT_INTERRUPT,
     UpdateDeviceClass,
     UpdateEntity,
@@ -58,6 +57,16 @@ from homeassistant.setup import async_setup_component
 from .common import MockUpdateEntity
 
 TEST_DOMAIN = "test"
+PRESS_BUTTON = UpdateManualAction(
+    translation_domain=TEST_DOMAIN,
+    translation_key="press_button",
+    translation_placeholders={"button": "Reset"},
+)
+PRESS_BUTTON_ATTRIBUTE = {
+    "translation_domain": TEST_DOMAIN,
+    "translation_key": "press_button",
+    "translation_placeholders": {"button": "Reset"},
+}
 
 
 async def test_update(hass: HomeAssistant) -> None:
@@ -1747,77 +1756,20 @@ async def test_install_phase(
 
 
 @pytest.mark.parametrize(
-    ("manual_action", "expected"),
-    [
-        pytest.param(None, None, id="none"),
-        pytest.param(
-            MANUAL_ACTION_CONFIRM_ON_DEVICE,
-            {
-                "translation_domain": DOMAIN,
-                "translation_key": "confirm_on_device",
-                "translation_placeholders": {},
-            },
-            id="shared",
-        ),
-        pytest.param(
-            UpdateManualAction(
-                translation_domain=TEST_DOMAIN,
-                translation_key="press_button",
-                translation_placeholders={"button": "Reset"},
-            ),
-            {
-                "translation_domain": TEST_DOMAIN,
-                "translation_key": "press_button",
-                "translation_placeholders": {"button": "Reset"},
-            },
-            id="integration",
-        ),
-    ],
-)
-async def test_manual_action(
-    hass: HomeAssistant,
-    manual_action: UpdateManualAction | None,
-    expected: dict[str, Any] | None,
-) -> None:
-    """Test the manual action is reported with its translation."""
-    entity = MockUpdateEntity(
-        name="Update",
-        installed_version="1.0.0",
-        latest_version="1.0.1",
-        manual_action=manual_action,
-    )
-    setup_test_component_platform(hass, DOMAIN, [entity])
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
-    await hass.async_block_till_done()
-
-    state = hass.states.get("update.update")
-    assert state is not None
-    assert state.attributes[UpdateEntityStateAttribute.MANUAL_ACTION] == expected
-
-
-@pytest.mark.parametrize(
     ("installed_version", "latest_version", "in_progress", "expected"),
     [
         pytest.param(
             "1.0.0",
             "1.0.1",
             False,
-            {
-                "translation_domain": DOMAIN,
-                "translation_key": "confirm_on_device",
-                "translation_placeholders": {},
-            },
+            PRESS_BUTTON_ATTRIBUTE,
             id="update_available",
         ),
         pytest.param(
             "1.0.1",
             "1.0.1",
             True,
-            {
-                "translation_domain": DOMAIN,
-                "translation_key": "confirm_on_device",
-                "translation_placeholders": {},
-            },
+            PRESS_BUTTON_ATTRIBUTE,
             id="in_progress",
         ),
         pytest.param("1.0.1", "1.0.1", False, None, id="up_to_date"),
@@ -1838,7 +1790,7 @@ async def test_manual_action_only_with_update(
         latest_version=latest_version,
         supported_features=UpdateEntityFeature.PROGRESS,
         in_progress=in_progress,
-        manual_action=MANUAL_ACTION_CONFIRM_ON_DEVICE,
+        manual_action=PRESS_BUTTON,
     )
     setup_test_component_platform(hass, DOMAIN, [entity])
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
@@ -1849,22 +1801,16 @@ async def test_manual_action_only_with_update(
     assert state.attributes[UpdateEntityStateAttribute.MANUAL_ACTION] == expected
 
 
-@pytest.mark.parametrize(
-    "translation_key",
-    [
-        *(
-            f"_.state_attributes.install_phase.state.{install_phase}"
-            for install_phase in UpdateInstallPhase
-        ),
-        f"manual_actions.{MANUAL_ACTION_CONFIRM_ON_DEVICE.translation_key}",
-    ],
-)
-async def test_install_status_translations(
-    hass: HomeAssistant, translation_key: str
+@pytest.mark.parametrize("install_phase", list(UpdateInstallPhase))
+async def test_install_phase_translations(
+    hass: HomeAssistant, install_phase: UpdateInstallPhase
 ) -> None:
-    """Test the install phases and shared manual actions are translated."""
+    """Test the install phases are translated."""
     translations = await async_get_translations(
         hass, "en", "entity_component", {DOMAIN}
     )
 
-    assert f"component.update.entity_component.{translation_key}" in translations
+    assert (
+        "component.update.entity_component._.state_attributes.install_phase.state."
+        f"{install_phase}"
+    ) in translations
