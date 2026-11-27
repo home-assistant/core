@@ -478,6 +478,7 @@ async def async_setup_entry(
         for device in (
             *session.device_helper.motion_detectors2,
             *session.device_helper.micromodule_relays,
+            *session.device_helper.micromodule_impulse_relays,
             *session.device_helper.smart_plugs,
             *session.device_helper.smart_plugs_compact,
         )

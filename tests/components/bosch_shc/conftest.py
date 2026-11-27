@@ -695,6 +695,8 @@ def micromodule_relay_device(
     switch_type: SwitchConfiguration.SwitchType | None = None,
     actuator_type: SwitchConfiguration.ActuatorType | None = None,
     output_mode: SwitchConfiguration.OutputMode | None = None,
+    profile: str | None = None,
+    supported_profiles: list[str] | None = None,
 ) -> SHCMicromoduleRelay:
     """Build a minimal device double for the micromodule_relays bucket."""
     device = create_autospec(SHCMicromoduleRelay, instance=True, spec_set=True)
@@ -707,8 +709,8 @@ def micromodule_relay_device(
     device.device_services = []
     device.deleted = False
     device.status = "AVAILABLE"
-    device.profile = None
-    device.supported_profiles = []
+    device.profile = profile
+    device.supported_profiles = supported_profiles or []
     device.child_lock = child_lock
     device.device_service_ids = {"ChildProtection"} if has_child_protection else set()
     device.supports_switch_configuration = supports_switch_configuration

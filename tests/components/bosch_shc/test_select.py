@@ -1128,6 +1128,32 @@ async def test_installation_profile_select_option_reloads(
 
 @pytest.mark.parametrize(
     "device_buckets",
+    [
+        {
+            "micromodule_impulse_relays": [
+                micromodule_relay_device(
+                    profile="GENERIC", supported_profiles=["GENERIC", "OUTDOOR"]
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_installation_profile_impulse_relay(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Impulse relays advertising profiles get a profile select."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("select.relay_purpose_of_use")
+    assert state is not None
+    assert state.state == "generic"
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
     [{"motion_detectors2": [motion_detector2_device()]}],
     indirect=True,
 )
