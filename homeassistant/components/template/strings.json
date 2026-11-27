@@ -18,6 +18,7 @@
       "fan_speeds_required": "Fan speeds are required when a fan speed or the set fan speed action is set.",
       "hs_action_required": "Actions on set HS color are required when an HS color is set.",
       "level_action_required": "Actions on set level are required when a brightness level is set.",
+      "list_template_required": "Enter a template, or switch to the list to enter the items one by one.",
       "set_fan_speed_required": "A set fan speed action is required when fan speeds are set.",
       "source_list_required": "A source list is required when a source or the select source actions are set.",
       "temperature_action_required": "Actions on set color temperature are required when a color temperature is set.",
@@ -135,7 +136,7 @@
           "device_id": "[%key:component::template::common::device_id_description%]",
           "hvac_action": "Defines a template for the current HVAC action. Valid HVAC actions are `cooling`, `defrosting`, `drying`, `fan`, `heating`, `idle`, `off`, and `preheating`.",
           "hvac_mode": "Defines a template for the current HVAC mode. Valid HVAC modes are `auto`, `cool`, `dry`, `fan_only`, `heat`, `heat_cool` and `off`.",
-          "hvac_modes": "Defines a template for a list of available HVAC modes. Valid HVAC modes for the list are `auto`, `cool`, `dry`, `fan_only`, `heat`, `heat_cool` and `off`.",
+          "hvac_modes": "The available HVAC modes, as a list or a template that returns a list. Valid HVAC modes are `auto`, `cool`, `dry`, `fan_only`, `heat`, `heat_cool` and `off`.",
           "set_hvac_mode": "Defines actions to run when the climate is given a `set_hvac_mode` command. Receives variable `hvac_mode`.",
           "set_temperature": "Defines actions to run when the climate is given a `set_temperature` command. Receives variable `hvac_mode`, `temperature`, `target_temp_high`, and `target_temp_low`. If `hvac_mode` is received, the `set_hvac_mode` actions are executed before the actions in `set_temperature`.",
           "target_temperature": "Defines a template for the target temperature.",
@@ -200,7 +201,7 @@
         },
         "data_description": {
           "device_id": "[%key:component::template::common::device_id_description%]",
-          "in_zones": "Defines a template that returns a list of zones the device tracker is currently in. The template should return a list of zone entity IDs. If the device tracker is not in any zone, the template should return an empty list.",
+          "in_zones": "The zones the device tracker is currently in, as a list or a template that returns a list of zone entity IDs. If the device tracker is not in any zone, the template should return an empty list.",
           "latitude": "Defines a template to get the latitude of the device tracker. Valid values are numbers between `-90` and `90`.",
           "longitude": "Defines a template to get the longitude of the device tracker. Valid values are numbers between `-180` and `180`.",
           "name": "[%key:common::config_flow::data::name%]"
@@ -231,7 +232,7 @@
         "data_description": {
           "device_id": "[%key:component::template::common::device_id_description%]",
           "event_type": "Defines a template for the type of the event.",
-          "event_types": "Defines a template for a list of available event types."
+          "event_types": "The available event types, as a list or a template that returns a list."
         },
         "sections": {
           "additional_options": {
@@ -407,7 +408,7 @@
           "media_stop": "Defines actions to run when the media player is stopped.",
           "select_source": "Defines actions to run when the media player is given a command to select a source. Receives variable `source`. Requires a source list.",
           "source": "Defines a template to get the current source of the media player. The source must be in the source list.",
-          "source_list": "Defines a template to get the list of sources supported by the media player.",
+          "source_list": "The sources supported by the media player, as a list or a template that returns a list.",
           "state": "Defines a template to get the state of the media player. Valid values are `off`, `on`, `idle`, `playing`, `paused`, and `buffering`. If not set, the state is optimistic and follows the actions.",
           "turn_off": "Defines actions to run when the media player is turned off.",
           "turn_on": "Defines actions to run when the media player is turned on.",
@@ -474,7 +475,7 @@
         },
         "data_description": {
           "device_id": "[%key:component::template::common::device_id_description%]",
-          "options": "Template for the select’s available options.",
+          "options": "The select’s available options, as a list or a template that returns a list.",
           "select_option": "Defines actions to run when an `option` from the `options` list is selected. Receives variable `option`.",
           "state": "Template for the select’s current value."
         },
@@ -632,7 +633,7 @@
           "clean_spot": "Defines actions to run when the vacuum is given a 'Clean spot' command.",
           "device_id": "[%key:component::template::common::device_id_description%]",
           "fan_speed": "Defines a template to get the fan speed of the vacuum.",
-          "fan_speeds": "List of fan speeds supported by the vacuum.",
+          "fan_speeds": "The fan speeds supported by the vacuum, as a list or a template that returns a list.",
           "locate": "Defines actions to run when the vacuum is given a 'Locate' command.",
           "pause": "Defines actions to run when the vacuum is paused.",
           "return_to_base": "Defines actions to run when the vacuum is given a 'Return to dock' command.",
@@ -671,7 +672,7 @@
         "data_description": {
           "current_temperature": "Defines a template for the current temperature.",
           "device_id": "[%key:component::template::common::device_id_description%]",
-          "operation_list": "Defines a template for a list of available operation modes.",
+          "operation_list": "The available operation modes, as a list or a template that returns a list.",
           "operation_mode": "Defines a template for the current operation mode.",
           "set_operation_mode": "Defines actions to run when the water heater is given a `set_operation_mode` command. Receives variable `operation_mode`.",
           "set_temperature": "Defines actions to run when the water heater is given a `set_temperature` command. Receives variable `temperature` and `operation_mode`.",
@@ -871,6 +872,7 @@
       "fan_speeds_required": "[%key:component::template::config::error::fan_speeds_required%]",
       "hs_action_required": "[%key:component::template::config::error::hs_action_required%]",
       "level_action_required": "[%key:component::template::config::error::level_action_required%]",
+      "list_template_required": "[%key:component::template::config::error::list_template_required%]",
       "set_fan_speed_required": "[%key:component::template::config::error::set_fan_speed_required%]",
       "source_list_required": "[%key:component::template::config::error::source_list_required%]",
       "temperature_action_required": "[%key:component::template::config::error::temperature_action_required%]",
@@ -1552,6 +1554,23 @@
         "no_code": "No code format",
         "number": "Number",
         "text": "Text"
+      }
+    },
+    "hvac_modes": {
+      "options": {
+        "auto": "[%key:common::state::auto%]",
+        "cool": "[%key:component::climate::entity_component::_::state::cool%]",
+        "dry": "[%key:component::climate::entity_component::_::state::dry%]",
+        "fan_only": "[%key:component::climate::entity_component::_::state::fan_only%]",
+        "heat": "[%key:component::climate::entity_component::_::state::heat%]",
+        "heat_cool": "[%key:component::climate::entity_component::_::state::heat_cool%]",
+        "off": "[%key:common::state::off%]"
+      }
+    },
+    "list_or_template": {
+      "choices": {
+        "list": "List",
+        "template": "Template"
       }
     },
     "update_device_class": {

@@ -176,7 +176,7 @@ async def setup_single_attribute_climate(
     hass: HomeAssistant,
     style: ConfigurationStyle,
     attribute: str,
-    attribute_template: str,
+    attribute_template: str | list[str],
     extra_config: dict,
 ) -> None:
     """Do setup of climate integration."""
@@ -957,6 +957,7 @@ async def test_missing_set_temperature_config(
             "{{ ['dry', 'auto', 'fan_only'] }}",
             [HVACMode.DRY, HVACMode.AUTO, HVACMode.FAN_ONLY],
         ),
+        (["off", "heat"], [HVACMode.OFF, HVACMode.HEAT]),
         ("{{ [] }}", []),
         ("{{ '[]' }}", []),
         (
@@ -1123,6 +1124,51 @@ async def test_hvac_modes_updates_supported_features(hass: HomeAssistant) -> Non
     assert state.attributes["supported_features"] == ClimateEntityFeature.TURN_ON
 
 
+@pytest.mark.parametrize(
+    ("attribute", "extra_config"), [("hvac_modes", SET_HVAC_MODE_ACTION)]
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.parametrize(
+    ("attribute_template", "expected"),
+    [
+        (["heat"], ClimateEntityFeature.TURN_ON),
+        (["off"], ClimateEntityFeature.TURN_OFF),
+        (["off", "heat"], ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON),
+    ],
+)
+@pytest.mark.usefixtures("setup_single_attribute_climate")
+async def test_static_hvac_modes_supported_features(
+    hass: HomeAssistant, expected: ClimateEntityFeature
+) -> None:
+    """Test a static hvac_modes list sets the turn on and turn off features."""
+    state = hass.states.get(TEST_CLIMATE.entity_id)
+    assert state.attributes["supported_features"] == expected
+
+
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+async def test_bad_static_hvac_modes(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test an invalid hvac mode in a static list is a config error."""
+    await setup_entity(
+        hass,
+        TEST_CLIMATE,
+        style,
+        0,
+        {"hvac_modes": ["off", "bogus"], **SET_HVAC_MODE_ACTION},
+    )
+    assert hass.states.async_all(climate.DOMAIN) == []
+    assert "Invalid config for 'template': value must be one of" in caplog.text
+
+
 @pytest.mark.parametrize(("config", "extra_config"), [(MINIMUM_REQUIREMENTS, {})])
 @pytest.mark.parametrize(
     "style",
@@ -1229,6 +1275,7 @@ async def test_optimistic_set_hvac_mode_action(
     [
         ("{{ ['off', 'low', 'medium', 'high'] }}", ["off", "low", "medium", "high"]),
         ("{{ ['off', 'high'] }}", ["off", "high"]),
+        (["off", "high"], ["off", "high"]),
         ("{{ [] }}", []),
         ("{{ '[]' }}", []),
         ("{{ -3 }}", None),

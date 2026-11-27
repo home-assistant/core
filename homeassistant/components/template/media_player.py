@@ -156,9 +156,9 @@ MEDIA_PLAYER_COMMON_SCHEMA = probatio.Schema(
         probatio.Optional(CONF_REPEAT): cv.template,
         probatio.Optional(CONF_SHUFFLE): cv.template,
         probatio.Optional(CONF_SOUND_MODE): cv.template,
-        probatio.Optional(CONF_SOUND_MODE_LIST): cv.template,
+        probatio.Optional(CONF_SOUND_MODE_LIST): tcv.list_or_template(),
         probatio.Optional(CONF_SOURCE): cv.template,
-        probatio.Optional(CONF_SOURCE_LIST): cv.template,
+        probatio.Optional(CONF_SOURCE_LIST): tcv.list_or_template(),
         probatio.Optional(CONF_VOLUME_LEVEL): cv.template,
         **{probatio.Optional(option): cv.template for option, _ in STRING_TEMPLATES},
         **{

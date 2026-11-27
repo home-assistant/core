@@ -82,7 +82,9 @@ FAN_COMMON_SCHEMA = probatio.Schema(
         probatio.Optional(CONF_OSCILLATING): cv.template,
         probatio.Optional(CONF_PERCENTAGE): cv.template,
         probatio.Optional(CONF_PRESET_MODE): cv.template,
-        probatio.Optional(CONF_PRESET_MODES): probatio.EnsureList(),
+        probatio.Optional(CONF_PRESET_MODES): tcv.list_or_template(
+            wrap_plain_string=True
+        ),
         probatio.Optional(CONF_SET_DIRECTION_ACTION): cv.SCRIPT_SCHEMA,
         probatio.Optional(CONF_SET_OSCILLATING_ACTION): cv.SCRIPT_SCHEMA,
         probatio.Optional(CONF_SET_PERCENTAGE_ACTION): cv.SCRIPT_SCHEMA,
@@ -172,6 +174,7 @@ class FanExtraStoredData(ExtraStoredData):
     is_on: bool | None
     percentage: int | None
     preset_mode: str | None
+    preset_modes: list[str] | None
     oscillating: bool | None
     direction: str | None
 
@@ -188,6 +191,8 @@ class FanExtraStoredData(ExtraStoredData):
                 is_on=restored["is_on"],
                 percentage=restored["percentage"],
                 preset_mode=restored["preset_mode"],
+                # Not stored before preset_modes became a template
+                preset_modes=restored.get("preset_modes"),
                 oscillating=restored["oscillating"],
                 direction=restored["direction"],
             )
@@ -227,12 +232,16 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity, RestoreEntity):
             tcv.number(self, CONF_PERCENTAGE, 0, 100),
         )
 
-        # List of valid preset modes
-        self._attr_preset_modes: list[str] | None = config.get(CONF_PRESET_MODES)
-        self.setup_template(
+        self._attr_preset_modes = None
+        self.setup_list_item_templates(
+            CONF_PRESET_MODES,
+            "_attr_preset_modes",
+            tcv.list_of_strings(self, CONF_PRESET_MODES),
             CONF_PRESET_MODE,
             "_attr_preset_mode",
-            tcv.item_in_list(self, CONF_PRESET_MODE, self._attr_preset_modes),
+            tcv.item_in_list(
+                self, CONF_PRESET_MODE, "_attr_preset_modes", CONF_PRESET_MODES
+            ),
         )
 
         # Oscillating boolean
@@ -393,6 +402,7 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity, RestoreEntity):
             is_on=self._attr_is_on,
             percentage=self._attr_percentage,
             preset_mode=self._attr_preset_mode,
+            preset_modes=self._attr_preset_modes,
             oscillating=self._attr_oscillating,
             direction=self._attr_current_direction,
         )
@@ -403,6 +413,7 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity, RestoreEntity):
         self._attr_is_on = extra_data.is_on
         self._attr_percentage = extra_data.percentage
         self._attr_preset_mode = extra_data.preset_mode
+        self._attr_preset_modes = extra_data.preset_modes
         self._attr_oscillating = extra_data.oscillating
         self._attr_current_direction = extra_data.direction
 

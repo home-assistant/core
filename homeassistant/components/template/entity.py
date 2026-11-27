@@ -98,6 +98,7 @@ class AbstractTemplateEntity(Entity):
         self._attr_extra_state_attributes = {}
         self._assumed_attributes: dict[str, str] = {}
         self._rendered_list_items: dict[str, Any] = {}
+        self._static_values: dict[str, Any] = {}
 
         self._attribute_templates: dict[str, Template] | None = None
         self._attributes_template: Template | None = None
@@ -271,16 +272,25 @@ class AbstractTemplateEntity(Entity):
         add_if_static: bool = True,
     ) -> Template | None:
         """Add a template."""
-        if (template := self._config.get(option)) and isinstance(template, Template):
-            if add_if_static or (not template.is_static):
+        if isinstance(value := self._config.get(option), list):
+            result = validator(value) if validator else value
+            if on_update:
+                on_update(result)
+            else:
+                setattr(self, attribute, result)
+            self._static_values[attribute] = getattr(self, attribute)
+            return None
+
+        if isinstance(value, Template):
+            if add_if_static or (not value.is_static):
                 self._templates[option] = EntityTemplate(
                     attribute,
-                    template,
+                    value,
                     validator,
                     on_update,
                     none_on_template_error,
                 )
-            return template
+            return value
 
         return None
 
@@ -417,6 +427,9 @@ class AbstractTemplateEntity(Entity):
         # Extra data should be loaded last
         if extra_data is not _SENTINEL:
             self.restore_extra_data(extra_data)
+            # Static lists come from the config and must win over restored data
+            for attribute, value in self._static_values.items():
+                setattr(self, attribute, value)
 
     def restore_last_state_state(self, last_state: State) -> bool:
         """Restore the state from the last state."""

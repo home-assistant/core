@@ -92,6 +92,10 @@ OPTIMISTIC_PRESET_MODE_CONFIG2 = {
     **OPTIMISTIC_PRESET_MODE_CONFIG,
     "preset_modes": ["auto", "low", "medium", "high"],
 }
+OPTIMISTIC_PRESET_MODE_TEMPLATE_CONFIG = {
+    **OPTIMISTIC_PRESET_MODE_CONFIG,
+    "preset_modes": "{{ ['auto', 'low', 'medium', 'high'] }}",
+}
 
 OSCILLATE_ACTION = make_test_action(
     "set_oscillating", {"oscillating": "{{ oscillating }}"}
@@ -169,7 +173,7 @@ async def setup_single_attribute_state_fan(
     count: int,
     style: ConfigurationStyle,
     attribute: str,
-    attribute_template: str,
+    attribute_template: str | list[str],
     state_template: str,
     extra_config: dict,
 ) -> None:
@@ -372,7 +376,13 @@ async def test_percentage_template(
             "{{ 1 == 1 }}",
             "{{ states('sensor.test_sensor') }}",
             {"preset_modes": ["auto", "smart"], **PRESET_MODE_ACTION},
-        )
+        ),
+        (
+            1,
+            "{{ 1 == 1 }}",
+            "{{ states('sensor.test_sensor') }}",
+            {"preset_modes": "{{ ['auto', 'smart'] }}", **PRESET_MODE_ACTION},
+        ),
     ],
 )
 @pytest.mark.parametrize(
@@ -398,6 +408,65 @@ async def test_preset_mode_template(
     """Test preset_mode template."""
     await async_trigger(hass, TEST_STATE_ENTITY_ID, preset_mode)
     _verify(hass, STATE_ON, None, None, None, expected)
+
+
+@pytest.mark.parametrize(
+    ("count", "state_template", "attribute", "extra_config"),
+    [(1, "{{ 1 == 1 }}", "preset_modes", PRESET_MODE_ACTION)],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.parametrize(
+    ("attribute_template", "expected"),
+    [
+        (["auto", "smart"], ["auto", "smart"]),
+        ("auto", ["auto"]),
+        ("{{ ['auto', 'smart'] }}", ["auto", "smart"]),
+        ("{{ [] }}", []),
+        ("{{ 'auto' }}", None),
+        ("{{ x - 1 }}", None),
+    ],
+)
+@pytest.mark.usefixtures("setup_single_attribute_state_fan")
+async def test_preset_modes_template(
+    hass: HomeAssistant, expected: list[str] | None
+) -> None:
+    """Test preset_modes as a static list, a plain string or a template."""
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "anything")
+
+    state = hass.states.get(TEST_FAN.entity_id)
+    assert state.attributes.get("preset_modes") == expected
+
+
+@pytest.mark.parametrize(
+    ("count", "state_template", "attribute", "attribute_template", "extra_config"),
+    [
+        (
+            1,
+            "{{ 1 == 1 }}",
+            "preset_mode",
+            "{{ 'smart' }}",
+            {
+                "preset_modes": "{{ state_attr('sensor.test_sensor', 'modes') }}",
+                **PRESET_MODE_ACTION,
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_single_attribute_state_fan")
+async def test_preset_mode_revalidated_on_list_change(hass: HomeAssistant) -> None:
+    """Test an unchanged preset_mode becomes valid when preset_modes includes it."""
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "on", {"modes": ["auto"]})
+    _verify(hass, STATE_ON, None, None, None, None)
+
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "on", {"modes": ["auto", "smart"]})
+    _verify(hass, STATE_ON, None, None, None, "smart")
 
 
 @pytest.mark.parametrize(
@@ -834,7 +903,10 @@ async def test_set_invalid_direction(
 
 @pytest.mark.parametrize(
     ("count", "state_template", "extra_config"),
-    [(1, "{{ 'on' }}", OPTIMISTIC_PRESET_MODE_CONFIG2)],
+    [
+        (1, "{{ 'on' }}", OPTIMISTIC_PRESET_MODE_CONFIG2),
+        (1, "{{ 'on' }}", OPTIMISTIC_PRESET_MODE_TEMPLATE_CONFIG),
+    ],
 )
 @pytest.mark.parametrize(
     "style",
@@ -843,6 +915,7 @@ async def test_set_invalid_direction(
 @pytest.mark.usefixtures("setup_state_fan")
 async def test_preset_modes(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test preset_modes."""
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "anything")
     for cnt, mode in enumerate(("auto", "low", "medium", "high")):
         await common.async_set_preset_mode(hass, TEST_FAN.entity_id, mode)
         assert_action(TEST_FAN, calls, cnt + 1, "set_preset_mode", preset_mode=mode)
@@ -850,7 +923,10 @@ async def test_preset_modes(hass: HomeAssistant, calls: list[ServiceCall]) -> No
 
 @pytest.mark.parametrize(
     ("count", "state_template", "extra_config"),
-    [(1, "{{ 'on' }}", OPTIMISTIC_PRESET_MODE_CONFIG2)],
+    [
+        (1, "{{ 'on' }}", OPTIMISTIC_PRESET_MODE_CONFIG2),
+        (1, "{{ 'on' }}", OPTIMISTIC_PRESET_MODE_TEMPLATE_CONFIG),
+    ],
 )
 @pytest.mark.parametrize(
     "style",
@@ -861,6 +937,7 @@ async def test_invalid_preset_modes(
     hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
     """Test invalid preset_modes."""
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "anything")
     for mode in ("invalid", "smart"):
         with pytest.raises(NotValidPresetModeError):
             await common.async_set_preset_mode(hass, TEST_FAN.entity_id, mode)
@@ -1622,6 +1699,41 @@ async def test_restore_state(
     assert state.attributes["preset_mode"] == "low"
     assert state.attributes["oscillating"] is True
     assert state.attributes["direction"] == DIRECTION_REVERSE
+
+
+async def test_restore_state_static_preset_modes(hass: HomeAssistant) -> None:
+    """Test static preset_modes from the config replace the restored list."""
+    setup_mock_template_entity_restore_state(
+        hass,
+        TEST_FAN,
+        STATE_ON,
+        saved_extra_data={
+            "is_on": True,
+            "percentage": None,
+            "preset_mode": "auto",
+            "preset_modes": ["old", "auto"],
+            "oscillating": None,
+            "direction": None,
+        },
+    )
+
+    await setup_restore_template_entity(
+        hass,
+        TEST_FAN,
+        ConfigurationStyle.TRIGGER,
+        {
+            **OPTIMISTIC_PRESET_MODE_CONFIG,
+            "state": "{{ true }}",
+            "preset_modes": ["auto", "smart"],
+        },
+    )
+
+    assert_state_and_attributes(
+        hass,
+        TEST_FAN,
+        STATE_ON,
+        {"preset_mode": "auto", "preset_modes": ["auto", "smart"]},
+    )
 
 
 @pytest.mark.parametrize(

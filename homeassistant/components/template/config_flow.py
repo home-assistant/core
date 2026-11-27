@@ -6,7 +6,8 @@ from typing import Any, cast, override
 
 import probatio
 
-from homeassistant.components import websocket_api
+from homeassistant.components import websocket_api, zone
+from homeassistant.components.climate import HVACMode
 from homeassistant.components.media_player import SERVICE_SELECT_SOURCE
 from homeassistant.components.number import (
     DEFAULT_MAX_VALUE,
@@ -67,6 +68,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowFormStep,
     SchemaFlowMenuStep,
 )
+from homeassistant.helpers.template import is_template_string
 
 from . import validators as tcv
 from .alarm_control_panel import (
@@ -219,6 +221,70 @@ _REQUIRED_OPTIONS: dict[str, tuple[tuple[str, str, str], ...]] = {
     ),
 }
 
+# Options that take a list of items or a template rendering one
+_LIST_OR_TEMPLATE_OPTIONS: dict[str, tuple[str, ...]] = {
+    Platform.CLIMATE: (CONF_HVAC_MODES,),
+    Platform.DEVICE_TRACKER: (CONF_IN_ZONES,),
+    Platform.EVENT: (CONF_EVENT_TYPES,),
+    Platform.MEDIA_PLAYER: (CONF_SOURCE_LIST,),
+    Platform.SELECT: (CONF_OPTIONS,),
+    Platform.VACUUM: (CONF_FAN_SPEED_LIST,),
+    Platform.WATER_HEATER: (CONF_OPERATION_LIST,),
+}
+
+# Optional list options are unset when the frontend sends an empty list
+_OPTIONAL_LIST_OPTIONS: dict[str, tuple[str, ...]] = {
+    Platform.DEVICE_TRACKER: (CONF_IN_ZONES,),
+    Platform.MEDIA_PLAYER: (CONF_SOURCE_LIST,),
+    Platform.VACUUM: (CONF_FAN_SPEED_LIST,),
+}
+
+
+def _list_or_template_selector(
+    list_selector: selector.Selector | None = None,
+) -> selector.ChooseSelector:
+    """Return a selector for a list of items or a template rendering one."""
+    if list_selector is None:
+        list_selector = selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                options=[],
+                multiple=True,
+                custom_value=True,
+                mode=selector.SelectSelectorMode.DROPDOWN,
+            )
+        )
+    # ChooseSelector only validates choices given as selector configs
+    return selector.ChooseSelector(
+        selector.ChooseSelectorConfig(
+            choices={
+                "list": {"selector": list_selector.serialize()["selector"]},
+                "template": {"selector": {"template": {}}},
+            },
+            translation_key="list_or_template",
+        )
+    )
+
+
+def _drop_empty_lists(domain: str, user_input: dict[str, Any]) -> dict[str, Any]:
+    """Return the user input without optional list options that are empty."""
+    empty = {
+        option
+        for option in _OPTIONAL_LIST_OPTIONS.get(domain, ())
+        if user_input.get(option) == []
+    }
+    return {key: value for key, value in user_input.items() if key not in empty}
+
+
+def _invalid_list_templates(domain: str, user_input: dict[str, Any]) -> list[str]:
+    """Return the list options set to a string that is not a template."""
+    return [
+        option
+        for option in _LIST_OR_TEMPLATE_OPTIONS.get(domain, ())
+        if isinstance(value := user_input.get(option), str)
+        and not is_template_string(value)
+    ]
+
+
 # Device class can only be chosen when the entity is created.
 _CONFIG_DEVICE_CLASS_DOMAINS = (
     Platform.BUTTON,
@@ -285,7 +351,15 @@ def generate_schema(
 
     if domain == Platform.CLIMATE:
         schema |= {
-            probatio.Required(CONF_HVAC_MODES): selector.TemplateSelector(),
+            probatio.Required(CONF_HVAC_MODES): _list_or_template_selector(
+                selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=[mode.value for mode in HVACMode],
+                        multiple=True,
+                        translation_key=CONF_HVAC_MODES,
+                    )
+                )
+            ),
             probatio.Optional(CONF_HVAC_MODE): selector.TemplateSelector(),
             probatio.Required(SET_HVAC_MODE_ACTION): selector.ActionSelector(),
             probatio.Optional(CONF_HVAC_ACTION): selector.TemplateSelector(),
@@ -333,7 +407,11 @@ def generate_schema(
 
     if domain == Platform.DEVICE_TRACKER:
         schema |= {
-            probatio.Optional(CONF_IN_ZONES): selector.TemplateSelector(),
+            probatio.Optional(CONF_IN_ZONES): _list_or_template_selector(
+                selector.EntitySelector(
+                    selector.EntitySelectorConfig(domain=zone.DOMAIN, multiple=True)
+                )
+            ),
             probatio.Optional(CONF_LATITUDE): selector.TemplateSelector(),
             probatio.Optional(CONF_LONGITUDE): selector.TemplateSelector(),
         }
@@ -344,7 +422,7 @@ def generate_schema(
     if domain == Platform.EVENT:
         schema |= {
             probatio.Required(CONF_EVENT_TYPE): selector.TemplateSelector(),
-            probatio.Required(CONF_EVENT_TYPES): selector.TemplateSelector(),
+            probatio.Required(CONF_EVENT_TYPES): _list_or_template_selector(),
         }
 
     if domain == Platform.FAN:
@@ -417,7 +495,7 @@ def generate_schema(
             probatio.Optional(SERVICE_MEDIA_NEXT_TRACK): selector.ActionSelector(),
             probatio.Optional(SERVICE_MEDIA_PREVIOUS_TRACK): selector.ActionSelector(),
             probatio.Optional(CONF_SOURCE): selector.TemplateSelector(),
-            probatio.Optional(CONF_SOURCE_LIST): selector.TemplateSelector(),
+            probatio.Optional(CONF_SOURCE_LIST): _list_or_template_selector(),
             probatio.Optional(SERVICE_SELECT_SOURCE): selector.ActionSelector(),
         }
 
@@ -456,7 +534,7 @@ def generate_schema(
     if domain == Platform.SELECT:
         schema |= {
             probatio.Optional(CONF_STATE): selector.TemplateSelector(),
-            probatio.Required(CONF_OPTIONS): selector.TemplateSelector(),
+            probatio.Required(CONF_OPTIONS): _list_or_template_selector(),
             probatio.Optional(CONF_SELECT_OPTION): selector.ActionSelector(),
         }
 
@@ -507,14 +585,7 @@ def generate_schema(
             probatio.Optional(CONF_STATE): selector.TemplateSelector(),
             probatio.Required(SERVICE_START): selector.ActionSelector(),
             probatio.Optional(CONF_FAN_SPEED): selector.TemplateSelector(),
-            probatio.Optional(CONF_FAN_SPEED_LIST): selector.SelectSelector(
-                selector.SelectSelectorConfig(
-                    options=[],
-                    multiple=True,
-                    custom_value=True,
-                    mode=selector.SelectSelectorMode.DROPDOWN,
-                )
-            ),
+            probatio.Optional(CONF_FAN_SPEED_LIST): _list_or_template_selector(),
             probatio.Optional(SERVICE_SET_FAN_SPEED): selector.ActionSelector(),
             probatio.Optional(SERVICE_STOP): selector.ActionSelector(),
             probatio.Optional(SERVICE_PAUSE): selector.ActionSelector(),
@@ -525,7 +596,7 @@ def generate_schema(
 
     if domain == Platform.WATER_HEATER:
         schema |= {
-            probatio.Required(CONF_OPERATION_LIST): selector.TemplateSelector(),
+            probatio.Required(CONF_OPERATION_LIST): _list_or_template_selector(),
             probatio.Optional(CONF_OPERATION_MODE): selector.TemplateSelector(),
             probatio.Required(SET_OPERATION_MODE_ACTION): selector.ActionSelector(),
             probatio.Optional(
@@ -722,10 +793,11 @@ def validate_user_input(
             # with temperature_kelvin or by removing the color temperature action
             handler.options.pop(CONF_TEMPERATURE, None)
             user_input.pop(CONF_TEMPERATURE, None)
-        if template_type == Platform.VACUUM and not user_input.get(CONF_FAN_SPEED_LIST):
-            # The frontend sends an empty list when all fan speeds are removed
-            handler.options.pop(CONF_FAN_SPEED_LIST, None)
-            user_input.pop(CONF_FAN_SPEED_LIST, None)
+        if _invalid_list_templates(template_type, user_input):
+            raise SchemaFlowError("list_template_required")
+        for option in user_input.keys() - _drop_empty_lists(template_type, user_input):
+            handler.options.pop(option, None)
+            user_input.pop(option)
         for option, required_option, error in _REQUIRED_OPTIONS.get(template_type, ()):
             if option in user_input and required_option not in user_input:
                 raise SchemaFlowError(error)
@@ -1051,9 +1123,13 @@ def ws_start_preview(
             if key.schema not in user_input:
                 continue
             try:
-                validator(user_input[key.schema])
+                # Choose selectors unwrap the active choice from the input
+                user_input[key.schema] = validator(user_input[key.schema])
             except probatio.Invalid as ex:
                 errors[key.schema] = str(ex.msg)
+
+        for option in _invalid_list_templates(domain, user_input):
+            errors[option] = "Expected a list or a template"
 
         if domain == Platform.SENSOR:
             try:
@@ -1065,13 +1141,7 @@ def ws_start_preview(
             except probatio.Invalid as ex:
                 errors[CONF_STATE_CLASS] = str(ex.msg)
 
-        required_input = user_input
-        if domain == Platform.VACUUM and not user_input.get(CONF_FAN_SPEED_LIST):
-            required_input = {
-                key: value
-                for key, value in user_input.items()
-                if key != CONF_FAN_SPEED_LIST
-            }
+        required_input = _drop_empty_lists(domain, user_input)
         for option, required_option, _ in _REQUIRED_OPTIONS.get(domain, ()):
             try:
                 tcv.requires_option(option, required_option)(required_input)

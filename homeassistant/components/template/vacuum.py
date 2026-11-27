@@ -83,7 +83,9 @@ DEPRECATED_HELPER_INCOMPLETE_FAN_SPEED_ISSUE_ID = (
 
 VACUUM_COMMON_SCHEMA = probatio.Schema(
     {
-        probatio.Optional(CONF_FAN_SPEED_LIST): probatio.EnsureList(),
+        probatio.Optional(CONF_FAN_SPEED_LIST): tcv.list_or_template(
+            wrap_plain_string=True
+        ),
         probatio.Optional(CONF_FAN_SPEED): cv.template,
         probatio.Optional(CONF_STATE): cv.template,
         probatio.Inclusive(
@@ -259,6 +261,7 @@ class VacuumExtraStoredData(ExtraStoredData):
 
     activity: VacuumActivity | None
     fan_speed: str | None
+    fan_speed_list: list[str] | None
 
     @override
     def as_dict(self) -> dict[str, Any]:
@@ -266,6 +269,7 @@ class VacuumExtraStoredData(ExtraStoredData):
         return {
             "activity": self.activity.value if self.activity else None,
             "fan_speed": self.fan_speed,
+            "fan_speed_list": self.fan_speed_list,
         }
 
     @classmethod
@@ -279,6 +283,8 @@ class VacuumExtraStoredData(ExtraStoredData):
             return cls(
                 activity=activity,
                 fan_speed=restored["fan_speed"],
+                # Not stored before fan_speeds became a template
+                fan_speed_list=restored.get("fan_speed_list"),
             )
         except KeyError, ValueError:
             return None
@@ -302,17 +308,21 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity, RestoreE
     def __init__(self, name: str, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
 
-        # List of valid fan speeds
-        self._attr_fan_speed_list = config.get(CONF_FAN_SPEED_LIST, [])
+        self._attr_fan_speed_list = []
         self._segments: list[Segment] = []
         self.setup_state_template(
             "_attr_activity",
             tcv.strenum(self, CONF_STATE, VacuumActivity),
         )
-        self.setup_template(
+        self.setup_list_item_templates(
+            CONF_FAN_SPEED_LIST,
+            "_attr_fan_speed_list",
+            tcv.list_of_strings(self, CONF_FAN_SPEED_LIST),
             CONF_FAN_SPEED,
             "_attr_fan_speed",
-            tcv.item_in_list(self, CONF_FAN_SPEED, self._attr_fan_speed_list),
+            tcv.item_in_list(
+                self, CONF_FAN_SPEED, "_attr_fan_speed_list", CONF_FAN_SPEED_LIST
+            ),
         )
         self.add_assumed_attribute(
             "_attr_fan_speed", CONF_FAN_SPEED, SERVICE_SET_FAN_SPEED
@@ -342,6 +352,12 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity, RestoreE
             if (action_config := config.get(action_id)) is not None:
                 self.add_script(action_id, action_config, name, DOMAIN)
                 self._attr_supported_features |= supported_feature
+
+    @property
+    @override
+    def fan_speed_list(self) -> list[str]:
+        """Return the fan speeds, a template error clears the list."""
+        return self._attr_fan_speed_list or []
 
     @callback
     def _update_segments(self, result: list[Segment] | None) -> None:
@@ -429,12 +445,12 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity, RestoreE
     @override
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
-        if fan_speed not in self._attr_fan_speed_list:
+        if fan_speed not in self.fan_speed_list:
             _LOGGER.error(
                 "Received invalid fan speed: %s for entity %s. Expected: %s",
                 fan_speed,
                 self.entity_id,
-                self._attr_fan_speed_list,
+                self.fan_speed_list,
             )
             return
 
@@ -452,6 +468,7 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity, RestoreE
         return VacuumExtraStoredData(
             activity=self._attr_activity,
             fan_speed=self._attr_fan_speed,
+            fan_speed_list=self._attr_fan_speed_list,
         )
 
     @override
@@ -459,6 +476,7 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity, RestoreE
         """Restore the extra data."""
         self._attr_activity = extra_data.activity
         self._attr_fan_speed = extra_data.fan_speed
+        self._attr_fan_speed_list = extra_data.fan_speed_list or []
 
 
 class TemplateStateVacuumEntity(TemplateEntity, AbstractTemplateVacuum):

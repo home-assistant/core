@@ -55,7 +55,7 @@ EVENT_COMMON_SCHEMA = probatio.Schema(
     {
         probatio.Optional(CONF_DEVICE_CLASS): DEVICE_CLASS_SCHEMA,
         probatio.Required(CONF_EVENT_TYPE): cv.template,
-        probatio.Required(CONF_EVENT_TYPES): cv.template,
+        probatio.Required(CONF_EVENT_TYPES): tcv.list_or_template(),
     }
 )
 

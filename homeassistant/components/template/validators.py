@@ -19,7 +19,7 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.condition import ConditionsChecker
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.template import Template
+from homeassistant.helpers.template import Template, is_template_string
 from homeassistant.helpers.trace import trace_get
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
@@ -562,3 +562,27 @@ def requires_option(option: str, required_option: str) -> Callable[[dict], dict]
         )
 
     return verify
+
+
+def list_or_template(
+    item_validator: Callable[[Any], Any] = cv.string,
+    wrap_plain_string: bool = False,
+) -> Callable[[Any], list[Any] | Template]:
+    """Validate a static list or a template that renders a list.
+
+    wrap_plain_string turns a string without a template into a single item list.
+    """
+    validate_list = probatio.Schema([item_validator])
+
+    def validate(value: Any) -> list[Any] | Template:
+        if isinstance(value, list):
+            return validate_list(value)
+        if (
+            wrap_plain_string
+            and isinstance(value, str)
+            and not is_template_string(value)
+        ):
+            return validate_list([value])
+        return cv.template(value)
+
+    return validate

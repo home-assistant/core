@@ -149,7 +149,7 @@ async def setup_single_attribute_water_heater(
     hass: HomeAssistant,
     style: ConfigurationStyle,
     attribute: str,
-    attribute_template: str,
+    attribute_template: str | list[str],
     extra_config: dict,
 ) -> None:
     """Do setup of water heater integration."""
@@ -211,6 +211,7 @@ async def test_temperature_template(hass: HomeAssistant, expected: Any) -> None:
             "{{ ['off', 'eco', 'electric'] }}",
             ["off", "eco", "electric"],
         ),
+        (["off", "eco"], ["off", "eco"]),
         ("{{ [] }}", []),
         ("{{ '[]' }}", []),
         ("{{ -3 }}", None),
