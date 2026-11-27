@@ -10,26 +10,6 @@
       "unknown": "Unexpected error occurred."
     },
     "step": {
-      "reconfigure": {
-        "data": {
-          "baud": "Baud rate",
-          "datarate": "Data rate",
-          "device": "Serial device",
-          "frequency": "Frequency (MHz)",
-          "led": "Jeelink LED",
-          "toggle_interval": "Toggle interval",
-          "toggle_mask": "Toggle mask"
-        },
-        "data_description": {
-          "baud": "The receiver communication speed.",
-          "datarate": "The receiver data rate.",
-          "device": "The serial device connected to the receiver.",
-          "frequency": "The receiver frequency.",
-          "led": "Whether the receiver LED is enabled.",
-          "toggle_interval": "The receiver toggle interval.",
-          "toggle_mask": "The receiver toggle mask."
-        }
-      },
       "user": {
         "data": {
           "baud": "Baud rate",
