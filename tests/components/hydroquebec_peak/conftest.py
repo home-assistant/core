@@ -75,8 +75,6 @@ def mock_client() -> Generator[MagicMock]:
         ),
     ):
         client = client_mock.return_value
-        client.get_offer_labels = AsyncMock(
-            return_value={TEST_OFFER: TEST_OFFER, OTHER_OFFER: OTHER_OFFER}
-        )
+        client.get_sector_offers = AsyncMock(return_value=(TEST_OFFER, OTHER_OFFER))
         client.get_events = AsyncMock(return_value=TEST_EVENTS)
         yield client
