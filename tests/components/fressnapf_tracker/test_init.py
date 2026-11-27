@@ -9,12 +9,14 @@ from fressnapftracker import (
 )
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import MockHAClientWebSocket, WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fressnapf_tracker.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.setup import async_setup_component
 
 from .conftest import MOCK_SERIAL_NUMBER
 
@@ -117,7 +119,9 @@ async def test_invalid_tracker(
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert len(issue_registry.issues) == 1
 
-    issue_id = f"invalid_fressnapf_tracker_{MOCK_SERIAL_NUMBER}"
+    issue_id = (
+        f"invalid_fressnapf_tracker_{mock_config_entry.entry_id}_{MOCK_SERIAL_NUMBER}"
+    )
     issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert issue is not None
     assert issue.config_entry_id == mock_config_entry.entry_id
@@ -134,20 +138,118 @@ async def test_invalid_tracker_already_exists(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test that an existing issue is not duplicated."""
+    mock_config_entry.add_to_hass(hass)
     ir.async_create_issue(
         hass,
         DOMAIN,
-        f"invalid_fressnapf_tracker_{MOCK_SERIAL_NUMBER}",
+        f"invalid_fressnapf_tracker_{mock_config_entry.entry_id}_{MOCK_SERIAL_NUMBER}",
+        config_entry_id=mock_config_entry.entry_id,
         is_fixable=False,
         severity=ir.IssueSeverity.WARNING,
         translation_key="invalid_fressnapf_tracker",
         translation_placeholders={"tracker_id": MOCK_SERIAL_NUMBER},
     )
 
-    mock_config_entry.add_to_hass(hass)
-
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert len(issue_registry.issues) == 1
+
+
+@pytest.mark.usefixtures("mock_auth_client", "mock_api_client_malformed_tracker")
+async def test_invalid_tracker_shared_between_entries(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_email_config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test each account sharing an invalid tracker gets its own issue."""
+    mock_email_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(mock_email_config_entry, unique_id="other")
+    mock_config_entry.add_to_hass(hass)
+    entries = (mock_config_entry, mock_email_config_entry)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    for entry in entries:
+        assert entry.state is ConfigEntryState.LOADED
+
+    assert len(issue_registry.issues) == 2
+    for entry in entries:
+        issue = issue_registry.async_get_issue(
+            DOMAIN, f"invalid_fressnapf_tracker_{entry.entry_id}_{MOCK_SERIAL_NUMBER}"
+        )
+        assert issue is not None
+        assert issue.config_entry_id == entry.entry_id
+
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert len(issue_registry.issues) == 1
+    assert issue_registry.async_get_issue(
+        DOMAIN,
+        f"invalid_fressnapf_tracker_{mock_email_config_entry.entry_id}_{MOCK_SERIAL_NUMBER}",
+    )
+
+
+async def _remove_device(
+    ws_client: MockHAClientWebSocket, device_id: str, config_entry_id: str
+) -> bool:
+    """Try to remove a device via the websocket API and return the success."""
+    await ws_client.send_json_auto_id(
+        {
+            "type": "config/device_registry/remove_config_entry",
+            "config_entry_id": config_entry_id,
+            "device_id": device_id,
+        }
+    )
+    response = await ws_client.receive_json()
+    return response["success"]
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_remove_stale_device(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test only devices of trackers that left the account can be removed."""
+    assert await async_setup_component(hass, "config", {})
+    ws_client = await hass_ws_client(hass)
+
+    active = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL_NUMBER), mock_config_entry.entry_id
+    )
+    assert active is not None
+    assert not await _remove_device(ws_client, active.id, mock_config_entry.entry_id)
+    assert device_registry.async_get(active.id) is not None
+
+    stale = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "STALE123")},
+    )
+    assert await _remove_device(ws_client, stale.id, mock_config_entry.entry_id)
+    assert device_registry.async_get(stale.id) is None
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_remove_device_entry_not_loaded(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test no device can be removed while the config entry is not loaded."""
+    assert await async_setup_component(hass, "config", {})
+    ws_client = await hass_ws_client(hass)
+
+    stale = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "STALE123")},
+    )
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+    assert not await _remove_device(ws_client, stale.id, mock_config_entry.entry_id)
+    assert device_registry.async_get(stale.id) is not None

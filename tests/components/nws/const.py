@@ -11,16 +11,12 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
     ATTR_FORECAST_WIND_SPEED,
-    ATTR_WEATHER_HUMIDITY,
-    ATTR_WEATHER_PRESSURE,
-    ATTR_WEATHER_TEMPERATURE,
-    ATTR_WEATHER_VISIBILITY,
-    ATTR_WEATHER_WIND_BEARING,
-    ATTR_WEATHER_WIND_SPEED,
+    WeatherEntityStateAttribute,
 )
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,
+    CONF_LOCATION,
     CONF_LONGITUDE,
     UnitOfLength,
     UnitOfPressure,
@@ -36,8 +32,10 @@ from homeassistant.util.unit_conversion import (
 
 NWS_CONFIG = {
     CONF_API_KEY: "test",
-    CONF_LATITUDE: 35,
-    CONF_LONGITUDE: -75,
+    CONF_LOCATION: {
+        CONF_LATITUDE: 35,
+        CONF_LONGITUDE: -75,
+    },
     CONF_STATION: "ABC",
 }
 
@@ -146,38 +144,38 @@ SENSOR_EXPECTED_OBSERVATION_IMPERIAL = {
 }
 
 WEATHER_EXPECTED_OBSERVATION_IMPERIAL = {
-    ATTR_WEATHER_TEMPERATURE: round(
+    WeatherEntityStateAttribute.TEMPERATURE: round(
         TemperatureConverter.convert(
             10, UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT
         )
     ),
-    ATTR_WEATHER_WIND_BEARING: 180,
-    ATTR_WEATHER_WIND_SPEED: round(
+    WeatherEntityStateAttribute.WIND_BEARING: 180,
+    WeatherEntityStateAttribute.WIND_SPEED: round(
         SpeedConverter.convert(
             10, UnitOfSpeed.KILOMETERS_PER_HOUR, UnitOfSpeed.MILES_PER_HOUR
         ),
         2,
     ),
-    ATTR_WEATHER_PRESSURE: round(
+    WeatherEntityStateAttribute.PRESSURE: round(
         PressureConverter.convert(100000, UnitOfPressure.PA, UnitOfPressure.INHG), 2
     ),
-    ATTR_WEATHER_VISIBILITY: round(
+    WeatherEntityStateAttribute.VISIBILITY: round(
         DistanceConverter.convert(10000, UnitOfLength.METERS, UnitOfLength.MILES), 2
     ),
-    ATTR_WEATHER_HUMIDITY: 10,
+    WeatherEntityStateAttribute.HUMIDITY: 10,
 }
 
 WEATHER_EXPECTED_OBSERVATION_METRIC = {
-    ATTR_WEATHER_TEMPERATURE: 10,
-    ATTR_WEATHER_WIND_BEARING: 180,
-    ATTR_WEATHER_WIND_SPEED: 10,
-    ATTR_WEATHER_PRESSURE: round(
+    WeatherEntityStateAttribute.TEMPERATURE: 10,
+    WeatherEntityStateAttribute.WIND_BEARING: 180,
+    WeatherEntityStateAttribute.WIND_SPEED: 10,
+    WeatherEntityStateAttribute.PRESSURE: round(
         PressureConverter.convert(100000, UnitOfPressure.PA, UnitOfPressure.HPA)
     ),
-    ATTR_WEATHER_VISIBILITY: round(
+    WeatherEntityStateAttribute.VISIBILITY: round(
         DistanceConverter.convert(10000, UnitOfLength.METERS, UnitOfLength.KILOMETERS)
     ),
-    ATTR_WEATHER_HUMIDITY: 10,
+    WeatherEntityStateAttribute.HUMIDITY: 10,
 }
 
 NONE_OBSERVATION = dict.fromkeys(DEFAULT_OBSERVATION)

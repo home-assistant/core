@@ -3,6 +3,7 @@
 from nibe.connection import Connection
 from nibe.connection.modbus import Modbus
 from nibe.connection.nibegw import NibeGW, ProductInfo
+from nibe.exceptions import AddressInUseException, ModbusUrlException
 from nibe.heatpump import HeatPump, Model
 
 from homeassistant.const import (
@@ -12,8 +13,13 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.exceptions import (
+    ConfigEntryError,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
+from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_CONNECTION_TYPE,
@@ -28,11 +34,15 @@ from .const import (
     DOMAIN,
 )
 from .coordinator import CoilCoordinator, NibeHeatpumpConfigEntry
+from .http import LogSetView
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.CLIMATE,
+    Platform.IMAGE,
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
@@ -40,6 +50,12 @@ PLATFORMS: list[Platform] = [
     Platform.WATER_HEATER,
 ]
 COIL_READ_RETRIES = 5
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Nibe Heat Pump integration."""
+    hass.http.register_view(LogSetView)
+    return True
 
 
 async def async_setup_entry(
@@ -63,13 +79,29 @@ async def async_setup_entry(
             listening_port=entry.data[CONF_LISTENING_PORT],
         )
     elif connection_type == CONF_CONNECTION_TYPE_MODBUS:
-        connection = Modbus(
-            heatpump, entry.data[CONF_MODBUS_URL], entry.data[CONF_MODBUS_UNIT]
-        )
+        try:
+            connection = Modbus(
+                heatpump, entry.data[CONF_MODBUS_URL], entry.data[CONF_MODBUS_UNIT]
+            )
+        except ModbusUrlException as err:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="modbus_url_invalid",
+                translation_placeholders={"url": entry.data[CONF_MODBUS_URL]},
+            ) from err
     else:
         raise HomeAssistantError(f"Connection type {connection_type} is not supported.")
 
-    await connection.start()
+    try:
+        await connection.start()
+    except AddressInUseException as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="address_in_use",
+            translation_placeholders={
+                "port": str(entry.data.get(CONF_LISTENING_PORT, ""))
+            },
+        ) from err
 
     assert heatpump.model
 
@@ -85,13 +117,11 @@ async def async_setup_entry(
     entry.runtime_data = coordinator
 
     reg = dr.async_get(hass)
-    device_entry = reg.async_get_or_create_device(
+    device_entry = reg.async_get_or_create(
         config_entry_id=entry.entry_id,
-        device_info=dr.DeviceInfo(
-            identifiers={(DOMAIN, entry.unique_id or entry.entry_id)},
-            manufacturer="NIBE Energy Systems",
-            name=heatpump.model.name,
-        ),
+        identifiers={(DOMAIN, entry.unique_id or entry.entry_id)},
+        manufacturer="NIBE Energy Systems",
+        name=heatpump.model.name,
     )
 
     def _on_product_info(product_info: ProductInfo):

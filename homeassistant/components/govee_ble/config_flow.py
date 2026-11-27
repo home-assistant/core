@@ -57,7 +57,6 @@ class GoveeConfigFlow(ConfigFlow, domain=DOMAIN):
                 title=title, data={CONF_DEVICE_TYPE: device.device_type}
             )
 
-        self._set_confirm_only()
         placeholders = {"name": title}
         self.context["title_placeholders"] = placeholders
         return self.async_show_form(

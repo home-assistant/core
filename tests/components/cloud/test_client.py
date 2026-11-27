@@ -469,6 +469,17 @@ async def test_system_msg(hass: HomeAssistant) -> None:
     assert cloud.client.relayer_region == "xx-earth-616"
 
 
+@pytest.mark.parametrize("ssl_peer_certificate", [None, "/ssl/client_ca.pem"])
+async def test_remote_ssl_peer_certificate(
+    hass: HomeAssistant, ssl_peer_certificate: str | None
+) -> None:
+    """Test the remote connection requires the certificate the HTTP config sets."""
+    hass.http = Mock(remote_ssl_peer_certificate=ssl_peer_certificate)
+    client = CloudClient(hass, MagicMock(), None, {}, {})
+
+    assert client.remote_ssl_peer_certificate == ssl_peer_certificate
+
+
 async def test_cloud_connection_info(hass: HomeAssistant) -> None:
     """Test connection info msg."""
     with (
@@ -513,6 +524,7 @@ async def test_async_create_repair_issue_known(
         translation_key=translation_key,
         placeholders={
             "account_url": "http://example.org",
+            "ca_file": "/ssl/client_ca.pem",
             "custom_domains": "example.com",
         },
         severity="warning",
@@ -554,6 +566,7 @@ async def test_async_delete_repair_issue(
         active=True,
         breaks_in_ha_version=None,
         config_entry_id=None,
+        config_subentry_id=None,
         created=dt_util.utcnow(),
         data={},
         dismissed_version=None,

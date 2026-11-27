@@ -187,11 +187,10 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     async def setup_entry(
         _hass: HomeAssistant,
         entry: ConfigEntry,
-    ) -> bool:
+    ) -> None:
         runtime_data = MagicMock()
         runtime_data.async_shutdown = AsyncMock()
         entry.runtime_data = runtime_data
-        return True
 
     with patch(
         "homeassistant.components.specialized_turbo.async_setup_entry",

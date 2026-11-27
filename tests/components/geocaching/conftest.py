@@ -28,7 +28,7 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.geocaching.async_setup_entry", return_value=True
+        "homeassistant.components.geocaching.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup
 
@@ -46,3 +46,38 @@ def mock_geocaching_config_flow() -> Generator[MagicMock]:
         geocachingapi = geocaching_mock.return_value
         geocachingapi.update.return_value = mock_status
         yield geocachingapi
+
+
+@pytest.fixture
+def mock_oauth_session() -> Generator[MagicMock]:
+    """Patch the OAuth2 session used when setting up the coordinator."""
+    session = MagicMock()
+    session.token = {"access_token": "mock-token"}
+
+    with (
+        patch(
+            "homeassistant.components.geocaching.async_get_config_entry_implementation",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.components.geocaching.OAuth2Session",
+            return_value=session,
+        ),
+    ):
+        yield session
+
+
+@pytest.fixture
+def mock_geocaching_api() -> Generator[MagicMock]:
+    """Return the mocked Geocaching API used by the coordinator.
+
+    The ``update`` mock can be reconfigured per test (``return_value`` or
+    ``side_effect``) to simulate successive, realistic API responses.
+    """
+    with patch(
+        "homeassistant.components.geocaching.coordinator.GeocachingApi"
+    ) as geocaching_api_mock:
+        geocaching_api_mock.return_value.update = AsyncMock(
+            return_value=GeocachingStatus()
+        )
+        yield geocaching_api_mock.return_value

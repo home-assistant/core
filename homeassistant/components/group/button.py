@@ -7,16 +7,16 @@ import probatio
 from homeassistant.components.button import (
     DOMAIN as BUTTON_DOMAIN,
     PLATFORM_SCHEMA as BUTTON_PLATFORM_SCHEMA,
-    SERVICE_PRESS,
     ButtonEntity,
+    ButtonService,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_ENTITIES,
     CONF_NAME,
     CONF_UNIQUE_ID,
     STATE_UNAVAILABLE,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
@@ -26,6 +26,7 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .const import GroupEntityStateAttribute
 from .entity import GroupEntity
 
 DEFAULT_NAME = "Button group"
@@ -108,7 +109,9 @@ class ButtonGroup(GroupEntity, ButtonEntity):
         """Initialize a button group."""
         self._entity_ids = entity_ids
         self._attr_name = name
-        self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_ids}
+        self._attr_extra_state_attributes = {
+            GroupEntityStateAttribute.ENTITY_ID: entity_ids
+        }
         self._attr_unique_id = unique_id
 
     @override
@@ -116,8 +119,8 @@ class ButtonGroup(GroupEntity, ButtonEntity):
         """Forward the press to all buttons in the group."""
         await self.hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: self._entity_ids},
+            ButtonService.PRESS,
+            {TargetKey.ENTITY_ID: self._entity_ids},
             blocking=True,
             context=self._context,
         )

@@ -350,7 +350,7 @@ async def test_setup_dependencies_platform(hass: HomeAssistant) -> None:
 
 async def test_setup_entry(hass: HomeAssistant) -> None:
     """Test setup entry calls async_setup_entry on platform."""
-    mock_setup_entry = AsyncMock(return_value=True)
+    mock_setup_entry = AsyncMock(return_value=None)
     mock_platform(
         hass,
         "entry_domain.test_domain",
@@ -381,7 +381,7 @@ async def test_setup_entry_platform_not_exist(hass: HomeAssistant) -> None:
 
 async def test_setup_entry_fails_duplicate(hass: HomeAssistant) -> None:
     """Test we don't allow setting up a config entry twice."""
-    mock_setup_entry = AsyncMock(return_value=True)
+    mock_setup_entry = AsyncMock(return_value=None)
     mock_platform(
         hass,
         "entry_domain.test_domain",
@@ -405,7 +405,7 @@ async def test_setup_entry_fails_duplicate(hass: HomeAssistant) -> None:
 
 async def test_unload_entry_resets_platform(hass: HomeAssistant) -> None:
     """Test unloading an entry removes all entities."""
-    mock_setup_entry = AsyncMock(return_value=True)
+    mock_setup_entry = AsyncMock(return_value=None)
     mock_platform(
         hass,
         "entry_domain.test_domain",
@@ -919,7 +919,7 @@ async def test_reset_preserves_only_component_platform(hass: HomeAssistant) -> N
     mock_platform(
         hass,
         "entry_domain.test_domain",
-        MockPlatform(async_setup_entry=AsyncMock(return_value=True)),
+        MockPlatform(async_setup_entry=AsyncMock(return_value=None)),
     )
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     entries = [MockConfigEntry(domain="entry_domain") for _ in range(2)]

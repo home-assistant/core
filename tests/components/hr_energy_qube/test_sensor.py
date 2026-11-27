@@ -13,13 +13,14 @@ from pytest_homeassistant.common import (
 from python_qube_heatpump import StatusCode
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -103,3 +104,50 @@ async def test_status_sensor(
     state = hass.states.get("sensor.qube_heat_pump_heat_pump_status")
     assert state is not None
     assert state.state == expected
+
+
+async def test_room_temperature_without_room_sensor(
+    hass: HomeAssistant,
+    mock_qube_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the room temperature sensor is not created without a room sensor."""
+    mock_qube_client.get_all_data.return_value.roomprb_en = False
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.qube_heat_pump_room_temperature") is None
+    assert hass.states.get("sensor.qube_heat_pump_outside_temperature") is not None
+
+
+async def test_room_temperature_missing_value(
+    hass: HomeAssistant,
+    mock_qube_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the room temperature is unknown when the controller reports -999.9."""
+    mock_qube_client.get_all_data.return_value.temp_room = -999.9
+
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("sensor.qube_heat_pump_room_temperature")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize("number", [1, 2, 3])
+async def test_heater_working_hours_disabled_by_default(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_qube_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    number: int,
+) -> None:
+    """Test the heater working hours sensors are disabled by default."""
+    await setup_integration(hass, mock_config_entry)
+
+    entity_id = f"sensor.qube_heat_pump_working_hours_heater_{number}"
+    entry = entity_registry.async_get(entity_id)
+    assert entry is not None
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    assert hass.states.get(entity_id) is None

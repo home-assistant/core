@@ -56,12 +56,15 @@ from .const import (
     SERVICE_SNAPSHOT,
     CameraEntityFeature,
     CameraEntityStateAttribute,
+    CameraService,
+    CameraServiceArgument,
     CameraState,
     StreamType,
 )
 from .entity import (
     Camera,
     CameraCapabilities,
+    CameraEntityCapabilities,
     CameraEntityDescription,
     async_get_still_stream,
 )
@@ -125,10 +128,13 @@ __all__ = [
     "TOKEN_CHANGE_INTERVAL",
     "Camera",
     "CameraCapabilities",
+    "CameraEntityCapabilities",
     "CameraEntityDescription",
     "CameraEntityFeature",
     "CameraEntityStateAttribute",
     "CameraImageView",
+    "CameraService",
+    "CameraServiceArgument",
     "CameraState",
     "CameraView",
     "CameraWebRTCProvider",
@@ -206,7 +212,10 @@ async def _async_get_image(
 
                 return image
 
-    raise HomeAssistantError("Unable to get image")
+    raise HomeAssistantError(
+        translation_domain=DOMAIN,
+        translation_key="image_unavailable",
+    )
 
 
 async def async_get_image(

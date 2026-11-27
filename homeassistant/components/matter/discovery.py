@@ -10,6 +10,7 @@ from homeassistant.core import callback
 
 from .binary_sensor import DISCOVERY_SCHEMAS as BINARY_SENSOR_SCHEMAS
 from .button import DISCOVERY_SCHEMAS as BUTTON_SCHEMAS
+from .camera import DISCOVERY_SCHEMAS as CAMERA_SCHEMAS
 from .climate import DISCOVERY_SCHEMAS as CLIMATE_SENSOR_SCHEMAS
 from .const import CLUSTER_REVISION_ATTRIBUTE_ID, FEATUREMAP_ATTRIBUTE_ID
 from .cover import DISCOVERY_SCHEMAS as COVER_SCHEMAS
@@ -31,6 +32,7 @@ from .water_heater import DISCOVERY_SCHEMAS as WATER_HEATER_SCHEMAS
 DISCOVERY_SCHEMAS: dict[Platform, list[MatterDiscoverySchema]] = {
     Platform.BINARY_SENSOR: BINARY_SENSOR_SCHEMAS,
     Platform.BUTTON: BUTTON_SCHEMAS,
+    Platform.CAMERA: CAMERA_SCHEMAS,
     Platform.CLIMATE: CLIMATE_SENSOR_SCHEMAS,
     Platform.COVER: COVER_SCHEMAS,
     Platform.EVENT: EVENT_SCHEMAS,
@@ -86,7 +88,7 @@ def _matches_cluster_revision(
 
 @callback
 def async_discover_entities(
-    endpoint: MatterEndpoint,
+    endpoint: MatterEndpoint, server_schema: int
 ) -> Generator[MatterEntityInfo]:
     """Run discovery on MatterEndpoint and return matching MatterEntityInfo(s)."""
     discovered_attributes: set[type[ClusterAttributeDescriptor]] = set()
@@ -94,6 +96,13 @@ def async_discover_entities(
     for schema in iter_schemas():
         # abort if attribute(s) already discovered
         if any(x in schema.required_attributes for x in discovered_attributes):
+            continue
+
+        # check minimum server schema version
+        if (
+            schema.server_schema_min is not None
+            and server_schema < schema.server_schema_min
+        ):
             continue
 
         primary_attribute = schema.required_attributes[0]

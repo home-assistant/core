@@ -7,6 +7,17 @@
       "cannot_connect": "Failed to connect to server. Please re-check the server edition and server address and try again."
     },
     "step": {
+      "reconfigure": {
+        "data": {
+          "address": "[%key:component::minecraft_server::config::step::user::data::address%]",
+          "type": "[%key:component::minecraft_server::config::step::user::data::type%]"
+        },
+        "data_description": {
+          "address": "[%key:component::minecraft_server::config::step::user::data_description::address%]",
+          "type": "[%key:component::minecraft_server::config::step::user::data_description::type%]"
+        },
+        "description": "Update the configuration for your Minecraft server."
+      },
       "user": {
         "data": {
           "address": "Server address",

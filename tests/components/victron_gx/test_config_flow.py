@@ -78,7 +78,8 @@ def ssdp_discovery_info(token_pairing: str = "0") -> SsdpServiceInfo:
 def mock_victron_hub():
     """Mock the Victron Hub."""
     with patch(
-        "homeassistant.components.victron_gx.config_flow.VictronVenusHub"
+        "homeassistant.components.victron_gx.config_flow.VictronVenusHub",
+        autospec=True,
     ) as mock_hub:
         hub_instance = MagicMock()
         hub_instance.connect = AsyncMock()
@@ -118,8 +119,6 @@ async def test_user_flow_full_config(hass: HomeAssistant) -> None:
         CONF_USERNAME: "test-username",
         CONF_PASSWORD: "test-password",
         CONF_SSL: False,
-        CONF_SERIAL: None,
-        CONF_MODEL: None,
         CONF_INSTALLATION_ID: MOCK_INSTALLATION_ID,
     }
 
@@ -149,8 +148,6 @@ async def test_user_flow_minimal_config(hass: HomeAssistant) -> None:
         CONF_HOST: MOCK_HOST,
         CONF_PORT: DEFAULT_PORT,
         CONF_SSL: False,
-        CONF_SERIAL: None,
-        CONF_MODEL: None,
         CONF_INSTALLATION_ID: MOCK_INSTALLATION_ID,
     }
 
@@ -265,9 +262,7 @@ async def test_ssdp_flow_success(hass: HomeAssistant) -> None:
     assert result["data"] == {
         CONF_HOST: MOCK_HOST,
         CONF_PORT: DEFAULT_SSL_PORT,
-        CONF_SERIAL: MOCK_SERIAL,
         CONF_INSTALLATION_ID: MOCK_INSTALLATION_ID,
-        CONF_MODEL: MOCK_MODEL,
         CONF_SSL: True,
     }
 
@@ -404,9 +399,7 @@ async def test_ssdp_flow_auth_required(
     assert result["data"] == {
         CONF_HOST: MOCK_HOST,
         CONF_PORT: DEFAULT_SSL_PORT,
-        CONF_SERIAL: MOCK_SERIAL,
         CONF_INSTALLATION_ID: MOCK_INSTALLATION_ID,
-        CONF_MODEL: MOCK_MODEL,
         CONF_USERNAME: "remoteconsole",
         CONF_PASSWORD: "test-password",
         CONF_SSL: True,
@@ -485,9 +478,7 @@ async def test_ssdp_auth_invalid_credentials(
     assert result["data"] == {
         CONF_HOST: MOCK_HOST,
         CONF_PORT: DEFAULT_PORT,
-        CONF_SERIAL: MOCK_SERIAL,
         CONF_INSTALLATION_ID: MOCK_INSTALLATION_ID,
-        CONF_MODEL: MOCK_MODEL,
         CONF_USERNAME: "remoteconsole",
         CONF_PASSWORD: "test-password",
         CONF_SSL: False,
@@ -1208,9 +1199,7 @@ async def test_ssdp_token_pairing_success(
     assert result["data"] == {
         CONF_HOST: MOCK_HOST,
         CONF_PORT: DEFAULT_SSL_PORT,
-        CONF_SERIAL: MOCK_SERIAL,
         CONF_INSTALLATION_ID: MOCK_INSTALLATION_ID,
-        CONF_MODEL: MOCK_MODEL,
         CONF_MQTT_TOKEN_PAIRING: True,
         CONF_USERNAME: "token/homeassistant/homeassistant_abc123",
         CONF_PASSWORD: "generated-password",

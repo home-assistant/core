@@ -25,14 +25,10 @@ from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_MESSAGE,
     DOMAIN as NOTIFY_DOMAIN,
-    SERVICE_SEND_MESSAGE,
+    NotifyService,
+    NotifyServiceArgument,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -125,6 +121,69 @@ async def test_notification_options(
     assert frame.text == "The secret of getting ahead is getting started"
 
 
+@pytest.mark.parametrize("repeat", [0, 3])
+async def test_notification_sound_repeat(
+    hass: HomeAssistant,
+    mock_lametric: MagicMock,
+    repeat: int,
+) -> None:
+    """Test the sound repeat count is passed to the device."""
+    await hass.services.async_call(
+        NOTIFY_DOMAIN,
+        NOTIFY_SERVICE,
+        {
+            ATTR_MESSAGE: "Meow!",
+            ATTR_DATA: {"sound": "positive1", "repeat": repeat},
+        },
+        blocking=True,
+    )
+
+    assert len(mock_lametric.notify.mock_calls) == 1
+
+    notification: Notification = mock_lametric.notify.mock_calls[0][2]["notification"]
+    assert notification.model.sound is not None
+    assert notification.model.sound.sound is NotificationSound.POSITIVE1
+    assert notification.model.sound.repeat == repeat
+
+
+@pytest.mark.parametrize(
+    "sound_data",
+    [
+        pytest.param({"sound": "positive1"}, id="sound"),
+        # The count is refused even when it cannot apply to the sound at all,
+        # like a URL that has no fallback.
+        pytest.param({"sound_url": "https://example.com/doorbell.mp3"}, id="sound_url"),
+    ],
+)
+@pytest.mark.parametrize(
+    "repeat",
+    [
+        pytest.param(None, id="none"),
+        pytest.param("abc", id="string"),
+        pytest.param(-1, id="negative"),
+    ],
+)
+async def test_notification_invalid_repeat(
+    hass: HomeAssistant,
+    mock_lametric: MagicMock,
+    sound_data: dict[str, str],
+    repeat: int | str | None,
+) -> None:
+    """Test an invalid sound repeat count is refused without calling the device."""
+    with pytest.raises(ServiceValidationError, match="Invalid repeat value"):
+        await hass.services.async_call(
+            NOTIFY_DOMAIN,
+            NOTIFY_SERVICE,
+            {
+                ATTR_MESSAGE: "Meow!",
+                ATTR_DATA: {**sound_data, "repeat": repeat},
+            },
+            blocking=True,
+        )
+
+    mock_lametric.notify.assert_not_called()
+
+
 async def test_notification_unknown_sound(
     hass: HomeAssistant,
     mock_lametric: MagicMock,
@@ -183,10 +242,10 @@ async def test_send_message(
     """Test sending a message through the LaMetric notify entity."""
     await hass.services.async_call(
         NOTIFY_DOMAIN,
-        SERVICE_SEND_MESSAGE,
+        NotifyService.SEND_MESSAGE,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_MESSAGE: "The way to get started is to quit talking and begin doing",
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            NotifyServiceArgument.MESSAGE: "The way to get started is to quit talking and begin doing",
         },
         blocking=True,
     )
@@ -240,10 +299,10 @@ async def test_send_message_error(
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             NOTIFY_DOMAIN,
-            SERVICE_SEND_MESSAGE,
+            NotifyService.SEND_MESSAGE,
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_MESSAGE: "It's failure that gives you the proper perspective",
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                NotifyServiceArgument.MESSAGE: "It's failure that gives you the proper perspective",
             },
             blocking=True,
         )
@@ -290,11 +349,17 @@ async def test_notification_unknown_sound_without_audio(
     mock_lametric.notify.assert_not_called()
 
 
+@pytest.mark.parametrize("repeat", [1, 3])
 async def test_notification_sound_url(
     hass: HomeAssistant,
     mock_lametric: MagicMock,
+    repeat: int,
 ) -> None:
-    """Test sending a notification with a sound from a URL, and a fallback."""
+    """Test sending a notification with a sound from a URL, and a fallback.
+
+    The device API cannot repeat a sound fetched from a URL, so the count
+    applies to the fallback only.
+    """
     await hass.services.async_call(
         NOTIFY_DOMAIN,
         NOTIFY_SERVICE,
@@ -303,6 +368,7 @@ async def test_notification_sound_url(
             ATTR_DATA: {
                 "sound_url": "https://example.com/doorbell.mp3",
                 "sound": "cat",
+                "repeat": repeat,
             },
         },
         blocking=True,
@@ -311,7 +377,7 @@ async def test_notification_sound_url(
     notification: Notification = mock_lametric.notify.mock_calls[0][2]["notification"]
     assert notification.model.sound == SoundURL(
         url="https://example.com/doorbell.mp3",
-        fallback=Sound(sound=NotificationSound.CAT),
+        fallback=Sound(sound=NotificationSound.CAT, repeat=repeat),
     )
 
 

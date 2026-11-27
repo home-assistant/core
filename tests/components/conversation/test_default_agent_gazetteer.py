@@ -114,8 +114,8 @@ async def test_recognizes_a_misheard_name(hass: HomeAssistant) -> None:
         language="en",
         agent_id=conversation.HOME_ASSISTANT_AGENT,
     )
-    hassil_result = await agent.async_recognize_intent(user_input)
-    assert hassil_result is None or hassil_result.unmatched_entities
+    hassil_results = await agent.async_recognize_intents(user_input)
+    assert not hassil_results or hassil_results[0].unmatched_entities
 
     result = await conversation.async_converse(
         hass, "turn on the kichen lights", None, Context(), None
@@ -214,7 +214,7 @@ async def test_not_used_when_prefer_local_intents(hass: HomeAssistant) -> None:
         agent_id=conversation.HOME_ASSISTANT_AGENT,
     )
     with (
-        chat_session.async_get_chat_session(hass) as session,
+        chat_session.async_get_chat_session(hass, context=None) as session,
         async_get_chat_log(hass, session, user_input) as chat_log,
     ):
         assert await agent.async_handle_intents(user_input, chat_log) is None

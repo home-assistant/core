@@ -32,7 +32,7 @@ def _patch_success() -> Generator[None]:
             return_value="myhouse",
         ),
         patch("homeassistant.components.nexia.config_flow.NexiaHome.login"),
-        patch("homeassistant.components.nexia.async_setup_entry", return_value=True),
+        patch("homeassistant.components.nexia.async_setup_entry", return_value=None),
     ):
         yield
 
@@ -58,7 +58,7 @@ async def test_form(hass: HomeAssistant, brand) -> None:
         ),
         patch(
             "homeassistant.components.nexia.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -272,7 +272,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
             "homeassistant.components.nexia.config_flow.NexiaHome.get_name",
             return_value="myhouse",
         ),
-        patch("homeassistant.components.nexia.async_setup_entry", return_value=True),
+        patch("homeassistant.components.nexia.async_setup_entry", return_value=None),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_PASSWORD: "new_password"}
@@ -333,7 +333,7 @@ async def test_reauth_errors(
             "homeassistant.components.nexia.config_flow.NexiaHome.get_name",
             return_value="myhouse",
         ),
-        patch("homeassistant.components.nexia.async_setup_entry", return_value=True),
+        patch("homeassistant.components.nexia.async_setup_entry", return_value=None),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_PASSWORD: "new_password"}

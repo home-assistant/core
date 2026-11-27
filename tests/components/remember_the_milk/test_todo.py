@@ -25,7 +25,7 @@ from homeassistant.components.todo import (
     TodoServices,
 )
 from homeassistant.config_entries import ConfigSubentryDataWithId
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
@@ -157,7 +157,7 @@ async def test_create_todo_item(
     await hass.services.async_call(
         TODO_DOMAIN,
         TodoServices.ADD_ITEM,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_ITEM: "Buy butter"},
+        {TargetKey.ENTITY_ID: ENTITY_ID, ATTR_ITEM: "Buy butter"},
         blocking=True,
     )
 
@@ -184,7 +184,7 @@ async def test_create_todo_item_with_due_date(
         TODO_DOMAIN,
         TodoServices.ADD_ITEM,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
+            TargetKey.ENTITY_ID: ENTITY_ID,
             ATTR_ITEM: "Buy butter",
             ATTR_DUE_DATE: "2024-03-15",
         },
@@ -216,7 +216,7 @@ async def test_create_todo_item_with_description(
         TODO_DOMAIN,
         TodoServices.ADD_ITEM,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
+            TargetKey.ENTITY_ID: ENTITY_ID,
             ATTR_ITEM: "Buy butter",
             ATTR_DESCRIPTION: "Full fat please",
         },
@@ -258,7 +258,7 @@ async def test_update_todo_item_rename(
     await hass.services.async_call(
         TODO_DOMAIN,
         TodoServices.UPDATE_ITEM,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_ITEM: uid, ATTR_RENAME: new_name},
+        {TargetKey.ENTITY_ID: ENTITY_ID, ATTR_ITEM: uid, ATTR_RENAME: new_name},
         blocking=True,
     )
 
@@ -326,7 +326,7 @@ async def test_update_todo_item_status(
     await hass.services.async_call(
         TODO_DOMAIN,
         TodoServices.UPDATE_ITEM,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_ITEM: uid, ATTR_STATUS: target_status},
+        {TargetKey.ENTITY_ID: ENTITY_ID, ATTR_ITEM: uid, ATTR_STATUS: target_status},
         blocking=True,
     )
 
@@ -360,7 +360,7 @@ async def test_delete_todo_items(
     await hass.services.async_call(
         TODO_DOMAIN,
         TodoServices.REMOVE_ITEM,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_ITEM: [uid1, uid2]},
+        {TargetKey.ENTITY_ID: ENTITY_ID, ATTR_ITEM: [uid1, uid2]},
         blocking=True,
     )
 
@@ -408,7 +408,7 @@ async def test_update_todo_item_set_due_date(
     await hass.services.async_call(
         TODO_DOMAIN,
         TodoServices.UPDATE_ITEM,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_ITEM: uid, ATTR_DUE_DATE: new_due_str},
+        {TargetKey.ENTITY_ID: ENTITY_ID, ATTR_ITEM: uid, ATTR_DUE_DATE: new_due_str},
         blocking=True,
     )
 
@@ -439,7 +439,7 @@ async def test_update_todo_item_add_description(
         TODO_DOMAIN,
         TodoServices.UPDATE_ITEM,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
+            TargetKey.ENTITY_ID: ENTITY_ID,
             ATTR_ITEM: uid,
             ATTR_DESCRIPTION: "Organic if possible",
         },
@@ -487,7 +487,11 @@ async def test_update_todo_item_edit_description(
     await hass.services.async_call(
         TODO_DOMAIN,
         TodoServices.UPDATE_ITEM,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_ITEM: uid, ATTR_DESCRIPTION: new_description},
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ATTR_ITEM: uid,
+            ATTR_DESCRIPTION: new_description,
+        },
         blocking=True,
     )
 
@@ -521,7 +525,7 @@ async def test_update_todo_item_delete_description(
     await hass.services.async_call(
         TODO_DOMAIN,
         TodoServices.UPDATE_ITEM,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_ITEM: uid, ATTR_DESCRIPTION: ""},
+        {TargetKey.ENTITY_ID: ENTITY_ID, ATTR_ITEM: uid, ATTR_DESCRIPTION: ""},
         blocking=True,
     )
 
@@ -561,7 +565,7 @@ async def test_update_todo_item_empty_note_preserved(
         TODO_DOMAIN,
         TodoServices.UPDATE_ITEM,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
+            TargetKey.ENTITY_ID: ENTITY_ID,
             ATTR_ITEM: uid,
             ATTR_STATUS: TodoItemStatus.COMPLETED,
         },
@@ -628,7 +632,7 @@ async def test_todo_item_api_errors(
         await hass.services.async_call(
             TODO_DOMAIN,
             TodoServices.ADD_ITEM,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_ITEM: "Buy butter"},
+            {TargetKey.ENTITY_ID: ENTITY_ID, ATTR_ITEM: "Buy butter"},
             blocking=True,
         )
     assert exc_info.value.translation_key == translation_key

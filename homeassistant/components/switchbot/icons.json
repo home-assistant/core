@@ -15,6 +15,9 @@
       "previous_image": {
         "default": "mdi:skip-previous"
       },
+      "random_image": {
+        "default": "mdi:shuffle-variant"
+      },
       "reset_filter_usage": {
         "default": "mdi:restart"
       }
@@ -236,6 +239,9 @@
   "services": {
     "add_password": {
       "service": "mdi:key-plus"
+    },
+    "get_keypad_info": {
+      "service": "mdi:information-outline"
     }
   }
 }

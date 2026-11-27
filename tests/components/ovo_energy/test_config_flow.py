@@ -40,7 +40,7 @@ def _patch_success() -> Generator[None]:
         ),
         patch(
             "homeassistant.components.ovo_energy.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         yield
@@ -144,7 +144,7 @@ async def test_full_flow_implementation(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.ovo_energy.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result2 = await hass.config_entries.flow.async_configure(

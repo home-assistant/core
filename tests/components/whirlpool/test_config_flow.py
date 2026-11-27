@@ -68,7 +68,7 @@ def assert_successful_reauth_flow(
 def fixture_mock_whirlpool_setup_entry():
     """Set up async_setup_entry fixture."""
     with patch(
-        "homeassistant.components.whirlpool.async_setup_entry", return_value=True
+        "homeassistant.components.whirlpool.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -224,7 +224,16 @@ async def test_already_configured(
 
 
 @pytest.mark.parametrize(
-    "appliance_type", ["aircons", "washers", "dryers", "ovens", "refrigerators"]
+    "appliance_type",
+    [
+        "aircons",
+        "washers",
+        "dryers",
+        "ovens",
+        "microwaves",
+        "refrigerators",
+        "unsupported_appliances",
+    ],
 )
 async def test_no_appliances_flow(
     hass: HomeAssistant,
@@ -249,7 +258,9 @@ async def test_no_appliances_flow(
     mock_appliances_manager_api.return_value.washers = []
     mock_appliances_manager_api.return_value.dryers = []
     mock_appliances_manager_api.return_value.ovens = []
+    mock_appliances_manager_api.return_value.microwaves = []
     mock_appliances_manager_api.return_value.refrigerators = []
+    mock_appliances_manager_api.return_value.unsupported_appliances = []
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], CONFIG_INPUT | {CONF_REGION: region[0], CONF_BRAND: brand[0]}
     )

@@ -1,6 +1,7 @@
 sync_clock:
   fields:
     config_entry:
+      required: true
       selector:
         config_entry:
           integration: velbus
@@ -8,6 +9,7 @@ sync_clock:
 scan:
   fields:
     config_entry:
+      required: true
       selector:
         config_entry:
           integration: velbus
@@ -15,6 +17,7 @@ scan:
 clear_cache:
   fields:
     config_entry:
+      required: true
       selector:
         config_entry:
           integration: velbus
@@ -28,6 +31,7 @@ clear_cache:
 set_memo_text:
   fields:
     config_entry:
+      required: true
       selector:
         config_entry:
           integration: velbus

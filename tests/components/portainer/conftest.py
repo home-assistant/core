@@ -1,7 +1,7 @@
 """Common fixtures for the portainer tests."""
 
 from collections.abc import AsyncGenerator, Generator
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import DEFAULT, AsyncMock, MagicMock, patch
 
 from pyportainer import PortainerEventListener
 from pyportainer.models.docker import (
@@ -28,7 +28,8 @@ from pytest_homeassistant.common import (
     load_json_value_fixture,
 )
 
-from homeassistant.components.portainer.const import DOMAIN
+from homeassistant.components.portainer.const import DOMAIN, SUBENTRY_TYPE_ENVIRONMENT
+from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import CONF_API_TOKEN, CONF_URL, CONF_VERIFY_SSL
 
 MOCK_TEST_CONFIG = {
@@ -41,13 +42,16 @@ TEST_ENTRY = "portainer_test_entry_123"
 TEST_INSTANCE_ID = "299ab403-70a8-4c05-92f7-bf7a994d50df"
 TEST_CONTAINER_NAME = "practical_morse"
 TEST_CONTAINER_ID = "ee20facfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf"
+STOPPED_CONTAINER_ID = (
+    "cc08facfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf"
+)
 
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.portainer.async_setup_entry", return_value=True
+        "homeassistant.components.portainer.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -110,8 +114,13 @@ def mock_portainer_client(mock_portainer_watcher: MagicMock) -> Generator[AsyncM
         client.docker_system_df.return_value = DockerSystemDF.from_dict(
             load_json_value_fixture("docker_system_df.json", DOMAIN)
         )
-        client.inspect_container.return_value = DockerInspect.from_dict(
-            load_json_value_fixture("container_inspect.json", DOMAIN)
+        inspect = load_json_value_fixture("container_inspect.json", DOMAIN)
+        client.inspect_container.return_value = DockerInspect.from_dict(inspect)
+        inspect["State"].update(Status="exited", Running=False, ExitCode=137)
+        stopped_inspect = DockerInspect.from_dict(inspect)
+        # Falls back to return_value, so tests can still override it
+        client.inspect_container.side_effect = lambda endpoint_id, container_id: (
+            stopped_inspect if container_id == STOPPED_CONTAINER_ID else DEFAULT
         )
         client.get_image.return_value = LocalImageInformation.from_dict(
             load_json_value_fixture("local_image_information.json", DOMAIN)
@@ -196,4 +205,19 @@ def mock_config_entry() -> MockConfigEntry:
         unique_id=TEST_INSTANCE_ID,
         entry_id=TEST_ENTRY,
         version=5,
+        minor_version=3,
+        subentries_data=[
+            ConfigSubentryData(
+                data={},
+                subentry_type=SUBENTRY_TYPE_ENVIRONMENT,
+                title="my-environment",
+                unique_id="1",
+            ),
+            ConfigSubentryData(
+                data={},
+                subentry_type=SUBENTRY_TYPE_ENVIRONMENT,
+                title="my-edge-offline",
+                unique_id="42",
+            ),
+        ],
     )

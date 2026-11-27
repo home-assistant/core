@@ -69,31 +69,36 @@ async def test_setup(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
     with patch(
-        "homeassistant.components.sensecap_lorawan.async_setup_entry", return_value=True
+        "homeassistant.components.sensecap_lorawan.async_setup_entry", return_value=None
     ) as setup:
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "SenseCAP"
     assert result["data"] == {}
-    assert result["result"].unique_id == "sensecap_lorawan"
+    assert result["result"].unique_id is None
     setup.assert_called_once()
 
 
+@pytest.mark.parametrize("unique_id", [None, "sensecap_lorawan"])
 @pytest.mark.parametrize(
     ("source", "data"),
     [(SOURCE_USER, None), (SOURCE_INTEGRATION_DISCOVERY, LoRaWANDiscoveryInfo())],
 )
-@pytest.mark.usefixtures("config_entry")
 async def test_already_configured(
-    hass: HomeAssistant, source: str, data: LoRaWANDiscoveryInfo | None
+    hass: HomeAssistant,
+    source: str,
+    data: LoRaWANDiscoveryInfo | None,
+    unique_id: str | None,
 ) -> None:
     """Only one SenseCAP entry is needed for all connections."""
+    MockConfigEntry(domain="sensecap_lorawan", unique_id=unique_id).add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
         "sensecap_lorawan", context={"source": source}, data=data
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
+    assert len(hass.config_entries.async_entries("sensecap_lorawan")) == 1
 
 
 async def test_duplicate_discovery(

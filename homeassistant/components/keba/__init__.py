@@ -1,6 +1,7 @@
 """Support for KEBA charging stations."""
 
 import asyncio
+from collections.abc import Callable
 import logging
 
 from keba_kecontact.connection import KebaKeContact
@@ -11,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+from .const import DOMAIN, KebaServiceArgument
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -65,7 +66,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     fallback = config[DOMAIN][CONF_FS_FALLBACK] if failsafe else 0
     persist = config[DOMAIN][CONF_FS_PERSIST] if failsafe else 0
     try:
-        hass.loop.create_task(keba.set_failsafe(timeout, fallback, persist))
+        await keba.set_failsafe(timeout, fallback, persist)
     except ValueError as ex:
         _LOGGER.warning("Could not set failsafe mode %s", ex)
 
@@ -86,11 +87,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class KebaHandler(KebaKeContact):
     """Representation of a KEBA charging station connection."""
 
-    def __init__(self, hass, host, rfid, refresh_interval):
+    def __init__(
+        self, hass: HomeAssistant, host: str, rfid: str, refresh_interval: int
+    ) -> None:
         """Initialize charging station connection."""
         super().__init__(host, self.hass_callback)
 
-        self._update_listeners = []
+        self._update_listeners: list[Callable[[], None]] = []
         self._hass = hass
         self.rfid = rfid
         self.device_name = "keba"  # correct device name will be set in setup()
@@ -169,7 +172,7 @@ class KebaHandler(KebaKeContact):
     async def async_set_energy(self, param):
         """Set energy target in async way."""
         try:
-            energy = param["energy"]
+            energy = param[KebaServiceArgument.ENERGY]
             await self.set_energy(float(energy))
             self._set_fast_polling()
         except (KeyError, ValueError) as ex:
@@ -178,7 +181,7 @@ class KebaHandler(KebaKeContact):
     async def async_set_current(self, param):
         """Set current maximum in async way."""
         try:
-            current = param["current"]
+            current = param[KebaServiceArgument.CURRENT]
             await self.set_current(float(current))
             # No fast polling as this function might be called regularly
         except (KeyError, ValueError) as ex:
@@ -207,9 +210,9 @@ class KebaHandler(KebaKeContact):
     async def async_set_failsafe(self, param=None):
         """Set failsafe mode in async way."""
         try:
-            timeout = param[CONF_FS_TIMEOUT]
-            fallback = param[CONF_FS_FALLBACK]
-            persist = param[CONF_FS_PERSIST]
+            timeout = param[KebaServiceArgument.FAILSAFE_TIMEOUT]
+            fallback = param[KebaServiceArgument.FAILSAFE_FALLBACK]
+            persist = param[KebaServiceArgument.FAILSAFE_PERSIST]
             await self.set_failsafe(int(timeout), float(fallback), bool(persist))
             self._set_fast_polling()
         except (KeyError, ValueError) as ex:

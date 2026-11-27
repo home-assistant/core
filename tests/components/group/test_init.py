@@ -18,7 +18,7 @@ from pytest_homeassistant.common import (
 
 from homeassistant.components import group
 from homeassistant.components.group import DOMAIN
-from homeassistant.components.group.const import ATTR_AUTO, ATTR_ORDER
+from homeassistant.components.group.const import GroupEntityStateAttribute
 from homeassistant.components.group.registry import GroupIntegrationRegistry
 from homeassistant.components.lock import LockState
 from homeassistant.const import (
@@ -253,7 +253,7 @@ async def test_monitor_group(hass: HomeAssistant) -> None:
 
     group_state = hass.states.get(test_group.entity_id)
     assert group_state.state == STATE_ON
-    assert group_state.attributes.get(ATTR_AUTO)
+    assert group_state.attributes.get(GroupEntityStateAttribute.AUTO)
 
 
 async def test_group_turns_off_if_all_off(hass: HomeAssistant) -> None:
@@ -888,6 +888,7 @@ async def test_is_on_and_state_mixed_domains(
 
 async def test_reloading_groups(hass: HomeAssistant) -> None:
     """Test reloading the group config."""
+    initial_listeners = hass.bus.async_listeners().get(EVENT_STATE_CHANGED, 0)
     assert await async_setup_component(
         hass,
         DOMAIN,
@@ -921,7 +922,7 @@ async def test_reloading_groups(hass: HomeAssistant) -> None:
         "group.second_group",
         "group.test_group",
     ]
-    assert hass.bus.async_listeners()["state_changed"] == 1
+    assert hass.bus.async_listeners()[EVENT_STATE_CHANGED] == initial_listeners + 1
 
     with patch(
         "homeassistant.config.load_yaml_config_file",
@@ -936,7 +937,7 @@ async def test_reloading_groups(hass: HomeAssistant) -> None:
         "group.all_tests",
         "group.hello",
     ]
-    assert hass.bus.async_listeners()["state_changed"] == 1
+    assert hass.bus.async_listeners()[EVENT_STATE_CHANGED] == initial_listeners + 1
 
 
 async def test_modify_group(hass: HomeAssistant) -> None:
@@ -1008,16 +1009,16 @@ async def test_setup(hass: HomeAssistant) -> None:
     assert {test_group.entity_id, "light.bowl"} == set(
         group_state.attributes["entity_id"]
     )
-    assert group_state.attributes.get(ATTR_AUTO) is None
+    assert group_state.attributes.get(GroupEntityStateAttribute.AUTO) is None
     assert group_state.attributes.get(ATTR_ICON) == "mdi:work"
-    assert group_state.attributes.get(ATTR_ORDER) == 3
+    assert group_state.attributes.get(GroupEntityStateAttribute.ORDER) == 3
 
     group_state = hass.states.get(f"{group.DOMAIN}.test_group")
     assert group_state.state == STATE_UNKNOWN
     assert set(group_state.attributes["entity_id"]) == {"sensor.happy", "hello.world"}
-    assert group_state.attributes.get(ATTR_AUTO) is None
+    assert group_state.attributes.get(GroupEntityStateAttribute.AUTO) is None
     assert group_state.attributes.get(ATTR_ICON) is None
-    assert group_state.attributes.get(ATTR_ORDER) == 0
+    assert group_state.attributes.get(GroupEntityStateAttribute.ORDER) == 0
 
 
 async def test_service_group_services(hass: HomeAssistant) -> None:
@@ -1112,7 +1113,7 @@ async def test_service_group_set_group_remove_group(hass: HomeAssistant) -> None
 
     group_state = hass.states.get("group.user_test_group")
     assert group_state
-    assert group_state.attributes[ATTR_AUTO]
+    assert group_state.attributes[GroupEntityStateAttribute.AUTO]
     assert group_state.attributes["friendly_name"] == "Test"
 
     common.async_set_group(hass, "user_test_group", entity_ids=["test.entity_bla1"])
@@ -1120,7 +1121,7 @@ async def test_service_group_set_group_remove_group(hass: HomeAssistant) -> None
 
     group_state = hass.states.get("group.user_test_group")
     assert group_state
-    assert group_state.attributes[ATTR_AUTO]
+    assert group_state.attributes[GroupEntityStateAttribute.AUTO]
     assert group_state.attributes["friendly_name"] == "Test"
     assert list(group_state.attributes["entity_id"]) == ["test.entity_bla1"]
 
@@ -1135,7 +1136,7 @@ async def test_service_group_set_group_remove_group(hass: HomeAssistant) -> None
 
     group_state = hass.states.get("group.user_test_group")
     assert group_state
-    assert group_state.attributes[ATTR_AUTO]
+    assert group_state.attributes[GroupEntityStateAttribute.AUTO]
     assert group_state.attributes["friendly_name"] == "Test2"
     assert group_state.attributes["icon"] == "mdi:camera"
     assert sorted(group_state.attributes["entity_id"]) == sorted(
@@ -2412,3 +2413,57 @@ async def test_entity_platforms_with_multiple_on_states_with_state_match(
         group_state2,
         grouped_groups,
     )
+
+
+@pytest.mark.parametrize(
+    ("options", "expected_options"),
+    [
+        pytest.param(
+            {"group_type": "sensor", "type": "sum"},
+            {"group_type": "sensor", "type": "sum", "ignore_non_numeric": True},
+            id="sensor_without_option",
+        ),
+        pytest.param(
+            {"group_type": "sensor", "type": "sum", "ignore_non_numeric": False},
+            {"group_type": "sensor", "type": "sum", "ignore_non_numeric": False},
+            id="sensor_with_option",
+        ),
+        pytest.param(
+            {"group_type": "switch", "all": False},
+            {"group_type": "switch", "all": False},
+            id="other_group_type",
+        ),
+    ],
+)
+async def test_migrate_entry_to_minor_version_2(
+    hass: HomeAssistant,
+    options: dict[str, Any],
+    expected_options: dict[str, Any],
+) -> None:
+    """Test sensor groups without ignore_non_numeric keep ignoring non-numeric."""
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "entities": [],
+            "hide_members": False,
+            "name": "My group",
+            **options,
+        },
+        title="My group",
+        version=1,
+        minor_version=1,
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.version == 1
+    assert config_entry.minor_version == 2
+    assert config_entry.options == {
+        "entities": [],
+        "hide_members": False,
+        "name": "My group",
+        **expected_options,
+    }

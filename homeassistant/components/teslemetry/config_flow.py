@@ -7,7 +7,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast, override
 
 from aiohttp import ClientError
-from aiopowerwall import PowerwallAuthenticationError, PowerwallError
 from bleak.exc import BleakError
 from bleak_retry_connector import BleakNotFoundError, BleakOutOfConnectionSlotsError
 from habluetooth.const import STRONG_OWNER_STALE_RSSI
@@ -34,6 +33,7 @@ from tesla_fleet_api.exceptions import (
     WhitelistOperationLocalEntityAuthFailedUIDenied,
 )
 from tesla_fleet_api.tesla import EnergySiteRouter
+from tesla_fleet_api.tesla.powerwall import PowerwallAuthenticationError, PowerwallError
 from tesla_fleet_api.tesla.vehicle.bluetooth import VehicleBluetooth
 from tesla_fleet_api.teslemetry import Teslemetry
 from tesla_fleet_api.teslemetry.energysite import AuthorizedClient, TeslemetryEnergySite
@@ -55,7 +55,6 @@ from homeassistant.components.bluetooth import (
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlowResult,
     ConfigSubentryFlow,
@@ -66,13 +65,15 @@ from homeassistant.core import callback
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from . import _BLE_KEY_ERRORS, TeslemetryConfigEntry
+from . import _BLE_KEY_ERRORS
 from .const import (
     BLE_ADVERTISEMENT_TIMEOUT,
     CLIENT_ID,
+    CONF_LEGACY_GATEWAY,
     CONF_SITE_ID,
     CONF_VIN,
     DOMAIN,
+    GATEWAY_1_PART_NUMBER,
     LOGGER,
     POWERWALL_KEY_FILE,
     SUBENTRY_TYPE_ENERGY_SITE,
@@ -85,7 +86,7 @@ from .helpers import (
     async_verify_local_gateway,
     cloud_energy_site,
 )
-from .models import TeslemetryEnergyData
+from .models import TeslemetryConfigEntry, TeslemetryEnergyData
 
 
 class PowerwallSetupError(Exception):
@@ -120,7 +121,7 @@ class OAuth2FlowHandler(
     @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: TeslemetryConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return the subentry types supported by this integration."""
         return {
@@ -168,7 +169,7 @@ class OAuth2FlowHandler(
         )
 
     def _async_apply_token(
-        self, entry: ConfigEntry, data: dict[str, Any]
+        self, entry: TeslemetryConfigEntry, data: dict[str, Any]
     ) -> ConfigFlowResult:
         """Store the refreshed token and reload the entry exactly once."""
         if entry.state is not ConfigEntryState.LOADED:
@@ -257,7 +258,7 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
         }
         vehicle_metadata = entry.runtime_data.metadata_coordinator.data["vehicles"]
         choices = {
-            vehicle.vin: vehicle.device["name"] or vehicle.vin
+            vehicle.vin: vehicle.device.name or vehicle.vin
             for vehicle in entry.runtime_data.vehicles
             if vehicle.vin not in already_added
             # Vehicles without the command protocol (pre-2021 Model S/X) report
@@ -286,6 +287,15 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
                 {probatio.Required(CONF_VIN): probatio.In(choices)}
             ),
         )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Re-run Bluetooth pairing for an already added vehicle."""
+        if not async_scanner_count(self.hass, connectable=True):
+            return self.async_abort(reason="bluetooth_not_available")
+        self._vin = self._get_reconfigure_subentry().data[CONF_VIN]
+        return await self.async_step_scan()
 
     async def async_step_scan(
         self, user_input: dict[str, Any] | None = None
@@ -434,6 +444,17 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
             assert self._address is not None
             assert self._vin is not None
         self._vehicle = None
+        if self.source == SOURCE_RECONFIGURE:
+            entry = self._get_entry()
+            result = self.async_update_and_abort(
+                entry,
+                self._get_reconfigure_subentry(),
+                data_updates={CONF_ADDRESS: self._address},
+            )
+            # Reload manually: the update listener only reloads on subentry add or
+            # remove, and async_update_reload_and_abort raises while a listener is set.
+            self.hass.config_entries.async_schedule_reload(entry.entry_id)
+            return result
         return self.async_create_entry(
             title=self._title or self._vin,
             data={CONF_VIN: self._vin, CONF_ADDRESS: self._address},
@@ -558,6 +579,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         self._public_key_der: bytes = b""
         self._public_key_b64: str = ""
         self._discovered_host: str = ""
+        self._legacy_gateway: bool = False
         self._site_id: int | None = None
         self._site_name: str = ""
         self._approval_expired: bool = False
@@ -653,6 +675,17 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         """
         energy_site = cast(TeslemetryEnergySite | EnergySiteRouter, energy_data.api)
         self._energy_site = energy_site
+        site_info = energy_data.info_coordinator.data
+        # Without listed gateways, fall back to the site id: the gateway DIN,
+        # which starts with its part number.
+        part_numbers = [
+            gateway.get("part_number", "")
+            for gateway in site_info.get("components_gateways", [])
+        ] or [site_info.get("id", "")]
+        self._legacy_gateway = any(
+            part_number.startswith(GATEWAY_1_PART_NUMBER)
+            for part_number in part_numbers
+        )
 
         try:
             self._discovered_host = await energy_site.find_gateway_address() or ""
@@ -808,17 +841,39 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Collect the local gateway host/password and verify the LAN connection."""
+        if self._legacy_gateway:
+            return await self.async_step_legacy_credentials(user_input)
+        return await self._async_step_gateway_credentials("credentials", user_input)
+
+    async def async_step_legacy_credentials(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Collect the full Gateway 1 password and verify the LAN connection."""
+        return await self._async_step_gateway_credentials(
+            "legacy_credentials", user_input
+        )
+
+    async def _async_step_gateway_credentials(
+        self, step_id: str, user_input: dict[str, Any] | None
+    ) -> SubentryFlowResult:
+        """Show the credentials form for step_id and verify what it submits."""
         errors: dict[str, str] = {}
         if user_input is not None:
             if TYPE_CHECKING:
                 assert self._energy_site is not None
                 assert self._key_pem is not None
             host = user_input[CONF_HOST].strip()
-            # The gateway accepts only the last 5 characters of the Wi-Fi password.
-            password = user_input[CONF_PASSWORD].strip()[-5:]
+            password = user_input[CONF_PASSWORD].strip()
+            if not self._legacy_gateway:
+                # The gateway accepts only the last 5 characters of the Wi-Fi password.
+                password = password[-5:]
             try:
                 await async_verify_local_gateway(
-                    self.hass, host, password, self._key_pem
+                    self.hass,
+                    host,
+                    password,
+                    self._key_pem,
+                    legacy_gateway=self._legacy_gateway,
                 )
             except PowerwallKeyRejectedError as err:
                 LOGGER.debug("Powerwall rejected the signed read: %s", err.__cause__)
@@ -832,7 +887,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
                 return self._async_save_credentials(host, password)
 
         return self.async_show_form(
-            step_id="credentials",
+            step_id=step_id,
             data_schema=probatio.Schema(
                 {
                     probatio.Required(
@@ -854,7 +909,11 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             self._async_update(
                 entry,
                 subentry,
-                data_updates={CONF_HOST: host, CONF_PASSWORD: password},
+                data_updates={
+                    CONF_HOST: host,
+                    CONF_PASSWORD: password,
+                    CONF_LEGACY_GATEWAY: self._legacy_gateway,
+                },
             )
             # Always reload, even when credentials are unchanged: an earlier
             # local-control initialization failure leaves only the cloud API active,
@@ -868,6 +927,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
                 CONF_SITE_ID: self._site_id,
                 CONF_HOST: host,
                 CONF_PASSWORD: password,
+                CONF_LEGACY_GATEWAY: self._legacy_gateway,
             },
             unique_id=str(self._site_id),
         )

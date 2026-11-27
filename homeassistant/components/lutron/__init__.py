@@ -10,8 +10,10 @@ from pylutron import (
     Led,
     Lutron,
     LutronException,
+    Motor,
     OccupancyGroup,
     Output,
+    Shade,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -50,9 +52,10 @@ class LutronData:
     client: Lutron
     binary_sensors: list[tuple[str, OccupancyGroup]]
     buttons: list[tuple[str, Keypad, Button]]
-    covers: list[tuple[str, Output]]
+    covers: list[tuple[str, Shade]]
     fans: list[tuple[str, Output]]
     lights: list[tuple[str, Output]]
+    motors: list[tuple[str, Motor]]
     scenes: list[tuple[str, Keypad, Button, Led | None]]
     switches: list[tuple[str, Output]]
 
@@ -88,6 +91,7 @@ async def async_setup_entry(
         covers=[],
         fans=[],
         lights=[],
+        motors=[],
         scenes=[],
         switches=[],
     )
@@ -137,13 +141,11 @@ async def async_setup_entry(
                 config_entry.entry_id,
             )
 
-    device_registry.async_get_or_create_device(
+    device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        device_info=dr.DeviceInfo(
-            identifiers={(DOMAIN, lutron_client.guid)},
-            manufacturer="Lutron",
-            name="Main repeater",
-        ),
+        identifiers={(DOMAIN, lutron_client.guid)},
+        manufacturer="Lutron",
+        name="Main repeater",
     )
 
     config_entry.runtime_data = entry_data
@@ -162,7 +164,12 @@ def _setup_output(
 ) -> None:
     """Set up a Lutron output."""
     _LOGGER.debug("Working on output %s", output.type)
-    if output.type == "SYSTEM_SHADE":
+    if isinstance(output, Motor):
+        # raise/lower/stop only - separate entity class on the cover platform
+        entry_data.motors.append((area_name, output))
+        platform = Platform.COVER
+    elif isinstance(output, Shade) and output.type == "SYSTEM_SHADE":
+        # SIVOIA_QED shades stay lights until their light entities are deprecated
         entry_data.covers.append((area_name, output))
         platform = Platform.COVER
     elif output.type == "CEILING_FAN_TYPE":

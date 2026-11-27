@@ -9,9 +9,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('airzone', '6e7a0798c1734ba81d26ced0e690eaec_2:1')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -64,9 +64,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('airzone', '6e7a0798c1734ba81d26ced0e690eaec_2:1')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -122,9 +122,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('airzone', '6e7a0798c1734ba81d26ced0e690eaec_dhw')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -170,6 +170,66 @@
     'state': '43',
   })
 # ---
+# name: test_airzone_create_sensors[sensor.airzone_webserver_network_interface-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'ethernet',
+        'wifi',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('airzone', '6e7a0798c1734ba81d26ced0e690eaec_ws')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.airzone_webserver_network_interface',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Network interface',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Network interface',
+    'platform': 'airzone',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'interface',
+    'unique_id': 'airzone_unique_id_ws_interface',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_airzone_create_sensors[sensor.airzone_webserver_network_interface-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Airzone WebServer Network interface',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'ethernet',
+        'wifi',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.airzone_webserver_network_interface',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'ethernet',
+  })
+# ---
 # name: test_airzone_create_sensors[sensor.airzone_webserver_rssi-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -180,9 +240,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('airzone', '6e7a0798c1734ba81d26ced0e690eaec_ws')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -225,6 +285,72 @@
     'state': '-42',
   })
 # ---
+# name: test_airzone_create_sensors[sensor.aux_heat_eco_adapt-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
+        'manual',
+        'a',
+        'a_p',
+        'a_pp',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('airzone', '6e7a0798c1734ba81d26ced0e690eaec_4:1')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.aux_heat_eco_adapt',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Eco-Adapt',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Eco-Adapt',
+    'platform': 'airzone',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'eco_adapt',
+    'unique_id': 'airzone_unique_id_4:1_eco-adapt',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_airzone_create_sensors[sensor.aux_heat_eco_adapt-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aux Heat Eco-Adapt',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
+        'manual',
+        'a',
+        'a_p',
+        'a_pp',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.aux_heat_eco_adapt',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_airzone_create_sensors[sensor.aux_heat_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -235,9 +361,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('airzone', '6e7a0798c1734ba81d26ced0e690eaec_4:1')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -293,9 +419,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('airzone', '6e7a0798c1734ba81d26ced0e690eaec_1:4')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -338,6 +464,72 @@
     'state': '25',
   })
 # ---
+# name: test_airzone_create_sensors[sensor.despacho_eco_adapt-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
+        'manual',
+        'a',
+        'a_p',
+        'a_pp',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('airzone', '6e7a0798c1734ba81d26ced0e690eaec_1:4')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.despacho_eco_adapt',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Eco-Adapt',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Eco-Adapt',
+    'platform': 'airzone',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'eco_adapt',
+    'unique_id': 'airzone_unique_id_1:4_eco-adapt',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_airzone_create_sensors[sensor.despacho_eco_adapt-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Despacho Eco-Adapt',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
+        'manual',
+        'a',
+        'a_p',
+        'a_pp',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.despacho_eco_adapt',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_airzone_create_sensors[sensor.despacho_humidity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -348,9 +540,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('airzone', '6e7a0798c1734ba81d26ced0e690eaec_1:4')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -403,9 +595,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('airzone', '6e7a0798c1734ba81d26ced0e690eaec_1:4')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -457,9 +649,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('airzone', '6e7a0798c1734ba81d26ced0e690eaec_1:4')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -505,6 +697,72 @@
     'state': '21.2',
   })
 # ---
+# name: test_airzone_create_sensors[sensor.dkn_plus_eco_adapt-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
+        'manual',
+        'a',
+        'a_p',
+        'a_pp',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('airzone', '6e7a0798c1734ba81d26ced0e690eaec_3:1')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.dkn_plus_eco_adapt',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Eco-Adapt',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Eco-Adapt',
+    'platform': 'airzone',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'eco_adapt',
+    'unique_id': 'airzone_unique_id_3:1_eco-adapt',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_airzone_create_sensors[sensor.dkn_plus_eco_adapt-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DKN Plus Eco-Adapt',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
+        'manual',
+        'a',
+        'a_p',
+        'a_pp',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dkn_plus_eco_adapt',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_airzone_create_sensors[sensor.dkn_plus_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -515,9 +773,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('airzone', '6e7a0798c1734ba81d26ced0e690eaec_3:1')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -573,9 +831,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('airzone', '6e7a0798c1734ba81d26ced0e690eaec_1:3')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -618,6 +876,72 @@
     'state': '35',
   })
 # ---
+# name: test_airzone_create_sensors[sensor.dorm_1_eco_adapt-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
+        'manual',
+        'a',
+        'a_p',
+        'a_pp',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('airzone', '6e7a0798c1734ba81d26ced0e690eaec_1:3')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.dorm_1_eco_adapt',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Eco-Adapt',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Eco-Adapt',
+    'platform': 'airzone',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'eco_adapt',
+    'unique_id': 'airzone_unique_id_1:3_eco-adapt',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_airzone_create_sensors[sensor.dorm_1_eco_adapt-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dorm #1 Eco-Adapt',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
+        'manual',
+        'a',
+        'a_p',
+        'a_pp',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dorm_1_eco_adapt',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'a_p',
+  })
+# ---
 # name: test_airzone_create_sensors[sensor.dorm_1_humidity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -628,9 +952,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('airzone', '6e7a0798c1734ba81d26ced0e690eaec_1:3')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -683,9 +1007,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('airzone', '6e7a0798c1734ba81d26ced0e690eaec_1:3')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -737,9 +1061,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('airzone', '6e7a0798c1734ba81d26ced0e690eaec_1:3')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -795,9 +1119,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('airzone', '6e7a0798c1734ba81d26ced0e690eaec_1:5')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -840,6 +1164,72 @@
     'state': '80',
   })
 # ---
+# name: test_airzone_create_sensors[sensor.dorm_2_eco_adapt-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
+        'manual',
+        'a',
+        'a_p',
+        'a_pp',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('airzone', '6e7a0798c1734ba81d26ced0e690eaec_1:5')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.dorm_2_eco_adapt',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Eco-Adapt',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Eco-Adapt',
+    'platform': 'airzone',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'eco_adapt',
+    'unique_id': 'airzone_unique_id_1:5_eco-adapt',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_airzone_create_sensors[sensor.dorm_2_eco_adapt-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dorm #2 Eco-Adapt',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
+        'manual',
+        'a',
+        'a_p',
+        'a_pp',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dorm_2_eco_adapt',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_airzone_create_sensors[sensor.dorm_2_humidity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -850,9 +1240,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('airzone', '6e7a0798c1734ba81d26ced0e690eaec_1:5')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -905,9 +1295,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('airzone', '6e7a0798c1734ba81d26ced0e690eaec_1:5')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -959,9 +1349,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('airzone', '6e7a0798c1734ba81d26ced0e690eaec_1:5')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1017,9 +1407,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('airzone', '6e7a0798c1734ba81d26ced0e690eaec_1:2')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1062,6 +1452,72 @@
     'state': '99',
   })
 # ---
+# name: test_airzone_create_sensors[sensor.dorm_ppal_eco_adapt-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
+        'manual',
+        'a',
+        'a_p',
+        'a_pp',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('airzone', '6e7a0798c1734ba81d26ced0e690eaec_1:2')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.dorm_ppal_eco_adapt',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Eco-Adapt',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Eco-Adapt',
+    'platform': 'airzone',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'eco_adapt',
+    'unique_id': 'airzone_unique_id_1:2_eco-adapt',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_airzone_create_sensors[sensor.dorm_ppal_eco_adapt-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dorm Ppal Eco-Adapt',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
+        'manual',
+        'a',
+        'a_p',
+        'a_pp',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dorm_ppal_eco_adapt',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_airzone_create_sensors[sensor.dorm_ppal_humidity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1072,9 +1528,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('airzone', '6e7a0798c1734ba81d26ced0e690eaec_1:2')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1127,9 +1583,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('airzone', '6e7a0798c1734ba81d26ced0e690eaec_1:2')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -1181,9 +1637,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('airzone', '6e7a0798c1734ba81d26ced0e690eaec_1:2')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1239,9 +1695,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('airzone', '6e7a0798c1734ba81d26ced0e690eaec_1:1')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1294,9 +1750,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('airzone', '6e7a0798c1734ba81d26ced0e690eaec_1:1')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,

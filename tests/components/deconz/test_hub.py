@@ -74,7 +74,7 @@ async def test_update_address(
     with (
         patch(
             "homeassistant.components.deconz.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
         patch("pydeconz.gateway.WSClient") as ws_mock,
     ):

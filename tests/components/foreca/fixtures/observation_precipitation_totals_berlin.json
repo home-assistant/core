@@ -1,0 +1,112 @@
+{
+  "observations": [
+    {
+      "station": "Berlin-Tempelhof",
+      "distance": "6 km S",
+      "time": "2026-11-09T10:00:00+01:00",
+      "temperature": 0.7,
+      "feelsLikeTemp": -1.4,
+      "symbol": "d400",
+      "windDirString": "SE",
+      "windDir": 130,
+      "windSpeed": 1.8,
+      "windGust": 2.5,
+      "pressure": 1024.6,
+      "relHumidity": 94,
+      "visibility": 7330,
+      "snowDepth": 13,
+      "longitude": 13.4,
+      "latitude": 52.47,
+      "elevation": 49,
+      "precipitation": [
+        {
+          "period": "3h",
+          "endtime": "2026-11-09T10:00:00+01:00",
+          "accum": 0
+        },
+        {
+          "period": "12h",
+          "endtime": "2026-11-09T07:00:00+01:00",
+          "accum": 0
+        },
+        {
+          "period": "24h",
+          "endtime": "2026-11-09T07:00:00+01:00",
+          "accum": 0
+        }
+      ]
+    },
+    {
+      "station": "Berlin-Dahlem",
+      "distance": "11 km SW",
+      "time": "2026-11-09T09:00:00+01:00",
+      "temperature": 0.6,
+      "feelsLikeTemp": -1.8,
+      "symbol": "d400",
+      "windDirString": "SE",
+      "windDir": 130,
+      "windSpeed": 2,
+      "windGust": null,
+      "pressure": 1024,
+      "relHumidity": 96,
+      "visibility": 5000,
+      "snowDepth": null,
+      "longitude": 13.3,
+      "latitude": 52.45,
+      "elevation": 70,
+      "precipitation": [
+        {
+          "period": "3h",
+          "endtime": "2026-11-09T07:00:00+01:00",
+          "accum": 0
+        },
+        {
+          "period": "12h",
+          "endtime": "2026-11-09T07:00:00+01:00",
+          "accum": 0
+        },
+        {
+          "period": "24h",
+          "endtime": "2026-11-09T07:00:00+01:00",
+          "accum": 0
+        }
+      ]
+    },
+    {
+      "station": "Berlin-Sch\u00f6nefeld",
+      "distance": "18 km SE",
+      "time": "2026-11-09T10:00:00+01:00",
+      "temperature": 0.4,
+      "feelsLikeTemp": -1.8,
+      "symbol": "d400",
+      "windDirString": "SE",
+      "windDir": 120,
+      "windSpeed": 1.8,
+      "windGust": 2.7,
+      "pressure": 1024.6,
+      "relHumidity": 99,
+      "visibility": 4890,
+      "snowDepth": 13,
+      "longitude": 13.53,
+      "latitude": 52.38,
+      "elevation": 48,
+      "precipitation": [
+        {
+          "period": "3h",
+          "endtime": "2026-11-09T10:00:00+01:00",
+          "accum": 0
+        },
+        {
+          "period": "12h",
+          "endtime": "2026-11-09T07:00:00+01:00",
+          "accum": 0
+        },
+        {
+          "period": "24h",
+          "endtime": "2026-11-09T07:00:00+01:00",
+          "accum": 0
+        }
+      ]
+    }
+  ]
+}

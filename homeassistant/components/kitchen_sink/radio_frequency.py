@@ -1,19 +1,39 @@
 """Demo platform that offers a fake radio frequency entity."""
 
+from dataclasses import dataclass
 from typing import override
 
 from rf_protocols import RadioFrequencyCommand
 
 from homeassistant.components import persistent_notification
-from homeassistant.components.radio_frequency import RadioFrequencyTransmitterEntity
+from homeassistant.components.radio_frequency import (
+    RadioFrequencyTransmitterEntity,
+    RadioFrequencyTransmitterEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN
+from .const import DOMAIN
 
 PARALLEL_UPDATES = 0
+
+
+@dataclass(frozen=True, kw_only=True)
+class DemoRadioFrequencyEntityDescription(RadioFrequencyTransmitterEntityDescription):
+    """Describes a demo radio frequency entity."""
+
+    device_name: str
+
+
+TRANSMITTERS = (
+    DemoRadioFrequencyEntityDescription(
+        key="rf_transmitter",
+        name="Radio Frequency Transmitter",
+        device_name="RF Blaster",
+    ),
+)
 
 
 async def async_setup_entry(
@@ -22,36 +42,24 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the demo radio frequency platform."""
-    async_add_entities(
-        [
-            DemoRadioFrequency(
-                unique_id="rf_transmitter",
-                device_name="RF Blaster",
-                entity_name="Radio Frequency Transmitter",
-            ),
-        ]
-    )
+    async_add_entities(DemoRadioFrequency(description) for description in TRANSMITTERS)
 
 
 class DemoRadioFrequency(RadioFrequencyTransmitterEntity):
     """Representation of a demo radio frequency entity."""
 
+    entity_description: DemoRadioFrequencyEntityDescription
     _attr_has_entity_name = True
     _attr_should_poll = False
 
-    def __init__(
-        self,
-        unique_id: str,
-        device_name: str,
-        entity_name: str,
-    ) -> None:
+    def __init__(self, description: DemoRadioFrequencyEntityDescription) -> None:
         """Initialize the demo radio frequency entity."""
-        self._attr_unique_id = unique_id
+        self.entity_description = description
+        self._attr_unique_id = description.key
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, unique_id)},
-            name=device_name,
+            identifiers={(DOMAIN, description.key)},
+            name=description.device_name,
         )
-        self._attr_name = entity_name
 
     @property
     @override

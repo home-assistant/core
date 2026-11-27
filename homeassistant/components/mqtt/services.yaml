@@ -37,6 +37,7 @@ publish:
 dump:
   fields:
     topic:
+      required: true
       example: "OpenZWave/#"
       selector:
         text:

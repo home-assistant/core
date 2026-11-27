@@ -7,16 +7,15 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.light import ATTR_BRIGHTNESS, DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    DOMAIN as LIGHT_DOMAIN,
+    LightService,
+    LightServiceArgument,
+)
 from homeassistant.components.wmspro.const import DOMAIN
 from homeassistant.components.wmspro.light import SCAN_INTERVAL
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import STATE_OFF, STATE_ON, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -121,8 +120,8 @@ async def test_light_turn_on_and_off(
 
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity.entity_id},
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: entity.entity_id},
             blocking=True,
         )
 
@@ -142,8 +141,8 @@ async def test_light_turn_on_and_off(
 
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: entity.entity_id},
+            LightService.TURN_OFF,
+            {TargetKey.ENTITY_ID: entity.entity_id},
             blocking=True,
         )
 
@@ -188,8 +187,8 @@ async def test_light_dimm_on_and_off(
 
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity.entity_id},
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: entity.entity_id},
             blocking=True,
         )
 
@@ -209,8 +208,11 @@ async def test_light_dimm_on_and_off(
 
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity.entity_id, ATTR_BRIGHTNESS: 128},
+            LightService.TURN_ON,
+            {
+                TargetKey.ENTITY_ID: entity.entity_id,
+                LightServiceArgument.BRIGHTNESS: 128,
+            },
             blocking=True,
         )
 
@@ -230,8 +232,8 @@ async def test_light_dimm_on_and_off(
 
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: entity.entity_id},
+            LightService.TURN_OFF,
+            {TargetKey.ENTITY_ID: entity.entity_id},
             blocking=True,
         )
 

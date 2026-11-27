@@ -48,6 +48,16 @@
               "meta": {
                 "show_in_contract_screen": true
               }
+            },
+            {
+              "uuid": "00000000-0000-4000-8000-000000000301",
+              "label": "Laadpaal",
+              "type": "charge_point_installation",
+              "start_date": "2023-10-08T22:00:00.000000Z",
+              "end_date": null,
+              "meta": {
+                "show_in_contract_screen": true
+              }
             }
           ],
           "features": [

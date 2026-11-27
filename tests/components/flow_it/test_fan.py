@@ -1,4 +1,4 @@
-"""Test Flow-it fan platform."""
+"""Test AriaQ fan platform."""
 
 from unittest.mock import AsyncMock
 
@@ -7,15 +7,13 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.fan import (
-    ATTR_PERCENTAGE,
-    ATTR_PRESET_MODE,
     DOMAIN as FAN_DOMAIN,
-    SERVICE_SET_PERCENTAGE,
-    SERVICE_SET_PRESET_MODE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    FanService,
+    FanServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_ON
+from homeassistant.const import ATTR_ENTITY_ID, STATE_ON, TargetKey
 from homeassistant.core import HomeAssistant
 
 ENTITY_ID = "fan.001122334455"
@@ -30,7 +28,7 @@ ENTITY_ID = "fan.001122334455"
 )
 async def test_fan_turn_on_off(
     hass: HomeAssistant,
-    mock_flow_it: AsyncMock,
+    mock_ariaq: AsyncMock,
     mock_config_entry: MockConfigEntry,
     service: str,
     speed: Speed,
@@ -49,13 +47,13 @@ async def test_fan_turn_on_off(
         {ATTR_ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
-    mock_flow_it.return_value.send_command.assert_awaited_once_with(
+    mock_ariaq.return_value.send_command.assert_awaited_once_with(
         speed, flow_in=True, flow_out=True
     )
 
 
 async def test_fan_set_percentage(
-    hass: HomeAssistant, mock_flow_it: AsyncMock, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, mock_ariaq: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test setting percentage."""
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -65,17 +63,17 @@ async def test_fan_set_percentage(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PERCENTAGE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_PERCENTAGE: 60},
+        FanService.SET_PERCENTAGE,
+        {TargetKey.ENTITY_ID: entity_id, FanServiceArgument.PERCENTAGE: 60},
         blocking=True,
     )
-    mock_flow_it.return_value.send_command.assert_awaited_once_with(
+    mock_ariaq.return_value.send_command.assert_awaited_once_with(
         Speed.LEVEL_3, flow_in=True, flow_out=True
     )
 
 
 async def test_fan_set_percentage_zero(
-    hass: HomeAssistant, mock_flow_it: AsyncMock, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, mock_ariaq: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test setting percentage to 0 turns off fan."""
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -85,17 +83,17 @@ async def test_fan_set_percentage_zero(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PERCENTAGE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_PERCENTAGE: 0},
+        FanService.SET_PERCENTAGE,
+        {TargetKey.ENTITY_ID: entity_id, FanServiceArgument.PERCENTAGE: 0},
         blocking=True,
     )
-    mock_flow_it.return_value.send_command.assert_awaited_once_with(
+    mock_ariaq.return_value.send_command.assert_awaited_once_with(
         Speed.OFF, flow_in=True, flow_out=True
     )
 
 
 async def test_fan_set_preset_mode(
-    hass: HomeAssistant, mock_flow_it: AsyncMock, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, mock_ariaq: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test setting preset mode."""
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -105,10 +103,10 @@ async def test_fan_set_preset_mode(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: "boost"},
+        FanService.SET_PRESET_MODE,
+        {TargetKey.ENTITY_ID: entity_id, FanServiceArgument.PRESET_MODE: "boost"},
         blocking=True,
     )
-    mock_flow_it.return_value.send_command.assert_awaited_once_with(
+    mock_ariaq.return_value.send_command.assert_awaited_once_with(
         Speed.BOOST, flow_in=True, flow_out=True
     )

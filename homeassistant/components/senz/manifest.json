@@ -4,10 +4,11 @@
   "categories": ["climate.thermostats_heating"],
   "codeowners": ["@milanmeu"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/senz",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["pysenz"],
-  "requirements": ["pysenz==1.1.2"]
+  "requirements": ["pysenz==1.2.0"]
 }

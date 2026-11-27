@@ -10,8 +10,9 @@ from opendisplay import (
     AuthenticationFailedError,
     AuthenticationRequiredError,
     BLEConnectionError,
-    OpenDisplayDevice,
     OpenDisplayError,
+    Sec2KeyRequiredError,
+    connect,
     parse_advertisement,
 )
 import probatio
@@ -73,13 +74,13 @@ class OpenDisplayConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             async with (
                 asyncio.timeout(CONNECT_TIMEOUT),
-                OpenDisplayDevice(
-                    mac_address=address,
+                connect(
+                    address=address,
                     ble_device=ble_device,
                     encryption_key=encryption_key,
-                ) as device,
+                ),
             ):
-                await device.read_firmware_version()
+                pass
         except TimeoutError as err:
             raise BLEConnectionError(
                 f"Connection probe exceeded {CONNECT_TIMEOUT}s"
@@ -112,7 +113,7 @@ class OpenDisplayConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 await self._async_test_connection(self._discovery_info.address)
-            except AuthenticationRequiredError:
+            except AuthenticationRequiredError, Sec2KeyRequiredError:
                 return await self.async_step_encryption_key()
             except OpenDisplayError:
                 errors["base"] = "cannot_connect"
@@ -122,7 +123,6 @@ class OpenDisplayConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 return self.async_create_entry(title=self._discovery_info.name, data={})
 
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="bluetooth_confirm",
             description_placeholders=self.context["title_placeholders"],
@@ -143,7 +143,7 @@ class OpenDisplayConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 await self._async_test_connection(address)
-            except AuthenticationRequiredError:
+            except AuthenticationRequiredError, Sec2KeyRequiredError:
                 self.context["title_placeholders"] = {
                     "name": self._discovered_devices[address].name
                 }
@@ -194,7 +194,11 @@ class OpenDisplayConfigFlow(ConfigFlow, domain=DOMAIN):
         """Test connection, populate errors, and return True on success."""
         try:
             await self._async_test_connection(address, encryption_key)
-        except AuthenticationFailedError, AuthenticationRequiredError:
+        except (
+            AuthenticationFailedError,
+            AuthenticationRequiredError,
+            Sec2KeyRequiredError,
+        ):
             errors[CONF_ENCRYPTION_KEY] = "invalid_auth"
         except OpenDisplayError:
             errors["base"] = "cannot_connect"

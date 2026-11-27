@@ -26,6 +26,7 @@ from homeassistant.components.assist_satellite import (
 )
 from homeassistant.components.intent import TimerEventType, TimerInfo
 from homeassistant.components.network import async_get_source_ip
+from homeassistant.components.tts import TextToSpeechCommonOption
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -46,7 +47,7 @@ from .entity import VoIPEntity
 _LOGGER = logging.getLogger(__name__)
 
 _PIPELINE_TIMEOUT_SEC: Final = 30
-_HANGUP_SEC: Final = 0.5
+_HANGUP_SEC: Final = 2.0
 _ANNOUNCEMENT_BEFORE_DELAY: Final = 0.5
 _ANNOUNCEMENT_AFTER_DELAY: Final = 1.0
 _ANNOUNCEMENT_RING_TIMEOUT: Final = 30
@@ -154,10 +155,10 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
     def tts_options(self) -> dict[str, Any] | None:
         """Options passed for text-to-speech."""
         return {
-            tts.ATTR_PREFERRED_FORMAT: "wav",
-            tts.ATTR_PREFERRED_SAMPLE_RATE: 16000,
-            tts.ATTR_PREFERRED_SAMPLE_CHANNELS: 1,
-            tts.ATTR_PREFERRED_SAMPLE_BYTES: 2,
+            TextToSpeechCommonOption.PREFERRED_FORMAT: "wav",
+            TextToSpeechCommonOption.PREFERRED_SAMPLE_RATE: 16000,
+            TextToSpeechCommonOption.PREFERRED_SAMPLE_CHANNELS: 1,
+            TextToSpeechCommonOption.PREFERRED_SAMPLE_BYTES: 2,
         }
 
     @override
@@ -376,6 +377,11 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         if self._run_pipeline_task is not None:
             _LOGGER.debug("Cancelling running pipeline")
             self._run_pipeline_task.cancel()
+            # Clear it now rather than relying on the task's own cleanup, which
+            # never runs if it is cancelled before reaching its try block (e.g.
+            # a hang-up during the listening tone). A stale reference stops
+            # on_chunk() from starting a pipeline for the next call.
+            self._run_pipeline_task = None
         if not self._call_end_future.done():
             self._call_end_future.set_result(None)
         self._last_chunk_time = None
@@ -477,10 +483,13 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
             if (current_task := asyncio.current_task()) and current_task.cancelling():
                 raise
         finally:
-            # Stop audio stream
-            await self._audio_queue.put(None)
+            # disconnect() may already have cleared this and a new call may
+            # have started its own pipeline, so only clear our own reference.
+            if self._run_pipeline_task is asyncio.current_task():
+                self._run_pipeline_task = None
 
-            self._run_pipeline_task = None
+                # Stop audio stream
+                await self._audio_queue.put(None)
             _LOGGER.debug("Pipeline finished")
 
     async def _play_announcement(
@@ -509,13 +518,15 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
             self._announcement = None
             raise
         finally:
-            self._run_pipeline_task = None
-            _LOGGER.debug("Announcement finished")
+            if self._run_pipeline_task is asyncio.current_task():
+                self._run_pipeline_task = None
 
-            if self._run_pipeline_after_announce:
-                # Clear announcement to allow pipeline to run
-                _LOGGER.debug("Clearing announcement")
-                self._announcement = None
+                if self._run_pipeline_after_announce:
+                    # Clear announcement to allow pipeline to run
+                    _LOGGER.debug("Clearing announcement")
+                    self._announcement = None
+
+            _LOGGER.debug("Announcement finished")
 
     def _clear_audio_queue(self) -> None:
         """Ensure audio queue is empty."""

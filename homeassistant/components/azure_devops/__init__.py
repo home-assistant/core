@@ -2,7 +2,6 @@
 
 import logging
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
@@ -37,6 +36,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: AzureDevOpsConfigEntry) 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: AzureDevOpsConfigEntry
+) -> None:
     """Unload Azure DevOps config entry."""
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

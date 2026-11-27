@@ -1,4 +1,4 @@
-"""Test the Pterodactyl config flow."""
+"""Tests for the config flow of the Pterodactyl integration."""
 
 from collections.abc import Generator
 from unittest.mock import AsyncMock
@@ -44,6 +44,10 @@ async def test_full_flow(hass: HomeAssistant) -> None:
         (PterodactylApiError, "cannot_connect"),
         (BadRequestError, "cannot_connect"),
         (TimeoutError, "cannot_connect"),
+        (
+            ClientResponseError(request_info=None, history=[], status=500),
+            "cannot_connect",
+        ),
         (Exception, "unknown"),
         (
             ClientResponseError(request_info=None, history=[], status=401),
@@ -138,6 +142,10 @@ async def test_reauth_full_flow(
         (PterodactylApiError, "cannot_connect"),
         (BadRequestError, "cannot_connect"),
         (Exception, "unknown"),
+        (
+            ClientResponseError(request_info=None, history=[], status=500),
+            "cannot_connect",
+        ),
         (
             ClientResponseError(request_info=None, history=[], status=401),
             "invalid_auth",

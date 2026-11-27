@@ -20,6 +20,12 @@ from .common import (
 )
 
 
+@pytest.fixture
+def platform() -> Platform:
+    """Return the platform under test."""
+    return Platform.SELECT
+
+
 @pytest.mark.usefixtures("matter_devices")
 async def test_selects(
     hass: HomeAssistant,
@@ -233,6 +239,94 @@ async def test_pump(
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get("select.mock_pump_mode")
     assert state.state == "local"
+
+
+@pytest.mark.parametrize("node_fixture", ["aqara_camera_hub_g350"])
+async def test_camera_night_vision(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test the CameraAvStreamManagement night vision select."""
+    entity_id = "select.aqara_camera_hub_g350_night_vision"
+    # fixture reports NightVision as TriStateAutoEnum.kAuto
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "auto"
+    assert state.attributes["options"] == ["off", "on", "auto"]
+
+    attribute_path = create_attribute_path_from_attribute(
+        endpoint_id=2,
+        attribute=clusters.CameraAvStreamManagement.Attributes.NightVision,
+    )
+    set_node_attribute(matter_node, 2, 1361, 22, 0)
+    await trigger_subscription_callback(
+        hass,
+        matter_client,
+        data=0,
+        node_id=matter_node.node_id,
+        attribute_path=attribute_path,
+    )
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "off"
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {"entity_id": entity_id, "option": "on"},
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_args_list == [
+        call(node_id=matter_node.node_id, attribute_path=attribute_path, value=1)
+    ]
+
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {"entity_id": entity_id, "option": "auto"},
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_args_list[1] == call(
+        node_id=matter_node.node_id, attribute_path=attribute_path, value=2
+    )
+    assert matter_client.write_attribute.call_count == 2
+
+    # an unrecognized raw value should not be reported as a known state
+    set_node_attribute(matter_node, 2, 1361, 22, 253)
+    await trigger_subscription_callback(
+        hass,
+        matter_client,
+        data=253,
+        node_id=matter_node.node_id,
+        attribute_path=attribute_path,
+    )
+    state = hass.states.get(entity_id)
+    assert state.state == "unknown"
+
+
+@pytest.mark.parametrize("node_fixture", ["aqara_camera_hub_g350"])
+@pytest.mark.parametrize(
+    ("attributes", "night_vision_entity_expected"),
+    [
+        pytest.param({}, True, id="night-vision-feature-set"),
+        pytest.param(
+            {
+                "2/1361/65532": 1055
+                & ~int(clusters.CameraAvStreamManagement.Bitmaps.Feature.kNightVision)
+            },
+            False,
+            id="night-vision-feature-unset",
+        ),
+    ],
+)
+async def test_camera_night_vision_discovery(
+    hass: HomeAssistant,
+    matter_node: MatterNode,
+    night_vision_entity_expected: bool,
+) -> None:
+    """Test the night vision select is only discovered when its feature bit is set."""
+    entity_id = "select.aqara_camera_hub_g350_night_vision"
+    assert (hass.states.get(entity_id) is not None) == night_vision_entity_expected
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_microwave_oven"])
@@ -491,3 +585,144 @@ async def test_wago_connection_mode_select(
         ),
         value=True,
     )
+
+
+@pytest.mark.parametrize("node_fixture", ["wago_home_blind_control"])
+async def test_wago_travel_time_mode_select(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test select entity for the WAGO WindowCovering ManualMode attribute."""
+    entity_id = "select.home_blind_wi_fi_travel_time_mode"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "manual"
+    assert state.attributes["options"] == ["automatic", "manual"]
+
+    set_node_attribute(matter_node, 1, 258, 355729412, False)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id)
+    assert state.state == "automatic"
+
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {"entity_id": entity_id, "option": "automatic"},
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_count == 1
+    assert matter_client.write_attribute.call_args == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=1,
+            attribute=clusters.WindowCovering.Attributes.WagoManualMode,
+        ),
+        value=False,
+    )
+
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {"entity_id": entity_id, "option": "manual"},
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_count == 2
+    assert matter_client.write_attribute.call_args == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=1,
+            attribute=clusters.WindowCovering.Attributes.WagoManualMode,
+        ),
+        value=True,
+    )
+
+
+@pytest.mark.parametrize("node_fixture", ["wago_home_blind_control"])
+async def test_wago_blind_type_select(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test select entity for the WAGO WindowCovering BlindType attribute."""
+    entity_id = "select.home_blind_wi_fi_blind_type"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "roller_shutter"
+    assert state.attributes["options"] == ["roller_shutter", "venetian_blind"]
+
+    set_node_attribute(matter_node, 1, 258, 355729413, 1)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id)
+    assert state.state == "venetian_blind"
+
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {"entity_id": entity_id, "option": "venetian_blind"},
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_count == 1
+    assert matter_client.write_attribute.call_args == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=1,
+            attribute=clusters.WindowCovering.Attributes.WagoBlindType,
+        ),
+        value=1,
+    )
+
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {"entity_id": entity_id, "option": "roller_shutter"},
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_count == 2
+    assert matter_client.write_attribute.call_args == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=1,
+            attribute=clusters.WindowCovering.Attributes.WagoBlindType,
+        ),
+        value=0,
+    )
+
+
+@pytest.mark.parametrize("node_fixture", ["aqara_led_strip_t2"])
+async def test_aqara_led_strip_t2(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test select entities on Aqara LED Strip T2."""
+    state = hass.states.get("select.aqara_led_strip_t2_music_sync_effect")
+    assert state
+    assert state.state == "pulse"
+
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {
+            "entity_id": "select.aqara_led_strip_t2_music_sync_effect",
+            "option": "flash",
+        },
+        blocking=True,
+    )
+
+    assert matter_client.write_attribute.call_count == 1
+    assert matter_client.write_attribute.call_args == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=1,
+            attribute=custom_clusters.AqaraLedStripCluster.Attributes.MusicSyncEffect,
+        ),
+        value=4,  # = Flash
+    )
+
+    set_node_attribute(matter_node, 1, 291503119, 21, 4)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("select.aqara_led_strip_t2_music_sync_effect")
+    assert state
+    assert state.state == "flash"

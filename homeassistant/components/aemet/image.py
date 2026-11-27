@@ -12,6 +12,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .coordinator import AemetConfigEntry, WeatherUpdateCoordinator
 from .entity import AemetEntity
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 AEMET_IMAGES: Final[tuple[ImageEntityDescription, ...]] = (
     ImageEntityDescription(
         key=AOD_RADAR,
@@ -33,17 +36,37 @@ async def async_setup_entry(
     unique_id = config_entry.unique_id
     assert unique_id is not None
 
-    async_add_entities(
-        AemetImage(
-            hass,
-            name,
-            coordinator,
-            description,
-            unique_id,
-        )
-        for description in AEMET_IMAGES
-        if dict_nested_value(coordinator.data["lib"], [description.key]) is not None
-    )
+    added_images: set[str] = set()
+
+    @callback
+    def async_discover_images() -> None:
+        """Discover new images from coordinator data."""
+        new_entities = []
+
+        for description in AEMET_IMAGES:
+            if description.key in added_images:
+                continue
+
+            if dict_nested_value(coordinator.data["lib"], [description.key]) is None:
+                continue
+
+            added_images.add(description.key)
+            new_entities.append(
+                AemetImage(
+                    hass,
+                    name,
+                    coordinator,
+                    description,
+                    unique_id,
+                )
+            )
+
+        if new_entities:
+            async_add_entities(new_entities)
+
+    async_discover_images()
+
+    config_entry.async_on_unload(coordinator.async_add_listener(async_discover_images))
 
 
 class AemetImage(AemetEntity, ImageEntity):

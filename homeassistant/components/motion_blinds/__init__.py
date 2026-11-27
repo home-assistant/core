@@ -105,7 +105,11 @@ async def async_setup_entry(
     if not await connect_gateway_class.async_connect_gateway(
         host, key, blind_type_list
     ):
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={"host": host},
+        )
     motion_gateway = connect_gateway_class.gateway_device
 
     coordinator = DataUpdateCoordinatorMotionBlinds(
@@ -134,7 +138,7 @@ async def async_setup_entry(
         blind.device_type not in DEVICE_TYPES_WIFI
         for blind in motion_gateway.device_list.values()
     ):
-        dr.async_get(hass).async_get_or_create_device(
+        dr.async_get(hass).async_get_or_create_from_info(
             config_entry_id=entry.entry_id,
             device_info=gateway_device_info(motion_gateway),
         )
@@ -166,3 +170,20 @@ async def async_unload_entry(
             if motion_data.multicast is not None:
                 motion_data.multicast.Stop_listen()
                 motion_data.multicast = None
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant,
+    config_entry: MotionBlindsConfigEntry,
+    device_entry: dr.AnyDeviceEntry,
+) -> bool:
+    """Allow removing devices that are no longer connected to the gateway."""
+    if (runtime_data := getattr(config_entry, "runtime_data", None)) is None:
+        return False
+
+    gateway = runtime_data.gateway
+    return not any(
+        identifier[0] == DOMAIN
+        and (identifier[1] == gateway.mac or identifier[1] in gateway.device_list)
+        for identifier in device_entry.identifiers
+    )

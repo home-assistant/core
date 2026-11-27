@@ -1,4 +1,54 @@
 # serializer version: 1
+# name: test_all_entities[binary_sensor.eg_fussbodenthermostat_identification_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('vicare', 'fht_gateway_zigbee_################')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.eg_fussbodenthermostat_identification_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Identification mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Identification mode',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'identification_mode',
+    'unique_id': 'fht_gateway_zigbee_################-identification_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.eg_fussbodenthermostat_identification_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'EG Fußbodenthermostat Identification mode',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.eg_fussbodenthermostat_identification_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_all_entities[binary_sensor.model0_burner-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -7,9 +57,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('vicare', 'gateway0_deviceSerialVitodens300W')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -58,9 +108,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('vicare', 'gateway0_deviceSerialVitodens300W')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -109,9 +159,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('vicare', 'gateway0_deviceSerialVitodens300W')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -160,9 +210,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('vicare', 'gateway0_deviceSerialVitodens300W')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -211,9 +261,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('vicare', 'gateway0_deviceSerialVitodens300W')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -262,9 +312,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('vicare', 'gateway0_deviceSerialVitodens300W')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -313,9 +363,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('vicare', 'gateway0_deviceSerialVitodens300W')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -363,9 +413,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('vicare', 'gateway0_deviceSerialVitodens300W')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -413,9 +463,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('vicare', 'gateway0_deviceSerialVitodens300W')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -456,7 +506,7 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_all_entities[binary_sensor.model1_child_safety_lock-entry]
+# name: test_all_entities[binary_sensor.model5_room_0_condensation_risk-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -464,13 +514,13 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('vicare', 'gateway5_deviceId5_room_0')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.model1_child_safety_lock',
+    'entity_id': 'binary_sensor.model5_room_0_condensation_risk',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -478,35 +528,36 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Child safety lock',
+    'object_id_base': 'Condensation risk',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Child safety lock',
+    'original_name': 'Condensation risk',
     'platform': 'vicare',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'child_safety_lock_mode',
-    'unique_id': 'gateway1_zigbee_################-child_safety_lock_mode',
+    'translation_key': 'condensation_risk',
+    'unique_id': 'gateway5_deviceId5-room_condensation_risk-0',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[binary_sensor.model1_child_safety_lock-state]
+# name: test_all_entities[binary_sensor.model5_room_0_condensation_risk-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'model1 Child safety lock',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Room 0 Condensation risk',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.model1_child_safety_lock',
+    'entity_id': 'binary_sensor.model5_room_0_condensation_risk',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_all_entities[binary_sensor.model1_identification_mode-entry]
+# name: test_all_entities[binary_sensor.model5_room_0_window-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -514,113 +565,13 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.model1_identification_mode',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Identification mode',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Identification mode',
-    'platform': 'vicare',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'identification_mode',
-    'unique_id': 'gateway1_zigbee_################-identification_mode',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[binary_sensor.model1_identification_mode-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'model1 Identification mode',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.model1_identification_mode',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unavailable',
-  })
-# ---
-# name: test_all_entities[binary_sensor.model1_mounting_mode-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.model1_mounting_mode',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Mounting mode',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Mounting mode',
-    'platform': 'vicare',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'mounting_mode',
-    'unique_id': 'gateway1_zigbee_################-mounting_mode',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[binary_sensor.model1_mounting_mode-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'model1 Mounting mode',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.model1_mounting_mode',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unavailable',
-  })
-# ---
-# name: test_all_entities[binary_sensor.model1_valve-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('vicare', 'gateway5_deviceId5_room_0')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.model1_valve',
+    'entity_id': 'binary_sensor.model5_room_0_window',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -628,36 +579,36 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Valve',
+    'object_id_base': 'Window',
     'options': dict({
     }),
-    'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
+    'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
     'original_icon': None,
-    'original_name': 'Valve',
+    'original_name': 'Window',
     'platform': 'vicare',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'valve',
-    'unique_id': 'gateway1_zigbee_################-valve',
+    'translation_key': None,
+    'unique_id': 'gateway5_deviceId5-room_window_open-0',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[binary_sensor.model1_valve-state]
+# name: test_all_entities[binary_sensor.model5_room_0_window-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'model1 Valve',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Room 0 Window',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.model1_valve',
+    'entity_id': 'binary_sensor.model5_room_0_window',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_all_entities[binary_sensor.model2_identification_mode-entry]
+# name: test_all_entities[binary_sensor.model5_room_1_condensation_risk-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -665,13 +616,115 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('vicare', 'gateway5_deviceId5_room_1')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.model5_room_1_condensation_risk',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Condensation risk',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Condensation risk',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'condensation_risk',
+    'unique_id': 'gateway5_deviceId5-room_condensation_risk-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.model5_room_1_condensation_risk-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Room 1 Condensation risk',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.model5_room_1_condensation_risk',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[binary_sensor.model5_room_1_window-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <ChildDeviceEntry identifiers=[('vicare', 'gateway5_deviceId5_room_1')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.model5_room_1_window',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Window',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
+    'original_icon': None,
+    'original_name': 'Window',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'gateway5_deviceId5-room_window_open-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.model5_room_1_window-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Room 1 Window',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.model5_room_1_window',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[binary_sensor.og_repeater_identification_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('vicare', 'gateway2_zigbee_################')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.model2_identification_mode',
+    'entity_id': 'binary_sensor.og_repeater_identification_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -694,20 +747,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[binary_sensor.model2_identification_mode-state]
+# name: test_all_entities[binary_sensor.og_repeater_identification_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'model2 Identification mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'OG Repeater Identification mode',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.model2_identification_mode',
+    'entity_id': 'binary_sensor.og_repeater_identification_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_all_entities[binary_sensor.model3_identification_mode-entry]
+# name: test_all_entities[binary_sensor.thermostat_ug_flur_child_safety_lock-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -715,13 +768,63 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('vicare', 'gateway1_zigbee_################')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.thermostat_ug_flur_child_safety_lock',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Child safety lock',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Child safety lock',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'child_safety_lock_mode',
+    'unique_id': 'gateway1_zigbee_################-child_safety_lock_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.thermostat_ug_flur_child_safety_lock-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Thermostat UG Flur Child safety lock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.thermostat_ug_flur_child_safety_lock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[binary_sensor.thermostat_ug_flur_identification_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('vicare', 'gateway1_zigbee_################')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.model3_identification_mode',
+    'entity_id': 'binary_sensor.thermostat_ug_flur_identification_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -740,24 +843,24 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'identification_mode',
-    'unique_id': 'fht_gateway_zigbee_################-identification_mode',
+    'unique_id': 'gateway1_zigbee_################-identification_mode',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[binary_sensor.model3_identification_mode-state]
+# name: test_all_entities[binary_sensor.thermostat_ug_flur_identification_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'model3 Identification mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Thermostat UG Flur Identification mode',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.model3_identification_mode',
+    'entity_id': 'binary_sensor.thermostat_ug_flur_identification_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_all_entities[binary_sensor.model4_valve-entry]
+# name: test_all_entities[binary_sensor.thermostat_ug_flur_mounting_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -765,13 +868,114 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('vicare', 'gateway1_zigbee_################')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.thermostat_ug_flur_mounting_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Mounting mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Mounting mode',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'mounting_mode',
+    'unique_id': 'gateway1_zigbee_################-mounting_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.thermostat_ug_flur_mounting_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Thermostat UG Flur Mounting mode',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.thermostat_ug_flur_mounting_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[binary_sensor.thermostat_ug_flur_valve-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('vicare', 'gateway1_zigbee_################')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.model4_valve',
+    'entity_id': 'binary_sensor.thermostat_ug_flur_valve',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Valve',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
+    'original_icon': None,
+    'original_name': 'Valve',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'valve',
+    'unique_id': 'gateway1_zigbee_################-valve',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.thermostat_ug_flur_valve-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Thermostat UG Flur Valve',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.thermostat_ug_flur_valve',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[binary_sensor.zone_eg_bad_valve-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('vicare', 'fht_gateway_zigbee_################_2')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.zone_eg_bad_valve',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -794,14 +998,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[binary_sensor.model4_valve-state]
+# name: test_all_entities[binary_sensor.zone_eg_bad_valve-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'model4 Valve',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zone EG Bad Valve',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.model4_valve',
+    'entity_id': 'binary_sensor.zone_eg_bad_valve',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

@@ -5,16 +5,10 @@ from collections.abc import Iterable
 import logging
 from typing import Any
 
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import STATE_OFF, STATE_ON, TargetKey
 from homeassistant.core import Context, HomeAssistant, State
 
-from .const import DOMAIN
+from .const import DOMAIN, InputBooleanService
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,12 +34,16 @@ async def _async_reproduce_states(
     if cur_state.state == state.state:
         return
 
-    service = SERVICE_TURN_ON if state.state == STATE_ON else SERVICE_TURN_OFF
+    service = (
+        InputBooleanService.TURN_ON
+        if state.state == STATE_ON
+        else InputBooleanService.TURN_OFF
+    )
 
     await hass.services.async_call(
         DOMAIN,
         service,
-        {ATTR_ENTITY_ID: state.entity_id},
+        {TargetKey.ENTITY_ID: state.entity_id},
         context=context,
         blocking=True,
     )

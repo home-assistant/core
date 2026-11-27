@@ -3,6 +3,7 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "ipv6_not_supported": "IPv6 is not supported.",
       "unique_id_mismatch": "The host belongs to a different WiiM device."
     },
     "error": {
@@ -28,6 +29,16 @@
         },
         "data_description": {
           "host": "The hostname or IP address of the WiiM device."
+        }
+      }
+    }
+  },
+  "entity": {
+    "select": {
+      "audio_output": {
+        "name": "Audio output",
+        "state": {
+          "other_out": "Other out"
         }
       }
     }

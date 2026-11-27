@@ -7,8 +7,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import BroadlinkDevice
 from .const import BROADLINK_DATA
+from .device import BroadlinkDevice
 from .entity import BroadlinkEntity
 
 DAY_ID_TO_NAME = {

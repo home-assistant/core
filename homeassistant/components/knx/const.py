@@ -1,6 +1,7 @@
 """Constants for the KNX integration."""
 
 from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
 from enum import Enum, StrEnum
 from typing import TYPE_CHECKING, Final, TypedDict
 
@@ -18,6 +19,25 @@ if TYPE_CHECKING:
 
 DOMAIN: Final = "knx"
 KNX_MODULE_KEY: HassKey[KNXModule] = HassKey(DOMAIN)
+
+
+@dataclass(slots=True, frozen=True)
+class KnxEntityIdentifier:
+    """Class to identify KNX entities in KNX frontend."""
+
+    platform: str
+    unique_id: str
+    ui: bool  # ui or yaml entity
+
+
+class GroupAddressEntity(TypedDict):
+    """An entity using a group address, as reported to the KNX frontend."""
+
+    platform: str
+    unique_id: str
+    ui: bool
+    disabled: bool  # disabled in the entity registry
+
 
 # Prefix of device identifiers created via the `knx/create_device` websocket
 # command (see websocket.py). A YAML `device.id` matching this prefix is
@@ -114,16 +134,6 @@ ATTR_SOURCE: Final = "source"
 type AsyncMessageCallbackType = Callable[[Telegram], Awaitable[None]]
 type MessageCallbackType = Callable[[Telegram], None]
 
-SERVICE_KNX_SEND: Final = "send"
-SERVICE_KNX_ATTR_PAYLOAD: Final = "payload"
-SERVICE_KNX_ATTR_TYPE: Final = "type"
-SERVICE_KNX_ATTR_RESPONSE: Final = "response"
-SERVICE_KNX_ATTR_REMOVE: Final = "remove"
-SERVICE_KNX_EVENT_REGISTER: Final = "event_register"
-SERVICE_KNX_EXPOSURE_REGISTER: Final = "exposure_register"
-SERVICE_KNX_READ: Final = "read"
-SERVICE_KNX_SAVE_SCENE: Final = "save_scene"
-
 REPAIR_ISSUE_DATA_SECURE_GROUP_KEY: Final = "data_secure_group_key_issue"
 REPAIR_ISSUE_ENTITY_VALIDATION_ERROR: Final = "entity_validation_error"
 REPAIR_ISSUE_EXPOSE_VALIDATION_ERROR: Final = "expose_validation_error"
@@ -147,8 +157,8 @@ class KNXConfigEntryData(TypedDict, total=False):
     user_id: int | None  # not required
     user_password: str | None  # not required
     device_authentication: str | None  # not required
-    knxkeys_filename: str  # not required
-    knxkeys_password: str  # not required
+    knxkeys_filename: str | None  # not required
+    knxkeys_password: str | None  # not required
     backbone_key: str | None  # not required
     sync_latency_tolerance: int | None  # not required
 

@@ -17,11 +17,10 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: RovaConfigEntry) -> None:
     """Set up ROVA from a config entry."""
 
-    api = Rova(
-        entry.data[CONF_ZIP_CODE],
-        entry.data[CONF_HOUSE_NUMBER],
-        entry.data[CONF_HOUSE_NUMBER_SUFFIX],
-    )
+    zip_code = entry.data[CONF_ZIP_CODE]
+    house_number = entry.data[CONF_HOUSE_NUMBER]
+    house_number_suffix = entry.data[CONF_HOUSE_NUMBER_SUFFIX]
+    api = Rova(zip_code, house_number, house_number_suffix)
 
     try:
         rova_area = await hass.async_add_executor_job(api.is_rova_area)
@@ -32,13 +31,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: RovaConfigEntry) -> None
         async_create_issue(
             hass,
             DOMAIN,
-            f"no_rova_area_{entry.data[CONF_ZIP_CODE]}",
+            f"no_rova_area_{entry.entry_id}",
+            config_entry_id=entry.entry_id,
             is_fixable=False,
             issue_domain=DOMAIN,
             severity=IssueSeverity.ERROR,
             translation_key="no_rova_area",
             translation_placeholders={
-                CONF_ZIP_CODE: entry.data[CONF_ZIP_CODE],
+                "address": f"{zip_code} {house_number} {house_number_suffix}".strip(),
             },
         )
         raise ConfigEntryError("Rova does not collect garbage in this area")

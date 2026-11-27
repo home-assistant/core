@@ -41,7 +41,7 @@ def _patch_success() -> Generator[None]:
         ),
         patch(
             "homeassistant.components.uptimerobot.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         yield
@@ -65,7 +65,7 @@ async def test_user(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.uptimerobot.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -204,7 +204,7 @@ async def test_user_unique_id_already_exists(
         ),
         patch(
             "homeassistant.components.uptimerobot.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -241,7 +241,7 @@ async def test_reauthentication(
         ),
         patch(
             "homeassistant.components.uptimerobot.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -274,7 +274,7 @@ async def test_reauthentication_failure(
         ),
         patch(
             "homeassistant.components.uptimerobot.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -323,7 +323,7 @@ async def test_reauthentication_failure_no_existing_entry(
         ),
         patch(
             "homeassistant.components.uptimerobot.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -362,7 +362,7 @@ async def test_reauthentication_failure_account_not_matching(
         ),
         patch(
             "homeassistant.components.uptimerobot.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -412,7 +412,7 @@ async def test_reconfigure_successful(
         ),
         patch(
             "homeassistant.components.uptimerobot.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -451,7 +451,7 @@ async def test_reconfigure_failed(
         ),
         patch(
             "homeassistant.components.uptimerobot.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -474,7 +474,7 @@ async def test_reconfigure_failed(
         ),
         patch(
             "homeassistant.components.uptimerobot.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result3 = await hass.config_entries.flow.async_configure(

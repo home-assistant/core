@@ -54,6 +54,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up guest WiFi QR code for device."""
     avm_wrapper = entry.runtime_data
+    if not avm_wrapper.has_guest_wifi:
+        return
 
     guest_wifi_info = await hass.async_add_executor_job(
         avm_wrapper.fritz_guest_wifi.get_info

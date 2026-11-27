@@ -1,6 +1,7 @@
 """Helpers for managing a pairing with a HomeKit accessory or bridge."""
 
 import asyncio
+from collections import defaultdict
 from collections.abc import Callable, Iterable
 from datetime import datetime, timedelta
 from functools import partial
@@ -32,7 +33,7 @@ from homeassistant.core import CALLBACK_TYPE, CoreState, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import ChildDeviceInfo, DeviceInfo
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 from homeassistant.helpers.start import async_at_started
 
@@ -61,6 +62,15 @@ MAX_POLL_FAILURES_TO_DECLARE_UNAVAILABLE = 3
 MAX_CHARACTERISTICS_PER_REQUEST = 49
 
 BLE_AVAILABILITY_CHECK_INTERVAL = 1800  # seconds
+
+IDENTIFIER_SERVICE_ID = "homekit_controller:service-id"
+
+# An accessory with several services of one of these types, like the outlets
+# of a power strip, gets a child device per service
+CHILD_DEVICE_SERVICE_TYPES = {
+    ServicesTypes.LIGHTBULB: "light",
+    ServicesTypes.OUTLET: "outlet",
+}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -131,6 +141,9 @@ class HKDevice:
         # A map of aid -> device_id
         # Useful when routing events to triggers
         self.devices: dict[int, str] = {}
+
+        # A map of (aid, service iid) -> child device_id
+        self.child_devices: dict[tuple[int, int], str] = {}
 
         self.available = False
 
@@ -428,6 +441,61 @@ class HKDevice:
             serial_number=accessory.serial_number,
         )
 
+    def child_device_services(self, accessory: Accessory) -> list[Service]:
+        """Return the services of an accessory that get their own child device."""
+        services_by_type: dict[str, list[Service]] = defaultdict(list)
+        for service in accessory.services:
+            if service.type not in CHILD_DEVICE_SERVICE_TYPES:
+                continue
+            # A service that another service links to is a part of that service
+            if accessory.services.first(child_service=service) is not None:
+                continue
+            services_by_type[service.type].append(service)
+        return [
+            service
+            for services in services_by_type.values()
+            if len(services) > 1
+            for service in services
+        ]
+
+    def child_device_identifier(self, aid: int, iid: int) -> tuple[str, str]:
+        """Return the device registry identifier of a child device."""
+        return (IDENTIFIER_SERVICE_ID, f"{self.unique_id}:aid:{aid}:iid:{iid}")
+
+    def child_device_info(self, aid: int, iid: int) -> ChildDeviceInfo | None:
+        """Return the child device info of a service, if it has a child device."""
+        if (aid, iid) not in self.child_devices:
+            return None
+        return ChildDeviceInfo(
+            identifiers={self.child_device_identifier(aid, iid)},
+            parent_device_id=self.devices[aid],
+        )
+
+    def _child_device_info_for_service(
+        self, accessory: Accessory, service: Service, parent_device_id: str, index: int
+    ) -> ChildDeviceInfo:
+        """Build the child device info of a service."""
+        device_info = ChildDeviceInfo(
+            identifiers={self.child_device_identifier(accessory.aid, service.iid)},
+            parent_device_id=parent_device_id,
+        )
+        name: str | None = service.value(CharacteristicsTypes.NAME)
+        if name and name.casefold().startswith(accessory.name.casefold()):
+            suffix = name[len(accessory.name) :]
+            # Only strip the accessory name when it ends at a word boundary
+            if not suffix or suffix[0] in " -_":
+                name = suffix.strip(" -_")
+        if name and not name.isdecimal():
+            device_info.name = name
+        else:
+            # A name that is only a number is used as the index
+            device_info.translation_key = CHILD_DEVICE_SERVICE_TYPES[service.type]
+            device_info.translation_placeholders = {
+                "index": name
+                or str(service.value(CharacteristicsTypes.SERVICE_LABEL_INDEX) or index)
+            }
+        return device_info
+
     @callback
     def async_migrate_devices(self) -> None:
         """Migrate legacy device entries from 3-tuples to 2-tuples."""
@@ -651,6 +719,7 @@ class HKDevice:
         device_registry = dr.async_get(self.hass)
 
         devices = {}
+        child_devices: dict[tuple[int, int], str] = {}
         bridge_device_id: str | None = None
 
         # Accessories are sorted by their HomeKit accessory id (aid). The bridge is
@@ -662,7 +731,7 @@ class HKDevice:
             if accessory.aid != 1 and bridge_device_id is not None:
                 device_info.via_device_id = bridge_device_id
 
-            device = device_registry.async_get_or_create_device(
+            device = device_registry.async_get_or_create_from_info(
                 config_entry_id=self.config_entry.entry_id,
                 device_info=device_info,
             )
@@ -672,7 +741,52 @@ class HKDevice:
 
             devices[accessory.aid] = device.id
 
+            indexes: defaultdict[str, int] = defaultdict(int)
+            for service in self.child_device_services(accessory):
+                indexes[service.type] += 1
+                child_device = device_registry.async_get_or_create_child_from_info(
+                    config_entry_id=self.config_entry.entry_id,
+                    device_info=self._child_device_info_for_service(
+                        accessory, service, device.id, indexes[service.type]
+                    ),
+                )
+                child_devices[(accessory.aid, service.iid)] = child_device.id
+
+        previous_child_devices = self.child_devices
         self.devices = devices
+        self.child_devices = child_devices
+
+        # A service gains or loses its child device when the services of its
+        # accessory change, so move its entities along before removing stale
+        # child devices, which would remove the entities with them
+        entity_registry = er.async_get(self.hass)
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, self.config_entry.entry_id
+        ):
+            if (iids := unique_id_to_iids(entry.unique_id)) is None:
+                continue
+            aid, iid, char_iid = iids
+            device_id = (
+                child_devices.get((aid, iid)) if iid is not None else None
+            ) or devices.get(aid)
+            if device_id is None or entry.device_id == device_id:
+                continue
+            updates: dict[str, Any] = {"device_id": device_id}
+            if iid is not None and char_iid is None:
+                # Rename with the move, so the entity's area follows to the child device
+                if (aid, iid) in child_devices:
+                    updates["has_entity_name"] = True
+                    updates["original_name"] = None
+                elif (aid, iid) in previous_child_devices:
+                    updates["has_entity_name"] = False
+            entity_registry.async_update_entity(entry.entity_id, **updates)
+
+        child_device_ids = set(child_devices.values())
+        for child_device in dr.async_child_entries_for_config_entry(
+            device_registry, self.config_entry.entry_id
+        ):
+            if child_device.id not in child_device_ids:
+                device_registry.async_remove_device(child_device.id)
 
     async def async_process_entity_map(self) -> None:
         """Process the entity map and load any platforms or entities that need adding.

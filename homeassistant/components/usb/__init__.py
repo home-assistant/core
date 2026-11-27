@@ -37,7 +37,9 @@ from .consumers import UNSCANNABLE_PORT_SCHEMES, async_get_serial_port_consumers
 from .models import SerialDevice, SerialPortConsumer, USBDevice
 from .serial_proxy_stub import register_serialx_transport
 from .utils import (
+    has_unique_serial_number,
     scan_serial_ports,
+    serial_path_udev_id,
     usb_device_from_path,
     usb_device_matches_matcher,
     usb_serial_device_from_port,
@@ -61,6 +63,7 @@ __all__ = [
     "SerialPortConsumer",
     "USBCallbackMatcher",
     "USBDevice",
+    "async_find_moved_serial_port",
     "async_get_serial_port_consumers",
     "async_is_serial_port_present",
     "async_notify_serial_ports_changed",
@@ -68,7 +71,9 @@ __all__ = [
     "async_register_scan_request_callback",
     "async_register_serial_port_scanner",
     "async_scan_serial_ports",
+    "has_unique_serial_number",
     "scan_serial_ports",
+    "serial_path_udev_id",
     "usb_device_from_path",
     "usb_device_matches_matcher",
     "usb_serial_device_from_port",
@@ -126,6 +131,12 @@ async def async_is_serial_port_present(hass: HomeAssistant, device_path: str) ->
     return any(
         port.device == device_path for port in await async_scan_serial_ports(hass)
     )
+
+
+@hass_callback
+def async_find_moved_serial_port(hass: HomeAssistant, device_path: str) -> str | None:
+    """Return the path a configured port's device is now at, if it has moved."""
+    return hass.data[_USB_DATA].async_find_moved_serial_port(device_path)
 
 
 @hass_callback
@@ -394,6 +405,30 @@ class USBDiscovery:
                 _LOGGER.exception("Error in USB scanner callback")
 
         return list(ports.values())
+
+    @hass_callback
+    def async_find_moved_serial_port(self, device_path: str) -> str | None:
+        """Return the path a configured port's device is now at, if it has moved."""
+        # Only a by-id path or a serial proxy URL names its device
+        if (udev_id := serial_path_udev_id(device_path)) is None:
+            return None
+
+        ports = self._last_processed_devices
+        if any(port.device == device_path for port in ports):
+            return None
+
+        # Identical devices without a unique serial number share a name, so a lone match
+        # may be another device while the configured one is unplugged
+        candidates = [
+            port.device
+            for port in ports
+            if has_unique_serial_number(port)
+            and serial_path_udev_id(port.device) == udev_id
+        ]
+        if len(candidates) != 1:
+            return None
+
+        return candidates[0]
 
     @hass_callback
     def async_get_usb_matchers_for_device(self, device: USBDevice) -> list[USBMatcher]:

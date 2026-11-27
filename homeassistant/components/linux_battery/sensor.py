@@ -1,5 +1,6 @@
 """Details about the built-in battery."""
 
+from enum import StrEnum
 import logging
 import os
 from typing import Any, override
@@ -12,36 +13,13 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
 )
-from homeassistant.const import (
-    ATTR_MANUFACTURER,
-    ATTR_NAME,
-    ATTR_SERIAL_NUMBER,
-    CONF_NAME,
-    PERCENTAGE,
-)
+from homeassistant.const import CONF_NAME, PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTR_PATH = "path"
-ATTR_ALARM = "alarm"
-ATTR_CAPACITY = "capacity"
-ATTR_CAPACITY_LEVEL = "capacity_level"
-ATTR_CYCLE_COUNT = "cycle_count"
-ATTR_ENERGY_FULL = "energy_full"
-ATTR_ENERGY_FULL_DESIGN = "energy_full_design"
-ATTR_ENERGY_NOW = "energy_now"
-ATTR_MODEL_NAME = "model_name"
-ATTR_POWER_NOW = "power_now"
-ATTR_STATUS = "status"
-ATTR_VOLTAGE_MIN_DESIGN = "voltage_min_design"
-ATTR_VOLTAGE_NOW = "voltage_now"
-
-ATTR_HEALTH = "health"
-ATTR_STATUS = "status"
 
 CONF_BATTERY = "battery"
 CONF_SYSTEM = "system"
@@ -52,6 +30,28 @@ DEFAULT_PATH = "/sys/class/power_supply"
 DEFAULT_SYSTEM = "linux"
 
 SYSTEMS = ["android", "linux"]
+
+
+class LinuxBatteryEntityStateAttribute(StrEnum):
+    """State attributes for linux_battery entities."""
+
+    ALARM = "alarm"
+    CAPACITY_LEVEL = "capacity_level"
+    CYCLE_COUNT = "cycle_count"
+    ENERGY_FULL = "energy_full"
+    ENERGY_FULL_DESIGN = "energy_full_design"
+    ENERGY_NOW = "energy_now"
+    HEALTH = "health"
+    MANUFACTURER = "manufacturer"
+    MODEL_NAME = "model_name"
+    NAME = "name"
+    PATH = "path"
+    POWER_NOW = "power_now"
+    SERIAL_NUMBER = "serial_number"
+    STATUS = "status"
+    VOLTAGE_MIN_DESIGN = "voltage_min_design"
+    VOLTAGE_NOW = "voltage_now"
+
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
@@ -106,27 +106,27 @@ class LinuxBatterySensor(SensorEntity):
         """Return the state attributes of the sensor."""
         if self._system == "android":
             return {
-                ATTR_NAME: self._battery_stat.name,
-                ATTR_PATH: self._battery_stat.path,
-                ATTR_HEALTH: self._battery_stat.health,
-                ATTR_STATUS: self._battery_stat.status,
+                LinuxBatteryEntityStateAttribute.NAME: self._battery_stat.name,
+                LinuxBatteryEntityStateAttribute.PATH: self._battery_stat.path,
+                LinuxBatteryEntityStateAttribute.HEALTH: self._battery_stat.health,
+                LinuxBatteryEntityStateAttribute.STATUS: self._battery_stat.status,
             }
         return {
-            ATTR_NAME: self._battery_stat.name,
-            ATTR_PATH: self._battery_stat.path,
-            ATTR_ALARM: self._battery_stat.alarm,
-            ATTR_CAPACITY_LEVEL: self._battery_stat.capacity_level,
-            ATTR_CYCLE_COUNT: self._battery_stat.cycle_count,
-            ATTR_ENERGY_FULL: self._battery_stat.energy_full,
-            ATTR_ENERGY_FULL_DESIGN: self._battery_stat.energy_full_design,
-            ATTR_ENERGY_NOW: self._battery_stat.energy_now,
-            ATTR_MANUFACTURER: self._battery_stat.manufacturer,
-            ATTR_MODEL_NAME: self._battery_stat.model_name,
-            ATTR_POWER_NOW: self._battery_stat.power_now,
-            ATTR_SERIAL_NUMBER: self._battery_stat.serial_number,
-            ATTR_STATUS: self._battery_stat.status,
-            ATTR_VOLTAGE_MIN_DESIGN: self._battery_stat.voltage_min_design,
-            ATTR_VOLTAGE_NOW: self._battery_stat.voltage_now,
+            LinuxBatteryEntityStateAttribute.NAME: self._battery_stat.name,
+            LinuxBatteryEntityStateAttribute.PATH: self._battery_stat.path,
+            LinuxBatteryEntityStateAttribute.ALARM: self._battery_stat.alarm,
+            LinuxBatteryEntityStateAttribute.CAPACITY_LEVEL: self._battery_stat.capacity_level,
+            LinuxBatteryEntityStateAttribute.CYCLE_COUNT: self._battery_stat.cycle_count,
+            LinuxBatteryEntityStateAttribute.ENERGY_FULL: self._battery_stat.energy_full,
+            LinuxBatteryEntityStateAttribute.ENERGY_FULL_DESIGN: self._battery_stat.energy_full_design,
+            LinuxBatteryEntityStateAttribute.ENERGY_NOW: self._battery_stat.energy_now,
+            LinuxBatteryEntityStateAttribute.MANUFACTURER: self._battery_stat.manufacturer,
+            LinuxBatteryEntityStateAttribute.MODEL_NAME: self._battery_stat.model_name,
+            LinuxBatteryEntityStateAttribute.POWER_NOW: self._battery_stat.power_now,
+            LinuxBatteryEntityStateAttribute.SERIAL_NUMBER: self._battery_stat.serial_number,
+            LinuxBatteryEntityStateAttribute.STATUS: self._battery_stat.status,
+            LinuxBatteryEntityStateAttribute.VOLTAGE_MIN_DESIGN: self._battery_stat.voltage_min_design,
+            LinuxBatteryEntityStateAttribute.VOLTAGE_NOW: self._battery_stat.voltage_now,
         }
 
     def update(self) -> None:

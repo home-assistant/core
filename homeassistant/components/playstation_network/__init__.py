@@ -62,14 +62,12 @@ async def async_setup_entry(
     # platforms (media players, friends) can resolve it as their via_device.
     if TYPE_CHECKING:
         assert entry.unique_id
-    dr.async_get(hass).async_get_or_create_device(
+    dr.async_get(hass).async_get_or_create(
         config_entry_id=entry.entry_id,
-        device_info=dr.DeviceInfo(
-            identifiers={(DOMAIN, entry.unique_id)},
-            name=coordinator.data.username,
-            entry_type=DeviceEntryType.SERVICE,
-            manufacturer="Sony Interactive Entertainment",
-        ),
+        identifiers={(DOMAIN, entry.unique_id)},
+        name=coordinator.data.username,
+        entry_type=DeviceEntryType.SERVICE,
+        manufacturer="Sony Interactive Entertainment",
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

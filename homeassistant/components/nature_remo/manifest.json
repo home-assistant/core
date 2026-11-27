@@ -8,6 +8,7 @@
   ],
   "codeowners": ["@tnj"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/nature_remo",
   "integration_type": "hub",
   "iot_class": "cloud_polling",

@@ -5,23 +5,21 @@ import logging
 from typing import Any, override
 
 from homeassistant.components.climate import (
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
     FAN_AUTO,
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
     ClimateEntity,
     ClimateEntityFeature,
+    ClimateServiceArgument,
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
+from homeassistant.const import PRECISION_WHOLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AdvantageAirDataConfigEntry
 from .const import (
     ADVANTAGE_AIR_AUTOFAN_ENABLED,
     ADVANTAGE_AIR_STATE_CLOSE,
@@ -29,7 +27,7 @@ from .const import (
     ADVANTAGE_AIR_STATE_ON,
     ADVANTAGE_AIR_STATE_OPEN,
 )
-from .coordinator import AdvantageAirCoordinator
+from .coordinator import AdvantageAirCoordinator, AdvantageAirDataConfigEntry
 from .entity import AdvantageAirAcEntity, AdvantageAirZoneEntity
 
 ADVANTAGE_AIR_HVAC_MODES = {
@@ -259,13 +257,22 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the Temperature."""
-        if ATTR_TEMPERATURE in kwargs:
-            await self.async_update_ac({"setTemp": kwargs[ATTR_TEMPERATURE]})
-        if ATTR_TARGET_TEMP_LOW in kwargs and ATTR_TARGET_TEMP_HIGH in kwargs:
+        if ClimateServiceArgument.TEMPERATURE in kwargs:
+            await self.async_update_ac(
+                {"setTemp": kwargs[ClimateServiceArgument.TEMPERATURE]}
+            )
+        if (
+            ClimateServiceArgument.TARGET_TEMP_LOW in kwargs
+            and ClimateServiceArgument.TARGET_TEMP_HIGH in kwargs
+        ):
             await self.async_update_ac(
                 {
-                    ADVANTAGE_AIR_COOL_TARGET: kwargs[ATTR_TARGET_TEMP_HIGH],
-                    ADVANTAGE_AIR_HEAT_TARGET: kwargs[ATTR_TARGET_TEMP_LOW],
+                    ADVANTAGE_AIR_COOL_TARGET: kwargs[
+                        ClimateServiceArgument.TARGET_TEMP_HIGH
+                    ],
+                    ADVANTAGE_AIR_HEAT_TARGET: kwargs[
+                        ClimateServiceArgument.TARGET_TEMP_LOW
+                    ],
                 }
             )
 
@@ -364,5 +371,5 @@ class AdvantageAirZone(AdvantageAirZoneEntity, ClimateEntity):
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the Temperature."""
-        temp = kwargs.get(ATTR_TEMPERATURE)
+        temp = kwargs.get(ClimateServiceArgument.TEMPERATURE)
         await self.async_update_zone({"setTemp": temp})

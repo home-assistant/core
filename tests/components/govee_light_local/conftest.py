@@ -1,6 +1,6 @@
 """Tests configuration for Govee Local API."""
 
-from asyncio import Event
+import asyncio
 from collections.abc import Generator
 from ipaddress import IPv4Network
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -79,7 +79,7 @@ def fixture_mock_govee_api() -> Generator[AsyncMock]:
     """Set up Govee Local API fixture."""
     mock_api = AsyncMock(spec=GoveeController)
     mock_api.start = AsyncMock()
-    mock_api.cleanup = MagicMock(return_value=Event())
+    mock_api.cleanup = MagicMock(return_value=asyncio.Event())
     mock_api.cleanup.return_value.set()
     mock_api.turn_on_off = AsyncMock()
     mock_api.set_brightness = AsyncMock()
@@ -91,6 +91,8 @@ def fixture_mock_govee_api() -> Generator[AsyncMock]:
     mock_api.listening_addresses = ["10.0.0.7", "192.168.1.2"]
     mock_api.networks = [IPv4Network("10.0.0.0/8"), IPv4Network("192.168.1.0/24")]
     mock_api.bind_failures = []
+    mock_api.protocols = [MagicMock()]
+    mock_api.rebind_failed = AsyncMock(return_value=[])
 
     with (
         patch(
@@ -105,12 +107,18 @@ def fixture_mock_govee_api() -> Generator[AsyncMock]:
         yield mock_controller.return_value
 
 
+@pytest.fixture(name="mock_stuck_cleanup")
+def fixture_mock_stuck_cleanup(mock_govee_api: AsyncMock) -> None:
+    """Make cleanup never complete, as if a transport never closed."""
+    mock_govee_api.cleanup = MagicMock(return_value=asyncio.Event())
+
+
 @pytest.fixture(name="mock_setup_entry")
 def fixture_mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.govee_light_local.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 

@@ -7,6 +7,7 @@ from aioelectricitymaps import (
     ElectricityMapsError,
     ElectricityMapsInvalidTokenError,
     ElectricityMapsNoDataError,
+    ZoneRequest,
 )
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -14,7 +15,13 @@ from pytest_homeassistant.common import MockConfigEntry
 from homeassistant import config_entries
 from homeassistant.components.co2signal import config_flow
 from homeassistant.components.co2signal.const import DOMAIN
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_COUNTRY_CODE,
+    CONF_LATITUDE,
+    CONF_LOCATION,
+    CONF_LONGITUDE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -31,7 +38,7 @@ async def test_form_home(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.co2signal.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -71,13 +78,15 @@ async def test_form_coordinates(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.co2signal.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {
-                "latitude": 12.3,
-                "longitude": 45.6,
+                CONF_LOCATION: {
+                    CONF_LATITUDE: 12.3,
+                    CONF_LONGITUDE: 45.6,
+                }
             },
         )
         await hass.async_block_till_done()
@@ -113,7 +122,7 @@ async def test_form_country(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.co2signal.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
@@ -190,10 +199,13 @@ async def test_form_error_handling(
 
 async def test_reauth(
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
     electricity_maps: AsyncMock,
 ) -> None:
     """Test reauth flow."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_API_KEY: "api_key", CONF_COUNTRY_CODE: "fr"},
+    )
     config_entry.add_to_hass(hass)
 
     init_result = await config_entry.start_reauth_flow(hass)
@@ -203,7 +215,7 @@ async def test_reauth(
 
     with patch(
         "homeassistant.components.co2signal.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         configure_result = await hass.config_entries.flow.async_configure(
             init_result["flow_id"],
@@ -216,3 +228,148 @@ async def test_reauth(
     assert configure_result["type"] is FlowResultType.ABORT
     assert configure_result["reason"] == "reauth_successful"
     assert len(mock_setup_entry.mock_calls) == 1
+    electricity_maps.carbon_intensity_for_home_assistant.assert_called_once_with(
+        ZoneRequest(zone="fr")
+    )
+    assert config_entry.data == {CONF_API_KEY: "api_key2", CONF_COUNTRY_CODE: "fr"}
+
+
+@pytest.mark.usefixtures("electricity_maps")
+async def test_reconfigure_home(hass: HomeAssistant) -> None:
+    """Test reconfiguring to the home location."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_API_KEY: "api_key", CONF_COUNTRY_CODE: "fr"},
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    with patch(
+        "homeassistant.components.co2signal.async_setup_entry",
+        return_value=None,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"location": config_flow.TYPE_USE_HOME}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data == {CONF_API_KEY: "api_key"}
+
+
+@pytest.mark.usefixtures("electricity_maps")
+async def test_reconfigure_coordinates(hass: HomeAssistant) -> None:
+    """Test reconfiguring the coordinates."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_API_KEY: "api_key", CONF_LATITUDE: 1.2, CONF_LONGITUDE: 3.4},
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"location": config_flow.TYPE_SPECIFY_COORDINATES}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "coordinates"
+
+    with patch(
+        "homeassistant.components.co2signal.async_setup_entry",
+        return_value=None,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_LOCATION: {CONF_LATITUDE: 12.3, CONF_LONGITUDE: 45.6}},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data == {
+        CONF_API_KEY: "api_key",
+        CONF_LATITUDE: 12.3,
+        CONF_LONGITUDE: 45.6,
+    }
+
+
+@pytest.mark.usefixtures("electricity_maps")
+async def test_reconfigure_country(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test reconfiguring to a zone key."""
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"location": config_flow.TYPE_SPECIFY_COUNTRY}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "country"
+
+    with patch(
+        "homeassistant.components.co2signal.async_setup_entry",
+        return_value=None,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_COUNTRY_CODE: "fr"}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data == {CONF_API_KEY: "api_key", CONF_COUNTRY_CODE: "fr"}
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "err_code"),
+    [
+        pytest.param(
+            ElectricityMapsInvalidTokenError, "invalid_auth", id="invalid_auth"
+        ),
+        pytest.param(ElectricityMapsError("Something else"), "unknown", id="unknown"),
+        pytest.param(
+            ElectricityMapsNoDataError("I have no data"), "no_data", id="no_data"
+        ),
+    ],
+)
+async def test_reconfigure_error_handling(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    electricity_maps: AsyncMock,
+    side_effect: Exception,
+    err_code: str,
+) -> None:
+    """Test reconfiguring recovers from errors."""
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+
+    electricity_maps.carbon_intensity_for_home_assistant.side_effect = side_effect
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"location": config_flow.TYPE_SPECIFY_COUNTRY}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_COUNTRY_CODE: "fr"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "country"
+    assert result["errors"] == {"base": err_code}
+
+    electricity_maps.carbon_intensity_for_home_assistant.side_effect = None
+    with patch(
+        "homeassistant.components.co2signal.async_setup_entry",
+        return_value=None,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_COUNTRY_CODE: "fr"}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data == {CONF_API_KEY: "api_key", CONF_COUNTRY_CODE: "fr"}

@@ -21,6 +21,7 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityDescription,
     CoverEntityFeature,
+    CoverSpeed,
 )
 from homeassistant.components.script import scripts_with_entity
 from homeassistant.const import Platform
@@ -36,8 +37,8 @@ from homeassistant.helpers.issue_registry import (
 from homeassistant.helpers.start import async_at_started
 
 from . import OverkizDataConfigEntry
-from .const import DOMAIN, LOGGER
-from .coordinator import OverkizDataUpdateCoordinator
+from .const import DOMAIN, LOGGER, OverkizServiceArgument
+from .coordinator import OverkizDataUpdateCoordinator, OverkizDeviceCommand
 from .entity import OverkizDescriptiveEntity
 
 # Special position values reported by some Overkiz devices
@@ -46,9 +47,6 @@ _POSITION_UNKNOWN = 124  # "Unknown position" preset
 
 # Default tilt step size (in degrees) used for RTS tilt commands
 _TILT_STEP_SIZE = 5
-
-_SPEED_DEFAULT = "default"
-_SPEED_LOW = "low"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -70,6 +68,9 @@ class OverkizCoverDescription(CoverEntityDescription):
     close_tilt_command: OverkizCommand | None = None
     close_tilt_command_args: tuple[OverkizStateType, ...] = ()
     stop_tilt_command: OverkizCommand | None = None
+    open_tilt_position: int | None = None
+    tilt_start_angle: int | None = None
+    tilt_end_angle: int | None = None
 
 
 COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
@@ -120,6 +121,18 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         device_class=CoverDeviceClass.SHUTTER,
         current_position_state=OverkizState.CORE_CLOSURE,
         set_position_command=OverkizCommand.SET_CLOSURE,
+        open_command=OverkizCommand.OPEN,
+        close_command=OverkizCommand.CLOSE,
+        stop_command=OverkizCommand.STOP,
+    ),
+    # Needs override since PositionableScreenUno only reports TargetClosureState
+    # and ignores setClosure
+    # uiClass is ExteriorScreen
+    OverkizCoverDescription(
+        key=UIWidget.POSITIONABLE_SCREEN_UNO,
+        device_class=CoverDeviceClass.BLIND,
+        current_position_state=OverkizState.CORE_TARGET_CLOSURE,
+        set_position_command=OverkizCommand.SET_DEPLOYMENT,
         open_command=OverkizCommand.OPEN,
         close_command=OverkizCommand.CLOSE,
         stop_command=OverkizCommand.STOP,
@@ -221,6 +234,9 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         open_tilt_command=OverkizCommand.OPEN_SLATS,
         close_tilt_command=OverkizCommand.CLOSE_SLATS,
         stop_tilt_command=OverkizCommand.STOP,
+        open_tilt_position=60,
+        tilt_start_angle=-90,
+        tilt_end_angle=60,
     ),
     # Needs override since PositionableGarageDoor reports
     # core:OpenClosedUnknownState instead of core:OpenClosedState
@@ -667,6 +683,7 @@ def _async_check_deprecated_low_speed_cover(
         DOMAIN,
         issue_id,
         breaks_in_ha_version="2027.5.0",
+        config_entry_id=entity_entry.config_entry_id,
         is_fixable=False,
         severity=IssueSeverity.WARNING,
         translation_key=(
@@ -694,6 +711,10 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
 
         # Use device url as unique ID for backwards compatibility
         self._attr_unique_id = self.device.device_url
+
+        self._attr_open_tilt_position = description.open_tilt_position
+        self._attr_tilt_start_angle = description.tilt_start_angle
+        self._attr_tilt_end_angle = description.tilt_end_angle
 
         # Overkiz does support covers where only tilt commands are supported
         # and HA sets by default open/close as supported feature which conflicts
@@ -750,7 +771,7 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
 
         if self.device.supports_command(OverkizCommand.SET_CLOSURE_AND_LINEAR_SPEED):
             supported_features |= CoverEntityFeature.SPEED
-            self._attr_supported_speeds = [_SPEED_DEFAULT, _SPEED_LOW]
+            self._attr_supported_speeds = [CoverSpeed.FAST, CoverSpeed.SLOW]
 
         self._attr_supported_features = supported_features
 
@@ -811,9 +832,13 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
                 state_name,
             )
 
-            if fallback_state := self.device.states.get(
-                OverkizState.CORE_TARGET_CLOSURE
-            ):
+            # TargetClosureState may be 124 as well, e.g. when it is the position
+            # state itself (PositionableScreenUno)
+            if (
+                fallback_state := self.device.states.get(
+                    OverkizState.CORE_TARGET_CLOSURE
+                )
+            ) and fallback_state.value_as_int != _POSITION_UNKNOWN:
                 position = fallback_state.value_as_int
             else:
                 return None
@@ -831,7 +856,7 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         position = kwargs[ATTR_POSITION]
-        if kwargs.get(ATTR_SPEED) == _SPEED_LOW:
+        if kwargs.get(ATTR_SPEED) == CoverSpeed.SLOW:
             await self._async_set_cover_position_low_speed(position)
             return
 
@@ -844,7 +869,7 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
     @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        if kwargs.get(ATTR_SPEED) == _SPEED_LOW:
+        if kwargs.get(ATTR_SPEED) == CoverSpeed.SLOW:
             await self._async_set_cover_position_low_speed(100)
             return
 
@@ -854,7 +879,7 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
     @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
-        if kwargs.get(ATTR_SPEED) == _SPEED_LOW:
+        if kwargs.get(ATTR_SPEED) == CoverSpeed.SLOW:
             await self._async_set_cover_position_low_speed(0)
             return
 
@@ -924,8 +949,8 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
                 translation_key="unsupported_set_position_and_tilt",
             )
 
-        position = kwargs[ATTR_POSITION]
-        tilt_position = kwargs[ATTR_TILT_POSITION]
+        position = kwargs[OverkizServiceArgument.POSITION]
+        tilt_position = kwargs[OverkizServiceArgument.TILT_POSITION]
 
         if self.entity_description.invert_position:
             position = 100 - position
@@ -941,7 +966,9 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
     @override
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
-        if command := self.entity_description.open_tilt_command:
+        if (position := self.entity_description.open_tilt_position) is not None:
+            await self.async_set_cover_tilt_position(**{ATTR_TILT_POSITION: position})
+        elif command := self.entity_description.open_tilt_command:
             await self.executor.async_execute_command(
                 command, *self.entity_description.open_tilt_command_args
             )
@@ -1010,11 +1037,12 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
 
     def is_running(self, command: OverkizCommand) -> bool:
         """Return if the given commands are currently running."""
+        device_command = OverkizDeviceCommand(
+            device_url=self.device.device_url, command_name=command
+        )
         return any(
-            execution.get("device_url") == self.device.device_url
-            and execution.get("command_name") == command
-            for executions in self.coordinator.executions.values()
-            for execution in executions
+            device_command in device_commands
+            for device_commands in self.coordinator.executions.values()
         )
 
     @property
