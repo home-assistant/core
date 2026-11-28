@@ -1,7 +1,8 @@
 """Tests for the GeoSphere Austria Warnings sensors."""
 
+from collections.abc import Generator
 from typing import Any
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pygeosphere_warnings import GeoSphereConnectionError
@@ -17,7 +18,7 @@ from homeassistant.components.geosphere_austria_warnings.const import DOMAIN
 from homeassistant.components.geosphere_austria_warnings.coordinator import (
     UPDATE_INTERVAL,
 )
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -38,6 +39,16 @@ EXPECTED_ENTITY_IDS = {
 }
 
 WARNING_DETAIL_ATTRIBUTE_KEYS = {"type", "start", "end", "warning_id"}
+
+
+@pytest.fixture(autouse=True)
+def sensor_platform_only() -> Generator[None]:
+    """Only set up the sensor platform."""
+    with patch(
+        "homeassistant.components.geosphere_austria_warnings.PLATFORMS",
+        [Platform.SENSOR],
+    ):
+        yield
 
 
 def warning_details(state: State) -> dict[str, Any]:
