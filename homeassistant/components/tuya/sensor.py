@@ -84,7 +84,7 @@ from .util import get_device_temp_unit_convert
 class TuyaSensorEntityDescription(TuyaEntityDescription, SensorEntityDescription):
     """Describes Tuya sensor entity."""
 
-    dpcode: DPCode | None = None
+    dpcode: DPCode | tuple[DPCode, ...] | None = None
     wrapper_class: tuple[type[DPCodeTypeInformationWrapper], ...] | None = None
 
 
@@ -160,69 +160,90 @@ def _electricity_data(dpcode: DPCode) -> tuple[TuyaSensorEntityDescription, ...]
 
 def _has_multiple_phase_channels(device: CustomerDevice) -> bool:
     """Return if the device reports more than one indexed phase channel."""
-    return DPCode.PHASE_S2 in device.status_range
+    return (
+        DPCode.PHASE_S2 in device.status_range or DPCode.PHASE_2 in device.status_range
+    )
 
 
 def _indexed_electricity_data(
-    dpcode: DPCode, index: int
+    dpcode: tuple[DPCode, ...],
+    index: int,
 ) -> tuple[TuyaSensorEntityDescription, ...]:
-    """Build sensors extracted from an indexed hex-string electricity DPCode."""
+    """Build sensors extracted from an indexed electricity DPCode."""
     return (
         TuyaSensorEntityDescription(
-            key=f"{dpcode}electriccurrent",
+            key=f"{dpcode[0]}electriccurrent",
             dpcode=dpcode,
             device_class=SensorDeviceClass.CURRENT,
             state_class=SensorStateClass.MEASUREMENT,
             suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-            wrapper_class=(ElectricityCurrentHexStringWrapper,),
+            wrapper_class=(
+                ElectricityCurrentHexStringWrapper,
+                ElectricityCurrentRawWrapper,
+            ),
             channel_index=index,
             channel_condition=_has_multiple_phase_channels,
         ),
         TuyaSensorEntityDescription(
-            key=f"{dpcode}power",
+            key=f"{dpcode[0]}power",
             dpcode=dpcode,
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
             suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
-            wrapper_class=(ElectricityPowerHexStringWrapper,),
+            wrapper_class=(
+                ElectricityPowerHexStringWrapper,
+                ElectricityPowerRawWrapper,
+            ),
             channel_index=index,
             channel_condition=_has_multiple_phase_channels,
         ),
         TuyaSensorEntityDescription(
-            key=f"{dpcode}voltage",
+            key=f"{dpcode[0]}voltage",
             dpcode=dpcode,
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=(ElectricityVoltageHexStringWrapper,),
+            wrapper_class=(
+                ElectricityVoltageHexStringWrapper,
+                ElectricityVoltageRawWrapper,
+            ),
             channel_index=index,
             channel_condition=_has_multiple_phase_channels,
         ),
         TuyaSensorEntityDescription(
-            key=f"{dpcode}reactivepower",
+            key=f"{dpcode[0]}reactivepower",
             dpcode=dpcode,
             device_class=SensorDeviceClass.REACTIVE_POWER,
             state_class=SensorStateClass.MEASUREMENT,
             suggested_unit_of_measurement=UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE,
-            wrapper_class=(ElectricityReactivePowerHexStringWrapper,),
+            wrapper_class=(
+                ElectricityReactivePowerHexStringWrapper,
+                ElectricityReactivePowerRawWrapper,
+            ),
             channel_index=index,
             channel_condition=_has_multiple_phase_channels,
         ),
         TuyaSensorEntityDescription(
-            key=f"{dpcode}apparentpower",
+            key=f"{dpcode[0]}apparentpower",
             dpcode=dpcode,
             device_class=SensorDeviceClass.APPARENT_POWER,
             state_class=SensorStateClass.MEASUREMENT,
             suggested_unit_of_measurement=UnitOfApparentPower.KILO_VOLT_AMPERE,
-            wrapper_class=(ElectricityApparentPowerHexStringWrapper,),
+            wrapper_class=(
+                ElectricityApparentPowerHexStringWrapper,
+                ElectricityApparentPowerRawWrapper,
+            ),
             channel_index=index,
             channel_condition=_has_multiple_phase_channels,
         ),
         TuyaSensorEntityDescription(
-            key=f"{dpcode}powerfactor",
+            key=f"{dpcode[0]}powerfactor",
             dpcode=dpcode,
             device_class=SensorDeviceClass.POWER_FACTOR,
             state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=(ElectricityPowerFactorHexStringWrapper,),
+            wrapper_class=(
+                ElectricityPowerFactorHexStringWrapper,
+                ElectricityPowerFactorRawWrapper,
+            ),
             channel_index=index,
             channel_condition=_has_multiple_phase_channels,
         ),
@@ -1950,7 +1971,8 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             description
             for index in range(1, 21)
             for description in _indexed_electricity_data(
-                DPCode(f"phase_s{index}"), index
+                (DPCode(f"phase_s{index}"), DPCode(f"phase_{index}")),
+                index,
             )
         ),
     ),
@@ -2062,6 +2084,20 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
 }
 
 
+def _get_sensor_definition(
+    device: CustomerDevice,
+    dpcode: str | tuple[DPCode, ...],
+    wrapper_class: tuple[type[DPCodeTypeInformationWrapper], ...] | None,
+) -> SensorDefinition | None:
+    """Return the sensor definition, accepting a tuple of DP codes."""
+    if isinstance(dpcode, tuple):
+        for candidate in wrapper_class or ():
+            if wrapper := candidate.find_dpcode(device, dpcode):
+                return SensorDefinition(sensor_wrapper=wrapper)
+        return None
+    return get_default_definition(device, dpcode, wrapper_class)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TuyaConfigEntry,
@@ -2094,7 +2130,7 @@ async def async_setup_entry(
                     )
                     for description in descriptions
                     if (
-                        definition := get_default_definition(
+                        definition := _get_sensor_definition(
                             device,
                             description.dpcode or description.key,
                             description.wrapper_class,
