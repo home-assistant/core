@@ -15,15 +15,10 @@ from hatasmota.models import DiscoveryHashType
 
 from homeassistant.components import light
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP_KELVIN,
-    ATTR_EFFECT,
-    ATTR_HS_COLOR,
-    ATTR_TRANSITION,
-    ATTR_WHITE,
     ColorMode,
     LightEntity,
     LightEntityFeature,
+    LightServiceArgument,
     brightness_supported,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -221,29 +216,41 @@ class TasmotaLight(
 
         attributes: dict[str, Any] = {}
 
-        if ATTR_HS_COLOR in kwargs and ColorMode.HS in supported_color_modes:  # type: ignore[operator]
-            hs_color = kwargs[ATTR_HS_COLOR]
+        if (
+            LightServiceArgument.HS_COLOR in kwargs
+            and ColorMode.HS in supported_color_modes  # type: ignore[operator]
+        ):
+            hs_color = kwargs[LightServiceArgument.HS_COLOR]
             attributes["color_hs"] = [hs_color[0], hs_color[1]]
 
-        if ATTR_WHITE in kwargs and ColorMode.WHITE in supported_color_modes:  # type: ignore[operator]
-            attributes["white_value"] = scale_brightness(kwargs[ATTR_WHITE])
+        if (
+            LightServiceArgument.WHITE in kwargs
+            and ColorMode.WHITE in supported_color_modes  # type: ignore[operator]
+        ):
+            attributes["white_value"] = scale_brightness(
+                kwargs[LightServiceArgument.WHITE]
+            )
 
-        if ATTR_TRANSITION in kwargs:
-            attributes["transition"] = kwargs[ATTR_TRANSITION]
+        if LightServiceArgument.TRANSITION in kwargs:
+            attributes["transition"] = kwargs[LightServiceArgument.TRANSITION]
 
-        if ATTR_BRIGHTNESS in kwargs and brightness_supported(supported_color_modes):
-            attributes["brightness"] = scale_brightness(kwargs[ATTR_BRIGHTNESS])
+        if LightServiceArgument.BRIGHTNESS in kwargs and brightness_supported(
+            supported_color_modes
+        ):
+            attributes["brightness"] = scale_brightness(
+                kwargs[LightServiceArgument.BRIGHTNESS]
+            )
 
         if (
-            ATTR_COLOR_TEMP_KELVIN in kwargs
+            LightServiceArgument.COLOR_TEMP_KELVIN in kwargs
             and ColorMode.COLOR_TEMP in supported_color_modes  # type: ignore[operator]
         ):
             attributes["color_temp"] = color_util.color_temperature_kelvin_to_mired(
-                kwargs[ATTR_COLOR_TEMP_KELVIN]
+                kwargs[LightServiceArgument.COLOR_TEMP_KELVIN]
             )
 
-        if ATTR_EFFECT in kwargs:
-            attributes["effect"] = kwargs[ATTR_EFFECT]
+        if LightServiceArgument.EFFECT in kwargs:
+            attributes["effect"] = kwargs[LightServiceArgument.EFFECT]
 
         await self._tasmota_entity.set_state(True, attributes)
 
@@ -252,7 +259,7 @@ class TasmotaLight(
         """Turn the entity off."""
         attributes = {"state": "OFF"}
 
-        if ATTR_TRANSITION in kwargs:
-            attributes["transition"] = kwargs[ATTR_TRANSITION]
+        if LightServiceArgument.TRANSITION in kwargs:
+            attributes["transition"] = kwargs[LightServiceArgument.TRANSITION]
 
         await self._tasmota_entity.set_state(False, attributes)

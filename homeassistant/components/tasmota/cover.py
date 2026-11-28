@@ -7,11 +7,10 @@ from hatasmota.entity import TasmotaEntity as HATasmotaEntity
 from hatasmota.models import DiscoveryHashType
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
-    ATTR_TILT_POSITION,
     DOMAIN as COVER_DOMAIN,
     CoverEntity,
     CoverEntityFeature,
+    CoverServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -146,7 +145,7 @@ class TasmotaCover(
     @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        position = kwargs[ATTR_POSITION]
+        position = kwargs[CoverServiceArgument.POSITION]
         await self._tasmota_entity.set_position(position)
 
     @override
@@ -167,7 +166,7 @@ class TasmotaCover(
     @override
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
-        tilt = kwargs[ATTR_TILT_POSITION]
+        tilt = kwargs[CoverServiceArgument.TILT_POSITION]
         await self._tasmota_entity.set_tilt_position(tilt)
 
     @override
