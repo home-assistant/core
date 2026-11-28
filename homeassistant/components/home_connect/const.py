@@ -78,6 +78,8 @@ BSH_DOOR_STATE_LOCKED = "BSH.Common.EnumType.DoorState.Locked"
 BSH_DOOR_STATE_OPEN = "BSH.Common.EnumType.DoorState.Open"
 
 
+ATTR_RAW_VALUE = "raw_value"
+
 AFFECTS_TO_ACTIVE_PROGRAM = "active_program"
 AFFECTS_TO_SELECTED_PROGRAM = "selected_program"
 
