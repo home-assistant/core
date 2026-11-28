@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any, override
 
 from boschshcpy import (
     BatteryLevelService,
+    PowerMeterMixin,
     SHCBatteryDevice,
     SHCLightControl,
     SHCLightSwitchBSM,
@@ -62,6 +63,7 @@ class SHCSensorEntityDescription[_DeviceT: SHCDevice](SensorEntityDescription):
 type _PowerMeterDevice = (
     SHCSmartPlug | SHCLightSwitchBSM | SHCLightControl | SHCMicromoduleShutterControl
 )
+type _YieldDevice = PowerMeterMixin
 
 TEMPERATURE_SENSOR = "temperature"
 HUMIDITY_SENSOR = "humidity"
@@ -74,6 +76,8 @@ HUMIDITY_RATING_SENSOR = "humidity_rating"
 PURITY_RATING_SENSOR = "purity_rating"
 POWER_SENSOR = "power"
 ENERGY_SENSOR = "energy"
+ENERGY_YIELD_SENSOR = "energy_yield"
+POWER_YIELD_SENSOR = "power_yield"
 COMMUNICATION_QUALITY_SENSOR = "communication_quality"
 FLOOR_TEMPERATURE_SENSOR = "floor_temperature"
 SIREN_BATTERY_SENSOR = "siren_battery"
@@ -284,6 +288,34 @@ _ENERGY_DESCRIPTION: SHCSensorEntityDescription[_PowerMeterDevice] = (
         value_fn=lambda device: device.energyconsumption / 1000.0,
     )
 )
+_ENERGY_YIELD_DESCRIPTION: SHCSensorEntityDescription[_YieldDevice] = (
+    SHCSensorEntityDescription(
+        key=ENERGY_YIELD_SENSOR,
+        translation_key=ENERGY_YIELD_SENSOR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        suggested_display_precision=2,
+        value_fn=lambda device: (
+            None if device.energy_yield is None else device.energy_yield / 1000.0
+        ),
+    )
+)
+_POWER_YIELD_DESCRIPTION: SHCSensorEntityDescription[_YieldDevice] = (
+    SHCSensorEntityDescription(
+        key=POWER_YIELD_SENSOR,
+        translation_key=POWER_YIELD_SENSOR,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        suggested_display_precision=1,
+        value_fn=lambda device: (
+            None
+            if device.powerconsumption is None
+            else max(-device.powerconsumption, 0.0)
+        ),
+    )
+)
 _COMPACT_POWER_DESCRIPTION: SHCSensorEntityDescription[SHCSmartPlugCompact] = (
     SHCSensorEntityDescription(
         key=POWER_SENSOR,
@@ -482,6 +514,27 @@ async def async_setup_entry(
         )
         for device in power_meter_devices
         for description in (_POWER_DESCRIPTION, _ENERGY_DESCRIPTION)
+    )
+
+    # Smart Plug [+M] in Mini-PV mode reports PV production separately.
+    yield_devices: list[_YieldDevice] = [
+        device
+        for device in (
+            *session.device_helper.smart_plugs,
+            *session.device_helper.smart_plugs_compact,
+        )
+        if device.supports_energy_yield
+    ]
+    entities.extend(
+        SHCSensor(
+            hass,
+            device,
+            description,
+            shc_info.unique_id,
+            config_entry.entry_id,
+        )
+        for device in yield_devices
+        for description in (_ENERGY_YIELD_DESCRIPTION, _POWER_YIELD_DESCRIPTION)
     )
 
     entities.extend(

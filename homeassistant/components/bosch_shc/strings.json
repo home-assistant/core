@@ -359,6 +359,9 @@
       "communication_quality": {
         "name": "Communication quality"
       },
+      "energy_yield": {
+        "name": "Energy yield"
+      },
       "floor_temperature": {
         "name": "Floor temperature"
       },
@@ -367,6 +370,9 @@
       },
       "open_windows_doors": {
         "name": "Open doors and windows"
+      },
+      "power_yield": {
+        "name": "Power yield"
       },
       "purity": {
         "name": "Purity"
