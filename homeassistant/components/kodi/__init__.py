@@ -1,11 +1,7 @@
 """The Kodi integration."""
 
-from dataclasses import dataclass
+from pykodi import InvalidAuthError, Kodi, get_kodi_connection
 
-from pykodi import CannotConnectError, InvalidAuthError, Kodi, get_kodi_connection
-from pykodi.kodi import KodiHTTPConnection, KodiWSConnection
-
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -21,21 +17,12 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
+from .connection import KodiConfigEntry, KodiConnectionManager
 from .const import CONF_WS_PORT, DOMAIN
 from .services import async_setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = [Platform.MEDIA_PLAYER]
-
-type KodiConfigEntry = ConfigEntry[KodiRuntimeData]
-
-
-@dataclass
-class KodiRuntimeData:
-    """Data class to hold Kodi runtime data."""
-
-    connection: KodiHTTPConnection | KodiWSConnection
-    kodi: Kodi
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -56,12 +43,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: KodiConfigEntry) -> None
         session=async_get_clientsession(hass),
     )
 
-    kodi = Kodi(conn)
+    manager = KodiConnectionManager(hass, entry, conn, Kodi(conn))
+    # Also runs when the setup fails or is cancelled
+    entry.async_on_unload(manager.async_stop)
+    # Listen before the setup waits for Kodi, so a stop during it closes the connection.
+    entry.async_on_unload(
+        hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, manager.async_stop)
+    )
 
     try:
-        await conn.connect()
-    except CannotConnectError:
-        pass
+        await manager.async_setup()
     except InvalidAuthError as error:
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
@@ -69,17 +60,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: KodiConfigEntry) -> None
             translation_placeholders={"host": entry.data[CONF_HOST]},
         ) from error
 
-    async def _close(event):
-        await conn.close()
-
-    entry.async_on_unload(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close))
-
-    entry.runtime_data = KodiRuntimeData(connection=conn, kodi=kodi)
+    entry.runtime_data = manager
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    manager.async_start()
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: KodiConfigEntry) -> None:
     """Unload a config entry."""
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
-    await entry.runtime_data.connection.close()

@@ -1,14 +1,12 @@
 """Support for interfacing with the XBMC/Kodi JSON-RPC API."""
 
 from collections.abc import Awaitable, Callable, Coroutine
-from datetime import timedelta
 from functools import wraps
 import logging
 import re
 from typing import Any, Concatenate, override
 
 from jsonrpc_base.jsonrpc import ProtocolError, TransportError
-from pykodi import CannotConnectError
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
@@ -20,35 +18,26 @@ from homeassistant.components.media_player import (
     MediaType,
     async_process_play_media_url,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_DEVICE_ID,
-    CONF_NAME,
-    CONF_TYPE,
-    EVENT_HOMEASSISTANT_STARTED,
-)
-from homeassistant.core import CoreState, HomeAssistant, callback
+from homeassistant.const import ATTR_ENTITY_ID, CONF_DEVICE_ID, CONF_NAME, CONF_TYPE
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.network import is_internal_request
 from homeassistant.util import dt as dt_util
 
-from . import KodiConfigEntry
 from .browse_media import (
     build_item_response,
     get_media_info,
     library_payload,
     media_source_content_filter,
 )
+from .connection import KodiConfigEntry
 from .const import DOMAIN, EVENT_TURN_OFF, EVENT_TURN_ON
 
 _LOGGER = logging.getLogger(__name__)
 
 EVENT_KODI_CALL_METHOD_RESULT = "kodi_call_method_result"
-
-WEBSOCKET_WATCHDOG_INTERVAL = timedelta(seconds=10)
 
 # https://github.com/xbmc/xbmc/blob/master/xbmc/media/MediaType.h
 MEDIA_TYPES = {
@@ -83,12 +72,11 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Kodi media player platform."""
-    data = config_entry.runtime_data
     name = config_entry.data[CONF_NAME]
     if (uid := config_entry.unique_id) is None:
         uid = config_entry.entry_id
 
-    entity = KodiEntity(data.connection, data.kodi, name, uid)
+    entity = KodiEntity(config_entry.runtime_data, name, uid)
     async_add_entities([entity])
 
 
@@ -141,10 +129,11 @@ class KodiEntity(MediaPlayerEntity):
         | MediaPlayerEntityFeature.VOLUME_STEP
     )
 
-    def __init__(self, connection, kodi, name, uid):
+    def __init__(self, manager, name, uid):
         """Initialize the Kodi entity."""
-        self._connection = connection
-        self._kodi = kodi
+        self._manager = manager
+        self._connection = manager.connection
+        self._kodi = manager.kodi
         self._attr_unique_id = uid
         self._device_id = None
         self._state_generation = 0
@@ -154,7 +143,6 @@ class KodiEntity(MediaPlayerEntity):
         self._app_properties = {}
         self._media_position_updated_at = None
         self._media_position = None
-        self._connect_error = False
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, uid)},
@@ -224,16 +212,6 @@ class KodiEntity(MediaPlayerEntity):
             },
         )
 
-    async def async_on_quit(self, sender, data):
-        """Reset the player state on quit action."""
-        await self._clear_connection()
-
-    async def _clear_connection(self, close=True):
-        self._reset_state()
-        self.async_write_ha_state()
-        if close:
-            await self._connection.close()
-
     @property
     @override
     def state(self) -> MediaPlayerState:
@@ -251,38 +229,38 @@ class KodiEntity(MediaPlayerEntity):
 
     @override
     async def async_added_to_hass(self) -> None:
-        """Connect the websocket if needed."""
+        """Subscribe to the notifications of Kodi."""
         if not self._connection.can_subscribe:
             return
 
-        if self._connection.connected:
-            await self._on_ws_connected()
+        for notification, handler in (
+            ("Player.OnPause", self.async_on_speed_event),
+            ("Player.OnPlay", self.async_on_speed_event),
+            ("Player.OnAVStart", self.async_on_speed_event),
+            ("Player.OnAVChange", self.async_on_speed_event),
+            ("Player.OnResume", self.async_on_speed_event),
+            ("Player.OnSpeedChanged", self.async_on_speed_event),
+            ("Player.OnSeek", self.async_on_speed_event),
+            ("Player.OnStop", self.async_on_stop),
+            ("Application.OnVolumeChanged", self.async_on_volume_changed),
+            ("Other.OnKeyPress", self.async_on_key_press),
+        ):
+            self.async_on_remove(self._connection.subscribe(notification, handler))
+        self.async_on_remove(
+            self._manager.async_add_listener(self._async_connection_changed)
+        )
 
-        async def start_watchdog(event=None):
-            """Start websocket watchdog."""
-            await self._async_connect_websocket_if_disconnected()
-            self.async_on_remove(
-                async_track_time_interval(
-                    self.hass,
-                    self._async_connect_websocket_if_disconnected,
-                    WEBSOCKET_WATCHDOG_INTERVAL,
-                )
-            )
+        if self._manager.version is not None:
+            self._async_connection_changed()
 
-        # If Home Assistant is already in a running state, start the watchdog
-        # immediately, else trigger it after Home Assistant has finished starting.
-        if self.hass.state is CoreState.running:
-            await start_watchdog()
-        else:
-            self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, start_watchdog)
+    @callback
+    def _async_connection_changed(self) -> None:
+        """Refresh the state after a connect, reset it when Kodi is gone."""
+        if (sw_version := self._manager.version) is None:
+            self._reset_state()
+            self.async_write_ha_state()
+            return
 
-    async def _on_ws_connected(self):
-        """Call after ws is connected."""
-        self._connect_error = False
-        self._register_ws_callbacks()
-
-        version = (await self._kodi.get_application_properties(["version"]))["version"]
-        sw_version = f"{version['major']}.{version['minor']}"
         if self.device_entry:
             dr.async_get(self.hass).async_update_device(
                 self.device_entry.id, sw_version=sw_version
@@ -290,55 +268,6 @@ class KodiEntity(MediaPlayerEntity):
             self._device_id = self.device_entry.id
 
         self.async_schedule_update_ha_state(True)
-
-    async def _async_ws_connect(self):
-        """Connect to Kodi via websocket protocol."""
-        try:
-            await self._connection.connect()
-            await self._on_ws_connected()
-        except TransportError, CannotConnectError:
-            if not self._connect_error:
-                self._connect_error = True
-                _LOGGER.warning("Unable to connect to Kodi via websocket")
-            await self._clear_connection(False)
-        else:
-            self._connect_error = False
-
-    async def _ping(self):
-        try:
-            await self._kodi.ping()
-        except TransportError, CannotConnectError:
-            if not self._connect_error:
-                self._connect_error = True
-                _LOGGER.warning("Unable to ping Kodi via websocket")
-            await self._clear_connection()
-        else:
-            self._connect_error = False
-
-    async def _async_connect_websocket_if_disconnected(self, *_):
-        """Reconnect the websocket if it fails."""
-        if not self._connection.connected:
-            await self._async_ws_connect()
-        else:
-            await self._ping()
-
-    @callback
-    def _register_ws_callbacks(self):
-        self._connection.server.Player.OnPause = self.async_on_speed_event
-        self._connection.server.Player.OnPlay = self.async_on_speed_event
-        self._connection.server.Player.OnAVStart = self.async_on_speed_event
-        self._connection.server.Player.OnAVChange = self.async_on_speed_event
-        self._connection.server.Player.OnResume = self.async_on_speed_event
-        self._connection.server.Player.OnSpeedChanged = self.async_on_speed_event
-        self._connection.server.Player.OnSeek = self.async_on_speed_event
-        self._connection.server.Player.OnStop = self.async_on_stop
-        self._connection.server.Application.OnVolumeChanged = (
-            self.async_on_volume_changed
-        )
-        self._connection.server.Other.OnKeyPress = self.async_on_key_press
-        self._connection.server.System.OnQuit = self.async_on_quit
-        self._connection.server.System.OnRestart = self.async_on_quit
-        self._connection.server.System.OnSleep = self.async_on_quit
 
     @cmd
     async def async_update(self) -> None:

@@ -1,6 +1,8 @@
 """Fixtures for the Kodi tests."""
 
-from collections.abc import Generator
+import asyncio
+from collections.abc import Awaitable, Callable, Generator
+import inspect
 from typing import Any
 from unittest.mock import MagicMock, patch
 
@@ -70,6 +72,40 @@ def mock_connection(can_subscribe: bool) -> Generator[MagicMock]:
     )
     connection.connected = True
     connection.can_subscribe = can_subscribe
+    subscriptions: dict[str, list[Callable[[str, Any], Any]]] = {}
+
+    def subscribe(
+        method: str, handler: Callable[[str, Any], Any]
+    ) -> Callable[[], None]:
+        """Call the handler when the test calls the notification on the server.
+
+        Awaiting that call runs coroutine handlers and raises their errors.
+        """
+        if not can_subscribe:
+            raise NotImplementedError
+
+        def dispatch(sender: str, data: Any) -> Awaitable[list[Any]]:
+            results = [subscribed(sender, data) for subscribed in list(handlers)]
+            return asyncio.gather(
+                *(result for result in results if inspect.isawaitable(result))
+            )
+
+        if (handlers := subscriptions.get(method)) is None:
+            handlers = subscriptions[method] = []
+            *path, name = method.split(".")
+            target = connection.server
+            for part in path:
+                target = getattr(target, part)
+            setattr(target, name, dispatch)
+        handlers.append(handler)
+
+        def unsubscribe() -> None:
+            if handler in handlers:
+                handlers.remove(handler)
+
+        return unsubscribe
+
+    connection.subscribe.side_effect = subscribe
 
     async def close() -> None:
         connection.connected = False
