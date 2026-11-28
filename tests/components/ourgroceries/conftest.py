@@ -9,7 +9,6 @@ from pytest_homeassistant.common import MockConfigEntry
 from homeassistant.components.ourgroceries.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from . import items_to_shopping_list
 
@@ -63,6 +62,6 @@ async def mock_setup_integration(
     with patch(
         "homeassistant.components.ourgroceries.OurGroceries", return_value=ourgroceries
     ):
-        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.config_entries.async_setup(ourgroceries_config_entry.entry_id)
         await hass.async_block_till_done()
         yield
