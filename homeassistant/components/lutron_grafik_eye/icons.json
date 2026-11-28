@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "select": {
+      "scene": {
+        "default": "mdi:lightbulb-group",
+        "state": {
+          "0": "mdi:lightbulb-group-off"
+        }
+      }
+    }
+  }
+}
