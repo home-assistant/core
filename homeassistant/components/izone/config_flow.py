@@ -413,11 +413,6 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors={"base": "unpaired_bridge"},
                 suggested_values={CONF_HOST: host},
             )
-        except pizone.ControllerAlreadyClaimedError:
-            return self._async_show_manual_host_form(
-                errors={"base": "already_configured"},
-                suggested_values={CONF_HOST: host},
-            )
 
         existing = self.hass.config_entries.async_entry_for_domain_unique_id(
             DOMAIN, endpoint.uid

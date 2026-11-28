@@ -233,7 +233,7 @@ async def async_discover_by_host(
     Raises:
         OSError: Discovery UDP socket could not be bound.
         UnpairedBridgeError: Probed UID is the unpaired placeholder.
-        ControllerAlreadyClaimedError: Host or UID is already claimed on the service.
+        EndpointVerifyError: No address answers as an iZone controller.
     """
     service = await async_ensure_discovery(hass)
     return await service.discover_by_host(host)
