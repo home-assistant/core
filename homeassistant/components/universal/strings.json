@@ -1,4 +1,9 @@
 {
+  "exceptions": {
+    "no_active_child": {
+      "message": "Cannot group with {entity_id}, it has no active child media player."
+    }
+  },
   "services": {
     "reload": {
       "description": "Reloads universal media players from the YAML-configuration.",
