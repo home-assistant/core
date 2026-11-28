@@ -13,7 +13,6 @@ from homeassistant.components.aurora_abb_powerone.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from .test_sensor import _simulated_returns
 
@@ -60,7 +59,7 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
             },
         )
         mock_entry.add_to_hass(hass)
-        assert await async_setup_component(hass, DOMAIN, {})
+        assert await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
         assert mock_entry.state is ConfigEntryState.LOADED
 
