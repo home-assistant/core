@@ -16,10 +16,11 @@ from homeassistant.components.stream import FORMAT_CONTENT_TYPE, HLS_PROVIDER
 from homeassistant.const import EntityStateAttribute
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.util import dt as dt_util
 
 from . import Camera, _async_get_image
-from .const import DATA_COMPONENT, DOMAIN, StreamType
-from .helper import async_stream_endpoint_url
+from .const import DATA_COMPONENT, DEFAULT_CONTENT_TYPE, DOMAIN, StreamType
+from .helper import async_get_past_image, async_stream_endpoint_url
 
 
 async def async_get_media_source(hass: HomeAssistant) -> CameraMediaSource:
@@ -90,17 +91,28 @@ class CameraMediaSource(MediaSource):
 
     @override
     async def async_get_media_image(self, item: MediaSourceItem) -> MediaImage:
-        """Return a snapshot of the camera."""
-        camera = self.hass.data[DATA_COMPONENT].get_entity(item.identifier)
+        """Return a snapshot of the camera, from history with a timestamp."""
+        entity_id, sep, when = item.identifier.partition("/")
+        camera = self.hass.data[DATA_COMPONENT].get_entity(entity_id)
 
         if not camera:
             raise Unresolvable(f"Could not resolve media item: {item.identifier}")
 
-        if not camera.is_on:
-            raise Unresolvable(f"Camera {item.identifier} is off")
+        if not sep:
+            if not camera.is_on:
+                raise Unresolvable(f"Camera {entity_id} is off")
+            snapshot = await _async_get_image(camera)
+            return MediaImage(snapshot.content, snapshot.content_type)
 
-        snapshot = await _async_get_image(camera)
-        return MediaImage(snapshot.content, snapshot.content_type)
+        try:
+            timestamp = dt_util.parse_datetime(when, raise_on_error=True)
+        except ValueError as err:
+            raise Unresolvable(
+                f"Invalid timestamp in media item: {item.identifier}"
+            ) from err
+        return MediaImage(
+            await async_get_past_image(camera, timestamp), DEFAULT_CONTENT_TYPE
+        )
 
     @override
     async def async_browse_media(

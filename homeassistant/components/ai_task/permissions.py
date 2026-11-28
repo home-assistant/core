@@ -31,7 +31,9 @@ async def async_check_permissions(
             prefix = f"media-source://{domain}/"
             if not media_content_id.startswith(prefix):
                 continue
-            attachment_entity_id = media_content_id.removeprefix(prefix)
+            # A camera id may be followed by "/<timestamp>" for a past image.
+            identifier = media_content_id.removeprefix(prefix)
+            attachment_entity_id = identifier.partition("/")[0]
             if not user.permissions.check_entity(attachment_entity_id, POLICY_READ):
                 raise Unauthorized(
                     context=context,
