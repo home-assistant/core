@@ -43,6 +43,7 @@ def _mock_device(mac: str, name: str) -> Mock:
         is_vertical_swing=Mock(return_value=False),
         get_fan_speed=Mock(return_value=OperationMode.FAN_SPEED_AUTO),
         get_mode=Mock(return_value=OperationMode.MODE_COOL),
+        get_last_mode=Mock(return_value=OperationMode.MODE_COOL),
         get_sensor_temperature=Mock(return_value=24),
         get_temperature=Mock(return_value=22),
         get_shabat_mode=Mock(return_value=False),
@@ -57,6 +58,9 @@ def _mock_device(mac: str, name: str) -> Mock:
     )
     # `name` is a reserved Mock kwarg, so it must be set after construction.
     device.name = name
+    # The mode a legacy unit was last running in, kept by the library on the
+    # device object; the entity restores it into here on setup.
+    device.current_mode = OperationMode.MODE_COOL
     # Bind the library's own accessor over the mocked telemetry, so a test that
     # changes or drops a measurement sees the getter follow it.
     device.get_measurement_temperature = Mock(

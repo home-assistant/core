@@ -24,6 +24,7 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import PRESET_NONE, PRESET_SHABAT
 from .coordinator import ElectraSmartConfigEntry, ElectraSmartCoordinator
@@ -69,6 +70,9 @@ ELECTRA_MODES = [
     HVACMode.AUTO,
 ]
 
+# The mode the unit will resume to, exposed while it is off.
+ATTR_LAST_MODE = "last_mode"
+
 _LOGGER = logging.getLogger(__name__)
 
 # Coordinator is used to centralize the data updates
@@ -89,7 +93,7 @@ async def async_setup_entry(
     )
 
 
-class ElectraClimateEntity(ElectraEntity, ClimateEntity):
+class ElectraClimateEntity(ElectraEntity, ClimateEntity, RestoreEntity):
     """Define an Electra climate."""
 
     _attr_fan_modes = ELECTRA_FAN_MODES
@@ -138,9 +142,21 @@ class ElectraClimateEntity(ElectraEntity, ClimateEntity):
 
     @override
     async def async_added_to_hass(self) -> None:
-        """Set the state from the telemetry fetched during setup."""
+        """Set the state from the telemetry fetched during setup.
+
+        A legacy unit reports the mode it was last running in only while it is
+        running, so the mode this entity last saw is restored and kept until the
+        unit runs again.
+        """
         await super().async_added_to_hass()
+        if (last_state := await self.async_get_last_state()) is not None:
+            self._restore_last_mode(last_state.attributes.get(ATTR_LAST_MODE))
         self._update_device_attrs()
+
+    def _restore_last_mode(self, last_mode: Any) -> None:
+        """Seed the device's remembered mode from a previously stored state."""
+        if last_mode in HVAC_MODE_HASS_TO_ELECTRA:
+            self._device.current_mode = HVAC_MODE_HASS_TO_ELECTRA[last_mode]
 
     @callback
     @override
@@ -243,6 +259,17 @@ class ElectraClimateEntity(ElectraEntity, ClimateEntity):
 
         self._attr_preset_mode = (
             PRESET_SHABAT if self._device.get_shabat_mode() else PRESET_NONE
+        )
+
+        # ``hvac_mode`` is ``off`` while the unit is off, which hides the mode
+        # it will turn back on to. That mode is not in the cloud payload once
+        # the unit is off and idle, so report the one the entity last saw, and
+        # nothing until one has been seen.
+        last_mode = self._device.get_last_mode()
+        self._attr_extra_state_attributes = (
+            {ATTR_LAST_MODE: HVAC_MODE_ELECTRA_TO_HASS[last_mode]}
+            if last_mode is not None
+            else {}
         )
 
     @override

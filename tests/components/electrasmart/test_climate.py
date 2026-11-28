@@ -21,6 +21,7 @@ from homeassistant.components.climate import (
     ClimateServiceArgument,
     HVACMode,
 )
+from homeassistant.components.electrasmart.climate import ATTR_LAST_MODE
 from homeassistant.components.electrasmart.const import (
     PRESET_NONE,
     PRESET_SHABAT,
@@ -599,3 +600,51 @@ async def test_failed_updates_are_counted_until_the_next_success(
     await async_advance_to_next_poll(hass, freezer)
 
     assert "try #1 since last success" in caplog.text
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_last_mode_is_exposed_while_the_unit_is_off(hass: HomeAssistant) -> None:
+    """The mode the unit will turn back on to is visible next to hvac_mode."""
+    state = hass.states.get(ENTITY_ID)
+
+    assert state.state == HVACMode.OFF
+    assert state.attributes[ATTR_LAST_MODE] == HVACMode.COOL
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_last_mode_is_omitted_when_no_mode_was_seen(
+    hass: HomeAssistant, mock_device: Mock, freezer: FrozenDateTimeFactory
+) -> None:
+    """A unit that has never reported a mode shows no last_mode attribute."""
+    mock_device.get_last_mode = Mock(return_value=None)
+
+    await async_advance_to_next_poll(hass, freezer)
+
+    assert ATTR_LAST_MODE not in hass.states.get(ENTITY_ID).attributes
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_last_mode_is_restored_across_a_reload(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_api: Mock,
+    mock_device: Mock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """The mode the entity last saw is restored when it comes back up."""
+    mock_device.get_last_mode = Mock(return_value=OperationMode.MODE_HEAT)
+
+    await async_advance_to_next_poll(hass, freezer)
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_LAST_MODE] == HVACMode.HEAT
+
+    # The device object starts out knowing nothing about the mode.
+    mock_device.current_mode = None
+    mock_device.get_last_mode = Mock(return_value=None)
+
+    with patch(
+        "homeassistant.components.electrasmart.ElectraAPI", return_value=mock_api
+    ):
+        await hass.config_entries.async_reload(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_device.current_mode == OperationMode.MODE_HEAT
