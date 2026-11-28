@@ -5,6 +5,7 @@ import hashlib
 from typing import cast, override
 
 from homeassistant.components.application_credentials import AuthorizationServer
+from homeassistant.config_entries import SOURCE_HASSIO
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow, llm
@@ -13,6 +14,7 @@ from homeassistant.util import slugify
 from .application_credentials import authorization_server_context
 from .const import (
     CONF_AUTHORIZATION_URL,
+    CONF_REQUIRES_ADMIN,
     CONF_SERVER_NAME,
     CONF_SLUG,
     CONF_TOKEN_URL,
@@ -114,6 +116,10 @@ async def async_setup_entry(
             hass=hass,
             id=api_id,
             name=entry.title,
+            # App entries without the discovered panel access stay admin-only
+            requires_admin=entry.data.get(
+                CONF_REQUIRES_ADMIN, entry.source == SOURCE_HASSIO
+            ),
             coordinator=coordinator,
         ),
     )

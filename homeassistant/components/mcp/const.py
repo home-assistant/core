@@ -6,6 +6,7 @@ CONF_AUTHORIZATION_URL = "authorization_url"
 CONF_TOKEN_URL = "token_url"
 CONF_SCOPE = "scope"
 CONF_SLUG = "slug"
+CONF_REQUIRES_ADMIN = "requires_admin"
 CONF_SERVER_NAME = "server_name"
 
 # Providers such as OpenAI and Anthropic reject tool names longer than this
