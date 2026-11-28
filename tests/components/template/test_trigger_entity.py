@@ -5,7 +5,11 @@ from unittest.mock import Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import assert_setup_component, async_fire_time_changed
+from pytest_homeassistant.common import (
+    assert_setup_component,
+    async_fire_time_changed,
+    async_mock_service,
+)
 
 from homeassistant.components.template import DOMAIN, trigger_entity
 from homeassistant.components.template.const import TemplateService
@@ -18,9 +22,10 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Context, HomeAssistant, ServiceCall
+from homeassistant.core import Context, CoreState, HomeAssistant, ServiceCall
 from homeassistant.helpers import (
     condition,
     config_validation as cv,
@@ -1144,3 +1149,137 @@ async def test_trigger_without_context_does_not_inherit_context(
     assert state.state == "without_context"
     assert state.context.id != context.id
     assert state.context.user_id is None
+
+
+async def _async_update_entity(hass: HomeAssistant, entity_ids: list[str]) -> None:
+    """Call the homeassistant.update_entity action."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {"entity_id": entity_ids},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+
+async def test_update_entity_runs_manual_trigger(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test update_entity runs the trigger block once with a manual trigger."""
+    calls = async_mock_service(hass, "test", "fetch")
+    with assert_setup_component(1, DOMAIN):
+        assert await async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                "template": {
+                    "triggers": {"trigger": "event", "event_type": "my_event"},
+                    "actions": [{"action": "test.fetch"}],
+                    "sensor": [
+                        {"name": "a", "state": "{{ trigger.platform or 'manual' }}"},
+                        {"name": "b", "state": "{{ trigger.platform or 'manual' }}"},
+                    ],
+                },
+            },
+        )
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire("my_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert hass.states.get("sensor.a").state == "event"
+    assert hass.states.get("sensor.b").state == "event"
+
+    await _async_update_entity(hass, ["sensor.a", "sensor.b"])
+
+    # Both entities share one trigger block, so the actions run only once
+    assert len(calls) == 2
+    assert hass.states.get("sensor.a").state == "manual"
+    assert hass.states.get("sensor.b").state == "manual"
+    assert "fails" not in caplog.text
+
+
+async def test_update_entity_skips_conditions(hass: HomeAssistant) -> None:
+    """Test update_entity skips the block and entity conditions."""
+    with assert_setup_component(1, DOMAIN):
+        assert await async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                "template": {
+                    "triggers": {"trigger": "event", "event_type": "my_event"},
+                    "conditions": "{{ false }}",
+                    "sensor": [
+                        {
+                            "name": "a",
+                            "state": "{{ trigger.platform or 'manual' }}",
+                            "conditions": "{{ false }}",
+                        },
+                    ],
+                },
+            },
+        )
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire("my_event")
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.a").state == STATE_UNKNOWN
+
+    await _async_update_entity(hass, ["sensor.a"])
+
+    assert hass.states.get("sensor.a").state == "manual"
+
+
+async def test_update_entity_without_trigger_data(hass: HomeAssistant) -> None:
+    """Test a manual trigger makes templates that need trigger data unavailable."""
+    with assert_setup_component(1, DOMAIN):
+        assert await async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                "template": {
+                    "triggers": {"trigger": "event", "event_type": "my_event"},
+                    "sensor": {
+                        "name": "a",
+                        "state": "{{ trigger.event.data.value }}",
+                    },
+                },
+            },
+        )
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire("my_event", {"value": "fired"})
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.a").state == "fired"
+
+    await _async_update_entity(hass, ["sensor.a"])
+
+    assert hass.states.get("sensor.a").state == STATE_UNAVAILABLE
+
+
+async def test_update_entity_before_start(hass: HomeAssistant) -> None:
+    """Test update_entity does nothing before the triggers are attached."""
+    hass.set_state(CoreState.not_running)
+    calls = async_mock_service(hass, "test", "fetch")
+    with assert_setup_component(1, DOMAIN):
+        assert await async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                "template": {
+                    "triggers": {"trigger": "event", "event_type": "my_event"},
+                    "actions": [{"action": "test.fetch"}],
+                    "sensor": {
+                        "name": "a",
+                        "state": "{{ trigger.platform or 'manual' }}",
+                    },
+                },
+            },
+        )
+    await hass.async_block_till_done()
+
+    await _async_update_entity(hass, ["sensor.a"])
+
+    assert not calls
+    assert hass.states.get("sensor.a").state == STATE_UNKNOWN

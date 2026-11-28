@@ -1,5 +1,6 @@
 """Data update coordinator for trigger based template entities."""
 
+import asyncio
 from collections.abc import Callable, Mapping
 import logging
 from typing import TYPE_CHECKING, Any, TypedDict, cast, override
@@ -33,6 +34,7 @@ class TriggerData(TypedDict):
 
     run_variables: Mapping[str, Any]
     context: Context | None
+    skip_condition: bool
 
 
 class TriggerUpdateCoordinator(DataUpdateCoordinator[TriggerData]):
@@ -54,6 +56,7 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator[TriggerData]):
         self._trigger_variables: ScriptVariables | None = None
         self._rendered_trigger_variables: dict[str, Any] = {}
         self._blueprint_inputs: dict | None = None
+        self._manual_trigger_task: asyncio.Task[None] | None = None
         self.entities: set[Entity] = set()
         if config is not None:
             self._trigger_variables = config.get(CONF_TRIGGER_VARIABLES)
@@ -177,9 +180,25 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator[TriggerData]):
         variables.update(section.async_simple_render(variables))
         return variables
 
+    async def async_manual_trigger(self) -> None:
+        """Run the trigger block as if it was triggered manually."""
+        if self._unsub_trigger is None:
+            return
+        # Updating several entities of the same block must only run it once
+        if self._manual_trigger_task is None or self._manual_trigger_task.done():
+            if self._script:
+                action: Callable = self._handle_triggered_with_script
+            else:
+                action = self._handle_triggered
+            self._manual_trigger_task = self.hass.async_create_task(
+                action({"trigger": {"platform": None}}, Context(), skip_condition=True),
+                eager_start=False,
+            )
+        await self._manual_trigger_task
+
     @callback
     def _async_render_variables_and_conditions(
-        self, run_variables: TemplateVarsType
+        self, run_variables: TemplateVarsType, skip_condition: bool = False
     ) -> Mapping[str, Any] | None:
         """Render run variables and check conditions, None means stop."""
         try:
@@ -197,15 +216,20 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator[TriggerData]):
             else:
                 self.logger.error("Error rendering variables: %s", err)
             return None
-        if not check_conditions(self._cond_func, run_variables):
+        if not skip_condition and not check_conditions(self._cond_func, run_variables):
             return None
         return run_variables
 
     async def _handle_triggered_with_script(
-        self, run_variables: TemplateVarsType, context: Context | None = None
+        self,
+        run_variables: TemplateVarsType,
+        context: Context | None = None,
+        skip_condition: bool = False,
     ) -> None:
         if (
-            run_variables := self._async_render_variables_and_conditions(run_variables)
+            run_variables := self._async_render_variables_and_conditions(
+                run_variables, skip_condition
+            )
         ) is None:
             return
         # Create a context referring to the trigger context.
@@ -216,21 +240,33 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator[TriggerData]):
             assert self._script is not None
 
         if script_result := await self._script.async_run(run_variables, script_context):
-            self._execute_update(script_result.variables, context)
+            self._execute_update(script_result.variables, context, skip_condition)
 
     async def _handle_triggered(
-        self, run_variables: TemplateVarsType, context: Context | None = None
+        self,
+        run_variables: TemplateVarsType,
+        context: Context | None = None,
+        skip_condition: bool = False,
     ) -> None:
         if (
-            run_variables := self._async_render_variables_and_conditions(run_variables)
+            run_variables := self._async_render_variables_and_conditions(
+                run_variables, skip_condition
+            )
         ) is None:
             return
-        self._execute_update(run_variables, context)
+        self._execute_update(run_variables, context, skip_condition)
 
     @callback
     def _execute_update(
-        self, run_variables: Mapping[str, Any], context: Context | None = None
+        self,
+        run_variables: Mapping[str, Any],
+        context: Context | None = None,
+        skip_condition: bool = False,
     ) -> None:
         self.async_set_updated_data(
-            {"run_variables": run_variables, "context": context}
+            {
+                "run_variables": run_variables,
+                "context": context,
+                "skip_condition": skip_condition,
+            }
         )
