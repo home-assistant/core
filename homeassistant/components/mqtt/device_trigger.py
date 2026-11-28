@@ -29,7 +29,7 @@ from .config import MQTT_BASE_SCHEMA
 from .const import ATTR_DISCOVERY_HASH, CONF_ENCODING, CONF_QOS, CONF_TOPIC, DOMAIN
 from .discovery import MQTTDiscoveryPayload, clear_discovery_hash
 from .entity import MqttDiscoveryDeviceUpdateMixin, send_discovery_done, update_device
-from .models import DATA_MQTT
+from .models import DATA_MQTT, ReceiveMessage
 from .schemas import MQTT_DEVICE_INFO_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
@@ -108,6 +108,7 @@ class TriggerInstance:
             mqtt_config,
             self.action,
             self.trigger_info,
+            message_callback=self.trigger.async_log_message,
         )
 
 
@@ -126,6 +127,24 @@ class Trigger:
     type: str
     value_template: str | None
     trigger_instances: list[TriggerInstance] = field(default_factory=list)
+
+    @callback
+    def async_log_message(self, msg: ReceiveMessage) -> None:
+        """Keep a received message in the debug info of a discovered trigger."""
+        debug_info_triggers = self.hass.data[DATA_MQTT].debug_info_triggers
+        # Each automation that uses the trigger receives the message
+        if (
+            self.discovery_data is None
+            or (
+                trigger_debug_info := debug_info_triggers.get(
+                    self.discovery_data[ATTR_DISCOVERY_HASH]
+                )
+            )
+            is None
+            or msg in trigger_debug_info["messages"]
+        ):
+            return
+        trigger_debug_info["messages"].append(msg)
 
     async def add_trigger(
         self, action: TriggerActionType, trigger_info: TriggerInfo
