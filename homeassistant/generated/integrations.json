@@ -7226,6 +7226,18 @@
       ],
       "config_flow": false
     },
+    "intertechno_tristate": {
+      "name": "Intertechno TriState",
+      "integration_type": "device",
+      "categories": [
+        "plugs_switches"
+      ],
+      "connectivity": [
+        "rf"
+      ],
+      "config_flow": true,
+      "iot_class": "assumed_state"
+    },
     "intesis_modbus": {
       "name": "Intesis Modbus",
       "integration_type": "device",

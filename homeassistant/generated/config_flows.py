@@ -409,6 +409,7 @@ FLOWS = {
         "insteon",
         "intelliclima",
         "intellifire",
+        "intertechno_tristate",
         "intesis_modbus",
         "iometer",
         "ios",
