@@ -1,5 +1,5 @@
 {
   "domain": "daikin",
   "name": "Daikin",
-  "integrations": ["daikin", "daikin_infrared"]
+  "integrations": ["daikin", "daikin_infrared", "daikin_onecta"]
 }

@@ -1,0 +1,214 @@
+[
+  {
+    "_id": "00000000-0000-4000-8000-000000000113",
+    "deviceModel": "Altherma",
+    "type": "heating-wlan",
+    "isCloudConnectionUp": {
+      "settable": false,
+      "value": true
+    },
+    "managementPoints": [
+      {
+        "embeddedId": "gateway",
+        "managementPointType": "gateway",
+        "managementPointCategory": "secondary",
+        "firmwareVersion": {
+          "settable": false,
+          "value": "3.3.0",
+          "maxLength": 8
+        },
+        "ipAddress": {
+          "settable": false,
+          "value": "192.0.2.14",
+          "maxLength": 15
+        },
+        "isFirmwareUpdateSupported": {
+          "settable": false,
+          "requiresReboot": false,
+          "value": true
+        },
+        "macAddress": {
+          "settable": false,
+          "value": "02:00:00:00:01:07",
+          "maxLength": 17
+        },
+        "modelInfo": {
+          "settable": false,
+          "value": "BRP069A78",
+          "maxLength": 9
+        },
+        "name": {
+          "settable": false,
+          "requiresReboot": false,
+          "value": "Gateway",
+          "maxLength": 63
+        }
+      },
+      {
+        "embeddedId": "climateControlMainZone",
+        "managementPointType": "climateControl",
+        "managementPointCategory": "primary",
+        "managementPointSubType": "mainZone",
+        "controlMode": {
+          "settable": false,
+          "requiresReboot": false,
+          "value": "roomTemperature",
+          "values": [
+            "leavingWaterTemperature",
+            "externalRoomTemperature",
+            "roomTemperature"
+          ]
+        },
+        "errorCode": {
+          "settable": false,
+          "requiresReboot": false,
+          "value": "",
+          "maxLength": 16
+        },
+        "holidayMode": {
+          "settable": true,
+          "requiresReboot": false,
+          "ref": "#holidayMode",
+          "value": {
+            "enabled": false,
+            "startDate": "2017-01-01",
+            "endDate": "2017-01-01"
+          }
+        },
+        "isHolidayModeActive": {
+          "settable": false,
+          "requiresReboot": false,
+          "value": false
+        },
+        "isInEmergencyState": {
+          "settable": false,
+          "requiresReboot": false,
+          "value": false
+        },
+        "isInErrorState": {
+          "settable": false,
+          "requiresReboot": false,
+          "value": false
+        },
+        "isInInstallerState": {
+          "settable": false,
+          "requiresReboot": false,
+          "value": false
+        },
+        "isInWarningState": {
+          "settable": false,
+          "requiresReboot": false,
+          "value": false
+        },
+        "name": {
+          "settable": false,
+          "requiresReboot": false,
+          "value": "",
+          "maxLength": 63
+        },
+        "onOffMode": {
+          "settable": true,
+          "requiresReboot": false,
+          "value": "on",
+          "values": ["off", "on"]
+        },
+        "operationMode": {
+          "settable": false,
+          "requiresReboot": false,
+          "value": "heating",
+          "values": ["heating"]
+        },
+        "sensoryData": {
+          "settable": false,
+          "ref": "#sensoryData",
+          "value": {
+            "leavingWaterTemperature": {
+              "settable": false,
+              "requiresReboot": false,
+              "value": 36,
+              "maxValue": 127,
+              "minValue": -127,
+              "stepValue": 1
+            },
+            "outdoorTemperature": {
+              "settable": false,
+              "requiresReboot": false,
+              "value": 16,
+              "maxValue": 127,
+              "minValue": -127,
+              "stepValue": 1
+            },
+            "roomTemperature": {
+              "settable": false,
+              "requiresReboot": false,
+              "value": 20.5,
+              "maxValue": 127,
+              "minValue": -127,
+              "stepValue": 0.1
+            }
+          }
+        },
+        "setpointMode": {
+          "settable": false,
+          "requiresReboot": true,
+          "value": "weatherDependent",
+          "values": ["fixed", "weatherDependent"]
+        },
+        "temperatureControl": {
+          "settable": true,
+          "ref": "#temperatureControl",
+          "value": {
+            "operationModes": {
+              "auto": {
+                "setpoints": {
+                  "leavingWaterOffset": {
+                    "settable": true,
+                    "requiresReboot": false,
+                    "value": 0,
+                    "maxValue": 10,
+                    "minValue": -10,
+                    "stepValue": 1
+                  },
+                  "roomTemperature": {
+                    "settable": true,
+                    "requiresReboot": false,
+                    "value": 21,
+                    "maxValue": 26,
+                    "minValue": 16,
+                    "stepValue": 0.5
+                  }
+                }
+              },
+              "cooling": {
+                "setpoints": {}
+              },
+              "heating": {
+                "setpoints": {
+                  "leavingWaterOffset": {
+                    "settable": true,
+                    "requiresReboot": false,
+                    "value": 0,
+                    "maxValue": 10,
+                    "minValue": -10,
+                    "stepValue": 1
+                  },
+                  "roomTemperature": {
+                    "settable": true,
+                    "requiresReboot": false,
+                    "value": 21,
+                    "maxValue": 26,
+                    "minValue": 16,
+                    "stepValue": 0.5
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    ],
+    "embeddedId": "test-embedded-120",
+    "timestamp": "2024-10-25T10:40:10.386Z",
+    "id": "00000000-0000-4000-8000-000000000113"
+  }
+]

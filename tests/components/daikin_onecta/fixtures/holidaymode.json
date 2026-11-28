@@ -1,0 +1,152 @@
+[
+  {
+    "_id": "00000000-0000-4000-8000-000000000101",
+    "type": "heating",
+    "deviceModel": "NDJ",
+    "isCloudConnectionUp": {
+      "settable": false,
+      "value": true
+    },
+    "managementPoints": [
+      {
+        "embeddedId": "0",
+        "managementPointType": "gateway",
+        "managementPointCategory": "secondary",
+        "name": {
+          "settable": false,
+          "maxLength": 63,
+          "value": "Gateway"
+        },
+        "firmwareVersion": {
+          "settable": false,
+          "value": "438CC083000"
+        },
+        "isFirmwareUpdateSupported": {
+          "settable": false,
+          "value": true
+        },
+        "modelInfo": {
+          "settable": false,
+          "value": "DRGATEWAYAA"
+        },
+        "ipAddress": {
+          "settable": false,
+          "value": "192.0.2.23"
+        },
+        "macAddress": {
+          "settable": false,
+          "value": "02:00:00:00:01:03"
+        },
+        "errorCode": {
+          "settable": false,
+          "value": ""
+        },
+        "isInErrorState": {
+          "settable": false,
+          "value": false
+        }
+      },
+      {
+        "embeddedId": "1",
+        "managementPointType": "climateControl",
+        "managementPointSubType": "mainZone",
+        "managementPointCategory": "primary",
+        "name": {
+          "settable": false,
+          "value": "",
+          "maxLength": 63
+        },
+        "errorCode": {
+          "settable": false,
+          "value": ""
+        },
+        "holidayMode": {
+          "settable": true,
+          "ref": "#holidayMode",
+          "value": {
+            "enabled": true,
+            "startDate": "2024-03-21",
+            "endDate": "2024-03-22"
+          }
+        },
+        "isHolidayModeActive": {
+          "settable": false,
+          "value": true
+        },
+        "isInErrorState": {
+          "settable": false,
+          "value": false
+        },
+        "isInWarningState": {
+          "settable": false,
+          "value": false
+        },
+        "onOffMode": {
+          "settable": false,
+          "values": ["on", "off"],
+          "value": "on"
+        },
+        "controlMode": {
+          "settable": false,
+          "values": ["roomTemperature"],
+          "value": "roomTemperature"
+        },
+        "sensoryData": {
+          "settable": false,
+          "ref": "#sensoryData",
+          "value": {
+            "roomTemperature": {
+              "settable": false,
+              "value": 23
+            }
+          }
+        },
+        "temperatureControl": {
+          "ref": "#temperatureControl",
+          "settable": false,
+          "value": {
+            "operationModes": {
+              "heatingDay": {
+                "setpoints": {
+                  "roomTemperature": {
+                    "maxValue": 30,
+                    "minValue": 10,
+                    "stepValue": 0.5,
+                    "settable": false,
+                    "value": 23
+                  }
+                }
+              },
+              "heatingNight": {
+                "setpoints": {
+                  "roomTemperature": {
+                    "maxValue": 30,
+                    "minValue": 10,
+                    "stepValue": 0.5,
+                    "settable": false,
+                    "value": 23
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationMode": {
+          "settable": false,
+          "values": ["heatingDay", "heatingNight"],
+          "value": "heatingDay"
+        },
+        "targetTemperature": {
+          "settable": false,
+          "value": 23,
+          "maxValue": 30,
+          "minValue": 10,
+          "stepValue": 0.5
+        }
+      }
+    ],
+    "embeddedId": "test-embedded-112",
+    "timestamp": "2024-03-21T10:18:53.637Z",
+    "id": "00000000-0000-4000-8000-000000000101"
+  }
+]
