@@ -30,7 +30,7 @@ rules:
   test-before-configure: done
   test-before-setup: done
   unique-config-entry: done
-  action-exceptions: todo
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters: todo
   docs-installation-parameters: todo
