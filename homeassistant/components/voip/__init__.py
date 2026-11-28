@@ -22,6 +22,7 @@ PLATFORMS = (
     Platform.ASSIST_SATELLITE,
     Platform.SELECT,
     Platform.SWITCH,
+    Platform.TIMER_LIST,
 )
 _LOGGER = logging.getLogger(__name__)
 _IP_WILDCARD = "0.0.0.0"

@@ -76,6 +76,13 @@ class VoIPDevice:
             "select", DOMAIN, f"{self.voip_id}-vad_sensitivity"
         )
 
+    def get_timer_list_entity_id(self, hass: HomeAssistant) -> str | None:
+        """Return entity id for the timer list."""
+        ent_reg = er.async_get(hass)
+        return ent_reg.async_get_entity_id(
+            "timer_list", DOMAIN, f"{self.voip_id}-timers"
+        )
+
 
 class VoIPDevices:
     """Class to store devices."""

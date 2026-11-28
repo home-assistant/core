@@ -15,7 +15,7 @@ import wave
 from voip_utils import SIP_PORT, RtpDatagramProtocol
 from voip_utils.sip import SipEndpoint, get_sip_endpoint
 
-from homeassistant.components import intent, tts
+from homeassistant.components import tts
 from homeassistant.components.assist_pipeline import PipelineEvent, PipelineEventType
 from homeassistant.components.assist_satellite import (
     AssistSatelliteAnnouncement,
@@ -24,8 +24,8 @@ from homeassistant.components.assist_satellite import (
     AssistSatelliteEntityDescription,
     AssistSatelliteEntityFeature,
 )
-from homeassistant.components.intent import TimerEventType, TimerInfo
 from homeassistant.components.network import async_get_source_ip
+from homeassistant.components.timer_list import TimerItem
 from homeassistant.components.tts import TextToSpeechCommonOption
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -152,6 +152,12 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
 
     @property
     @override
+    def timer_list_entity_id(self) -> str | None:
+        """Return the entity ID of the timer list holding the device's timers."""
+        return self.voip_device.get_timer_list_entity_id(self.hass)
+
+    @property
+    @override
     def tts_options(self) -> dict[str, Any] | None:
         """Options passed for text-to-speech."""
         return {
@@ -166,13 +172,6 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
         self.voip_device.protocol = self
-
-        assert self.device_entry is not None
-        self.async_on_remove(
-            intent.async_register_timer_handler(
-                self.hass, self.device_entry.id, self.async_handle_timer_event
-            )
-        )
 
     @override
     async def async_will_remove_from_hass(self) -> None:
@@ -190,19 +189,13 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         raise NotImplementedError
 
     @callback
-    def async_handle_timer_event(
-        self,
-        event_type: TimerEventType,
-        timer_info: TimerInfo,
-    ) -> None:
-        """Handle timer event."""
-        if event_type != TimerEventType.FINISHED:
-            return
-
-        if timer_info.name:
-            message = f"{timer_info.name} finished"
+    def async_announce_timer(self, timer: TimerItem) -> None:
+        """Announce a finished timer."""
+        if timer.name:
+            message = f"{timer.name} finished"
         else:
-            message = f"{timedelta(seconds=timer_info.created_seconds)} timer finished"
+            duration = timedelta(seconds=round(timer.total_duration.total_seconds()))
+            message = f"{duration} timer finished"
 
         async def announce_message():
             announcement = await self._resolve_announcement_media_id(message, None)
