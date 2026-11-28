@@ -1,6 +1,7 @@
 """Philips Hue lights platform tests for V2 bridge/api."""
 
 import asyncio
+from copy import deepcopy
 from typing import Any
 from unittest.mock import Mock, patch
 
@@ -969,18 +970,19 @@ async def test_grouped_lights(
     assert test_entity.attributes["max_color_temp_kelvin"] == 6535
     assert test_entity.attributes["min_color_temp_kelvin"] == 2000
     assert test_entity.attributes["is_hue_group"] is True
-    assert test_entity.attributes["hue_scenes"] == {"Dynamic Test Scene"}
+    assert test_entity.attributes["hue_scenes"] == ["Dynamic Test Scene"]
     assert test_entity.attributes["hue_type"] == "zone"
-    assert test_entity.attributes["lights"] == {
+    # Members are listed in the order of the room or zone children
+    assert test_entity.attributes["lights"] == [
         "Hue light with color and color temperature 1",
-        "Hue light with color and color temperature gradient",
         "Hue light with color and color temperature 2",
-    }
-    assert test_entity.attributes["entity_id"] == {
-        "light.hue_light_with_color_and_color_temperature_gradient",
-        "light.hue_light_with_color_and_color_temperature_2",
+        "Hue light with color and color temperature gradient",
+    ]
+    assert test_entity.attributes["entity_id"] == [
         "light.hue_light_with_color_and_color_temperature_1",
-    }
+        "light.hue_light_with_color_and_color_temperature_2",
+        "light.hue_light_with_color_and_color_temperature_gradient",
+    ]
 
     # test light created for hue room
     test_entity = hass.states.get("light.test_room_test_room")
@@ -991,19 +993,19 @@ async def test_grouped_lights(
     assert test_entity.attributes["max_color_temp_kelvin"] == 6535
     assert test_entity.attributes["min_color_temp_kelvin"] == 2202
     assert test_entity.attributes["is_hue_group"] is True
-    assert test_entity.attributes["hue_scenes"] == {
+    assert test_entity.attributes["hue_scenes"] == [
         "Regular Test Scene",
         "Smart Test Scene",
-    }
+    ]
     assert test_entity.attributes["hue_type"] == "room"
-    assert test_entity.attributes["lights"] == {
-        "Hue on/off light",
+    assert test_entity.attributes["lights"] == [
         "Hue light with color temperature only",
-    }
-    assert test_entity.attributes["entity_id"] == {
+        "Hue on/off light",
+    ]
+    assert test_entity.attributes["entity_id"] == [
         "light.test_room_hue_light_with_color_temperature_only",
         "light.test_room_hue_on_off_light",
-    }
+    ]
 
     # Test calling the turn on service on a grouped light
     test_light_id = "light.test_zone"
@@ -1531,6 +1533,41 @@ async def test_grouped_lights(
             mock_bridge_v2.mock_requests[index]["json"]["identify"]["action"]
             == "identify"
         )
+
+
+async def test_grouped_light_members_follow_children_order(
+    hass: HomeAssistant,
+    mock_bridge_v2: Mock,
+    v2_resources_test_data: JsonArrayType,
+) -> None:
+    """Test group members are listed in the order of the room or zone children."""
+    test_data = deepcopy(v2_resources_test_data)
+    for resource in test_data:
+        if resource["type"] in ("room", "zone"):
+            resource["children"].reverse()
+    await mock_bridge_v2.api.load_test_data(test_data)
+    await setup_platform(hass, mock_bridge_v2, Platform.LIGHT)
+
+    zone = hass.states.get("light.test_zone")
+    assert zone.attributes["entity_id"] == [
+        "light.hue_light_with_color_and_color_temperature_gradient",
+        "light.hue_light_with_color_and_color_temperature_2",
+        "light.hue_light_with_color_and_color_temperature_1",
+    ]
+    assert zone.attributes["lights"] == [
+        "Hue light with color and color temperature gradient",
+        "Hue light with color and color temperature 2",
+        "Hue light with color and color temperature 1",
+    ]
+    room = hass.states.get("light.test_room_test_room")
+    assert room.attributes["entity_id"] == [
+        "light.test_room_hue_on_off_light",
+        "light.test_room_hue_light_with_color_temperature_only",
+    ]
+    assert room.attributes["lights"] == [
+        "Hue on/off light",
+        "Hue light with color temperature only",
+    ]
 
 
 @pytest.mark.parametrize(
