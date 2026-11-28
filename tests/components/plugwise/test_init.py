@@ -306,12 +306,13 @@ async def test_remove_thermozone_temperature_sensor(
     thermostat_temperature = entity_registry.async_get_or_create(
         domain=Platform.SENSOR,
         platform=DOMAIN,
-        unique_id=f"{HEATER_ID}-temperature",
-        suggested_object_id=f"{HEATER_ID}-temperature",
+        unique_id="1346fbd8498d4dbcab7e18d51b771f3d-temperature",
+        suggested_object_id="1346fbd8498d4dbcab7e18d51b771f3d-temperature",
         config_entry=mock_config_entry,
     )
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.plugwise.PLATFORMS", []):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
     assert (
         entity_registry.async_get_entity_id(
