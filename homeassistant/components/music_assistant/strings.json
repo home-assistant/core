@@ -273,6 +273,22 @@
         }
       }
     },
+    "sensor": {
+      "sleep_timer": {
+        "name": "Sleep timer",
+        "state_attributes": {
+          "mode": {
+            "name": "Mode",
+            "state": {
+              "duration": "After a duration",
+              "end_of_chapter": "End of the current chapter",
+              "end_of_item": "End of the current item",
+              "off": "[%key:common::state::off%]"
+            }
+          }
+        }
+      }
+    },
     "switch": {
       "adaptive_drc": {
         "name": "Adaptive DRC"

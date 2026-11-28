@@ -5,6 +5,11 @@
         "default": "mdi:heart-plus"
       }
     },
+    "sensor": {
+      "sleep_timer": {
+        "default": "mdi:sleep"
+      }
+    },
     "switch": {
       "queue_autoplay": {
         "default": "mdi:infinity"
