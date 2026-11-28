@@ -843,6 +843,43 @@ async def test_websocket_subscribe_updates_on_state_change(
     assert "New Event" in summaries
 
 
+async def test_websocket_subscribe_updates_on_reported_change(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    test_entities: list[MockCalendarEntity],
+) -> None:
+    """Test that subscribers receive updates when a calendar reports a change."""
+    client = await hass_ws_client(hass)
+    start = dt_util.now()
+
+    await client.send_json_auto_id(
+        {
+            "type": "calendar/event/subscribe",
+            "entity_id": "calendar.calendar_1",
+            "start": start.isoformat(),
+            "end": (start + timedelta(days=1)).isoformat(),
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    await client.receive_json()
+
+    entity = test_entities[0]
+    entity.create_event(
+        start=start + timedelta(hours=2),
+        end=start + timedelta(hours=3),
+        summary="New Event",
+    )
+    entity.async_update_event_listeners()
+    await hass.async_block_till_done()
+
+    msg = await client.receive_json()
+    assert {event["summary"] for event in msg["event"]["events"]} == {
+        "Future Event",
+        "New Event",
+    }
+
+
 async def test_websocket_subscribe_entity_not_found(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,

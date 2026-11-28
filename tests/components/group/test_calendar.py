@@ -584,13 +584,31 @@ async def test_subscribe_updates_on_member_report(
     ]
 
 
-async def test_trigger_updates_on_member_report(
+@pytest.mark.parametrize(
+    "groups",
+    [
+        pytest.param([FAMILY_GROUP], id="group"),
+        pytest.param(
+            [
+                {**FAMILY_GROUP, "entities": ["calendar.nested"]},
+                {
+                    "platform": DOMAIN,
+                    "entities": ["calendar.home", GROUP_ENTITY_ID],
+                    "name": "Nested",
+                },
+            ],
+            id="nested_group_with_cycle",
+        ),
+    ],
+)
+async def test_trigger_updates_on_member_change(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     calendar_platform: list[MockCalendarEntity],
+    groups: list[ConfigType],
 ) -> None:
-    """Test triggers pick up member events added without a state change."""
-    await _setup_groups(hass)
+    """Test triggers pick up event changes reported by a member."""
+    await _setup_groups(hass, groups)
     calls = async_mock_service(hass, "test", "automation")
     assert await async_setup_component(
         hass,
@@ -619,7 +637,7 @@ async def test_trigger_updates_on_member_report(
             summary="Call",
         )
     )
-    home.async_write_ha_state()
+    home.async_update_event_listeners()
     await hass.async_block_till_done()
 
     freezer.move_to(NOW + dt.timedelta(minutes=6))

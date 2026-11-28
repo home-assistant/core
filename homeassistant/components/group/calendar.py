@@ -9,6 +9,7 @@ import probatio
 from homeassistant.components.calendar import (
     DOMAIN as CALENDAR_DOMAIN,
     PLATFORM_SCHEMA as CALENDAR_PLATFORM_SCHEMA,
+    SIGNAL_CALENDAR_EVENTS_UPDATED,
     CalendarEntity,
     CalendarEvent,
 )
@@ -16,6 +17,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ENTITIES, CONF_NAME, CONF_UNIQUE_ID
 from homeassistant.core import Event, EventStateReportedData, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -124,6 +126,7 @@ class CalendarGroup(GroupEntity, CalendarEntity):
         }
         self._attr_unique_id = unique_id
         self._member_events: list[CalendarEvent] = []
+        self._passing_on_update = False
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -136,13 +139,34 @@ class CalendarGroup(GroupEntity, CalendarEntity):
             # A nested group reports an unchanged state when only its later
             # events change. Writing state here could loop through cycles.
             self.async_update_group_state()
-            self._async_notify_events_updated()
+            if self._event_listener_debouncer:
+                self._event_listener_debouncer.async_schedule_call()
 
         self.async_on_remove(
             async_track_state_report_event(
                 self.hass, self._entity_ids, async_member_reported
             )
         )
+        for entity_id in self._entity_ids:
+            self.async_on_remove(
+                async_dispatcher_connect(
+                    self.hass,
+                    SIGNAL_CALENDAR_EVENTS_UPDATED.format(entity_id),
+                    self._async_member_events_updated,
+                )
+            )
+
+    @callback
+    def _async_member_events_updated(self) -> None:
+        """Pass on that the events of a member have changed."""
+        # Groups can be members of each other
+        if self._passing_on_update:
+            return
+        self._passing_on_update = True
+        try:
+            self.async_update_event_listeners()
+        finally:
+            self._passing_on_update = False
 
     @property
     @override
