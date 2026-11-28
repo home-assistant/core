@@ -12,6 +12,18 @@ from .const import BRAND, DEFAULT_ZONE, DOMAIN, ENTITY_CATEGORY_MAPPING
 from .coordinator import MusicCastDataUpdateCoordinator
 
 
+def get_source_label(
+    input_names: dict[str, str], input_list: list[str], source_id: str
+) -> str:
+    """Return the display label for a MusicCast input within a zone."""
+    label = input_names.get(source_id, "")
+    if source_id != label and (
+        label in input_list or list(input_names.values()).count(label) > 1
+    ):
+        label += f" ({source_id})"
+    return label or source_id
+
+
 class MusicCastEntity(CoordinatorEntity[MusicCastDataUpdateCoordinator]):
     """Defines a base MusicCast entity."""
 
