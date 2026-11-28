@@ -174,13 +174,21 @@
     }
   },
   "options": {
+    "error": {
+      "white_kelvin_incomplete": "Set both the warm and the cold white color temperature, or neither.",
+      "white_kelvin_order": "The warm white color temperature must be lower than the cold white one."
+    },
     "step": {
       "init": {
         "data": {
-          "keep_master_light": "Add 'Main' control even with single LED segment"
+          "cold_white_kelvin": "Cold white color temperature",
+          "keep_master_light": "Add 'Main' control even with single LED segment",
+          "warm_white_kelvin": "Warm white color temperature"
         },
         "data_description": {
-          "keep_master_light": "Ensures the main light control is always available when you are dynamically adding and removing segments through automation."
+          "cold_white_kelvin": "Color temperature of the cold white LEDs, from the LED strip's specifications. Leave both empty to use the default range.",
+          "keep_master_light": "Ensures the main light control is always available when you are dynamically adding and removing segments through automation.",
+          "warm_white_kelvin": "Color temperature of the warm white LEDs, from the LED strip's specifications. Leave both empty to use the default range."
         }
       }
     }
