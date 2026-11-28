@@ -166,6 +166,16 @@ def with_input_flag(input_source: str) -> str:
     return input_source
 
 
+def with_default_input_timeout(input_source: str) -> str:
+    """Add a socket I/O timeout to RTSP inputs unless one is already set."""
+    lowered = input_source.lower()
+    if "rtsp://" not in lowered and "rtsps://" not in lowered:
+        return input_source
+    if "-timeout" in lowered or "-rw_timeout" in lowered:
+        return input_source
+    return f"-timeout {FFMPEG_INPUT_TIMEOUT_US} {input_source}"
+
+
 def recording_ffmpeg_args(
     config: dict[str, Any],
     selected: SelectedRecordingConfiguration,
@@ -190,8 +200,7 @@ def recording_ffmpeg_args(
                 f"-level:v {RECORDING_LEVELS[int(video.level)]} "
                 "-preset veryfast -tune zerolatency "
             )
-        # A second -vf would replace source filters such as a flip, so they run
-        # first, in the reverse order ha-ffmpeg also gives them in live streams.
+
         filters: list[str] = []
         source_args: list[str] = []
         tokens = iter(input_args)
@@ -264,6 +273,9 @@ RESOLUTIONS = [
 ]
 
 FFMPEG_WATCH_INTERVAL = timedelta(seconds=5)
+# Socket I/O timeout for RTSP inputs, in microseconds (15 seconds). Lets ffmpeg
+# exit on a connection the server closed without a FIN or RST.
+FFMPEG_INPUT_TIMEOUT_US = 15_000_000
 # pyhap coalesces events per characteristic, so a motion event must stay
 # detected long enough for HomeKit to receive it.
 MOTION_EVENT_RESET_SECONDS = 10
@@ -543,6 +555,7 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
             _LOGGER.error("Camera has no stream source")
             return False
         input_source = with_input_flag(input_source)
+        input_source = with_default_input_timeout(input_source)
         video_profile = ""
         if self.config[CONF_VIDEO_CODEC] != VIDEO_CODEC_COPY:
             video_profile = (

@@ -488,7 +488,7 @@ async def test_camera_stream_source_found(hass: HomeAssistant, run_driver) -> No
 
     working_ffmpeg.open.assert_called_with(
         cmd=[],
-        input_source="-i rtsp://example.local",
+        input_source="-timeout 15000000 -i rtsp://example.local",
         output=expected_output.format(**session_info),
         stdout_pipe=False,
         extra_cmd="-hide_banner -nostats",
@@ -514,7 +514,7 @@ async def test_camera_stream_source_found(hass: HomeAssistant, run_driver) -> No
 
     working_ffmpeg.open.assert_called_with(
         cmd=[],
-        input_source="-i rtsp://example2.local",
+        input_source="-timeout 15000000 -i rtsp://example2.local",
         output=expected_output.format(**session_info),
         stdout_pipe=False,
         extra_cmd="-hide_banner -nostats",
