@@ -9,7 +9,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
 
-from .conftest import SCENE_CAPABILITIES, setup_light
+from . import SCENE_CAPABILITIES, setup_light
 
 
 async def test_diagnostics(

@@ -36,18 +36,8 @@ async def async_setup_entry(
 ) -> None:
     """Govee light setup."""
 
-    coordinator = config_entry.runtime_data
-
-    def discovery_callback(device: GoveeDevice, is_new: bool) -> bool:
-        if is_new:
-            async_add_entities([GoveeLight(coordinator, device)])
-        return True
-
-    async_add_entities(
-        GoveeLight(coordinator, device) for device in coordinator.devices
-    )
-
-    coordinator.set_discovery_callback(discovery_callback)
+    data = config_entry.runtime_data
+    async_add_entities([GoveeLight(data.coordinator, data.device)])
 
 
 class GoveeLight(CoordinatorEntity[GoveeLocalApiCoordinator], LightEntity):
