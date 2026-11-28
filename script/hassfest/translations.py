@@ -382,6 +382,15 @@ RELEASE_NOTES_MESSAGES_SCHEMA = cv.schema_with_slug_keys(
 )
 
 
+MANUAL_ACTIONS_SCHEMA = cv.schema_with_slug_keys(
+    {
+        probatio.Required("description"): translation_value_validator,
+        probatio.Required("instruction"): translation_value_validator,
+    },
+    slug_validator=translation_key_validator,
+)
+
+
 def update_integration_only(value: Any) -> Any:
     """Validate shared release notes messages are only defined by update."""
     _, integration = _CURRENT_TRANSLATION.get()
@@ -446,6 +455,7 @@ ENTITY_COMPONENT_SCHEMA = probatio.Schema(
 ENTITY_SCHEMA = probatio.Schema(
     {
         probatio.Optional("update"): {
+            probatio.Optional("manual_actions"): MANUAL_ACTIONS_SCHEMA,
             probatio.Optional("release_notes_messages"): RELEASE_NOTES_MESSAGES_SCHEMA,
             translation_key_validator: ENTITY_TRANSLATION_SCHEMA,
         },

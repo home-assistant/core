@@ -385,6 +385,15 @@ SAMPLE_STRINGS = {
             },
         },
         "update": {
+            "manual_actions": {
+                "press_button": {
+                    "description": (
+                        "During the update, someone has to press {button} on "
+                        "the device."
+                    ),
+                    "instruction": "Press {button} on the device.",
+                },
+            },
             "release_notes_messages": {
                 "network_reliability": (
                     "Review {docs_url} before starting the update."

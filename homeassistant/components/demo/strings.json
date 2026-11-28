@@ -98,6 +98,14 @@
         }
       }
     },
+    "update": {
+      "manual_actions": {
+        "confirm_on_device": {
+          "description": "During the update, someone has to confirm it on the device's screen.",
+          "instruction": "Confirm the update on the device's screen."
+        }
+      }
+    },
     "vacuum": {
       "model_s": {
         "state_attributes": {
