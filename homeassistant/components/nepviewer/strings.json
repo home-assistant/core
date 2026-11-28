@@ -1,0 +1,66 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "wrong_account": "The credentials belong to a different NEPViewer account."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "The password for your NEPViewer account."
+        },
+        "description": "Re-enter the password for {email} to re-authenticate."
+      },
+      "user": {
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "email": "The email address of your NEPViewer account.",
+          "password": "The password for your NEPViewer account."
+        }
+      }
+    }
+  },
+  "device": {
+    "panel": {
+      "name": "Panel {number}"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "current_power": {
+        "name": "Current power"
+      },
+      "energy_today": {
+        "name": "Energy today"
+      },
+      "energy_total": {
+        "name": "Lifetime energy"
+      },
+      "last_reported": {
+        "name": "Last reported"
+      }
+    }
+  },
+  "exceptions": {
+    "api_error": {
+      "message": "The NEPViewer API returned an unexpected response."
+    },
+    "auth_failed": {
+      "message": "Authentication with NEPViewer failed."
+    },
+    "cannot_connect": {
+      "message": "Could not connect to the NEPViewer API."
+    }
+  }
+}
