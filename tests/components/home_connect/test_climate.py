@@ -1,11 +1,13 @@
 """Tests for home_connect climate entities."""
 
 from collections.abc import Awaitable, Callable
+from typing import Any, Literal
 from unittest.mock import AsyncMock, MagicMock
 
 from aiohomeconnect.model import (
     ApplianceType,
     ArrayOfEvents,
+    ArrayOfOptions,
     ArrayOfPrograms,
     ArrayOfSettings,
     Event,
@@ -14,7 +16,9 @@ from aiohomeconnect.model import (
     EventType,
     GetSetting,
     HomeAppliance,
+    Option,
     OptionKey,
+    Program,
     ProgramDefinition,
     ProgramKey,
     SettingKey,
@@ -1254,4 +1258,285 @@ async def test_preset_mode_feature_not_supported_on_missing_active_clean(
     assert state
     assert (
         not state.attributes[ATTR_SUPPORTED_FEATURES] & ClimateEntityFeature.PRESET_MODE
+    )
+
+
+@pytest.mark.parametrize("get_all_programs_arg", ["active", "selected"])
+@pytest.mark.parametrize(
+    (
+        "option",
+        "option_data",
+        "option_definition",
+        "feature",
+        "service",
+        "service_data_args",
+        "expected_call_value",
+        "state_attribute",
+        "new_value",
+        "expected_state_attribute_value",
+        "attributes_to_check",
+    ),
+    [
+        (
+            OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_MODE,
+            Option(
+                key=OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_MODE,
+                value="HeatingVentilationAirConditioning.AirConditioner.EnumType.FanSpeedMode.Automatic",
+            ),
+            ProgramDefinitionOption(
+                OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_MODE,
+                "Enumeration",
+                constraints=ProgramDefinitionConstraints(
+                    allowed_values=[
+                        "HeatingVentilationAirConditioning.AirConditioner.EnumType.FanSpeedMode.Automatic",
+                    ]
+                ),
+            ),
+            ClimateEntityFeature.FAN_MODE,
+            ClimateService.SET_FAN_MODE,
+            {ClimateServiceArgument.FAN_MODE: FAN_AUTO},
+            "HeatingVentilationAirConditioning.AirConditioner.EnumType.FanSpeedMode.Automatic",
+            ATTR_FAN_MODE,
+            "HeatingVentilationAirConditioning.AirConditioner.EnumType.FanSpeedMode.Manual",
+            "manual",
+            {ATTR_FAN_MODES: ["auto"]},
+        ),
+        (
+            OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_SETPOINT_TEMPERATURE,
+            Option(
+                key=OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_SETPOINT_TEMPERATURE,
+                value=20.0,
+                unit="°C",
+            ),
+            ProgramDefinitionOption(
+                OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_SETPOINT_TEMPERATURE,
+                "Double",
+                unit="°C",
+                constraints=ProgramDefinitionConstraints(
+                    min=16.0,
+                    max=30.0,
+                    step_size=1,
+                ),
+            ),
+            ClimateEntityFeature.TARGET_TEMPERATURE,
+            ClimateService.SET_TEMPERATURE,
+            {ClimateServiceArgument.TEMPERATURE: 20.0},
+            20.0,
+            ATTR_TEMPERATURE,
+            22.0,
+            22.0,
+            {},
+        ),
+    ],
+    ids=["fan_speed_mode", "setpoint_temperature"],
+)
+@pytest.mark.parametrize("appliance", [ApplianceType.AIR_CONDITIONER], indirect=True)
+async def test_options_features_available_non_writable(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+    get_all_programs_arg: Literal["active", "selected"],
+    option: OptionKey,
+    option_data: Option,
+    option_definition: ProgramDefinitionOption,
+    feature: ClimateEntityFeature,
+    service: str,
+    service_data_args: dict[str, Any],
+    expected_call_value: Any,
+    state_attribute: str,
+    new_value: Any,
+    expected_state_attribute_value: Any,
+    attributes_to_check: dict[str, Any],
+) -> None:
+    """Test that option enters in read-only mode when is not listed in available program.
+
+    The feature is still there because is listed as selected/active program option,
+    but because is not listed in available program options, it cannot be set.
+    """
+    entity_id = "climate.air_conditioner"
+    options = [option_data]
+    client.get_all_programs.side_effect = None
+    client.get_all_programs.return_value = ArrayOfPrograms(
+        [
+            EnumerateProgram(
+                key=ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_AUTO,
+                raw_key=ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_AUTO.value,
+                constraints=EnumerateProgramConstraints(
+                    execution=Execution.SELECT_AND_START,
+                ),
+            ),
+        ],
+        **{
+            get_all_programs_arg: Program(
+                key=ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_AUTO,
+                options=options,
+            )
+        },
+    )
+    client.get_active_program_options = client.get_selected_program_options = AsyncMock(
+        return_value=ArrayOfOptions(options)
+    )
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_AUTO,
+            options=[option_definition],
+        )
+    )
+
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] & feature
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        service,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            **service_data_args,
+        },
+        blocking=True,
+    )
+
+    client.set_active_program_option.assert_awaited_once_with(
+        appliance.ha_id,
+        option_key=option,
+        value=expected_call_value,
+    )
+
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_AUTO,
+            options=[],
+        )
+    )
+    await client.add_events(
+        [
+            EventMessage(
+                appliance.ha_id,
+                EventType.NOTIFY,
+                data=ArrayOfEvents(
+                    [
+                        Event(
+                            key=EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
+                            raw_key=EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM.value,
+                            timestamp=0,
+                            level="",
+                            handling="",
+                            value=ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_AUTO.value,
+                        ),
+                    ]
+                ),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] & feature
+    assert state.attributes[state_attribute] != expected_state_attribute_value
+    for attr, expected_value in attributes_to_check.items():
+        assert state.attributes[attr] == expected_value
+
+    client.set_active_program_option.reset_mock()
+    with pytest.raises(HomeAssistantError, match=r"Option.*cannot be set"):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            service,
+            {
+                TargetKey.ENTITY_ID: entity_id,
+                **service_data_args,
+            },
+            blocking=True,
+        )
+    client.set_active_program_option.assert_not_awaited()
+
+    await client.add_events(
+        [
+            EventMessage(
+                appliance.ha_id,
+                EventType.NOTIFY,
+                data=ArrayOfEvents(
+                    [
+                        Event(
+                            key=option,
+                            raw_key=option.value,
+                            timestamp=0,
+                            level="",
+                            handling="",
+                            value=new_value,
+                        ),
+                    ]
+                ),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes[state_attribute] == expected_state_attribute_value
+
+
+@pytest.mark.parametrize("appliance", [ApplianceType.AIR_CONDITIONER], indirect=True)
+async def test_options_features_error_obtaining_available_program(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+) -> None:
+    """Test exposed fan modes when cannot get options constraints.
+
+    The entity should expose all the fan modes by default.
+    Setting the option should be also possible.
+    """
+    entity_id = "climate.air_conditioner"
+    client.get_available_program.side_effect = HomeConnectError("error.key")
+    client.get_all_programs = AsyncMock(
+        return_value=ArrayOfPrograms(
+            [
+                EnumerateProgram(
+                    key=ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_AUTO,
+                    raw_key=ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_AUTO,
+                )
+            ],
+            Program(
+                key=ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_AUTO,
+                options=[
+                    Option(
+                        OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_MODE,
+                        "HeatingVentilationAirConditioning.AirConditioner.EnumType.FanSpeedMode.Automatic",
+                    )
+                ],
+            ),
+        )
+    )
+
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert set(state.attributes[ATTR_FAN_MODES]) == {"auto", "manual"}
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        ClimateService.SET_FAN_MODE,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.FAN_MODE: "manual",
+        },
+        blocking=True,
+    )
+
+    client.set_active_program_option.assert_awaited_once_with(
+        appliance.ha_id,
+        option_key=OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_MODE,
+        value="HeatingVentilationAirConditioning.AirConditioner.EnumType.FanSpeedMode.Manual",
     )
