@@ -5,7 +5,7 @@ import hashlib
 from typing import cast, override
 
 from homeassistant.components.application_credentials import AuthorizationServer
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_API_TOKEN
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_API_TOKEN, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow, llm
 from homeassistant.util import slugify
@@ -43,7 +43,8 @@ async def async_get_config_entry_implementation(
         AuthorizationServer(
             authorize_url=entry.data[CONF_AUTHORIZATION_URL],
             token_url=entry.data[CONF_TOKEN_URL],
-        )
+        ),
+        entry.data[CONF_URL],
     ):
         return await config_entry_oauth2_flow.async_get_config_entry_implementation(
             hass, entry

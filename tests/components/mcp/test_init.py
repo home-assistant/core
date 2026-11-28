@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import AsyncIterator, Generator
+import datetime as dt
 import json
 import re
 import ssl
@@ -24,6 +25,7 @@ from mcp.types import (
 import probatio
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 import respx
 
 from homeassistant.components.mcp.const import CONF_SERVER_NAME, CONF_SLUG, DOMAIN
@@ -47,8 +49,17 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 from homeassistant.helpers.httpx_client import SERVER_SOFTWARE
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
+from homeassistant.util import dt as dt_util
 
-from .conftest import API_TOKEN, MCP_SERVER_URL, TEST_API_NAME, TEST_SERVER_NAME
+from .conftest import (
+    API_TOKEN,
+    CLIENT_ID,
+    CLIENT_SECRET,
+    MCP_SERVER_URL,
+    OAUTH_TOKEN_URL,
+    TEST_API_NAME,
+    TEST_SERVER_NAME,
+)
 
 SEARCH_MEMORY_TOOL = Tool(
     name="search_memory",
@@ -1235,3 +1246,37 @@ async def test_llm_api_id(hass: HomeAssistant) -> None:
     apis = llm.async_get_apis(hass)
     api = next(iter([api for api in apis if api.name == TEST_API_NAME]))
     assert api.id == "mcp-a0d7b954_mcp"
+
+
+@pytest.mark.parametrize(
+    "config_entry_token_expiration",
+    [dt_util.utcnow() - dt.timedelta(days=1)],
+)
+@pytest.mark.usefixtures("credential", "fake_mcp_server")
+async def test_oauth_token_refresh_includes_resource(
+    hass: HomeAssistant,
+    config_entry_with_auth: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test refreshing an expired OAuth token includes the resource indicator."""
+    aioclient_mock.post(
+        OAUTH_TOKEN_URL,
+        json={
+            "access_token": "new-access-token",
+            "refresh_token": "new-refresh-token",
+            "token_type": "Bearer",
+            "expires_in": 3600,
+        },
+    )
+
+    await hass.config_entries.async_setup(config_entry_with_auth.entry_id)
+    assert config_entry_with_auth.state is ConfigEntryState.LOADED
+
+    assert len(aioclient_mock.mock_calls) == 1
+    assert aioclient_mock.mock_calls[0][2] == {
+        "grant_type": "refresh_token",
+        "client_id": CLIENT_ID,
+        "client_secret": CLIENT_SECRET,
+        "refresh_token": "test-refresh-token",
+        "resource": MCP_SERVER_URL,
+    }

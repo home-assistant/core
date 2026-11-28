@@ -29,7 +29,7 @@ from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from . import async_get_config_entry_implementation
 from .application_credentials import authorization_server_context
-from .auth import AuthenticateHeader
+from .auth import AuthenticateHeader, canonical_resource_uri
 from .const import CONF_AUTHORIZATION_URL, CONF_SCOPE, CONF_SLUG, CONF_TOKEN_URL, DOMAIN
 from .coordinator import (
     TIMEOUT,
@@ -375,7 +375,9 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         This is needed since we can't automatically assume existing credentials
         should be used given they may be for another existing server.
         """
-        with authorization_server_context(self.authorization_server()):
+        with authorization_server_context(
+            self.authorization_server(), self.data[CONF_URL]
+        ):
             if not await async_get_implementations(self.hass, self.DOMAIN):
                 return await self.async_step_new_credentials()
             return self.async_show_menu(
@@ -398,7 +400,9 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         This exists to dynamically set application credentials Authorization Server
         based on the values form the OAuth discovery step.
         """
-        with authorization_server_context(self.authorization_server()):
+        with authorization_server_context(
+            self.authorization_server(), self.data[CONF_URL]
+        ):
             return await super().async_step_pick_implementation(user_input)
 
     @override
@@ -547,7 +551,7 @@ def _resource_metadata_from_response(
         isinstance(data, dict)
         and (authorization_servers := data.get("authorization_servers"))
         and isinstance(authorization_servers, list)
-        and data.get("resource") == mcp_server_url
+        and data.get("resource") == canonical_resource_uri(mcp_server_url)
     ):
         return ResourceMetadata(
             authorization_servers=authorization_servers,

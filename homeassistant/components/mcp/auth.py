@@ -12,6 +12,11 @@ RESOURCE_METADATA_REGEXP = r'resource_metadata="([^"]+)"'
 SCOPES_REGEXP = r'scope="([^"]+)"'
 
 
+def canonical_resource_uri(url: str) -> str:
+    """Return the canonical RFC 8707 resource URI without userinfo or fragment."""
+    return str(URL(url.strip()).with_user(None).with_fragment(None))
+
+
 @dataclass
 class AuthenticateHeader:
     """Class to hold info from the WWW-Authenticate header for supporting rfc9728."""
