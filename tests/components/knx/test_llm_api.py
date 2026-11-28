@@ -851,6 +851,7 @@ def _suggestion(suggestion_id: str, platforms: list[str], address: str) -> Any:
         suggested_name=f"Suggested {suggestion_id}",
         group_id="1.1.1",
         group_name="Device",
+        space_id=None,
         secondary_info="Channel",
         platform_options=platforms,
         suggestions={

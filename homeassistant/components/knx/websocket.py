@@ -23,7 +23,12 @@ from homeassistant.components.frontend import async_panel_exists
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.const import CONF_ENTITY_ID, CONF_PLATFORM, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import (
+    area_registry as ar,
+    config_validation as cv,
+    entity_registry as er,
+    floor_registry as fr,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import dt as dt_util
 
@@ -621,11 +626,20 @@ async def ws_get_schema(
     )
 
 
+_NON_EMPTY_NAME: Final = probatio.All(str, probatio.Strip, probatio.Length(min=1))
+
+
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         probatio.Required("type"): "knx/create_entity",
         **CREATE_ENTITY_BASE_SCHEMA,
+        probatio.Exclusive("area_id", "area"): str,
+        # an area of the building structure to get or create, eg. from a suggestion
+        probatio.Exclusive("suggested_area", "area"): {
+            probatio.Required("name"): _NON_EMPTY_NAME,
+            probatio.Optional("floor"): probatio.Any(_NON_EMPTY_NAME, None),
+        },
     }
 )
 @websocket_api.async_response
@@ -637,10 +651,29 @@ async def ws_create_entity(
     msg: dict,
 ) -> None:
     """Create entity in entity store and load it."""
+    area_id: str | None = msg.get("area_id")
+    if area_id is not None and ar.async_get(hass).async_get_area(area_id) is None:
+        connection.send_error(
+            msg["id"], websocket_api.ERR_NOT_FOUND, f"Area {area_id} not found"
+        )
+        return
     try:
         validated_data = validate_entity_data(msg)
     except EntityStoreValidationException as exc:
         connection.send_result(msg["id"], exc.validation_error)
+        return
+    entity = validated_data[CONF_DATA].entity
+    if (
+        (area_id is not None or "suggested_area" in msg)
+        and entity.device_info is not None
+        and not entity.name
+    ):
+        # the entity registry refuses an own area for the main entity of a device
+        connection.send_error(
+            msg["id"],
+            websocket_api.ERR_INVALID_FORMAT,
+            "An entity without a name of its own takes the area of its device",
+        )
         return
     try:
         entity_id = await knx.config_store.create_entity(
@@ -653,9 +686,36 @@ async def ws_create_entity(
             msg["id"], websocket_api.const.ERR_HOME_ASSISTANT_ERROR, str(err)
         )
         return
+    if entity_id is not None:
+        if suggested_area := msg.get("suggested_area"):
+            area_id = _async_get_or_create_area(
+                hass, suggested_area["name"], suggested_area.get("floor")
+            )
+        # an area deleted meanwhile is left out, as deleting it clears it anyway
+        if area_id is not None and ar.async_get(hass).async_get_area(area_id):
+            er.async_get(hass).async_update_entity(entity_id, area_id=area_id)
     connection.send_result(
         msg["id"], EntityStoreValidationSuccess(success=True, entity_id=entity_id)
     )
+
+
+@callback
+def _async_get_or_create_area(hass: HomeAssistant, name: str, floor: str | None) -> str:
+    """Return the id of the area of this name, creating it on its floor if missing.
+
+    The floor of an existing area is kept.
+    """
+    area_registry = ar.async_get(hass)
+    if area := area_registry.async_get_area_by_name(name):
+        return area.id
+    floor_id: str | None = None
+    if floor is not None:
+        floor_registry = fr.async_get(hass)
+        floor_entry = floor_registry.async_get_floor_by_name(
+            floor
+        ) or floor_registry.async_create(floor)
+        floor_id = floor_entry.floor_id
+    return area_registry.async_create(name, floor_id=floor_id).id
 
 
 @websocket_api.require_admin

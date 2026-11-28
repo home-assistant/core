@@ -4,6 +4,7 @@ import dataclasses
 import json
 import string
 from typing import Any
+from unittest.mock import patch
 
 import pytest
 from pytest_homeassistant.common import async_load_json_object_fixture
@@ -18,6 +19,7 @@ from homeassistant.components.knx.const import (
 )
 from homeassistant.components.knx.storage.config_store import (
     STORAGE_KEY as KNX_CONFIG_STORAGE_KEY,
+    KNXConfigStore,
     to_storage_dict,
 )
 from homeassistant.components.knx.storage.const import CONF_DATA
@@ -51,7 +53,12 @@ from homeassistant.components.knx.storage.serialize import get_serialized_schema
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import CONF_PLATFORM, EntityCategory, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers import (
+    area_registry as ar,
+    entity_registry as er,
+    floor_registry as fr,
+    issue_registry as ir,
+)
 from homeassistant.helpers.translation import async_get_translations
 
 from . import KnxEntityGenerator
@@ -152,6 +159,224 @@ async def test_create_entity_error(
     assert not res["result"]["success"]
     assert res["result"]["errors"][0]["path"] == ["platform"]
     assert res["result"]["error_base"].startswith("value must be one of")
+
+
+SWITCH_ENTITY_DATA = {
+    "entity": {"name": "Test"},
+    "knx": {"ga_switch": {"write": "1/2/3"}},
+}
+
+
+@pytest.fixture
+def areas(area_registry: ar.AreaRegistry, floor_registry: fr.FloorRegistry) -> None:
+    """Create the area "Kitchen" on the first floor, and an empty ground floor."""
+    first_floor = floor_registry.async_create("First floor")
+    floor_registry.async_create("Ground floor")
+    area_registry.async_create("Kitchen", floor_id=first_floor.floor_id)
+
+
+@pytest.mark.usefixtures("areas")
+@pytest.mark.parametrize(
+    ("area", "expected"),
+    [
+        pytest.param({"area_id": "kitchen"}, ("Kitchen", "first_floor"), id="area_id"),
+        pytest.param(
+            {"suggested_area": {"name": "kitchen", "floor": "Ground floor"}},
+            ("Kitchen", "first_floor"),
+            id="existing_area_keeps_its_floor",
+        ),
+        pytest.param(
+            {"suggested_area": {"name": "Bath", "floor": "ground floor"}},
+            ("Bath", "ground_floor"),
+            id="new_area_on_existing_floor",
+        ),
+        pytest.param(
+            {"suggested_area": {"name": "Attic", "floor": "Second floor"}},
+            ("Attic", "second_floor"),
+            id="new_area_on_new_floor",
+        ),
+        pytest.param(
+            {"suggested_area": {"name": "Garden", "floor": None}},
+            ("Garden", None),
+            id="new_area_without_floor",
+        ),
+    ],
+)
+async def test_create_entity_area(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+    area: dict[str, Any],
+    expected: tuple[str, str | None],
+) -> None:
+    """Test an entity is created in an existing or a new area."""
+    await knx.setup_integration()
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "knx/create_entity",
+            "platform": Platform.SWITCH,
+            "data": SWITCH_ENTITY_DATA,
+            **area,
+        }
+    )
+    res = await client.receive_json()
+    assert res["success"], res
+    entity = entity_registry.async_get(res["result"]["entity_id"])
+    area_entry = area_registry.async_get_area(entity.area_id)
+    assert (area_entry.name, area_entry.floor_id) == expected
+
+
+@pytest.mark.usefixtures("areas")
+@pytest.mark.parametrize(
+    ("area", "error_code"),
+    [
+        pytest.param({"area_id": "unknown"}, "not_found", id="unknown_area_id"),
+        pytest.param(
+            {"area_id": "kitchen", "suggested_area": {"name": "Bath"}},
+            "invalid_format",
+            id="area_id_and_suggested_area",
+        ),
+        pytest.param(
+            {"suggested_area": {"name": " "}}, "invalid_format", id="empty_name"
+        ),
+        pytest.param(
+            {"suggested_area": {"name": "Bath", "floor": ""}},
+            "invalid_format",
+            id="empty_floor",
+        ),
+    ],
+)
+async def test_create_entity_area_error(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+    area: dict[str, Any],
+    error_code: str,
+) -> None:
+    """Test no entity is created for an invalid area."""
+    await knx.setup_integration()
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "knx/create_entity",
+            "platform": Platform.SWITCH,
+            "data": SWITCH_ENTITY_DATA,
+            **area,
+        }
+    )
+    res = await client.receive_json()
+    assert not res["success"]
+    assert res["error"]["code"] == error_code
+    assert KNX_CONFIG_STORAGE_KEY not in hass_storage
+
+
+@pytest.mark.usefixtures("areas")
+@pytest.mark.parametrize(
+    "area",
+    [
+        pytest.param({"area_id": "kitchen"}, id="area_id"),
+        pytest.param(
+            {"suggested_area": {"name": "Bath", "floor": "Second floor"}},
+            id="suggested_area",
+        ),
+    ],
+)
+async def test_create_entity_area_of_device_entity(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+    area_registry: ar.AreaRegistry,
+    floor_registry: fr.FloorRegistry,
+    area: dict[str, Any],
+) -> None:
+    """Test an entity named after its device can't get an area of its own."""
+    await knx.setup_integration()
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "knx/create_device", "name": "Device"})
+    res = await client.receive_json()
+    device_info = res["result"]["identifiers"][0][1]
+
+    await client.send_json_auto_id(
+        {
+            "type": "knx/create_entity",
+            "platform": Platform.SWITCH,
+            "data": {
+                "entity": {"device_info": device_info},
+                "knx": {"ga_switch": {"write": "1/2/3"}},
+            },
+            **area,
+        }
+    )
+    res = await client.receive_json()
+    assert not res["success"]
+    assert res["error"]["code"] == "invalid_format"
+    # the request leaves nothing behind
+    assert KNX_CONFIG_STORAGE_KEY not in hass_storage
+    assert area_registry.async_get_area_by_name("Bath") is None
+    assert floor_registry.async_get_floor_by_name("Second floor") is None
+
+
+async def test_create_entity_area_deleted_meanwhile(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test an area deleted while the entity is created is left out."""
+    kitchen = area_registry.async_create("Kitchen")
+    await knx.setup_integration()
+    client = await hass_ws_client(hass)
+    create_entity = KNXConfigStore.create_entity
+
+    async def _delete_area_first(self: KNXConfigStore, *args: Any) -> str | None:
+        area_registry.async_delete(kitchen.id)
+        return await create_entity(self, *args)
+
+    with patch.object(KNXConfigStore, "create_entity", _delete_area_first):
+        await client.send_json_auto_id(
+            {
+                "type": "knx/create_entity",
+                "platform": Platform.SWITCH,
+                "data": SWITCH_ENTITY_DATA,
+                "area_id": kitchen.id,
+            }
+        )
+        res = await client.receive_json()
+    assert res["success"], res
+    assert res["result"]["success"]
+    assert entity_registry.async_get(res["result"]["entity_id"]).area_id is None
+
+
+async def test_create_entity_invalid_data_creates_no_area(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+    area_registry: ar.AreaRegistry,
+) -> None:
+    """Test a suggested area is not created when the entity data is invalid."""
+    await knx.setup_integration()
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "knx/create_entity",
+            "platform": Platform.SWITCH,
+            "data": {"entity": {"name": "Test"}, "knx": {}},
+            "suggested_area": {"name": "Bath", "floor": "Ground floor"},
+        }
+    )
+    res = await client.receive_json()
+    assert res["success"], res
+    assert not res["result"]["success"]
+    assert area_registry.async_get_area_by_name("Bath") is None
 
 
 @pytest.mark.parametrize(

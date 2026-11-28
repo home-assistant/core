@@ -348,6 +348,15 @@ def _project(
             ),
         },
         "communication_objects": communication_objects,
+        "locations": {
+            "P-1": {
+                "type": "Room",
+                "identifier": "P-1",
+                "name": "Room",
+                "devices": ["1.0.2"],
+                "spaces": {},
+            }
+        },
     }
 
 
@@ -418,6 +427,8 @@ async def test_suggestions_for_other_channels(
         {"address": "1/1/4", "name": "GA 1/1/4"},
     ]
     assert channel_2["source"] == "cfg"
+    # a device no space lists
+    assert channel_2["space_id"] is None
     assert channel_2["platform_options"] == ["cover"]
     assert channel_2["suggested_name"] == "Cover actuator Output CH-2"
     assert channel_2["existing_entity_ids"] == []
@@ -430,6 +441,7 @@ async def test_suggestions_for_other_channels(
     }
     assert sibling["group_id"] == "1.0.2"
     assert sibling["group_name"] == "Cover actuator 2"
+    assert sibling["space_id"] == "P-1"
     assert sibling["secondary_info"] == "Output CH-1"
     assert sibling["metadata"] == {"template_entity_id": entity.entity_id}
 

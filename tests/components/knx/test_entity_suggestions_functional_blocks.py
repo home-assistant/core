@@ -268,6 +268,15 @@ TEST_PROJECT: dict[str, Any] = {
             },
         },
     },
+    "locations": {
+        "P-1": {
+            "type": "Room",
+            "identifier": "P-1",
+            "name": "Room",
+            "devices": ["1.1.2"],
+            "spaces": {},
+        }
+    },
     "communication_objects": {
         "co-1": _com_object(["417.52"], ["1/0/1", "1/0/2"]),
         "co-2": _com_object(["417.51"], ["1/0/3"]),
@@ -919,6 +928,9 @@ async def test_ws_get_entity_suggestions(
     assert switch_actuator["source"] == "fb"
     assert switch_actuator["group_id"] == "1.1.1"
     assert switch_actuator["group_name"] == "Schaltaktor"
+    # a device no space lists
+    assert switch_actuator["space_id"] is None
+    assert suggestions["fb_1.1.2_CH-1"]["space_id"] == "P-1"
     assert switch_actuator["metadata"] == {"functional_blocks": ["417"]}
     assert switch_actuator["secondary_info"] == "Ausgang 1"
     # light is the default for FB 417

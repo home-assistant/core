@@ -6,6 +6,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from ...const import DOMAIN
+from .areas import async_suggested_areas
 from .base import SuggestionProvider
 from .const import (
     EntitySuggestion,
@@ -94,6 +95,10 @@ async def async_get_entity_suggestions(
     """
     suggestion_filter = suggestion_filter or SuggestionFilter()
     entity_ids_by_group_address = _entity_ids_by_group_address(hass, knx)
+    project = await knx.project.get_knxproject()
+    suggested_areas = (
+        async_suggested_areas(hass, project.get("locations") or {}) if project else {}
+    )
     result = EntitySuggestionsResult(suggestions=[], providers={})
     for provider in SUGGESTION_PROVIDERS:
         provider_result = await provider.async_get_suggestions(hass, knx)
@@ -106,6 +111,9 @@ async def async_get_entity_suggestions(
                 "existing_entity_ids": _existing_entity_ids(
                     provider_suggestion, entity_ids_by_group_address
                 ),
+                "suggested_area": suggested_areas.get(space_id)
+                if (space_id := provider_suggestion["space_id"]) is not None
+                else None,
             }
             if _matches(suggestion, suggestion_filter):
                 result["suggestions"].append(suggestion)

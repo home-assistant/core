@@ -32,7 +32,7 @@ from typing import TYPE_CHECKING, Any, Final, Required, TypedDict, override
 
 from awesomeversion import AwesomeVersion
 import probatio
-from xknxproject.models import DPTType, Function, KNXProject, Space
+from xknxproject.models import DPTType, Function, KNXProject
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -41,6 +41,7 @@ from .. import dpa
 from ..const import CONF_DPT, CONF_GA_PASSIVE
 from ..entity_store_schema import KNX_SCHEMA_FOR_PLATFORM
 from ..knx_selector import GASelector
+from .areas import space_names
 from .base import SuggestionProvider
 from .const import (
     PlatformSuggestion,
@@ -493,46 +494,6 @@ def _build_platform_suggestion(
     )
 
 
-def _space_paths(
-    locations: dict[str, Space], parents: tuple[str, ...] = ()
-) -> dict[str, tuple[str, ...]]:
-    """The names of each space and the spaces containing it, by its identifier."""
-    found: dict[str, tuple[str, ...]] = {}
-    for space in locations.values():
-        path = (*parents, space["name"])
-        found[space["identifier"]] = path
-        found |= _space_paths(space["spaces"], path)
-    return found
-
-
-def _space_names(locations: dict[str, Space]) -> dict[str, str]:
-    """The name of each space by its identifier.
-
-    A name used by more than one space is prefixed with the names of the spaces
-    containing it, as far as needed to tell them apart - eg. "Ground floor /
-    Kitchen" and "First floor / Kitchen".
-    """
-    paths = _space_paths(locations)
-    depths = dict.fromkeys(paths, 1)
-    while True:
-        labels = {
-            identifier: path[-depths[identifier] :]
-            for identifier, path in paths.items()
-        }
-        counts = Counter(labels.values())
-        deeper = [
-            identifier
-            for identifier, label in labels.items()
-            if counts[label] > 1 and depths[identifier] < len(paths[identifier])
-        ]
-        if not deeper:
-            return {
-                identifier: " / ".join(label) for identifier, label in labels.items()
-            }
-        for identifier in deeper:
-            depths[identifier] += 1
-
-
 def _disambiguate_names(suggestions: list[ProviderSuggestion]) -> None:
     """Prefix names used multiple times with their room name."""
     name_counts = Counter(suggestion["suggested_name"] for suggestion in suggestions)
@@ -545,7 +506,7 @@ def _disambiguate_names(suggestions: list[ProviderSuggestion]) -> None:
 
 def _build_suggestions(project: KNXProject) -> list[ProviderSuggestion]:
     """Build suggestions for all functions of a type with an entity."""
-    space_names = _space_names(project.get("locations") or {})
+    group_names = space_names(project.get("locations") or {})
     linked = _linked_objects(project)
     suggestions: list[ProviderSuggestion] = []
     for function_id, function in (project.get("functions") or {}).items():
@@ -557,7 +518,8 @@ def _build_suggestions(project: KNXProject) -> list[ProviderSuggestion]:
                 id=function_id,
                 suggested_name=function["name"],
                 group_id=function["space_id"],
-                group_name=space_names.get(function["space_id"], ""),
+                group_name=group_names.get(function["space_id"], ""),
+                space_id=function["space_id"],
                 secondary_info=function["usage_text"],
                 platform_options=[platform.value],
                 suggestions={platform.value: platform_suggestion},
