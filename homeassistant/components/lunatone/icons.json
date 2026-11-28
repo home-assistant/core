@@ -1,5 +1,19 @@
 {
   "entity": {
+    "button": {
+      "scan_cancel": {
+        "default": "mdi:cancel"
+      },
+      "scan_start": {
+        "default": "mdi:magnify"
+      },
+      "scan_start_current": {
+        "default": "mdi:magnify"
+      },
+      "scan_start_new": {
+        "default": "mdi:magnify"
+      }
+    },
     "sensor": {
       "dali_line_status": {
         "default": "mdi:current-ac"
