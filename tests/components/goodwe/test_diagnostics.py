@@ -11,7 +11,6 @@ from syrupy.filters import props
 from homeassistant.components.goodwe import CONF_MODEL_FAMILY, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_HOST, TEST_PORT
 
@@ -35,7 +34,7 @@ async def test_entry_diagnostics(
         entry_id="3bd2acb0e4f0476d40865546d0d91921",
     )
     config_entry.add_to_hass(hass)
-    assert await async_setup_component(hass, DOMAIN, {})
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
 
     result = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
     assert result == snapshot(exclude=props("created_at", "modified_at"))
