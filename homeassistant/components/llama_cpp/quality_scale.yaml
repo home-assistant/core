@@ -40,11 +40,11 @@ rules:
   docs-installation-parameters: done
   entity-unavailable:
     status: exempt
-    comment: Conversation entities do not have an unavailable state.
+    comment: Conversation and AI task entities do not have an unavailable state.
   integration-owner: done
   log-when-unavailable:
     status: exempt
-    comment: Conversation entities do not have an unavailable state.
+    comment: Conversation and AI task entities do not have an unavailable state.
   parallel-updates:
     status: exempt
     comment: No periodic updates are performed by this integration.
@@ -76,13 +76,13 @@ rules:
     comment: No physical devices are supported.
   entity-category:
     status: exempt
-    comment: Conversation entity does not require an entity category.
+    comment: Conversation and AI task entities do not require an entity category.
   entity-device-class:
     status: exempt
-    comment: Conversation entity does not require a device class.
+    comment: Conversation and AI task entities do not require a device class.
   entity-disabled-by-default:
     status: exempt
-    comment: Conversation entity should be enabled by default.
+    comment: Conversation and AI task entities should be enabled by default.
   entity-translations: done
   exception-translations: done
   icon-translations:

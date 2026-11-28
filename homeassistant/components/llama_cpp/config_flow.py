@@ -69,6 +69,14 @@ STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
 )
 
 
+def _subentry_title(subentry_type: str, model: str) -> str:
+    """Return the subentry title, telling AI tasks apart from conversation agents."""
+    title = model_name_to_title(model)
+    if subentry_type == "ai_task_data":
+        return f"{title} AI task"
+    return title
+
+
 class LlamaCppConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for llama.cpp."""
 
@@ -195,7 +203,16 @@ class LlamaCppConfigFlow(ConfigFlow, domain=DOMAIN):
                                 CONF_LLM_HASS_API: [llm.LLM_API_ASSIST],
                                 **base_options,
                             },
-                            "title": model_name_to_title(model),
+                            "title": _subentry_title("conversation", model),
+                            "unique_id": None,
+                        },
+                        {
+                            "subentry_type": "ai_task_data",
+                            "data": {
+                                CONF_RECOMMENDED: True,
+                                CONF_CHAT_MODEL: model,
+                            },
+                            "title": _subentry_title("ai_task_data", model),
                             "unique_id": None,
                         },
                     ],
@@ -235,12 +252,13 @@ class LlamaCppConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
         return {
-            "conversation": ConversationSubentryFlowHandler,
+            "conversation": LlamaCppSubentryFlowHandler,
+            "ai_task_data": LlamaCppSubentryFlowHandler,
         }
 
 
-class ConversationSubentryFlowHandler(ConfigSubentryFlow):
-    """Flow for managing conversation subentries."""
+class LlamaCppSubentryFlowHandler(ConfigSubentryFlow):
+    """Flow for managing conversation and AI task subentries."""
 
     options: dict[str, Any] | None = None
     models: list[str] | None = None
@@ -269,9 +287,10 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
             return self.async_abort(reason="cannot_connect")
         self.options = {
             CONF_RECOMMENDED: True,
-            CONF_LLM_HASS_API: [llm.LLM_API_ASSIST],
             CONF_CHAT_MODEL: recommended_model(models),
         }
+        if self._subentry_type == "conversation":
+            self.options[CONF_LLM_HASS_API] = [llm.LLM_API_ASSIST]
         return await self.async_step_init()
 
     async def async_step_reconfigure(
@@ -305,6 +324,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                     self._openai_client,
                     model=model,
                     stream=self._get_entry().data.get(CONF_STREAMING, False),
+                    with_tools=self._subentry_type == "conversation",
                 )
             except HomeAssistantError as err:
                 LOGGER.error("Model completion validation failed: %s", err)
@@ -312,26 +332,28 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                     step_id="init",
                     data_schema=self.add_suggested_values_to_schema(
                         probatio.Schema(
-                            llama_cpp_config_option_schema(self.hass, options, models)
+                            llama_cpp_config_option_schema(
+                                self.hass, self._subentry_type, options, models
+                            )
                         ),
                         user_input,
                     ),
                     errors={"base": err.translation_key or "unknown"},
                 )
 
+            title = _subentry_title(self._subentry_type, user_input[CONF_CHAT_MODEL])
             if self.source == "user":
-                return self.async_create_entry(
-                    title=model_name_to_title(user_input[CONF_CHAT_MODEL]),
-                    data=user_input,
-                )
+                return self.async_create_entry(title=title, data=user_input)
             return self.async_update_and_abort(
                 self._get_entry(),
                 self._get_reconfigure_subentry(),
                 data=user_input,
-                title=model_name_to_title(user_input[CONF_CHAT_MODEL]),
+                title=title,
             )
 
-        schema = llama_cpp_config_option_schema(self.hass, options, models)
+        schema = llama_cpp_config_option_schema(
+            self.hass, self._subentry_type, options, models
+        )
         return self.async_show_form(
             step_id="init",
             data_schema=self.add_suggested_values_to_schema(
@@ -342,40 +364,41 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
 
 def llama_cpp_config_option_schema(
     hass: HomeAssistant,
+    subentry_type: str,
     options: dict[str, Any],
     models: list[str] | None = None,
 ) -> dict:
     """Return a schema for llama.cpp completion options."""
-    hass_apis: list[SelectOptionDict] = [
-        SelectOptionDict(
-            label=api.name,
-            value=api.id,
-        )
-        for api in llm.async_get_apis(hass)
-    ]
-    LOGGER.debug("Available LLM APIs: %s", hass_apis)
-
     schema: dict[probatio.Required | probatio.Optional, Any] = {}
 
-    schema.update(
-        {
-            probatio.Optional(
-                CONF_PROMPT,
-                description={
-                    "suggested_value": options.get(
-                        CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT
+    if subentry_type == "conversation":
+        hass_apis: list[SelectOptionDict] = [
+            SelectOptionDict(
+                label=api.name,
+                value=api.id,
+            )
+            for api in llm.async_get_apis(hass)
+        ]
+        LOGGER.debug("Available LLM APIs: %s", hass_apis)
+        schema.update(
+            {
+                probatio.Optional(
+                    CONF_PROMPT,
+                    description={
+                        "suggested_value": options.get(
+                            CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT
+                        )
+                    },
+                ): TemplateSelector(),
+                probatio.Optional(
+                    CONF_LLM_HASS_API,
+                ): SelectSelector(
+                    SelectSelectorConfig(
+                        options=hass_apis, multiple=True, mode=SelectSelectorMode.LIST
                     )
-                },
-            ): TemplateSelector(),
-            probatio.Optional(
-                CONF_LLM_HASS_API,
-            ): SelectSelector(
-                SelectSelectorConfig(
-                    options=hass_apis, multiple=True, mode=SelectSelectorMode.LIST
-                )
-            ),
-        }
-    )
+                ),
+            }
+        )
     schema.update(
         {
             probatio.Optional(

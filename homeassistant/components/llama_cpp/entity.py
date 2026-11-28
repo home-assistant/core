@@ -4,8 +4,6 @@ import base64
 from collections.abc import AsyncGenerator, Callable
 import json
 import logging
-import mimetypes
-from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, cast
 
 from openai import AsyncOpenAI
@@ -37,6 +35,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, llm
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.json import json_dumps
+from homeassistant.util import slugify
 
 from .api import api_error_handler
 from .const import (
@@ -68,14 +67,17 @@ def _format_structured_output(
     """Format structured output specification."""
     schema = probatio.to_openapi(
         structure,
-        custom_serializer=llm_api.custom_serializer if llm_api else None,
+        custom_serializer=(
+            (llm_api and llm_api.custom_serializer) or llm.selector_serializer
+        ),
         openapi_version="3.1.0",
     )
     return ResponseFormatJSONSchema(
         type="json_schema",
         json_schema={
-            "name": name,
-            "strict": True,
+            "name": slugify(name)[:64] or "response",
+            # Strict mode requires every field, but structure fields are optional
+            "strict": False,
             "schema": cast(dict[str, object], schema),
         },
     )
@@ -323,52 +325,58 @@ class LlamaCppBaseLLMEntity(Entity):
             ]
 
         model: str = options.get(CONF_CHAT_MODEL, DEFAULT_MODEL)
-        messages = [
-            m
-            for content in chat_log.content
-            if (m := _convert_content_to_chat_message(content))
-        ]
-
-        response_format: ResponseFormatJSONSchema | Omit = Omit()
-        if structure and structure_name:
-            response_format = _format_structured_output(
-                structure_name, structure, chat_log.llm_api
-            )
 
         last_content = chat_log.content[-1]
-        if (
-            isinstance(last_content, conversation.UserContent)
+        attachment_content = (
+            last_content
+            if isinstance(last_content, conversation.UserContent)
             and last_content.attachments
-        ):
-            files = await async_prepare_files_for_prompt(
-                self.hass,
-                [a.path for a in last_content.attachments],
+            else None
+        )
+        messages = [
+            m
+            for content in (
+                chat_log.content[:-1] if attachment_content else chat_log.content
             )
-            for i in range(len(messages) - 1, -1, -1):
-                if messages[i]["role"] == "user":
-                    user_msg = cast(ChatCompletionUserMessageParam, messages[i])
-                    current_content = user_msg.get("content")
-                    if isinstance(current_content, str):
-                        user_msg["content"] = [
-                            ChatCompletionContentPartTextParam(
-                                type="text", text=current_content
-                            ),
-                            *files,
-                        ]
-                    break
+            if (m := _convert_content_to_chat_message(content))
+        ]
+        if attachment_content:
+            parts: list[ChatCompletionContentPartParam] = []
+            if attachment_content.content:
+                parts.append(
+                    ChatCompletionContentPartTextParam(
+                        type="text", text=attachment_content.content
+                    )
+                )
+            parts.extend(
+                await async_prepare_files_for_prompt(
+                    self.hass, attachment_content.attachments or []
+                )
+            )
+            messages.append(ChatCompletionUserMessageParam(role="user", content=parts))
+
+        response_format: ResponseFormatJSONSchema | Omit = Omit()
+        if structure:
+            response_format = _format_structured_output(
+                structure_name or "", structure, chat_log.llm_api
+            )
 
         client: AsyncOpenAI = self.entry.runtime_data
         streaming = bool(
             self.entry.data.get(CONF_STREAMING, options.get(CONF_STREAMING, False))
         )
 
-        for _iteration in range(MAX_TOOL_ITERATIONS):
+        async def async_complete(
+            request_tools: list[ChatCompletionFunctionToolParam] | None,
+            request_format: ResponseFormatJSONSchema | Omit,
+        ) -> None:
+            """Send the messages and add the answer to the chat log."""
             with api_error_handler():
                 result = await client.chat.completions.create(
                     messages=messages,
                     model=model,
-                    tools=tools or Omit(),
-                    response_format=response_format,
+                    tools=request_tools or Omit(),
+                    response_format=request_format,
                     max_tokens=cast(
                         int, options.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS)
                     ),
@@ -405,61 +413,68 @@ class LlamaCppBaseLLMEntity(Entity):
                     ]
                 )
 
+        # A grammar-constrained response cannot call tools, so tools and the
+        # structured answer are requested separately
+        structured_after_tools = bool(tools) and not isinstance(response_format, Omit)
+
+        for _iteration in range(MAX_TOOL_ITERATIONS):
+            await async_complete(
+                tools, Omit() if structured_after_tools else response_format
+            )
             if not chat_log.unresponded_tool_results:
                 break
 
+        if structured_after_tools:
+            last_message = messages[-1]
+            if last_message["role"] == "assistant" and not last_message.get(
+                "tool_calls"
+            ):
+                # llama.cpp rejects a trailing assistant message (prefill) with a
+                # structured response_format
+                messages.pop()
+            content_count = len(chat_log.content)
+            await async_complete(None, response_format)
+            if len(chat_log.content) == content_count:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN, translation_key="response_not_found"
+                )
+
 
 async def async_prepare_files_for_prompt(
-    hass: HomeAssistant, files: list[Path]
+    hass: HomeAssistant, attachments: list[conversation.Attachment]
 ) -> list[ChatCompletionContentPartParam]:
-    """Prepare files for OpenAI-compatible API.
+    """Prepare image attachments for OpenAI-compatible API.
 
     Caller needs to ensure that the files are allowed.
     """
 
-    def guess_file_type(file_path: Path) -> tuple[str | None, str | None]:
-        """Guess the file type based on the file extension."""
-        return mimetypes.guess_type(str(file_path))
-
     def append_files_to_content() -> list[ChatCompletionContentPartParam]:
         content: list[ChatCompletionContentPartParam] = []
 
-        for file_path in files:
-            if not file_path.exists():
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="file_not_found",
-                    translation_placeholders={"file_path": str(file_path)},
-                )
-
-            mime_type, _ = guess_file_type(file_path)
-
-            if not mime_type or not mime_type.startswith(("image/", "application/pdf")):
+        for attachment in attachments:
+            if not attachment.mime_type.startswith("image/"):
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="unsupported_file_type",
-                    translation_placeholders={"file_path": str(file_path)},
+                    translation_placeholders={"file_path": str(attachment.path)},
+                )
+            if not attachment.path.exists():
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="file_not_found",
+                    translation_placeholders={"file_path": str(attachment.path)},
                 )
 
-            base64_file = base64.b64encode(file_path.read_bytes()).decode("utf-8")
-
-            if mime_type.startswith("image/"):
-                content.append(
-                    {
-                        "type": "image_url",
-                        "image_url": {
-                            "url": f"data:{mime_type};base64,{base64_file}",
-                            "detail": "auto",
-                        },
-                    }
-                )
-            elif mime_type.startswith("application/pdf"):
-                content.append(
-                    {
-                        "type": "text",
-                        "text": f"[File: {file_path.name}]\nContent: {base64_file}",
-                    }
-                )
+            base64_file = base64.b64encode(attachment.path.read_bytes()).decode("utf-8")
+            content.append(
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": f"data:{attachment.mime_type};base64,{base64_file}",
+                        "detail": "auto",
+                    },
+                }
+            )
 
         return content
 

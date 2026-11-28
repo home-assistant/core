@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, patch
 from freezegun import freeze_time
 import httpx2
 import openai
+from openai import Omit
 from openai.types.chat import (
     ChatCompletion,
     ChatCompletionChunk,
@@ -201,7 +202,7 @@ async def test_function_call(
         "openai.resources.chat.completions.AsyncCompletions.create",
         new_callable=AsyncMock,
         side_effect=completion_result,
-    ):
+    ) as mock_create:
         result = await conversation.async_converse(
             hass,
             "Please call the test function",
@@ -212,6 +213,11 @@ async def test_function_call(
 
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     assert mock_chat_log.content[1:] == snapshot
+    # One call per tool round, never with a structured response format
+    assert mock_create.call_count == 2
+    for call in mock_create.call_args_list:
+        assert call.kwargs["tools"]
+        assert isinstance(call.kwargs["response_format"], Omit)
 
 
 @pytest.mark.parametrize(("config_entry_options"), [ASSIST_OPTIONS])

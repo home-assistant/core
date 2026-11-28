@@ -20,6 +20,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up conversation entities."""
     for subentry in config_entry.subentries.values():
+        if subentry.subentry_type != "conversation":
+            continue
+
         async_add_entities(
             [LlamaCppConversationEntity(config_entry, subentry)],
             config_subentry_id=subentry.subentry_id,
