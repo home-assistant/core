@@ -1,7 +1,5 @@
 """Tests for the Cert Expiry config flow."""
 
-import socket
-import ssl
 from unittest.mock import patch
 
 import pytest
@@ -9,6 +7,13 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.cert_expiry.const import DOMAIN
+from homeassistant.components.cert_expiry.errors import (
+    ConnectionRefused,
+    ConnectionReset,
+    ConnectionTimeout,
+    HandshakeFailed,
+    ResolveFailed,
+)
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -26,9 +31,7 @@ async def test_user(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    with patch(
-        "homeassistant.components.cert_expiry.config_flow.get_cert_expiry_timestamp"
-    ):
+    with patch("homeassistant.components.cert_expiry.config_flow.async_get_cert"):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_HOST: HOST, CONF_PORT: PORT}
         )
@@ -48,8 +51,8 @@ async def test_user_with_bad_cert(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
     with patch(
-        "homeassistant.components.cert_expiry.helper.async_get_cert",
-        side_effect=ssl.SSLError("some error"),
+        "homeassistant.components.cert_expiry.config_flow.async_get_cert",
+        side_effect=HandshakeFailed(HOST, PORT, "some error"),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_HOST: HOST, CONF_PORT: PORT}
@@ -62,13 +65,11 @@ async def test_user_with_bad_cert(hass: HomeAssistant) -> None:
     assert result["result"].unique_id == f"{HOST}:{PORT}"
 
 
-async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
+async def test_abort_if_already_setup(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test we abort if the cert is already setup."""
-    MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_HOST: HOST, CONF_PORT: PORT},
-        unique_id=f"{HOST}:{PORT}",
-    ).add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -83,111 +84,95 @@ async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
-async def test_abort_on_socket_failed(hass: HomeAssistant) -> None:
-    """Test we abort of we have errors during socket creation."""
+@pytest.mark.parametrize(
+    ("side_effect", "error_key"),
+    [
+        pytest.param(ResolveFailed(HOST, PORT), "resolve_failed", id="resolve_failed"),
+        pytest.param(
+            ConnectionTimeout(HOST, PORT),
+            "connection_timeout",
+            id="connection_timeout",
+        ),
+        pytest.param(
+            ConnectionRefused(HOST, PORT), "connection_refused", id="connection_refused"
+        ),
+        pytest.param(
+            ConnectionReset(HOST, PORT), "connection_reset", id="connection_reset"
+        ),
+    ],
+)
+async def test_abort_on_socket_failed(
+    hass: HomeAssistant, side_effect: Exception, error_key: str
+) -> None:
+    """Test the form re-shows on socket failure, then recovers on retry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     with patch(
-        "homeassistant.components.cert_expiry.helper.async_get_cert",
-        side_effect=socket.gaierror(),
+        "homeassistant.components.cert_expiry.config_flow.async_get_cert",
+        side_effect=side_effect,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_HOST: HOST}
         )
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {CONF_HOST: "resolve_failed"}
+    assert result["errors"] == {CONF_HOST: error_key}
 
-    with patch(
-        "homeassistant.components.cert_expiry.helper.async_get_cert",
-        side_effect=TimeoutError,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_HOST: HOST}
-        )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {CONF_HOST: "connection_timeout"}
-
-    with patch(
-        "homeassistant.components.cert_expiry.helper.async_get_cert",
-        side_effect=ConnectionRefusedError,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_HOST: HOST}
-        )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {CONF_HOST: "connection_refused"}
-
-    with patch(
-        "homeassistant.components.cert_expiry.helper.async_get_cert",
-        side_effect=ConnectionResetError,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_HOST: HOST}
-        )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {CONF_HOST: "connection_reset"}
-
-    with patch(
-        "homeassistant.components.cert_expiry.config_flow.get_cert_expiry_timestamp"
-    ):
+    with patch("homeassistant.components.cert_expiry.config_flow.async_get_cert"):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_HOST: HOST}
         )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == HOST
+    assert result["data"][CONF_HOST] == HOST
+    assert result["data"][CONF_PORT] == PORT
+    assert result["result"].unique_id == f"{HOST}:{PORT}"
 
 
-async def test_reconfigure_successful(hass: HomeAssistant) -> None:
+async def test_reconfigure_successful(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test reconfiguration of an existing entry updates its data and unique_id."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_HOST: HOST, CONF_PORT: PORT},
-        unique_id=f"{HOST}:{PORT}",
-    )
-    entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
-    result = await entry.start_reconfigure_flow(hass)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
     new_host = "new.example.com"
     new_port = 8443
-    with patch(
-        "homeassistant.components.cert_expiry.config_flow.get_cert_expiry_timestamp"
-    ):
+    with patch("homeassistant.components.cert_expiry.config_flow.async_get_cert"):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_HOST: new_host, CONF_PORT: new_port}
         )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    assert entry.data[CONF_HOST] == new_host
-    assert entry.data[CONF_PORT] == new_port
-    assert entry.unique_id == f"{new_host}:{new_port}"
+    assert mock_config_entry.data[CONF_HOST] == new_host
+    assert mock_config_entry.data[CONF_PORT] == new_port
+    assert mock_config_entry.unique_id == f"{new_host}:{new_port}"
 
 
 @pytest.mark.parametrize(
     ("side_effect", "error_key"),
     [
-        (socket.gaierror(), "resolve_failed"),
-        (TimeoutError, "connection_timeout"),
-        (ConnectionRefusedError, "connection_refused"),
-        (ConnectionResetError, "connection_reset"),
+        (ResolveFailed(HOST, PORT), "resolve_failed"),
+        (ConnectionTimeout(HOST, PORT), "connection_timeout"),
+        (ConnectionRefused(HOST, PORT), "connection_refused"),
+        (ConnectionReset(HOST, PORT), "connection_reset"),
     ],
 )
 async def test_reconfigure_validation_failure_recovers(
-    hass: HomeAssistant, side_effect: Exception, error_key: str
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    side_effect: Exception,
+    error_key: str,
 ) -> None:
     """Test the reconfigure form re-shows on failure then recovers on retry."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_HOST: HOST, CONF_PORT: PORT},
-        unique_id=f"{HOST}:{PORT}",
-    )
-    entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
-    result = await entry.start_reconfigure_flow(hass)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
@@ -195,7 +180,7 @@ async def test_reconfigure_validation_failure_recovers(
     new_port = 8443
 
     with patch(
-        "homeassistant.components.cert_expiry.helper.async_get_cert",
+        "homeassistant.components.cert_expiry.config_flow.async_get_cert",
         side_effect=side_effect,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -206,12 +191,10 @@ async def test_reconfigure_validation_failure_recovers(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
     assert result["errors"] == {CONF_HOST: error_key}
-    assert entry.data[CONF_HOST] == HOST
-    assert entry.data[CONF_PORT] == PORT
+    assert mock_config_entry.data[CONF_HOST] == HOST
+    assert mock_config_entry.data[CONF_PORT] == PORT
 
-    with patch(
-        "homeassistant.components.cert_expiry.config_flow.get_cert_expiry_timestamp"
-    ):
+    with patch("homeassistant.components.cert_expiry.config_flow.async_get_cert"):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={CONF_HOST: new_host, CONF_PORT: new_port},
@@ -219,12 +202,14 @@ async def test_reconfigure_validation_failure_recovers(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    assert entry.data[CONF_HOST] == new_host
-    assert entry.data[CONF_PORT] == new_port
-    assert entry.unique_id == f"{new_host}:{new_port}"
+    assert mock_config_entry.data[CONF_HOST] == new_host
+    assert mock_config_entry.data[CONF_PORT] == new_port
+    assert mock_config_entry.unique_id == f"{new_host}:{new_port}"
 
 
-async def test_reconfigure_already_exists(hass: HomeAssistant) -> None:
+async def test_reconfigure_already_exists(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test reconfiguration aborts when target host:port matches another entry."""
     other_host = "other.example.com"
     other_port = 8443
@@ -234,14 +219,9 @@ async def test_reconfigure_already_exists(hass: HomeAssistant) -> None:
         unique_id=f"{other_host}:{other_port}",
     ).add_to_hass(hass)
 
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_HOST: HOST, CONF_PORT: PORT},
-        unique_id=f"{HOST}:{PORT}",
-    )
-    entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
-    result = await entry.start_reconfigure_flow(hass)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
@@ -252,5 +232,5 @@ async def test_reconfigure_already_exists(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert entry.data[CONF_HOST] == HOST
-    assert entry.data[CONF_PORT] == PORT
+    assert mock_config_entry.data[CONF_HOST] == HOST
+    assert mock_config_entry.data[CONF_PORT] == PORT

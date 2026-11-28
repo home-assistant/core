@@ -3,6 +3,36 @@
     "sensor": {
       "certificate_expiry": {
         "default": "mdi:certificate"
+      },
+      "certificate_version": {
+        "default": "mdi:numeric"
+      },
+      "cipher_suite": {
+        "default": "mdi:lock"
+      },
+      "common_name": {
+        "default": "mdi:card-account-details"
+      },
+      "fingerprint": {
+        "default": "mdi:fingerprint"
+      },
+      "issuer_common_name": {
+        "default": "mdi:domain"
+      },
+      "issuer_organization": {
+        "default": "mdi:domain"
+      },
+      "organization": {
+        "default": "mdi:office-building"
+      },
+      "organizational_unit": {
+        "default": "mdi:sitemap"
+      },
+      "serial_number": {
+        "default": "mdi:pound"
+      },
+      "tls_version": {
+        "default": "mdi:lock-check"
       }
     }
   }

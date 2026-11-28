@@ -8,6 +8,7 @@ import probatio
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
 
+from .certs import async_get_cert
 from .const import DEFAULT_PORT, DOMAIN
 from .errors import (
     ConnectionRefused,
@@ -16,7 +17,6 @@ from .errors import (
     ResolveFailed,
     ValidationFailure,
 )
-from .helper import get_cert_expiry_timestamp
 
 
 class CertexpiryConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -34,7 +34,7 @@ class CertexpiryConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> bool:
         """Test connection to the server and try to get the certificate."""
         try:
-            await get_cert_expiry_timestamp(
+            await async_get_cert(
                 self.hass,
                 user_input[CONF_HOST],
                 user_input.get(CONF_PORT, DEFAULT_PORT),
