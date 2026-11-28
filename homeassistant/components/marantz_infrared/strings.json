@@ -2,9 +2,19 @@
   "config": {
     "abort": {
       "already_configured": "This Marantz device has already been configured with this infrared emitter.",
-      "no_emitters": "[%key:component::infrared::common::no_infrared_emitters%]"
+      "no_infrared_emitters": "[%key:component::infrared::common::no_infrared_emitters%]"
     },
     "step": {
+      "reconfigure": {
+        "data": {
+          "infrared_emitter_entity_id": "[%key:component::infrared::common::infrared_entity_id%]"
+        },
+        "data_description": {
+          "infrared_emitter_entity_id": "[%key:component::infrared::common::infrared_entity_id_description%]"
+        },
+        "description": "Change the infrared emitter used to control your Marantz device.",
+        "title": "Reconfigure Marantz IR Remote"
+      },
       "user": {
         "data": {
           "infrared_emitter_entity_id": "[%key:component::infrared::common::infrared_entity_id%]",

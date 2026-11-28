@@ -1,18 +1,32 @@
 """Tests for the Marantz Infrared config flow."""
 
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
+from pytest_homeassistant.components.infrared.common import MockInfraredEmitterEntity
 
+from homeassistant.components.infrared import DATA_COMPONENT as INFRARED_DATA_COMPONENT
 from homeassistant.components.marantz_infrared.const import (
     CONF_INFRARED_EMITTER_ENTITY_ID,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import MOCK_INFRARED_EMITTER_ENTITY_ID
+from .conftest import MOCK_INFRARED_EMITTER_ENTITY_ID, MOCK_MODEL
+
+SECOND_EMITTER_ENTITY_ID = "infrared.second_ir_emitter"
+
+
+@pytest.fixture
+async def mock_second_infrared_emitter(
+    hass: HomeAssistant, init_infrared: None
+) -> None:
+    """Add a second infrared emitter to choose from."""
+    await hass.data[INFRARED_DATA_COMPONENT].async_add_entities(
+        [MockInfraredEmitterEntity("second_ir_emitter", "Second IR emitter")]
+    )
 
 
 @pytest.mark.usefixtures("mock_infrared_emitter_entity")
@@ -41,10 +55,6 @@ async def test_user_flow_success(
         CONF_MODEL: "pm6006_integrated_amplifier",
         CONF_INFRARED_EMITTER_ENTITY_ID: MOCK_INFRARED_EMITTER_ENTITY_ID,
     }
-    assert (
-        result["result"].unique_id
-        == f"pm6006_integrated_amplifier_{MOCK_INFRARED_EMITTER_ENTITY_ID}"
-    )
 
 
 @pytest.mark.usefixtures("mock_infrared_emitter_entity")
@@ -72,6 +82,28 @@ async def test_user_flow_already_configured(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_infrared_emitter_entity")
+async def test_user_flow_same_emitter_other_model(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test another model can use the emitter of an existing entry."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_MODEL: "generic_amplifier",
+            CONF_INFRARED_EMITTER_ENTITY_ID: MOCK_INFRARED_EMITTER_ENTITY_ID,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Generic Amplifier"
+
+
 @pytest.mark.usefixtures("init_infrared")
 async def test_user_flow_no_emitters(hass: HomeAssistant) -> None:
     """Test user flow aborts when no infrared emitters exist."""
@@ -80,7 +112,7 @@ async def test_user_flow_no_emitters(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_emitters"
+    assert result["reason"] == "no_infrared_emitters"
 
 
 @pytest.mark.usefixtures("mock_infrared_emitter_entity")
@@ -108,4 +140,82 @@ async def test_user_flow_title_from_model(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == expected_title
-    assert result["result"].unique_id == f"{model}_{MOCK_INFRARED_EMITTER_ENTITY_ID}"
+
+
+@pytest.mark.usefixtures("mock_second_infrared_emitter")
+@pytest.mark.parametrize(
+    "emitter_entity_id",
+    [
+        pytest.param(SECOND_EMITTER_ENTITY_ID, id="change_emitter"),
+        pytest.param(MOCK_INFRARED_EMITTER_ENTITY_ID, id="same_emitter"),
+    ],
+)
+async def test_reconfigure_flow(
+    hass: HomeAssistant, init_integration: MockConfigEntry, emitter_entity_id: str
+) -> None:
+    """Test reconfiguring changes the emitter and keeps the model."""
+    result = await init_integration.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    schema = result["data_schema"].schema
+    assert [str(key) for key in schema] == [CONF_INFRARED_EMITTER_ENTITY_ID]
+    assert (
+        get_schema_suggested_value(schema, CONF_INFRARED_EMITTER_ENTITY_ID)
+        == MOCK_INFRARED_EMITTER_ENTITY_ID
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_INFRARED_EMITTER_ENTITY_ID: emitter_entity_id},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert init_integration.data == {
+        CONF_MODEL: MOCK_MODEL,
+        CONF_INFRARED_EMITTER_ENTITY_ID: emitter_entity_id,
+    }
+    assert init_integration.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.usefixtures("mock_infrared_emitter_entity", "mock_second_infrared_emitter")
+async def test_reconfigure_flow_already_configured(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test reconfigure aborts when the same model uses the chosen emitter."""
+    mock_config_entry.add_to_hass(hass)
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_MODEL: MOCK_MODEL,
+            CONF_INFRARED_EMITTER_ENTITY_ID: SECOND_EMITTER_ENTITY_ID,
+        },
+    ).add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_INFRARED_EMITTER_ENTITY_ID: SECOND_EMITTER_ENTITY_ID},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert (
+        mock_config_entry.data[CONF_INFRARED_EMITTER_ENTITY_ID]
+        == MOCK_INFRARED_EMITTER_ENTITY_ID
+    )
+
+
+@pytest.mark.usefixtures("init_infrared")
+async def test_reconfigure_flow_no_emitters(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test reconfigure aborts when there are no infrared emitters."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_infrared_emitters"

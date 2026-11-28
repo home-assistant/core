@@ -44,7 +44,6 @@ def mock_config_entry(model: str) -> MockConfigEntry:
             CONF_MODEL: model,
             CONF_INFRARED_EMITTER_ENTITY_ID: MOCK_INFRARED_EMITTER_ENTITY_ID,
         },
-        unique_id=f"{model}_{MOCK_INFRARED_EMITTER_ENTITY_ID}",
     )
 
 
