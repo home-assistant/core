@@ -17,16 +17,12 @@ from homematicip.device import Device
 from packaging.version import Version
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP_KELVIN,
-    ATTR_EFFECT,
-    ATTR_HS_COLOR,
-    ATTR_TRANSITION,
     DEFAULT_MAX_KELVIN,
     DEFAULT_MIN_KELVIN,
     ColorMode,
     LightEntity,
     LightEntityFeature,
+    LightServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -263,15 +259,16 @@ class HomematicipColorLight(HomematicipGenericEntity, LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         channel = self.get_channel_or_raise()
-        dim_level = round(kwargs.get(ATTR_BRIGHTNESS, 255) / 255.0, 2)
+        dim_level = round(kwargs.get(LightServiceArgument.BRIGHTNESS, 255) / 255.0, 2)
 
-        if ATTR_BRIGHTNESS not in kwargs:
+        if LightServiceArgument.BRIGHTNESS not in kwargs:
             # If no brightness is set, use the current brightness
             dim_level = channel.dimLevel or 1.0
 
-        if ATTR_COLOR_TEMP_KELVIN in kwargs:
+        if LightServiceArgument.COLOR_TEMP_KELVIN in kwargs:
             await channel.set_color_temperature_dim_level_async(
-                color_temperature=kwargs[ATTR_COLOR_TEMP_KELVIN], dim_level=dim_level
+                color_temperature=kwargs[LightServiceArgument.COLOR_TEMP_KELVIN],
+                dim_level=dim_level,
             )
             return
 
@@ -281,13 +278,13 @@ class HomematicipColorLight(HomematicipGenericEntity, LightEntity):
             return
 
         # Keep the color temperature when only the brightness changes
-        if ATTR_HS_COLOR not in kwargs and channel.hue is None:
+        if LightServiceArgument.HS_COLOR not in kwargs and channel.hue is None:
             await channel.set_dim_level_async(dim_level=dim_level)
             return
 
         # Full color mode with hue/saturation
-        if ATTR_HS_COLOR in kwargs:
-            hs_color = kwargs[ATTR_HS_COLOR]
+        if LightServiceArgument.HS_COLOR in kwargs:
+            hs_color = kwargs[LightServiceArgument.HS_COLOR]
             hue = hs_color[0] % 360.0
             saturation = hs_color[1] / 100.0
         else:
@@ -345,8 +342,10 @@ class HomematicipDimmer(HomematicipGenericEntity, LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the dimmer on."""
         channel = self.get_channel_or_raise()
-        if ATTR_BRIGHTNESS in kwargs:
-            await channel.async_set_dim_level(kwargs[ATTR_BRIGHTNESS] / 255.0)
+        if LightServiceArgument.BRIGHTNESS in kwargs:
+            await channel.async_set_dim_level(
+                kwargs[LightServiceArgument.BRIGHTNESS] / 255.0
+            )
         else:
             await channel.async_set_dim_level(1)
 
@@ -429,12 +428,12 @@ class HomematicipNotificationLight(HomematicipGenericEntity, LightEntity):
         """Turn the light on."""
         # Use hs_color from kwargs,
         # if not applicable use current hs_color.
-        hs_color = kwargs.get(ATTR_HS_COLOR, self.hs_color)
+        hs_color = kwargs.get(LightServiceArgument.HS_COLOR, self.hs_color)
         simple_rgb_color = _convert_color(hs_color)
 
         # Use brightness from kwargs,
         # if not applicable use current brightness.
-        brightness = kwargs.get(ATTR_BRIGHTNESS, self.brightness)
+        brightness = kwargs.get(LightServiceArgument.BRIGHTNESS, self.brightness)
 
         # If no kwargs, use default value.
         if not kwargs:
@@ -443,7 +442,7 @@ class HomematicipNotificationLight(HomematicipGenericEntity, LightEntity):
         # Minimum brightness is 10, otherwise the led is disabled
         brightness = max(10, brightness)
         dim_level = brightness / 255.0
-        transition = kwargs.get(ATTR_TRANSITION, 0.5)
+        transition = kwargs.get(LightServiceArgument.TRANSITION, 0.5)
 
         await self._func_channel.async_set_rgb_dim_level_with_time(
             rgb=simple_rgb_color,
@@ -456,7 +455,7 @@ class HomematicipNotificationLight(HomematicipGenericEntity, LightEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         simple_rgb_color = self._func_channel.simpleRGBColorState
-        transition = kwargs.get(ATTR_TRANSITION, 0.5)
+        transition = kwargs.get(LightServiceArgument.TRANSITION, 0.5)
 
         await self._func_channel.async_set_rgb_dim_level_with_time(
             rgb=simple_rgb_color,
@@ -507,21 +506,21 @@ class HomematicipNotificationLightV2(HomematicipNotificationLight, LightEntity):
         """Turn the light on."""
         # Use hs_color from kwargs,
         # if not applicable use current hs_color.
-        hs_color = kwargs.get(ATTR_HS_COLOR, self.hs_color)
+        hs_color = kwargs.get(LightServiceArgument.HS_COLOR, self.hs_color)
         simple_rgb_color = _convert_color(hs_color)
 
         # If no kwargs, use default value.
         brightness = 255
-        if ATTR_BRIGHTNESS in kwargs:
-            brightness = kwargs[ATTR_BRIGHTNESS]
+        if LightServiceArgument.BRIGHTNESS in kwargs:
+            brightness = kwargs[LightServiceArgument.BRIGHTNESS]
 
         # Minimum brightness is 10, otherwise the led is disabled
         brightness = max(10, brightness)
         dim_level = round(brightness / 255.0, 2)
 
         effect = self.effect
-        if ATTR_EFFECT in kwargs:
-            effect = kwargs[ATTR_EFFECT]
+        if LightServiceArgument.EFFECT in kwargs:
+            effect = kwargs[LightServiceArgument.EFFECT]
 
         await self._func_channel.async_set_optical_signal(
             opticalSignalBehaviour=effect, rgb=simple_rgb_color, dimLevel=dim_level
@@ -652,21 +651,21 @@ class HomematicipOpticalSignalLight(HomematicipGenericEntity, LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         # Use hs_color from kwargs, if not applicable use current hs_color.
-        hs_color = kwargs.get(ATTR_HS_COLOR, self.hs_color)
+        hs_color = kwargs.get(LightServiceArgument.HS_COLOR, self.hs_color)
         simple_rgb_color = _convert_color(hs_color)
 
         # If no kwargs, use default value.
         brightness = 255
-        if ATTR_BRIGHTNESS in kwargs:
-            brightness = kwargs[ATTR_BRIGHTNESS]
+        if LightServiceArgument.BRIGHTNESS in kwargs:
+            brightness = kwargs[LightServiceArgument.BRIGHTNESS]
 
         # Minimum brightness is 10, otherwise the LED is disabled
         brightness = max(10, brightness)
         dim_level = round(brightness / 255.0, 2)
 
         effect = self.effect
-        if ATTR_EFFECT in kwargs:
-            effect = kwargs[ATTR_EFFECT]
+        if LightServiceArgument.EFFECT in kwargs:
+            effect = kwargs[LightServiceArgument.EFFECT]
         elif effect is None:
             effect = "on"
 
@@ -744,10 +743,10 @@ class HomematicipCombinationSignallingLight(HomematicipGenericEntity, LightEntit
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
-        hs_color = kwargs.get(ATTR_HS_COLOR, self.hs_color)
+        hs_color = kwargs.get(LightServiceArgument.HS_COLOR, self.hs_color)
         simple_rgb_color = _convert_color(hs_color)
 
-        brightness = kwargs.get(ATTR_BRIGHTNESS, self.brightness)
+        brightness = kwargs.get(LightServiceArgument.BRIGHTNESS, self.brightness)
 
         # Default to full brightness when no kwargs given
         if not kwargs:
