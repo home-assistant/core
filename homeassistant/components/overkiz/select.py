@@ -2,9 +2,10 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import override
+from typing import cast, override
 
-from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
+from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState, UIClass
+from pyoverkiz.enums.ui import UIWidget
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
@@ -13,7 +14,63 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import OverkizDataConfigEntry
 from .const import IGNORED_OVERKIZ_DEVICES
-from .entity import OverkizDescriptiveEntity
+from .entity import OverkizExecutableEntity
+
+# Oven core:ModeState values (core:SupportedModes) to translatable options.
+OVEN_MODES: dict[str, str] = {
+    "defrost": "defrost",
+    "bottomHeat": "bottom_heat",
+    "bottomFan": "bottom_fan",
+    "conventional": "conventional",
+    "conventionalFan": "conventional_fan",
+    "grillMedium": "grill_medium",
+    "grillStrong": "grill_strong",
+    "grillPower": "grill_power",
+    "fannedGrill": "fanned_grill",
+    "keepingWarm": "keeping_warm",
+    "fanCooking": "fan_cooking",
+    "combinedHeat": "combined_heat",
+    "delicateFood": "delicate_food",
+    "shabbat": "shabbat",
+    "bread": "bread",
+    "eco": "eco",
+    "auto": "auto",
+    "lowTemperature": "low_temperature",
+    "catalyticCleaning": "catalytic_cleaning",
+    "pyrolitic90Cleaning": "pyrolytic_90_cleaning",
+    "pyrolitic105Cleaning": "pyrolytic_105_cleaning",
+    "pyrolitic120Cleaning": "pyrolytic_120_cleaning",
+    "pyroliticAutoCleaning": "pyrolytic_auto_cleaning",
+    "guidedCooking": "guided_cooking",
+    "guidedCookingMicrowave": "guided_cooking_microwave",
+    "guidedDefrostingMicrowave": "guided_defrosting_microwave",
+    "ecoConventional": "eco_conventional",
+    "ecoFan": "eco_fan",
+    "booster": "booster",
+    "pyroliticExpressCleaning": "pyrolytic_express_cleaning",
+    "pizza": "pizza",
+    "catalyticExpressCleaning": "catalytic_express_cleaning",
+    "drying": "drying",
+    "guidedSteam": "guided_steam",
+    "microwave": "microwave",
+    "defrostingMicrowave": "defrosting_microwave",
+    "keepingWarmMicrowave": "keeping_warm_microwave",
+    "fanCookingMicrowave": "fan_cooking_microwave",
+    "grillMicrowave": "grill_microwave",
+    "grillVariableMicrowave": "grill_variable_microwave",
+    "conventionalMicrowave": "conventional_microwave",
+    "heatAndHoldMicrowave": "heat_and_hold_microwave",
+    "steam": "steam",
+    "defrostingSteam": "defrosting_steam",
+    "keepingWarmSteam": "keeping_warm_steam",
+    "fanSteam": "fan_steam",
+    "grillFanSteam": "grill_fan_steam",
+    "conventionalSteam": "conventional_steam",
+    "conventionalFanSteam": "conventional_fan_steam",
+    "cleaningSteam": "cleaning_steam",
+    "emptyingSteam": "emptying_steam",
+    "descalingSteam": "descaling_steam",
+}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -21,6 +78,15 @@ class OverkizSelectDescription(SelectEntityDescription):
     """Class to describe an Overkiz select entity."""
 
     select_option: Callable[[str, Callable[..., Awaitable[None]]], Awaitable[None]]
+
+    # Device state holding the live option list, overriding `options`.
+    options_state_name: str | None = None
+
+    # Device state values to option keys.
+    options_map: dict[str, str] | None = None
+
+    # Restrict to these device types (UIWidget/UIClass).
+    device_types: list[UIWidget | UIClass] | None = None
 
 
 def _select_option_open_closed_pedestrian(
@@ -117,6 +183,19 @@ SELECT_DESCRIPTIONS: list[OverkizSelectDescription] = [
         select_option=_select_option_active_zone,
         translation_key="active_zones",
     ),
+    # Oven/DynamicOven
+    OverkizSelectDescription(
+        key=OverkizState.CORE_MODE,
+        name="Mode",
+        options=list(OVEN_MODES.values()),
+        options_state_name=OverkizState.CORE_AVAILABLE_MODES,
+        options_map=OVEN_MODES,
+        select_option=lambda option, execute_command: execute_command(
+            OverkizCommand.SET_MODE, option
+        ),
+        device_types=[UIClass.OVEN],
+        translation_key="oven_mode",
+    ),
 ]
 
 SUPPORTED_STATES = {description.key: description for description in SELECT_DESCRIPTIONS}
@@ -149,28 +228,60 @@ async def async_setup_entry(
             )
             for state in device.definition.states
             if (description := SUPPORTED_STATES.get(state))
+            and (
+                description.device_types is None
+                or device.widget in description.device_types
+                or device.ui_class in description.device_types
+            )
         )
 
     async_add_entities(entities)
 
 
-class OverkizSelect(OverkizDescriptiveEntity, SelectEntity):
+class OverkizSelect(OverkizExecutableEntity, SelectEntity):
     """Representation of an Overkiz Select entity."""
 
     entity_description: OverkizSelectDescription
 
     @property
     @override
+    def options(self) -> list[str]:
+        """Return the available options."""
+        if self.entity_description.options_state_name and (
+            state := self.device.states.get(self.entity_description.options_state_name)
+        ):
+            return [
+                option
+                for value in cast(list, state.value) or []
+                if (option := self._to_option(str(value))) is not None
+            ]
+
+        return self.entity_description.options or []
+
+    @property
+    @override
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
         if state := self.device.states.get(self.entity_description.key):
-            return str(state.value)
+            return self._to_option(str(state.value))
 
         return None
 
     @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
+        if options_map := self.entity_description.options_map:
+            option = next(
+                value for value, mapped in options_map.items() if mapped == option
+            )
+
         await self.entity_description.select_option(
             option, self.executor.async_execute_command
         )
+
+    def _to_option(self, value: str) -> str | None:
+        """Return the option for a device state value."""
+        if (options_map := self.entity_description.options_map) is None:
+            return value
+
+        return options_map.get(value)
