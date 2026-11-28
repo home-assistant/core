@@ -6,6 +6,7 @@ import probatio
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
+    DOMAIN as PLATFORM_DOMAIN,
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
@@ -24,6 +25,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_ALIASES
 from .entity import RflinkDevice
+from .utils import create_issue_platform
 
 CONF_OFF_DELAY = "off_delay"
 DEFAULT_FORCE_UPDATE = False
@@ -65,6 +67,7 @@ async def async_setup_platform(
 ) -> None:
     """Set up the Rflink platform."""
     if discovery_info is None:
+        create_issue_platform(hass, PLATFORM_DOMAIN)
         return
     async_add_entities(devices_from_config(discovery_info))
 
