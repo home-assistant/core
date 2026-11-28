@@ -16,6 +16,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.helpers.typing import ConfigType
 
+from . import report
 from .const import (
     ATTR_AUTO_UPDATE,
     ATTR_BACKUP,
@@ -42,6 +43,7 @@ from .const import (
     UpdateServiceArgument,
 )
 from .entity import UpdateEntity, UpdateEntityDescription, UpdateReleaseNotesMessage
+from .report import async_discard_snapshot, async_snapshot_before_update
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -88,6 +90,8 @@ __all__ = [
     "UpdateReleaseNotesMessageSeverity",
     "UpdateService",
     "UpdateServiceArgument",
+    "async_discard_snapshot",
+    "async_snapshot_before_update",
 ]
 
 # mypy: disallow-any-generics
@@ -103,6 +107,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async_setup_services(hass)
 
     websocket_api.async_register_command(hass, websocket_release_notes)
+    await report.async_setup(hass)
 
     return True
 

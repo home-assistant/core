@@ -116,6 +116,16 @@
       "message": "Update installation already in progress for {entity_id}."
     }
   },
+  "issues": {
+    "stale_entity_removed": {
+      "description": "The entity `{old_entity_id}` existed before the update to Home Assistant {to_version} and is now gone. [{name}]({edit}) (`{kind_entity_id}`) still uses it.",
+      "title": "Removed entity still in use"
+    },
+    "stale_entity_renamed": {
+      "description": "The entity `{old_entity_id}` existed before the update to Home Assistant {to_version} and is now `{new_entity_id}`. [{name}]({edit}) (`{kind_entity_id}`) still uses the old entity ID.",
+      "title": "Renamed entity still in use"
+    }
+  },
   "services": {
     "clear_skipped": {
       "description": "Removes the skipped version marker from an update.",

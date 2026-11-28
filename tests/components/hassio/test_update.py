@@ -36,7 +36,7 @@ from homeassistant.components.hassio.update import (
     SupervisorSupervisorUpdateEntity,
 )
 from homeassistant.const import __version__ as HAVERSION
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -680,7 +680,11 @@ async def test_update_os_with_backup(
     supervisor_client.os.update.assert_called_once_with(OSUpdate(version=None))
 
 
-async def test_update_core(hass: HomeAssistant, supervisor_client: AsyncMock) -> None:
+async def test_update_core(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    hass_storage: dict[str, Any],
+) -> None:
     """Test updating core update entity."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
@@ -708,6 +712,11 @@ async def test_update_core(hass: HomeAssistant, supervisor_client: AsyncMock) ->
     supervisor_client.homeassistant.update.assert_called_once_with(
         HomeAssistantUpdateOptions(version=None, backup=False)
     )
+    # The update report compares the next run with this snapshot.
+    before_update = hass_storage["update.report"]["data"]["before_update"]
+    assert before_update["version"] == HAVERSION
+    assert before_update["backup"] is False
+    assert before_update["automatic"] is False
 
 
 async def test_update_core_progress(
@@ -955,6 +964,7 @@ async def test_update_core_with_backup(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     supervisor_client: AsyncMock,
+    hass_storage: dict[str, Any],
     commands: list[dict[str, Any]],
     default_mount: str | None,
     expected_kwargs: dict[str, Any],
@@ -993,6 +1003,9 @@ async def test_update_core_with_backup(
     supervisor_client.homeassistant.update.assert_called_once_with(
         HomeAssistantUpdateOptions(version=None, backup=False)
     )
+    before_update = hass_storage["update.report"]["data"]["before_update"]
+    assert before_update["backup"] is True
+    assert before_update["automatic"] is False
 
 
 async def test_update_core_sets_progress_immediately(
@@ -1778,8 +1791,20 @@ async def test_update_supervisor_with_error(
         )
 
 
+@pytest.mark.parametrize(
+    ("state", "snapshot_kept"),
+    [
+        pytest.param(CoreState.running, False, id="running"),
+        # Supervisor stops Home Assistant during the update.
+        pytest.param(CoreState.stopping, True, id="stopping"),
+    ],
+)
 async def test_update_core_with_error(
-    hass: HomeAssistant, supervisor_client: AsyncMock
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    hass_storage: dict[str, Any],
+    state: CoreState,
+    snapshot_kept: bool,
 ) -> None:
     """Test updating core update entity with error."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
@@ -1793,7 +1818,11 @@ async def test_update_core_with_error(
         )
     await hass.async_block_till_done()
 
-    supervisor_client.homeassistant.update.side_effect = SupervisorError
+    def fail(options: HomeAssistantUpdateOptions) -> None:
+        hass.set_state(state)
+        raise SupervisorError
+
+    supervisor_client.homeassistant.update.side_effect = fail
     with pytest.raises(
         HomeAssistantError, match=r"^Error updating Home Assistant Core:"
     ):
@@ -1803,6 +1832,9 @@ async def test_update_core_with_error(
             {"entity_id": "update.home_assistant_core_update"},
             blocking=True,
         )
+
+    before_update = hass_storage["update.report"]["data"]["before_update"]
+    assert (before_update is not None) is snapshot_kept
 
 
 async def test_update_core_with_backup_and_error(
