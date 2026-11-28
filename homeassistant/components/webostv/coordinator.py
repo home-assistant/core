@@ -11,7 +11,7 @@ from aiowebostv import (
 )
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import CONF_CLIENT_SECRET, CONF_HOST
+from homeassistant.const import CONF_CLIENT_SECRET, CONF_HOST, CONF_MAC
 from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
@@ -21,7 +21,7 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailedUnreachable,
 )
 
-from .const import DOMAIN, LOGGER
+from .const import CONF_WAKE_ON_LAN, DOMAIN, LOGGER
 
 SCAN_INTERVAL = timedelta(seconds=10)
 
@@ -53,7 +53,9 @@ class WebOsTvDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
     @property
     def mac_addresses(self) -> list[str]:
-        """Return the TV MAC addresses persisted in the device registry."""
+        """Return the configured MAC address or persisted TV MAC addresses."""
+        if mac := self.config_entry.options.get(CONF_WAKE_ON_LAN, {}).get(CONF_MAC):
+            return [mac]
         device = dr.async_get(self.hass).async_get_device_by_identifier(
             (DOMAIN, cast(str, self.config_entry.unique_id)), self.config_entry.entry_id
         )

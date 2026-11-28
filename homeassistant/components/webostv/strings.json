@@ -107,6 +107,19 @@
           "sources": "List of sources to enable"
         },
         "description": "Select enabled sources",
+        "sections": {
+          "wake_on_lan": {
+            "data": {
+              "broadcast_address": "[%key:component::wake_on_lan::config::step::user::data::broadcast_address%]",
+              "mac": "[%key:component::wake_on_lan::config::step::user::data::mac%]"
+            },
+            "data_description": {
+              "broadcast_address": "[%key:component::wake_on_lan::config::step::user::data_description::broadcast_address%]",
+              "mac": "[%key:component::wake_on_lan::config::step::user::data_description::mac%]"
+            },
+            "name": "Advanced Wake-on-LAN options"
+          }
+        },
         "title": "Options for LG webOS TV"
       }
     }

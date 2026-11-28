@@ -1,12 +1,26 @@
 """Test the LG webOS TV options flow."""
 
+from unittest.mock import MagicMock
+
+import probatio
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.webostv.const import CONF_SOURCES, DOMAIN, LIVE_TV_APP_ID
-from homeassistant.const import CONF_CLIENT_SECRET, CONF_HOST
+from homeassistant.components.webostv.const import (
+    CONF_SOURCES,
+    CONF_WAKE_ON_LAN,
+    DOMAIN,
+    LIVE_TV_APP_ID,
+)
+from homeassistant.const import (
+    CONF_BROADCAST_ADDRESS,
+    CONF_CLIENT_SECRET,
+    CONF_HOST,
+    CONF_MAC,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import config_validation as cv
 
 from . import setup_webostv
 from .const import CLIENT_KEY, FAKE_UUID, HOST, MOCK_APPS, MOCK_INPUTS
@@ -115,3 +129,60 @@ async def test_options_flow_no_sources_selected(hass: HomeAssistant, client) -> 
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_SOURCES: []}
+
+
+async def test_wake_options(hass: HomeAssistant, client: MagicMock) -> None:
+    """Save and clear wake-up overrides while preserving selected sources."""
+    entry = await setup_webostv(hass)
+    wake_options = {
+        CONF_BROADCAST_ADDRESS: "192.168.10.255",
+        CONF_MAC: "11:22:33:44:55:66",
+    }
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_SOURCES: ["Input01"], CONF_WAKE_ON_LAN: wake_options},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    await hass.async_block_till_done()
+    assert entry.options == {CONF_SOURCES: ["Input01"], CONF_WAKE_ON_LAN: wake_options}
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    section = result["data_schema"].schema[CONF_WAKE_ON_LAN]
+    assert section.options["collapsed"]
+    assert section.schema({}) == {}
+    fields = probatio.to_field_list(
+        result["data_schema"], custom_serializer=cv.custom_serializer
+    )
+    wake_field = next(field for field in fields if field["name"] == CONF_WAKE_ON_LAN)
+    assert "default" not in wake_field
+    assert {
+        field["name"]: field["description"]["suggested_value"]
+        for field in wake_field["schema"]
+    } == wake_options
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_SOURCES: ["Input01"], CONF_WAKE_ON_LAN: {}},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    await hass.async_block_till_done()
+    assert entry.options == {CONF_SOURCES: ["Input01"]}
+
+
+@pytest.mark.parametrize(
+    "wake_options",
+    [
+        pytest.param({CONF_BROADCAST_ADDRESS: "invalid"}, id="invalid-ip"),
+        pytest.param({CONF_BROADCAST_ADDRESS: "::1"}, id="ipv6"),
+        pytest.param({CONF_MAC: "not-a-mac"}, id="invalid-mac"),
+    ],
+)
+async def test_invalid_wake_options(
+    hass: HomeAssistant, client: MagicMock, wake_options: dict[str, str]
+) -> None:
+    """Reject invalid wake-up addresses before saving options."""
+    entry = await setup_webostv(hass)
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    with pytest.raises(probatio.Invalid):
+        result["data_schema"]({CONF_WAKE_ON_LAN: wake_options})

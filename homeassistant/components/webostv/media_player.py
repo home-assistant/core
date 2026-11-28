@@ -14,7 +14,7 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.const import EntityStateAttribute
+from homeassistant.const import CONF_BROADCAST_ADDRESS, EntityStateAttribute
 from homeassistant.core import HomeAssistant, ServiceResponse, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -24,6 +24,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from .const import (
     ATTR_SOUND_OUTPUT,
     CONF_SOURCES,
+    CONF_WAKE_ON_LAN,
     DOMAIN,
     LIVE_TV_APP_ID,
     LOGGER,
@@ -273,7 +274,12 @@ class LgWebOSMediaPlayerEntity(WebOsTvEntity, RestoreEntity, MediaPlayerEntity):
             await self.coordinator.turn_on.async_run(self.hass, self._context)
         elif macs := self.coordinator.mac_addresses:
             try:
-                await self._client.turn_on(macs)
+                await self._client.turn_on(
+                    macs,
+                    broadcast_address=self.coordinator.config_entry.options.get(
+                        CONF_WAKE_ON_LAN, {}
+                    ).get(CONF_BROADCAST_ADDRESS, "255.255.255.255"),
+                )
             except WebOsTvWakeError as error:
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
