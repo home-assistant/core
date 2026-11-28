@@ -6,16 +6,15 @@ from pyinsteon.config import CELSIUS
 from pyinsteon.constants import ThermostatMode
 
 from homeassistant.components.climate import (
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
     FAN_AUTO,
     ClimateEntity,
     ClimateEntityFeature,
+    ClimateServiceArgument,
     HVACAction,
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
+from homeassistant.const import Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -191,9 +190,9 @@ class InsteonClimateEntity(InsteonEntity, ClimateEntity):
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        target_temp = kwargs.get(ATTR_TEMPERATURE)
-        target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
-        target_temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
+        target_temp = kwargs.get(ClimateServiceArgument.TEMPERATURE)
+        target_temp_low = kwargs.get(ClimateServiceArgument.TARGET_TEMP_LOW)
+        target_temp_high = kwargs.get(ClimateServiceArgument.TARGET_TEMP_HIGH)
         if target_temp is not None:
             if self._insteon_device.groups[SYSTEM_MODE].value == ThermostatMode.HEAT:
                 await self._insteon_device.async_set_heat_set_point(target_temp)

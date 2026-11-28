@@ -4,9 +4,9 @@ import math
 from typing import Any, override
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
     CoverEntity,
     CoverEntityFeature,
+    CoverServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -81,7 +81,7 @@ class InsteonCoverEntity(InsteonEntity, CoverEntity):
     @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Set the cover position."""
-        position = int(kwargs[ATTR_POSITION] * 255 / 100)
+        position = int(kwargs[CoverServiceArgument.POSITION] * 255 / 100)
         if position == 0:
             await self._insteon_device.async_close()
         else:

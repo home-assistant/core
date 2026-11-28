@@ -5,7 +5,7 @@ from typing import Any, override
 from pyinsteon.config import ON_LEVEL
 from pyinsteon.device_types.device_base import Device as InsteonDevice
 
-from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
+from homeassistant.components.light import ColorMode, LightEntity, LightServiceArgument
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
@@ -76,8 +76,8 @@ class InsteonDimmerEntity(InsteonEntity, LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn light on."""
         brightness: int | None = None
-        if ATTR_BRIGHTNESS in kwargs:
-            brightness = int(kwargs[ATTR_BRIGHTNESS])
+        if LightServiceArgument.BRIGHTNESS in kwargs:
+            brightness = int(kwargs[LightServiceArgument.BRIGHTNESS])
         elif self._insteon_device_group.group == 1:
             brightness = self.get_device_property(ON_LEVEL)
         if brightness:
