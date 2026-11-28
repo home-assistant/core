@@ -16,7 +16,6 @@ from homeassistant.components.rainforest_eagle.const import (
 )
 from homeassistant.const import CONF_HOST, CONF_TYPE
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from . import MOCK_200_RESPONSE_WITHOUT_PRICE, MOCK_CLOUD_ID
 
@@ -50,7 +49,7 @@ async def setup_rainforest_200(
         ),
     ) as mock_update:
         mock_update.return_value.is_connected = True
-        assert await async_setup_component(hass, DOMAIN, {})
+        assert await hass.config_entries.async_setup(config_entry_200.entry_id)
         await hass.async_block_till_done()
         yield mock_update.return_value
 
@@ -58,7 +57,7 @@ async def setup_rainforest_200(
 @pytest.fixture
 async def setup_rainforest_100(hass: HomeAssistant) -> AsyncGenerator[MagicMock]:
     """Set up rainforest."""
-    MockConfigEntry(
+    entry = MockConfigEntry(
         domain=DOMAIN,
         data={
             CONF_CLOUD_ID: MOCK_CLOUD_ID,
@@ -67,7 +66,8 @@ async def setup_rainforest_100(hass: HomeAssistant) -> AsyncGenerator[MagicMock]
             CONF_HARDWARE_ADDRESS: None,
             CONF_TYPE: TYPE_EAGLE_100,
         },
-    ).add_to_hass(hass)
+    )
+    entry.add_to_hass(hass)
     with patch(
         "homeassistant.components.rainforest_eagle.coordinator.Eagle100Reader",
         return_value=Mock(
@@ -84,6 +84,6 @@ async def setup_rainforest_100(hass: HomeAssistant) -> AsyncGenerator[MagicMock]
             ),
         ),
     ) as mock_update:
-        assert await async_setup_component(hass, DOMAIN, {})
+        assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         yield mock_update
