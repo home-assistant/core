@@ -51,7 +51,7 @@ async def mock_setup_integration(
 ) -> AsyncGenerator[None]:
     """Set up the integration."""
     with patch(f"homeassistant.components.{DOMAIN}.PLATFORMS", platforms):
-        assert await async_setup_component(hass, DOMAIN, {})
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
         yield
 
