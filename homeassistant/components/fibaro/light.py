@@ -135,9 +135,9 @@ class FibaroLight(FibaroEntity, LightEntity):
         self.call_turn_off()
 
     @override
-    def update(self) -> None:
+    def _update_from_data(self) -> None:
         """Update the state."""
-        super().update()
+        super()._update_from_data()
 
         # Dimmable and RGB lights can be on based on different
         # properties, so we need to check here several values

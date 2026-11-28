@@ -61,9 +61,9 @@ class PositionableFibaroCover(FibaroEntity, CoverEntity):
         return position
 
     @override
-    def update(self) -> None:
+    def _update_from_data(self) -> None:
         """Update the state."""
-        super().update()
+        super()._update_from_data()
 
         self._attr_current_cover_position = self.bound(self.level)
         if self._has_tilt:
@@ -139,9 +139,9 @@ class FibaroCover(FibaroEntity, CoverEntity):
             self._attr_supported_features |= CoverEntityFeature.STOP_TILT
 
     @override
-    def update(self) -> None:
+    def _update_from_data(self) -> None:
         """Update the state."""
-        super().update()
+        super()._update_from_data()
 
         device_state = self.fibaro_device.state.str_value(default="").lower()
 
