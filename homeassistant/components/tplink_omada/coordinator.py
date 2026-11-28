@@ -21,6 +21,7 @@ from tplink_omada_client.devices import (
     OmadaSwitch,
 )
 from tplink_omada_client.exceptions import OmadaClientException
+from tplink_omada_client.networks import LanNetwork
 
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.core import HomeAssistant, callback
@@ -221,6 +222,15 @@ class OmadaDevicesCoordinator(OmadaCoordinator[OmadaListDevice]):
     async def poll_update(self) -> dict[str, OmadaListDevice]:
         """Poll the site's current registered Omada devices."""
         return {d.mac: d for d in await self.omada_client.get_devices()}
+
+
+class OmadaLanCoordinator(OmadaCoordinator[LanNetwork]):
+    """Read the configured LAN networks for one site."""
+
+    @override
+    async def poll_update(self) -> dict[str, LanNetwork]:
+        networks = await self.omada_client.get_lan_networks()
+        return {network.id: network for network in networks}
 
 
 class OmadaClientsCoordinator(OmadaCoordinator[OmadaWirelessClient]):

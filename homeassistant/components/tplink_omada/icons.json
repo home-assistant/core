@@ -12,6 +12,12 @@
       "cpu_usage": {
         "default": "mdi:cpu-32-bit"
       },
+      "lan_network": {
+        "default": "mdi:lan"
+      },
+      "lan_vlan": {
+        "default": "mdi:lan"
+      },
       "mem_usage": {
         "default": "mdi:memory"
       }
