@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 from infrared_protocols.codes.nad.amplifier import NADAmplifierCode
 from infrared_protocols.codes.nad.cd import NADCDCode
 from infrared_protocols.codes.nad.tape import NADTapeCode
+from infrared_protocols.codes.nad.tuner import NADTunerCode
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.components.infrared import (
@@ -69,6 +70,9 @@ def mock_nad_to_command() -> Generator[MagicMock]:
         ),
         patch.object(
             NADTapeCode, "to_command", autospec=True, side_effect=lambda self: self
+        ),
+        patch.object(
+            NADTunerCode, "to_command", autospec=True, side_effect=lambda self: self
         ),
     ):
         yield mock
