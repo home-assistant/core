@@ -4,11 +4,12 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
-from yoto_api import Chapter, Track, YotoError
+from yoto_api import Chapter, NoTrackPlayingError, Track, YotoError
 
 from homeassistant.components.media_player import (
     DOMAIN as MEDIA_PLAYER_DOMAIN,
@@ -22,6 +23,8 @@ from homeassistant.components.media_player import (
     MediaPlayerServiceArgument,
     MediaPlayerState,
 )
+from homeassistant.components.yoto.const import DOMAIN
+from homeassistant.components.yoto.services import YotoService, YotoServiceArgument
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -715,5 +718,164 @@ async def test_command_error_raises(
             MEDIA_PLAYER_DOMAIN,
             service,
             {ATTR_ENTITY_ID: ENTITY_ID, **service_data},
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
+    "service_data",
+    [
+        pytest.param({YotoServiceArgument.DURATION: {"minutes": 30}}, id="duration"),
+        pytest.param(
+            {
+                YotoServiceArgument.MODE: "duration",
+                YotoServiceArgument.DURATION: {"minutes": 30},
+            },
+            id="duration_mode",
+        ),
+    ],
+)
+async def test_set_sleep_timer_duration(
+    hass: HomeAssistant,
+    mock_yoto_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    service_data: dict[str, Any],
+) -> None:
+    """Duration mode sends the duration in seconds."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        DOMAIN,
+        YotoService.SET_SLEEP_TIMER,
+        {TargetKey.ENTITY_ID: ENTITY_ID, **service_data},
+        blocking=True,
+    )
+
+    mock_yoto_client.set_sleep_timer.assert_called_once_with("player-test", 1800)
+
+
+async def test_clear_sleep_timer(
+    hass: HomeAssistant,
+    mock_yoto_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Clearing the sleep timer reaches the client."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        DOMAIN,
+        YotoService.CLEAR_SLEEP_TIMER,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+
+    mock_yoto_client.clear_sleep_timer.assert_called_once_with("player-test")
+
+
+async def test_set_sleep_timer_end_of_track(
+    hass: HomeAssistant,
+    mock_yoto_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """End of track mode lets the library time the current track."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        DOMAIN,
+        YotoService.SET_SLEEP_TIMER,
+        {TargetKey.ENTITY_ID: ENTITY_ID, YotoServiceArgument.MODE: "end_of_track"},
+        blocking=True,
+    )
+
+    mock_yoto_client.set_sleep_timer_end_of_track.assert_called_once_with("player-test")
+    mock_yoto_client.set_sleep_timer.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error"),
+    [
+        pytest.param(
+            NoTrackPlayingError("no track"), ServiceValidationError, id="no_track"
+        ),
+        pytest.param(YotoError("nope"), HomeAssistantError, id="sleep_timer_failed"),
+    ],
+)
+async def test_set_sleep_timer_end_of_track_error(
+    hass: HomeAssistant,
+    mock_yoto_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    side_effect: Exception,
+    expected_error: type[Exception],
+) -> None:
+    """End of track errors surface as Home Assistant errors."""
+    await setup_integration(hass, mock_config_entry)
+    mock_yoto_client.set_sleep_timer_end_of_track.side_effect = side_effect
+
+    with pytest.raises(expected_error):
+        await hass.services.async_call(
+            DOMAIN,
+            YotoService.SET_SLEEP_TIMER,
+            {TargetKey.ENTITY_ID: ENTITY_ID, YotoServiceArgument.MODE: "end_of_track"},
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
+    "service_data",
+    [
+        pytest.param({}, id="missing_duration"),
+        pytest.param(
+            {YotoServiceArgument.MODE: "duration"}, id="duration_mode_without_duration"
+        ),
+        pytest.param(
+            {YotoServiceArgument.DURATION: {"seconds": 0}}, id="zero_duration"
+        ),
+        pytest.param(
+            {
+                YotoServiceArgument.MODE: "end_of_track",
+                YotoServiceArgument.DURATION: {"minutes": 5},
+            },
+            id="end_of_track_with_duration",
+        ),
+        pytest.param({YotoServiceArgument.MODE: "unknown"}, id="unknown_mode"),
+    ],
+)
+async def test_set_sleep_timer_invalid(
+    hass: HomeAssistant,
+    mock_yoto_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    service_data: dict[str, Any],
+) -> None:
+    """Invalid sleep timer requests are rejected."""
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(probatio.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            YotoService.SET_SLEEP_TIMER,
+            {TargetKey.ENTITY_ID: ENTITY_ID, **service_data},
+            blocking=True,
+        )
+
+    mock_yoto_client.set_sleep_timer.assert_not_called()
+
+
+async def test_sleep_timer_command_error(
+    hass: HomeAssistant,
+    mock_yoto_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A failing sleep timer command surfaces as HomeAssistantError."""
+    await setup_integration(hass, mock_config_entry)
+    mock_yoto_client.set_sleep_timer.side_effect = YotoError("nope")
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            YotoService.SET_SLEEP_TIMER,
+            {
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                YotoServiceArgument.DURATION: {"minutes": 5},
+            },
             blocking=True,
         )

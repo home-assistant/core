@@ -46,6 +46,9 @@
           "day": "mdi:weather-sunny",
           "night": "mdi:weather-night"
         }
+      },
+      "sleep_timer": {
+        "default": "mdi:timer-outline"
       }
     },
     "switch": {
@@ -69,6 +72,14 @@
       "night_mode_start": {
         "default": "mdi:weather-night"
       }
+    }
+  },
+  "services": {
+    "clear_sleep_timer": {
+      "service": "mdi:timer-off-outline"
+    },
+    "set_sleep_timer": {
+      "service": "mdi:timer-outline"
     }
   }
 }

@@ -1,10 +1,19 @@
 """Media player platform for the Yoto integration."""
 
 from collections.abc import Awaitable, Callable
-from datetime import datetime
-from typing import Any, override
+from datetime import datetime, timedelta
+from typing import TYPE_CHECKING, Any, override
 
-from yoto_api import Card, Chapter, Group, PlaybackStatus, Track, YotoError, YotoPlayer
+from yoto_api import (
+    Card,
+    Chapter,
+    Group,
+    NoTrackPlayingError,
+    PlaybackStatus,
+    Track,
+    YotoError,
+    YotoPlayer,
+)
 
 from homeassistant.components.media_player import (
     BrowseError,
@@ -20,7 +29,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from .const import DOMAIN, SleepTimerMode
 from .coordinator import YotoConfigEntry, YotoDataUpdateCoordinator
 from .entity import YotoPlayerEntity
 
@@ -202,6 +211,39 @@ class YotoMediaPlayer(YotoPlayerEntity, MediaPlayerEntity):
     async def async_media_previous_track(self) -> None:
         """Skip to the previous track on the active card."""
         await self._async_run(self.coordinator.client.previous_track, self._player_id)
+
+    async def async_set_sleep_timer(
+        self, mode: SleepTimerMode, duration: timedelta | None = None
+    ) -> None:
+        """Stop playback after ``duration`` or at the end of the current track."""
+        client = self.coordinator.client
+        if mode is SleepTimerMode.DURATION:
+            if TYPE_CHECKING:
+                assert duration is not None
+            await self._async_run(
+                client.set_sleep_timer,
+                self._player_id,
+                int(duration.total_seconds()),
+            )
+            return
+        try:
+            await client.set_sleep_timer_end_of_track(self._player_id)
+        except NoTrackPlayingError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="no_current_track",
+            ) from err
+        except YotoError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="sleep_timer_failed",
+            ) from err
+
+    async def async_clear_sleep_timer(self) -> None:
+        """Cancel the running sleep timer."""
+        await self._async_run(
+            self.coordinator.client.clear_sleep_timer, self._player_id
+        )
 
     @override
     async def async_play_media(
