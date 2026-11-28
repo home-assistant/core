@@ -67,14 +67,11 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow:
-    status: exempt
-    comment: |
-      The Bluetooth address is the unique ID, and a changed PIN is handled by the reauthentication flow.
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: |
-      A rejected PIN is handled by the reauthentication flow, and Bluetooth outages are retried automatically.
+      A rejected PIN is handled by the reauthentication flow, and connection outages are retried automatically.
   stale-devices:
     status: exempt
     comment: |
@@ -85,5 +82,5 @@ rules:
   inject-websession:
     status: exempt
     comment: |
-      This is a Bluetooth integration and has no web session dependency.
+      Local Bluetooth and UDP transports do not use a web session.
   strict-typing: done
