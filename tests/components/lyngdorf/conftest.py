@@ -11,9 +11,12 @@ from lyngdorf import (
     NumericControl,
     NumericRange,
     Player,
+    Reading,
     Remote,
     RemoteKey,
+    Selector,
     SteppableControl,
+    Switch,
     Trim,
     VolumeControl,
     ZoneB,
@@ -88,6 +91,31 @@ def _control(value: float | None, value_range: NumericRange) -> MagicMock:
     return control
 
 
+def _reading(value: str | None, options: list[str]) -> MagicMock:
+    """Return a mocked read-only value."""
+    reading = MagicMock(spec=Reading)
+    reading.value = value
+    reading.options = options
+    return reading
+
+
+def _selector(value: str | None, options: list[str]) -> MagicMock:
+    """Return a mocked selectable value."""
+    selector = MagicMock(spec=Selector)
+    selector.value = value
+    selector.options = options
+    selector.select = AsyncMock()
+    return selector
+
+
+def _switch(value: bool | None) -> MagicMock:
+    """Return a mocked on/off value."""
+    switch = MagicMock(spec=Switch)
+    switch.value = value
+    switch.set = AsyncMock()
+    return switch
+
+
 @pytest.fixture
 def mock_create_receiver() -> Generator[MagicMock]:
     """Return a mocked create_receiver factory."""
@@ -134,6 +162,20 @@ def mock_receiver(mock_create_receiver: MagicMock) -> MagicMock:
     for _t in ("centre", "height", "lfe", "surround"):
         setattr(receiver, f"trim_{_t}", None)
         setattr(receiver, f"trim_{_t}_range", NumericRange(-10.0, 10.0, 0.1))
+
+    receiver.power = _switch(False)
+    receiver.mute = _switch(False)
+    receiver.source_selector = _selector(None, [])
+    receiver.sound_mode_selector = _selector(None, [])
+    receiver.room_perfect_position_selector = _selector(
+        "Focus 1", ["Global", "Focus 1"]
+    )
+    receiver.voicing_selector = _selector("Neutral", ["Neutral", "Music", "Movie"])
+    receiver.audio_information_reading = _reading("Stereo", [])
+    receiver.video_information_reading = _reading("4K HDR", [])
+    receiver.audio_input_reading = _reading("optical", ["optical", "aux"])
+    receiver.video_input_reading = _reading("hdmi", ["hdmi"])
+    receiver.streaming_source_reading = _reading("AirPlay", ["AirPlay", "DLNA"])
 
     receiver.volume_range = NumericRange(-99.9, 24.0, 0.1)
     receiver.zone_b_volume_range = NumericRange(-99.9, 24.0, 0.1)
@@ -227,10 +269,29 @@ def mock_receiver(mock_create_receiver: MagicMock) -> MagicMock:
     zone_b.streaming_source = "DLNA"
     zone_b.sources = []
     zone_b.volume = _steppable(-40.0, NumericRange(-99.9, 24.0, 0.1))
+    zone_b.power = _switch(False)
+    zone_b.mute = _switch(False)
+    zone_b.source_selector = _selector(None, [])
+    zone_b.audio_input_reading = _reading("aux", ["optical", "aux"])
+    zone_b.streaming_source_reading = _reading("DLNA", ["AirPlay", "DLNA"])
     receiver.zone_b = zone_b
 
     mock_create_receiver.return_value = receiver
     return receiver
+
+
+@pytest.fixture
+def receiver_without_optional_features(mock_receiver: MagicMock) -> MagicMock:
+    """Every optional selector and reading absent."""
+    mock_receiver.sound_mode_selector = None
+    mock_receiver.room_perfect_position_selector = None
+    mock_receiver.voicing_selector = None
+    mock_receiver.audio_information_reading = None
+    mock_receiver.video_information_reading = None
+    mock_receiver.audio_input_reading = None
+    mock_receiver.video_input_reading = None
+    mock_receiver.streaming_source_reading = None
+    return mock_receiver
 
 
 @pytest.fixture
