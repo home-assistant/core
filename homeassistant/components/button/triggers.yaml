@@ -5,6 +5,12 @@ pressed:
       - domain: input_button
       - domain: event
         device_class: button
+        capability:
+          event_types:
+            - single_press
+            - press_end
+            - press_start
+            - multi_press
   fields:
     press_count:
       required: true
@@ -23,6 +29,10 @@ held:
     entity:
       - domain: event
         device_class: button
+        capability:
+          event_types:
+            - long_press_start
+            - long_press_end
   fields:
     interval:
       required: false
@@ -34,3 +44,7 @@ hold_ended:
     entity:
       - domain: event
         device_class: button
+        capability:
+          event_types:
+            - - long_press_start
+              - long_press_end
