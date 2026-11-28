@@ -11,7 +11,6 @@ from pytest_homeassistant.components.bluetooth import generate_ble_device
 from homeassistant.components.hue_ble.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from . import TEST_DEVICE_MAC, TEST_DEVICE_NAME
 
@@ -88,7 +87,7 @@ async def test_setup_error(
             side_effect=[poll_state_result],
         ),
     ):
-        assert await async_setup_component(hass, DOMAIN, {}) is True
+        await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         assert entry.state is ConfigEntryState.SETUP_RETRY
         assert message in caplog.text
@@ -115,6 +114,6 @@ async def test_setup(
             return_value=None,
         ),
     ):
-        assert await async_setup_component(hass, DOMAIN, {}) is True
+        assert await hass.config_entries.async_setup(entry.entry_id) is True
         await hass.async_block_till_done()
         assert entry.state is ConfigEntryState.LOADED
