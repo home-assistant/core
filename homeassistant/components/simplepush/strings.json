@@ -4,10 +4,20 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
-      "user": {
+      "app": {
+        "data": {
+          "api_token": "[%key:common::config_flow::data::api_token%]"
+        },
+        "data_description": {
+          "api_token": "Find it in the Simplepush app under Settings > API Token."
+        }
+      },
+      "legacy": {
         "data": {
           "device_key": "The device key of your device",
           "event": "The event for the events.",
@@ -15,10 +25,19 @@
           "password": "The password of the encryption used by your device",
           "salt": "The salt used by your device."
         }
+      },
+      "user": {
+        "menu_options": {
+          "app": "Simplepush app (v1.0.0 or later)",
+          "legacy": "Legacy Simplepush app (before v1.0.0)"
+        }
       }
     }
   },
   "exceptions": {
+    "invalid_api_token": {
+      "message": "Simplepush rejected the API token."
+    },
     "send_message_failed": {
       "message": "Failed to send the Simplepush notification."
     },

@@ -1,18 +1,52 @@
 """Config flow for simplepush integration."""
 
+from http import HTTPStatus
+import logging
 from typing import Any, override
 
 import probatio
+from simplepush import ApiError, Client
 from simplepush.legacy import UnknownError, send
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_NAME, CONF_PASSWORD
+from homeassistant.const import CONF_API_TOKEN, CONF_NAME, CONF_PASSWORD
 
-from .const import ATTR_ENCRYPTED, CONF_DEVICE_KEY, CONF_SALT, DEFAULT_NAME, DOMAIN
+from .const import (
+    APP_TITLE,
+    ATTR_ENCRYPTED,
+    CONF_DEVICE_KEY,
+    CONF_SALT,
+    DEFAULT_NAME,
+    DOMAIN,
+)
+
+_LOGGER = logging.getLogger(__name__)
 
 
-def validate_input(entry: dict[str, str]) -> dict[str, str] | None:
-    """Validate user input."""
+def validate_input(api_token: str) -> dict[str, str]:
+    """Send a test task to your own devices."""
+    try:
+        Client(api_token=api_token).send_task(
+            title="Home Assistant configured successfully",
+            content=(
+                "Your Home Assistant Simplepush integration is configured correctly "
+                "and ready to send notifications to this device."
+            ),
+        )
+    except ApiError as err:
+        if err.status == HTTPStatus.UNAUTHORIZED:
+            return {"base": "invalid_auth"}
+        return {"base": "cannot_connect"}
+    except OSError:
+        return {"base": "cannot_connect"}
+    except Exception:
+        _LOGGER.exception("Unexpected exception")
+        return {"base": "unknown"}
+    return {}
+
+
+def validate_legacy_input(entry: dict[str, str]) -> dict[str, str] | None:
+    """Send a test message to a device of the old app."""
     try:
         if CONF_PASSWORD in entry:
             send(
@@ -41,7 +75,39 @@ class SimplePushFlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle a flow initiated by the user."""
+        """Choose between the current and the old Simplepush app."""
+        return self.async_show_menu(step_id="user", menu_options=["app", "legacy"])
+
+    async def async_step_app(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Set up the current Simplepush app with an API token."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            self._async_abort_entries_match(user_input)
+
+            if not (
+                errors := await self.hass.async_add_executor_job(
+                    validate_input, user_input[CONF_API_TOKEN]
+                )
+            ):
+                return self.async_create_entry(title=APP_TITLE, data=user_input)
+
+        return self.async_show_form(
+            step_id="app",
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema(
+                    {probatio.Required(probatio.Secret(CONF_API_TOKEN)): str}
+                ),
+                user_input,
+            ),
+            errors=errors,
+        )
+
+    async def async_step_legacy(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Set up the old Simplepush app with a device key."""
         errors: dict[str, str] | None = None
         if user_input is not None:
             await self.async_set_unique_id(user_input[CONF_DEVICE_KEY])
@@ -55,7 +121,7 @@ class SimplePushFlowHandler(ConfigFlow, domain=DOMAIN):
 
             if not (
                 errors := await self.hass.async_add_executor_job(
-                    validate_input, user_input
+                    validate_legacy_input, user_input
                 )
             ):
                 return self.async_create_entry(
@@ -64,7 +130,7 @@ class SimplePushFlowHandler(ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
-            step_id="user",
+            step_id="legacy",
             data_schema=probatio.Schema(
                 {
                     probatio.Required(probatio.Secret(CONF_DEVICE_KEY)): str,
