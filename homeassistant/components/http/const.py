@@ -37,6 +37,7 @@ CONF_USE_X_FRAME_OPTIONS: Final = "use_x_frame_options"
 CONF_TRUSTED_PROXIES: Final = "trusted_proxies"
 CONF_LOGIN_ATTEMPTS_THRESHOLD: Final = "login_attempts_threshold"
 CONF_IP_BAN_ENABLED: Final = "ip_ban_enabled"
+CONF_IP_BAN_DURATION: Final = "ip_ban_duration"
 CONF_SSL_PROFILE: Final = "ssl_profile"
 
 # Profile names of the deprecated YAML config and of storage before version

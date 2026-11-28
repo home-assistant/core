@@ -24,6 +24,7 @@ from homeassistant.util.ssl import SSLProfile
 from .const import (
     CONF_BASE_URL,
     CONF_CORS_ORIGINS,
+    CONF_IP_BAN_DURATION,
     CONF_IP_BAN_ENABLED,
     CONF_LOGIN_ATTEMPTS_THRESHOLD,
     CONF_SERVER_HOST,
@@ -109,6 +110,7 @@ class ConfData(TypedDict, total=False):
     trusted_proxies: list[str]
     login_attempts_threshold: int
     ip_ban_enabled: bool
+    ip_ban_duration: int
     ssl_profile: SSLProfile
     use_x_frame_options: bool
     created_at: str
@@ -164,6 +166,10 @@ HTTP_STORAGE_SCHEMA: Final = probatio.Schema(
             CONF_LOGIN_ATTEMPTS_THRESHOLD, default=NO_LOGIN_ATTEMPT_THRESHOLD
         ): probatio.Any(cv.positive_int, NO_LOGIN_ATTEMPT_THRESHOLD),
         probatio.Optional(CONF_IP_BAN_ENABLED, default=True): cv.boolean,
+        # Minutes; bans never expire when omitted
+        probatio.Optional(CONF_IP_BAN_DURATION): probatio.All(
+            cv.positive_int, probatio.Range(min=1)
+        ),
         probatio.Optional(
             CONF_SSL_PROFILE, default=DEFAULT_SSL_PROFILE
         ): probatio.Coerce(SSLProfile),

@@ -1,17 +1,21 @@
 """The tests for the Home Assistant HTTP component."""
 
+from datetime import timedelta
 from http import HTTPStatus
 from ipaddress import ip_address
 import logging
 import os
+from pathlib import Path
 from socket import gaierror, herror
 import threading
 from typing import NoReturn
 from unittest.mock import AsyncMock, Mock, mock_open, patch
 
 from aiohttp import web
+from aiohttp.test_utils import TestClient
 from aiohttp.web_exceptions import HTTPUnauthorized
 from aiohttp.web_middlewares import middleware
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import async_get_persistent_notifications
 from pytest_homeassistant.typing import ClientSessionGenerator
@@ -26,6 +30,7 @@ from homeassistant.components.http.ban import (
     setup_bans,
 )
 from homeassistant.components.http.view import request_handler_factory
+from homeassistant.config import load_yaml_config_file
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.http import KEY_AUTHENTICATED, KEY_HASS
@@ -312,6 +317,150 @@ async def test_access_from_supervisor_ip(
         resp = await client.get("/")
         assert resp.status == status
         assert len(manager.ip_bans_lookup) == bans
+
+
+@pytest.mark.freeze_time("2026-11-26T12:00:00+00:00")
+@pytest.mark.parametrize(
+    ("ban_duration", "banned_at", "status"),
+    [
+        pytest.param(
+            None, "2016-11-16T19:20:03+00:00", HTTPStatus.FORBIDDEN, id="never_expires"
+        ),
+        pytest.param(
+            60, "2026-11-26T11:30:00+00:00", HTTPStatus.FORBIDDEN, id="active"
+        ),
+        pytest.param(
+            60, "2026-11-26T11:00:00+00:00", HTTPStatus.NOT_FOUND, id="expired"
+        ),
+    ],
+)
+async def test_ban_duration(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    ban_duration: int | None,
+    banned_at: str,
+    status: HTTPStatus,
+) -> None:
+    """Test bans expire after the ban duration."""
+    app = web.Application()
+    app[KEY_HASS] = hass
+    setup_bans(hass, app, 5, ban_duration)
+    mock_real_ip(app)(BANNED_IPS[0])
+
+    with patch(
+        "homeassistant.components.http.ban.load_yaml_config_file",
+        return_value={BANNED_IPS[0]: {"banned_at": banned_at}},
+    ):
+        client = await aiohttp_client(app)
+
+    resp = await client.get("/")
+    assert resp.status == status
+
+
+async def _setup_ban_file_client(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    ban_file: Path,
+) -> TestClient:
+    """Set up a client always failing auth, with bans stored in ban_file."""
+    app = web.Application()
+    app[KEY_HASS] = hass
+
+    async def unauth_handler(request: web.Request) -> NoReturn:
+        """Return a mock web response."""
+        raise HTTPUnauthorized
+
+    app.router.add_get("/", unauth_handler)
+    setup_bans(hass, app, 2, 60)
+    app[KEY_BAN_MANAGER].path = str(ban_file)
+    mock_real_ip(app)("200.201.202.204")
+    # Undo prevent_io, these tests read a real ban file
+    with patch(
+        "homeassistant.components.http.ban.load_yaml_config_file",
+        load_yaml_config_file,
+    ):
+        return await aiohttp_client(app)
+
+
+@pytest.mark.freeze_time("2026-11-26T12:00:00+00:00")
+async def test_expired_ban_resets_failed_attempts(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    freezer: FrozenDateTimeFactory,
+    tmp_path: Path,
+) -> None:
+    """Test an expired ban gives a fresh set of attempts and keeps one entry."""
+    ban_file = tmp_path / IP_BANS_FILE
+    client = await _setup_ban_file_client(hass, aiohttp_client, ban_file)
+
+    for _ in range(2):
+        assert (await client.get("/")).status == HTTPStatus.UNAUTHORIZED
+    assert (await client.get("/")).status == HTTPStatus.FORBIDDEN
+
+    freezer.tick(timedelta(minutes=60))
+
+    # One failure is not enough to get banned again
+    for _ in range(2):
+        assert (await client.get("/")).status == HTTPStatus.UNAUTHORIZED
+    assert (await client.get("/")).status == HTTPStatus.FORBIDDEN
+
+    assert ban_file.read_text() == (
+        "\n200.201.202.204:\n  banned_at: '2026-11-26T13:00:00+00:00'\n"
+    )
+
+
+@pytest.mark.freeze_time("2026-11-26T12:00:00+00:00")
+@pytest.mark.parametrize(
+    ("content_after_load", "expected"),
+    [
+        pytest.param(
+            None,
+            """# Managed by hand
+200.201.202.204:
+  # Office
+  banned_at: '2026-11-26T12:00:00+00:00'  # first ban
+
+100.64.0.2:
+  banned_at: '2026-11-26T10:00:00+00:00'
+""",
+            id="entry_updated_in_place",
+        ),
+        pytest.param(
+            "# Emptied by hand\n",
+            "# Emptied by hand\n\n200.201.202.204:\n"
+            "  banned_at: '2026-11-26T12:00:00+00:00'\n",
+            id="entry_gone_appended",
+        ),
+    ],
+)
+async def test_ban_after_expiry_updates_ban_file(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    tmp_path: Path,
+    content_after_load: str | None,
+    expected: str,
+) -> None:
+    """Test banning again after expiry only changes banned_at in the ban file."""
+    ban_file = tmp_path / IP_BANS_FILE
+    ban_file.write_text(
+        """# Managed by hand
+200.201.202.204:
+  # Office
+  banned_at: '2026-11-26T10:00:00+00:00'  # first ban
+
+100.64.0.2:
+  banned_at: '2026-11-26T10:00:00+00:00'
+"""
+    )
+    client = await _setup_ban_file_client(hass, aiohttp_client, ban_file)
+    if content_after_load is not None:
+        ban_file.write_text(content_after_load)
+
+    for _ in range(2):
+        assert (await client.get("/")).status == HTTPStatus.UNAUTHORIZED
+    assert (await client.get("/")).status == HTTPStatus.FORBIDDEN
+
+    assert ban_file.read_text() == expected
 
 
 async def test_ban_middleware_not_loaded_by_config(hass: HomeAssistant) -> None:
