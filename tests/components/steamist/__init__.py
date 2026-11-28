@@ -7,13 +7,11 @@ from aiosteamist import Steamist, SteamistStatus
 from discovery30303 import AIODiscovery30303, Device30303
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components import steamist
 from homeassistant.components.steamist.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.setup import async_setup_component
 
 MOCK_ASYNC_GET_STATUS_INACTIVE = SteamistStatus(
     temp=70, temp_units="F", minutes_remain=0, active=False
@@ -69,7 +67,7 @@ async def _async_setup_entry_with_status(
     client = _mocked_steamist()
     client.async_get_status = AsyncMock(return_value=status)
     with _patch_status(status, client):
-        await async_setup_component(hass, steamist.DOMAIN, {steamist.DOMAIN: {}})
+        await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
     return client, config_entry

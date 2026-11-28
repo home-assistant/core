@@ -13,7 +13,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from . import (
@@ -62,7 +61,7 @@ async def test_config_entry_retry_later(hass: HomeAssistant) -> None:
         "homeassistant.components.steamist.Steamist.async_get_status",
         side_effect=TimeoutError,
     ):
-        await async_setup_component(hass, steamist.DOMAIN, {steamist.DOMAIN: {}})
+        await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
@@ -99,7 +98,7 @@ async def test_config_entry_fills_unique_id_with_directed_discovery(
             return_value=mock_aio_discovery,
         ),
     ):
-        await async_setup_component(hass, steamist.DOMAIN, {steamist.DOMAIN: {}})
+        await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         assert config_entry.state is ConfigEntryState.LOADED
 
@@ -133,7 +132,7 @@ async def test_discovery_happens_at_interval(
         ),
         _patch_status(MOCK_ASYNC_GET_STATUS_ACTIVE),
     ):
-        await async_setup_component(hass, steamist.DOMAIN, {steamist.DOMAIN: {}})
+        await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
 
         assert len(mock_aio_discovery.async_scan.mock_calls) == 2
