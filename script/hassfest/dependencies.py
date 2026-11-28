@@ -318,9 +318,6 @@ def _check_circular_deps(
 
 def _validate_circular_dependencies(integrations: dict[str, Integration]) -> None:
     for integration in integrations.values():
-        if integration.domain in IGNORE_VIOLATIONS:
-            continue
-
         _check_circular_deps(
             integrations, integration.domain, integration, set(), deque()
         )

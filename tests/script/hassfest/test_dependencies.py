@@ -8,6 +8,7 @@ import pytest
 from script.hassfest.dependencies import (
     CORE_INTEGRATIONS,
     ImportCollector,
+    _validate_circular_dependencies,
     _validate_dependencies,
 )
 
@@ -131,6 +132,60 @@ def test_dependency_on_non_core_integration_allowed(config: Config) -> None:
     _validate_dependencies(integrations)
 
     assert consumer.errors == []
+
+
+@pytest.mark.parametrize(
+    "domain",
+    [
+        pytest.param("consumer", id="regular"),
+        pytest.param("logbook", id="import_check_exempt"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("manifest_key", "error"),
+    [
+        pytest.param(
+            "dependencies",
+            "Found a circular dependency with other ({domain}, other)",
+            id="dependencies",
+        ),
+        pytest.param(
+            "after_dependencies",
+            "Found a circular dependency with after dependencies of other"
+            " ({domain}, other)",
+            id="after_dependencies",
+        ),
+    ],
+)
+def test_circular_dependency_rejected(
+    config: Config, domain: str, manifest_key: str, error: str
+) -> None:
+    """Test that a circular dependency is rejected."""
+    integration = get_integration(domain, config)
+    integration.manifest["dependencies"] = ["other"]
+    other = get_integration("other", config)
+    other.manifest[manifest_key] = [domain]
+
+    _validate_circular_dependencies({domain: integration, "other": other})
+
+    assert [err.error for err in integration.errors] == [error.format(domain=domain)]
+
+
+def test_no_circular_dependency_allowed(config: Config) -> None:
+    """Test that a dependency chain without a cycle is not rejected."""
+    consumer = get_integration("consumer", config)
+    consumer.manifest["dependencies"] = ["other"]
+    other = get_integration("other", config)
+    other.manifest["after_dependencies"] = ["third"]
+    integrations = {
+        "consumer": consumer,
+        "other": other,
+        "third": get_integration("third", config),
+    }
+
+    _validate_circular_dependencies(integrations)
+
+    assert [integration.errors for integration in integrations.values()] == [[], [], []]
 
 
 def test_core_integrations_in_sync_with_bootstrap() -> None:
