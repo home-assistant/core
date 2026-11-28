@@ -39,7 +39,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryDisabler
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
-from homeassistant.setup import async_setup_component
 
 IMPORT_TIMEOUT = 60
 
@@ -76,7 +75,7 @@ async def test_init_error(
         new_callable=AsyncMock,
         side_effect=side_effect,
     ):
-        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
         assert error in caplog.text
         assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
@@ -98,7 +97,7 @@ async def test_init_auth_error(
             message="",
         ),
     ):
-        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
         assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
@@ -1483,7 +1482,7 @@ async def test_migration_from_v2_7(
     existing_subentries = dict(mock_config_entry.subentries)
 
     with patch("openai.resources.models.AsyncModels.list", new_callable=AsyncMock):
-        assert await async_setup_component(hass, DOMAIN, {})
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
         assert mock_config_entry.minor_version == 8
@@ -1544,7 +1543,7 @@ async def test_migration_from_v2_7_existing_evaluation(
     existing_subentries = dict(mock_config_entry.subentries)
 
     with patch("openai.resources.models.AsyncModels.list", new_callable=AsyncMock):
-        assert await async_setup_component(hass, DOMAIN, {})
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
     assert mock_config_entry.minor_version == 8
