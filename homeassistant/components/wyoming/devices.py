@@ -4,6 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from homeassistant.components.assist_pipeline import VadSensitivity
+from homeassistant.components.timer_list import TimerListEvent
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 
@@ -28,6 +29,7 @@ class SatelliteDevice:
     _is_muted_listener: Callable[[], None] | None = None
     _pipeline_listener: Callable[[], None] | None = None
     _audio_settings_listener: Callable[[], None] | None = None
+    _timer_listener: Callable[[TimerListEvent], None] | None = None
 
     @callback
     def set_is_active(self, active: bool) -> None:
@@ -86,6 +88,12 @@ class SatelliteDevice:
                 self._audio_settings_listener()
 
     @callback
+    def handle_timer_event(self, event: TimerListEvent) -> None:
+        """Inform the listener of a change to the satellite's timers."""
+        if self._timer_listener is not None:
+            self._timer_listener(event)
+
+    @callback
     def set_is_active_listener(self, is_active_listener: Callable[[], None]) -> None:
         """Listen for updates to is_active."""
         self._is_active_listener = is_active_listener
@@ -106,6 +114,13 @@ class SatelliteDevice:
     ) -> None:
         """Listen for updates to audio settings."""
         self._audio_settings_listener = audio_settings_listener
+
+    @callback
+    def set_timer_listener(
+        self, timer_listener: Callable[[TimerListEvent], None]
+    ) -> None:
+        """Listen for changes to the satellite's timers."""
+        self._timer_listener = timer_listener
 
     def get_assist_in_progress_entity_id(self, hass: HomeAssistant) -> str | None:
         """Return entity id for assist in progress binary sensor."""
@@ -154,4 +169,11 @@ class SatelliteDevice:
         ent_reg = er.async_get(hass)
         return ent_reg.async_get_entity_id(
             "select", DOMAIN, f"{self.satellite_id}-vad_sensitivity"
+        )
+
+    def get_timer_list_entity_id(self, hass: HomeAssistant) -> str | None:
+        """Return entity id for the timer list."""
+        ent_reg = er.async_get(hass)
+        return ent_reg.async_get_entity_id(
+            "timer_list", DOMAIN, f"{self.satellite_id}-timers"
         )

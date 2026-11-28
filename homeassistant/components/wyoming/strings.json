@@ -81,6 +81,11 @@
       "mute": {
         "name": "Mute"
       }
+    },
+    "timer_list": {
+      "timers": {
+        "name": "Timers"
+      }
     }
   },
   "exceptions": {

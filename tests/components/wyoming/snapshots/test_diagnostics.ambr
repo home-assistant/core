@@ -92,6 +92,7 @@
       'select',
       'switch',
       'number',
+      'timer_list',
     ]),
     'satellite': dict({
       'auto_gain': 0,
