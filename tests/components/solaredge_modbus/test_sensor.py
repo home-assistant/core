@@ -15,7 +15,7 @@ from pytest_homeassistant.common import (
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.solaredge_modbus.const import SCAN_INTERVAL
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 
@@ -390,3 +390,33 @@ async def test_der_storage_unavailable_when_its_block_fails(
 
     assert hass.states.get(DER_STORAGE_ENTITY).state == STATE_UNAVAILABLE
     assert hass.states.get("sensor.solaredge_se10000h_power").state != STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_battery_float_sentinel_reads_as_unknown(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """Battery float32 points reporting -FLT_MAX read as unknown, not a value.
+
+    SolarEdge battery blocks mark "not implemented" floats with the
+    word-swapped 0xFF7FFFFF sentinel rather than the NaN the decoder filters.
+    """
+    for address in (57672, 57674, 57708, 57712, 57714, 57728):
+        mock_modbus_unit.holding[address] = 0xFFFF
+        mock_modbus_unit.holding[address + 1] = 0xFF7F
+
+    await _setup_sensor_platform(hass, mock_config_entry)
+
+    for entity_id in (
+        "sensor.battery_1_maximum_charge_peak_power",
+        "sensor.battery_1_maximum_discharge_peak_power",
+        "sensor.battery_1_temperature",
+        "sensor.battery_1_dc_voltage",
+        "sensor.battery_1_dc_current",
+        "sensor.battery_1_available_energy",
+    ):
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == STATE_UNKNOWN, entity_id

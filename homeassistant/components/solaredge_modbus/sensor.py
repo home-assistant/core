@@ -73,6 +73,10 @@ _PHASE_NEUTRAL_METER = (
     SunSpecDID.THREE_PHASE_WYE_METER,
 )
 
+# SolarEdge battery blocks report "not implemented" floats as +/-FLT_MAX
+# (word-swapped 0xFF7FFFFF) rather than the NaN sentinel the decoder filters.
+_BATTERY_FLOAT_SENTINEL = 1e37
+
 
 @dataclass(frozen=True, kw_only=True)
 class SolarEdgeModbusSensorEntityDescription[ComponentT](SensorEntityDescription):
@@ -1022,10 +1026,13 @@ class SolarEdgeModbusBatterySensorEntity(SolarEdgeModbusBatteryEntity, SensorEnt
     @property
     @override
     def native_value(self) -> StateType:
-        """Return the sensor value."""
-        return self.entity_description.value_fn(
+        """Return the sensor value, or None for the "not implemented" sentinel."""
+        value = self.entity_description.value_fn(
             self.coordinator.solaredge.batteries[self._index - 1]
         )
+        if isinstance(value, float) and abs(value) >= _BATTERY_FLOAT_SENTINEL:
+            return None
+        return value
 
 
 class SolarEdgeModbusBatteryEnergySensorEntity(
