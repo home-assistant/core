@@ -1,0 +1,18 @@
+{
+  "entity": {
+    "sensor": {
+      "phase_forward_energy": {
+        "default": "mdi:transmission-tower-import"
+      },
+      "phase_reverse_energy": {
+        "default": "mdi:transmission-tower-export"
+      },
+      "total_forward_energy": {
+        "default": "mdi:transmission-tower-import"
+      },
+      "total_reverse_energy": {
+        "default": "mdi:transmission-tower-export"
+      }
+    }
+  }
+}

@@ -1,0 +1,102 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: This integration does not register any service actions.
+  appropriate-polling: done
+  brands:
+    status: done
+    comment: |
+      Listed under the victron brand in homeassistant/brands/victron.json. The
+      entry in the home-assistant/brands repository
+      (core_integrations/victron_modbus -> ../core_brands/victron, like the other
+      Victron integrations) is added in home-assistant/brands pull request 11362.
+  common-modules: done
+  config-flow: done
+  config-flow-test-coverage: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: This integration does not register any service actions.
+  docs-conditions:
+    status: exempt
+    comment: This integration provides no conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration provides no triggers.
+  entity-event-setup:
+    status: exempt
+    comment: |
+      Entities read cached state from the coordinator; they subscribe via
+      CoordinatorEntity and register no other event handlers. The sensor
+      platform's own coordinator listener only adds sensors for readings that
+      were unavailable at setup, and is removed when the entry unloads.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry:
+    status: done
+    comment: Entries are keyed on the device's serial number.
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: This integration does not register any service actions.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: The integration has no options flow.
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: A Modbus link has no authentication.
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery: done
+  discovery-update-info:
+    status: done
+    comment: |
+      Rediscovery at a new address updates the entry's host, but only when the
+      address the entry holds no longer answers.
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: Each config entry represents a single, fixed device.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow: todo
+  repair-issues:
+    status: exempt
+    comment: No repairable issues are raised.
+  stale-devices:
+    status: exempt
+    comment: The set of devices (meter + 3 phases) is fixed; none become stale.
+
+  # Platinum
+  async-dependency: done
+  inject-websession:
+    status: exempt
+    comment: This integration talks Modbus, not HTTP.
+  strict-typing: done

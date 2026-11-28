@@ -1,5 +1,10 @@
 {
   "domain": "victron",
   "name": "Victron",
-  "integrations": ["victron_gx", "victron_ble", "victron_remote_monitoring"]
+  "integrations": [
+    "victron_gx",
+    "victron_ble",
+    "victron_remote_monitoring",
+    "victron_modbus"
+  ]
 }
