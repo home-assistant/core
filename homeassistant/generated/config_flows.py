@@ -110,6 +110,7 @@ FLOWS = {
         "bayesian",
         "benq_projector_infrared",
         "besen",
+        "birthday",
         "bitcoin",
         "bitvis",
         "blebox",
