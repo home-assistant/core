@@ -15,7 +15,6 @@ from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerat
 from homeassistant.components.local_calendar import LocalCalendarStore
 from homeassistant.components.local_calendar.const import CONF_CALENDAR_NAME, DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 CALENDAR_NAME = "Light Schedule"
 FRIENDLY_NAME = "Light Schedule"
@@ -102,7 +101,7 @@ def mock_config_entry() -> MockConfigEntry:
 async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     """Set up the integration."""
     config_entry.add_to_hass(hass)
-    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
 

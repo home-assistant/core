@@ -10,13 +10,11 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
-from homeassistant.components.local_calendar.const import DOMAIN
 from homeassistant.components.local_calendar.store import LocalCalendarStore
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.template import DATE_STR_FORMAT
-from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .conftest import (
@@ -1243,7 +1241,7 @@ async def test_adjacent_events_stay_on(
 
     config_entry.add_to_hass(hass)
     with patch("homeassistant.components.calendar.SCAN_INTERVAL", timedelta(hours=1)):
-        assert await async_setup_component(hass, DOMAIN, {})
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
         state = hass.states.get(TEST_ENTITY)
@@ -1331,7 +1329,7 @@ async def test_cancelled_event_does_not_turn_the_entity_on(
     freezer.move_to("2026-07-29 07:50:20+00:00")  # 01:50:20 in America/Regina
 
     config_entry.add_to_hass(hass)
-    assert await async_setup_component(hass, DOMAIN, {})
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     state = hass.states.get(TEST_ENTITY)
