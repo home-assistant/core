@@ -1,7 +1,11 @@
 """Tests for the OpenAI Conversation integration."""
 
-from typing import Literal
+import base64
+from datetime import timedelta
+import json
+from typing import Any, Literal
 
+from chatgpt_plan_auth.const import ISSUER
 from openai.types.responses import (
     ResponseCodeInterpreterCallCodeDeltaEvent,
     ResponseCodeInterpreterCallCodeDoneEvent,
@@ -37,6 +41,8 @@ from openai.types.responses.response_code_interpreter_tool_call import OutputLog
 from openai.types.responses.response_function_web_search import ActionSearch
 from openai.types.responses.response_output_item import ImageGenerationCall
 from openai.types.responses.response_reasoning_item import Summary
+
+from homeassistant.util import dt as dt_util
 
 
 def create_message_item(
@@ -458,3 +464,28 @@ def create_image_gen_call_item(
             type="response.output_item.done",
         ),
     ]
+
+
+def _jwt_segment(value: Any) -> str:
+    """Encode a JSON value as a base64url JWT segment."""
+    return base64.urlsafe_b64encode(json.dumps(value).encode()).decode().rstrip("=")
+
+
+def create_chatgpt_id_token(*, client_id: str, nonce: str, **claims: Any) -> str:
+    """Create a Sign in with ChatGPT ID token.
+
+    The token is not signed: the library does not verify the signature (the
+    token arrives from the TLS authenticated token endpoint in the same
+    response as the code exchange), so there is no key to sign it with.
+    """
+    payload = {
+        "iss": ISSUER,
+        "aud": client_id,
+        "sub": "chatgpt-user-1",
+        "nonce": nonce,
+        "email": "user@example.com",
+        "iat": int(dt_util.utcnow().timestamp()),
+        "exp": int((dt_util.utcnow() + timedelta(hours=1)).timestamp()),
+        **claims,
+    }
+    return f"{_jwt_segment({'alg': 'none'})}.{_jwt_segment(payload)}."
