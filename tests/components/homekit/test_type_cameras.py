@@ -262,9 +262,12 @@ async def test_camera_stream_source_configured(hass: HomeAssistant, run_driver) 
         await _async_stop_all_streams(hass, acc)
 
     expected_output = (
-        "-map 0:v:0 -an -c:v libx264 -profile:v high "
-        "-tune zerolatency -pix_fmt yuv420p -r 30 -b:v 299k "
-        "-bufsize 1196k -maxrate 299k -payload_type 99 "
+        "-map 0:v:0 -an -c:v libx264 -profile:v high -level:v 4.0 "
+        "-preset veryfast -tune zerolatency -pix_fmt yuv420p "
+        "-vf 'scale=min(1280\\,iw):min(720\\,ih):"
+        "force_original_aspect_ratio=decrease:force_divisible_by=2' "
+        "-r 30 -b:v 299k -bufsize 598k -maxrate 299k -bf 0 -g 60 "
+        "-payload_type 99 "
         "-ssrc {v_ssrc} -f rtp -srtp_out_suite "
         "AES_CM_128_HMAC_SHA1_80 -srtp_out_params "
         "zdPmNLWeI86DtLJHvVLI6YPvqhVeeiLsNtrAgbgL "
@@ -476,9 +479,12 @@ async def test_camera_stream_source_found(hass: HomeAssistant, run_driver) -> No
         await _async_stop_all_streams(hass, acc)
 
     expected_output = (
-        "-map 0:v:0 -an -c:v libx264 -profile:v high "
-        "-tune zerolatency -pix_fmt yuv420p -r 30 -b:v 299k "
-        "-bufsize 1196k -maxrate 299k -payload_type 99 "
+        "-map 0:v:0 -an -c:v libx264 -profile:v high -level:v 4.0 "
+        "-preset veryfast -tune zerolatency -pix_fmt yuv420p "
+        "-vf 'scale=min(1280\\,iw):min(720\\,ih):"
+        "force_original_aspect_ratio=decrease:force_divisible_by=2' "
+        "-r 30 -b:v 299k -bufsize 598k -maxrate 299k -bf 0 -g 60 "
+        "-payload_type 99 "
         "-ssrc {v_ssrc} -f rtp -srtp_out_suite "
         "AES_CM_128_HMAC_SHA1_80 -srtp_out_params "
         "zdPmNLWeI86DtLJHvVLI6YPvqhVeeiLsNtrAgbgL "
@@ -650,9 +656,7 @@ async def test_camera_stream_source_configured_and_copy_codec(
         await _async_stop_all_streams(hass, acc)
 
     expected_output = (
-        "-map 0:v:0 -an -c:v copy -tune zerolatency "
-        "-pix_fmt yuv420p -r 30 -b:v 299k -bufsize 1196k "
-        "-maxrate 299k -payload_type 99 -ssrc {v_ssrc} -f "
+        "-map 0:v:0 -an -c:v copy -payload_type 99 -ssrc {v_ssrc} -f "
         "rtp -srtp_out_suite AES_CM_128_HMAC_SHA1_80 "
         "-srtp_out_params "
         "zdPmNLWeI86DtLJHvVLI6YPvqhVeeiLsNtrAgbgL "
@@ -730,9 +734,10 @@ async def test_camera_stream_source_configured_and_override_profile_names(
         await _async_stop_all_streams(hass, acc)
 
     expected_output = (
-        "-map 0:v:0 -an -c:v h264_v4l2m2m -profile:v 4 "
-        "-tune zerolatency -pix_fmt yuv420p -r 30 "
-        "-b:v 299k -bufsize 1196k -maxrate 299k "
+        "-map 0:v:0 -an -c:v h264_v4l2m2m -profile:v 4 -pix_fmt yuv420p "
+        "-vf 'scale=min(1280\\,iw):min(720\\,ih):"
+        "force_original_aspect_ratio=decrease:force_divisible_by=2' "
+        "-r 30 -b:v 299k -bufsize 598k -maxrate 299k -bf 0 -g 60 "
         "-payload_type 99 -ssrc {v_ssrc} -f rtp "
         "-srtp_out_suite AES_CM_128_HMAC_SHA1_80 "
         "-srtp_out_params "
@@ -812,9 +817,10 @@ async def test_camera_streaming_fails_after_starting_ffmpeg(
         await _async_stop_all_streams(hass, acc)
 
     expected_output = (
-        "-map 0:v:0 -an -c:v h264_omx -profile:v high "
-        "-tune zerolatency -pix_fmt yuv420p -r 30 "
-        "-b:v 299k -bufsize 1196k -maxrate 299k "
+        "-map 0:v:0 -an -c:v h264_omx -profile:v high -pix_fmt yuv420p "
+        "-vf 'scale=min(1280\\,iw):min(720\\,ih):"
+        "force_original_aspect_ratio=decrease:force_divisible_by=2' "
+        "-r 30 -b:v 299k -bufsize 598k -maxrate 299k -bf 0 -g 60 "
         "-payload_type 99 -ssrc {v_ssrc} -f rtp "
         "-srtp_out_suite AES_CM_128_HMAC_SHA1_80 "
         "-srtp_out_params "
@@ -835,6 +841,97 @@ async def test_camera_streaming_fails_after_starting_ffmpeg(
         extra_cmd="-hide_banner -nostats",
         stderr_pipe=True,
     )
+
+
+async def test_camera_stream_source_filters_before_scaling(
+    hass: HomeAssistant, run_driver: HomeDriver
+) -> None:
+    """Test configured source filters run before live stream scaling."""
+    await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+    entity_id = "camera.front"
+    hass.states.async_set(entity_id, "idle")
+    acc = Camera(
+        hass,
+        run_driver,
+        "Camera",
+        entity_id,
+        2,
+        {
+            CONF_STREAM_SOURCE: "-i rtsp://cam -vf \"drawtext=text='Front'\" -filter:v hflip"
+        },
+    )
+    acc.run()
+    await _async_setup_endpoints(hass, acc)
+    working_ffmpeg = _get_working_mock_ffmpeg()
+    with patch(
+        "homeassistant.components.homekit.type_cameras.HAFFmpeg",
+        return_value=working_ffmpeg,
+    ):
+        await _async_start_streaming(hass, acc)
+        await _async_stop_all_streams(hass, acc)
+
+    open_kwargs = working_ffmpeg.open.await_args.kwargs
+    assert open_kwargs["input_source"] == "-i rtsp://cam"
+    assert (
+        "-vf 'hflip,drawtext=text='\"'\"'Front'\"'\"',"
+        "scale=min(1280\\,iw):min(720\\,ih):"
+        "force_original_aspect_ratio=decrease:force_divisible_by=2'"
+        in open_kwargs["output"]
+    )
+
+
+@pytest.mark.parametrize(
+    ("config", "message"),
+    [
+        pytest.param(
+            {CONF_STREAM_SOURCE: "rtsp://user:pa'ss@cam"},
+            "Cannot build the stream: No closing quotation",
+            id="unbalanced_quote",
+        ),
+        pytest.param(
+            {CONF_STREAM_SOURCE: "-i rtsp://cam -vf"},
+            "Cannot build the stream: -vf without a filter",
+            id="filter_flag_without_filter",
+        ),
+        pytest.param(
+            {CONF_VIDEO_PROFILE_NAMES: ["baseline"]},
+            "Cannot build the stream: list index out of range",
+            id="unknown_profile",
+        ),
+    ],
+)
+async def test_camera_start_stream_cannot_build(
+    hass: HomeAssistant,
+    run_driver: HomeDriver,
+    mock_audio_proxy: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+    config: dict[str, Any],
+    message: str,
+) -> None:
+    """Test start_stream fails cleanly without starting ffmpeg or audio proxy."""
+    await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+    entity_id = "camera.front"
+    hass.states.async_set(entity_id, "idle")
+    acc = Camera(
+        hass,
+        run_driver,
+        "Camera",
+        entity_id,
+        2,
+        {CONF_STREAM_SOURCE: "rtsp://cam", CONF_SUPPORT_AUDIO: True, **config},
+    )
+    acc.run()
+    await _async_setup_endpoints(hass, acc)
+    working_ffmpeg = _get_working_mock_ffmpeg()
+    with patch(
+        "homeassistant.components.homekit.type_cameras.HAFFmpeg",
+        return_value=working_ffmpeg,
+    ):
+        await _async_start_streaming(hass, acc)
+
+    assert message in caplog.text
+    working_ffmpeg.open.assert_not_called()
+    mock_audio_proxy.async_start.assert_not_awaited()
 
 
 async def test_camera_with_linked_motion_sensor(
