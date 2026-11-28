@@ -125,6 +125,98 @@ async def test_fail_updating_image(
     assert previous_state == hass.states.get("image.roborock_s7_maxv_upstairs").state
 
 
+@pytest.mark.parametrize("map_present", [1, 0])
+async def test_restore_map_if_missing_skips_when_map_present_or_cleaning(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+    map_present: int,
+) -> None:
+    """Test map recovery skips when a map is present or the vacuum is cleaning."""
+    assert fake_vacuum.v1_properties
+    fake_vacuum.v1_properties.maps.set_current_map.reset_mock()
+    fake_vacuum.v1_properties.home.refresh.reset_mock()
+    coordinator = setup_entry.runtime_data.v1[0]
+    fake_vacuum.v1_properties.status.map_present = map_present
+    fake_vacuum.v1_properties.status.in_cleaning = int(map_present == 0)
+
+    await coordinator._restore_map_if_missing()
+
+    fake_vacuum.v1_properties.maps.set_current_map.assert_not_awaited()
+    fake_vacuum.v1_properties.home.refresh.assert_not_awaited()
+
+
+async def test_restore_map_if_missing_without_known_map(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+) -> None:
+    """Test map recovery skips without a known map or single-map fallback."""
+    assert fake_vacuum.v1_properties
+    fake_vacuum.v1_properties.maps.set_current_map.reset_mock()
+    fake_vacuum.v1_properties.home.refresh.reset_mock()
+    coordinator = setup_entry.runtime_data.v1[0]
+    fake_vacuum.v1_properties.status.map_present = 0
+    coordinator._last_map_flag = None
+    fake_vacuum.v1_properties.maps.current_map = None
+    fake_vacuum.v1_properties.home.home_map_info = {}
+
+    await coordinator._restore_map_if_missing()
+
+    fake_vacuum.v1_properties.maps.set_current_map.assert_not_awaited()
+    fake_vacuum.v1_properties.home.refresh.assert_not_awaited()
+
+
+@patch("homeassistant.components.roborock.coordinator.MAP_SLEEP", 0)
+async def test_restore_map_if_missing_uses_single_map_fallback(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+) -> None:
+    """Test map recovery uses the only known map as a fallback."""
+    assert fake_vacuum.v1_properties
+    fake_vacuum.v1_properties.maps.set_current_map.reset_mock()
+    fake_vacuum.v1_properties.home.refresh.reset_mock()
+    coordinator = setup_entry.runtime_data.v1[0]
+    fake_vacuum.v1_properties.status.map_present = 0
+    coordinator._last_map_flag = None
+    fake_vacuum.v1_properties.maps.current_map = None
+    map_id = next(iter(fake_vacuum.v1_properties.home.home_map_info))
+    fake_vacuum.v1_properties.home.home_map_info = {
+        map_id: fake_vacuum.v1_properties.home.home_map_info[map_id]
+    }
+
+    await coordinator._restore_map_if_missing()
+
+    fake_vacuum.v1_properties.maps.set_current_map.assert_awaited_once_with(map_id)
+    fake_vacuum.v1_properties.home.refresh.assert_awaited_once()
+
+
+@patch("homeassistant.components.roborock.coordinator.MAP_SLEEP", 0)
+@pytest.mark.parametrize(
+    ("trait_name", "method_name"),
+    [("maps", "set_current_map"), ("home", "refresh")],
+)
+async def test_restore_map_if_missing_handles_exception(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+    trait_name: str,
+    method_name: str,
+) -> None:
+    """Test map recovery handles Roborock exceptions."""
+    assert fake_vacuum.v1_properties
+    fake_vacuum.v1_properties.maps.set_current_map.reset_mock()
+    fake_vacuum.v1_properties.home.refresh.reset_mock()
+    coordinator = setup_entry.runtime_data.v1[0]
+    fake_vacuum.v1_properties.status.map_present = 0
+    getattr(getattr(fake_vacuum.v1_properties, trait_name), method_name).side_effect = (
+        RoborockException
+    )
+
+    await coordinator._restore_map_if_missing()
+
+
 async def test_map_status_change(
     hass: HomeAssistant,
     setup_entry: MockConfigEntry,
@@ -170,6 +262,26 @@ async def test_map_status_change(
         body = await resp.read()
         assert body is not None
         assert body != old_body
+
+
+@patch("homeassistant.components.roborock.coordinator.MAP_SLEEP", 0)
+async def test_restore_map_when_device_reports_no_map(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test restoring the last known map when the device reports no map."""
+    assert fake_vacuum.v1_properties
+    fake_vacuum.v1_properties.status.map_present = 0
+    fake_vacuum.v1_properties.status.refresh.side_effect = None
+
+    freezer.tick(V1_LOCAL_NOT_CLEANING_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert fake_vacuum.v1_properties.maps.set_current_map.await_args.args == (1,)
+    fake_vacuum.v1_properties.home.refresh.assert_awaited()
 
 
 @pytest.mark.parametrize(
