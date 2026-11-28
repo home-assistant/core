@@ -35,6 +35,7 @@ if TYPE_CHECKING:
 STATE_INCLUDE = [
     "current_temperature",
     "target_temperature",
+    "current_setpoint",
     "hvac_mode",
     "hvac_action",
 ]
@@ -42,6 +43,7 @@ SENSOR_INCLUDE = ["outside_temperature", "total_energy"]
 DHW_STATE_INCLUDE = [
     "operating_mode",
     "nominal_setpoint",
+    "dhw_current_setpoint",
     "dhw_actual_value_top_temperature",
 ]
 DHW_CONFIG_INCLUDE = ["reduced_setpoint", "nominal_setpoint_max"]
@@ -155,7 +157,7 @@ class BSBLanFastCoordinator(BSBLanCoordinator[BSBLanFastData]):
                     translation_placeholders={"host": host},
                 ) from err
             except BSBLANError:
-                sensor = self.data.sensor if self.data else Sensor()
+                sensor = data.sensor if (data := self.data_or_none) else Sensor()
                 LOGGER.debug("Sensor data not available on device at %s", host)
 
         except BSBLANAuthError as err:
@@ -176,8 +178,8 @@ class BSBLanFastCoordinator(BSBLanCoordinator[BSBLanFastData]):
             dhw = await self.client.hot_water_state(include=DHW_STATE_INCLUDE)
         except BSBLANError:
             # Preserve last known DHW state if available (entity may depend on it)
-            if self.data:
-                dhw = self.data.dhw
+            if data := self.data_or_none:
+                dhw = data.dhw
             LOGGER.debug(
                 "DHW (Domestic Hot Water) state not available on device at %s",
                 self.config_entry.data[CONF_HOST],
@@ -262,7 +264,7 @@ class BSBLanSlowCoordinator(BSBLanCoordinator[BSBLanSlowData]):
         write) to avoid extra serial-bus traffic on every interval, so they
         are carried over from the previous update.
         """
-        previous = self.data or BSBLanSlowData()
+        previous = self.data_or_none or BSBLanSlowData()
         dhw_config: HotWaterConfig | None
         try:
             dhw_config = await self.client.hot_water_config(include=DHW_CONFIG_INCLUDE)

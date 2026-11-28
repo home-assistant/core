@@ -39,11 +39,12 @@ from homeassistant.exceptions import (
     OAuth2TokenRequestReauthError,
 )
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    UpdateFailed,
+    UpdateFailedUnreachable,
+)
 from homeassistant.util.decorator import Registry
-
-if TYPE_CHECKING:
-    from . import OverkizDataConfigEntry
 
 from .const import (
     DOMAIN,
@@ -53,6 +54,9 @@ from .const import (
     UPDATE_INTERVAL,
     UPDATE_INTERVAL_EXECUTION,
 )
+
+if TYPE_CHECKING:
+    from . import OverkizDataConfigEntry
 
 # Events are a discriminated union; each handler narrows to its own subtype.
 EVENT_HANDLERS: Registry[
@@ -97,6 +101,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         self.data = {}
         self.client = client
         self.devices: dict[str, Device] = {d.device_url: d for d in devices}
+        self.setup_device_urls = set(self.devices)
         self.executions: dict[str, set[OverkizDeviceCommand]] = {}
         # A gateway reports its devices' states from cache while it is
         # unreachable, so nothing in the device payload reveals the outage.
@@ -105,6 +110,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         }
         self.areas = self._places_to_area(places) if places else None
         self._default_update_interval = UPDATE_INTERVAL
+        self.reload_requested = False
 
         self.is_stateless = all(
             device.identifier.protocol in (Protocol.RTS, Protocol.INTERNAL)
@@ -137,16 +143,21 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
                 ).total_seconds(),
             ) from exception
         except MaintenanceError as exception:
-            raise UpdateFailed("Server is down for maintenance.") from exception
+            raise UpdateFailedUnreachable(
+                "Server is down for maintenance."
+            ) from exception
         except ServiceUnavailableError as exception:
-            raise UpdateFailed("Server is unavailable.") from exception
+            raise UpdateFailedUnreachable("Server is unavailable.") from exception
         except SomfyServiceError as exception:
             raise UpdateFailed("Somfy service error.") from exception
         except InvalidEventListenerIdError as exception:
             raise UpdateFailed(exception) from exception
-        except (TimeoutError, ClientConnectorError) as exception:
+        except TimeoutError as exception:
             LOGGER.debug("Failed to connect", exc_info=True)
             raise UpdateFailed("Failed to connect.") from exception
+        except ClientConnectorError as exception:
+            LOGGER.debug("Failed to connect", exc_info=True)
+            raise UpdateFailedUnreachable("Failed to connect.") from exception
         except ServerDisconnectedError:
             self.executions = {}
 
@@ -161,11 +172,15 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
 
             return self.devices
 
+        self.reload_requested = False
         for event in events:
             LOGGER.debug(event)
 
             if event_handler := EVENT_HANDLERS.get(event.name):
                 await event_handler(self, event)
+
+        if self.reload_requested:
+            self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
 
         # Restore the default update interval if no executions are pending
         if not self.executions:
@@ -255,14 +270,22 @@ async def on_device_unavailable_disabled(
 
 
 @EVENT_HANDLERS.register(EventName.DEVICE_CREATED)
-@EVENT_HANDLERS.register(EventName.DEVICE_UPDATED)
-async def on_device_created_updated(
+async def on_device_created(
     coordinator: OverkizDataUpdateCoordinator, event: DeviceEvent
 ) -> None:
-    """Handle device unavailable / disabled event."""
-    coordinator.hass.async_create_task(
-        coordinator.hass.config_entries.async_reload(coordinator.config_entry.entry_id)
-    )
+    """Handle device created event."""
+    # A rebooted gateway re-announces all its devices while it still reports
+    # incomplete devices and placeholder labels, so only reload for a new one.
+    if event.device_url not in coordinator.setup_device_urls:
+        coordinator.reload_requested = True
+
+
+@EVENT_HANDLERS.register(EventName.DEVICE_UPDATED)
+async def on_device_updated(
+    coordinator: OverkizDataUpdateCoordinator, event: DeviceEvent
+) -> None:
+    """Handle device updated event."""
+    coordinator.reload_requested = True
 
 
 @EVENT_HANDLERS.register(EventName.DEVICE_STATE_CHANGED)
@@ -289,6 +312,7 @@ async def on_device_removed(
     coordinator: OverkizDataUpdateCoordinator, event: DeviceRemovedEvent
 ) -> None:
     """Handle device removed event."""
+    coordinator.setup_device_urls.discard(event.device_url)
     base_device_url = event.device_url.split("#")[0]
     registry = dr.async_get(coordinator.hass)
 

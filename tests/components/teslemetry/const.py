@@ -130,6 +130,7 @@ METADATA = {
         "123456": {
             "access": True,
             "name": "Energy Site",
+            "paired": True,
         }
     },
 }
@@ -167,6 +168,7 @@ METADATA_LEGACY = {
         "123456": {
             "access": True,
             "name": "Energy Site",
+            "paired": True,
         }
     },
 }
@@ -200,6 +202,7 @@ METADATA_OLD_FIRMWARE = {
         "123456": {
             "access": True,
             "name": "Energy Site",
+            "paired": True,
         }
     },
 }
@@ -223,6 +226,7 @@ METADATA_NOSCOPE = {
         "123456": {
             "access": True,
             "name": "Energy Site",
+            "paired": True,
         }
     },
 }
@@ -243,6 +247,7 @@ METADATA_ENERGY = {
         "123456": {
             "access": True,
             "name": "Energy Site",
+            "paired": True,
         }
     },
 }

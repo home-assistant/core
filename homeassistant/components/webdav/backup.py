@@ -23,8 +23,8 @@ from homeassistant.helpers.json import json_dumps
 from homeassistant.util.async_ import gather_with_limited_concurrency
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads_object
 
-from . import WebDavConfigEntry
 from .const import CONF_BACKUP_PATH, DATA_BACKUP_AGENT_LISTENERS, DOMAIN
+from .helpers import WebDavConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

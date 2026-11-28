@@ -107,6 +107,16 @@
                 "setpointMode": "PermanentOverride"
               },
               "name": "Spare Room"
+            },
+            {
+              "zoneId": "3450734",
+              "temperatureStatus": { "isAvailable": false },
+              "activeFaults": [],
+              "setpointStatus": {
+                "targetHeatTemperature": 10.0,
+                "setpointMode": "FollowSchedule"
+              },
+              "name": "Garage"
             }
           ],
           "dhw": {

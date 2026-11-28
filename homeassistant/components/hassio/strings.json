@@ -18,6 +18,9 @@
       "disk_free": {
         "name": "Disk free"
       },
+      "disk_life_time": {
+        "name": "Disk lifetime"
+      },
       "disk_total": {
         "name": "Disk total"
       },
@@ -49,6 +52,9 @@
     },
     "supervisor_not_connected": {
       "message": "Not connected with the supervisor / system too busy"
+    },
+    "supervisor_update_error": {
+      "message": "Error updating Home Assistant Supervisor: {error}"
     },
     "supervisor_update_pending": {
       "message": "Supervisor was out-of-date during onboarding. Update triggered, will retry when complete"
@@ -138,6 +144,10 @@
     "issue_addon_pwned": {
       "description": "App {addon} uses secrets/passwords in its configuration which are detected as not secure. See [pwned passwords and secrets]({more_info_pwned}) for more information on this issue.",
       "title": "Insecure secrets detected in app configuration"
+    },
+    "issue_core_deprecated_tcp_api_request": {
+      "description": "Something in Home Assistant is calling the Supervisor API with the `{supervisor_token}` token, for example a request to `{reference}`.\n\nThis usually comes from a [Command line]({command_line_url}) or [Shell command]({shell_command_url}) configuration, or from a custom integration. Select Learn more to find out how to find and update it.",
+      "title": "Deprecated use of the Supervisor API token"
     },
     "issue_mount_mount_failed": {
       "fix_flow": {
@@ -230,17 +240,6 @@
         }
       },
       "title": "Reboot required"
-    },
-    "legacy_homeassistant_folder": {
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "description": "An automation or script called the `hassio.backup_partial` or `hassio.restore_partial` action with `\"homeassistant\"` listed in `folders`. This is a legacy alias for the `homeassistant: true` option and will stop being accepted in a future release.\n\nUpdate the affected automations and scripts to set `homeassistant: true` and remove `\"homeassistant\"` from the `folders` list. When this is done, select **Submit** to mark this issue as resolved.",
-            "title": "Legacy \"homeassistant\" folder used in partial backup/restore"
-          }
-        }
-      },
-      "title": "Legacy \"homeassistant\" folder used in partial backup/restore"
     },
     "unhealthy": {
       "description": "System is currently unhealthy due to {reason}. For troubleshooting information, select Learn more.",
@@ -410,6 +409,10 @@
         "addon": {
           "description": "The add-on to write to.",
           "name": "[%key:component::hassio::services::addon_start::fields::addon::name%]"
+        },
+        "input": {
+          "description": "[%key:component::hassio::services::app_stdin::fields::input::description%]",
+          "name": "[%key:component::hassio::services::app_stdin::fields::input::name%]"
         }
       },
       "name": "Write data to add-on stdin"

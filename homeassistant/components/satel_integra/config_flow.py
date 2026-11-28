@@ -14,7 +14,6 @@ from satel_integra.exceptions import (
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -160,7 +159,7 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: SatelConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
         return {
@@ -238,7 +237,12 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
             if not errors:
-                return self.async_update_reload_and_abort(
+                update_and_abort = (
+                    self.async_update_and_abort
+                    if reconfigure_entry.update_listeners
+                    else self.async_update_reload_and_abort
+                )
+                return update_and_abort(
                     reconfigure_entry,
                     data_updates={
                         CONF_HOST: normalized_input[CONF_HOST],

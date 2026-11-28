@@ -10,7 +10,6 @@ from aiomealie import (
     MealplanEntryType,
     RegisteredParser,
 )
-from awesomeversion import AwesomeVersion
 import probatio
 
 from homeassistant.components.todo import DOMAIN as TODO_DOMAIN
@@ -184,27 +183,6 @@ SERVICE_PARSE_INGREDIENT_SCHEMA = probatio.Schema(
 )
 
 
-def _validate_mealplan_type(version: AwesomeVersion, entry_type: str) -> None:
-    """Validate mealplan entry type, if prior to 3.7.0."""
-
-    if (
-        version.valid
-        and version < AwesomeVersion("v3.7.0")
-        and entry_type
-        not in {
-            MealplanEntryType.BREAKFAST.value,
-            MealplanEntryType.DINNER.value,
-            MealplanEntryType.LUNCH.value,
-            MealplanEntryType.SIDE.value,
-        }
-    ):
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="invalid_mealplan_entry_type",
-            translation_placeholders={"mealplan_type": entry_type},
-        )
-
-
 async def _async_get_mealplan(call: ServiceCall) -> ServiceResponse:
     """Get the mealplan for a specific range."""
     entry: MealieConfigEntry = service.async_get_config_entry(
@@ -308,8 +286,6 @@ async def _async_set_random_mealplan(call: ServiceCall) -> ServiceResponse:
     entry_type = MealplanEntryType(call.data[MealieServiceArgument.ENTRY_TYPE])
     client = entry.runtime_data.client
 
-    _validate_mealplan_type(entry.runtime_data.version, entry_type.value)
-
     try:
         mealplan = await client.random_mealplan(mealplan_date, entry_type)
     except MealieConnectionError as err:
@@ -330,8 +306,6 @@ async def _async_set_mealplan(call: ServiceCall) -> ServiceResponse:
     mealplan_date = call.data[MealieServiceArgument.DATE]
     entry_type = MealplanEntryType(call.data[MealieServiceArgument.ENTRY_TYPE])
     client = entry.runtime_data.client
-
-    _validate_mealplan_type(entry.runtime_data.version, entry_type.value)
 
     try:
         mealplan = await client.set_mealplan(
@@ -387,8 +361,6 @@ async def _async_update_mealplan(call: ServiceCall) -> ServiceResponse:
     entry_type = MealplanEntryType(call.data[MealieServiceArgument.ENTRY_TYPE])
     client = entry.runtime_data.client
 
-    _validate_mealplan_type(entry.runtime_data.version, entry_type.value)
-
     try:
         mealplan = await client.update_mealplan(
             mealplan_id,
@@ -430,12 +402,6 @@ async def _async_parse_ingredient(call: ServiceCall) -> ServiceResponse:
             translation_domain=DOMAIN,
             translation_key="connection_error",
         ) from err
-    if not result or not result.confidence:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="could_not_parse_ingredient",
-        )
-
     result_dict = asdict(result)
     # Add flag to indicate whether the ingredient has acceptable confidence to
     # be added as an ingredient in the to-do list add_item method.

@@ -14,6 +14,7 @@ from homeassistant.components.intent import llm as intent_llm
 from homeassistant.components.intent.timers import async_register_timer_handler
 from homeassistant.components.media_player import MediaPlayerDeviceClass
 from homeassistant.components.switch import SwitchDeviceClass
+from homeassistant.components.timer_list import DOMAIN as TIMER_LIST_DOMAIN
 from homeassistant.components.valve import ValveDeviceClass
 from homeassistant.const import SERVICE_TURN_ON
 from homeassistant.core import Context, HomeAssistant, callback
@@ -28,6 +29,7 @@ LLM_AGENT_ID = "conversation.test_llm_agent"
 async def setup_integrations(hass: HomeAssistant) -> None:
     """Set up the integrations and expose a cover."""
     assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, TIMER_LIST_DOMAIN, {})
     assert await async_setup_component(hass, "intent", {})
     assert await async_setup_component(hass, "llm", {})
     hass.states.async_set(COVER_ENTITY_ID, "open", {"friendly_name": "Test Cover"})

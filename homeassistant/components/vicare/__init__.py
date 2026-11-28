@@ -58,7 +58,7 @@ from .const import (
 from .coordinator import ViCareCoordinator
 from .services import async_setup_services
 from .types import ViCareConfigEntry, ViCareData, ViCareDevice
-from .utils import get_device_identifier, get_device_serial, get_rooms
+from .utils import get_device_identifier, get_device_name, get_device_serial, get_rooms
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -121,6 +121,7 @@ async def async_migrate_entry(
             hass,
             DOMAIN,
             "update_redirect_uri",
+            config_entry_id=config_entry.entry_id,
             is_fixable=False,
             severity=ir.IssueSeverity.WARNING,
             translation_key="update_redirect_uri",
@@ -340,7 +341,12 @@ def _setup_vicare_api(
     for device_config in _reachable_devices(device_config_list, probed):
         api = device_config.asAutoDetectDevice()
         devices.append(
-            ViCareDevice(config=device_config, api=api, serial=get_device_serial(api))
+            ViCareDevice(
+                config=device_config,
+                api=api,
+                serial=get_device_serial(api),
+                name=get_device_name(api),
+            )
         )
     if device_config_list and not devices:
         # Offline devices get no entities, and nothing would set them up later.

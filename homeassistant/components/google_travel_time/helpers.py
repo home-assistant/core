@@ -21,6 +21,7 @@ import probatio
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.issue_registry import (
@@ -36,19 +37,24 @@ from .const import (
     TRAFFIC_MODELS_TO_API_ENUM,
     TRANSIT_PREFS_TO_API_ENUM,
     TRANSPORT_TYPES_TO_API_ENUM,
+    TRAVEL_PREFS_TO_API_ENUM,
     UNITS_TO_API_ENUM,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 CLIENT_TIMEOUT = 30
+REFERRER_BLOCKED_REASON = "API_KEY_HTTP_REFERRER_BLOCKED"
 
 
-def get_client(hass: HomeAssistant, api_key: str) -> GoogleMapsRoutingApi:
+def get_client(
+    hass: HomeAssistant, api_key: str, referrer: str | None = None
+) -> GoogleMapsRoutingApi:
     """Return a Google Maps Routes API client."""
     return GoogleMapsRoutingApi(
         session=async_get_clientsession(hass),
         api_key=api_key,
+        referrer=referrer,
         timeout=CLIENT_TIMEOUT,
     )
 
@@ -56,10 +62,10 @@ def get_client(hass: HomeAssistant, api_key: str) -> GoogleMapsRoutingApi:
 def is_routes_api_disabled(err: GoogleMapsRoutingApiAuthError) -> bool:
     """Return whether the Routes API can't be used with this API key.
 
-    This is a permission denied error (HTTP 403), such as the API not being enabled
-    or being excluded by the API key restrictions.
+    Any permission denied error (HTTP 403) other than a blocked HTTP referrer, such as
+    the API not being enabled or being excluded by the API key restrictions.
     """
-    return err.status == "PERMISSION_DENIED"
+    return err.status == "PERMISSION_DENIED" and err.reason != REFERRER_BLOCKED_REASON
 
 
 def convert_time(time_str: str) -> dt.datetime:
@@ -116,6 +122,7 @@ async def validate_config_entry(
     api_key: str,
     origin: str,
     destination: str,
+    referrer: str | None = None,
 ) -> None:
     """Validate the config entry data."""
     origin_waypoint = convert_to_waypoint(hass, origin)
@@ -123,7 +130,7 @@ async def validate_config_entry(
     if origin_waypoint is None or destination_waypoint is None:
         raise UnknownException("Unable to resolve the origin or destination")
 
-    client = get_client(hass, api_key)
+    client = get_client(hass, api_key, referrer)
     try:
         await client.async_compute_routes(
             origin=origin_waypoint,
@@ -135,6 +142,8 @@ async def validate_config_entry(
         if is_routes_api_disabled(auth_error):
             _LOGGER.error("Routes API is disabled: %s", auth_error)
             raise PermissionDeniedException from auth_error
+        if auth_error.reason == REFERRER_BLOCKED_REASON:
+            raise InvalidReferrerException from auth_error
         _LOGGER.error("Request denied: %s", auth_error)
         raise InvalidApiKeyException from auth_error
     except GoogleMapsRoutingApiConnectionTimeoutError as timeout_error:
@@ -147,6 +156,10 @@ async def validate_config_entry(
 
 class InvalidApiKeyException(Exception):
     """Invalid API Key Error."""
+
+
+class InvalidReferrerException(Exception):
+    """HTTP referrer not allowed Error."""
 
 
 class UnknownException(Exception):
@@ -198,6 +211,7 @@ async def async_compute_routes(
     field_mask: str = (
         "routes.duration,routes.staticDuration,routes.distanceMeters,routes.localizedValues"
     ),
+    travel_routing_preference: str | None = None,
 ) -> ComputeRoutesResponse | None:
     """Compute routes using Google Routes API."""
     origin_waypoint = convert_to_waypoint(hass, origin)
@@ -207,9 +221,25 @@ async def async_compute_routes(
         return None
 
     routing_preference = None
+    routing_traffic_model = (
+        TRAFFIC_MODELS_TO_API_ENUM[traffic_model] if traffic_model else None
+    )
     avoid_tolls = avoid_highways = avoid_ferries = avoid_indoor = False
+
     if travel_mode == TravelMode.DRIVE:
         routing_preference = RoutingPreference.TRAFFIC_AWARE_OPTIMAL
+        if travel_routing_preference is not None:
+            routing_preference = TRAVEL_PREFS_TO_API_ENUM[travel_routing_preference]
+
+        if (
+            routing_preference != RoutingPreference.TRAFFIC_AWARE_OPTIMAL
+            and routing_traffic_model is not None
+        ):
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="traffic_model_not_allowed",
+            )
+
         avoid_tolls = avoid == "tolls"
         avoid_ferries = avoid == "ferries"
         avoid_highways = avoid == "highways"
@@ -238,9 +268,7 @@ async def async_compute_routes(
         avoid_highways=avoid_highways,
         avoid_ferries=avoid_ferries,
         avoid_indoor=avoid_indoor,
-        traffic_model=TRAFFIC_MODELS_TO_API_ENUM[traffic_model]
-        if traffic_model
-        else None,
+        traffic_model=routing_traffic_model,
         transit_routing_preference=transit_routing_preference_enum,
         allowed_travel_modes=allowed_travel_modes,
         field_mask=field_mask,

@@ -8,12 +8,10 @@ from aiohasupervisor.models import Job
 from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
 
 from homeassistant.components.update import (
-    ATTR_INSTALLED_VERSION,
-    ATTR_LATEST_VERSION,
-    ATTR_SKIPPED_VERSION,
     UpdateEntity,
     UpdateEntityDescription,
     UpdateEntityFeature,
+    UpdateEntityStateAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import (
@@ -31,6 +29,7 @@ from .const import (
     ADDONS_COORDINATOR,
     ATTR_VERSION_LATEST,
     DATA_AUTO_UPDATE,
+    DOMAIN,
     JOBS_COORDINATOR,
     MAIN_COORDINATOR,
 )
@@ -379,7 +378,9 @@ class SupervisorSupervisorUpdateEntity(HassioSupervisorEntity, UpdateEntity):
             self._attr_in_progress = False
             self.async_write_ha_state()
             raise HomeAssistantError(
-                f"Error updating Home Assistant Supervisor: {err}"
+                translation_domain=DOMAIN,
+                translation_key="supervisor_update_error",
+                translation_placeholders={"error": str(err)},
             ) from err
 
     @callback
@@ -526,13 +527,17 @@ class SupervisorCoreUpdateEntity(HassioCoreEntity, UpdateEntity):
 
         auto_update = self.hass.data[DATA_AUTO_UPDATE]
         if (
-            skipped_version := new_state.attributes.get(ATTR_SKIPPED_VERSION)
+            skipped_version := new_state.attributes.get(
+                UpdateEntityStateAttribute.SKIPPED_VERSION
+            )
         ) is not None:
             auto_update.async_skip_version(skipped_version)
             return
 
         if (old_state := event.data["old_state"]) is None or (
-            previously_skipped := old_state.attributes.get(ATTR_SKIPPED_VERSION)
+            previously_skipped := old_state.attributes.get(
+                UpdateEntityStateAttribute.SKIPPED_VERSION
+            )
         ) is None:
             return
 
@@ -540,7 +545,9 @@ class SupervisorCoreUpdateEntity(HassioCoreEntity, UpdateEntity):
         # the skipped one got installed. Only a skip cleared while that
         # version is still the pending update is the user changing their mind.
         if (
-            new_state.attributes.get(ATTR_LATEST_VERSION) == previously_skipped
-            and new_state.attributes.get(ATTR_INSTALLED_VERSION) != previously_skipped
+            new_state.attributes.get(UpdateEntityStateAttribute.LATEST_VERSION)
+            == previously_skipped
+            and new_state.attributes.get(UpdateEntityStateAttribute.INSTALLED_VERSION)
+            != previously_skipped
         ):
             auto_update.async_unskip_version(previously_skipped)

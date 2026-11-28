@@ -13,14 +13,13 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_PLAYLIST,
     ATTR_MEDIA_VOLUME_LEVEL,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
-    SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
-    SERVICE_MEDIA_PREVIOUS_TRACK,
-    SERVICE_VOLUME_SET,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
     MediaPlayerState,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -85,8 +84,11 @@ async def test_media_player_services(
     ) as call:
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_VOLUME_SET,
-            {ATTR_ENTITY_ID: entity_id, ATTR_MEDIA_VOLUME_LEVEL: 0.5},
+            MediaPlayerService.VOLUME_SET,
+            {
+                TargetKey.ENTITY_ID: entity_id,
+                MediaPlayerServiceArgument.VOLUME_LEVEL: 0.5,
+            },
             blocking=True,
         )
         state = hass.states.get(entity_id)
@@ -99,8 +101,8 @@ async def test_media_player_services(
     ) as call:
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_MEDIA_PAUSE,
-            {ATTR_ENTITY_ID: entity_id},
+            MediaPlayerService.MEDIA_PAUSE,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
         state = hass.states.get(entity_id)
@@ -114,8 +116,8 @@ async def test_media_player_services(
     ) as call:
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_MEDIA_PLAY,
-            {ATTR_ENTITY_ID: entity_id},
+            MediaPlayerService.MEDIA_PLAY,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
         state = hass.states.get(entity_id)
@@ -128,8 +130,8 @@ async def test_media_player_services(
     ) as call:
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_MEDIA_NEXT_TRACK,
-            {ATTR_ENTITY_ID: entity_id},
+            MediaPlayerService.MEDIA_NEXT_TRACK,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
         state = hass.states.get(entity_id)
@@ -141,8 +143,8 @@ async def test_media_player_services(
     ) as call:
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_MEDIA_PREVIOUS_TRACK,
-            {ATTR_ENTITY_ID: entity_id},
+            MediaPlayerService.MEDIA_PREVIOUS_TRACK,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
         state = hass.states.get(entity_id)
@@ -165,10 +167,10 @@ async def test_media_player_command_errors(hass: HomeAssistant, response: dict) 
     ):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_VOLUME_SET,
+            MediaPlayerService.VOLUME_SET,
             {
-                ATTR_ENTITY_ID: "media_player.test_media_player",
-                ATTR_MEDIA_VOLUME_LEVEL: 0.5,
+                TargetKey.ENTITY_ID: "media_player.test_media_player",
+                MediaPlayerServiceArgument.VOLUME_LEVEL: 0.5,
             },
             blocking=True,
         )
@@ -189,10 +191,10 @@ async def test_media_player_command_exception(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_VOLUME_SET,
+            MediaPlayerService.VOLUME_SET,
             {
-                ATTR_ENTITY_ID: "media_player.test_media_player",
-                ATTR_MEDIA_VOLUME_LEVEL: 0.5,
+                TargetKey.ENTITY_ID: "media_player.test_media_player",
+                MediaPlayerServiceArgument.VOLUME_LEVEL: 0.5,
             },
             blocking=True,
         )
@@ -426,8 +428,8 @@ async def test_streaming_play_while_display_off(
     ) as call:
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_MEDIA_PLAY,
-            {ATTR_ENTITY_ID: entity_id},
+            MediaPlayerService.MEDIA_PLAY,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
         call.assert_called_once()

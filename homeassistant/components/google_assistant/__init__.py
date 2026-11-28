@@ -2,7 +2,7 @@
 
 import probatio
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_API_KEY, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
@@ -28,7 +28,7 @@ from .const import (
     DOMAIN,
     SOURCE_CLOUD,
 )
-from .http import GoogleAssistantView, GoogleConfig
+from .http import GoogleAssistantView, GoogleConfig, GoogleConfigEntry
 from .services import async_setup_services
 
 CONF_ALLOW_UNLOCK = "allow_unlock"
@@ -97,8 +97,6 @@ CONFIG_SCHEMA = probatio.Schema(
     {probatio.Optional(DOMAIN): GOOGLE_ASSISTANT_SCHEMA}, extra=probatio.ALLOW_EXTRA
 )
 
-type GoogleConfigEntry = ConfigEntry[GoogleConfig]
-
 
 async def async_setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
     """Activate Google Actions component."""
@@ -141,7 +139,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoogleConfigEntry) -> No
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, config[CONF_PROJECT_ID])},
         manufacturer="Google",
-        model="Google Assistant",
+        model="Google Home",
         name=config[CONF_PROJECT_ID],
         entry_type=dr.DeviceEntryType.SERVICE,
     )

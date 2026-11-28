@@ -18,6 +18,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.service import async_get_config_entry
 
 from .const import (
+    CONF_REFERRER,
     DOMAIN,
     TRAVEL_MODES_TO_API_ENUM,
     GoogleTravelTimeService,
@@ -110,7 +111,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
             service.data[GoogleTravelTimeServiceArgument.MODE]
         ]
 
-        client = get_client(hass, api_key)
+        client = get_client(hass, api_key, entry.data.get(CONF_REFERRER))
 
         try:
             response = await async_compute_routes(
@@ -126,7 +127,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
                     GoogleTravelTimeServiceArgument.TRAFFIC_MODEL
                 ),
                 departure_time=service.data.get(
-                    GoogleTravelTimeServiceArgument.DEPARTURE_TIME
+                    GoogleTravelTimeServiceArgument.DEPARTURE_TIME,
+                ),
+                travel_routing_preference=service.data.get(
+                    GoogleTravelTimeServiceArgument.TRAVEL_ROUTING_PREFERENCE,
                 ),
             )
         except Exception as ex:  # noqa: BLE001
@@ -142,7 +146,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         )
         api_key = entry.data[CONF_API_KEY]
 
-        client = get_client(hass, api_key)
+        client = get_client(hass, api_key, entry.data.get(CONF_REFERRER))
 
         try:
             response = await async_compute_routes(

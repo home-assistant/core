@@ -11,7 +11,7 @@ from .coordinator import (
     IslamicPrayerTimesConfigEntry,
 )
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.CALENDAR, Platform.SENSOR]
 
 
 _LOGGER = logging.getLogger(__name__)

@@ -9,7 +9,6 @@ from pymta import LINE_TO_FEED, BusFeed, MTAFeedError, SubwayFeed
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
@@ -37,6 +36,7 @@ from .const import (
     SUBENTRY_TYPE_BUS,
     SUBENTRY_TYPE_SUBWAY,
 )
+from .coordinator import MTAConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,7 +51,7 @@ class MTAConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: MTAConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this handler."""
         return {

@@ -1,18 +1,18 @@
 {
   "conditions": {
     "is_closed": {
-      "condition": "mdi:window-closed"
+      "condition": "mdi:window-closed-variant"
     },
     "is_open": {
-      "condition": "mdi:window-open"
+      "condition": "mdi:window-open-variant"
     }
   },
   "triggers": {
     "closed": {
-      "trigger": "mdi:window-closed"
+      "trigger": "mdi:window-closed-variant"
     },
     "opened": {
-      "trigger": "mdi:window-open"
+      "trigger": "mdi:window-open-variant"
     }
   }
 }

@@ -2,6 +2,7 @@
 
 from datetime import datetime
 import logging
+from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -21,6 +22,7 @@ from homeassistant.components.config import entity_registry
 from homeassistant.const import ATTR_ICON, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
+    area_registry as ar,
     device_registry as dr,
     entity_registry as er,
     label_registry as lr,
@@ -32,6 +34,22 @@ from homeassistant.helpers.entity_registry import (
     RegistryEntryHider,
 )
 from homeassistant.util.dt import utcnow
+
+
+@pytest.fixture
+def areas_and_labels(area_registry: ar.AreaRegistry) -> None:
+    """Create the areas that the tests assign to entries."""
+    for name in (
+        "12345a",
+        "12345b",
+        "attic",
+        "bedroom",
+        "garage",
+        "garden",
+        "kitchen",
+        "mock_area_id",
+    ):
+        area_registry.async_create(name)
 
 
 @pytest.fixture
@@ -415,6 +433,106 @@ async def test_list_entities_for_display(
     }
 
 
+@pytest.mark.parametrize(
+    ("filter_data", "expected_entity_ids"),
+    [
+        (
+            {},
+            ["light.kitchen", "light.bedroom", "switch.fan", "sensor.power"],
+        ),
+        (
+            {"entity_ids": []},
+            ["light.kitchen", "light.bedroom", "switch.fan", "sensor.power"],
+        ),
+        (
+            {"entity_ids": ["light.kitchen", "sensor.power", "light.unknown"]},
+            ["light.kitchen", "sensor.power"],
+        ),
+        (
+            {"include": {"domains": ["light"]}},
+            ["light.kitchen", "light.bedroom"],
+        ),
+        (
+            {"include": {"domains": ["light"], "entities": ["switch.fan"]}},
+            ["light.kitchen", "light.bedroom", "switch.fan"],
+        ),
+        (
+            {"include": {"entity_globs": ["*.k*"]}},
+            ["light.kitchen"],
+        ),
+        (
+            {"exclude": {"domains": ["light"]}},
+            ["switch.fan", "sensor.power"],
+        ),
+        (
+            {
+                "include": {"domains": ["light"]},
+                "exclude": {"entities": ["light.bedroom"]},
+            },
+            ["light.kitchen"],
+        ),
+        (
+            {
+                "entity_ids": ["light.kitchen", "switch.fan"],
+                "include": {"domains": ["light"]},
+            },
+            ["light.kitchen"],
+        ),
+        (
+            {"entity_ids": ["light.disabled"]},
+            [],
+        ),
+    ],
+)
+async def test_list_entities_for_display_with_filter(
+    hass: HomeAssistant,
+    client: MockHAClientWebSocket,
+    filter_data: dict[str, Any],
+    expected_entity_ids: list[str],
+) -> None:
+    """Test list entries limited to entity ids or to an entity filter."""
+    mock_registry(
+        hass,
+        {
+            "light.kitchen": RegistryEntryWithDefaults(
+                entity_id="light.kitchen",
+                platform="test_platform",
+                unique_id="1234",
+            ),
+            "light.bedroom": RegistryEntryWithDefaults(
+                entity_id="light.bedroom",
+                platform="test_platform",
+                unique_id="2345",
+            ),
+            "light.disabled": RegistryEntryWithDefaults(
+                disabled_by=RegistryEntryDisabler.USER,
+                entity_id="light.disabled",
+                platform="test_platform",
+                unique_id="3456",
+            ),
+            "switch.fan": RegistryEntryWithDefaults(
+                entity_id="switch.fan",
+                platform="test_platform",
+                unique_id="4567",
+            ),
+            "sensor.power": RegistryEntryWithDefaults(
+                entity_id="sensor.power",
+                platform="test_platform",
+                unique_id="5678",
+            ),
+        },
+    )
+
+    await client.send_json_auto_id(
+        {"type": "config/entity_registry/list_for_display", **filter_data}
+    )
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"]["entity_categories"] == {"0": "config", "1": "diagnostic"}
+    assert [entry["ei"] for entry in msg["result"]["entities"]] == expected_entity_ids
+
+
 async def test_get_entity(hass: HomeAssistant, client: MockHAClientWebSocket) -> None:
     """Test get entry."""
     name_created_at = datetime(1994, 2, 14, 12, 0, 0)
@@ -610,6 +728,7 @@ async def test_get_entities(hass: HomeAssistant, client: MockHAClientWebSocket) 
     }
 
 
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_update_entity(
     hass: HomeAssistant,
     client: MockHAClientWebSocket,
@@ -652,7 +771,7 @@ async def test_update_entity(
             "type": "config/entity_registry/update",
             "entity_id": "test_domain.world",
             "aliases": ["alias_1", "alias_2"],
-            "area_id": "mock-area-id",
+            "area_id": "mock_area_id",
             "categories": {"scope1": "id", "scope2": "id"},
             "device_class": "custom_device_class",
             "hidden_by": "user",  # We exchange strings over the WS API, not enums
@@ -667,7 +786,7 @@ async def test_update_entity(
     assert msg["result"] == {
         "entity_entry": {
             "aliases": ["alias_1", "alias_2"],
-            "area_id": "mock-area-id",
+            "area_id": "mock_area_id",
             "capabilities": None,
             "categories": {"scope1": "id", "scope2": "id"},
             "created_at": created.timestamp(),
@@ -751,7 +870,7 @@ async def test_update_entity(
     assert msg["result"] == {
         "entity_entry": {
             "aliases": ["alias_1", "alias_2"],
-            "area_id": "mock-area-id",
+            "area_id": "mock_area_id",
             "capabilities": None,
             "categories": {"scope1": "id", "scope2": "id"},
             "config_entry_id": None,
@@ -798,7 +917,7 @@ async def test_update_entity(
     assert msg["result"] == {
         "entity_entry": {
             "aliases": ["alias_1", "alias_2"],
-            "area_id": "mock-area-id",
+            "area_id": "mock_area_id",
             "capabilities": None,
             "categories": {"scope1": "id", "scope2": "id"},
             "config_entry_id": None,
@@ -844,7 +963,7 @@ async def test_update_entity(
     assert msg["result"] == {
         "entity_entry": {
             "aliases": ["alias_1", "alias_2"],
-            "area_id": "mock-area-id",
+            "area_id": "mock_area_id",
             "capabilities": None,
             "categories": {"scope1": "id", "scope2": "id", "scope3": "id"},
             "config_entry_id": None,
@@ -890,7 +1009,7 @@ async def test_update_entity(
     assert msg["result"] == {
         "entity_entry": {
             "aliases": ["alias_1", "alias_2"],
-            "area_id": "mock-area-id",
+            "area_id": "mock_area_id",
             "capabilities": None,
             "categories": {"scope1": "id", "scope2": "id", "scope3": "other_id"},
             "config_entry_id": None,
@@ -936,7 +1055,7 @@ async def test_update_entity(
     assert msg["result"] == {
         "entity_entry": {
             "aliases": ["alias_1", "alias_2"],
-            "area_id": "mock-area-id",
+            "area_id": "mock_area_id",
             "capabilities": None,
             "categories": {"scope1": "id", "scope3": "other_id"},
             "config_entry_id": None,
@@ -979,7 +1098,7 @@ async def test_update_entity(
     assert msg["result"] == {
         "entity_entry": {
             "aliases": [None, "alias_1", "alias_2", "alias_3"],
-            "area_id": "mock-area-id",
+            "area_id": "mock_area_id",
             "capabilities": None,
             "categories": {"scope1": "id", "scope3": "other_id"},
             "config_entry_id": None,
@@ -1008,6 +1127,7 @@ async def test_update_entity(
     }
 
 
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_update_entity_own_area_without_own_name(
     hass: HomeAssistant,
     client: MockHAClientWebSocket,
@@ -1696,6 +1816,113 @@ async def test_get_automatic_entity_ids(
     }
 
 
+@pytest.mark.parametrize(
+    ("stored", "overrides", "expected_entity_id"),
+    [
+        pytest.param({}, {}, "sensor.living_room_lamp_power", id="no_overrides"),
+        pytest.param(
+            {"name": "Stored", "area_id": "kitchen"},
+            {},
+            "sensor.kitchen_stored",
+            id="stored_without_overrides",
+        ),
+        pytest.param(
+            {},
+            {"sensor.lamp": {"name": "Energy"}},
+            "sensor.living_room_lamp_energy",
+            id="name",
+        ),
+        pytest.param(
+            {"name": "Stored"},
+            {"sensor.lamp": {"name": None}},
+            "sensor.living_room_lamp_power",
+            id="name_removed",
+        ),
+        pytest.param(
+            {},
+            {"sensor.lamp": {"area_id": "kitchen"}},
+            "sensor.kitchen_power",
+            id="area",
+        ),
+        pytest.param(
+            {"area_id": "kitchen"},
+            {"sensor.lamp": {"area_id": None}},
+            "sensor.living_room_lamp_power",
+            id="area_removed",
+        ),
+        pytest.param(
+            {},
+            {"sensor.lamp": {"area_id": "kitchen", "name": "Energy"}},
+            "sensor.kitchen_energy",
+            id="name_and_area",
+        ),
+        pytest.param(
+            {"name": "Stored", "area_id": "kitchen"},
+            {"sensor.lamp": {"area_id": None, "name": None}},
+            "sensor.living_room_lamp_power",
+            id="name_and_area_removed",
+        ),
+        pytest.param(
+            {},
+            {"sensor.other": {"name": "Energy"}},
+            "sensor.living_room_lamp_power",
+            id="other_entity",
+        ),
+    ],
+)
+async def test_get_automatic_entity_ids_overrides(
+    hass: HomeAssistant,
+    client: MockHAClientWebSocket,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    stored: dict[str, str],
+    overrides: dict[str, dict[str, str | None]],
+    expected_entity_id: str,
+) -> None:
+    """Test get_automatic_entity_ids uses unsaved name and area changes."""
+    living_room = area_registry.async_create("Living room")
+    area_registry.async_create("Kitchen")
+    config_entry = MockConfigEntry(domain="test_platform")
+    config_entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test_platform", "lamp")},
+        name="Lamp",
+    )
+    device_registry.async_update_device(device.id, area_id=living_room.id)
+    entry = entity_registry.async_get_or_create(
+        "sensor",
+        "test_platform",
+        "power",
+        config_entry=config_entry,
+        device_id=device.id,
+        has_entity_name=True,
+        object_id_base="Power",
+        original_name="Power",
+    )
+    entity_registry.async_update_entity(
+        entry.entity_id, new_entity_id="sensor.lamp", **stored
+    )
+
+    await client.send_json_auto_id(
+        {
+            "type": "config/entity_registry/get_automatic_entity_ids",
+            "entity_ids": ["sensor.lamp"],
+            "overrides": overrides,
+        }
+    )
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == {"sensor.lamp": expected_entity_id}
+    # overrides are not stored
+    entry = entity_registry.async_get("sensor.lamp")
+    assert entry is not None
+    assert entry.name == stored.get("name")
+    assert entry.area_id == stored.get("area_id")
+
+
 async def test_get_settings(client: MockHAClientWebSocket) -> None:
     """Test get settings."""
     await client.send_json_auto_id({"type": "config/entity_registry/settings/get"})
@@ -1799,3 +2026,25 @@ async def test_update_settings_requires_admin(
 
     assert msg["success"]
     assert msg["result"] == {"entity_id_parts": None}
+
+
+async def test_update_entity_unknown_area(
+    client: MockHAClientWebSocket,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test updating an entity to an unknown area returns an error."""
+    entry = entity_registry.async_get_or_create("light", "hue", "5678")
+
+    await client.send_json_auto_id(
+        {
+            "type": "config/entity_registry/update",
+            "entity_id": entry.entity_id,
+            "area_id": "unknown",
+        }
+    )
+    msg = await client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "invalid_info"
+    assert msg["error"]["message"] == "Area 'unknown' not found."
+    assert entity_registry.async_get(entry.entity_id) == entry

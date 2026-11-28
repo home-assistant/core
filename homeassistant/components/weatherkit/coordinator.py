@@ -5,11 +5,16 @@ import time
 from typing import Any, override
 
 from apple_weatherkit import DataSetType
-from apple_weatherkit.client import WeatherKitApiClient, WeatherKitApiClientError
+from apple_weatherkit.client import (
+    WeatherKitApiClient,
+    WeatherKitApiClientAuthenticationError,
+    WeatherKitApiClientError,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -81,6 +86,11 @@ class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 hourly_start=dt_now,
                 hourly_end=dt_now + HOURLY_FORECAST_DURATION,
             )
+        except WeatherKitApiClientAuthenticationError as exception:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="authentication_error",
+            ) from exception
         except WeatherKitApiClientError as exception:
             if self.data is None or (
                 self.last_updated_at is not None

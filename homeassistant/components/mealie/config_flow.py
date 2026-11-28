@@ -52,7 +52,10 @@ DISCOVERY_SCHEMA = probatio.Schema(
     }
 )
 
-EXAMPLE_URL = "http://192.168.1.123:1234"
+CONNECTION_PLACEHOLDERS = {
+    "example_url": "http://192.168.1.123:1234",
+    "min_version": str(MIN_REQUIRED_MEALIE_VERSION),
+}
 
 
 class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -125,7 +128,7 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=USER_SCHEMA,
             errors=errors,
-            description_placeholders={"example_url": EXAMPLE_URL},
+            description_placeholders=CONNECTION_PLACEHOLDERS,
         )
 
     async def async_step_reauth(
@@ -156,7 +159,7 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=REAUTH_SCHEMA,
             errors=errors,
-            description_placeholders={"example_url": EXAMPLE_URL},
+            description_placeholders=CONNECTION_PLACEHOLDERS,
         )
 
     async def async_step_reconfigure(
@@ -185,7 +188,7 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reconfigure",
             data_schema=USER_SCHEMA,
             errors=errors,
-            description_placeholders={"example_url": EXAMPLE_URL},
+            description_placeholders=CONNECTION_PLACEHOLDERS,
         )
 
     @override
@@ -241,7 +244,10 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="hassio_confirm",
             data_schema=DISCOVERY_SCHEMA,
-            description_placeholders={"addon": self._hassio_discovery["addon"]},
+            description_placeholders={
+                "addon": self._hassio_discovery["addon"],
+                "min_version": str(MIN_REQUIRED_MEALIE_VERSION),
+            },
             errors=errors or {},
         )
 

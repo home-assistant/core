@@ -1,5 +1,6 @@
 """The Mikrotik router class."""
 
+from contextlib import suppress
 from datetime import timedelta
 import ssl
 from typing import Any, override
@@ -57,12 +58,15 @@ class MikrotikData:
     """Handle all communication with the Mikrotik API."""
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, api: librouteros.Api
+        self,
+        hass: HomeAssistant,
+        config_entry: MikrotikConfigEntry,
+        api: librouteros.Api,
     ) -> None:
         """Initialize the Mikrotik Client."""
         self.hass = hass
         self.config_entry = config_entry
-        self.api = api
+        self.api: librouteros.Api | None = api
         self._host: str = self.config_entry.data[CONF_HOST]
         self.all_devices: dict[str, dict[str, Any]] = {}
         self.devices: dict[str, Device] = {}
@@ -338,20 +342,35 @@ class MikrotikData:
         with mikrotik_config_entry_errors(
             suppress_errors=suppress_errors, during_setup=during_setup
         ):
+            if self.api is not None:
+                try:
+                    return list(self.api(cmd, **(params or {})))
+                except CONNECTION_ERRORS as err:
+                    LOGGER.debug(
+                        "Mikrotik %s - connection dropped (%s), reconnecting",
+                        self._host,
+                        err,
+                    )
+                    self.disconnect()
+            self.api = get_api(dict(self.config_entry.data))
             try:
-                if params:
-                    return list(self.api(cmd, **params))
-                return list(self.api(cmd))
-            except CONNECTION_ERRORS as err:
-                LOGGER.debug(
-                    "Mikrotik %s - connection dropped (%s), reconnecting",
-                    self._host,
-                    err,
-                )
-                self.api = get_api(dict(self.config_entry.data))
-                if params:
-                    return list(self.api(cmd, **params))
-                return list(self.api(cmd))
+                return list(self.api(cmd, **(params or {})))
+            except CONNECTION_ERRORS:
+                self.disconnect()
+                raise
+
+    def disconnect(self) -> None:
+        """Close the connection to the Mikrotik API.
+
+        A reply cut off by a connection error stays unread on the socket and
+        would be read as the reply to the next command, so the connection is
+        never reused after one.
+        """
+        if self.api is None:
+            return
+        with suppress(*CONNECTION_ERRORS):
+            self.api.close()
+        self.api = None
 
 
 class MikrotikDataUpdateCoordinator(DataUpdateCoordinator[None]):
@@ -401,6 +420,17 @@ class MikrotikDataUpdateCoordinator(DataUpdateCoordinator[None]):
     def serial_num(self) -> str:
         """Return the serial number of the hub."""
         return self._mk_data.serial_number
+
+    @property
+    def interface_scope(self) -> str:
+        """Return the prefix that scopes interface identifiers to this router.
+
+        CHR and x86 installs have no routerboard serial number, so the config
+        entry ID keeps their interfaces apart instead.
+        """
+        if self.serial_num == "None":
+            return self.config_entry.entry_id
+        return self.serial_num
 
     @property
     def option_detection_time(self) -> timedelta:

@@ -6,7 +6,7 @@ from typing import Any, override
 from aiohttp import ClientSession
 from linkplay.bridge import LinkPlayBridge
 from linkplay.discovery import linkplay_factory_httpapi_bridge
-from linkplay.exceptions import LinkPlayRequestException
+from linkplay.exceptions import LinkPlayInvalidDataException, LinkPlayRequestException
 from linkplay.manufacturers import MANUFACTURER_WIIM
 import probatio
 
@@ -52,9 +52,13 @@ class LinkPlayConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             bridge = await linkplay_factory_httpapi_bridge(discovery_info.host, session)
-        except LinkPlayRequestException:
-            _LOGGER.exception(
-                "Failed to connect to LinkPlay device at %s", discovery_info.host
+        except (LinkPlayRequestException, LinkPlayInvalidDataException) as err:
+            # Discovery runs on every start, so a device that can't be reached or
+            # answers in a way the library doesn't understand isn't an error
+            _LOGGER.debug(
+                "Failed to connect to LinkPlay device at %s: %s",
+                discovery_info.host,
+                err,
             )
             return self.async_abort(reason="cannot_connect")
 
@@ -103,9 +107,12 @@ class LinkPlayConfigFlow(ConfigFlow, domain=DOMAIN):
                 bridge = await linkplay_factory_httpapi_bridge(
                     user_input[CONF_HOST], session
                 )
-            except LinkPlayRequestException:
-                _LOGGER.exception(
-                    "Failed to connect to LinkPlay device at %s", user_input[CONF_HOST]
+            except (LinkPlayRequestException, LinkPlayInvalidDataException) as err:
+                # The form shows cannot_connect, so the traceback adds nothing
+                _LOGGER.debug(
+                    "Failed to connect to LinkPlay device at %s: %s",
+                    user_input[CONF_HOST],
+                    err,
                 )
                 errors["base"] = "cannot_connect"
 
@@ -128,5 +135,38 @@ class LinkPlayConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=probatio.Schema({probatio.Required(CONF_HOST): str}),
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the LinkPlay device host."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            session: ClientSession = await async_get_client_session(self.hass)
+            try:
+                bridge = await linkplay_factory_httpapi_bridge(
+                    user_input[CONF_HOST], session
+                )
+            except LinkPlayRequestException:
+                errors["base"] = "cannot_connect"
+            else:
+                await self.async_set_unique_id(
+                    bridge.device.uuid, raise_on_progress=False
+                )
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry, data_updates=user_input
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema({probatio.Required(CONF_HOST): str}),
+                user_input or reconfigure_entry.data,
+            ),
             errors=errors,
         )

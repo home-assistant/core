@@ -8,12 +8,11 @@ from typing import Any, override
 import pypck
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_TRANSITION,
     DOMAIN as LIGHT_DOMAIN,
     ColorMode,
     LightEntity,
     LightEntityFeature,
+    LightServiceArgument,
 )
 from homeassistant.const import CONF_DOMAIN, CONF_ENTITIES
 from homeassistant.core import HomeAssistant
@@ -105,16 +104,18 @@ class LcnOutputLight(LcnEntity, LightEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        if ATTR_TRANSITION in kwargs:
+        if LightServiceArgument.TRANSITION in kwargs:
             transition = pypck.lcn_defs.time_to_ramp_value(
-                kwargs[ATTR_TRANSITION] * 1000
+                kwargs[LightServiceArgument.TRANSITION] * 1000
             )
         else:
             transition = self._transition
 
-        if ATTR_BRIGHTNESS in kwargs:
+        if LightServiceArgument.BRIGHTNESS in kwargs:
             percent = int(
-                brightness_to_value(BRIGHTNESS_SCALE, kwargs[ATTR_BRIGHTNESS])
+                brightness_to_value(
+                    BRIGHTNESS_SCALE, kwargs[LightServiceArgument.BRIGHTNESS]
+                )
             )
             if not await self.device_connection.dim_output(
                 self.output.value, percent, transition
@@ -134,9 +135,9 @@ class LcnOutputLight(LcnEntity, LightEntity):
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        if ATTR_TRANSITION in kwargs:
+        if LightServiceArgument.TRANSITION in kwargs:
             transition = pypck.lcn_defs.time_to_ramp_value(
-                kwargs[ATTR_TRANSITION] * 1000
+                kwargs[LightServiceArgument.TRANSITION] * 1000
             )
         else:
             transition = self._transition

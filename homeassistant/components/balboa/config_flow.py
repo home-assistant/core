@@ -7,7 +7,7 @@ import probatio
 from pybalboa import SpaClient
 from pybalboa.exceptions import SpaConnectionError
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
@@ -18,6 +18,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
 )
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
+from . import BalboaConfigEntry
 from .const import CONF_SYNC_TIME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -60,7 +61,9 @@ class BalboaSpaClientFlowHandler(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     @override
-    def async_get_options_flow(config_entry: ConfigEntry) -> SchemaOptionsFlowHandler:
+    def async_get_options_flow(
+        config_entry: BalboaConfigEntry,
+    ) -> SchemaOptionsFlowHandler:
         """Get the options flow for this handler."""
         return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)
 

@@ -7,14 +7,13 @@ import pytest
 import requests_mock
 
 from homeassistant.components.media_player import (
-    ATTR_MEDIA_CONTENT_ID,
-    ATTR_MEDIA_CONTENT_TYPE,
     DOMAIN as MP_DOMAIN,
-    SERVICE_PLAY_MEDIA,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
     MediaType,
 )
 from homeassistant.components.plex.const import CONF_SERVER_IDENTIFIER, PLEX_URI_SCHEME
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -75,11 +74,11 @@ async def test_media_player_playback(
     ):
         await hass.services.async_call(
             MP_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: media_player,
-                ATTR_MEDIA_CONTENT_TYPE: MediaType.MOVIE,
-                ATTR_MEDIA_CONTENT_ID: payload,
+                TargetKey.ENTITY_ID: media_player,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.MOVIE,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: payload,
             },
             True,
         )
@@ -99,11 +98,11 @@ async def test_media_player_playback(
     ):
         await hass.services.async_call(
             MP_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: media_player,
-                ATTR_MEDIA_CONTENT_TYPE: MediaType.MOVIE,
-                ATTR_MEDIA_CONTENT_ID: (
+                TargetKey.ENTITY_ID: media_player,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.MOVIE,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: (
                     '{"library_name": "Movies", "title": "Movie 1" }'
                 ),
             },
@@ -120,11 +119,11 @@ async def test_media_player_playback(
     ):
         await hass.services.async_call(
             MP_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: media_player,
-                ATTR_MEDIA_CONTENT_TYPE: MediaType.MOVIE,
-                ATTR_MEDIA_CONTENT_ID: (
+                TargetKey.ENTITY_ID: media_player,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.MOVIE,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: (
                     '{"library_name": "Movies", "title": "Movie 1", "resume": true}'
                 ),
             },
@@ -137,11 +136,11 @@ async def test_media_player_playback(
     playmedia_mock.reset()
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: media_player,
-            ATTR_MEDIA_CONTENT_TYPE: MediaType.MOVIE,
-            ATTR_MEDIA_CONTENT_ID: PLEX_URI_SCHEME
+            TargetKey.ENTITY_ID: media_player,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.MOVIE,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: PLEX_URI_SCHEME
             + f"{DEFAULT_DATA[CONF_SERVER_IDENTIFIER]}/1",
         },
         True,
@@ -152,11 +151,11 @@ async def test_media_player_playback(
     playmedia_mock.reset()
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: media_player,
-            ATTR_MEDIA_CONTENT_TYPE: MediaType.MOVIE,
-            ATTR_MEDIA_CONTENT_ID: PLEX_URI_SCHEME
+            TargetKey.ENTITY_ID: media_player,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.MOVIE,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: PLEX_URI_SCHEME
             + f"{DEFAULT_DATA[CONF_SERVER_IDENTIFIER]}/1?resume=1",
         },
         True,
@@ -168,11 +167,11 @@ async def test_media_player_playback(
     playmedia_mock.reset()
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: media_player,
-            ATTR_MEDIA_CONTENT_TYPE: MediaType.MOVIE,
-            ATTR_MEDIA_CONTENT_ID: PLEX_URI_SCHEME + "1",
+            TargetKey.ENTITY_ID: media_player,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.MOVIE,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: PLEX_URI_SCHEME + "1",
         },
         True,
     )
@@ -188,11 +187,11 @@ async def test_media_player_playback(
     ):
         await hass.services.async_call(
             MP_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: media_player,
-                ATTR_MEDIA_CONTENT_TYPE: MediaType.MOVIE,
-                ATTR_MEDIA_CONTENT_ID: '{"library_name": "Movies", "title": "Movie" }',
+                TargetKey.ENTITY_ID: media_player,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.MOVIE,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: '{"library_name": "Movies", "title": "Movie" }',
             },
             True,
         )
@@ -211,11 +210,11 @@ async def test_media_player_playback(
     ):
         await hass.services.async_call(
             MP_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: media_player,
-                ATTR_MEDIA_CONTENT_TYPE: MediaType.MOVIE,
-                ATTR_MEDIA_CONTENT_ID: '{"library_name": "Movies", "title": "Movie" }',
+                TargetKey.ENTITY_ID: media_player,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.MOVIE,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: '{"library_name": "Movies", "title": "Movie" }',
             },
             True,
         )
@@ -236,11 +235,11 @@ async def test_media_player_playback(
     ):
         await hass.services.async_call(
             MP_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: media_player,
-                ATTR_MEDIA_CONTENT_TYPE: MediaType.MOVIE,
-                ATTR_MEDIA_CONTENT_ID: (
+                TargetKey.ENTITY_ID: media_player,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.MOVIE,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: (
                     '{"library_name": "Movies",'
                     ' "title": "Movie",'
                     ' "allow_multiple": true }'
@@ -256,11 +255,11 @@ async def test_media_player_playback(
     radio_id = "/library/sections/3/stations/1"
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: media_player,
-            ATTR_MEDIA_CONTENT_TYPE: "station",
-            ATTR_MEDIA_CONTENT_ID: PLEX_URI_SCHEME
+            TargetKey.ENTITY_ID: media_player,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "station",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: PLEX_URI_SCHEME
             + f"{DEFAULT_DATA[CONF_SERVER_IDENTIFIER]}/{radio_id}",
         },
         True,

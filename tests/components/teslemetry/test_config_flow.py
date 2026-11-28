@@ -10,11 +10,6 @@ from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 from urllib.parse import parse_qs, urlparse
 
 from aiohttp import ClientConnectionError, ClientError
-from aiopowerwall import (
-    PowerwallAuthenticationError,
-    PowerwallConnectionError,
-    PowerwallFaultError,
-)
 from bleak.backends.device import BLEDevice
 from bleak.exc import BleakDeviceNotFoundError, BleakError
 from bleak_retry_connector import (
@@ -59,6 +54,11 @@ from tesla_fleet_api.exceptions import (
 )
 from tesla_fleet_api.tesla import VehicleRouter
 from tesla_fleet_api.tesla.bluetooth import TeslaBluetooth
+from tesla_fleet_api.tesla.powerwall import (
+    PowerwallAuthenticationError,
+    PowerwallConnectionError,
+    PowerwallFaultError,
+)
 from tesla_fleet_api.teslemetry.energysite import AuthorizedClient, AuthorizedClients
 
 from homeassistant.components.application_credentials import (
@@ -69,10 +69,11 @@ from homeassistant.components.bluetooth import (
     BluetoothScanningMode,
     async_register_scanner,
 )
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.teslemetry.const import (
     AUTHORIZE_URL,
     CLIENT_ID,
+    CONF_LEGACY_GATEWAY,
     CONF_SITE_ID,
     CONF_VIN,
     DOMAIN,
@@ -89,7 +90,7 @@ from homeassistant.config_entries import (
     ConfigSubentryData,
     SubentryFlowResult,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CONF_ADDRESS, CONF_HOST, CONF_PASSWORD
+from homeassistant.const import CONF_ADDRESS, CONF_HOST, CONF_PASSWORD, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, UnknownFlow
 from homeassistant.helpers import (
@@ -100,7 +101,7 @@ from homeassistant.helpers import (
 from homeassistant.setup import async_setup_component
 
 from . import mock_config_entry, setup_platform
-from .const import ADDRESS, CONFIG_V1, METADATA, PRODUCTS, UNIQUE_ID, VIN
+from .const import ADDRESS, CONFIG_V1, METADATA, PRODUCTS, SITE_INFO, UNIQUE_ID, VIN
 
 REDIRECT = "https://example.com/auth/external/callback"
 
@@ -2153,8 +2154,8 @@ async def test_subentry_reconfigure_reloads_onto_new_address(
         # first checks whether the vehicle is in Bluetooth range.
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.test_flash_lights"},
+            ButtonService.PRESS,
+            {TargetKey.ENTITY_ID: "button.test_flash_lights"},
             blocking=True,
         )
 
@@ -2241,7 +2242,7 @@ GATEWAY_DIN = "ABC123"
 PUBLIC_KEY_DER = b"public-key-der"
 PUBLIC_KEY_B64 = "cHVibGljLWtleS1kZXI="
 
-# aiopowerwall's PowerwallClient parses the PEM at construction time, so tests
+# PowerwallClient parses the PEM at construction time, so tests
 # that build one need a real (if undersized, for speed) RSA key rather than
 # arbitrary bytes.
 _TEST_RSA_KEY_PEM = rsa.generate_private_key(
@@ -2291,7 +2292,7 @@ def mock_gateway_discovery() -> Generator[AsyncMock]:
 def mock_local_authorized_clients() -> Generator[AsyncMock]:
     """Default a paired gateway's local authorized-clients read to unreachable."""
     with patch(
-        "aiopowerwall.client.PowerwallClient.list_authorized_clients",
+        "tesla_fleet_api.tesla.powerwall.client.PowerwallClient.list_authorized_clients",
         new=AsyncMock(side_effect=PowerwallConnectionError),
     ) as mock_list:
         yield mock_list
@@ -2329,7 +2330,7 @@ def _mock_powerwall_client(
     din: str = GATEWAY_DIN,
     status_error: Exception | None = None,
 ) -> MagicMock:
-    """Return a mock aiopowerwall PowerwallClient async context manager."""
+    """Return a mock PowerwallClient async context manager."""
     client = MagicMock()
     client.__aenter__ = AsyncMock(return_value=client)
     client.__aexit__ = AsyncMock(return_value=False)
@@ -2796,9 +2797,72 @@ async def test_add_flow_creates_subentry_bound_to_existing_device(
     assert [device.id for device in site_devices] == [site_device.id]
 
 
+def _site_info_with_gateway(din: str, gateways: list[dict[str, Any]]) -> dict[str, Any]:
+    """Return site_info with the given site DIN and gateway components."""
+    site_info = deepcopy(SITE_INFO)
+    site_info["response"]["id"] = din
+    site_info["response"]["components"]["gateways"] = gateways
+    return site_info
+
+
+@pytest.mark.parametrize(
+    ("site_info", "step_id", "stored_password", "legacy_gateway"),
+    [
+        pytest.param(SITE_INFO, "credentials", "sword", False, id="gateway_2"),
+        pytest.param(
+            _site_info_with_gateway(
+                SITE_INFO["response"]["id"],
+                [
+                    {
+                        **SITE_INFO["response"]["components"]["gateways"][0],
+                        "din": "1118431-01-F--TG000000000000",
+                        "part_number": "1118431-01-F",
+                    }
+                ],
+            ),
+            "legacy_credentials",
+            "long-wifi-password",
+            True,
+            id="gateway_1_part_number",
+        ),
+        pytest.param(
+            _site_info_with_gateway("1118431-01-F--TG000000000000", []),
+            "legacy_credentials",
+            "long-wifi-password",
+            True,
+            id="gateway_1_site_din",
+        ),
+        pytest.param(
+            _site_info_with_gateway(
+                SITE_INFO["response"]["id"],
+                [
+                    {
+                        key: value
+                        for key, value in SITE_INFO["response"]["components"][
+                            "gateways"
+                        ][0].items()
+                        if key != "part_number"
+                    }
+                ],
+            ),
+            "credentials",
+            "sword",
+            False,
+            id="gateway_without_part_number",
+        ),
+    ],
+)
 @pytest.mark.usefixtures("mock_rsa_key")
-async def test_subentry_credentials_password_truncated(hass: HomeAssistant) -> None:
-    """A full Wi-Fi password is trimmed to its final five characters."""
+async def test_subentry_credentials_password_by_gateway(
+    hass: HomeAssistant,
+    mock_site_info: AsyncMock,
+    site_info: dict[str, Any],
+    step_id: str,
+    stored_password: str,
+    legacy_gateway: bool,
+) -> None:
+    """A Gateway 1 keeps the full password; other gateways keep its last 5 characters."""
+    mock_site_info.side_effect = lambda: deepcopy(site_info)
     entry = await _setup_account_no_subentry(hass)
 
     client = _mock_powerwall_client()
@@ -2815,8 +2879,9 @@ async def test_subentry_credentials_password_truncated(hass: HomeAssistant) -> N
         ) as mock_client,
         patch.object(hass.config_entries, "async_schedule_reload"),
     ):
+        mock_client.legacy_gateway.return_value = client
         result = await _start_add_flow_select_site(hass, entry)
-        assert result["step_id"] == "credentials"
+        assert result["step_id"] == step_id
 
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"], {CONF_HOST: HOST, CONF_PASSWORD: "long-wifi-password"}
@@ -2825,8 +2890,20 @@ async def test_subentry_credentials_password_truncated(hass: HomeAssistant) -> N
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     subentry = entry.get_subentries_of_type(SUBENTRY_TYPE_ENERGY_SITE)[0]
-    assert subentry.data[CONF_PASSWORD] == "sword"
-    assert mock_client.call_args.kwargs["gateway_password"] == "sword"
+    assert subentry.data == {
+        CONF_SITE_ID: SITE_ID,
+        CONF_HOST: HOST,
+        CONF_PASSWORD: stored_password,
+        CONF_LEGACY_GATEWAY: legacy_gateway,
+    }
+    assert mock_client.legacy_gateway.called is legacy_gateway
+    assert [
+        call.kwargs["gateway_password"]
+        for call in (
+            *mock_client.call_args_list,
+            *mock_client.legacy_gateway.call_args_list,
+        )
+    ] == [stored_password]
 
 
 @pytest.mark.usefixtures("mock_rsa_key")
@@ -3474,6 +3551,7 @@ async def test_reconfigure_updates_credentials_and_schedules_reload(
     subentry = entry.subentries[subentry_id]
     assert subentry.data[CONF_HOST] == new_host
     assert subentry.data[CONF_PASSWORD] == "wxyz9"
+    assert subentry.data[CONF_LEGACY_GATEWAY] is False
     # The subentry-change reload listener fires only on membership changes, so the
     # step must schedule the reload itself for the new credentials to take effect.
     mock_reload.assert_called_once_with(entry.entry_id)

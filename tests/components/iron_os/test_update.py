@@ -57,7 +57,7 @@ async def test_update(
         }
     )
     result = await ws_client.receive_json()
-    assert result["result"] == snapshot
+    assert result["result"]["release_notes"] == snapshot
 
 
 @pytest.mark.usefixtures("ble_device", "mock_pynecil")

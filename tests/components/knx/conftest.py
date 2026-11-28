@@ -181,6 +181,7 @@ class KNXTestKit:
             mock = Mock()
             mock.start = AsyncMock(side_effect=patch_xknx_start)
             mock.stop = AsyncMock()
+            mock.stop_reconnect = AsyncMock()
             mock.gateway_info = AsyncMock()
             return mock
 
@@ -460,6 +461,12 @@ async def knx(
 async def project_data(hass: HomeAssistant) -> dict[str, Any]:
     """Return the fixture project data."""
     return await async_load_json_object_fixture(hass, "project.json", DOMAIN)
+
+
+@pytest.fixture
+async def current_project_data(hass: HomeAssistant) -> dict[str, Any]:
+    """Return project data in the format of the installed xknxproject."""
+    return await async_load_json_object_fixture(hass, "project_current.json", DOMAIN)
 
 
 @pytest.fixture

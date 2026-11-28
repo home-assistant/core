@@ -75,8 +75,44 @@
       "current_temperature": {
         "name": "Current temperature"
       },
+      "freshwater_iq_chlorine": {
+        "name": "Chlorine"
+      },
+      "freshwater_iq_orp": {
+        "name": "Oxidation reduction potential"
+      },
+      "freshwater_iq_sensor_life": {
+        "name": "Sensor life"
+      },
       "fwss_version": {
         "name": "FreshWater Salt System version"
+      },
+      "heater_current": {
+        "name": "Heater current"
+      },
+      "heater_power": {
+        "name": "Heater power"
+      },
+      "jet1_jet2_blower_current": {
+        "name": "Jets 1, 2, and blower current"
+      },
+      "jet1_jet2_blower_power": {
+        "name": "Jets 1, 2, and blower apparent power"
+      },
+      "jet3_current": {
+        "name": "Jet 3 current"
+      },
+      "jet3_power": {
+        "name": "Jet 3 apparent power"
+      },
+      "small_loads_current": {
+        "name": "Small loads current"
+      },
+      "small_loads_power": {
+        "name": "Small loads apparent power"
+      },
+      "total_power": {
+        "name": "Total apparent power"
       },
       "water_care_10_day_timer": {
         "name": "Salt 10-day check timer"
@@ -94,10 +130,19 @@
   },
   "exceptions": {
     "cannot_connect": {
-      "message": "An error occurred while communicating with the Hot Spring API."
+      "message": "An error occurred while communicating with the Hot Spring API"
     },
     "invalid_response": {
-      "message": "Invalid response received from the Hot Spring API."
+      "message": "Invalid response received from the Hot Spring API"
+    },
+    "spa_not_connected": {
+      "message": "The spa is not connected to its Hot Spring home network adapter"
+    },
+    "timeout": {
+      "message": "Timed out while communicating with the Hot Spring API"
+    },
+    "wrong_device": {
+      "message": "The device at the configured host has MAC address {found}, not {expected}"
     }
   }
 }

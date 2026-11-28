@@ -10,7 +10,6 @@ import probatio
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
@@ -69,7 +68,7 @@ class AxisFlowHandler(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: AxisConfigEntry,
     ) -> AxisOptionsFlowHandler:
         """Get the options flow for this handler."""
         return AxisOptionsFlowHandler()
