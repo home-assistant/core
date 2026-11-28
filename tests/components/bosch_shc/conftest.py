@@ -1082,6 +1082,8 @@ def smoke_detector_device(
     intrusion_alarm: bool = False,
     alarmstate: AlarmService.State = AlarmService.State.IDLE_OFF,
     smoke_sensitivity: SmokeSensitivityService.SmokeSensitivityLevel | None = None,
+    supports_smoke_sensitivity: bool = False,
+    pre_alarm_enabled: bool = False,
 ) -> SHCSmokeDetector:
     """Build a minimal device double for the smoke_detectors bucket."""
     device = create_autospec(SHCSmokeDetector, instance=True, spec_set=True)
@@ -1097,6 +1099,8 @@ def smoke_detector_device(
     device.supports_intrusion_alarm = supports_intrusion_alarm
     device.intrusion_alarm = intrusion_alarm
     device.alarmstate = alarmstate
+    device.supports_smoke_sensitivity = supports_smoke_sensitivity
+    device.pre_alarm_enabled = pre_alarm_enabled
     device.smoke_sensitivity = smoke_sensitivity
     return device
 
@@ -1106,6 +1110,8 @@ def twinguard_device(
     name: str = "Twinguard",
     supports_nightly_promise: bool = False,
     nightly_promise_enabled: bool = False,
+    supports_smoke_sensitivity: bool = False,
+    pre_alarm_enabled: bool = False,
 ) -> SHCTwinguard:
     """Build a minimal device double for the twinguards bucket."""
     device = create_autospec(SHCTwinguard, instance=True, spec_set=True)
@@ -1119,5 +1125,7 @@ def twinguard_device(
     device.deleted = False
     device.status = "AVAILABLE"
     device.supports_nightly_promise = supports_nightly_promise
+    device.supports_smoke_sensitivity = supports_smoke_sensitivity
+    device.pre_alarm_enabled = pre_alarm_enabled
     device.nightly_promise_enabled = nightly_promise_enabled
     return device
