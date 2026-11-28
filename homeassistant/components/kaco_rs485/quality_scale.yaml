@@ -80,7 +80,11 @@ rules:
     comment: Entities use device_class-derived icons; no custom icons are needed.
   reconfiguration-flow: todo
   repair-issues: todo
-  stale-devices: todo
+  stale-devices:
+    status: done
+    comment: >
+      Manual removal: at night a removed inverter can't be told apart from a
+      sleeping one. Removal is refused while the inverter still answers.
 
   # Platinum
   async-dependency: done
