@@ -140,6 +140,7 @@ FLOWS = {
         "casper_glow",
         "cast",
         "ccm15",
+        "ceiling_fan_infrared",
         "centriconnect",
         "cert_expiry",
         "chacon_dio",
