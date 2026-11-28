@@ -6,8 +6,13 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import override
 
-from pyzonneplan import Battery, ElectricityChartGroup, GasChartGroup
-from pyzonneplan.const import MONEY_FACTOR, BatteryState
+from pyzonneplan import Battery, ChargePoint, ElectricityChartGroup, GasChartGroup
+from pyzonneplan.const import (
+    MONEY_FACTOR,
+    BatteryState,
+    ChargePointStatus,
+    LoadBalancingHealth,
+)
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -20,6 +25,7 @@ from homeassistant.const import (
     PERCENTAGE,
     EntityCategory,
     UnitOfEnergy,
+    UnitOfLength,
     UnitOfPower,
     UnitOfVolume,
 )
@@ -35,7 +41,7 @@ from .coordinator import (
     ZonneplanCoordinator,
     ZonneplanData,
 )
-from .entity import ZonneplanBatteryEntity, ZonneplanEntity
+from .entity import ZonneplanBatteryEntity, ZonneplanChargePointEntity, ZonneplanEntity
 
 PARALLEL_UPDATES = 0
 
@@ -507,6 +513,121 @@ ZONNEPLAN_BATTERY_SENSORS: tuple[ZonneplanBatterySensorEntityDescription, ...] =
 )
 
 
+def _session_start(charge_point: ChargePoint) -> datetime | None:
+    """Return the start of the current or last charging session."""
+    session = charge_point.state.charge_point_session
+    return None if session is None else session.start_time
+
+
+@dataclass(frozen=True, kw_only=True)
+class ZonneplanChargePointSensorEntityDescription(SensorEntityDescription):
+    """Describes a Zonneplan charge point sensor."""
+
+    value_fn: Callable[[ChargePoint], StateType | Decimal | datetime]
+    last_reset_fn: Callable[[ChargePoint], datetime | None] | None = None
+
+
+CHARGE_POINT_SENSORS: tuple[ZonneplanChargePointSensorEntityDescription, ...] = (
+    ZonneplanChargePointSensorEntityDescription(
+        key="charge_point_state",
+        translation_key="charge_point_state",
+        device_class=SensorDeviceClass.ENUM,
+        options=[state.value for state in ChargePointStatus],
+        value_fn=lambda charge_point: charge_point.state.state,
+    ),
+    ZonneplanChargePointSensorEntityDescription(
+        key="power",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda charge_point: charge_point.state.power_actual,
+    ),
+    ZonneplanChargePointSensorEntityDescription(
+        key="session_energy",
+        translation_key="session_energy",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda charge_point: charge_point.state.energy_delivered_session_kwh,
+    ),
+    ZonneplanChargePointSensorEntityDescription(
+        key="session_cost",
+        translation_key="session_cost",
+        device_class=SensorDeviceClass.MONETARY,
+        native_unit_of_measurement=CURRENCY_EURO,
+        state_class=SensorStateClass.TOTAL,
+        suggested_display_precision=2,
+        value_fn=lambda charge_point: charge_point.session_cost,
+        last_reset_fn=_session_start,
+    ),
+    ZonneplanChargePointSensorEntityDescription(
+        key="session_flex_result",
+        translation_key="session_flex_result",
+        device_class=SensorDeviceClass.MONETARY,
+        native_unit_of_measurement=CURRENCY_EURO,
+        state_class=SensorStateClass.TOTAL,
+        suggested_display_precision=2,
+        value_fn=lambda charge_point: charge_point.session_flex_result,
+        last_reset_fn=_session_start,
+    ),
+    ZonneplanChargePointSensorEntityDescription(
+        key="session_average_price",
+        translation_key="session_average_price",
+        native_unit_of_measurement=f"EUR/{UnitOfEnergy.KILO_WATT_HOUR}",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+        value_fn=lambda charge_point: charge_point.session_average_cost,
+    ),
+    ZonneplanChargePointSensorEntityDescription(
+        key="session_start",
+        translation_key="session_start",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=_session_start,
+    ),
+    ZonneplanChargePointSensorEntityDescription(
+        key="session_charged_distance",
+        translation_key="session_charged_distance",
+        device_class=SensorDeviceClass.DISTANCE,
+        native_unit_of_measurement=UnitOfLength.KILOMETERS,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda charge_point: (
+            None
+            if (session := charge_point.state.charge_point_session) is None
+            else session.charged_distance_in_kilometers
+        ),
+    ),
+    ZonneplanChargePointSensorEntityDescription(
+        key="load_balancing_health",
+        translation_key="load_balancing_health",
+        device_class=SensorDeviceClass.ENUM,
+        options=[health.value for health in LoadBalancingHealth],
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda charge_point: charge_point.state.load_balancing_health,
+    ),
+    ZonneplanChargePointSensorEntityDescription(
+        key="next_schedule_start",
+        translation_key="next_schedule_start",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda charge_point: (
+            None
+            if (schedule := charge_point.next_schedule) is None
+            else schedule.start_time
+        ),
+    ),
+    ZonneplanChargePointSensorEntityDescription(
+        key="next_schedule_end",
+        translation_key="next_schedule_end",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda charge_point: (
+            None
+            if (schedule := charge_point.next_schedule) is None
+            else schedule.end_time
+        ),
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ZonneplanConfigEntry,
@@ -515,6 +636,7 @@ async def async_setup_entry(
     """Set up Zonneplan sensor platform."""
     coordinator = entry.runtime_data.coordinator
     battery_coordinator = entry.runtime_data.battery_coordinator
+    charge_point_coordinator = entry.runtime_data.charge_point_coordinator
 
     async_add_entities(
         [
@@ -532,6 +654,13 @@ async def async_setup_entry(
                 ZonneplanBatterySensor(battery_coordinator, contract_uuid, description)
                 for contract_uuid in battery_coordinator.data
                 for description in ZONNEPLAN_BATTERY_SENSORS
+            ),
+            *(
+                ZonneplanChargePointSensor(
+                    charge_point_coordinator, contract_uuid, description
+                )
+                for contract_uuid in charge_point_coordinator.data
+                for description in CHARGE_POINT_SENSORS
             ),
         ]
     )
@@ -588,3 +717,23 @@ class ZonneplanBatterySensor(ZonneplanBatteryEntity, SensorEntity):
         return self.entity_description.last_reset_fn(
             self.coordinator.data[self._contract_uuid]
         )
+
+
+class ZonneplanChargePointSensor(ZonneplanChargePointEntity, SensorEntity):
+    """Representation of a Zonneplan charge point sensor."""
+
+    entity_description: ZonneplanChargePointSensorEntityDescription
+
+    @property
+    @override
+    def native_value(self) -> StateType | Decimal | datetime:
+        """Return the value of the sensor."""
+        return self.entity_description.value_fn(self.charge_point)
+
+    @property
+    @override
+    def last_reset(self) -> datetime | None:
+        """Return the start of the session for per-session totals."""
+        if self.entity_description.last_reset_fn is None:
+            return None
+        return self.entity_description.last_reset_fn(self.charge_point)

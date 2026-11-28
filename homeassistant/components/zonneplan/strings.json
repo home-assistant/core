@@ -125,6 +125,15 @@
           "updating": "Updating"
         }
       },
+      "charge_point_state": {
+        "name": "Status",
+        "state": {
+          "charging": "[%key:common::state::charging%]",
+          "error": "[%key:common::state::error%]",
+          "standby": "[%key:common::state::standby%]",
+          "vehicle_detected": "Vehicle detected"
+        }
+      },
       "current_electricity_price": {
         "name": "Current electricity price"
       },
@@ -218,6 +227,13 @@
           "updating": "[%key:component::zonneplan::entity::sensor::battery_state::state::updating%]"
         }
       },
+      "load_balancing_health": {
+        "name": "Load balancing health",
+        "state": {
+          "healthy": "Healthy",
+          "unhealthy": "Unhealthy"
+        }
+      },
       "lowest_electricity_price_today": {
         "name": "Lowest electricity price today"
       },
@@ -226,6 +242,30 @@
       },
       "next_hour_electricity_price": {
         "name": "Next hour electricity price"
+      },
+      "next_schedule_end": {
+        "name": "Next schedule end"
+      },
+      "next_schedule_start": {
+        "name": "Next schedule start"
+      },
+      "session_average_price": {
+        "name": "Session average price"
+      },
+      "session_charged_distance": {
+        "name": "Session charged distance"
+      },
+      "session_cost": {
+        "name": "Session cost"
+      },
+      "session_energy": {
+        "name": "Session energy"
+      },
+      "session_flex_result": {
+        "name": "Session flex result"
+      },
+      "session_start": {
+        "name": "Session start"
       },
       "total_earned": {
         "name": "Total earned"
