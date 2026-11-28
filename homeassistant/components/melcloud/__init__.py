@@ -44,7 +44,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MelCloudConfigEntry) -> 
             all_devices = await get_devices(
                 token=entry.data[CONF_TOKEN],
                 session=async_get_clientsession(hass),
-                conf_update_interval=timedelta(minutes=30),
+                conf_update_interval=timedelta(minutes=5),
                 device_set_debounce=timedelta(seconds=2),
             )
     except ClientResponseError as ex:
