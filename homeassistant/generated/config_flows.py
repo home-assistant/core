@@ -147,6 +147,7 @@ FLOWS = {
         "chess_com",
         "chirpstack",
         "cielo_home",
+        "clicky",
         "cloudflare",
         "cloudflare_r2",
         "co2signal",
