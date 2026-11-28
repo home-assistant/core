@@ -26,8 +26,11 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_STANDBY,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import Event, HomeAssistant, ServiceCall
+from homeassistant.exceptions import HomeAssistantError
 
 
 async def test_activity_remote(
@@ -195,3 +198,73 @@ async def test_activity_remote_bad_names(
     await hass.async_block_till_done()
     assert acc.char_active.value == 1
     assert acc.char_input_source.value == 2
+
+
+async def test_activity_remote_activities_renamed_in_place(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test a renamed activity renames its input instead of rebuilding."""
+    entity_id = "remote.harmony"
+    base_attrs = {
+        ATTR_SUPPORTED_FEATURES: RemoteEntityFeature.ACTIVITY,
+        ATTR_CURRENT_ACTIVITY: "Apple TV",
+        ATTR_ACTIVITY_LIST: ["TV", "Apple TV"],
+    }
+    hass.states.async_set(entity_id, STATE_ON, base_attrs)
+    await hass.async_block_till_done()
+    acc = ActivityRemote(hass, hk_driver, "ActivityRemote", entity_id, 2, None)
+    acc.run()
+    await hass.async_block_till_done()
+
+    with patch.object(acc, "async_reload") as mock_reload:
+        hass.states.async_set(
+            entity_id,
+            STATE_ON,
+            {
+                **base_attrs,
+                ATTR_CURRENT_ACTIVITY: "Movie",
+                ATTR_ACTIVITY_LIST: ["TV", "Movie"],
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert not mock_reload.called
+    assert acc.sources == ["TV", "Movie"]
+    assert acc.char_input_source.value == 1
+
+
+@pytest.mark.parametrize("state", [STATE_UNAVAILABLE, STATE_UNKNOWN])
+async def test_activity_remote_failed_command_keeps_activities(
+    hass: HomeAssistant, hk_driver: HomeDriver, state: str
+) -> None:
+    """Test a failed command re-syncing a remote without activities keeps them."""
+    entity_id = "remote.harmony"
+    base_attrs = {
+        ATTR_SUPPORTED_FEATURES: RemoteEntityFeature.ACTIVITY,
+        ATTR_CURRENT_ACTIVITY: "Apple TV",
+        ATTR_ACTIVITY_LIST: ["TV", "Apple TV"],
+    }
+    hass.states.async_set(entity_id, STATE_ON, base_attrs)
+    await hass.async_block_till_done()
+    acc = ActivityRemote(hass, hk_driver, "ActivityRemote", entity_id, 2, None)
+    acc.run()
+    await hass.async_block_till_done()
+
+    async def _async_disconnect(call: ServiceCall) -> None:
+        # A remote that is no longer available stops writing its activity list
+        hass.states.async_set(
+            entity_id, state, {ATTR_SUPPORTED_FEATURES: RemoteEntityFeature.ACTIVITY}
+        )
+        raise HomeAssistantError("Disconnected")
+
+    hass.services.async_register(REMOTE_DOMAIN, "turn_on", _async_disconnect)
+
+    with patch.object(acc, "async_reload") as mock_reload:
+        acc.char_input_source.client_update_value(0)
+        await hass.async_block_till_done()
+        hass.states.async_set(entity_id, STATE_ON, base_attrs)
+        await hass.async_block_till_done()
+
+    assert not mock_reload.called
+    assert acc.sources == ["TV", "Apple TV"]
+    assert acc.char_input_source.value == 1

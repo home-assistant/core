@@ -1,5 +1,7 @@
 """Test different accessory types: Media Players."""
 
+from unittest.mock import patch
+
 import pytest
 from pytest_homeassistant.common import async_mock_service
 
@@ -8,6 +10,8 @@ from homeassistant.components.homekit.const import (
     ATTR_KEY_NAME,
     ATTR_VALUE,
     CHAR_CONFIGURED_NAME,
+    CHAR_INPUT_SOURCE_TYPE,
+    CHAR_NAME,
     CHAR_REMOTE_KEY,
     CONF_FEATURE_LIST,
     EVENT_HOMEKIT_TV_REMOTE_KEY_PRESSED,
@@ -16,6 +20,7 @@ from homeassistant.components.homekit.const import (
     FEATURE_PLAY_STOP,
     FEATURE_TOGGLE_MUTE,
     KEY_ARROW_RIGHT,
+    SERV_INPUT_SOURCE,
     SERV_SWITCH,
     TYPE_SET_TOP_BOX,
     TYPE_STREAMING_STICK,
@@ -49,6 +54,7 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
     STATE_STANDBY,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import CoreState, Event, HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -763,3 +769,197 @@ async def test_media_player_type_sets_category(
     assert acc.category == category
     assert acc.char_active.value == 1
     assert acc.char_input_source.value == 1
+
+
+def _television_attrs(sources: list[str], source: str) -> dict[str, object]:
+    """Return the attributes of a television with the given sources."""
+    return {
+        ATTR_DEVICE_CLASS: MediaPlayerDeviceClass.TV,
+        ATTR_SUPPORTED_FEATURES: 3469,
+        ATTR_INPUT_SOURCE_LIST: sources,
+        ATTR_INPUT_SOURCE: source,
+    }
+
+
+async def _create_television(
+    hass: HomeAssistant, hk_driver: HomeDriver, sources: list[str], source: str
+) -> TelevisionMediaPlayer:
+    """Create and start a television with the given sources."""
+    entity_id = "media_player.game_console"
+    hass.states.async_set(entity_id, STATE_ON, _television_attrs(sources, source))
+    await hass.async_block_till_done()
+    acc = TelevisionMediaPlayer(hass, hk_driver, "MediaPlayer", entity_id, 2, None)
+    acc.run()
+    await hass.async_block_till_done()
+    return acc
+
+
+def _set_sources(
+    hass: HomeAssistant,
+    acc: TelevisionMediaPlayer,
+    sources: list[str],
+    source: str,
+    state: str = STATE_ON,
+) -> None:
+    """Set the source list and current source of the television."""
+    hass.states.async_set(acc.entity_id, state, _television_attrs(sources, source))
+
+
+def _input_chars(acc: TelevisionMediaPlayer, char: str) -> list[object]:
+    """Return a characteristic value of each Input Source service, in order."""
+    return [
+        serv.get_characteristic(char).value
+        for serv in acc.services
+        if serv.display_name == SERV_INPUT_SOURCE
+    ]
+
+
+async def test_media_player_television_sources_renamed_in_place(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test a renamed source renames its input instead of rebuilding the accessory."""
+    acc = await _create_television(hass, hk_driver, ["HDMI 1", "Game A"], "Game A")
+
+    with patch.object(acc, "async_reload") as mock_reload:
+        _set_sources(hass, acc, ["HDMI 1", "Game B"], "Game B")
+        await hass.async_block_till_done()
+
+    assert not mock_reload.called
+    assert _input_chars(acc, CHAR_CONFIGURED_NAME) == ["HDMI 1", "Game B"]
+    assert _input_chars(acc, CHAR_NAME) == ["HDMI 1", "Game B"]
+    assert acc.char_input_source.value == 1
+
+    call_select_source = async_mock_service(hass, MEDIA_PLAYER_DOMAIN, "select_source")
+    acc.char_input_source.client_update_value(1)
+    await hass.async_block_till_done()
+    assert call_select_source[-1].data[ATTR_INPUT_SOURCE] == "Game B"
+
+
+async def test_media_player_television_renamed_source_type(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test the input source type follows the new name of a source."""
+    acc = await _create_television(hass, hk_driver, ["HDMI 1", "Game"], "Game")
+    assert _input_chars(acc, CHAR_INPUT_SOURCE_TYPE) == [3, 0]
+
+    _set_sources(hass, acc, ["Netflix", "HDMI 2"], "HDMI 2")
+    await hass.async_block_till_done()
+
+    assert _input_chars(acc, CHAR_INPUT_SOURCE_TYPE) == [0, 3]
+
+
+async def test_media_player_television_sources_count_changed(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test a new number of sources rebuilds the accessory once.
+
+    Until it is rebuilt, the accessory keeps its current input.
+    """
+    acc = await _create_television(hass, hk_driver, ["HDMI 1", "Game A"], "Game A")
+
+    with patch.object(acc, "async_reload") as mock_reload:
+        _set_sources(hass, acc, ["HDMI 1", "Game A", "Game B"], "Game B")
+        await hass.async_block_till_done()
+        assert acc.char_input_source.value == 1
+        _set_sources(hass, acc, ["HDMI 1", "Game A", "Game B"], "Game A")
+        await hass.async_block_till_done()
+
+    assert mock_reload.call_count == 1
+
+
+async def test_media_player_television_sources_renamed_while_unavailable(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test sources renamed while the television was unavailable are renamed."""
+    acc = await _create_television(hass, hk_driver, ["HDMI 1", "Game A"], "Game A")
+
+    _set_sources(hass, acc, ["HDMI 1", "Game A"], "Game A", state=STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+    with patch.object(acc, "async_reload") as mock_reload:
+        _set_sources(hass, acc, ["HDMI 1", "Game B"], "Game B")
+        await hass.async_block_till_done()
+
+    assert not mock_reload.called
+    assert _input_chars(acc, CHAR_CONFIGURED_NAME) == ["HDMI 1", "Game B"]
+    assert acc.char_input_source.value == 1
+
+
+async def test_media_player_television_sources_added_to_tv_without_sources(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test a television that starts without sources rebuilds once it has some."""
+    acc = await _create_television(hass, hk_driver, [], "")
+    assert acc.support_select_source is False
+
+    with patch.object(acc, "async_reload") as mock_reload:
+        _set_sources(hass, acc, ["HDMI 1"], "HDMI 1")
+        await hass.async_block_till_done()
+
+    assert mock_reload.called
+
+
+async def test_media_player_television_select_source_while_rebuild_pending(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test selecting a shown input still works until the accessory is rebuilt."""
+    acc = await _create_television(hass, hk_driver, ["HDMI 1", "Game A"], "Game A")
+    call_select_source = async_mock_service(hass, MEDIA_PLAYER_DOMAIN, "select_source")
+
+    with patch.object(acc, "async_reload"):
+        _set_sources(hass, acc, ["HDMI 1", "Game C", "Game D"], "Game C")
+        await hass.async_block_till_done()
+        acc.char_input_source.client_update_value(1)
+        await hass.async_block_till_done()
+
+    assert call_select_source[-1].data[ATTR_INPUT_SOURCE] == "Game A"
+
+
+async def test_media_player_television_sources_reordered(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test reordered sources rename the inputs to match the new order."""
+    acc = await _create_television(hass, hk_driver, ["HDMI 1", "Game A"], "HDMI 1")
+
+    with patch.object(acc, "async_reload") as mock_reload:
+        _set_sources(hass, acc, ["Game A", "HDMI 1"], "HDMI 1")
+        await hass.async_block_till_done()
+
+    assert not mock_reload.called
+    assert _input_chars(acc, CHAR_CONFIGURED_NAME) == ["Game A", "HDMI 1"]
+    assert _input_chars(acc, CHAR_INPUT_SOURCE_TYPE) == [0, 3]
+    assert acc.char_input_source.value == 1
+
+
+async def test_media_player_television_current_source_renamed_away(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test a current source missing from the renamed sources selects input 0."""
+    acc = await _create_television(hass, hk_driver, ["HDMI 1", "Game A"], "Game A")
+
+    _set_sources(hass, acc, ["HDMI 1", "Game B"], "Game C")
+    await hass.async_block_till_done()
+
+    assert _input_chars(acc, CHAR_CONFIGURED_NAME) == ["HDMI 1", "Game B"]
+    assert acc.char_input_source.value == 0
+
+
+@pytest.mark.parametrize(
+    "sources",
+    [
+        pytest.param([], id="no_sources"),
+        pytest.param(["HDMI 1", "Game A", "Game B"], id="more_sources"),
+    ],
+)
+async def test_media_player_television_sources_count_changed_while_unavailable(
+    hass: HomeAssistant, hk_driver: HomeDriver, sources: list[str]
+) -> None:
+    """Test a new number of sources seen after unavailable rebuilds the accessory."""
+    acc = await _create_television(hass, hk_driver, ["HDMI 1", "Game A"], "Game A")
+
+    _set_sources(hass, acc, ["HDMI 1", "Game A"], "Game A", state=STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+    with patch.object(acc, "async_reload") as mock_reload:
+        _set_sources(hass, acc, sources, "")
+        await hass.async_block_till_done()
+
+    assert mock_reload.call_count == 1
