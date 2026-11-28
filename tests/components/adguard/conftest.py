@@ -15,6 +15,7 @@ from adguardhome import (
     Status,
     TimeUnit,
 )
+from adguardhome.dhcp import AdGuardHomeDhcp
 from adguardhome.filtering import AdGuardHomeFiltering, FilterLists
 from adguardhome.querylog import AdGuardHomeQueryLog
 from adguardhome.safesearch import AdGuardHomeSafeSearch
@@ -23,6 +24,7 @@ from adguardhome.toggle import Toggle
 from adguardhome.update import AdGuardHomeUpdate
 from awesomeversion import AwesomeVersion
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.adguard import DOMAIN, PLATFORMS
 from homeassistant.const import (
@@ -35,8 +37,6 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -62,6 +62,7 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_adguard() -> Generator[AsyncMock]:
     """Return a mocked AdGuard Home client."""
     adguard_mock = AsyncMock(spec=AdGuardHome)
+    adguard_mock.dhcp = AsyncMock(spec=AdGuardHomeDhcp)
     adguard_mock.filtering = AsyncMock(spec=AdGuardHomeFiltering)
     adguard_mock.filtering.blocklists = AsyncMock(spec=FilterLists)
     adguard_mock.parental = AsyncMock(spec=Toggle)

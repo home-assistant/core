@@ -6,6 +6,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.threema.const import (
     CONF_API_SECRET,
@@ -17,14 +18,13 @@ from homeassistant.components.threema.const import (
 from homeassistant.config_entries import ConfigSubentryDataWithId
 from homeassistant.const import CONF_RECIPIENT
 
-from tests.common import MockConfigEntry
-
 MOCK_GATEWAY_ID = "*TESTGWY"
 MOCK_API_SECRET = "test_secret_key_12345"
 MOCK_PRIVATE_KEY = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
 MOCK_PUBLIC_KEY = "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
 MOCK_RECIPIENT_ID = "ABCD1234"
 MOCK_SUBENTRY_ID = "mock_subentry_id"
+MOCK_CREDITS = 100
 
 RECIPIENT_SUBENTRY: ConfigSubentryDataWithId = {
     "data": {CONF_RECIPIENT: MOCK_RECIPIENT_ID},
@@ -78,10 +78,14 @@ def mock_config_entry_with_keys(
 
 @pytest.fixture
 def mock_credentials() -> Generator[AsyncMock]:
-    """Mock ThreemaAPIClient.validate_credentials to succeed by default."""
+    """Mock ThreemaAPIClient.get_credits to succeed by default.
+
+    Credential validation fetches the credits too, so this also covers it.
+    """
     with patch(
-        "homeassistant.components.threema.client.ThreemaAPIClient.validate_credentials",
+        "homeassistant.components.threema.client.ThreemaAPIClient.get_credits",
         new_callable=AsyncMock,
+        return_value=MOCK_CREDITS,
     ) as mock:
         yield mock
 

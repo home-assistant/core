@@ -5,42 +5,20 @@ from unittest.mock import MagicMock
 
 from pyhik.constants import SENSOR_MAP
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.hikvision.binary_sensor import (
+    BINARY_SENSOR_DESCRIPTIONS,
+    IGNORED_SENSOR_TYPES,
+)
 from homeassistant.components.hikvision.const import DOMAIN
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_LAST_TRIP_TIME,
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_SSL,
-    CONF_USERNAME,
-    STATE_OFF,
-    STATE_UNAVAILABLE,
-    Platform,
-)
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.helpers import (
-    device_registry as dr,
-    entity_registry as er,
-    issue_registry as ir,
-)
-from homeassistant.setup import async_setup_component
+from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE, Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
-from .conftest import (
-    TEST_DEVICE_ID,
-    TEST_DEVICE_NAME,
-    TEST_HOST,
-    TEST_PASSWORD,
-    TEST_PORT,
-    TEST_USERNAME,
-)
-
-from tests.common import MockConfigEntry, snapshot_platform
+from .conftest import TEST_DEVICE_ID, TEST_DEVICE_NAME
 
 
 @pytest.fixture
@@ -56,32 +34,18 @@ async def test_all_entities(
     mock_hikcamera: MagicMock,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test all binary sensor entities."""
-    await setup_integration(hass, mock_config_entry)
+    """Test an entity is created for every described sensor type."""
+    mock_hikcamera.return_value.current_event_states = {
+        name: [(False, 1)] for name in BINARY_SENSOR_DESCRIPTIONS
+    }
+
+    with caplog.at_level(logging.WARNING):
+        await setup_integration(hass, mock_config_entry)
+
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
-
-
-async def test_binary_sensors_created(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_hikcamera: MagicMock,
-) -> None:
-    """Test binary sensors are created for each event type."""
-    await setup_integration(hass, mock_config_entry)
-
-    # Check Motion sensor (camera type doesn't include channel in name)
-    state = hass.states.get("binary_sensor.front_camera_motion")
-    assert state is not None
-    assert state.state == STATE_OFF
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.MOTION
-    assert ATTR_LAST_TRIP_TIME in state.attributes
-
-    # Check Line Crossing sensor
-    state = hass.states.get("binary_sensor.front_camera_line_crossing")
-    assert state is not None
-    assert state.state == STATE_OFF
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.MOTION
+    assert "Unknown Hikvision sensor type" not in caplog.text
 
 
 async def test_binary_sensor_device_info(
@@ -271,94 +235,14 @@ async def test_binary_sensor_videoloss_silently_skipped(
     assert "Unknown Hikvision sensor type" not in caplog.text
 
 
-async def test_yaml_import_creates_deprecation_issue(
-    hass: HomeAssistant,
-    mock_hikcamera: MagicMock,
-    issue_registry: ir.IssueRegistry,
-) -> None:
-    """Test YAML import creates deprecation issue."""
-    await async_setup_component(
-        hass,
-        "binary_sensor",
-        {
-            "binary_sensor": {
-                "platform": DOMAIN,
-                CONF_HOST: TEST_HOST,
-                CONF_PORT: TEST_PORT,
-                CONF_USERNAME: TEST_USERNAME,
-                CONF_PASSWORD: TEST_PASSWORD,
-                CONF_SSL: False,
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
-    # Check that deprecation issue was created in homeassistant domain
-    issue = issue_registry.async_get_issue(
-        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
-    )
-    assert issue is not None
-    assert issue.severity == ir.IssueSeverity.WARNING
-
-
-async def test_yaml_import_with_name(
-    hass: HomeAssistant,
-    mock_hikcamera: MagicMock,
-) -> None:
-    """Test YAML import uses custom name for config entry."""
-    await async_setup_component(
-        hass,
-        "binary_sensor",
-        {
-            "binary_sensor": {
-                "platform": DOMAIN,
-                CONF_NAME: "Custom Camera Name",
-                CONF_HOST: TEST_HOST,
-                CONF_PORT: TEST_PORT,
-                CONF_USERNAME: TEST_USERNAME,
-                CONF_PASSWORD: TEST_PASSWORD,
-                CONF_SSL: False,
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
-    # Check that the config entry was created with the custom name
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    assert entries[0].title == "Custom Camera Name"
-
-
-async def test_yaml_import_abort_creates_issue(
-    hass: HomeAssistant,
-    mock_hikcamera: MagicMock,
-    issue_registry: ir.IssueRegistry,
-) -> None:
-    """Test YAML import creates issue when import is aborted."""
-    mock_hikcamera.return_value.get_id = None
-
-    await async_setup_component(
-        hass,
-        "binary_sensor",
-        {
-            "binary_sensor": {
-                "platform": DOMAIN,
-                CONF_HOST: TEST_HOST,
-                CONF_PORT: TEST_PORT,
-                CONF_USERNAME: TEST_USERNAME,
-                CONF_PASSWORD: TEST_PASSWORD,
-                CONF_SSL: False,
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
-    # Check that import failure issue was created
-    issue = issue_registry.async_get_issue(
-        DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
-    )
-    assert issue is not None
-    assert issue.severity == ir.IssueSeverity.WARNING
+def test_every_pyhik_sensor_type_is_handled() -> None:
+    """Test every event type pyhik can emit is described or ignored."""
+    unhandled = {
+        name
+        for name in SENSOR_MAP.values()
+        if name not in BINARY_SENSOR_DESCRIPTIONS and name not in IGNORED_SENSOR_TYPES
+    }
+    assert not unhandled
 
 
 async def test_binary_sensor_update_callback(

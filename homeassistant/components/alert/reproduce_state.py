@@ -7,16 +7,10 @@ import asyncio
 from collections.abc import Iterable
 from typing import Any
 
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import STATE_OFF, STATE_ON, TargetKey
 from homeassistant.core import Context, HomeAssistant, State
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER, AlertService
 
 VALID_STATES = {STATE_ON, STATE_OFF}
 
@@ -43,13 +37,13 @@ async def _async_reproduce_state(
     if cur_state.state == state.state:
         return
 
-    service_data = {ATTR_ENTITY_ID: state.entity_id}
+    service_data: dict[str, Any] = {TargetKey.ENTITY_ID: state.entity_id}
 
     if state.state == STATE_ON:
-        service = SERVICE_TURN_ON
+        service = AlertService.TURN_ON
 
     elif state.state == STATE_OFF:
-        service = SERVICE_TURN_OFF
+        service = AlertService.TURN_OFF
 
     await hass.services.async_call(
         DOMAIN, service, service_data, context=context, blocking=True

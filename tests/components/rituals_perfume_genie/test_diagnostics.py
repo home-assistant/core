@@ -3,15 +3,14 @@
 from datetime import timedelta
 
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
 
 from .common import init_integration, mock_config_entry, mock_diffuser
-
-from tests.common import async_fire_time_changed
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 
 async def test_diagnostics(
@@ -45,10 +44,15 @@ async def test_diagnostics_diffuser_added(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
+    # The first update of its sensors waits a moment for all its entities.
+    freezer.tick(timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
     diagnostics = await get_diagnostics_for_config_entry(
         hass, hass_client, config_entry
     )
 
     assert len(diagnostics["diffusers"]) == 2
     assert diagnostics["diffusers"][0]["sensors"] is not None
-    assert diagnostics["diffusers"][1]["sensors"] is None
+    assert diagnostics["diffusers"][1]["sensors"] is not None

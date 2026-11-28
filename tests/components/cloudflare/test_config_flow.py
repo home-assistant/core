@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 import pycfdns
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.cloudflare.const import CONF_RECORDS, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -17,8 +18,6 @@ from . import (
     USER_INPUT_ZONE,
     patch_async_setup_entry,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_user_form(hass: HomeAssistant, cfupdate_flow: MagicMock) -> None:

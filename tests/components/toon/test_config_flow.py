@@ -4,6 +4,9 @@ from http import HTTPStatus
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 from toonapi import Agreement, ToonError
 
 from homeassistant.components.toon.const import CONF_AGREEMENT, DOMAIN
@@ -14,10 +17,6 @@ from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 
 async def setup_component(hass: HomeAssistant) -> None:

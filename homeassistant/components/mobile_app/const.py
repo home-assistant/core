@@ -12,8 +12,11 @@ STORAGE_VERSION_MINOR = 2
 STORAGE_SAVE_DELAY_SECONDS = 10
 
 CONF_CLOUDHOOK_URL = "cloudhook_url"
+CONF_DATA = "data"
+CONF_MESSAGE = "message"
 CONF_REMOTE_UI_URL = "remote_ui_url"
 CONF_SECRET = "secret"
+CONF_TITLE = "title"
 CONF_USER_ID = "user_id"
 
 DATA_CONFIG_ENTRIES = "config_entries"
@@ -26,12 +29,15 @@ DATA_STORE = "store"
 DATA_NOTIFY = "notify"
 DATA_PUSH_CHANNEL = "push_channel"
 DATA_PENDING_UPDATES = "pending_updates"
+DATA_REGISTRATION_LOCK = "registration_lock"
 
 ATTR_APP_DATA = "app_data"
 ATTR_APP_ID = "app_id"
 ATTR_APP_NAME = "app_name"
 ATTR_APP_VERSION = "app_version"
 ATTR_DEVICE_NAME = "device_name"
+ATTR_MANUFACTURER = "manufacturer"
+ATTR_MODEL = "model"
 ATTR_NO_LEGACY_ENCRYPTION = "no_legacy_encryption"
 ATTR_OS_NAME = "os_name"
 ATTR_OS_VERSION = "os_version"
@@ -56,6 +62,10 @@ ATTR_TOKEN = "token"
 
 MANUFACTURER_APPLE = "Apple"
 
+ATTR_PAYLOAD_DATA = "data"
+ATTR_PAYLOAD_MESSAGE = "message"
+ATTR_PAYLOAD_TITLE = "title"
+
 CLEAR_NOTIFICATION = "clear_notification"
 
 ATTR_EVENT_DATA = "event_data"
@@ -68,6 +78,8 @@ ATTR_SPEED = "speed"
 ATTR_ALTITUDE = "altitude"
 ATTR_COURSE = "course"
 ATTR_VERTICAL_ACCURACY = "vertical_accuracy"
+ATTR_RAW_GPS = "raw_gps"
+ATTR_RAW_GPS_ACCURACY = "raw_gps_accuracy"
 
 ATTR_WEBHOOK_DATA = "data"
 ATTR_WEBHOOK_ENCRYPTED = "encrypted"

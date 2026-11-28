@@ -1,13 +1,28 @@
 """Tests for the EnOcean switch platform."""
 
+from unittest.mock import Mock
+
+from enocean_async import EURID
+from enocean_async.protocol.erp1.rorg import RORG
+from enocean_async.protocol.erp1.telegram import ERP1Telegram
+import pytest
+from pytest_homeassistant.common import MockConfigEntry, assert_setup_component
+
 from homeassistant.components.enocean import DOMAIN
 from homeassistant.components.enocean.entity import combine_hex
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, assert_setup_component
+from . import TelegramReceiver
 
 SWITCH_CONFIG = {
     "switch": [
@@ -71,3 +86,55 @@ async def test_unique_id_migration(
         entity_registry.async_get_entity_id(SWITCH_DOMAIN, DOMAIN, old_unique_id)
         is None
     )
+
+
+@pytest.mark.parametrize(
+    ("rorg", "data", "expected_state"),
+    [
+        pytest.param(RORG.RORG_VLD, "046164", STATE_ON, id="actuator_status_on"),
+        pytest.param(RORG.RORG_VLD, "046100", STATE_OFF, id="actuator_status_off"),
+        pytest.param(RORG.RORG_VLD, "046264", STATE_OFF, id="other_channel"),
+        pytest.param(RORG.RORG_4BS, "0000640c", STATE_ON, id="power_reading"),
+    ],
+)
+async def test_status_telegram(
+    hass: HomeAssistant,
+    receive_telegram: TelegramReceiver,
+    rorg: RORG,
+    data: str,
+    expected_state: str,
+) -> None:
+    """Test that telegrams of the actuator update the switch state."""
+    assert await async_setup_component(hass, SWITCH_DOMAIN, SWITCH_CONFIG)
+    await hass.async_block_till_done()
+
+    await receive_telegram(
+        ERP1Telegram(rorg, bytes.fromhex(data), EURID("DE:AD:BE:EF"))
+    )
+
+    assert hass.states.get("switch.room0").state == expected_state
+
+
+@pytest.mark.usefixtures("receive_telegram")
+@pytest.mark.parametrize(
+    ("service", "expected_data"),
+    [
+        pytest.param(SERVICE_TURN_ON, "d20101640000000000", id="turn_on"),
+        pytest.param(SERVICE_TURN_OFF, "d20101000000000000", id="turn_off"),
+    ],
+)
+async def test_switch_command(
+    hass: HomeAssistant, mock_gateway: Mock, service: str, expected_data: str
+) -> None:
+    """Test that switching sends a command to the actuator."""
+    assert await async_setup_component(hass, SWITCH_DOMAIN, SWITCH_CONFIG)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN, service, {ATTR_ENTITY_ID: "switch.room0"}, blocking=True
+    )
+    await hass.async_block_till_done()
+
+    packet = mock_gateway.send_esp3_packet.call_args.args[0]
+    assert packet.data == bytes.fromhex(expected_data)
+    assert packet.optional == bytes.fromhex("03deadbeefff00")

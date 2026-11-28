@@ -18,7 +18,7 @@ from .models import MySensorsConfigEntry, MySensorsData
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: MySensorsConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: MySensorsConfigEntry) -> None:
     """Set up an instance of the MySensors integration.
 
     Every instance has a connection to exactly one Gateway.
@@ -36,17 +36,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: MySensorsConfigEntry) ->
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     await finish_setup(hass, entry)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: MySensorsConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: MySensorsConfigEntry) -> None:
     """Remove an instance of the MySensors integration."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if not unload_ok:
-        return False
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
     await gw_stop(entry)
-    return True
 
 
 async def async_remove_config_entry_device(

@@ -11,7 +11,6 @@ import probatio
 
 from homeassistant.config_entries import (
     SOURCE_IMPORT,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -19,9 +18,9 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_TYPE, UnitOfTime
 from homeassistant.core import callback
 from homeassistant.helpers import selector
-from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.helpers.typing import Undefined
 
-from . import list_input_devices
+from . import KeyboardRemoteConfigEntry, list_input_devices
 from .const import (
     CONF_DEVICE_DESCRIPTOR,
     CONF_DEVICE_NAME,
@@ -30,10 +29,12 @@ from .const import (
     CONF_EMULATE_KEY_HOLD,
     CONF_EMULATE_KEY_HOLD_DELAY,
     CONF_EMULATE_KEY_HOLD_REPEAT,
+    CONF_EXCLUSIVE,
     CONF_KEY_TYPES,
     DEFAULT_EMULATE_KEY_HOLD,
     DEFAULT_EMULATE_KEY_HOLD_DELAY,
     DEFAULT_EMULATE_KEY_HOLD_REPEAT,
+    DEFAULT_EXCLUSIVE,
     DEFAULT_KEY_TYPES,
     DEVINPUT_BY_ID,
     DOMAIN,
@@ -235,6 +236,7 @@ class KeyboardRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Keyboard Remote."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Initialize the flow."""
@@ -245,7 +247,7 @@ class KeyboardRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: KeyboardRemoteConfigEntry,
     ) -> KeyboardRemoteOptionsFlow:
         """Get the options flow for this handler."""
         return KeyboardRemoteOptionsFlow()
@@ -293,6 +295,7 @@ class KeyboardRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
                     data=data,
                     options={
                         CONF_KEY_TYPES: DEFAULT_KEY_TYPES,
+                        CONF_EXCLUSIVE: DEFAULT_EXCLUSIVE,
                         CONF_EMULATE_KEY_HOLD: DEFAULT_EMULATE_KEY_HOLD,
                         CONF_EMULATE_KEY_HOLD_DELAY: DEFAULT_EMULATE_KEY_HOLD_DELAY,
                         CONF_EMULATE_KEY_HOLD_REPEAT: DEFAULT_EMULATE_KEY_HOLD_REPEAT,
@@ -397,6 +400,7 @@ class KeyboardRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
             data=data,
             options={
                 CONF_KEY_TYPES: key_types,
+                CONF_EXCLUSIVE: DEFAULT_EXCLUSIVE,
                 CONF_EMULATE_KEY_HOLD: import_data[CONF_EMULATE_KEY_HOLD],
                 CONF_EMULATE_KEY_HOLD_DELAY: _clamp_imported(
                     CONF_EMULATE_KEY_HOLD_DELAY,
@@ -416,7 +420,7 @@ class KeyboardRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def _async_imported_entry(
         self, descriptor: str | None, name: str | None
-    ) -> ConfigEntry | None:
+    ) -> KeyboardRemoteConfigEntry | None:
         """Return the entry an earlier import of this YAML block created."""
         for entry in self._async_current_entries():
             if entry.source != SOURCE_IMPORT:
@@ -431,7 +435,7 @@ class KeyboardRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def _async_adopt_or_abort(
         self,
-        entry: ConfigEntry,
+        entry: KeyboardRemoteConfigEntry,
         descriptor: str | None,
         device_path: str | None,
         device_name: str | None,
@@ -466,7 +470,7 @@ class KeyboardRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
             title=(
                 device_name
                 if device_name and entry.title == entry.data[CONF_DEVICE_NAME]
-                else UNDEFINED
+                else Undefined
             ),
             data_updates=data_updates,
             reason="already_configured",
@@ -505,6 +509,11 @@ class KeyboardRemoteOptionsFlow(OptionsFlowWithReload):
                                 mode=selector.SelectSelectorMode.LIST,
                             )
                         ),
+                        # Suggested values come from the entry options, which have
+                        # no exclusive value until the entry is set up and migrated
+                        probatio.Required(
+                            CONF_EXCLUSIVE, default=DEFAULT_EXCLUSIVE
+                        ): selector.BooleanSelector(),
                         probatio.Required(
                             CONF_EMULATE_KEY_HOLD,
                         ): selector.BooleanSelector(),

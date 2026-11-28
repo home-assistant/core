@@ -9,9 +9,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import WatergateConfigEntry
 from .const import AUTO_SHUT_OFF_EVENT_NAME
-from .coordinator import WatergateDataCoordinator
+from .coordinator import WatergateConfigEntry, WatergateDataCoordinator
 from .entity import WatergateEntity
 
 VOLUME_AUTO_SHUT_OFF = "volume_threshold"
@@ -61,7 +60,7 @@ class AutoShutOffEvent(WatergateEntity, EventEntity):
         self.entity_description = entity_description
 
     @override
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register the callback for event handling when the entity is added."""
         await super().async_added_to_hass()
         self.async_on_remove(

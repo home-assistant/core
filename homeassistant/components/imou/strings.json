@@ -124,6 +124,11 @@
         "name": "Usage duration"
       }
     },
+    "siren": {
+      "siren": {
+        "name": "Siren"
+      }
+    },
     "switch": {
       "ab_alarm_sound": {
         "name": "Abnormal sound alarm"
@@ -191,8 +196,14 @@
     "press_button_failed": {
       "message": "Imou rejected the button press"
     },
+    "quota_exceeded": {
+      "message": "The Imou monthly API quota is used up"
+    },
     "select_option_failed": {
       "message": "Imou rejected the new option"
+    },
+    "siren_operation_failed": {
+      "message": "Imou rejected the siren change"
     },
     "switch_operation_failed": {
       "message": "Imou rejected the switch change"

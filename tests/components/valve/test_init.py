@@ -3,30 +3,7 @@
 from collections.abc import Generator
 
 import pytest
-from syrupy.assertion import SnapshotAssertion
-
-from homeassistant.components.valve import (
-    ATTR_CURRENT_POSITION,
-    ATTR_IS_CLOSED,
-    DOMAIN,
-    ValveDeviceClass,
-    ValveEntity,
-    ValveEntityDescription,
-    ValveEntityFeature,
-    ValveState,
-)
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_SET_VALVE_POSITION,
-    SERVICE_TOGGLE,
-    STATE_UNAVAILABLE,
-    Platform,
-)
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-
-from tests.common import (
+from pytest_homeassistant.common import (
     MockConfigEntry,
     MockModule,
     MockPlatform,
@@ -34,6 +11,22 @@ from tests.common import (
     mock_integration,
     mock_platform,
 )
+from syrupy.assertion import SnapshotAssertion
+
+from homeassistant.components.valve import (
+    DOMAIN,
+    ValveDeviceClass,
+    ValveEntity,
+    ValveEntityDescription,
+    ValveEntityFeature,
+    ValveEntityStateAttribute,
+    ValveService,
+    ValveState,
+)
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
+from homeassistant.const import STATE_UNAVAILABLE, Platform, TargetKey
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 TEST_DOMAIN = "test"
 
@@ -149,19 +142,17 @@ def mock_config_entry(hass: HomeAssistant) -> tuple[MockConfigEntry, list[ValveE
 
     async def async_setup_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setups(
             config_entry, [Platform.VALVE]
         )
-        return True
 
     async def async_unload_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Unload up test config entry."""
         await hass.config_entries.async_unload_platforms(config_entry, [Platform.VALVE])
-        return True
 
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
     mock_integration(
@@ -239,8 +230,8 @@ async def test_services(
     assert is_open(hass, ent2, 50)
 
     # call basic toggle services
-    await call_service(hass, SERVICE_TOGGLE, ent1)
-    await call_service(hass, SERVICE_TOGGLE, ent2)
+    await call_service(hass, ValveService.TOGGLE, ent1)
+    await call_service(hass, ValveService.TOGGLE, ent2)
     await hass.async_block_till_done()
 
     # entities without stop should be closed and with stop should be closing
@@ -250,8 +241,8 @@ async def test_services(
     assert is_closed(hass, ent2, 0)
 
     # call basic toggle services and set different valve position states
-    await call_service(hass, SERVICE_TOGGLE, ent1)
-    await call_service(hass, SERVICE_TOGGLE, ent2)
+    await call_service(hass, ValveService.TOGGLE, ent1)
+    await call_service(hass, ValveService.TOGGLE, ent2)
     await hass.async_block_till_done()
 
     # entities should be in correct state depending on
@@ -262,8 +253,8 @@ async def test_services(
     assert is_open(hass, ent2, 100)
 
     # call basic toggle services
-    await call_service(hass, SERVICE_TOGGLE, ent1)
-    await call_service(hass, SERVICE_TOGGLE, ent2)
+    await call_service(hass, ValveService.TOGGLE, ent1)
+    await call_service(hass, ValveService.TOGGLE, ent2)
     await hass.async_block_till_done()
 
     # entities should be in correct state depending on
@@ -275,7 +266,7 @@ async def test_services(
     ent2.finish_movement()
     assert is_closed(hass, ent2, 0)
 
-    await call_service(hass, SERVICE_SET_VALVE_POSITION, ent2, 50)
+    await call_service(hass, ValveService.SET_POSITION, ent2, 50)
     await hass.async_block_till_done()
     assert is_opening(hass, ent2, 0, True)
     ent2.finish_movement()
@@ -339,38 +330,38 @@ async def test_is_closed_state_attribute(hass: HomeAssistant) -> None:
     binary_valve = MockBinaryValveEntity()
     binary_valve.hass = hass
 
-    assert binary_valve.state_attributes[ATTR_IS_CLOSED] is None
+    assert binary_valve.state_attributes[ValveEntityStateAttribute.IS_CLOSED] is None
 
     binary_valve._attr_is_closed = True
-    assert binary_valve.state_attributes[ATTR_IS_CLOSED] is True
+    assert binary_valve.state_attributes[ValveEntityStateAttribute.IS_CLOSED] is True
 
     binary_valve._attr_is_closed = False
-    assert binary_valve.state_attributes[ATTR_IS_CLOSED] is False
+    assert binary_valve.state_attributes[ValveEntityStateAttribute.IS_CLOSED] is False
 
     pos_valve = MockValveEntity()
     pos_valve.hass = hass
 
-    assert pos_valve.state_attributes[ATTR_IS_CLOSED] is None
+    assert pos_valve.state_attributes[ValveEntityStateAttribute.IS_CLOSED] is None
 
     # is_closed property is ignored for position reporting valves,
     # so it should remain None even if set to True
     pos_valve._attr_is_closed = True
-    assert pos_valve.state_attributes[ATTR_IS_CLOSED] is None
+    assert pos_valve.state_attributes[ValveEntityStateAttribute.IS_CLOSED] is None
 
     # if current position is 0, the valve is closed
     pos_valve._attr_current_valve_position = 0
-    assert pos_valve.state_attributes[ATTR_IS_CLOSED] is True
+    assert pos_valve.state_attributes[ValveEntityStateAttribute.IS_CLOSED] is True
 
     # if current position is greater than 0, the valve is not closed
     pos_valve._attr_current_valve_position = 1
-    assert pos_valve.state_attributes[ATTR_IS_CLOSED] is False
+    assert pos_valve.state_attributes[ValveEntityStateAttribute.IS_CLOSED] is False
     pos_valve._attr_current_valve_position = 50
-    assert pos_valve.state_attributes[ATTR_IS_CLOSED] is False
+    assert pos_valve.state_attributes[ValveEntityStateAttribute.IS_CLOSED] is False
 
     # if current position is None, the valve close state attribute
     # is unknown and no fallback to the is_closed property is done
     pos_valve._attr_current_valve_position = None
-    assert pos_valve.state_attributes[ATTR_IS_CLOSED] is None
+    assert pos_valve.state_attributes[ValveEntityStateAttribute.IS_CLOSED] is None
 
 
 async def test_supported_features(hass: HomeAssistant) -> None:
@@ -385,7 +376,7 @@ def call_service(
     hass: HomeAssistant, service: str, ent: ValveEntity, position: int | None = None
 ):
     """Call any service on entity."""
-    params = {ATTR_ENTITY_ID: ent.entity_id}
+    params = {TargetKey.ENTITY_ID: ent.entity_id}
     if position is not None:
         params["position"] = position
     return hass.services.async_call(DOMAIN, service, params, blocking=True)
@@ -406,8 +397,13 @@ def _check_state(
     """Check if the state of a valve is as expected."""
     state = hass.states.get(ent.entity_id)
     correct_state = state.state == expected_state
-    correct_is_closed = state.attributes.get(ATTR_IS_CLOSED) == expected_is_closed
-    correct_position = state.attributes.get(ATTR_CURRENT_POSITION) == expected_position
+    correct_is_closed = (
+        state.attributes.get(ValveEntityStateAttribute.IS_CLOSED) == expected_is_closed
+    )
+    correct_position = (
+        state.attributes.get(ValveEntityStateAttribute.CURRENT_POSITION)
+        == expected_position
+    )
     return all([correct_state, correct_is_closed, correct_position])
 
 

@@ -6,6 +6,8 @@ from unittest.mock import patch
 
 import aiohttp
 import pytest
+from pytest_homeassistant.common import get_fixture_path
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant import config as hass_config
 from homeassistant.components.binary_sensor import (
@@ -13,11 +15,11 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
 )
 from homeassistant.components.rest import DOMAIN
+from homeassistant.components.rest.services import RestService
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     CONTENT_TYPE_JSON,
-    SERVICE_RELOAD,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -25,9 +27,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-
-from tests.common import get_fixture_path
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_setup_missing_basic_config(hass: HomeAssistant) -> None:
@@ -524,7 +523,7 @@ async def test_reload(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) 
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_RELOAD,
+            RestService.RELOAD,
             {},
             blocking=True,
         )

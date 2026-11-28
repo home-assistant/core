@@ -1,7 +1,9 @@
 {
   "domain": "slide",
   "name": "Slide",
+  "categories": ["blinds_curtains"],
   "codeowners": ["@ualex73"],
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/slide",
   "iot_class": "cloud_polling",
   "loggers": ["goslideapi"],

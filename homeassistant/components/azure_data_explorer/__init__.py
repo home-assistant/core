@@ -13,7 +13,7 @@ import probatio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import MATCH_ALL
 from homeassistant.core import Event, HomeAssistant, State
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA, EntityFilter
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.json import ExtendedJSONEncoder
@@ -69,7 +69,7 @@ async def async_setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Do the setup based on the config entry and the filter from yaml."""
     adx = AzureDataExplorer(hass, entry)
     try:
@@ -79,19 +79,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "Could not find Azure Data Explorer database or table"
         ) from exp
     except KustoAuthenticationError as exp:
-        raise ConfigEntryError(
+        raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="authentication_failed",
         ) from exp
 
     entry.async_on_unload(adx.async_stop)
     await adx.async_start()
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
-    return True
 
 
 class AzureDataExplorer:
@@ -187,6 +185,9 @@ class AzureDataExplorer:
                 _LOGGER.error("Could not find database or table: %s", err)
             except KustoAuthenticationError as err:
                 _LOGGER.error("Could not authenticate to Azure Data Explorer: %s", err)
+                # The final send on unload still uses the old credentials.
+                if not self._shutdown:
+                    self._entry.async_start_reauth(self.hass)
 
         self._schedule_next_send()
 

@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from pytrafikverket import (
     InvalidAuthentication,
     NoTrainStationFound,
@@ -18,8 +19,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
 
 from . import ENTRY_CONFIG, OPTIONS_CONFIG
-
-from tests.common import MockConfigEntry
 
 
 async def test_unload_entry(

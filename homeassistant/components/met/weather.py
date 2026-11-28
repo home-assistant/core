@@ -1,20 +1,13 @@
 """Support for Met.no weather service."""
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, override
+from typing import Any, override
 
 from homeassistant.components.weather import (
+    ATTR_CONDITION_CLEAR_NIGHT,
+    ATTR_CONDITION_SUNNY,
     ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_TIME,
-    ATTR_WEATHER_CLOUD_COVERAGE,
-    ATTR_WEATHER_DEW_POINT,
-    ATTR_WEATHER_HUMIDITY,
-    ATTR_WEATHER_PRESSURE,
-    ATTR_WEATHER_TEMPERATURE,
-    ATTR_WEATHER_UV_INDEX,
-    ATTR_WEATHER_WIND_BEARING,
-    ATTR_WEATHER_WIND_GUST_SPEED,
-    ATTR_WEATHER_WIND_SPEED,
     DOMAIN as WEATHER_DOMAIN,
     Forecast,
     SingleCoordinatorWeatherEntity,
@@ -22,8 +15,8 @@ from homeassistant.components.weather import (
 )
 from homeassistant.const import (
     CONF_LATITUDE,
+    CONF_LOCATION,
     CONF_LONGITUDE,
-    CONF_NAME,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
     UnitOfSpeed,
@@ -35,20 +28,10 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from .const import (
-    ATTR_CONDITION_CLEAR_NIGHT,
-    ATTR_CONDITION_SUNNY,
-    ATTR_MAP,
-    CONDITIONS_MAP,
-    CONF_TRACK_HOME,
-    DOMAIN,
-    FORECAST_MAP,
-)
+from .const import CONDITIONS_MAP, CONF_TRACK_HOME, DEFAULT_NAME, DOMAIN, FORECAST_MAP
 from .coordinator import MetDataUpdateCoordinator, MetWeatherConfigEntry
 
 PARALLEL_UPDATES = 0
-
-DEFAULT_NAME = "Met.no"
 
 
 async def async_setup_entry(
@@ -60,16 +43,13 @@ async def async_setup_entry(
     coordinator = config_entry.runtime_data
     entity_registry = er.async_get(hass)
 
-    name: str | None
     is_metric = hass.config.units is METRIC_SYSTEM
     if config_entry.data.get(CONF_TRACK_HOME, False):
-        name = hass.config.location_name
+        device_name = hass.config.location_name
     else:
-        name = config_entry.data.get(CONF_NAME, DEFAULT_NAME)
-        if TYPE_CHECKING:
-            assert isinstance(name, str)
+        device_name = config_entry.title
 
-    entities = [MetWeather(coordinator, config_entry, name, is_metric)]
+    entities = [MetWeather(coordinator, config_entry, device_name, is_metric)]
 
     # Remove hourly entity from legacy config entries
     if hourly_entity_id := entity_registry.async_get_entity_id(
@@ -89,8 +69,8 @@ def _calculate_unique_id(config: Mapping[str, Any], hourly: bool) -> str:
         name_appendix = "-hourly"
     if config.get(CONF_TRACK_HOME):
         return f"home{name_appendix}"
-
-    return f"{config[CONF_LATITUDE]}-{config[CONF_LONGITUDE]}{name_appendix}"
+    location = config[CONF_LOCATION]
+    return f"{location[CONF_LATITUDE]}-{location[CONF_LONGITUDE]}{name_appendix}"
 
 
 def format_condition(condition: str) -> str:
@@ -109,6 +89,7 @@ class MetWeather(SingleCoordinatorWeatherEntity[MetDataUpdateCoordinator]):
         "Meteorological Institute."
     )
     _attr_has_entity_name = True
+    _attr_name = None
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_native_precipitation_unit = UnitOfPrecipitationDepth.MILLIMETERS
     _attr_native_pressure_unit = UnitOfPressure.HPA
@@ -121,7 +102,7 @@ class MetWeather(SingleCoordinatorWeatherEntity[MetDataUpdateCoordinator]):
         self,
         coordinator: MetDataUpdateCoordinator,
         config_entry: MetWeatherConfigEntry,
-        name: str,
+        device_name: str,
         is_metric: bool,
     ) -> None:
         """Initialise the platform with a data instance and site."""
@@ -130,15 +111,14 @@ class MetWeather(SingleCoordinatorWeatherEntity[MetDataUpdateCoordinator]):
         self._config = config_entry.data
         self._is_metric = is_metric
         self._attr_device_info = DeviceInfo(
-            name="Forecast",
+            name=device_name,
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, config_entry.entry_id)},
-            manufacturer="Met.no",
+            manufacturer=DEFAULT_NAME,
             model="Forecast",
             configuration_url="https://www.met.no/en",
         )
         self._attr_track_home = self._config.get(CONF_TRACK_HOME, False)
-        self._attr_name = name
 
     @property
     @override
@@ -157,73 +137,55 @@ class MetWeather(SingleCoordinatorWeatherEntity[MetDataUpdateCoordinator]):
     @override
     def native_temperature(self) -> float | None:
         """Return the temperature."""
-        return self.coordinator.data.current_weather_data.get(
-            ATTR_MAP[ATTR_WEATHER_TEMPERATURE]
-        )
+        return self.coordinator.data.current_weather_data.get("temperature")
 
     @property
     @override
     def native_pressure(self) -> float | None:
         """Return the pressure."""
-        return self.coordinator.data.current_weather_data.get(
-            ATTR_MAP[ATTR_WEATHER_PRESSURE]
-        )
+        return self.coordinator.data.current_weather_data.get("pressure")
 
     @property
     @override
     def humidity(self) -> float | None:
         """Return the humidity."""
-        return self.coordinator.data.current_weather_data.get(
-            ATTR_MAP[ATTR_WEATHER_HUMIDITY]
-        )
+        return self.coordinator.data.current_weather_data.get("humidity")
 
     @property
     @override
     def native_wind_speed(self) -> float | None:
         """Return the wind speed."""
-        return self.coordinator.data.current_weather_data.get(
-            ATTR_MAP[ATTR_WEATHER_WIND_SPEED]
-        )
+        return self.coordinator.data.current_weather_data.get("wind_speed")
 
     @property
     @override
     def wind_bearing(self) -> float | str | None:
         """Return the wind direction."""
-        return self.coordinator.data.current_weather_data.get(
-            ATTR_MAP[ATTR_WEATHER_WIND_BEARING]
-        )
+        return self.coordinator.data.current_weather_data.get("wind_bearing")
 
     @property
     @override
     def native_wind_gust_speed(self) -> float | None:
         """Return the wind gust speed in native units."""
-        return self.coordinator.data.current_weather_data.get(
-            ATTR_MAP[ATTR_WEATHER_WIND_GUST_SPEED]
-        )
+        return self.coordinator.data.current_weather_data.get("wind_gust")
 
     @property
     @override
     def cloud_coverage(self) -> float | None:
         """Return the cloud coverage."""
-        return self.coordinator.data.current_weather_data.get(
-            ATTR_MAP[ATTR_WEATHER_CLOUD_COVERAGE]
-        )
+        return self.coordinator.data.current_weather_data.get("cloudiness")
 
     @property
     @override
     def native_dew_point(self) -> float | None:
         """Return the dew point."""
-        return self.coordinator.data.current_weather_data.get(
-            ATTR_MAP[ATTR_WEATHER_DEW_POINT]
-        )
+        return self.coordinator.data.current_weather_data.get("dew_point")
 
     @property
     @override
     def uv_index(self) -> float | None:
         """Return the uv index."""
-        return self.coordinator.data.current_weather_data.get(
-            ATTR_MAP[ATTR_WEATHER_UV_INDEX]
-        )
+        return self.coordinator.data.current_weather_data.get("uv_index")
 
     def _forecast(self, hourly: bool) -> list[Forecast] | None:
         """Return the forecast array."""

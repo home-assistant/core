@@ -11,6 +11,8 @@ from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import Service, ServicesTypes
 from aiohomekit.testing import FakeController, FakePairing
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.homekit_controller.const import (
@@ -32,9 +34,6 @@ from .common import (
     setup_test_accessories_with_controller,
     setup_test_component,
 )
-
-from tests.common import async_fire_time_changed
-from tests.typing import WebSocketGenerator
 
 FIXTURES_DIR = pathlib.Path(__file__).parent / "fixtures"
 FIXTURES = [path.relative_to(FIXTURES_DIR) for path in FIXTURES_DIR.glob("*.json")]
@@ -120,6 +119,29 @@ async def test_device_remove_devices(
     )
     response = await client.remove_device(dead_device_entry.id)
     assert response["success"]
+
+
+async def test_device_remove_child_devices(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test we can't remove the child device of a service that still exists."""
+    assert await async_setup_component(hass, "config", {})
+    accessories = await setup_accessories_from_file(hass, "connectsense.json")
+    config_entry, _ = await setup_test_accessories(hass, accessories)
+    child_devices = dr.async_child_entries_for_config_entry(
+        device_registry, config_entry.entry_id
+    )
+    assert len(child_devices) == 2
+
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(child_devices[0].id)
+
+    assert not response["success"]
+    assert entity_registry.async_get("switch.inwall_outlet_0394de_outlet_a")
+    assert entity_registry.async_get("switch.inwall_outlet_0394de_outlet_b")
 
 
 async def test_offline_device_raises(
@@ -287,10 +309,18 @@ async def test_snapshots(
     accessories = await setup_accessories_from_file(hass, example)
     config_entry, _ = await setup_test_accessories(hass, accessories)
 
-    registry_devices = dr.async_entries_for_config_entry(
-        device_registry, config_entry.entry_id
-    )
-    registry_devices.sort(key=lambda device: device.name)
+    registry_devices: list[dr.AnyDeviceEntry] = []
+    for device in sorted(
+        dr.async_entries_for_config_entry(device_registry, config_entry.entry_id),
+        key=lambda device: device.name,
+    ):
+        registry_devices.append(device)
+        registry_devices.extend(
+            sorted(
+                dr.async_entries_for_parent_device(device_registry, device.id),
+                key=lambda child_device: child_device.name or "",
+            )
+        )
 
     devices = []
 

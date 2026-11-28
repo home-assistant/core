@@ -58,6 +58,8 @@ from .const import (
 )
 from .coordinator import FritzConfigEntry
 
+CREDENTIAL_DOCS_URL = "https://www.home-assistant.io/integrations/fritz#credentials"
+
 
 class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a FRITZ!Box Tools config flow."""
@@ -103,6 +105,14 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
                 pool_maxsize=30,
                 redact_debug_log=True,
             )
+            # Credentials are only checked by the first TR-064 call
+            self._model = connection.call_action("DeviceInfo:1", "GetInfo")[
+                "NewModelName"
+            ]
+            upnp_disabled = (
+                "X_AVM-DE_UPnP1" in connection.services
+                and not connection.call_action("X_AVM-DE_UPnP1", "GetInfo")["NewEnable"]
+            )
         except FRITZ_AUTH_EXCEPTIONS:
             return ERROR_AUTH_INVALID
         except FritzConnectionException:
@@ -111,12 +121,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
             LOGGER.exception("Unexpected exception")
             return ERROR_UNKNOWN
 
-        self._model = connection.call_action("DeviceInfo:1", "GetInfo")["NewModelName"]
-
-        if (
-            "X_AVM-DE_UPnP1" in connection.services
-            and not connection.call_action("X_AVM-DE_UPnP1", "GetInfo")["NewEnable"]
-        ):
+        if upnp_disabled:
             return ERROR_UPNP_NOT_CONFIGURED
 
         return None
@@ -360,7 +365,10 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
                     ),
                 }
             ),
-            description_placeholders={"host": self._host},
+            description_placeholders={
+                "host": self._host,
+                "credential_docs_url": CREDENTIAL_DOCS_URL,
+            },
             errors=errors or {},
         )
 

@@ -7,12 +7,16 @@ from typing import override
 from aiohttp.client_exceptions import ClientResponseError, ServerDisconnectedError
 from brunt import BruntClientAsync, Thing
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    UpdateFailed,
+    UpdateFailedUnreachable,
+)
 
 from .const import REGULAR_INTERVAL
 
@@ -75,11 +79,15 @@ class BruntCoordinator(DataUpdateCoordinator[dict[str | None, Thing]]):
                 things = await self.bapi.async_get_things(force=True)
                 return {thing.serial: thing for thing in things}
         except ServerDisconnectedError as err:
-            raise UpdateFailed(f"Error communicating with API: {err}") from err
+            raise UpdateFailedUnreachable(
+                f"Error communicating with API: {err}"
+            ) from err
         except ClientResponseError as err:
             if err.status == 403:
                 raise ConfigEntryAuthFailed from err
-            if err.status == 401:
+            if err.status == 401 and self.config_entry.state is ConfigEntryState.LOADED:
                 _LOGGER.warning("Device not found, will reload Brunt integration")
-                await self.hass.config_entries.async_reload(self.config_entry.entry_id)
+                self.hass.config_entries.async_schedule_reload(
+                    self.config_entry.entry_id
+                )
             raise UpdateFailed from err

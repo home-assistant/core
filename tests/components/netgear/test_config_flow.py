@@ -4,6 +4,7 @@ from unittest.mock import Mock, patch
 
 from pynetgear import DEFAULT_USER
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.netgear.const import (
     CONF_CONSIDER_HOME,
@@ -28,8 +29,6 @@ from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_SERIAL,
     SsdpServiceInfo,
 )
-
-from tests.common import MockConfigEntry
 
 URL = "http://routerlogin.net"
 URL_SSL = "https://routerlogin.net"
@@ -62,6 +61,7 @@ TITLE_INCOMPLETE = ROUTER_INFOS["ModelName"]
 HOST = "10.0.0.1"
 SERIAL_2 = "5ER1AL0000002"
 PORT = 80
+PORT_SSL = 443
 SSL = False
 USERNAME = "Home_Assistant"
 PASSWORD = "password"
@@ -74,7 +74,7 @@ SSDP_URL_SLL = f"https://{HOST}:{PORT}/rootDesc.xml"
 def mock_controller_service():
     """Mock a successful service."""
     with (
-        patch("homeassistant.components.netgear.async_setup_entry", return_value=True),
+        patch("homeassistant.components.netgear.async_setup_entry", return_value=None),
         patch("homeassistant.components.netgear.router.Netgear") as service_mock,
     ):
         service_mock.return_value.get_info = Mock(return_value=ROUTER_INFOS)
@@ -85,6 +85,9 @@ def mock_controller_service():
 
 async def test_user(hass: HomeAssistant, service) -> None:
     """Test user step."""
+    service.return_value.port = PORT_SSL
+    service.return_value.ssl = True
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -96,6 +99,8 @@ async def test_user(hass: HomeAssistant, service) -> None:
         result["flow_id"],
         {
             CONF_HOST: HOST,
+            CONF_PORT: PORT_SSL,
+            CONF_SSL: True,
             CONF_USERNAME: USERNAME,
             CONF_PASSWORD: PASSWORD,
         },
@@ -104,10 +109,11 @@ async def test_user(hass: HomeAssistant, service) -> None:
     assert result["result"].unique_id == SERIAL
     assert result["title"] == TITLE
     assert result["data"].get(CONF_HOST) == HOST
-    assert result["data"].get(CONF_PORT) == PORT
-    assert result["data"].get(CONF_SSL) == SSL
+    assert result["data"].get(CONF_PORT) == PORT_SSL
+    assert result["data"].get(CONF_SSL) is True
     assert result["data"].get(CONF_USERNAME) == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
+    service.assert_called_once_with(PASSWORD, HOST, USERNAME, PORT_SSL, True)
 
 
 async def test_user_connect_error(hass: HomeAssistant, service: Mock) -> None:
@@ -304,6 +310,9 @@ async def test_ssdp(hass: HomeAssistant, service) -> None:
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    schema_defaults = result["data_schema"]({})
+    assert schema_defaults[CONF_PORT] == PORT_80
+    assert schema_defaults[CONF_SSL] is False
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_PASSWORD: PASSWORD}
@@ -316,10 +325,11 @@ async def test_ssdp(hass: HomeAssistant, service) -> None:
     assert result["data"].get(CONF_SSL) == SSL
     assert result["data"].get(CONF_USERNAME) == DEFAULT_USER
     assert result["data"][CONF_PASSWORD] == PASSWORD
+    service.assert_called_once_with(PASSWORD, HOST, DEFAULT_USER, PORT_80, False)
 
 
-async def test_ssdp_port_5555(hass: HomeAssistant, service) -> None:
-    """Test ssdp step with port 5555."""
+async def test_ssdp_override_connection_settings(hass: HomeAssistant, service) -> None:
+    """Test overriding discovered connection settings."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_SSDP},
@@ -336,21 +346,27 @@ async def test_ssdp_port_5555(hass: HomeAssistant, service) -> None:
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-
-    service.return_value.port = 5555
-    service.return_value.ssl = True
+    schema_defaults = result["data_schema"]({})
+    assert schema_defaults[CONF_PORT] == PORT_5555
+    assert schema_defaults[CONF_SSL] is True
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_PASSWORD: PASSWORD}
+        result["flow_id"],
+        {
+            CONF_PORT: PORT_80,
+            CONF_SSL: False,
+            CONF_PASSWORD: PASSWORD,
+        },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == SERIAL
     assert result["title"] == TITLE
     assert result["data"].get(CONF_HOST) == HOST
-    assert result["data"].get(CONF_PORT) == PORT_5555
-    assert result["data"].get(CONF_SSL) is True
+    assert result["data"].get(CONF_PORT) == PORT_80
+    assert result["data"].get(CONF_SSL) is False
     assert result["data"].get(CONF_USERNAME) == DEFAULT_USER
     assert result["data"][CONF_PASSWORD] == PASSWORD
+    service.assert_called_once_with(PASSWORD, HOST, DEFAULT_USER, PORT_80, False)
 
 
 async def test_options_flow(hass: HomeAssistant, service) -> None:

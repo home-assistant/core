@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 import logging
 from typing import Any, override
 
-from broadlink.exceptions import BroadlinkException
+from broadlink_async.exceptions import BroadlinkException
 import probatio
 
 from homeassistant.components.switch import (
@@ -35,8 +35,8 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import BroadlinkDevice
 from .const import BROADLINK_DATA, DOMAINS_AND_TYPES
+from .device import BroadlinkDevice
 from .entity import BroadlinkEntity
 from .helpers import data_packet, import_device, mac_address
 
@@ -53,10 +53,10 @@ SWITCH_SCHEMA = probatio.Schema(
 )
 
 PLATFORM_SCHEMA = probatio.All(
-    cv.deprecated(CONF_HOST),
-    cv.deprecated(CONF_SLOTS),
-    cv.deprecated(CONF_TIMEOUT),
-    cv.deprecated(CONF_TYPE),
+    cv.deprecated(CONF_HOST, breaks_in_ha_version="2027.6.0"),
+    cv.removed(CONF_SLOTS),
+    cv.removed(CONF_TIMEOUT),
+    cv.removed(CONF_TYPE),
     SWITCH_PLATFORM_SCHEMA.extend(
         {
             probatio.Required(CONF_MAC): mac_address,
@@ -86,13 +86,11 @@ async def async_setup_platform(
 
     if switches := config.get(CONF_SWITCHES):
         platform_data = hass.data[BROADLINK_DATA].platforms.get(Platform.SWITCH, {})
+        if not (switch_platform_data := platform_data.get(mac_addr)):
+            raise PlatformNotReady
         async_add_entities_config_entry: AddConfigEntryEntitiesCallback
         device: BroadlinkDevice
-        async_add_entities_config_entry, device = platform_data.get(
-            mac_addr, (None, None)
-        )
-        if not async_add_entities_config_entry:
-            raise PlatformNotReady
+        async_add_entities_config_entry, device = switch_platform_data
 
         async_add_entities_config_entry(
             BroadlinkRMSwitch(device, config) for config in switches

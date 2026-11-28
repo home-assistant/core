@@ -4,6 +4,7 @@ import dataclasses
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from vizaio import VizioConnectionError
 
 from homeassistant.components.media_player import MediaPlayerDeviceClass
@@ -46,8 +47,6 @@ from .const import (
     VOLUME_STEP,
     ZEROCONF_HOST,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures(

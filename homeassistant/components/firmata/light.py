@@ -4,7 +4,6 @@ import logging
 from typing import Any, override
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MAXIMUM, CONF_MINIMUM, CONF_NAME, CONF_PIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -58,7 +57,7 @@ class FirmataLight(FirmataPinEntity, LightEntity):
     def __init__(
         self,
         api: FirmataBoardPin,
-        config_entry: ConfigEntry,
+        config_entry: FirmataConfigEntry,
         name: str,
         pin: FirmataPinType,
     ) -> None:

@@ -2,14 +2,14 @@
 
 from typing import override
 
-from pyintelliclima import FanMode, FanSpeed, IntelliClimaECO2
+from pyintelliclima import FanMode, FanSpeed
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import IntelliClimaConfigEntry, IntelliClimaCoordinator
-from .entity import IntelliClimaECOEntity
+from .entity import IntelliClimaECODevice, IntelliClimaECOEntity, eco_devices
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -35,9 +35,9 @@ async def async_setup_entry(
     entities: list[IntelliClimaVMCFanModeSelect] = [
         IntelliClimaVMCFanModeSelect(
             coordinator=coordinator,
-            device=ecocomfort2,
+            device=device,
         )
-        for ecocomfort2 in coordinator.data.ecocomfort2_devices.values()
+        for device in eco_devices(coordinator.data)
     ]
 
     async_add_entities(entities)
@@ -52,7 +52,7 @@ class IntelliClimaVMCFanModeSelect(IntelliClimaECOEntity, SelectEntity):
     def __init__(
         self,
         coordinator: IntelliClimaCoordinator,
-        device: IntelliClimaECO2,
+        device: IntelliClimaECODevice,
     ) -> None:
         """Class initializer."""
         super().__init__(coordinator, device)
@@ -63,20 +63,9 @@ class IntelliClimaVMCFanModeSelect(IntelliClimaECOEntity, SelectEntity):
     @override
     def current_option(self) -> str | None:
         """Return the current fan mode."""
-        device_data = self._device_data
-
-        if device_data.mode_set == FanMode.off:
+        if (fan_state := self._fan_state) is None:
             return None
-
-        # If in auto mode (sensor mode with auto speed),
-        # return None (handled by fan entity preset mode)
-        if (
-            device_data.speed_set == FanSpeed.auto
-            and device_data.mode_set == FanMode.sensor
-        ):
-            return None
-
-        return INTELLICLIMA_MODE_TO_FAN_MODE.get(device_data.mode_set)
+        return INTELLICLIMA_MODE_TO_FAN_MODE.get(fan_state.direction)
 
     @override
     async def async_select_option(self, option: str) -> None:
@@ -94,7 +83,5 @@ class IntelliClimaVMCFanModeSelect(IntelliClimaECOEntity, SelectEntity):
         else:
             speed = device_data.speed_set
 
-        await self.coordinator.api.ecocomfort2.set_mode_speed(
-            self._device_sn, mode, speed
-        )
+        await self._device_api.set_mode_speed(self._device_sn, mode, speed)
         await self.coordinator.async_request_refresh()

@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 from Netio.exceptions import AuthError, CommunicationError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 import requests
 
 from homeassistant.components.netio.const import DOMAIN
@@ -18,8 +19,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 USER_INPUT = {
     CONF_HOST: "192.168.1.10",

@@ -1,4 +1,4 @@
-"""Sensor platform for Flow-it."""
+"""Sensor platform for AriaQ."""
 
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -23,19 +23,19 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import FlowItConfigEntry
-from .entity import FlowItVmcEntity
+from .coordinator import AriaQConfigEntry
+from .entity import AriaQVmcEntity
 
 
 @dataclass(frozen=True, kw_only=True)
-class FlowItVmcSensorEntityDescription(SensorEntityDescription):
-    """Describes Flow-it sensor entity."""
+class AriaQVmcSensorEntityDescription(SensorEntityDescription):
+    """Describes AriaQ sensor entity."""
 
     value_fn: Callable[[MachineStatusResponse], float | int | str | None]
 
 
-SENSORS: tuple[FlowItVmcSensorEntityDescription, ...] = (
-    FlowItVmcSensorEntityDescription(
+SENSORS: tuple[AriaQVmcSensorEntityDescription, ...] = (
+    AriaQVmcSensorEntityDescription(
         key="temperature_in",
         translation_key="temperature_in",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -44,7 +44,7 @@ SENSORS: tuple[FlowItVmcSensorEntityDescription, ...] = (
         suggested_display_precision=1,
         value_fn=lambda data: data.data.mode.temperatureIn_celsius,
     ),
-    FlowItVmcSensorEntityDescription(
+    AriaQVmcSensorEntityDescription(
         key="temperature_out",
         translation_key="temperature_out",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -53,7 +53,7 @@ SENSORS: tuple[FlowItVmcSensorEntityDescription, ...] = (
         suggested_display_precision=1,
         value_fn=lambda data: data.data.mode.temperatureOut_celsius,
     ),
-    FlowItVmcSensorEntityDescription(
+    AriaQVmcSensorEntityDescription(
         key="humidity_in",
         translation_key="humidity_in",
         native_unit_of_measurement=PERCENTAGE,
@@ -64,7 +64,7 @@ SENSORS: tuple[FlowItVmcSensorEntityDescription, ...] = (
             val * 100 if (val := data.data.mode.humidityIn) is not None else None
         ),
     ),
-    FlowItVmcSensorEntityDescription(
+    AriaQVmcSensorEntityDescription(
         key="humidity_out",
         translation_key="humidity_out",
         native_unit_of_measurement=PERCENTAGE,
@@ -75,7 +75,7 @@ SENSORS: tuple[FlowItVmcSensorEntityDescription, ...] = (
             val * 100 if (val := data.data.mode.humidityOut) is not None else None
         ),
     ),
-    FlowItVmcSensorEntityDescription(
+    AriaQVmcSensorEntityDescription(
         key="iaq",
         translation_key="iaq",
         native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
@@ -83,7 +83,7 @@ SENSORS: tuple[FlowItVmcSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.data.mode.iaq,
     ),
-    FlowItVmcSensorEntityDescription(
+    AriaQVmcSensorEntityDescription(
         key="pressure_in",
         translation_key="pressure_in",
         native_unit_of_measurement=UnitOfPressure.PA,
@@ -91,7 +91,7 @@ SENSORS: tuple[FlowItVmcSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.data.mode.pressureIn,
     ),
-    FlowItVmcSensorEntityDescription(
+    AriaQVmcSensorEntityDescription(
         key="pressure_out",
         translation_key="pressure_out",
         native_unit_of_measurement=UnitOfPressure.PA,
@@ -99,7 +99,7 @@ SENSORS: tuple[FlowItVmcSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.data.mode.pressureOut,
     ),
-    FlowItVmcSensorEntityDescription(
+    AriaQVmcSensorEntityDescription(
         key="hepa_filter_status",
         translation_key="hepa_filter_status",
         device_class=SensorDeviceClass.ENUM,
@@ -107,7 +107,7 @@ SENSORS: tuple[FlowItVmcSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.data.filter.hepa.status.name.lower(),
     ),
-    FlowItVmcSensorEntityDescription(
+    AriaQVmcSensorEntityDescription(
         key="g4_filter_status",
         translation_key="g4_filter_status",
         device_class=SensorDeviceClass.ENUM,
@@ -120,21 +120,21 @@ SENSORS: tuple[FlowItVmcSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: FlowItConfigEntry,
+    config_entry: AriaQConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Flow-it sensors."""
+    """Set up the AriaQ sensors."""
     data = config_entry.runtime_data
     async_add_entities(
-        FlowItVmcSensor(data.coordinator, data.vmc, description)
+        AriaQVmcSensor(data.coordinator, data.vmc, description)
         for description in SENSORS
     )
 
 
-class FlowItVmcSensor(FlowItVmcEntity, SensorEntity):
-    """Flow-it sensor entity."""
+class AriaQVmcSensor(AriaQVmcEntity, SensorEntity):
+    """AriaQ sensor entity."""
 
-    entity_description: FlowItVmcSensorEntityDescription
+    entity_description: AriaQVmcSensorEntityDescription
 
     @override
     @property

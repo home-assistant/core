@@ -3,6 +3,7 @@
 from collections.abc import Iterable
 import json
 import logging
+from pathlib import Path
 from typing import Any, override
 
 from homeassistant.components.remote import (
@@ -32,6 +33,7 @@ from .const import (
 from .data import HarmonyConfigEntry, HarmonyData
 from .entity import HarmonyEntity
 from .subscriber import HarmonyCallback
+from .util import config_file_path
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,8 +54,9 @@ async def async_setup_entry(
     default_activity: str | None = entry.options.get(ATTR_ACTIVITY)
     delay_secs: float = entry.options.get(ATTR_DELAY_SECS, DEFAULT_DELAY_SECS)
 
-    harmony_conf_file = hass.config.path(f"harmony_{entry.unique_id}.conf")
-    device = HarmonyRemote(data, default_activity, delay_secs, harmony_conf_file)
+    device = HarmonyRemote(
+        data, default_activity, delay_secs, config_file_path(hass, entry.unique_id)
+    )
     async_add_entities([device])
 
 
@@ -257,6 +260,7 @@ class HarmonyRemote(HarmonyEntity, RemoteEntity, RestoreEntity):
             return
 
         try:
+            Path(self._config_path).parent.mkdir(parents=True, exist_ok=True)
             with open(self._config_path, "w+", encoding="utf-8") as file_out:
                 json.dump(json_config, file_out, sort_keys=True, indent=4)
         except OSError as exc:

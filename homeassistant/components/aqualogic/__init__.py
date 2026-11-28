@@ -93,7 +93,7 @@ async def _async_import(hass: HomeAssistant, conf: dict) -> None:
     )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: AquaLogicConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AquaLogicConfigEntry) -> None:
     """Set up AquaLogic from a config entry."""
     processor = AquaLogicProcessor(hass, entry.data[CONF_HOST], entry.data[CONF_PORT])
     entry.runtime_data = processor
@@ -101,18 +101,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: AquaLogicConfigEntry) ->
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     processor.start()
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: AquaLogicConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: AquaLogicConfigEntry) -> None:
     """Unload an AquaLogic config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        processor = entry.runtime_data
-        processor.shutdown()
-        await hass.async_add_executor_job(lambda: processor.join(timeout=5))
-        if processor.is_alive():
-            _LOGGER.warning("Processor thread did not stop within timeout")
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    processor = entry.runtime_data
+    processor.shutdown()
+    await hass.async_add_executor_job(lambda: processor.join(timeout=5))
+    if processor.is_alive():
+        _LOGGER.warning("Processor thread did not stop within timeout")
 
 
 class AquaLogicProcessor(threading.Thread):

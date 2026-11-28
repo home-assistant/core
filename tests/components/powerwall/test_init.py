@@ -1,11 +1,20 @@
 """Tests for the PowerwallDataManager."""
 
-import datetime
+import datetime as dt
 from http.cookies import Morsel
+import logging
 from unittest.mock import MagicMock, Mock, patch
 
 from aiohttp import CookieJar
-from tesla_powerwall import AccessDeniedError, ApiError, LoginResponse
+from freezegun.api import FrozenDateTimeFactory
+import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from tesla_powerwall import (
+    AccessDeniedError,
+    ApiError,
+    LoginResponse,
+    PowerwallUnreachableError,
+)
 from tesla_powerwall.error import MissingAttributeError
 
 from homeassistant.components.powerwall.const import (
@@ -23,8 +32,6 @@ from .mocks import (
     _mock_powerwall_restricted,
     _mock_powerwall_with_fixtures,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_update_data_reauthenticate_on_access_denied(hass: HomeAssistant) -> None:
@@ -70,7 +77,7 @@ async def test_update_data_reauthenticate_on_access_denied(hass: HomeAssistant) 
         mock_powerwall.login.reset_mock(return_value=True)
         mock_powerwall.get_charge.side_effect = [AccessDeniedError("test"), 90.0]
 
-        async_fire_time_changed(hass, utcnow() + datetime.timedelta(minutes=1))
+        async_fire_time_changed(hass, utcnow() + dt.timedelta(minutes=1))
         await hass.async_block_till_done()
         flows = hass.config_entries.flow.async_progress(DOMAIN)
         assert len(flows) == 0
@@ -79,7 +86,7 @@ async def test_update_data_reauthenticate_on_access_denied(hass: HomeAssistant) 
         mock_powerwall.login.side_effect = AccessDeniedError("test")
         mock_powerwall.get_charge.side_effect = [AccessDeniedError("test"), 90.0]
 
-        async_fire_time_changed(hass, utcnow() + datetime.timedelta(minutes=1))
+        async_fire_time_changed(hass, utcnow() + dt.timedelta(minutes=1))
         await hass.async_block_till_done()
         assert config_entry.state is ConfigEntryState.LOADED
 
@@ -217,7 +224,7 @@ async def test_retry_ignores_cookie(hass: HomeAssistant) -> None:
 
         mock_powerwall.get_charge.side_effect = [AccessDeniedError("test"), 90.0]
 
-        async_fire_time_changed(hass, utcnow() + datetime.timedelta(minutes=1))
+        async_fire_time_changed(hass, utcnow() + dt.timedelta(minutes=1))
         await hass.async_block_till_done()
 
         mock_powerwall.login.assert_called_with("somepassword")
@@ -257,7 +264,7 @@ async def test_reauth_ignores_and_clears_cookie(hass: HomeAssistant) -> None:
             AccessDeniedError("test"),
         ]
 
-        async_fire_time_changed(hass, utcnow() + datetime.timedelta(minutes=1))
+        async_fire_time_changed(hass, utcnow() + dt.timedelta(minutes=1))
         await hass.async_block_till_done()
 
         mock_powerwall.login.assert_called_with("somepassword")
@@ -400,3 +407,40 @@ async def test_setup_api_changed(hass: HomeAssistant) -> None:
 
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
     assert config_entry.reason == "The Powerwall API has changed"
+
+
+@pytest.mark.parametrize(
+    ("exception", "level"),
+    [
+        pytest.param(PowerwallUnreachableError(), logging.INFO, id="unreachable"),
+        pytest.param(TimeoutError(), logging.ERROR, id="timeout"),
+    ],
+)
+async def test_refresh_log_level(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    exception: Exception,
+    level: int,
+) -> None:
+    """Test an unreachable powerwall is logged at info level."""
+    mock_powerwall = await _mock_powerwall_with_fixtures(hass)
+    config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_IP_ADDRESS: "1.2.3.4"})
+    config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.powerwall.Powerwall", return_value=mock_powerwall
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        mock_powerwall.get_charge.side_effect = exception
+        freezer.tick(dt.timedelta(minutes=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert [
+        record.levelno
+        for record in caplog.records
+        if record.name == "homeassistant.components.powerwall.coordinator"
+        and record.levelno > logging.DEBUG
+    ] == [level]

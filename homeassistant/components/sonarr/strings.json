@@ -6,13 +6,28 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "flow_title": "{name}",
     "step": {
       "reauth_confirm": {
         "description": "The Sonarr integration needs to be manually re-authenticated with the Sonarr API hosted at: {url}",
         "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "reconfigure": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "url": "[%key:common::config_flow::data::url%]"
+        },
+        "sections": {
+          "more_options": {
+            "data": {
+              "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+            },
+            "name": "[%key:component::sonarr::config::step::user::sections::more_options::name%]"
+          }
+        }
       },
       "user": {
         "data": {

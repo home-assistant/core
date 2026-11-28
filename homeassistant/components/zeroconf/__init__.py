@@ -25,11 +25,7 @@ from homeassistant.setup import async_when_setup_or_start
 
 from . import websocket_api
 from .const import DATA_DISCOVERY, DATA_INSTANCE, DOMAIN, ZEROCONF_TYPE
-from .discovery import (  # noqa: F401
-    ZeroconfDiscovery,
-    build_homekit_model_lookups,
-    info_from_service,
-)
+from .discovery import ZeroconfDiscovery, build_homekit_model_lookups, info_from_service
 from .models import HaAsyncZeroconf, HaZeroconf
 from .usage import install_multiple_zeroconf_catcher
 
@@ -63,6 +59,16 @@ CONFIG_SCHEMA = probatio.Schema(
     },
     extra=probatio.ALLOW_EXTRA,
 )
+
+__all__ = [
+    "DOMAIN",
+    "HaAsyncZeroconf",
+    "HaZeroconf",
+    "async_get_async_instance",
+    "async_get_async_zeroconf",
+    "async_get_instance",
+    "info_from_service",
+]
 
 
 async def async_get_instance(hass: HomeAssistant) -> HaZeroconf:

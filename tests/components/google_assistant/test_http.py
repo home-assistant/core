@@ -11,6 +11,14 @@ from uuid import uuid4
 
 import py
 import pytest
+from pytest_homeassistant.common import (
+    async_capture_events,
+    async_fire_time_changed,
+    async_mock_service,
+    async_test_home_assistant,
+)
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.google_assistant import GOOGLE_ASSISTANT_SCHEMA
 from homeassistant.components.google_assistant.const import (
@@ -32,15 +40,6 @@ from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import (
-    async_capture_events,
-    async_fire_time_changed,
-    async_mock_service,
-    async_test_home_assistant,
-)
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 DUMMY_PRIVATE_KEY = (
     "-----BEGIN PRIVATE KEY-----\n"

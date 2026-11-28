@@ -3,26 +3,18 @@
 from unittest.mock import Mock
 
 import pytest
+from pytest_homeassistant.common import snapshot_platform
 import ring_doorbell
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.siren import DOMAIN as SIREN_DOMAIN
+from homeassistant.components.siren import DOMAIN as SIREN_DOMAIN, SirenService
 from homeassistant.config_entries import SOURCE_REAUTH
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-    Platform,
-)
+from homeassistant.const import STATE_OFF, STATE_ON, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .common import MockConfigEntry, setup_platform
-
-from tests.common import snapshot_platform
 
 
 async def test_entity_registry(
@@ -207,8 +199,8 @@ async def test_camera_siren_on_off(
 
     await hass.services.async_call(
         SIREN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id},
+        SirenService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -224,8 +216,8 @@ async def test_camera_siren_on_off(
 
     await hass.services.async_call(
         SIREN_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: entity_id},
+        SirenService.TURN_OFF,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()

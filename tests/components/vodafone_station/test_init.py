@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.device_tracker import CONF_CONSIDER_HOME
 from homeassistant.components.vodafone_station.const import (
     CONF_DEVICE_DETAILS,
@@ -16,8 +18,6 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import setup_integration
 from .const import TEST_HOST, TEST_PASSWORD, TEST_TYPE, TEST_URL, TEST_USERNAME
-
-from tests.common import MockConfigEntry
 
 
 async def test_reload_config_entry_with_options(

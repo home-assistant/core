@@ -3,18 +3,13 @@
 import logging
 
 import pytest
+from pytest_homeassistant.common import async_mock_service, mock_component
 
 from homeassistant.components import automation, zone
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ENTITY_MATCH_ALL,
-    SERVICE_TURN_OFF,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.components.automation import AutomationService
+from homeassistant.const import ENTITY_MATCH_ALL, STATE_UNAVAILABLE, TargetKey
 from homeassistant.core import Context, HomeAssistant, ServiceCall
 from homeassistant.setup import async_setup_component
-
-from tests.common import async_mock_service, mock_component
 
 
 @pytest.fixture
@@ -41,6 +36,7 @@ async def setup_comp(hass: HomeAssistant) -> None:
     )
 
 
+@pytest.mark.usefixtures("improved_presence_detection")
 async def test_if_fires_on_zone_enter(
     hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
@@ -106,8 +102,8 @@ async def test_if_fires_on_zone_enter(
 
     await hass.services.async_call(
         automation.DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ENTITY_MATCH_ALL},
+        AutomationService.TURN_OFF,
+        {TargetKey.ENTITY_ID: ENTITY_MATCH_ALL},
         blocking=True,
     )
 
@@ -123,6 +119,7 @@ async def test_if_fires_on_zone_enter(
     assert len(service_calls) == 2
 
 
+@pytest.mark.usefixtures("improved_presence_detection")
 async def test_if_not_fires_for_enter_on_zone_leave(
     hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
@@ -160,6 +157,7 @@ async def test_if_not_fires_for_enter_on_zone_leave(
     assert len(service_calls) == 0
 
 
+@pytest.mark.usefixtures("improved_presence_detection")
 async def test_if_fires_on_zone_leave(
     hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
@@ -197,6 +195,7 @@ async def test_if_fires_on_zone_leave(
     assert len(service_calls) == 1
 
 
+@pytest.mark.usefixtures("improved_presence_detection")
 async def test_if_fires_on_zone_leave_2(
     hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
@@ -234,6 +233,7 @@ async def test_if_fires_on_zone_leave_2(
     assert len(service_calls) == 0
 
 
+@pytest.mark.usefixtures("improved_presence_detection")
 async def test_if_not_fires_for_leave_on_zone_enter(
     hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
@@ -271,6 +271,7 @@ async def test_if_not_fires_for_leave_on_zone_enter(
     assert len(service_calls) == 0
 
 
+@pytest.mark.usefixtures("improved_presence_detection")
 async def test_if_fires_on_zone_appear(
     hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
@@ -320,6 +321,7 @@ async def test_if_fires_on_zone_appear(
     )
 
 
+@pytest.mark.usefixtures("improved_presence_detection")
 async def test_if_fires_on_zone_appear_2(
     hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
@@ -377,6 +379,7 @@ async def test_if_fires_on_zone_appear_2(
     )
 
 
+@pytest.mark.usefixtures("improved_presence_detection")
 async def test_if_fires_on_zone_disappear(
     hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
@@ -426,6 +429,7 @@ async def test_if_fires_on_zone_disappear(
     )
 
 
+@pytest.mark.usefixtures("improved_presence_detection")
 async def test_zone_undefined(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],

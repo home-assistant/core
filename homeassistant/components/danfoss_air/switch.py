@@ -40,8 +40,8 @@ def setup_platform(
         [
             "Danfoss Air Automatic Bypass",
             ReadCommand.automatic_bypass,
-            UpdateCommand.bypass_activate,
-            UpdateCommand.bypass_deactivate,
+            UpdateCommand.automatic_bypass_activate,
+            UpdateCommand.automatic_bypass_deactivate,
         ],
     ]
 
@@ -77,6 +77,7 @@ class DanfossAir(SwitchEntity):
     def update(self) -> None:
         """Update the switch's state."""
         self._data.update()
+        self._attr_available = self._data.available
 
         self._attr_is_on = self._data.get_value(self._state_command)
         if self._attr_is_on is None:

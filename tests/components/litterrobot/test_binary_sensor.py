@@ -11,7 +11,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import ATTR_DEVICE_CLASS
 from homeassistant.core import HomeAssistant
 
-from .conftest import setup_integration
+from .conftest import create_mock_account, setup_integration
 
 
 @pytest.mark.freeze_time("2022-09-18 23:00:44+00:00")
@@ -47,6 +47,25 @@ async def test_litterhopper_binary_sensors(
     )
 
 
+@pytest.mark.parametrize(
+    ("laser_dirty", "expected_state"),
+    [(False, "off"), (True, "on")],
+)
+async def test_litter_robot_4_laser_dirty(
+    hass: HomeAssistant,
+    laser_dirty: bool,
+    expected_state: str,
+) -> None:
+    """Tests the Litter-Robot 4 laser dirty binary sensor."""
+    account = create_mock_account(robot_data={"isLaserDirty": laser_dirty}, v4=True)
+    await setup_integration(hass, account, BINARY_SENSOR_DOMAIN)
+
+    state = hass.states.get("binary_sensor.test_laser_dirty")
+    assert state
+    assert state.state == expected_state
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.PROBLEM
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_litter_robot_5_binary_sensors(
     hass: HomeAssistant,
@@ -78,13 +97,24 @@ async def test_litter_robot_5_binary_sensors(
     )
 
 
+@pytest.mark.parametrize(
+    "account_fixture",
+    [
+        pytest.param("mock_account", id="litter_robot_3"),
+        pytest.param("mock_account_with_litterrobot_4", id="litter_robot_4"),
+        pytest.param("mock_account_with_litterrobot_5", id="litter_robot_5"),
+        pytest.param("mock_account_with_feederrobot", id="feeder_robot"),
+    ],
+)
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_litter_robot_5_online_sensor(
+async def test_online_sensor(
     hass: HomeAssistant,
-    mock_account_with_litterrobot_5: MagicMock,
+    request: pytest.FixtureRequest,
+    account_fixture: str,
 ) -> None:
-    """Tests Litter-Robot 5 online binary sensor (diagnostic, disabled by default)."""
-    await setup_integration(hass, mock_account_with_litterrobot_5, BINARY_SENSOR_DOMAIN)
+    """Tests the online binary sensor for each robot type."""
+    account: MagicMock = request.getfixturevalue(account_fixture)
+    await setup_integration(hass, account, BINARY_SENSOR_DOMAIN)
 
     state = hass.states.get("binary_sensor.test_online")
     assert state

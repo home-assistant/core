@@ -5,8 +5,10 @@ from dataclasses import dataclass
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from volvocarsapi.api import VolvoCarsApi
-from volvocarsapi.auth import TOKEN_URL
+from volvocarsapi.auth import get_volvoid_server
 from volvocarsapi.models import (
     VolvoCarsAvailableCommand,
     VolvoCarsCommandResult,
@@ -42,9 +44,6 @@ from .const import (
     MOCK_ACCESS_TOKEN,
     SERVER_TOKEN_RESPONSE,
 )
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @dataclass
@@ -161,14 +160,20 @@ async def mock_api(
         yield api
 
 
+@pytest.fixture
+def client_id() -> str:
+    """Return the client ID of the application credentials."""
+    return CLIENT_ID
+
+
 @pytest.fixture(autouse=True)
-async def setup_credentials(hass: HomeAssistant) -> None:
+async def setup_credentials(hass: HomeAssistant, client_id: str) -> None:
     """Fixture to setup credentials."""
     assert await async_setup_component(hass, APPLICATION_CREDENTIALS_DOMAIN, {})
     await async_import_client_credential(
         hass,
         DOMAIN,
-        ClientCredential(CLIENT_ID, CLIENT_SECRET),
+        ClientCredential(client_id, CLIENT_SECRET),
     )
 
 
@@ -177,12 +182,13 @@ async def setup_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
+    client_id: str,
 ) -> Callable[[], Awaitable[bool]]:
     """Fixture to set up the integration."""
 
     async def run() -> bool:
         aioclient_mock.post(
-            TOKEN_URL,
+            get_volvoid_server(client_id).token_url,
             json=SERVER_TOKEN_RESPONSE,
         )
 
@@ -197,7 +203,7 @@ async def setup_integration(
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.volvo.async_setup_entry", return_value=True
+        "homeassistant.components.volvo.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup
 

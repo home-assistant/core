@@ -1,14 +1,18 @@
 """API for Smappee bound to Home Assistant OAuth."""
 
 from asyncio import run_coroutine_threadsafe
+from typing import TYPE_CHECKING
 
 from pysmappee import api
 
-from homeassistant import config_entries, core
+from homeassistant import core
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from . import SmappeeConfigEntry
 
 
 class ConfigEntrySmappeeApi(api.SmappeeApi):
@@ -17,15 +21,13 @@ class ConfigEntrySmappeeApi(api.SmappeeApi):
     def __init__(
         self,
         hass: core.HomeAssistant,
-        config_entry: config_entries.ConfigEntry,
-        implementation: config_entry_oauth2_flow.AbstractOAuth2Implementation,
+        config_entry: SmappeeConfigEntry,
+        session: config_entry_oauth2_flow.OAuth2Session,
     ) -> None:
         """Initialize Smappee Auth."""
         self.hass = hass
         self.config_entry = config_entry
-        self.session = config_entry_oauth2_flow.OAuth2Session(
-            hass, config_entry, implementation
-        )
+        self.session = session
 
         platform_to_farm = {
             "PRODUCTION": 1,

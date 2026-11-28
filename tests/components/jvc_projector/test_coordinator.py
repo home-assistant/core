@@ -9,6 +9,7 @@ from jvcprojector import (
     command as cmd,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.jvc_projector.const import DOMAIN
 from homeassistant.components.jvc_projector.coordinator import (
@@ -23,8 +24,6 @@ from homeassistant.helpers.device_registry import format_mac
 from homeassistant.util.dt import utcnow
 
 from . import MOCK_MAC
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.parametrize(

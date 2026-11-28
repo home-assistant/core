@@ -14,10 +14,12 @@ from gardena_bluetooth.const import (
     Sensor,
     Spray,
     Valve,
+    ValveActivationReason,
 )
 from gardena_bluetooth.parse import ActivationReason, ErrorData, SkipReason
 from habluetooth import BluetoothServiceInfo
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import Platform
@@ -30,8 +32,6 @@ from . import (
     WATER_TIMER_SERVICE_INFO,
     setup_entry,
 )
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 pytestmark = pytest.mark.usefixtures("constant_advertisements")
 
@@ -91,7 +91,7 @@ async def test_setup(
                     10
                 ),
                 Valve.activation_reason.unique_id: Valve.activation_reason.encode(
-                    ActivationReason.SCHEDULE
+                    ValveActivationReason.SCHEDULE
                 ),
             },
             id="timer",

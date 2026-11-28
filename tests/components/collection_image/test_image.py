@@ -8,6 +8,8 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun import freeze_time
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.collection_image import DOMAIN
 from homeassistant.components.image import Image, async_get_image
@@ -36,9 +38,6 @@ from .const import (
     TEST_IMAGE_2,
 )
 from .helpers import config_entry_from_uri
-
-from tests.common import MockConfigEntry
-from tests.typing import ClientSessionGenerator
 
 TEST_TIME = "2025-11-08T12:00:00+00:00"
 TEST_TIME_NEXT = "2025-11-08T13:00:00+00:00"

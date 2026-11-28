@@ -7,6 +7,10 @@ from http import HTTPStatus
 
 from aiohttp.client_exceptions import ClientResponseError
 from freezegun.api import FrozenDateTimeFactory
+import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.buienradar.const import CONF_DELTA, DOMAIN
 from homeassistant.config_entries import ConfigEntry
@@ -14,10 +18,6 @@ from homeassistant.const import CONF_COUNTRY_CODE, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 TEST_DELTA = 10
 
@@ -27,9 +27,21 @@ TEST_LONGITUDE = 5.4002156
 TEST_CFG_DATA = {CONF_LATITUDE: TEST_LATITUDE, CONF_LONGITUDE: TEST_LONGITUDE}
 
 
+pytestmark = pytest.mark.usefixtures("mock_buienradar_feeds")
+
+
 def radar_map_url(country_code: str = "NL") -> str:
     """Build map URL."""
     return f"https://api.buienradar.nl/image/1.0/RadarMap{country_code}?w=700&h=700"
+
+
+def _radar_map_calls(aioclient_mock: AiohttpClientMocker) -> int:
+    """Return the number of radar map requests, leaving out the weather feeds."""
+    return sum(
+        1
+        for _method, url, _data, _headers in aioclient_mock.mock_calls
+        if url.path.startswith("/image/")
+    )
 
 
 async def _setup_config_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -66,7 +78,7 @@ async def test_fetching_url_and_caching(
     resp = await client.get("/api/camera_proxy/camera.buienradar_51_5288505_400216")
 
     assert resp.status == HTTPStatus.OK
-    assert aioclient_mock.call_count == 1
+    assert _radar_map_calls(aioclient_mock) == 1
     body = await resp.text()
     assert body == "hello world"
 
@@ -74,7 +86,7 @@ async def test_fetching_url_and_caching(
     # afterwards.
 
     resp = await client.get("/api/camera_proxy/camera.buienradar_51_5288505_400216")
-    assert aioclient_mock.call_count == 1
+    assert _radar_map_calls(aioclient_mock) == 1
 
 
 async def test_expire_delta(
@@ -101,14 +113,14 @@ async def test_expire_delta(
     resp = await client.get("/api/camera_proxy/camera.buienradar_51_5288505_400216")
 
     assert resp.status == HTTPStatus.OK
-    assert aioclient_mock.call_count == 1
+    assert _radar_map_calls(aioclient_mock) == 1
     body = await resp.text()
     assert body == "hello world"
 
     freezer.tick(timedelta(seconds=TEST_DELTA + 1))
     # delta has passed -> should immediately call again
     resp = await client.get("/api/camera_proxy/camera.buienradar_51_5288505_400216")
-    assert aioclient_mock.call_count == 2
+    assert _radar_map_calls(aioclient_mock) == 2
 
 
 async def test_only_one_fetch_at_a_time(
@@ -135,7 +147,7 @@ async def test_only_one_fetch_at_a_time(
 
     assert (await resp.text()) == (await resp_2.text())
 
-    assert aioclient_mock.call_count == 1
+    assert _radar_map_calls(aioclient_mock) == 1
 
 
 async def test_belgium_country(
@@ -159,7 +171,7 @@ async def test_belgium_country(
 
     await client.get("/api/camera_proxy/camera.buienradar_51_5288505_400216")
 
-    assert aioclient_mock.call_count == 1
+    assert _radar_map_calls(aioclient_mock) == 1
 
 
 async def test_failure_response_not_cached(
@@ -181,7 +193,7 @@ async def test_failure_response_not_cached(
     await client.get("/api/camera_proxy/camera.buienradar_51_5288505_400216")
     await client.get("/api/camera_proxy/camera.buienradar_51_5288505_400216")
 
-    assert aioclient_mock.call_count == 2
+    assert _radar_map_calls(aioclient_mock) == 2
 
 
 async def test_last_modified_updates(
@@ -216,7 +228,7 @@ async def test_last_modified_updates(
 
     resp_1 = await client.get("/api/camera_proxy/camera.buienradar_51_5288505_400216")
     # It is not possible to check if header was sent.
-    assert aioclient_mock.call_count == 1
+    assert _radar_map_calls(aioclient_mock) == 1
 
     freezer.tick(timedelta(seconds=TEST_DELTA + 1))
 
@@ -224,12 +236,12 @@ async def test_last_modified_updates(
     # text, i.e. old value should be kept
     aioclient_mock.clear_requests()
     # mock call count is now reset as well:
-    assert aioclient_mock.call_count == 0
+    assert _radar_map_calls(aioclient_mock) == 0
 
     aioclient_mock.get(radar_map_url(), text=None, status=304)
 
     resp_2 = await client.get("/api/camera_proxy/camera.buienradar_51_5288505_400216")
-    assert aioclient_mock.call_count == 1
+    assert _radar_map_calls(aioclient_mock) == 1
 
     assert (await resp_1.read()) == (await resp_2.read())
 
@@ -256,17 +268,17 @@ async def test_retries_after_error(
     with suppress(ClientResponseError):
         await client.get("/api/camera_proxy/camera.buienradar_51_5288505_400216")
 
-    assert aioclient_mock.call_count == 1
+    assert _radar_map_calls(aioclient_mock) == 1
 
     # Change the response to a 200
     aioclient_mock.clear_requests()
     aioclient_mock.get(radar_map_url(), text="DEADBEEF")
 
-    assert aioclient_mock.call_count == 0
+    assert _radar_map_calls(aioclient_mock) == 0
 
     # http error should not be cached, immediate retry.
     resp_2 = await client.get("/api/camera_proxy/camera.buienradar_51_5288505_400216")
-    assert aioclient_mock.call_count == 1
+    assert _radar_map_calls(aioclient_mock) == 1
 
     # Binary text cannot be added as body to `aioclient_mock.get(text=...)`,
     # while `resp.read()` returns bytes, encode the value.

@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 import requests
 from syrupy.assertion import SnapshotAssertion
 from tuya_device_handlers import TUYA_QUIRKS_REGISTRY
@@ -17,7 +18,7 @@ from homeassistant.components.tuya.const import (
 )
 from homeassistant.components.tuya.diagnostics import _REDACTED_DPCODES
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import Platform
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -28,8 +29,6 @@ from . import (
     create_manager,
     initialize_entry,
 )
-
-from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 async def test_registry_cleanup(
@@ -369,16 +368,52 @@ async def test_fixtures_valid(hass: HomeAssistant) -> None:
                     )
 
 
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(
+            requests.exceptions.ConnectionError("Failed to resolve 'apigw.tuyaeu.com'"),
+            id="connection_error",
+        ),
+        pytest.param(
+            requests.exceptions.ReadTimeout(
+                "HTTPSConnectionPool(host='apigw.tuyaeu.com', port=443):"
+                " Read timed out. (read timeout=60)"
+            ),
+            id="read_timeout",
+        ),
+    ],
+)
 async def test_network_error_retries_setup(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    exception: requests.RequestException,
 ) -> None:
     """Test a network error during setup results in a setup retry."""
     manager = create_manager()
-    manager.update_device_cache.side_effect = requests.exceptions.ConnectionError(
-        "Failed to resolve 'apigw.tuyaeu.com'"
-    )
+    manager.update_device_cache.side_effect = exception
 
     await initialize_entry(hass, manager, mock_config_entry, [])
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == "cannot_connect"
+
+
+async def test_mq_stopped_on_home_assistant_stop(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the MQ thread is stopped when Home Assistant stops.
+
+    Config entries are not unloaded on shutdown, and the thread is not a daemon,
+    so it would otherwise keep the process alive.
+    """
+    await initialize_entry(hass, mock_manager, mock_config_entry, [])
+    # A refresh of the MQ replaces it, the current one is the one to stop
+    mock_manager.mq = MagicMock()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    mock_manager.mq.stop.assert_called_once_with()

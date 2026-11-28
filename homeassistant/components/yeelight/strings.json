@@ -2,7 +2,8 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "unique_id_mismatch": "The device at this host could not be confirmed to be the same Yeelight bulb."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
@@ -15,6 +16,14 @@
       "pick_device": {
         "data": {
           "device": "[%key:common::config_flow::data::device%]"
+        }
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "[%key:component::yeelight::config::step::user::data_description::host%]"
         }
       },
       "user": {

@@ -12,6 +12,7 @@ import aiohue.v2 as aiohue_v2
 from aiohue.v2.controllers.events import EventType
 from aiohue.v2.scene_activity import SceneActivityTracker
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_array_fixture
 
 from homeassistant.components import hue
 from homeassistant.components.hue.v1 import sensor_base as hue_sensor_base
@@ -24,7 +25,15 @@ from homeassistant.util.json import JsonArrayType
 
 from .const import FAKE_BRIDGE, FAKE_BRIDGE_DEVICE
 
-from tests.common import MockConfigEntry, load_json_array_fixture
+
+@pytest.fixture
+def mock_create_app_key() -> Generator[AsyncMock]:
+    """Mock creating an app key on the Hue bridge."""
+    with patch(
+        "homeassistant.components.hue.config_flow.create_app_key",
+        return_value="123456789",
+    ) as mock_create_app_key:
+        yield mock_create_app_key
 
 
 @pytest.fixture(autouse=True)
@@ -247,7 +256,7 @@ def create_config_entry(
 
 async def setup_component(hass: HomeAssistant) -> None:
     """Mock setup Hue component."""
-    with patch.object(hue, "async_setup_entry", return_value=True):
+    with patch.object(hue, "async_setup_entry", return_value=None):
         assert (
             await async_setup_component(
                 hass,

@@ -6,6 +6,8 @@ from unittest.mock import call
 
 from denon_rs232 import InputSource
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.denon_rs232.media_player import (
@@ -16,36 +18,20 @@ from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_CHANNEL,
-    ATTR_MEDIA_CONTENT_ID,
-    ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MP_DOMAIN,
-    SERVICE_PLAY_MEDIA,
-    SERVICE_SELECT_SOURCE,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
     MediaType,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    SERVICE_VOLUME_DOWN,
-    SERVICE_VOLUME_MUTE,
-    SERVICE_VOLUME_SET,
-    SERVICE_VOLUME_UP,
-    STATE_OFF,
-    STATE_ON,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.json import load_json
 
 from .conftest import MockReceiver, MockState, _default_state
-
-from tests.common import MockConfigEntry, snapshot_platform
-from tests.typing import WebSocketGenerator
 
 type ZoneName = Literal["main", "zone_2", "zone_3"]
 
@@ -137,16 +123,16 @@ async def test_power_controls(
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id},
+        MediaPlayerService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert mock_receiver._send_command.await_args == call(*power_on_command)
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: entity_id},
+        MediaPlayerService.TURN_OFF,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert mock_receiver._send_command.await_args == call(*power_off_command)
@@ -197,24 +183,24 @@ async def test_volume_controls(
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_VOLUME_SET,
-        {ATTR_ENTITY_ID: entity_id, ATTR_MEDIA_VOLUME_LEVEL: 0.5},
+        MediaPlayerService.VOLUME_SET,
+        {TargetKey.ENTITY_ID: entity_id, MediaPlayerServiceArgument.VOLUME_LEVEL: 0.5},
         blocking=True,
     )
     assert mock_receiver._send_command.await_args == call(*set_command)
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_VOLUME_UP,
-        {ATTR_ENTITY_ID: entity_id},
+        MediaPlayerService.VOLUME_UP,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert mock_receiver._send_command.await_args == call(*volume_up_command)
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_VOLUME_DOWN,
-        {ATTR_ENTITY_ID: entity_id},
+        MediaPlayerService.VOLUME_DOWN,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert mock_receiver._send_command.await_args == call(*volume_down_command)
@@ -230,16 +216,22 @@ async def test_main_mute_controls(
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_VOLUME_MUTE,
-        {ATTR_ENTITY_ID: MAIN_ENTITY_ID, ATTR_MEDIA_VOLUME_MUTED: True},
+        MediaPlayerService.VOLUME_MUTE,
+        {
+            TargetKey.ENTITY_ID: MAIN_ENTITY_ID,
+            MediaPlayerServiceArgument.IS_VOLUME_MUTED: True,
+        },
         blocking=True,
     )
     assert mock_receiver._send_command.await_args == call("MU", "ON")
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_VOLUME_MUTE,
-        {ATTR_ENTITY_ID: MAIN_ENTITY_ID, ATTR_MEDIA_VOLUME_MUTED: False},
+        MediaPlayerService.VOLUME_MUTE,
+        {
+            TargetKey.ENTITY_ID: MAIN_ENTITY_ID,
+            MediaPlayerServiceArgument.IS_VOLUME_MUTED: False,
+        },
         blocking=True,
     )
     assert mock_receiver._send_command.await_args == call("MU", "OFF")
@@ -299,8 +291,11 @@ async def test_source_state_and_controls(
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_SELECT_SOURCE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_INPUT_SOURCE: expected_source},
+        MediaPlayerService.SELECT_SOURCE,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            MediaPlayerServiceArgument.SOURCE: expected_source,
+        },
         blocking=True,
     )
     assert mock_receiver._send_command.await_args == call(*select_source_command)
@@ -313,10 +308,10 @@ async def test_main_invalid_source_raises(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             MP_DOMAIN,
-            SERVICE_SELECT_SOURCE,
+            MediaPlayerService.SELECT_SOURCE,
             {
-                ATTR_ENTITY_ID: MAIN_ENTITY_ID,
-                ATTR_INPUT_SOURCE: "NONEXISTENT",
+                TargetKey.ENTITY_ID: MAIN_ENTITY_ID,
+                MediaPlayerServiceArgument.SOURCE: "NONEXISTENT",
             },
             blocking=True,
         )
@@ -352,11 +347,11 @@ async def test_main_tuner_play_media(
     """
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: MAIN_ENTITY_ID,
-            ATTR_MEDIA_CONTENT_TYPE: MediaType.CHANNEL,
-            ATTR_MEDIA_CONTENT_ID: media_id,
+            TargetKey.ENTITY_ID: MAIN_ENTITY_ID,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.CHANNEL,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: media_id,
         },
         blocking=True,
     )
@@ -436,11 +431,11 @@ async def test_main_tuner_play_media_invalid_input_raises(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             MP_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: MAIN_ENTITY_ID,
-                ATTR_MEDIA_CONTENT_TYPE: media_type,
-                ATTR_MEDIA_CONTENT_ID: media_id,
+                TargetKey.ENTITY_ID: MAIN_ENTITY_ID,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: media_type,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: media_id,
             },
             blocking=True,
         )
@@ -457,11 +452,11 @@ async def test_zones_do_not_support_play_media(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             MP_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: entity_id,
-                ATTR_MEDIA_CONTENT_TYPE: MediaType.CHANNEL,
-                ATTR_MEDIA_CONTENT_ID: "A1",
+                TargetKey.ENTITY_ID: entity_id,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.CHANNEL,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "A1",
             },
             blocking=True,
         )
@@ -609,11 +604,11 @@ async def test_browsed_preset_tunes_when_played(
     for preset in TUNER_PRESETS:
         await hass.services.async_call(
             MP_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: MAIN_ENTITY_ID,
-                ATTR_MEDIA_CONTENT_TYPE: MediaType.CHANNEL,
-                ATTR_MEDIA_CONTENT_ID: preset,
+                TargetKey.ENTITY_ID: MAIN_ENTITY_ID,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.CHANNEL,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: preset,
             },
             blocking=True,
         )

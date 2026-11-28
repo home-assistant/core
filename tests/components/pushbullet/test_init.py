@@ -3,6 +3,9 @@
 from unittest.mock import patch
 
 from pushbullet import InvalidKeyError, PushbulletError
+import pytest
+from pytest_homeassistant.common import MockConfigEntry
+import requests
 
 from homeassistant.components.pushbullet.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
@@ -10,8 +13,6 @@ from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.core import HomeAssistant
 
 from . import MOCK_CONFIG
-
-from tests.common import MockConfigEntry
 
 
 async def test_async_setup_entry_success(
@@ -57,7 +58,17 @@ async def test_setup_entry_failed_invalid_key(hass: HomeAssistant) -> None:
     assert flows[0]["context"]["entry_id"] == entry.entry_id
 
 
-async def test_setup_entry_failed_conn_error(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        pytest.param(PushbulletError, id="pushbullet_error"),
+        # pushbullet.py lets network errors from requests propagate unwrapped
+        pytest.param(requests.exceptions.ConnectionError, id="requests_error"),
+    ],
+)
+async def test_setup_entry_failed_conn_error(
+    hass: HomeAssistant, side_effect: type[Exception]
+) -> None:
     """Test pushbullet failed setup due to conn error."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -66,7 +77,7 @@ async def test_setup_entry_failed_conn_error(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
     with patch(
         "homeassistant.components.pushbullet.PushBullet",
-        side_effect=PushbulletError,
+        side_effect=side_effect,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()

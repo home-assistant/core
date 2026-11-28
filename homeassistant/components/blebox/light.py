@@ -8,23 +8,17 @@ import blebox_uniapi.light
 from blebox_uniapi.light import BleboxColorMode
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP_KELVIN,
-    ATTR_EFFECT,
-    ATTR_RGB_COLOR,
-    ATTR_RGBW_COLOR,
-    ATTR_RGBWW_COLOR,
     ColorMode,
     LightEntity,
     LightEntityFeature,
+    LightServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import BleBoxConfigEntry
 from .const import DOMAIN, LIGHT_MAX_KELVINS, LIGHT_MIN_KELVINS
-from .coordinator import BleBoxCoordinator
+from .coordinator import BleBoxConfigEntry, BleBoxCoordinator
 from .entity import BleBoxEntity
 from .util import blebox_command
 
@@ -190,12 +184,12 @@ class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
 
-        rgbw = kwargs.get(ATTR_RGBW_COLOR)
-        brightness = kwargs.get(ATTR_BRIGHTNESS)
-        effect = kwargs.get(ATTR_EFFECT)
-        color_temp_kelvin = kwargs.get(ATTR_COLOR_TEMP_KELVIN)
-        rgbww = kwargs.get(ATTR_RGBWW_COLOR)
-        rgb = kwargs.get(ATTR_RGB_COLOR)
+        rgbw = kwargs.get(LightServiceArgument.RGBW_COLOR)
+        brightness = kwargs.get(LightServiceArgument.BRIGHTNESS)
+        effect = kwargs.get(LightServiceArgument.EFFECT)
+        color_temp_kelvin = kwargs.get(LightServiceArgument.COLOR_TEMP_KELVIN)
+        rgbww = kwargs.get(LightServiceArgument.RGBWW_COLOR)
+        rgb = kwargs.get(LightServiceArgument.RGB_COLOR)
 
         feature = self._feature
         value = feature.sensible_on_value

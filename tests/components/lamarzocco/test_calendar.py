@@ -5,22 +5,20 @@ from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.calendar import (
     DOMAIN as CALENDAR_DOMAIN,
-    EVENT_END_DATETIME,
-    EVENT_START_DATETIME,
-    SERVICE_GET_EVENTS,
+    CalendarService,
+    CalendarServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import WAKE_UP_SLEEP_ENTRY_IDS, async_init_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_calendar_events(
@@ -58,13 +56,13 @@ async def test_calendar_events(
 
         events = await hass.services.async_call(
             CALENDAR_DOMAIN,
-            SERVICE_GET_EVENTS,
+            CalendarService.GET_EVENTS,
             {
-                ATTR_ENTITY_ID: (
+                TargetKey.ENTITY_ID: (
                     f"calendar.{serial_number}_auto_on_off_schedule_{identifier}"
                 ),
-                EVENT_START_DATETIME: test_time,
-                EVENT_END_DATETIME: test_time + timedelta(days=23),
+                CalendarServiceArgument.START_DATE_TIME: test_time,
+                CalendarServiceArgument.END_DATE_TIME: test_time + timedelta(days=23),
             },
             blocking=True,
             return_response=True,
@@ -105,14 +103,14 @@ async def test_calendar_edge_cases(
 
     events = await hass.services.async_call(
         CALENDAR_DOMAIN,
-        SERVICE_GET_EVENTS,
+        CalendarService.GET_EVENTS,
         {
-            ATTR_ENTITY_ID: (
+            TargetKey.ENTITY_ID: (
                 f"calendar.{mock_lamarzocco.serial_number}"
                 f"_auto_on_off_schedule_{WAKE_UP_SLEEP_ENTRY_IDS[1].lower()}"
             ),
-            EVENT_START_DATETIME: start_date,
-            EVENT_END_DATETIME: end_date,
+            CalendarServiceArgument.START_DATE_TIME: start_date,
+            CalendarServiceArgument.END_DATE_TIME: end_date,
         },
         blocking=True,
         return_response=True,
@@ -152,14 +150,14 @@ async def test_no_calendar_events_global_disable(
 
     events = await hass.services.async_call(
         CALENDAR_DOMAIN,
-        SERVICE_GET_EVENTS,
+        CalendarService.GET_EVENTS,
         {
-            ATTR_ENTITY_ID: (
+            TargetKey.ENTITY_ID: (
                 f"calendar.{serial_number}"
                 f"_auto_on_off_schedule_{wake_up_sleep_entry_id.lower()}"
             ),
-            EVENT_START_DATETIME: test_time,
-            EVENT_END_DATETIME: test_time + timedelta(days=23),
+            CalendarServiceArgument.START_DATE_TIME: test_time,
+            CalendarServiceArgument.END_DATE_TIME: test_time + timedelta(days=23),
         },
         blocking=True,
         return_response=True,

@@ -3,7 +3,7 @@
 import asyncio
 from collections.abc import Collection
 from dataclasses import dataclass
-import datetime
+import datetime as dt
 from functools import partial
 from ipaddress import IPv4Network, IPv6Network, ip_network
 import logging
@@ -21,6 +21,7 @@ from aiohttp.streams import StreamReader
 from aiohttp.typedefs import JSONDecoder, StrOrURL
 from aiohttp.web_exceptions import HTTPMovedPermanently, HTTPRedirection
 from aiohttp.web_protocol import RequestHandler
+from aiohttp.web_urldispatcher import AbstractResource
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -51,6 +52,7 @@ from .const import (
     CONF_SSL_CERTIFICATE,
     CONF_SSL_KEY,
     CONF_SSL_PEER_CERTIFICATE,
+    CONF_SSL_PEER_CERTIFICATE_REMOTE,
     CONF_SSL_PROFILE,
     CONF_TRUSTED_PROXIES,
     ENV_SUPERVISOR,
@@ -89,6 +91,18 @@ _STATIC_CLASSES = {
 }
 
 
+def _comparable_config(conf: ConfData) -> ConfData:
+    """Return the config without metadata, and without the SSL profile if unused.
+
+    Without a certificate the profile has no effect, so a default config
+    persisted with an earlier default profile is still the default config.
+    """
+    conf = _strip_meta(conf)
+    if CONF_SSL_CERTIFICATE not in conf:
+        conf.pop(CONF_SSL_PROFILE, None)
+    return conf
+
+
 def make_server(
     hass: HomeAssistant,
     conf: ConfData,
@@ -101,6 +115,7 @@ def make_server(
         server_port=conf[CONF_SERVER_PORT],
         ssl_certificate=conf.get(CONF_SSL_CERTIFICATE),
         ssl_peer_certificate=conf.get(CONF_SSL_PEER_CERTIFICATE),
+        ssl_peer_certificate_remote=conf[CONF_SSL_PEER_CERTIFICATE_REMOTE],
         ssl_key=conf.get(CONF_SSL_KEY),
         # The loaded config stores trusted proxies as strings
         # (JSON-serializable); the forwarded middleware needs
@@ -111,11 +126,10 @@ def make_server(
         ssl_profile=conf[CONF_SSL_PROFILE],
         supervisor_unix_socket_path=supervisor_unix_socket_path,
         # Only the unconfigured default config on the new Supervisor default
-        # port bridges the previous one; compare without metadata so a default
-        # config reloaded from disk still matches.
+        # port bridges the previous one.
         port_transition=(
             ENV_SUPERVISOR in os.environ
-            and _strip_meta(conf) == _strip_meta(_DEFAULT_CONFIG)
+            and _comparable_config(conf) == _comparable_config(_DEFAULT_CONFIG)
             and conf[CONF_SERVER_PORT] != SERVER_PORT
         ),
     )
@@ -198,6 +212,29 @@ async def async_verify_can_bind(hass: HomeAssistant, conf: ConfData) -> None:
         await server.stop()
 
 
+def _load_peer_certificate(ssl_peer_certificate: str) -> None:
+    """Load the peer certificate authority into a throwaway SSL context."""
+    ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER).load_verify_locations(ssl_peer_certificate)
+
+
+async def async_verify_peer_certificate(
+    hass: HomeAssistant, ssl_peer_certificate: str
+) -> None:
+    """Verify the peer certificate authority file can be loaded.
+
+    The local server only loads it when it serves SSL itself, while remote
+    access loads it on its own, so it is checked separately here.
+
+    Raises ``HomeAssistantError`` if the file cannot be loaded.
+    """
+    try:
+        await hass.async_add_executor_job(_load_peer_certificate, ssl_peer_certificate)
+    except (OSError, ssl.SSLError) as err:
+        raise HomeAssistantError(
+            f"Could not use SSL peer certificate from {ssl_peer_certificate}: {err}"
+        ) from err
+
+
 class HomeAssistantRequest(web.Request):
     """Home Assistant request object."""
 
@@ -260,6 +297,7 @@ class HomeAssistantHTTP:
         ssl_profile: SSLProfile,
         supervisor_unix_socket_path: Path | None = None,
         port_transition: bool = False,
+        ssl_peer_certificate_remote: bool = False,
     ) -> None:
         """Initialize the HTTP Home Assistant server."""
         self.app = HomeAssistantApplication(
@@ -273,6 +311,7 @@ class HomeAssistantHTTP:
         self.hass = hass
         self.ssl_certificate = ssl_certificate
         self.ssl_peer_certificate = ssl_peer_certificate
+        self.ssl_peer_certificate_remote = ssl_peer_certificate_remote
         self.ssl_key = ssl_key
         self.server_host = server_host
         self.server_port = server_port
@@ -289,6 +328,14 @@ class HomeAssistantHTTP:
         self._port_transition = port_transition
         self._legacy_redirect_runner: web.AppRunner | None = None
         self._legacy_redirect_server: asyncio.Server | None = None
+        self._requires_auth_resources: set[AbstractResource] = set()
+
+    @property
+    def remote_ssl_peer_certificate(self) -> str | None:
+        """Return the peer certificate remote access must require, if any."""
+        if not self.ssl_peer_certificate_remote:
+            return None
+        return self.ssl_peer_certificate
 
     async def async_bind(self) -> None:
         """Create the SSL context and the server, binding its sockets.
@@ -380,7 +427,22 @@ class HomeAssistantHTTP:
             class_name = view.__class__.__name__
             raise AttributeError(f'{class_name} missing required attribute "name"')
 
-        view.register(self.hass, self.app, self.app.router)
+        routes = view.register(self.hass, self.app, self.app.router)
+        if view.requires_auth and routes:
+            self._requires_auth_resources.update(
+                route.resource for route in routes if route.resource is not None
+            )
+
+    async def async_path_requires_auth(
+        self, request: web.Request, raw_path: str
+    ) -> bool:
+        """Return whether raw_path resolves to a registered view requiring auth."""
+        probe_request = request.clone(rel_url=URL.build(path=raw_path, encoded=True))
+        for resource in self._requires_auth_resources:
+            _, allowed_methods = await resource.resolve(probe_request)
+            if allowed_methods:
+                return True
+        return False
 
     def register_redirect(
         self,
@@ -534,7 +596,7 @@ class HomeAssistantHTTP:
             .public_key(key.public_key())
             .serial_number(x509.random_serial_number())
             .not_valid_before(now)
-            .not_valid_after(now + datetime.timedelta(days=30))
+            .not_valid_after(now + dt.timedelta(days=30))
             .add_extension(
                 x509.SubjectAlternativeName([x509.DNSName(host)]),
                 critical=False,

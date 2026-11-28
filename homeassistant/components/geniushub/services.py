@@ -6,7 +6,7 @@ import probatio
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
@@ -17,34 +17,29 @@ from homeassistant.helpers.service import (
 )
 from homeassistant.helpers.typing import VolDictType
 
-from .const import (
-    ATTR_DURATION,
-    ATTR_ZONE_MODE,
-    DOMAIN,
-    SVC_SET_SWITCH_OVERRIDE,
-    SVC_SET_ZONE_MODE,
-    SVC_SET_ZONE_OVERRIDE,
-)
+from .const import DOMAIN, GeniusHubService, GeniusHubServiceArgument
 
 SET_SWITCH_OVERRIDE_SCHEMA: VolDictType = {
-    probatio.Optional(ATTR_DURATION): probatio.All(
+    probatio.Optional(GeniusHubServiceArgument.DURATION): probatio.All(
         cv.time_period,
         probatio.Range(min=timedelta(minutes=5), max=timedelta(days=1)),
     ),
 }
 SET_ZONE_MODE_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_ENTITY_ID): cv.entity_id,
-        probatio.Required(ATTR_ZONE_MODE): probatio.In(["off", "timer", "footprint"]),
+        probatio.Required(CommonServiceArgument.ENTITY_ID): cv.entity_id,
+        probatio.Required(GeniusHubServiceArgument.MODE): probatio.In(
+            ["off", "timer", "footprint"]
+        ),
     }
 )
 SET_ZONE_OVERRIDE_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_ENTITY_ID): cv.entity_id,
-        probatio.Required(ATTR_TEMPERATURE): probatio.All(
+        probatio.Required(CommonServiceArgument.ENTITY_ID): cv.entity_id,
+        probatio.Required(GeniusHubServiceArgument.TEMPERATURE): probatio.All(
             probatio.Coerce(float), probatio.Range(min=4, max=28)
         ),
-        probatio.Optional(ATTR_DURATION): probatio.All(
+        probatio.Optional(GeniusHubServiceArgument.DURATION): probatio.All(
             cv.time_period,
             probatio.Range(min=timedelta(minutes=5), max=timedelta(days=1)),
         ),
@@ -59,7 +54,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     @verify_domain_control(DOMAIN)
     async def set_zone_mode(call: ServiceCall) -> None:
         """Set the system mode."""
-        entity_id = call.data[ATTR_ENTITY_ID]
+        entity_id = call.data[CommonServiceArgument.ENTITY_ID]
 
         registry = er.async_get(hass)
         registry_entry = registry.async_get(entity_id)
@@ -87,15 +82,21 @@ def async_setup_services(hass: HomeAssistant) -> None:
         async_dispatcher_send(hass, DOMAIN, payload)
 
     hass.services.async_register(
-        DOMAIN, SVC_SET_ZONE_MODE, set_zone_mode, schema=SET_ZONE_MODE_SCHEMA
+        DOMAIN,
+        GeniusHubService.SET_ZONE_MODE,
+        set_zone_mode,
+        schema=SET_ZONE_MODE_SCHEMA,
     )
     hass.services.async_register(
-        DOMAIN, SVC_SET_ZONE_OVERRIDE, set_zone_mode, schema=SET_ZONE_OVERRIDE_SCHEMA
+        DOMAIN,
+        GeniusHubService.SET_ZONE_OVERRIDE,
+        set_zone_mode,
+        schema=SET_ZONE_OVERRIDE_SCHEMA,
     )
     async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SVC_SET_SWITCH_OVERRIDE,
+        GeniusHubService.SET_SWITCH_OVERRIDE,
         entity_domain=SWITCH_DOMAIN,
         func="async_turn_on",
         schema=SET_SWITCH_OVERRIDE_SCHEMA,

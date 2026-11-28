@@ -6,6 +6,18 @@ import logging
 from unittest.mock import call, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockModule,
+    MockPlatform,
+    RegistryEntryWithDefaults,
+    assert_setup_component,
+    async_fire_time_changed,
+    mock_integration,
+    mock_platform,
+    mock_registry,
+    mock_restore_cache,
+    patch_yaml_files,
+)
 
 from homeassistant.components import device_tracker, zone
 from homeassistant.components.device_tracker import (
@@ -40,19 +52,6 @@ from homeassistant.util import dt as dt_util
 
 from . import common
 from .common import MockScanner, mock_legacy_device_tracker_setup
-
-from tests.common import (
-    MockModule,
-    MockPlatform,
-    RegistryEntryWithDefaults,
-    assert_setup_component,
-    async_fire_time_changed,
-    mock_integration,
-    mock_platform,
-    mock_registry,
-    mock_restore_cache,
-    patch_yaml_files,
-)
 
 TEST_PLATFORM = {device_tracker.DOMAIN: {CONF_PLATFORM: "test"}}
 
@@ -528,6 +527,20 @@ async def test_see_state(hass: HomeAssistant, yaml_devices: str) -> None:
     assert attrs["gps_accuracy"] == 1
     assert attrs["source_type"] == "gps"
     assert attrs["number"] == 1
+
+
+@pytest.mark.usefixtures("improved_presence_detection", "yaml_devices")
+async def test_see_location_accuracy_overlap(hass: HomeAssistant) -> None:
+    """Test legacy devices always use the default overlap test."""
+    assert await async_setup_component(hass, device_tracker.DOMAIN, TEST_PLATFORM)
+    await hass.config.async_update(latitude=50.0, longitude=60.0, radius=200)
+    await hass.async_block_till_done()
+
+    # The accuracy circle only overlaps the home zone, ~222 m from its center
+    common.async_see(hass, dev_id="phone", gps=[50.002, 60.0], gps_accuracy=100)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("device_tracker.phone").state == STATE_HOME
 
 
 async def test_see_passive_zone_state(

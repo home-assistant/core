@@ -5,11 +5,16 @@ from unittest.mock import MagicMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from Netio.exceptions import CommunicationError
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.netio.const import DOMAIN
 from homeassistant.components.netio.coordinator import SCAN_INTERVAL
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -17,6 +22,8 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -24,8 +31,6 @@ from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ENTITY_OUTPUT_1 = "switch.powercable_output_1"
 
@@ -38,7 +43,8 @@ async def test_entities(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the switch entities and their states."""
-    await setup_integration(hass, mock_config_entry)
+    with patch("homeassistant.components.netio.PLATFORMS", [Platform.SWITCH]):
+        await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
@@ -93,8 +99,8 @@ async def test_switch_optimistic_state_reconciled(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ENTITY_OUTPUT_1},
+        SwitchService.TURN_OFF,
+        {TargetKey.ENTITY_ID: ENTITY_OUTPUT_1},
         blocking=True,
     )
     assert hass.states.get(ENTITY_OUTPUT_1).state == STATE_OFF
@@ -120,8 +126,8 @@ async def test_switch_action_error(
     with pytest.raises(HomeAssistantError, match="Error setting output 1"):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: ENTITY_OUTPUT_1},
+            SwitchService.TURN_ON,
+            {TargetKey.ENTITY_ID: ENTITY_OUTPUT_1},
             blocking=True,
         )
 

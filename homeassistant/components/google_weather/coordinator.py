@@ -2,10 +2,10 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import timedelta, tzinfo
 from functools import partial
 import logging
-from typing import TypeVar, override
+from typing import override
 
 from google_weather_api import (
     CurrentConditionsResponse,
@@ -24,6 +24,7 @@ from homeassistant.helpers.update_coordinator import (
     TimestampDataUpdateCoordinator,
     UpdateFailed,
 )
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 
@@ -32,16 +33,6 @@ _LOGGER = logging.getLogger(__name__)
 # The API returns at most 24 hourly records per request, so asking for more than
 # that costs an extra request per update. Keep it to a single page.
 HOURLY_FORECAST_HOURS = 24
-
-T = TypeVar(
-    "T",
-    bound=(
-        CurrentConditionsResponse
-        | DailyForecastResponse
-        | HourlyForecastResponse
-        | None
-    ),
-)
 
 
 @dataclass
@@ -61,10 +52,15 @@ class GoogleWeatherRuntimeData:
     subentries_runtime_data: dict[str, GoogleWeatherSubEntryRuntimeData]
 
 
+type _GoogleWeatherDataType = (
+    CurrentConditionsResponse | DailyForecastResponse | HourlyForecastResponse | None
+)
 type GoogleWeatherConfigEntry = ConfigEntry[GoogleWeatherRuntimeData]
 
 
-class GoogleWeatherBaseCoordinator(TimestampDataUpdateCoordinator[T]):
+class GoogleWeatherBaseCoordinator[T: _GoogleWeatherDataType](
+    TimestampDataUpdateCoordinator[T]
+):
     """Base class for Google Weather coordinators."""
 
     config_entry: GoogleWeatherConfigEntry
@@ -143,6 +139,8 @@ class GoogleWeatherDailyForecastCoordinator(
 ):
     """Handle fetching daily weather forecast."""
 
+    time_zone: tzinfo | None = None
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -159,6 +157,13 @@ class GoogleWeatherDailyForecastCoordinator(
             timedelta(hours=1),
             api.async_get_daily_forecast,
         )
+
+    @override
+    async def _async_update_data(self) -> DailyForecastResponse:
+        """Fetch daily forecast and resolve its time zone."""
+        data = await super()._async_update_data()
+        self.time_zone = await dt_util.async_get_time_zone(data.time_zone.id)
+        return data
 
 
 class GoogleWeatherHourlyForecastCoordinator(

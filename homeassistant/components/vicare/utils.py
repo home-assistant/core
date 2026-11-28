@@ -7,6 +7,7 @@ from typing import Any
 
 from PyViCare.PyViCare import PyViCare
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
+from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareHeatingDevice import (
     HeatingDeviceWithComponent as PyViCareHeatingDeviceComponent,
 )
@@ -48,12 +49,29 @@ def login(
     return vicare_api
 
 
-def get_device_serial(device: PyViCareDevice) -> str | None:
-    """Get device serial for device if supported."""
+def get_device_identifier(
+    device_config: PyViCareDeviceConfig, device_serial: str | None
+) -> str:
+    """Return the device registry identifier of a device."""
+    gateway_serial = device_config.getConfig().serial
+    if device_serial is not None:
+        return f"{gateway_serial}_{device_serial.replace('-', '_')}"
+    return f"{gateway_serial}_{device_config.getId()}"
+
+
+def _read_optional(
+    getter: Callable[[PyViCareDevice], str],
+    device: PyViCareDevice,
+    data_point: str,
+) -> str | None:
+    """Read an optional string data point, or None when it cannot be read.
+
+    Every reason is logged at debug, so an absent value stays traceable.
+    """
     try:
-        return device.getSerial()
+        return getter(device)
     except PyViCareNotSupportedFeatureError:
-        _LOGGER.debug("Device does not offer a 'device.serial' data point")
+        _LOGGER.debug("Device does not offer a '%s' data point", data_point)
     except PyViCareRateLimitError as limit_exception:
         _LOGGER.debug("Vicare API rate limit exceeded: %s", limit_exception)
     except PyViCareInvalidDataError as invalid_data_exception:
@@ -67,6 +85,28 @@ def get_device_serial(device: PyViCareDevice) -> str | None:
     except ValueError:
         _LOGGER.debug("Unable to decode data from ViCare server")
     return None
+
+
+def get_device_serial(device: PyViCareDevice) -> str | None:
+    """Get device serial for device if supported."""
+    return _read_optional(lambda api: api.getSerial(), device, "device.serial")
+
+
+def get_device_name(device: PyViCareDevice) -> str | None:
+    """Get the name a device was given in the ViCare app, if supported.
+
+    For room devices this is the only thing that tells them apart, since every
+    radiator actuator in an installation reports the same model. At device
+    level only zigbee devices, room sensors and floor heating offer the data
+    point, so callers fall back to the model.
+    """
+    try:
+        name = _read_optional(lambda api: api.getName(), device, "device.name")
+    except AttributeError:
+        # Only some device classes offer the getter at all.
+        _LOGGER.debug("Device class does not offer 'device.name'")
+        return None
+    return name.strip() or None if name is not None else None
 
 
 def is_supported(
@@ -117,6 +157,17 @@ def get_compressors(device: PyViCareDevice) -> list[PyViCareHeatingDeviceCompone
         _LOGGER.debug("No compressors found")
     except AttributeError as error:
         _LOGGER.debug("No compressors found: %s", error)
+    return []
+
+
+def get_rooms(device: PyViCareDevice) -> list[PyViCareHeatingDeviceComponent]:
+    """Return the list of rooms."""
+    try:
+        return device.rooms
+    except PyViCareNotSupportedFeatureError:
+        _LOGGER.debug("No rooms found")
+    except AttributeError as error:
+        _LOGGER.debug("No rooms found: %s", error)
     return []
 
 

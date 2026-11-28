@@ -6,34 +6,25 @@ from unittest.mock import PropertyMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, snapshot_platform
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.atag.climate import PRESET_MAP
 from homeassistant.components.climate import (
-    ATTR_HVAC_MODE,
-    ATTR_PRESET_MODE,
     DOMAIN as CLIMATE_DOMAIN,
     PRESET_AWAY,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_PRESET_MODE,
-    SERVICE_SET_TEMPERATURE,
+    ClimateService,
+    ClimateServiceArgument,
     HVACMode,
 )
 from homeassistant.components.homeassistant import DOMAIN as HA_DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_TEMPERATURE,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.const import STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import UID, init_integration
-
-from tests.common import async_fire_time_changed, snapshot_platform
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 CLIMATE_ID = "climate.atag_thermostat_atag"
 
@@ -65,8 +56,8 @@ async def test_setting_climate(
     with patch("pyatag.entities.Climate.set_temp") as mock_set_temp:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: CLIMATE_ID, ATTR_TEMPERATURE: 15},
+            ClimateService.SET_TEMPERATURE,
+            {TargetKey.ENTITY_ID: CLIMATE_ID, ClimateServiceArgument.TEMPERATURE: 15},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -75,8 +66,11 @@ async def test_setting_climate(
     with patch("pyatag.entities.Climate.set_preset_mode") as mock_set_preset:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: CLIMATE_ID, ATTR_PRESET_MODE: PRESET_AWAY},
+            ClimateService.SET_PRESET_MODE,
+            {
+                TargetKey.ENTITY_ID: CLIMATE_ID,
+                ClimateServiceArgument.PRESET_MODE: PRESET_AWAY,
+            },
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -85,8 +79,11 @@ async def test_setting_climate(
     with patch("pyatag.entities.Climate.set_hvac_mode") as mock_set_hvac:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: CLIMATE_ID, ATTR_HVAC_MODE: HVACMode.HEAT},
+            ClimateService.SET_HVAC_MODE,
+            {
+                TargetKey.ENTITY_ID: CLIMATE_ID,
+                ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT,
+            },
             blocking=True,
         )
         await hass.async_block_till_done()

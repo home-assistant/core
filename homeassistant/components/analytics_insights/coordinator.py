@@ -83,19 +83,23 @@ class HomeassistantAnalyticsDataUpdateCoordinator(DataUpdateCoordinator[Analytic
             if endpoint in self._responses:
                 return cast(_T, self._responses[endpoint])
             raise UpdateFailed(
-                f"Homeassistant Analytics returned 304 for {endpoint} without "
-                "previous data",
+                translation_domain=DOMAIN,
+                translation_key="not_modified_without_data",
+                translation_placeholders={"endpoint": endpoint},
                 retry_after=RETRY_AFTER.total_seconds(),
             ) from err
         except HomeassistantAnalyticsConnectionError as err:
             raise UpdateFailed(
-                f"Could not reach Homeassistant Analytics while fetching {endpoint}: "
-                f"{err}",
+                translation_domain=DOMAIN,
+                translation_key="connection_error",
+                translation_placeholders={"endpoint": endpoint, "error": str(err)},
                 retry_after=RETRY_AFTER.total_seconds(),
             ) from err
         except HomeassistantAnalyticsError as err:
             raise UpdateFailed(
-                f"Unexpected response from Homeassistant Analytics for {endpoint}",
+                translation_domain=DOMAIN,
+                translation_key="unexpected_response",
+                translation_placeholders={"endpoint": endpoint},
                 retry_after=RETRY_AFTER.total_seconds(),
             ) from err
         self._responses[endpoint] = result

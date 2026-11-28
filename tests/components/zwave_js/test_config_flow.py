@@ -14,6 +14,7 @@ from aiohasupervisor.models import AddonsOptions, Discovery
 import aiohttp
 from probatio import InInvalid
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_capture_events
 from zwave_js_server.exceptions import ConnectionFailed, FailedCommand
 from zwave_js_server.model.node import Node
 from zwave_js_server.version import VersionInfo
@@ -50,8 +51,6 @@ from homeassistant.helpers.service_info.usb import UsbServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .common import TEST_SENSITIVE_NETWORK_KEY
-
-from tests.common import MockConfigEntry, async_capture_events
 
 ADDON_DISCOVERY_INFO = {
     "addon": "Z-Wave JS",
@@ -143,7 +142,7 @@ def get_addon_discovery_info_fixture(get_addon_discovery_info: AsyncMock) -> Asy
 def setup_entry_fixture() -> Generator[AsyncMock]:
     """Mock entry setup."""
     with patch(
-        "homeassistant.components.zwave_js.async_setup_entry", return_value=True
+        "homeassistant.components.zwave_js.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -152,7 +151,7 @@ def setup_entry_fixture() -> Generator[AsyncMock]:
 def unload_entry_fixture() -> Generator[AsyncMock]:
     """Mock entry unload."""
     with patch(
-        "homeassistant.components.zwave_js.async_unload_entry", return_value=True
+        "homeassistant.components.zwave_js.async_unload_entry", return_value=None
     ) as mock_unload_entry:
         yield mock_unload_entry
 
@@ -302,7 +301,7 @@ async def test_manual(hass: HomeAssistant) -> None:
         ) as mock_setup,
         patch(
             "homeassistant.components.zwave_js.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -385,7 +384,7 @@ async def test_manual_errors(
 
     get_server_version.side_effect = None
     with patch(
-        "homeassistant.components.zwave_js.async_setup_entry", return_value=True
+        "homeassistant.components.zwave_js.async_setup_entry", return_value=None
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -530,7 +529,7 @@ async def test_supervisor_discovery(
         ) as mock_setup,
         patch(
             "homeassistant.components.zwave_js.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
@@ -632,7 +631,7 @@ async def test_clean_discovery_on_user_create(
         ) as mock_setup,
         patch(
             "homeassistant.components.zwave_js.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -852,7 +851,7 @@ async def test_usb_discovery(
         ) as mock_setup,
         patch(
             "homeassistant.components.zwave_js.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         await hass.async_block_till_done()
@@ -966,7 +965,7 @@ async def test_usb_discovery_addon_not_running(
         ) as mock_setup,
         patch(
             "homeassistant.components.zwave_js.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         await hass.async_block_till_done()
@@ -1485,7 +1484,7 @@ async def test_esphome_discovery_intent_custom(
         ) as mock_setup,
         patch(
             "homeassistant.components.zwave_js.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         await hass.async_block_till_done()
@@ -1575,7 +1574,7 @@ async def test_esphome_discovery_intent_recommended(
         ) as mock_setup,
         patch(
             "homeassistant.components.zwave_js.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -2264,7 +2263,7 @@ async def test_configure_addon_usb_socket_validation(
         patch("homeassistant.components.zwave_js.async_setup", return_value=True),
         patch(
             "homeassistant.components.zwave_js.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         await hass.async_block_till_done()
@@ -2359,7 +2358,7 @@ async def test_discovery_addon_not_running(
         ) as mock_setup,
         patch(
             "homeassistant.components.zwave_js.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         await hass.async_block_till_done()
@@ -2480,7 +2479,7 @@ async def test_discovery_addon_not_installed(
         ) as mock_setup,
         patch(
             "homeassistant.components.zwave_js.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         await hass.async_block_till_done()
@@ -2902,7 +2901,7 @@ async def test_concurrent_flow_during_addon_config_write(
             patch("homeassistant.components.zwave_js.async_setup", return_value=True),
             patch(
                 "homeassistant.components.zwave_js.async_setup_entry",
-                return_value=True,
+                return_value=None,
             ),
         ):
             result_manual = await hass.config_entries.flow.async_configure(
@@ -2957,6 +2956,21 @@ async def test_usb_discovery_requires_supervisor(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "discovery_requires_supervisor"
+
+
+@pytest.mark.usefixtures("supervisor")
+async def test_usb_discovery_serial_proxy(hass: HomeAssistant) -> None:
+    """Test usb discovery of an ESPHome serial proxy port is aborted."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USB},
+        data=dataclasses.replace(
+            USB_DISCOVERY_INFO,
+            device="esphome-hass://esphome/abc123?port_udev_id=usb-test_zwave-if00",
+        ),
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "serial_proxy_not_supported"
 
 
 @pytest.mark.usefixtures("supervisor", "addon_running")
@@ -3027,7 +3041,7 @@ async def test_not_addon(hass: HomeAssistant) -> None:
         ) as mock_setup,
         patch(
             "homeassistant.components.zwave_js.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -3180,7 +3194,7 @@ async def test_addon_running(
         ) as mock_setup,
         patch(
             "homeassistant.components.zwave_js.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -3450,7 +3464,7 @@ async def test_addon_installed(
         ) as mock_setup,
         patch(
             "homeassistant.components.zwave_js.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         await hass.async_block_till_done()
@@ -4013,7 +4027,7 @@ async def test_addon_not_installed(
         ) as mock_setup,
         patch(
             "homeassistant.components.zwave_js.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         await hass.async_block_till_done()
@@ -5434,7 +5448,7 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
         ) as mock_setup,
         patch(
             "homeassistant.components.zwave_js.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
@@ -6181,7 +6195,7 @@ async def test_choose_serial_port_usb_ports_failure(
             "homeassistant.components.zwave_js.config_flow.async_get_usb_ports",
             side_effect=OSError("test_error"),
         ),
-        patch("homeassistant.components.zwave_js.async_setup_entry", return_value=True),
+        patch("homeassistant.components.zwave_js.async_setup_entry", return_value=None),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         assert result["type"] is FlowResultType.ABORT
@@ -6236,7 +6250,7 @@ async def test_migrate_flow_abandoned_reloads_entry(
 
     # The user closes the migration dialog instead of continuing.
     with patch(
-        "homeassistant.components.zwave_js.async_setup_entry", return_value=True
+        "homeassistant.components.zwave_js.async_setup_entry", return_value=None
     ):
         hass.config_entries.flow.async_abort(result["flow_id"])
         await hass.async_block_till_done()
@@ -6299,7 +6313,7 @@ async def test_create_entry_spares_migration_flow(
         patch("homeassistant.components.zwave_js.async_setup", return_value=True),
         patch(
             "homeassistant.components.zwave_js.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -6362,7 +6376,7 @@ async def test_reconfigure_abandoned_restores_addon_config(
 
     # The user closes the dialog instead of waiting for the restart.
     with patch(
-        "homeassistant.components.zwave_js.async_setup_entry", return_value=True
+        "homeassistant.components.zwave_js.async_setup_entry", return_value=None
     ):
         hass.config_entries.flow.async_abort(result["flow_id"])
         await hass.async_block_till_done()
@@ -6619,6 +6633,42 @@ async def test_get_usb_ports_all_na(hass: HomeAssistant) -> None:
         assert "/dev/ttyUSB0" in device_paths
         assert "/dev/ttyUSB1" in device_paths
         assert "/dev/ttyUSB2" in device_paths
+
+
+async def test_get_usb_ports_skips_serial_proxy(hass: HomeAssistant) -> None:
+    """Test get_usb_ports leaves out ESPHome serial proxy ports."""
+    mock_ports = [
+        USBDevice(
+            device="/dev/ttyUSB0",
+            vid="1234",
+            pid="5678",
+            serial_number=None,
+            manufacturer=None,
+            description="Device A",
+        ),
+        SerialDevice(
+            device="esphome-hass://esphome/abc123?port_name=uart",
+            serial_number=None,
+            manufacturer=None,
+            description="uart",
+        ),
+        USBDevice(
+            device="esphome-hass://esphome/abc123?port_udev_id=usb-test_zwave-if00",
+            vid="1234",
+            pid="5678",
+            serial_number=None,
+            manufacturer=None,
+            description="Device B",
+        ),
+    ]
+
+    with patch(
+        "homeassistant.components.zwave_js.config_flow.usb.async_scan_serial_ports",
+        return_value=mock_ports,
+    ):
+        result = await async_get_usb_ports(hass)
+
+    assert list(result) == ["/dev/ttyUSB0"]
 
 
 async def test_get_usb_ports_mixed_case_filtering(hass: HomeAssistant) -> None:
@@ -6888,7 +6938,7 @@ async def test_intent_recommended_user(
         ) as mock_setup,
         patch(
             "homeassistant.components.zwave_js.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         await hass.async_block_till_done()
@@ -6979,7 +7029,7 @@ async def test_intent_recommended_preserves_existing_keys(
         patch("homeassistant.components.zwave_js.async_setup", return_value=True),
         patch(
             "homeassistant.components.zwave_js.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         await hass.async_block_till_done()
@@ -7088,7 +7138,7 @@ async def test_recommended_usb_discovery(
         ) as mock_setup,
         patch(
             "homeassistant.components.zwave_js.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         await hass.async_block_till_done()

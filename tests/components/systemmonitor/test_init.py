@@ -4,6 +4,7 @@ from unittest.mock import Mock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.systemmonitor.const import CONF_PROCESS, DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
@@ -11,8 +12,6 @@ from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry
 
 
 async def test_load_unload_entry(

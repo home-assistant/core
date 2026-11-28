@@ -10,11 +10,19 @@ from aiohttp import hdrs
 from freezegun.api import FrozenDateTimeFactory
 import httpx2
 import pytest
+from pytest_homeassistant.common import (
+    MockModule,
+    async_fire_time_changed,
+    mock_integration,
+    mock_platform,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 import respx
 
 from homeassistant.components import image
+from homeassistant.components.image import ImageService, ImageServiceArgument
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.setup import async_setup_component
@@ -30,14 +38,6 @@ from .conftest import (
     MockImageSyncEntity,
     MockURLImageEntity,
 )
-
-from tests.common import (
-    MockModule,
-    async_fire_time_changed,
-    mock_integration,
-    mock_platform,
-)
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.freeze_time("2023-04-01 00:00:00+00:00")
@@ -459,8 +459,9 @@ async def test_get_image_action(hass: HomeAssistant, mock_image_platform: None) 
     image_data = await image.async_get_image(hass, "image.test")
     assert image_data == image.Image(content_type="image/jpeg", content=b"Test")
 
-    with pytest.raises(HomeAssistantError, match="not found"):
+    with pytest.raises(HomeAssistantError, match="not found") as exc_info:
         await image.async_get_image(hass, "image.unknown")
+    assert exc_info.value.translation_key == "entity_not_found"
 
 
 async def test_get_image_cancelled(
@@ -500,10 +501,10 @@ async def test_snapshot_service(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             image.DOMAIN,
-            image.SERVICE_SNAPSHOT,
+            ImageService.SNAPSHOT,
             {
-                ATTR_ENTITY_ID: "image.test",
-                image.ATTR_FILENAME: "/test/snapshot.jpg",
+                TargetKey.ENTITY_ID: "image.test",
+                ImageServiceArgument.FILENAME: "/test/snapshot.jpg",
             },
             blocking=True,
         )
@@ -533,10 +534,10 @@ async def test_snapshot_service_no_image(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             image.DOMAIN,
-            image.SERVICE_SNAPSHOT,
+            ImageService.SNAPSHOT,
             {
-                ATTR_ENTITY_ID: "image.test",
-                image.ATTR_FILENAME: "/test/snapshot.jpg",
+                TargetKey.ENTITY_ID: "image.test",
+                ImageServiceArgument.FILENAME: "/test/snapshot.jpg",
             },
             blocking=True,
         )
@@ -561,10 +562,10 @@ async def test_snapshot_service_not_allowed_path(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             image.DOMAIN,
-            image.SERVICE_SNAPSHOT,
+            ImageService.SNAPSHOT,
             {
-                ATTR_ENTITY_ID: "image.test",
-                image.ATTR_FILENAME: "/test/snapshot.jpg",
+                TargetKey.ENTITY_ID: "image.test",
+                ImageServiceArgument.FILENAME: "/test/snapshot.jpg",
             },
             blocking=True,
         )
@@ -617,10 +618,10 @@ async def test_snapshot_service_os_error(
     ):
         await hass.services.async_call(
             image.DOMAIN,
-            image.SERVICE_SNAPSHOT,
+            ImageService.SNAPSHOT,
             {
-                ATTR_ENTITY_ID: "image.test",
-                image.ATTR_FILENAME: "/test/snapshot.jpg",
+                TargetKey.ENTITY_ID: "image.test",
+                ImageServiceArgument.FILENAME: "/test/snapshot.jpg",
             },
             blocking=True,
         )

@@ -10,16 +10,22 @@ from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
 from habiticalib import HabiticaGroupMembersResponse
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_fixture,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.habitica.const import DOMAIN
 from homeassistant.components.notify import (
-    ATTR_MESSAGE,
     DOMAIN as NOTIFY_DOMAIN,
-    SERVICE_SEND_MESSAGE,
+    NotifyService,
+    NotifyServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -29,13 +35,6 @@ from .conftest import (
     ERROR_NOT_AUTHORIZED,
     ERROR_NOT_FOUND,
     ERROR_TOO_MANY_REQUESTS,
-)
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_fixture,
-    snapshot_platform,
 )
 
 
@@ -105,10 +104,10 @@ async def test_send_message(
 
     await hass.services.async_call(
         NOTIFY_DOMAIN,
-        SERVICE_SEND_MESSAGE,
+        NotifyService.SEND_MESSAGE,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_MESSAGE: "Greetings, fellow adventurer",
+            TargetKey.ENTITY_ID: entity_id,
+            NotifyServiceArgument.MESSAGE: "Greetings, fellow adventurer",
         },
         blocking=True,
     )
@@ -150,10 +149,10 @@ async def test_send_message_exceptions(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             NOTIFY_DOMAIN,
-            SERVICE_SEND_MESSAGE,
+            NotifyService.SEND_MESSAGE,
             {
-                ATTR_ENTITY_ID: "notify.test_user_party_chat",
-                ATTR_MESSAGE: "Greetings, fellow adventurer",
+                TargetKey.ENTITY_ID: "notify.test_user_party_chat",
+                NotifyServiceArgument.MESSAGE: "Greetings, fellow adventurer",
             },
             blocking=True,
         )

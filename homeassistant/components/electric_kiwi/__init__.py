@@ -30,7 +30,7 @@ PLATFORMS: list[Platform] = [Platform.SELECT, Platform.SENSOR]
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ElectricKiwiConfigEntry
-) -> bool:
+) -> None:
     """Set up Electric Kiwi from a config entry."""
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
@@ -65,19 +65,17 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: ElectricKiwiConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: ElectricKiwiConfigEntry
-) -> bool:
+) -> None:
     """Migrate old entry."""
     if config_entry.version == 1 and config_entry.minor_version == 1:
         implementation = (
@@ -127,5 +125,3 @@ async def async_migrate_entry(
                     f"{unique_id}_{connection_details.id}", f"{unique_id}_{identifier}"
                 ),
             )
-
-    return True

@@ -15,7 +15,6 @@ from tesla_powerwall import (
 from yarl import URL
 
 from homeassistant.components import persistent_notification
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import (
@@ -25,7 +24,10 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
-from homeassistant.helpers.update_coordinator import UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    UpdateFailed,
+    UpdateFailedUnreachable,
+)
 from homeassistant.util.network import is_ip_address
 
 from .const import (
@@ -112,8 +114,12 @@ class PowerwallDataManager:
                 data = await _fetch_powerwall_data(
                     self.power_wall, restricted=self.restricted
                 )
-            except (TimeoutError, PowerwallUnreachableError) as err:
+            except TimeoutError as err:
                 raise UpdateFailed("Unable to fetch data from powerwall") from err
+            except PowerwallUnreachableError as err:
+                raise UpdateFailedUnreachable(
+                    "Unable to fetch data from powerwall"
+                ) from err
             except MissingAttributeError as err:
                 persistent_notification.create(
                     self.hass, API_CHANGED_ERROR_BODY, API_CHANGED_TITLE
@@ -150,7 +156,7 @@ class PowerwallDataManager:
                 break
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: PowerwallConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: PowerwallConfigEntry) -> None:
     """Set up Tesla Powerwall from a config entry."""
     ip_address: str = entry.data[CONF_IP_ADDRESS]
 
@@ -262,8 +268,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerwallConfigEntry) ->
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    return True
 
 
 async def async_migrate_entity_unique_ids(
@@ -451,6 +455,6 @@ def async_last_update_was_successful(
     )
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: PowerwallConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

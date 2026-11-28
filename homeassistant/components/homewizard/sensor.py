@@ -898,7 +898,7 @@ class HomeWizardExternalSensorEntity(HomeWizardEntity, SensorEntity):
             serial_number=device_unique_id,
         )
         if coordinator.data.device.serial is not None:
-            self._attr_device_info["via_device_id"] = async_get_device_id_by_identifier(
+            self._attr_device_info.via_device_id = async_get_device_id_by_identifier(
                 coordinator.hass,
                 (DOMAIN, coordinator.data.device.serial),
                 config_entry_id=coordinator.config_entry.entry_id,

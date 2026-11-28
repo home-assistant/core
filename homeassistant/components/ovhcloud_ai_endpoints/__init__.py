@@ -7,6 +7,10 @@ from openai import (
     OpenAIError,
     PermissionDeniedError,
 )
+
+# The client imports its chat resource lazily on first use,
+# which would happen inside the event loop. Import it with the integration.
+from openai.resources.chat import AsyncChat  # noqa: F401
 from openai.types.chat import ChatCompletionUserMessageParam
 
 from homeassistant.config_entries import ConfigEntry
@@ -52,9 +56,13 @@ async def _validate_api_key(client: AsyncOpenAI) -> None:
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: OVHcloudAIEndpointsConfigEntry
-) -> bool:
+) -> None:
     """Set up OVHcloud AI Endpoints from a config entry."""
     client = _create_client(hass, entry.data[CONF_API_KEY])
+
+    # Cache current platform data which gets added to each request
+    # (caching done by library)
+    _ = await hass.async_add_executor_job(client.platform_headers)
 
     try:
         await _validate_api_key(client)
@@ -69,8 +77,6 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_update_entry(
     hass: HomeAssistant, entry: OVHcloudAIEndpointsConfigEntry
@@ -81,6 +87,6 @@ async def async_update_entry(
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: OVHcloudAIEndpointsConfigEntry
-) -> bool:
+) -> None:
     """Unload OVHcloud AI Endpoints."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

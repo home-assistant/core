@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, Mock, PropertyMock
 
 import blebox_uniapi
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
@@ -13,27 +14,25 @@ from homeassistant.components.climate import (
     ATTR_HVAC_MODES,
     ATTR_MAX_TEMP,
     ATTR_MIN_TEMP,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_TEMPERATURE,
     ClimateEntityFeature,
+    ClimateService,
+    ClimateServiceArgument,
     HVACAction,
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
-    ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import async_setup_config_entry, async_setup_entity, mock_feature
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="saunabox")
@@ -162,8 +161,11 @@ async def test_set_hvac_mode_heat(saunabox, hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         "climate",
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.HEAT},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT,
+        },
         blocking=True,
     )
 
@@ -180,8 +182,8 @@ async def test_set_hvac_mode_off(saunabox, hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         "climate",
-        SERVICE_SET_HVAC_MODE,
-        {"entity_id": entity_id, ATTR_HVAC_MODE: HVACMode.OFF},
+        ClimateService.SET_HVAC_MODE,
+        {"entity_id": entity_id, ClimateServiceArgument.HVAC_MODE: HVACMode.OFF},
         blocking=True,
     )
 
@@ -198,8 +200,8 @@ async def test_set_thermo(saunabox, hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         "climate",
-        SERVICE_SET_TEMPERATURE,
-        {"entity_id": entity_id, ATTR_TEMPERATURE: 43.21},
+        ClimateService.SET_TEMPERATURE,
+        {"entity_id": entity_id, ClimateServiceArgument.TEMPERATURE: 43.21},
         blocking=True,
     )
 

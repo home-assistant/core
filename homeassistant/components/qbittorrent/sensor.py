@@ -33,6 +33,7 @@ SENSOR_TYPE_ALLTIME_DOWNLOAD = "alltime_download"
 SENSOR_TYPE_ALLTIME_UPLOAD = "alltime_upload"
 SENSOR_TYPE_GLOBAL_RATIO = "global_ratio"
 SENSOR_TYPE_ALL_TORRENTS = "all_torrents"
+SENSOR_TYPE_COMPLETED_TORRENTS = "completed_torrents"
 SENSOR_TYPE_PAUSED_TORRENTS = "paused_torrents"
 SENSOR_TYPE_ACTIVE_TORRENTS = "active_torrents"
 SENSOR_TYPE_INACTIVE_TORRENTS = "inactive_torrents"
@@ -183,9 +184,9 @@ SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
         translation_key="alltime_upload",
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.DATA_SIZE,
-        native_unit_of_measurement="B",
+        native_unit_of_measurement=UnitOfInformation.BYTES,
         suggested_display_precision=2,
-        suggested_unit_of_measurement="TiB",
+        suggested_unit_of_measurement=UnitOfInformation.TEBIBYTES,
         value_fn=get_alltime_upload,
     ),
     QBittorrentSensorEntityDescription(
@@ -199,6 +200,22 @@ SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
         key=SENSOR_TYPE_ALL_TORRENTS,
         translation_key="all_torrents",
         value_fn=lambda coordinator: count_torrents_in_states(coordinator, []),
+    ),
+    QBittorrentSensorEntityDescription(
+        key=SENSOR_TYPE_COMPLETED_TORRENTS,
+        translation_key="completed_torrents",
+        value_fn=lambda coordinator: count_torrents_in_states(
+            coordinator,
+            [
+                "uploading",
+                "stalledUP",
+                "checkingUP",
+                "stoppedUP",
+                "queuedUP",
+                "forcedUP",
+                "pausedUP",  # qBittorrent versions before 5.0 use pausedUP.
+            ],
+        ),
     ),
     QBittorrentSensorEntityDescription(
         key=SENSOR_TYPE_ACTIVE_TORRENTS,

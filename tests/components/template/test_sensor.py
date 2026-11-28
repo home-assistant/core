@@ -7,6 +7,12 @@ from typing import Any
 from unittest.mock import ANY, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    assert_setup_component,
+    async_capture_events,
+)
+from pytest_homeassistant.plugins import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.bootstrap import async_from_config_dict
@@ -16,6 +22,7 @@ from homeassistant.components.sensor import (
     SensorEntityStateAttribute,
 )
 from homeassistant.components.template import DOMAIN
+from homeassistant.components.template.const import SENSOR_DEPRECATED_ATTRIBUTES
 from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
     ATTR_FRIENDLY_NAME,
@@ -28,7 +35,11 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import Context, CoreState, HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.template import Template
@@ -45,6 +56,7 @@ from .conftest import (
     assert_state_and_attributes,
     async_get_flow_preview_state,
     async_trigger,
+    get_issues_with_prefix,
     make_test_trigger,
     setup_and_test_nested_unique_id,
     setup_and_test_unique_id,
@@ -52,9 +64,6 @@ from .conftest import (
     setup_mock_template_entity_restore_state,
     setup_restore_template_entity,
 )
-
-from tests.common import MockConfigEntry, assert_setup_component, async_capture_events
-from tests.conftest import WebSocketGenerator
 
 TEST_STATE_SENSOR = "sensor.test_state"
 TEST_ATTRIBUTE_ENTITY_ID = "sensor.test_attribute"
@@ -2036,3 +2045,97 @@ async def test_attributes_template_with_allowed_attributes(
 
     error = f"Unsupported attribute(s) found for {TEST_SENSOR.entity_id}: {attribute}"
     assert error not in caplog.text
+
+
+def get_deprecated_attributes_issues(
+    issue_registry: ir.IssueRegistry,
+) -> list[ir.IssueEntry]:
+    """Return the deprecated attributes issues."""
+    return get_issues_with_prefix(
+        issue_registry, SENSOR_DEPRECATED_ATTRIBUTES.translation_key
+    )
+
+
+@pytest.mark.parametrize(
+    ("count", "config", "options"),
+    [
+        pytest.param(
+            1,
+            {"state": "{{ 1 }}", "attributes": {"device_class": "energy"}},
+            "- `attributes: device_class` → `device_class`",
+            id="device_class",
+        ),
+        pytest.param(
+            1,
+            {"state": "{{ 1 }}", "attributes": {"state_class": "total"}},
+            "- `attributes: state_class` → `state_class`",
+            id="state_class",
+        ),
+        pytest.param(
+            1,
+            {"state": "{{ 1 }}", "attributes": {"last_reset": "{{ now() }}"}},
+            "- `attributes: last_reset` → `last_reset`",
+            id="last_reset",
+        ),
+        pytest.param(
+            1,
+            {
+                "state": "{{ 1 }}",
+                "attributes": {"device_class": "energy", "options": "{{ ['a'] }}"},
+            },
+            "- `attributes: device_class` → `device_class`",
+            id="with_allowed_attribute",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.usefixtures("setup_sensor")
+async def test_deprecated_attributes_issue(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry, options: str
+) -> None:
+    """Test a repair issue is created for attributes that have a dedicated option."""
+    issues = get_deprecated_attributes_issues(issue_registry)
+    assert len(issues) == 1
+    assert issues[0].breaks_in_ha_version == "2027.6.0"
+    assert issues[0].is_fixable is False
+    assert issues[0].severity == ir.IssueSeverity.WARNING
+    assert issues[0].learn_more_url == (
+        "https://www.home-assistant.io/integrations/template/#sensor"
+    )
+    assert issues[0].translation_key == SENSOR_DEPRECATED_ATTRIBUTES.translation_key
+    assert issues[0].translation_placeholders == {
+        "identifier": f"name: {TEST_SENSOR.object_id}",
+        "options": options,
+    }
+
+
+@pytest.mark.parametrize(
+    ("count", "config"),
+    [
+        pytest.param(
+            1,
+            {
+                "state": "{{ 1 }}",
+                "device_class": "energy",
+                "attributes": {"options": "{{ ['a'] }}", "other": "{{ 1 }}"},
+            },
+            id="dedicated_option",
+        ),
+        pytest.param(
+            1,
+            {"state": "{{ 1 }}", "attributes": "{{ {'device_class': 'energy'} }}"},
+            id="attributes_template",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.usefixtures("setup_sensor")
+async def test_no_deprecated_attributes_issue(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test no repair issue is created for dedicated options or allowed attributes."""
+    assert get_deprecated_attributes_issues(issue_registry) == []

@@ -1,8 +1,10 @@
 {
   "domain": "google_mail",
   "name": "Google Mail",
+  "categories": ["messaging_notifications.email_sms_calls"],
   "codeowners": ["@tkdrob"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/google_mail",
   "integration_type": "service",

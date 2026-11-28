@@ -4,26 +4,22 @@ from unittest.mock import AsyncMock, patch
 
 from pypalazzetti.exceptions import CommunicationError, ValidationError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
-    ATTR_FAN_MODE,
-    ATTR_HVAC_MODE,
     DOMAIN as CLIMATE_DOMAIN,
-    SERVICE_SET_FAN_MODE,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_TEMPERATURE,
+    ClimateService,
+    ClimateServiceArgument,
     HVACMode,
 )
 from homeassistant.components.palazzetti.const import FAN_AUTO, FAN_HIGH
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 ENTITY_ID = "climate.stove"
 
@@ -53,8 +49,11 @@ async def test_async_set_data(
     # Set HVAC Mode: Success
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.HEAT},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT,
+        },
         blocking=True,
     )
     mock_palazzetti_client.set_on.assert_called_once_with(True)
@@ -62,8 +61,11 @@ async def test_async_set_data(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.OFF},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.OFF,
+        },
         blocking=True,
     )
     mock_palazzetti_client.set_on.assert_called_once_with(False)
@@ -74,8 +76,11 @@ async def test_async_set_data(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.HEAT},
+            ClimateService.SET_HVAC_MODE,
+            {
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT,
+            },
             blocking=True,
         )
 
@@ -83,16 +88,19 @@ async def test_async_set_data(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.HEAT},
+            ClimateService.SET_HVAC_MODE,
+            {
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT,
+            },
             blocking=True,
         )
 
     # Set Temperature: Success
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 22},
+        ClimateService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.TEMPERATURE: 22},
         blocking=True,
     )
     mock_palazzetti_client.set_target_temperature.assert_called_once_with(22)
@@ -103,8 +111,8 @@ async def test_async_set_data(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 22},
+            ClimateService.SET_TEMPERATURE,
+            {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.TEMPERATURE: 22},
             blocking=True,
         )
 
@@ -112,16 +120,16 @@ async def test_async_set_data(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 22},
+            ClimateService.SET_TEMPERATURE,
+            {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.TEMPERATURE: 22},
             blocking=True,
         )
 
     # Set Fan Mode: Success
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_FAN_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_MODE: FAN_HIGH},
+        ClimateService.SET_FAN_MODE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.FAN_MODE: FAN_HIGH},
         blocking=True,
     )
     mock_palazzetti_client.set_fan_high.assert_called_once()
@@ -129,8 +137,8 @@ async def test_async_set_data(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_FAN_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_MODE: FAN_AUTO},
+        ClimateService.SET_FAN_MODE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.FAN_MODE: FAN_AUTO},
         blocking=True,
     )
     mock_palazzetti_client.set_fan_auto.assert_called_once()
@@ -138,8 +146,8 @@ async def test_async_set_data(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_FAN_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_MODE: "3"},
+        ClimateService.SET_FAN_MODE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.FAN_MODE: "3"},
         blocking=True,
     )
     mock_palazzetti_client.set_fan_speed.assert_called_once_with(3)
@@ -150,8 +158,8 @@ async def test_async_set_data(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_FAN_MODE,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_MODE: 3},
+            ClimateService.SET_FAN_MODE,
+            {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.FAN_MODE: 3},
             blocking=True,
         )
 
@@ -159,7 +167,7 @@ async def test_async_set_data(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_FAN_MODE,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_MODE: 3},
+            ClimateService.SET_FAN_MODE,
+            {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.FAN_MODE: 3},
             blocking=True,
         )

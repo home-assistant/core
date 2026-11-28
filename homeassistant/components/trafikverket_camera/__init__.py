@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 TVCameraConfigEntry = ConfigEntry[TVDataUpdateCoordinator]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: TVCameraConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: TVCameraConfigEntry) -> None:
     """Set up Trafikverket Camera from a config entry."""
 
     coordinator = TVDataUpdateCoordinator(hass, entry)
@@ -30,15 +30,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: TVCameraConfigEntry) -> 
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: TVCameraConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: TVCameraConfigEntry) -> None:
     """Unload Trafikverket Camera config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: TVCameraConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: TVCameraConfigEntry) -> None:
     """Migrate old entry."""
     api_key = entry.data[CONF_API_KEY]
     web_session = async_get_clientsession(hass)
@@ -95,10 +93,9 @@ async def async_migrate_entry(hass: HomeAssistant, entry: TVCameraConfigEntry) -
             new_data.pop(CONF_LOCATION)
             new_data[CONF_ID] = camera_id
             hass.config_entries.async_update_entry(entry, data=new_data, version=3)
-            return True
+            return
         raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="migration_no_camera_id",
             translation_placeholders={"location": location},
         )
-    return True

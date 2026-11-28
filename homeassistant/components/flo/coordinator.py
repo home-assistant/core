@@ -27,7 +27,7 @@ class FloRuntimeData:
     devices: list[FloDeviceDataUpdateCoordinator]
 
 
-class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
+class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Flo device object."""
 
     config_entry: FloConfigEntry
@@ -58,7 +58,7 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
         )
 
     @override
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> None:
         """Update data via library."""
         try:
             async with asyncio.timeout(20):
@@ -194,6 +194,19 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
             or self.pending_warning_alerts_count
             or self.pending_critical_alerts_count
         )
+
+    @property
+    def pending_alarms(self) -> dict[int, tuple[str, int]]:
+        """Return the pending alarms for the device, keyed by alarm id.
+
+        Each value is the alarm's (severity, count).
+        """
+        alarm_counts = self._device_information["notifications"]["pending"].get(
+            "alarmCount", []
+        )
+        return {
+            alarm["id"]: (alarm["severity"], alarm["count"]) for alarm in alarm_counts
+        }
 
     @property
     def water_detected(self) -> bool:

@@ -3,6 +3,7 @@
 import json
 from unittest.mock import MagicMock
 
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 from pytradfri.const import ATTR_GATEWAY_ID
 from pytradfri.gateway import Gateway
 
@@ -14,8 +15,6 @@ from homeassistant.setup import async_setup_component
 
 from . import GATEWAY_ID, GATEWAY_ID1, GATEWAY_ID2
 from .common import CommandStore
-
-from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 async def test_entry_setup_unload(

@@ -52,6 +52,11 @@
         "default": "mdi:counter"
       }
     },
+    "siren": {
+      "siren": {
+        "default": "mdi:bullhorn"
+      }
+    },
     "switch": {
       "ab_alarm_sound": {
         "default": "mdi:home-sound-in"

@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock
 from freezegun.api import FrozenDateTimeFactory
 from pylutron_caseta import BridgeDisconnectedError, BridgeResponseError
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
@@ -18,8 +19,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import MockBridge, async_setup_integration
-
-from tests.common import async_fire_time_changed
 
 
 class SingleSubscriberMockBridge(MockBridge):

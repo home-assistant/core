@@ -5,6 +5,7 @@ from unittest.mock import call, patch
 
 from androidtv.constants import KEYS
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.androidtv.const import (
     CONF_TURN_OFF_COMMAND,
@@ -14,12 +15,15 @@ from homeassistant.components.remote import (
     ATTR_NUM_REPEATS,
     DOMAIN as REMOTE_DOMAIN,
     SERVICE_SEND_COMMAND,
+    RemoteService,
+    RemoteServiceArgument,
 )
 from homeassistant.const import (
     ATTR_COMMAND,
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
@@ -32,8 +36,6 @@ from .common import (
     SHELL_RESPONSE_STANDBY,
     setup_mock_entry,
 )
-
-from tests.common import MockConfigEntry
 
 
 def _setup(config: dict[str, Any]) -> tuple[str, str, MockConfigEntry]:
@@ -155,8 +157,11 @@ async def test_remote_unicode_decode_error(hass: HomeAssistant) -> None:
             try:
                 await hass.services.async_call(
                     REMOTE_DOMAIN,
-                    SERVICE_SEND_COMMAND,
-                    service_data={ATTR_ENTITY_ID: entity_id, ATTR_COMMAND: "BACK"},
+                    RemoteService.SEND_COMMAND,
+                    service_data={
+                        TargetKey.ENTITY_ID: entity_id,
+                        RemoteServiceArgument.COMMAND: "BACK",
+                    },
                     blocking=True,
                 )
                 pytest.fail("Exception not raised")

@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 from actron_neo_api import ActronAirAPIError
 from actron_neo_api.models.settings import ActronAirModeSupport
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.actron_air.climate import (
@@ -12,24 +13,19 @@ from homeassistant.components.actron_air.climate import (
     ActronZoneClimate,
 )
 from homeassistant.components.climate import (
-    ATTR_FAN_MODE,
-    ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     DOMAIN as CLIMATE_DOMAIN,
-    SERVICE_SET_FAN_MODE,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_TEMPERATURE,
+    ClimateService,
+    ClimateServiceArgument,
     HVACMode,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def test_climate_entities(
@@ -62,8 +58,11 @@ async def test_system_set_temperature(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: "climate.test_system", ATTR_TEMPERATURE: 22.5},
+        ClimateService.SET_TEMPERATURE,
+        {
+            TargetKey.ENTITY_ID: "climate.test_system",
+            ClimateServiceArgument.TEMPERATURE: 22.5,
+        },
         blocking=True,
     )
 
@@ -89,8 +88,11 @@ async def test_system_set_temperature_api_error(
     with pytest.raises(HomeAssistantError, match="Test error"):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: "climate.test_system", ATTR_TEMPERATURE: 22.5},
+            ClimateService.SET_TEMPERATURE,
+            {
+                TargetKey.ENTITY_ID: "climate.test_system",
+                ClimateServiceArgument.TEMPERATURE: 22.5,
+            },
             blocking=True,
         )
 
@@ -131,8 +133,11 @@ async def test_system_set_fan_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_FAN_MODE,
-        {ATTR_ENTITY_ID: "climate.test_system", ATTR_FAN_MODE: "low"},
+        ClimateService.SET_FAN_MODE,
+        {
+            TargetKey.ENTITY_ID: "climate.test_system",
+            ClimateServiceArgument.FAN_MODE: "low",
+        },
         blocking=True,
     )
 
@@ -156,8 +161,11 @@ async def test_system_set_fan_mode_api_error(
     with pytest.raises(HomeAssistantError, match="Test error"):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_FAN_MODE,
-            {ATTR_ENTITY_ID: "climate.test_system", ATTR_FAN_MODE: "high"},
+            ClimateService.SET_FAN_MODE,
+            {
+                TargetKey.ENTITY_ID: "climate.test_system",
+                ClimateServiceArgument.FAN_MODE: "high",
+            },
             blocking=True,
         )
 
@@ -175,8 +183,11 @@ async def test_system_set_hvac_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: "climate.test_system", ATTR_HVAC_MODE: HVACMode.COOL},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: "climate.test_system",
+            ClimateServiceArgument.HVAC_MODE: HVACMode.COOL,
+        },
         blocking=True,
     )
 
@@ -198,8 +209,11 @@ async def test_system_set_hvac_mode_api_error(
     with pytest.raises(HomeAssistantError, match="Test error"):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: "climate.test_system", ATTR_HVAC_MODE: HVACMode.HEAT},
+            ClimateService.SET_HVAC_MODE,
+            {
+                TargetKey.ENTITY_ID: "climate.test_system",
+                ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT,
+            },
             blocking=True,
         )
 
@@ -212,8 +226,11 @@ async def test_zone_set_temperature(
     """Test setting temperature for zone climate entity."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: "climate.living_room_living_room", ATTR_TEMPERATURE: 23.0},
+        ClimateService.SET_TEMPERATURE,
+        {
+            TargetKey.ENTITY_ID: "climate.living_room_living_room",
+            ClimateServiceArgument.TEMPERATURE: 23.0,
+        },
         blocking=True,
     )
 
@@ -231,8 +248,11 @@ async def test_zone_set_temperature_api_error(
     with pytest.raises(HomeAssistantError, match="Test error"):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: "climate.living_room_living_room", ATTR_TEMPERATURE: 23.0},
+            ClimateService.SET_TEMPERATURE,
+            {
+                TargetKey.ENTITY_ID: "climate.living_room_living_room",
+                ClimateServiceArgument.TEMPERATURE: 23.0,
+            },
             blocking=True,
         )
 
@@ -268,10 +288,10 @@ async def test_zone_set_hvac_mode_on(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
+        ClimateService.SET_HVAC_MODE,
         {
-            ATTR_ENTITY_ID: "climate.living_room_living_room",
-            ATTR_HVAC_MODE: HVACMode.COOL,
+            TargetKey.ENTITY_ID: "climate.living_room_living_room",
+            ClimateServiceArgument.HVAC_MODE: HVACMode.COOL,
         },
         blocking=True,
     )
@@ -287,10 +307,10 @@ async def test_zone_set_hvac_mode_off(
     """Test setting HVAC mode to off for zone climate entity."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
+        ClimateService.SET_HVAC_MODE,
         {
-            ATTR_ENTITY_ID: "climate.living_room_living_room",
-            ATTR_HVAC_MODE: HVACMode.OFF,
+            TargetKey.ENTITY_ID: "climate.living_room_living_room",
+            ClimateServiceArgument.HVAC_MODE: HVACMode.OFF,
         },
         blocking=True,
     )
@@ -309,10 +329,10 @@ async def test_zone_set_hvac_mode_api_error(
     with pytest.raises(HomeAssistantError, match="Test error"):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
+            ClimateService.SET_HVAC_MODE,
             {
-                ATTR_ENTITY_ID: "climate.living_room_living_room",
-                ATTR_HVAC_MODE: HVACMode.OFF,
+                TargetKey.ENTITY_ID: "climate.living_room_living_room",
+                ClimateServiceArgument.HVAC_MODE: HVACMode.OFF,
             },
             blocking=True,
         )

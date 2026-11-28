@@ -3,15 +3,14 @@
 from unittest.mock import AsyncMock, MagicMock
 
 from aiohttp import ClientResponseError
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.geniushub import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_MAC, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry
 
 
 async def test_cloud_unique_id_migration(
@@ -42,12 +41,12 @@ async def test_cloud_unique_id_migration(
     assert entity_entry.unique_id == "1234_device_78"
 
 
-async def test_setup_client_response_error(
+async def test_setup_auth_failed(
     hass: HomeAssistant,
     mock_geniushub_cloud: AsyncMock,
     mock_cloud_config_entry: MockConfigEntry,
 ) -> None:
-    """Test setup fails when the hub responds with an error."""
+    """Test setup starts a reauth flow when the hub rejects the credentials."""
     mock_geniushub_cloud.update.side_effect = ClientResponseError(
         MagicMock(real_url="https://hub"), (), status=401, message="Unauthorized"
     )
@@ -57,4 +56,30 @@ async def test_setup_client_response_error(
     await hass.async_block_till_done()
 
     assert mock_cloud_config_entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == mock_cloud_config_entry.entry_id
+
+
+async def test_setup_client_response_error(
+    hass: HomeAssistant,
+    mock_geniushub_cloud: AsyncMock,
+    mock_cloud_config_entry: MockConfigEntry,
+) -> None:
+    """Test setup fails without reauth when the hub responds with another error."""
+    mock_geniushub_cloud.update.side_effect = ClientResponseError(
+        MagicMock(real_url="https://hub"),
+        (),
+        status=500,
+        message="Internal Server Error",
+    )
+    mock_cloud_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_cloud_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_cloud_config_entry.state is ConfigEntryState.SETUP_ERROR
     assert mock_cloud_config_entry.reason == "Setup failed, check your configuration"
+    assert hass.config_entries.flow.async_progress() == []

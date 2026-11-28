@@ -3,10 +3,12 @@
 import pytest
 
 from homeassistant.components.rituals_perfume_genie.sensor import SensorDeviceClass
+from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
+    STATE_UNKNOWN,
     EntityCategory,
 )
 from homeassistant.core import HomeAssistant
@@ -15,6 +17,7 @@ from homeassistant.helpers import entity_registry as er
 from .common import (
     init_integration,
     mock_config_entry,
+    mock_diffuser,
     mock_diffuser_v1_battery_cartridge,
     mock_diffuser_v3_no_battery_no_fill,
 )
@@ -40,7 +43,9 @@ async def test_sensors_diffuser_v1_battery_cartridge(
 
     state = hass.states.get("sensor.genie_fill")
     assert state
-    assert state.state == diffuser.fill
+    assert state.state == "95"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
     entry = entity_registry.async_get("sensor.genie_fill")
     assert entry
@@ -83,3 +88,29 @@ async def test_sensors_diffuser_v3_no_fill(
     state = hass.states.get("sensor.genie_v3_perfume")
     assert state
     assert state.state == diffuser.perfume
+
+
+async def test_sensors_no_cartridge(hass: HomeAssistant) -> None:
+    """Test the perfume and fill are unknown without a cartridge."""
+    config_entry = mock_config_entry(unique_id="id_123_sensor_test_no_cartridge")
+    await init_integration(
+        hass,
+        config_entry,
+        [
+            mock_diffuser(
+                hublot="lot123",
+                has_cartridge=False,
+                perfume="Cartridge is not loaded",
+                fill="No measurement available",
+                fill_raw="-1",
+            )
+        ],
+    )
+
+    state = hass.states.get("sensor.genie_perfume")
+    assert state
+    assert state.state == STATE_UNKNOWN
+
+    state = hass.states.get("sensor.genie_fill")
+    assert state
+    assert state.state == STATE_UNKNOWN

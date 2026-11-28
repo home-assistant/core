@@ -7,12 +7,13 @@ from mysensors.sensor import Sensor
 import pytest
 
 from homeassistant.components.text import (
-    ATTR_VALUE,
     DOMAIN as TEXT_DOMAIN,
-    SERVICE_SET_VALUE,
+    TextService,
+    TextServiceArgument,
 )
-from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_ENTITY_ID
+from homeassistant.const import ATTR_BATTERY_LEVEL, TargetKey
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 
 
 async def test_text_node(
@@ -32,8 +33,8 @@ async def test_text_node(
 
     await hass.services.async_call(
         TEXT_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: "Hello World"},
+        TextService.SET_VALUE,
+        {TargetKey.ENTITY_ID: entity_id, TextServiceArgument.VALUE: "Hello World"},
         blocking=True,
     )
 
@@ -52,11 +53,11 @@ async def test_text_node(
 
     value = "12345678123456781234567812"
 
-    with pytest.raises(ValueError) as err:
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             TEXT_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: value},
+            TextService.SET_VALUE,
+            {TargetKey.ENTITY_ID: entity_id, TextServiceArgument.VALUE: value},
             blocking=True,
         )
 

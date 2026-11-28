@@ -12,6 +12,7 @@ from pyheos import (
     NetworkType,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.heos.const import DOMAIN
 from homeassistant.config_entries import (
@@ -28,8 +29,6 @@ from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from . import MockHeos
-
-from tests.common import MockConfigEntry
 
 
 async def test_flow_aborts_already_setup(

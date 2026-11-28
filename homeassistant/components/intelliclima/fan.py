@@ -3,7 +3,7 @@
 import math
 from typing import Any, override
 
-from pyintelliclima import FanMode, FanSpeed, IntelliClimaECO2
+from pyintelliclima import FanMode, FanPreset, FanSpeed, FanSpeedState
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant
@@ -15,7 +15,7 @@ from homeassistant.util.percentage import (
 from homeassistant.util.scaling import int_states_in_range
 
 from .coordinator import IntelliClimaConfigEntry, IntelliClimaCoordinator
-from .entity import IntelliClimaECOEntity
+from .entity import IntelliClimaECODevice, IntelliClimaECOEntity, eco_devices
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -32,9 +32,9 @@ async def async_setup_entry(
     entities: list[IntelliClimaVMCFan] = [
         IntelliClimaVMCFan(
             coordinator=coordinator,
-            device=ecocomfort2,
+            device=device,
         )
-        for ecocomfort2 in coordinator.data.ecocomfort2_devices.values()
+        for device in eco_devices(coordinator.data)
     ]
 
     async_add_entities(entities)
@@ -55,7 +55,7 @@ class IntelliClimaVMCFan(IntelliClimaECOEntity, FanEntity):
     def __init__(
         self,
         coordinator: IntelliClimaCoordinator,
-        device: IntelliClimaECO2,
+        device: IntelliClimaECODevice,
     ) -> None:
         """Class initializer."""
         super().__init__(coordinator, device)
@@ -65,20 +65,24 @@ class IntelliClimaVMCFan(IntelliClimaECOEntity, FanEntity):
 
     @property
     @override
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if fan is on."""
-        return bool(self._device_data.mode_set != FanMode.off)
+        if (fan_state := self._fan_state) is None:
+            return None
+        return fan_state.direction is not FanMode.off
 
     @property
     @override
     def percentage(self) -> int | None:
         """Return the current speed percentage."""
-        device_data = self._device_data
-
-        if device_data.speed_set == FanSpeed.auto:
+        if (fan_state := self._fan_state) is None:
             return None
-
-        return ranged_value_to_percentage(self._speed_range, int(device_data.speed_set))
+        if fan_state.speed is FanSpeedState.off:
+            return 0
+        # Boost runs above the highest speed that can be set.
+        return ranged_value_to_percentage(
+            self._speed_range, min(fan_state.speed, FanSpeedState.speed3)
+        )
 
     @property
     @override
@@ -90,16 +94,9 @@ class IntelliClimaVMCFan(IntelliClimaECOEntity, FanEntity):
     @override
     def preset_mode(self) -> str | None:
         """Return the current preset mode."""
-        device_data = self._device_data
-
-        if device_data.mode_set == FanMode.off:
-            return None
-        if (
-            device_data.speed_set == FanSpeed.auto
-            and device_data.mode_set == FanMode.sensor
-        ):
+        fan_state = self._fan_state
+        if fan_state is not None and fan_state.preset is FanPreset.auto:
             return "auto"
-
         return None
 
     @override
@@ -120,7 +117,7 @@ class IntelliClimaVMCFan(IntelliClimaECOEntity, FanEntity):
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan."""
-        await self.coordinator.api.ecocomfort2.turn_off(self._device_sn)
+        await self._device_api.turn_off(self._device_sn)
         await self.coordinator.async_request_refresh()
 
     @override
@@ -138,15 +135,21 @@ class IntelliClimaVMCFan(IntelliClimaECOEntity, FanEntity):
     ) -> None:
         """Set mode and speed.
 
-        If percentage is None, it first defaults to the respective property.
-        If that is None or 0, then percentage defaults to 25 (sleep)
+        If percentage is None, it defaults to the last commanded speed.
+        If that is off or auto, then percentage defaults to 25 (sleep)
         """
         if percentage is None:
-            percentage = self.percentage or 25
+            # Not the running speed: that may be a boost or night override.
+            speed_set = self._device_data.speed_set
+            percentage = (
+                25
+                if speed_set in (FanSpeed.off, FanSpeed.auto)
+                else ranged_value_to_percentage(self._speed_range, int(speed_set))
+            )
 
         if preset_mode == "auto":
             # auto is a special case with special mode and speed setting
-            await self.coordinator.api.ecocomfort2.set_mode_speed_auto(self._device_sn)
+            await self._device_api.set_mode_speed_auto(self._device_sn)
             await self.coordinator.async_request_refresh()
             return
         if percentage == 0:
@@ -154,13 +157,10 @@ class IntelliClimaVMCFan(IntelliClimaECOEntity, FanEntity):
             await self.async_turn_off()
             return
 
-        # Determine the fan mode
-        if not self.is_on:
-            # Default to alternate fan mode if not turned on
+        # Keep the commanded mode, defaulting to alternate when turned off
+        mode = self._device_data.mode_set
+        if mode == FanMode.off:
             mode = FanMode.alternate
-        else:
-            # Maintain current mode
-            mode = self._device_data.mode_set
 
         speed = FanSpeed(
             str(
@@ -174,7 +174,5 @@ class IntelliClimaVMCFan(IntelliClimaECOEntity, FanEntity):
         )
 
         speed = FanSpeed.sleep if speed == FanSpeed.off else speed
-        await self.coordinator.api.ecocomfort2.set_mode_speed(
-            self._device_sn, mode, speed
-        )
+        await self._device_api.set_mode_speed(self._device_sn, mode, speed)
         await self.coordinator.async_request_refresh()

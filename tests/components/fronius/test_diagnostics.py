@@ -2,16 +2,15 @@
 
 from fronius_modbus.testing import MpptModuleSpec, build_sunspec_map
 from modbus_connection.mock import MockModbusConnection
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
 from homeassistant.core import HomeAssistant
 
 from . import mock_responses, setup_fronius_integration
-
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 
 async def test_diagnostics(

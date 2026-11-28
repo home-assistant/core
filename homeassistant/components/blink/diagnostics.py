@@ -7,7 +7,16 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import BlinkConfigEntry
 
-TO_REDACT = {"serial", "macaddress", "username", "password", "token", "unique_id"}
+TO_REDACT = {
+    "serial",
+    "macaddress",
+    "username",
+    "password",
+    "token",
+    "refresh_token",
+    "unique_id",
+    "hardware_id",
+}
 
 
 async def async_get_config_entry_diagnostics(

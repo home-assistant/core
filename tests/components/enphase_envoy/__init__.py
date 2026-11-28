@@ -3,12 +3,11 @@
 from datetime import timedelta
 
 from jwt import encode
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry
 
 TOKEN_SIGNING_KEY = "envoy-test-signing-key-0123456789"
 

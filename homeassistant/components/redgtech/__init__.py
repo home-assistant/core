@@ -13,7 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.SWITCH]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: RedgtechConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: RedgtechConfigEntry) -> None:
     """Set up Redgtech from a config entry."""
     _LOGGER.debug("Setting up Redgtech entry: %s", entry.entry_id)
     coordinator = RedgtechDataUpdateCoordinator(hass, entry)
@@ -24,10 +24,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: RedgtechConfigEntry) -> 
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     _LOGGER.debug("Successfully set up Redgtech entry: %s", entry.entry_id)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: RedgtechConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: RedgtechConfigEntry) -> None:
     """Unload a config entry."""
     _LOGGER.debug("Unloading Redgtech entry: %s", entry.entry_id)
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

@@ -192,7 +192,7 @@ def _create_yaml_light(xknx: XKNX, config: ConfigType) -> XknxLight:
     )
 
 
-def _create_ui_light(xknx: XKNX, conf: LightKnxConfig, name: str) -> XknxLight:
+def _create_ui_light(xknx: XKNX, conf: LightKnxConfig, name: str | None) -> XknxLight:
     """Return a KNX Light device to be used within XKNX."""
     group_address_tunable_white = None
     group_address_tunable_white_state = None
@@ -599,9 +599,7 @@ class KnxUiLight(_KnxLight, KnxUiEntity):
             unique_id=unique_id,
             entity_config=config.entity,
         )
-        self._device = _create_ui_light(
-            knx_module.xknx, config.knx, config.entity.xknx_name
-        )
+        self._device = _create_ui_light(knx_module.xknx, config.knx, config.entity.name)
         self._attr_color_mode = next(iter(self.supported_color_modes))
         self._attr_max_color_temp_kelvin = config.knx.color_temp_max
         self._attr_min_color_temp_kelvin = config.knx.color_temp_min

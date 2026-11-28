@@ -1,12 +1,20 @@
 """Test fixtures for calendar sensor platforms."""
 
 from collections.abc import Generator
-import datetime
+import datetime as dt
 import secrets
 from typing import Any
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    MockPlatform,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+)
 
 from homeassistant.components.calendar import (
     DOMAIN,
@@ -19,15 +27,6 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
-
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    MockPlatform,
-    mock_config_flow,
-    mock_integration,
-    mock_platform,
-)
 
 TEST_DOMAIN = "test"
 
@@ -72,8 +71,8 @@ class MockCalendarEntity(CalendarEntity):
 
     def create_event(
         self,
-        start: datetime.datetime,
-        end: datetime.datetime,
+        start: dt.date | dt.datetime,
+        end: dt.date | dt.datetime,
         summary: str | None = None,
         description: str | None = None,
         location: str | None = None,
@@ -92,18 +91,29 @@ class MockCalendarEntity(CalendarEntity):
     async def async_get_events(
         self,
         hass: HomeAssistant,
-        start_date: datetime.datetime,
-        end_date: datetime.datetime,
+        start_date: dt.datetime,
+        end_date: dt.datetime,
     ) -> list[CalendarEvent]:
         """Return calendar events within a datetime range."""
-        assert start_date < end_date
-        events = []
-        for event in self._events:
-            if event.start_datetime_local >= end_date:
-                continue
-            if event.end_datetime_local < start_date:
-                continue
-            events.append(event)
+        assert start_date.tzinfo == dt_util.get_default_time_zone()
+        assert end_date.tzinfo == dt_util.get_default_time_zone()
+        start_utc = dt_util.as_utc(start_date)
+        end_utc = dt_util.as_utc(end_date)
+        assert start_utc < end_utc
+
+        def _as_utc(value: dt.date | dt.datetime) -> dt.datetime:
+            if isinstance(value, dt.datetime):
+                return dt_util.as_utc(value)
+            return dt_util.as_utc(
+                dt.datetime.combine(value, dt.time(), tzinfo=start_date.tzinfo)
+            )
+
+        events = [
+            event
+            for event in self._events
+            if _as_utc(event.start) < end_utc and _as_utc(event.end) >= start_utc
+        ]
+        events.sort(key=lambda event: _as_utc(event.start))
         return events
 
 
@@ -134,21 +144,19 @@ def mock_setup_integration(
 
     async def async_setup_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setups(
             config_entry, [Platform.CALENDAR]
         )
-        return True
 
     async def async_unload_entry_init(
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-    ) -> bool:
+    ) -> None:
         await hass.config_entries.async_unload_platforms(
             config_entry, [Platform.CALENDAR]
         )
-        return True
 
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
     mock_integration(
@@ -186,13 +194,13 @@ def mock_test_entities() -> list[MockCalendarEntity]:
 
 def create_test_entities() -> list[MockCalendarEntity]:
     """Create test entities used during the test."""
-    half_hour_from_now = dt_util.now() + datetime.timedelta(minutes=30)
+    half_hour_from_now = dt_util.now() + dt.timedelta(minutes=30)
     entity1 = MockCalendarEntity(
         "Calendar 1",
         [
             CalendarEvent(
                 start=half_hour_from_now,
-                end=half_hour_from_now + datetime.timedelta(minutes=60),
+                end=half_hour_from_now + dt.timedelta(minutes=60),
                 summary="Future Event",
                 description="Future Description",
                 location="Future Location",
@@ -205,13 +213,13 @@ def create_test_entities() -> list[MockCalendarEntity]:
     )
     entity1.async_get_events = AsyncMock(wraps=entity1.async_get_events)
 
-    middle_of_event = dt_util.now() - datetime.timedelta(minutes=30)
+    middle_of_event = dt_util.now() - dt.timedelta(minutes=30)
     entity2 = MockCalendarEntity(
         "Calendar 2",
         [
             CalendarEvent(
                 start=middle_of_event,
-                end=middle_of_event + datetime.timedelta(minutes=60),
+                end=middle_of_event + dt.timedelta(minutes=60),
                 summary="Current Event",
             )
         ],

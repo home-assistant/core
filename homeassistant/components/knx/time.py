@@ -140,7 +140,7 @@ class KnxUiTime(_KNXTime, KnxUiEntity):
         knx_conf = config.knx
         self._device = XknxTimeDevice(
             knx_module.xknx,
-            name=config.entity.xknx_name,
+            name=config.entity.name,
             localtime=False,
             group_address=knx_conf.ga_time.write,
             group_address_state=state_and_passive(knx_conf.ga_time),

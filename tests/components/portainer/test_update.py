@@ -14,12 +14,23 @@ from pyportainer.exceptions import (
     PortainerNotFoundError,
     PortainerTimeoutError,
 )
-from pyportainer.models.docker import DockerContainer, PortainerImageUpdateStatus
+from pyportainer.models.docker import (
+    DockerContainer,
+    LocalImageInformation,
+    PortainerImageUpdateStatus,
+)
 from pyportainer.models.docker_inspect import DockerInspect
 from pyportainer.models.image_pull import DockerImagePullEvent
 from pyportainer.models.portainer import PortainerSystemVersion
 from pyportainer.watcher import PortainerImageWatcherResult
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_array_fixture,
+    load_json_value_fixture,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.portainer.const import DOMAIN
@@ -31,7 +42,7 @@ from homeassistant.components.update import (
     ATTR_RELEASE_URL,
     ATTR_UPDATE_PERCENTAGE,
 )
-from homeassistant.config_entries import SOURCE_REAUTH
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
@@ -46,20 +57,15 @@ from homeassistant.util import dt as dt_util
 
 from . import setup_integration
 
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_json_array_fixture,
-    load_json_value_fixture,
-    snapshot_platform,
-)
-
 ENTITY_ID = "update.funny_chatelet_image_update_available"
 SERVER_UPDATE_ENTITY_ID = "update.portainer_test_update"
 CONTAINER_IMAGE = "docker.io/library/ubuntu:latest"
 CONFIG_IMAGE = "example-image:1.0"
 INSTALLED_DIGEST = (
     "sha256:afcc7f1ac1b49db317a7196c902e61c6c3c4607d63599ee1a82d702d249a0ccb"
+)
+OTHER_REPO_DIGEST = (
+    "sha256:b69959407d21e8a062e0416bf13405bb2b71ed7a84dde4158ebafacfa06f5578"
 )
 RECREATED_CONTAINER_ID = (
     "0011facfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf"
@@ -410,6 +416,57 @@ async def test_update_installed_version_without_repo_digest(
     assert state.attributes[ATTR_INSTALLED_VERSION] is None
 
 
+async def test_update_missing_local_image(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_portainer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a container whose image is gone has no installed version until it returns."""
+    missing_image = "sha256:missing"
+    missing_inspect = DockerInspect.from_dict(
+        load_json_value_fixture("container_inspect.json", DOMAIN)
+        | {"Image": missing_image}
+    )
+    mock_portainer_client.inspect_container.side_effect = lambda _, container_id: (
+        missing_inspect
+        if container_id == missing_inspect.id
+        else mock_portainer_client.inspect_container.return_value
+    )
+
+    async def _get_image(endpoint_id: int, image: str) -> LocalImageInformation:
+        if image == missing_image:
+            raise PortainerNotFoundError("Image not found")
+        return mock_portainer_client.get_image.return_value
+
+    mock_portainer_client.get_image.side_effect = _get_image
+
+    with patch(
+        "homeassistant.components.portainer._PLATFORMS",
+        [Platform.UPDATE],
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.attributes[ATTR_INSTALLED_VERSION] is None
+    state = hass.states.get("update.serene_banach_image_update_available")
+    assert state is not None
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "sha256:afcc7f1ac1b4"
+
+    # The missing image isn't cached, so the next poll fetches it again
+    mock_portainer_client.get_image.side_effect = None
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_portainer_client.get_image.assert_called_with(1, missing_image)
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "sha256:afcc7f1ac1b4"
+
+
 async def test_update_using_cache(
     hass: HomeAssistant,
     mock_portainer_client: AsyncMock,
@@ -629,3 +686,38 @@ async def test_server_update_unavailable(
 
     assert (state := hass.states.get(SERVER_UPDATE_ENTITY_ID))
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_update_registry_digest_matches_other_repo_digest(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_portainer_watcher: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test no update is shown when the registry digest is not the first repo digest."""
+    mock_portainer_watcher.results = {
+        (
+            1,
+            "aa86eacfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf",
+        ): PortainerImageWatcherResult(
+            endpoint_id=1,
+            container_id="aa86eacfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf",
+            status=PortainerImageUpdateStatus(
+                update_available=False,
+                local_digest=INSTALLED_DIGEST,
+                registry_digest=OTHER_REPO_DIGEST,
+            ),
+        )
+    }
+
+    with patch(
+        "homeassistant.components.portainer._PLATFORMS",
+        [Platform.UPDATE],
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "sha256:b69959407d21"
+    assert state.attributes[ATTR_LATEST_VERSION] == "sha256:b69959407d21"

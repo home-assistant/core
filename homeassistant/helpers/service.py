@@ -14,9 +14,8 @@ import probatio
 from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_CONTROL
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_ACTION,
-    CONF_ENTITY_ID,
+    CONF_EXCLUDE,
     CONF_SELECTOR,
     CONF_SERVICE_DATA,
     CONF_SERVICE_DATA_TEMPLATE,
@@ -24,6 +23,7 @@ from homeassistant.const import (
     CONF_TARGET,
     ENTITY_MATCH_ALL,
     ENTITY_MATCH_NONE,
+    TargetKey,
 )
 from homeassistant.core import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
@@ -301,22 +301,30 @@ def async_prepare_call_from_config(
             else:
                 target.update(template.render_complex(conf, variables))
 
-            if CONF_ENTITY_ID in target:
+            if TargetKey.ENTITY_ID in target:
                 registry = entity_registry.async_get(hass)
-                entity_ids = cv.comp_entity_ids_or_uuids(target[CONF_ENTITY_ID])
+                entity_ids = cv.comp_entity_ids_or_uuids(target[TargetKey.ENTITY_ID])
                 if entity_ids not in (ENTITY_MATCH_ALL, ENTITY_MATCH_NONE):
                     entity_ids = entity_registry.async_validate_entity_ids(
                         registry, entity_ids
                     )
-                target[CONF_ENTITY_ID] = entity_ids
+                target[TargetKey.ENTITY_ID] = entity_ids
         except TemplateError as ex:
             raise HomeAssistantError(
                 f"Error rendering service target template: {ex}"
             ) from ex
         except probatio.Invalid as ex:
             raise HomeAssistantError(
-                f"Template rendered invalid entity IDs: {target[CONF_ENTITY_ID]}"
+                f"Template rendered invalid entity IDs: {target[TargetKey.ENTITY_ID]}"
             ) from ex
+
+        if exclude := target.get(CONF_EXCLUDE):
+            try:
+                target[CONF_EXCLUDE] = cv.TARGET_EXCLUDE_SCHEMA(exclude)
+            except probatio.Invalid as ex:
+                raise HomeAssistantError(
+                    f"Template rendered invalid exclude block: {exclude}"
+                ) from ex
 
     service_data = {}
 
@@ -327,17 +335,22 @@ def async_prepare_call_from_config(
             render = template.render_complex(config[conf], variables)
             if not isinstance(render, dict):
                 raise HomeAssistantError(
-                    "Error rendering data template: Result is not a Dictionary"
+                    translation_domain=HOMEASSISTANT_DOMAIN,
+                    translation_key="service_data_template_not_dict",
                 )
             service_data.update(render)
         except TemplateError as ex:
-            raise HomeAssistantError(f"Error rendering data template: {ex}") from ex
+            raise HomeAssistantError(
+                translation_domain=HOMEASSISTANT_DOMAIN,
+                translation_key="service_data_template_error",
+                translation_placeholders={"error": str(ex)},
+            ) from ex
 
     if CONF_SERVICE_ENTITY_ID in config:
         if target:
-            target[ATTR_ENTITY_ID] = config[CONF_SERVICE_ENTITY_ID]
+            target[TargetKey.ENTITY_ID] = config[CONF_SERVICE_ENTITY_ID]
         else:
-            target = {ATTR_ENTITY_ID: config[CONF_SERVICE_ENTITY_ID]}
+            target = {TargetKey.ENTITY_ID: config[CONF_SERVICE_ENTITY_ID]}
 
     return {
         "domain": domain,
@@ -368,12 +381,20 @@ async def async_extract_entities[_EntityT: Entity](
 
     Will convert group entity ids to the entity ids it represents.
     """
-    data_ent_id = service_call.data.get(ATTR_ENTITY_ID)
-
-    if data_ent_id == ENTITY_MATCH_ALL:
-        return [entity for entity in entities if entity.available]
+    data_ent_id = service_call.data.get(TargetKey.ENTITY_ID)
 
     target_selection = target_helpers.TargetSelection(service_call.data)
+
+    if data_ent_id == ENTITY_MATCH_ALL:
+        excluded = target_helpers.async_extract_excluded_entity_ids(
+            service_call.hass, target_selection, expand_group
+        )
+        return [
+            entity
+            for entity in entities
+            if entity.available and entity.entity_id not in excluded
+        ]
+
     referenced = target_helpers.async_extract_referenced_entity_ids(
         service_call.hass, target_selection, expand_group
     )
@@ -696,7 +717,7 @@ async def _resolve_entity_service_call_entities(
                 raise Unauthorized(context=call.context)
             entity_perms = user.permissions.check_entity
 
-    target_all_entities = call.data.get(ATTR_ENTITY_ID) == ENTITY_MATCH_ALL
+    target_all_entities = call.data.get(TargetKey.ENTITY_ID) == ENTITY_MATCH_ALL
 
     if target_all_entities:
         referenced: target_helpers.SelectedEntities | None = None
@@ -724,6 +745,15 @@ async def _resolve_entity_service_call_entities(
     )
 
     entity_candidates = [e for e in entity_candidates if e.available]
+
+    if target_all_entities and (
+        excluded := target_helpers.async_extract_excluded_entity_ids(
+            hass, target_helpers.TargetSelection(call.data)
+        )
+    ):
+        entity_candidates = [
+            e for e in entity_candidates if e.entity_id not in excluded
+        ]
 
     if not target_all_entities:
         assert referenced is not None
@@ -1447,8 +1477,8 @@ def async_get_device_and_config_entry(
     domain: str,
     device_id: str,
     *,
-    include_child_devices: Literal[True] = True,
-    include_main_devices: Literal[True] = True,
+    include_child_devices: bool = True,
+    include_main_devices: bool = True,
 ) -> tuple[device_registry.AnyDeviceEntry, ConfigEntry]: ...
 
 
@@ -1471,10 +1501,7 @@ def async_get_device_and_config_entry(
     as does a composite-device id, because both the splits of a composite and the
     restored composite itself are main devices.
     """
-    device: device_registry.AnyDeviceEntry | None
-    config_entry: ConfigEntry | None
-    # The flags are plain bools here, which matches none of the Literal overloads
-    device, config_entry = device_registry.async_get_device_and_config_entry_for_domain(  # type: ignore[call-overload]
+    device, config_entry = device_registry.async_get_device_and_config_entry_for_domain(
         hass,
         device_id,
         domain=domain,

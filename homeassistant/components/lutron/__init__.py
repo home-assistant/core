@@ -10,8 +10,10 @@ from pylutron import (
     Led,
     Lutron,
     LutronException,
+    Motor,
     OccupancyGroup,
     Output,
+    Shade,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -50,16 +52,17 @@ class LutronData:
     client: Lutron
     binary_sensors: list[tuple[str, OccupancyGroup]]
     buttons: list[tuple[str, Keypad, Button]]
-    covers: list[tuple[str, Output]]
+    covers: list[tuple[str, Shade]]
     fans: list[tuple[str, Output]]
     lights: list[tuple[str, Output]]
+    motors: list[tuple[str, Motor]]
     scenes: list[tuple[str, Keypad, Button, Led | None]]
     switches: list[tuple[str, Output]]
 
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: LutronConfigEntry
-) -> bool:
+) -> None:
     """Set up the Lutron integration."""
 
     host = config_entry.data[CONF_HOST]
@@ -88,6 +91,7 @@ async def async_setup_entry(
         covers=[],
         fans=[],
         lights=[],
+        motors=[],
         scenes=[],
         switches=[],
     )
@@ -148,8 +152,6 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    return True
-
 
 def _setup_output(
     hass: HomeAssistant,
@@ -162,7 +164,12 @@ def _setup_output(
 ) -> None:
     """Set up a Lutron output."""
     _LOGGER.debug("Working on output %s", output.type)
-    if output.type == "SYSTEM_SHADE":
+    if isinstance(output, Motor):
+        # raise/lower/stop only - separate entity class on the cover platform
+        entry_data.motors.append((area_name, output))
+        platform = Platform.COVER
+    elif isinstance(output, Shade) and output.type == "SYSTEM_SHADE":
+        # SIVOIA_QED shades stay lights until their light entities are deprecated
         entry_data.covers.append((area_name, output))
         platform = Platform.COVER
     elif output.type == "CEILING_FAN_TYPE":
@@ -329,6 +336,6 @@ def _async_check_keypad_identifiers(
     )
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: LutronConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: LutronConfigEntry) -> None:
     """Clean up resources and entities associated with the integration."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

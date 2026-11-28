@@ -6,6 +6,7 @@ This includes tests for all mock object types.
 from unittest.mock import Mock, patch
 
 import pytest
+from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components.homekit.accessories import (
     HomeAccessory,
@@ -14,7 +15,11 @@ from homeassistant.components.homekit.accessories import (
 )
 from homeassistant.components.homekit.const import (
     ATTR_DISPLAY_NAME,
+    ATTR_HW_VERSION,
     ATTR_INTEGRATION,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_SW_VERSION,
     ATTR_VALUE,
     BRIDGE_MODEL,
     BRIDGE_NAME,
@@ -37,21 +42,15 @@ from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL,
     ATTR_ENTITY_ID,
-    ATTR_HW_VERSION,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
     ATTR_SERVICE,
-    ATTR_SUPPORTED_FEATURES,
-    ATTR_SW_VERSION,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    EntityStateAttribute,
     __version__ as hass_version,
 )
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-
-from tests.common import async_mock_service
 
 
 async def test_accessory_cancels_track_state_change_on_stop(
@@ -80,7 +79,9 @@ async def test_reload_on_attr_change_after_unavailable_at_creation(
     entity available again.
     """
     entity_id = "sensor.accessory"
-    hass.states.async_set(entity_id, STATE_UNAVAILABLE, {ATTR_SUPPORTED_FEATURES: 1})
+    hass.states.async_set(
+        entity_id, STATE_UNAVAILABLE, {EntityStateAttribute.SUPPORTED_FEATURES: 1}
+    )
     await hass.async_block_till_done()
     acc = HomeAccessory(
         hass, hk_driver, "Home Accessory", entity_id, 2, {"platform": "isy994"}
@@ -93,7 +94,9 @@ async def test_reload_on_attr_change_after_unavailable_at_creation(
     ):
         acc.run()
         await hass.async_block_till_done()
-        hass.states.async_set(entity_id, STATE_ON, {ATTR_SUPPORTED_FEATURES: 3})
+        hass.states.async_set(
+            entity_id, STATE_ON, {EntityStateAttribute.SUPPORTED_FEATURES: 3}
+        )
         await hass.async_block_till_done()
         mock_reload.assert_called_once()
     await acc.stop()
@@ -104,12 +107,16 @@ async def test_reload_on_attr_change_between_creation_and_run(
 ) -> None:
     """Test catch-up reload when attrs change before the accessory runs."""
     entity_id = "sensor.accessory"
-    hass.states.async_set(entity_id, STATE_ON, {ATTR_SUPPORTED_FEATURES: 1})
+    hass.states.async_set(
+        entity_id, STATE_ON, {EntityStateAttribute.SUPPORTED_FEATURES: 1}
+    )
     await hass.async_block_till_done()
     acc = HomeAccessory(
         hass, hk_driver, "Home Accessory", entity_id, 2, {"platform": "isy994"}
     )
-    hass.states.async_set(entity_id, STATE_ON, {ATTR_SUPPORTED_FEATURES: 3})
+    hass.states.async_set(
+        entity_id, STATE_ON, {EntityStateAttribute.SUPPORTED_FEATURES: 3}
+    )
     await hass.async_block_till_done()
     with (
         patch(
@@ -128,7 +135,9 @@ async def test_no_reload_on_unavailable_flap_with_unchanged_attrs(
 ) -> None:
     """Test no reload when the entity flaps unavailable and recovers unchanged."""
     entity_id = "sensor.accessory"
-    hass.states.async_set(entity_id, STATE_ON, {ATTR_SUPPORTED_FEATURES: 1})
+    hass.states.async_set(
+        entity_id, STATE_ON, {EntityStateAttribute.SUPPORTED_FEATURES: 1}
+    )
     await hass.async_block_till_done()
     acc = HomeAccessory(
         hass, hk_driver, "Home Accessory", entity_id, 2, {"platform": "isy994"}
@@ -143,7 +152,9 @@ async def test_no_reload_on_unavailable_flap_with_unchanged_attrs(
         await hass.async_block_till_done()
         hass.states.async_set(entity_id, STATE_UNAVAILABLE)
         await hass.async_block_till_done()
-        hass.states.async_set(entity_id, STATE_ON, {ATTR_SUPPORTED_FEATURES: 1})
+        hass.states.async_set(
+            entity_id, STATE_ON, {EntityStateAttribute.SUPPORTED_FEATURES: 1}
+        )
         await hass.async_block_till_done()
         mock_reload.assert_not_called()
     await acc.stop()

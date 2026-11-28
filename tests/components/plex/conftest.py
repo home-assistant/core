@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
 import requests_mock
 
 from homeassistant.components.plex.const import DOMAIN, PLEX_SERVER_CONFIG
@@ -13,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from .const import DEFAULT_DATA, DEFAULT_OPTIONS, PLEX_DIRECT_URL
 from .helpers import websocket_connected
 from .mock_classes import MockGDM
-
-from tests.common import MockConfigEntry, load_fixture
 
 
 def plex_server_url(entry):
@@ -26,7 +25,7 @@ def plex_server_url(entry):
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.plex.async_setup_entry", return_value=True
+        "homeassistant.components.plex.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -307,6 +306,12 @@ def plextv_resources_fixture():
 def plextv_resources_two_servers_fixture():
     """Load two-server payload for plex.tv resources and return it."""
     return load_fixture("plex/plextv_resources_two_servers.xml")
+
+
+@pytest.fixture(name="plextv_resources_other_server", scope="package")
+def plextv_resources_other_server_fixture():
+    """Load payload for plex.tv resources without the default server and return it."""
+    return load_fixture("plex/plextv_resources_other_server.xml")
 
 
 @pytest.fixture(name="plextv_shared_users", scope="package")

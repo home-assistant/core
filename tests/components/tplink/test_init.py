@@ -17,6 +17,7 @@ from kasa import (
 )
 from kasa.iot import IotStrip
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components import tplink
 from homeassistant.components.tplink.const import (
@@ -72,8 +73,6 @@ from .const import (
     MODEL,
 )
 
-from tests.common import MockConfigEntry, async_fire_time_changed
-
 
 async def test_configuring_tplink_causes_discovery(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
@@ -115,6 +114,38 @@ async def test_config_entry_reload(hass: HomeAssistant) -> None:
         await hass.config_entries.async_unload(already_migrated_config_entry.entry_id)
         await hass.async_block_till_done()
         assert already_migrated_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+@pytest.mark.parametrize(
+    ("modules", "expected_interval"),
+    [
+        pytest.param([], tplink.UPDATE_INTERVAL, id="mains_powered"),
+        pytest.param(["Battery"], tplink.UPDATE_INTERVAL_BATTERY_POWERED, id="battery"),
+    ],
+)
+async def test_update_interval_battery_camera(
+    hass: HomeAssistant, modules: list[str], expected_interval: timedelta
+) -> None:
+    """Test battery-powered cameras are polled less often to save battery."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=MAC_ADDRESS
+    )
+    config_entry.add_to_hass(hass)
+    device = _mocked_device()
+    device.modules = {module: MagicMock() for module in modules}
+    with _patch_discovery(device=device), _patch_connect(device=device):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    coordinator = config_entry.runtime_data.parent_coordinator
+    assert coordinator.update_interval == expected_interval
+
+    device.update.reset_mock()
+    async_fire_time_changed(hass, dt_util.utcnow() + tplink.UPDATE_INTERVAL * 3)
+    await hass.async_block_till_done()
+    expected_calls = 1 if expected_interval == tplink.UPDATE_INTERVAL else 0
+    assert device.update.call_count == expected_calls
 
 
 async def test_config_entry_retry(hass: HomeAssistant) -> None:

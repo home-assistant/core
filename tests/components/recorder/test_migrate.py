@@ -1,12 +1,23 @@
 """The tests for the Recorder component."""
 
-import datetime
+import datetime as dt
 import importlib
 import sqlite3
 import sys
 from unittest.mock import ANY, Mock, PropertyMock, call, patch
 
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.components.recorder.common import (
+    async_wait_recorder,
+    async_wait_recording_done,
+    create_engine_test,
+    db_state_to_native,
+)
+from pytest_homeassistant.typing import (
+    RecorderInstanceContextManager,
+    RecorderInstanceGenerator,
+)
 from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.engine.interfaces import ReflectedForeignKeyConstraint
@@ -28,20 +39,11 @@ from homeassistant.components.recorder.db_schema import (
     RecorderRuns,
     States,
 )
-from homeassistant.components.recorder.util import session_scope
+from homeassistant.components.recorder.util import get_engine_db_url, session_scope
 from homeassistant.core import HomeAssistant, State
 from homeassistant.util import dt as dt_util
 
-from .common import (
-    async_wait_recorder,
-    async_wait_recording_done,
-    create_engine_test,
-    db_state_to_native,
-)
 from .conftest import InstrumentedMigration
-
-from tests.common import async_fire_time_changed
-from tests.typing import RecorderInstanceContextManager, RecorderInstanceGenerator
 
 
 @pytest.fixture
@@ -485,9 +487,9 @@ async def test_events_during_migration_are_queued(
         hass.states.async_set("my.entity", "on", {})
         hass.states.async_set("my.entity", "off", {})
         await hass.async_block_till_done()
-        async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(hours=2))
+        async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(hours=2))
         await hass.async_block_till_done()
-        async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(hours=4))
+        async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(hours=4))
 
         # Let migration finish
         instrument_migration.migration_stall.set()
@@ -527,9 +529,9 @@ async def test_events_during_migration_queue_exhausted(
         assert recorder.util.async_migration_in_progress(hass) is True
         hass.states.async_set("my.entity", "on", {})
         await hass.async_block_till_done()
-        async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(hours=2))
+        async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(hours=2))
         await hass.async_block_till_done()
-        async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(hours=4))
+        async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(hours=4))
         await hass.async_block_till_done()
         hass.states.async_set("my.entity", "off", {})
 
@@ -588,7 +590,7 @@ async def test_schema_migrate(
 
         This simulates an existing db with the old schema.
         """
-        module = f"tests.components.recorder.db_schema_{start_version!s}"
+        module = f"pytest_homeassistant.components.recorder.db_schema_{start_version!s}"
         importlib.import_module(module)
         old_models = sys.modules[module]
         engine = create_engine(*args, **kwargs)
@@ -696,7 +698,7 @@ def test_modify_column(engine_type, substr) -> None:
 
 def test_forgiving_add_column(recorder_db_url: str) -> None:
     """Test that add column will continue if column exists."""
-    engine = create_engine(recorder_db_url, poolclass=StaticPool)
+    engine = create_engine(get_engine_db_url(recorder_db_url), poolclass=StaticPool)
     with Session(engine) as session:
         session.execute(text("CREATE TABLE hello (id int)"))
         instance = Mock()
@@ -712,7 +714,7 @@ def test_forgiving_add_column(recorder_db_url: str) -> None:
 
 def test_forgiving_add_index(recorder_db_url: str) -> None:
     """Test that add index will continue if index exists."""
-    engine = create_engine(recorder_db_url, poolclass=StaticPool)
+    engine = create_engine(get_engine_db_url(recorder_db_url), poolclass=StaticPool)
     db_schema.Base.metadata.create_all(engine)
     with Session(engine) as session:
         instance = Mock()
@@ -727,7 +729,7 @@ def test_forgiving_drop_index(
     recorder_db_url: str, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test that drop index will continue if index drop fails."""
-    engine = create_engine(recorder_db_url, poolclass=StaticPool)
+    engine = create_engine(get_engine_db_url(recorder_db_url), poolclass=StaticPool)
     db_schema.Base.metadata.create_all(engine)
     with Session(engine) as session:
         instance = Mock()
@@ -842,7 +844,7 @@ def test_rebuild_sqlite_states_table(recorder_db_url: str) -> None:
 
     This test is specific for SQLite.
     """
-    engine = create_engine(recorder_db_url)
+    engine = create_engine(get_engine_db_url(recorder_db_url))
     session_maker = scoped_session(sessionmaker(bind=engine, future=True))
     with session_scope(session=session_maker()) as session:
         db_schema.Base.metadata.create_all(engine)
@@ -868,7 +870,7 @@ def test_rebuild_sqlite_states_table_missing_fails(
 
     This test is specific for SQLite.
     """
-    engine = create_engine(recorder_db_url)
+    engine = create_engine(get_engine_db_url(recorder_db_url))
     session_maker = scoped_session(sessionmaker(bind=engine, future=True))
     with session_scope(session=session_maker()) as session:
         db_schema.Base.metadata.create_all(engine)
@@ -903,7 +905,7 @@ def test_rebuild_sqlite_states_table_extra_columns(
 
     This test is specific for SQLite.
     """
-    engine = create_engine(recorder_db_url)
+    engine = create_engine(get_engine_db_url(recorder_db_url))
     session_maker = scoped_session(sessionmaker(bind=engine, future=True))
     with session_scope(session=session_maker()) as session:
         db_schema.Base.metadata.create_all(engine)
@@ -1007,7 +1009,7 @@ def test_drop_restore_foreign_key_constraints(recorder_db_url: str) -> None:
             if foreign_key["name"] and foreign_key["constrained_columns"] == [column]
         ]
 
-    engine = create_engine(recorder_db_url)
+    engine = create_engine(get_engine_db_url(recorder_db_url))
     db_schema.Base.metadata.create_all(engine)
 
     matching_constraints_1 = [
@@ -1133,7 +1135,7 @@ def test_restore_foreign_key_constraints_twice(recorder_db_url: str) -> None:
             if foreign_key["name"] and foreign_key["constrained_columns"] == [column]
         ]
 
-    engine = create_engine(recorder_db_url)
+    engine = create_engine(get_engine_db_url(recorder_db_url))
     db_schema.Base.metadata.create_all(engine)
 
     matching_constraints_1 = [
@@ -1267,7 +1269,7 @@ def test_drop_duplicated_foreign_key_constraints(recorder_db_url: str) -> None:
             if foreign_key["name"] and foreign_key["constrained_columns"] == [column]
         ]
 
-    engine = create_engine(recorder_db_url)
+    engine = create_engine(get_engine_db_url(recorder_db_url))
     db_schema.Base.metadata.create_all(engine)
 
     # Create a duplicate of the constraints
@@ -1377,7 +1379,7 @@ def test_restore_foreign_key_constraints_with_integrity_error(
         ("states", "old_state_id", "states", "state_id", States),
     )
 
-    engine = create_engine(recorder_db_url)
+    engine = create_engine(get_engine_db_url(recorder_db_url))
     db_schema.Base.metadata.create_all(engine)
 
     # Drop constraints

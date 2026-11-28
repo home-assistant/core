@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 from modbus_connection import ModbusError
 from pystiebeleltron.lwz import OperatingMode
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
@@ -26,7 +27,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry, snapshot_platform
 from tests.components.climate.common import (
     async_set_hvac_mode,
     async_set_preset_mode,

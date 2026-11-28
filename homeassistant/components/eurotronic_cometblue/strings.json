@@ -72,9 +72,6 @@
     "invalid_command_payload": {
       "message": "Invalid payload {payload} for {name}: {error}"
     },
-    "invalid_float": {
-      "message": "Value {value} is not a float"
-    },
     "invalid_half_precision": {
       "message": "value {value} is not a half precision float, remainder is {remainder}"
     },
@@ -86,12 +83,6 @@
     },
     "overlapping_schedule_times": {
       "message": "Overlapping times found in schedule, {start} is earlier than previous entry {previous_end} ends"
-    },
-    "unknown_hvac_mode": {
-      "message": "Unknown HVAC mode {hvac_mode}"
-    },
-    "unsupported_preset_mode": {
-      "message": "Unsupported preset_mode {preset_mode}"
     },
     "update_failed": {
       "message": "An unexpected error occurred while communicating with the TRV: {error}"

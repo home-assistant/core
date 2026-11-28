@@ -4,16 +4,20 @@ from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 from bleak import BleakError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
 from specialized_turbo import (
     DecryptionError,
     EncryptionKeyProviderError,
     EncryptionKeyRequiredError,
     IdentificationError,
+    IncompleteBikeInfoError,
 )
 from specialized_turbo.cloud import CloudAuthenticationError, CloudRequestError
 
 from homeassistant import config_entries
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
+from homeassistant.components.bluetooth.manager import HomeAssistantBluetoothManager
 from homeassistant.components.specialized_turbo.const import (
     CONF_HMI_HARDWARE,
     CONF_HMI_SERIAL,
@@ -42,9 +46,16 @@ from .conftest import (
     make_wrapped_key,
 )
 
-from tests.common import MockConfigEntry
-
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
+
+
+@pytest.fixture
+def immediate_scan_timeout(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Do not wait for live advertisements when none are sent."""
+    monkeypatch.setattr(
+        "homeassistant.components.specialized_turbo.config_flow._ADVERTISEMENT_TIMEOUT",
+        0,
+    )
 
 
 async def _choose_key_source(
@@ -61,6 +72,7 @@ async def _choose_key_source(
     )
 
 
+@pytest.mark.usefixtures("immediate_scan_timeout")
 async def test_bluetooth_discovery(
     hass: HomeAssistant,
     mock_library: MockLibrary,
@@ -87,6 +99,49 @@ async def test_bluetooth_discovery(
     mock_library.connection.disconnect.assert_awaited_once()
 
 
+async def test_bluetooth_discovery_receives_encrypted_advertisement(
+    hass: HomeAssistant,
+    mock_library: MockLibrary,
+) -> None:
+    """Test that confirmation uses a later advertisement from the selected bike."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+        data=make_service_info(
+            name=MOCK_ADDRESS,
+            manufacturer_data={0x004C: b"\x02\x15TURBOHMI2017" + bytes(9)},
+            service_uuids=["00000001-3731-3032-494d-484f42525554"],
+        ),
+    )
+    assert result["step_id"] == "bluetooth_confirm"
+
+    async def send_advertisements(_duration: float) -> None:
+        inject_bluetooth_service_info(hass, TCU1_SERVICE_INFO)
+        inject_bluetooth_service_info(
+            hass, make_service_info(manufacturer_data={0x0059: b"\x01"})
+        )
+        inject_bluetooth_service_info(hass, ENCRYPTED_SERVICE_INFO)
+
+    with (
+        patch(
+            "homeassistant.components.bluetooth.manager.discovery_flow.async_create_flow"
+        ),
+        patch.object(
+            HomeAssistantBluetoothManager,
+            "async_request_active_scan",
+            side_effect=send_advertisements,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "key_source"
+    mock_library.connection.connect.assert_not_awaited()
+
+
+@pytest.mark.usefixtures("immediate_scan_timeout")
 async def test_config_flow_uses_managed_ble_client(
     hass: HomeAssistant,
     mock_library: MockLibrary,
@@ -154,11 +209,14 @@ async def test_bluetooth_discovery_tcu1(
         context={"source": config_entries.SOURCE_BLUETOOTH},
         data=TCU1_SERVICE_INFO,
     )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={},
-    )
+    with patch.object(
+        HomeAssistantBluetoothManager, "async_request_active_scan"
+    ) as scan:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
 
+    scan.assert_not_called()
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_ADDRESS: MOCK_TCU1_ADDRESS}
     assert result["result"].unique_id == MOCK_TCU1_ADDRESS_FORMATTED
@@ -176,6 +234,7 @@ async def test_bluetooth_discovery_tcu1(
         ValueError("failed"),
     ],
 )
+@pytest.mark.usefixtures("immediate_scan_timeout")
 async def test_bluetooth_connection_errors(
     hass: HomeAssistant,
     mock_library: MockLibrary,
@@ -206,6 +265,7 @@ async def test_bluetooth_connection_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("immediate_scan_timeout")
 async def test_bluetooth_device_unavailable(
     hass: HomeAssistant,
     mock_library: MockLibrary,
@@ -238,6 +298,7 @@ async def test_bluetooth_device_unavailable(
     mock_library.connection.connect.assert_awaited_once()
 
 
+@pytest.mark.usefixtures("immediate_scan_timeout")
 async def test_bluetooth_key_required_without_metadata(
     hass: HomeAssistant,
     mock_library: MockLibrary,
@@ -265,6 +326,57 @@ async def test_bluetooth_key_required_without_metadata(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("immediate_scan_timeout")
+async def test_bluetooth_missing_advertisement_can_retry(
+    hass: HomeAssistant,
+    mock_library: MockLibrary,
+) -> None:
+    """Test that missing identification data has a specific, retryable error."""
+    mock_library.connection.connect.side_effect = IncompleteBikeInfoError("incomplete")
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+        data=NAME_ONLY_SERVICE_INFO,
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "bluetooth_confirm"
+    assert result["errors"] == {"base": "incomplete_advertisement"}
+    mock_library.connection.disconnect.assert_awaited_once()
+
+    with patch(
+        "homeassistant.components.bluetooth.manager.discovery_flow.async_create_flow"
+    ):
+        inject_bluetooth_service_info(
+            hass,
+            make_service_info(
+                manufacturer_data={0x0059: bytes.fromhex("01000000413334330603")}
+            ),
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+    mock_library.connection.connect.assert_awaited_once()
+    result = await _choose_key_source(hass, result, "manual_key")
+    mock_library.connection.connect.side_effect = None
+    wrapped_key = make_wrapped_key()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_WRAPPED_KEY: wrapped_key}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == MOCK_ADDRESS_FORMATTED
+    assert result["data"] == {
+        CONF_ADDRESS: MOCK_ADDRESS,
+        CONF_HMI_HARDWARE: "A.3.4",
+        CONF_HMI_SERIAL: "1",
+        CONF_KEY_SOURCE: KEY_SOURCE_MANUAL,
+        CONF_WRAPPED_KEY: wrapped_key,
+    }
+    assert mock_library.connection_constructor.call_args.kwargs["bike_info"].complete
 
 
 async def test_encrypted_account_setup_uses_managed_http_client(
@@ -428,15 +540,19 @@ async def test_encrypted_account_key_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.parametrize(
+    "error", [IdentificationError("failed"), IncompleteBikeInfoError("incomplete")]
+)
 async def test_encrypted_account_key_fails_connection(
     hass: HomeAssistant,
     mock_library: MockLibrary,
+    error: IdentificationError,
 ) -> None:
     """Test an account key must complete the bike identification handshake."""
     cloud = MagicMock()
     cloud.login = AsyncMock()
     cloud.get_wrapped_key = AsyncMock(return_value=make_wrapped_key())
-    mock_library.connection.connect.side_effect = IdentificationError("failed")
+    mock_library.connection.connect.side_effect = error
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_BLUETOOTH},
@@ -484,10 +600,14 @@ async def test_encrypted_manual_key_setup(
         context={"source": config_entries.SOURCE_BLUETOOTH},
         data=ENCRYPTED_SERVICE_INFO,
     )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={},
-    )
+    with patch.object(
+        HomeAssistantBluetoothManager, "async_request_active_scan"
+    ) as scan:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+
+    scan.assert_not_called()
     result = await _choose_key_source(hass, result, "manual_key")
     assert result["step_id"] == "manual_key"
 
@@ -581,6 +701,7 @@ async def test_manual_key_connection_failure_recovers(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("immediate_scan_timeout")
 async def test_user_flow(
     hass: HomeAssistant,
     mock_library: MockLibrary,
@@ -606,6 +727,41 @@ async def test_user_flow(
     mock_library.connection.connect.assert_awaited_once()
 
 
+@pytest.mark.usefixtures("immediate_scan_timeout")
+async def test_user_flow_refreshes_selected_bike_from_cache(
+    hass: HomeAssistant,
+    mock_library: MockLibrary,
+) -> None:
+    """Test that manual selection uses metadata received while the form was open."""
+    with patch(
+        "homeassistant.components.bluetooth.manager.discovery_flow.async_create_flow"
+    ):
+        inject_bluetooth_service_info(
+            hass,
+            make_service_info(
+                name=NAME_ONLY_SERVICE_INFO.name, manufacturer_data={0x0059: b"\x01"}
+            ),
+        )
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["step_id"] == "user"
+        inject_bluetooth_service_info(
+            hass,
+            make_service_info(
+                name=MOCK_ADDRESS,
+                manufacturer_data=ENCRYPTED_SERVICE_INFO.manufacturer_data,
+            ),
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_ADDRESS: MOCK_ADDRESS}
+        )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "key_source"
+    mock_library.connection.connect.assert_not_awaited()
+
+
 @pytest.mark.parametrize(
     ("service_info", "expected_unique_id"),
     [
@@ -614,6 +770,7 @@ async def test_user_flow(
     ],
     ids=["tcu1", "name_only"],
 )
+@pytest.mark.usefixtures("immediate_scan_timeout")
 async def test_user_flow_discovers_supported_variants(
     hass: HomeAssistant,
     mock_library: MockLibrary,
@@ -745,14 +902,7 @@ async def test_reauth_adds_manual_key(
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-        },
-        data=entry.data,
-    )
+    result = await entry.start_reauth_flow(hass)
 
     result = await _choose_key_source(hass, result, "manual_key")
     result = await hass.config_entries.flow.async_configure(
@@ -777,13 +927,7 @@ async def test_reconfigure_replaces_key(
         bytes.fromhex("ffeeddccbbaa99887766554433221100")
     )
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": encrypted_config_entry.entry_id,
-        },
-    )
+    result = await encrypted_config_entry.start_reconfigure_flow(hass)
 
     result = await _choose_key_source(hass, result, "manual_key")
     result = await hass.config_entries.flow.async_configure(
@@ -805,13 +949,7 @@ async def test_reconfigure_unencrypted_entry_not_supported(
     """Test reconfiguration is limited to encrypted entries."""
     mock_config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": mock_config_entry.entry_id,
-        },
-    )
+    result = await mock_config_entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_encrypted"

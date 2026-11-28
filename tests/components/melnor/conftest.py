@@ -6,14 +6,16 @@ from unittest.mock import AsyncMock, _patch, patch
 
 from melnor_bluetooth.device import Device
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import (
+    generate_advertisement_data,
+    generate_ble_device,
+)
 
 from homeassistant.components.bluetooth.models import BluetoothServiceInfoBleak
 from homeassistant.components.melnor.const import DOMAIN
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
 
 FAKE_ADDRESS_1 = "FAKE-ADDRESS-1"
 FAKE_ADDRESS_2 = "FAKE-ADDRESS-2"
@@ -236,7 +238,8 @@ def mock_melnor_device():
         device.mac = FAKE_ADDRESS_1
         device.model = "test_model"
         device.name = "test_melnor"
-        device.rssi = -50
+        # Device.rssi reads BLEDevice.rssi, which Bleak 1.0 removed
+        del device.rssi
 
         device.zone1 = MockValve(0)
         device.zone2 = MockValve(1)
@@ -252,7 +255,7 @@ def mock_melnor_device():
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Patch async setup entry to return True."""
     with patch(
-        "homeassistant.components.melnor.async_setup_entry", return_value=True
+        "homeassistant.components.melnor.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup
 

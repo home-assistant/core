@@ -1,111 +1,224 @@
 """Tests for the Aprilaire config flow."""
 
-from unittest.mock import AsyncMock, Mock, patch
+from collections.abc import Generator
+from unittest.mock import ANY, AsyncMock, patch
 
-from pyaprilaire.client import AprilaireClient
-from pyaprilaire.const import FunctionalDomain
+from pyaprilaire.client import AprilaireClient, NackError, ResponseTimeoutError
+from pyaprilaire.const import FunctionalDomain, NackStatus
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.aprilaire.config_flow import (
-    STEP_USER_DATA_SCHEMA,
-    AprilaireConfigFlow,
-)
+from homeassistant.components.aprilaire.const import DOMAIN
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 
 @pytest.fixture
-def client() -> AprilaireClient:
-    """Return a mock client."""
-    return AsyncMock(AprilaireClient)
+def client() -> Generator[AsyncMock]:
+    """Return a mock client that reports a MAC address."""
+    client = AsyncMock(AprilaireClient)
+    client.read_mac_address_and_wait.return_value = {"mac_address": "1:2:3:4:5:6"}
+    with patch(
+        "homeassistant.components.aprilaire.config_flow.AprilaireClient",
+        return_value=client,
+    ) as client_class:
+        client.client_class = client_class
+        yield client
 
 
-async def test_user_input_step() -> None:
-    """Test the user input step."""
-
-    show_form_mock = Mock()
-
-    config_flow = AprilaireConfigFlow()
-    config_flow.async_show_form = show_form_mock
-
-    await config_flow.async_step_user(None)
-
-    show_form_mock.assert_called_once_with(
-        step_id="user", data_schema=STEP_USER_DATA_SCHEMA
-    )
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Mock setting up a config entry."""
+    with patch(
+        "homeassistant.components.aprilaire.async_setup_entry", return_value=None
+    ) as mock_setup_entry:
+        yield mock_setup_entry
 
 
-async def test_config_flow_invalid_data(client: AprilaireClient) -> None:
-    """Test that the flow is aborted with invalid data."""
-
-    show_form_mock = Mock()
-    set_unique_id_mock = AsyncMock()
-    async_abort_entries_match_mock = Mock()
-
-    config_flow = AprilaireConfigFlow()
-    config_flow.async_show_form = show_form_mock
-    config_flow.async_set_unique_id = set_unique_id_mock
-    config_flow._async_abort_entries_match = async_abort_entries_match_mock
-
-    with patch("pyaprilaire.client.AprilaireClient", return_value=client):
-        await config_flow.async_step_user(
-            {
-                "host": "localhost",
-                "port": 7000,
-            }
-        )
-
-    client.start_listen.assert_called_once()
-    client.wait_for_response.assert_called_once_with(
-        FunctionalDomain.IDENTIFICATION, 2, 30
-    )
-    client.stop_listen.assert_called_once()
-
-    show_form_mock.assert_called_once_with(
-        step_id="user",
-        data_schema=STEP_USER_DATA_SCHEMA,
-        errors={"base": "connection_failed"},
-    )
-
-
-async def test_config_flow_data(client: AprilaireClient, hass: HomeAssistant) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_config_flow_data(client: AsyncMock, hass: HomeAssistant) -> None:
     """Test the config flow with valid data."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
 
-    client.data = {"mac_address": "1:2:3:4:5:6"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
 
-    show_form_mock = Mock()
-    set_unique_id_mock = AsyncMock()
-    abort_if_unique_id_configured_mock = Mock()
-    create_entry_mock = Mock()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"host": "localhost", "port": 7000}
+    )
+    await hass.async_block_till_done()
 
-    config_flow = AprilaireConfigFlow()
-    config_flow.hass = hass
-    config_flow.async_show_form = show_form_mock
-    config_flow.async_set_unique_id = set_unique_id_mock
-    config_flow._abort_if_unique_id_configured = abort_if_unique_id_configured_mock
-    config_flow.async_create_entry = create_entry_mock
-
-    client.wait_for_response = AsyncMock(return_value={"mac_address": "1:2:3:4:5:6"})
-
-    with patch("pyaprilaire.client.AprilaireClient", return_value=client):
-        await config_flow.async_step_user(
-            {
-                "host": "localhost",
-                "port": 7000,
-            }
-        )
-
-    client.start_listen.assert_called_once()
-    client.wait_for_response.assert_any_call(FunctionalDomain.CONTROL, 7, 30)
-    client.wait_for_response.assert_any_call(FunctionalDomain.SENSORS, 2, 30)
+    client.client_class.assert_called_once_with("localhost", 7000, ANY)
+    client.start_listen_once.assert_awaited_once()
+    client.read_mac_address_and_wait.assert_awaited_once_with(30)
     client.stop_listen.assert_called_once()
 
-    set_unique_id_mock.assert_called_once_with("1:2:3:4:5:6")
-    abort_if_unique_id_configured_mock.assert_called_once()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "AprilAire"
+    assert result["data"] == {"host": "localhost", "port": 7000}
+    assert result["result"].unique_id == "1:2:3:4:5:6"
 
-    create_entry_mock.assert_called_once_with(
-        title="AprilAire",
-        data={
-            "host": "localhost",
-            "port": 7000,
-        },
+
+@pytest.mark.parametrize(
+    ("connect_side_effect", "read_side_effect", "read_return_value"),
+    [
+        pytest.param(OSError(), None, None, id="cannot_connect"),
+        pytest.param(
+            None,
+            ResponseTimeoutError(FunctionalDomain.IDENTIFICATION, 2, 30),
+            None,
+            id="timeout",
+        ),
+        pytest.param(
+            None,
+            NackError(NackStatus.GENERIC_ERROR, NackStatus.GENERIC_ERROR.value),
+            None,
+            id="nack",
+        ),
+        pytest.param(None, None, {}, id="missing"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_config_flow_invalid_data(
+    client: AsyncMock,
+    hass: HomeAssistant,
+    connect_side_effect: Exception | None,
+    read_side_effect: Exception | None,
+    read_return_value: dict[str, str] | None,
+) -> None:
+    """Test that the flow shows an error with invalid data and can recover."""
+    client.start_listen_once.side_effect = connect_side_effect
+    client.read_mac_address_and_wait.side_effect = read_side_effect
+    client.read_mac_address_and_wait.return_value = read_return_value
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
     )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"host": "localhost", "port": 8000}
+    )
+
+    client.stop_listen.assert_called_once()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "connection_failed"}
+    suggested_values = {
+        str(key): key.description["suggested_value"]
+        for key in result["data_schema"].schema
+    }
+    assert suggested_values == {"host": "localhost", "port": 8000}
+
+    client.start_listen_once.side_effect = None
+    client.read_mac_address_and_wait.side_effect = None
+    client.read_mac_address_and_wait.return_value = {"mac_address": "1:2:3:4:5:6"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"host": "localhost", "port": 8000}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "1:2:3:4:5:6"
+    assert result["data"] == {"host": "localhost", "port": 8000}
+
+
+@pytest.mark.usefixtures("client")
+async def test_config_flow_already_configured(hass: HomeAssistant) -> None:
+    """Test the config flow aborts when the device is already configured."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="1:2:3:4:5:6",
+        data={"host": "localhost", "port": 7000},
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"host": "localhost", "port": 7000}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.fixture
+def config_entry(hass: HomeAssistant) -> MockConfigEntry:
+    """Return a config entry that is added to Home Assistant."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="1:2:3:4:5:6",
+        data={"host": "localhost", "port": 7000},
+        minor_version=2,
+    )
+    config_entry.add_to_hass(hass)
+    return config_entry
+
+
+async def test_reconfigure(
+    client: AsyncMock,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test reconfiguring the host and port."""
+    result = await config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"host": "192.168.1.10", "port": 8000}
+    )
+    await hass.async_block_till_done()
+
+    client.client_class.assert_called_once_with("192.168.1.10", 8000, ANY)
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data == {"host": "192.168.1.10", "port": 8000}
+    mock_setup_entry.assert_awaited_once()
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_connection_failed(
+    client: AsyncMock, hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test reconfiguring shows an error when the connection fails and can recover."""
+    client.start_listen_once.side_effect = OSError()
+    result = await config_entry.start_reconfigure_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"host": "192.168.1.10", "port": 8000}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "connection_failed"}
+
+    client.start_listen_once.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"host": "192.168.1.10", "port": 8000}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data == {"host": "192.168.1.10", "port": 8000}
+
+
+async def test_reconfigure_wrong_device(
+    client: AsyncMock, hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test reconfiguring aborts when a different thermostat answers."""
+    client.read_mac_address_and_wait.return_value = {"mac_address": "6:5:4:3:2:1"}
+    result = await config_entry.start_reconfigure_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"host": "192.168.1.10", "port": 8000}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "wrong_device"
+    assert config_entry.data == {"host": "localhost", "port": 7000}

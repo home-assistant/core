@@ -4,18 +4,28 @@ from collections.abc import Generator
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
-from boschshcpy.services_impl import ValveTappetService
+from boschshcpy import BatteryLevelService, SHCRoomThermostat2, TerminalConfiguration
+from boschshcpy.services_impl import OutdoorSirenPowerSupplyService, ValveTappetService
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
-from homeassistant.const import Platform
+from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util import dt as dt_util
 
-from .conftest import setup_integration, thermostat_device
-
-from tests.common import MockConfigEntry, async_fire_time_changed
+from .conftest import (
+    battery_only_device,
+    light_control_device,
+    motion_detector2_device,
+    outdoor_siren_device,
+    setup_integration,
+    thermostat_device,
+    thermostat_gen2_device,
+    twinguard_device,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -145,3 +155,317 @@ async def test_thermostat_valvetappet_state_attribute_preserved(
     state = hass.states.get("sensor.thermostat_valvetappet")
     assert state is not None
     assert state.attributes["valve_tappet_state"] == "VALVE_TOO_TIGHT"
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "roomthermostats": [
+                thermostat_gen2_device(
+                    device_id="hdm:ZigBee:roomthermostat2_1",
+                    name="Room Thermostat 2",
+                    temperature=22.5,
+                    humidity=45.0,
+                    terminal_type=TerminalConfiguration.Type.FLOOR_SENSOR_CONNECTED,
+                    terminal_temperature=28.5,
+                    spec=SHCRoomThermostat2,
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_room_thermostat_sensors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A Room Thermostat II exposes room temperature, humidity and floor temperature."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.room_thermostat_2_temperature").state == "22.5"
+    humidity = hass.states.get("sensor.room_thermostat_2_humidity")
+    assert humidity.state == "45.0"
+    assert humidity.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
+    assert hass.states.get("sensor.room_thermostat_2_floor_temperature").state == "28.5"
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "roomthermostats": [
+                thermostat_gen2_device(
+                    device_id="hdm:ZigBee:roomthermostat2_1",
+                    name="Room Thermostat 2",
+                    spec=SHCRoomThermostat2,
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_room_thermostat_optional_sensors_absent(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Humidity and floor temperature are skipped when the device has none."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.room_thermostat_2_temperature") is not None
+    assert hass.states.get("sensor.room_thermostat_2_humidity") is None
+    assert hass.states.get("sensor.room_thermostat_2_floor_temperature") is None
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "roomthermostats": [
+                thermostat_gen2_device(
+                    device_id="hdm:ZigBee:roomthermostat2_1",
+                    name="Room Thermostat 2",
+                    terminal_type=TerminalConfiguration.Type.OUTDOOR_SENSOR_CONNECTED,
+                    terminal_temperature=5.0,
+                    spec=SHCRoomThermostat2,
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_room_thermostat_no_floor_temperature_for_other_probe(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A terminal reading from a non-floor probe is not labeled as floor temperature."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.room_thermostat_2_floor_temperature") is None
+
+
+def _twinguard_with_readings() -> MagicMock:
+    """Build a Twinguard double with climate readings and ratings."""
+    device = twinguard_device()
+    device.temperature = 21.5
+    device.humidity = 48.0
+    device.purity = 750
+    device.description = "Good air"
+    for rating in (
+        "combined_rating",
+        "temperature_rating",
+        "humidity_rating",
+        "purity_rating",
+    ):
+        value = MagicMock()
+        value.name = "GOOD"
+        setattr(device, rating, value)
+    return device
+
+
+def _siren_power_supply() -> MagicMock:
+    """Build an outdoor siren power-supply service double."""
+    power_supply = MagicMock(spec=OutdoorSirenPowerSupplyService)
+    power_supply.battery_percentage_remaining = 80
+    power_supply.main_power_supply = (
+        OutdoorSirenPowerSupplyService.MainPowerSupply.SOLAR
+    )
+    power_supply.solar_charging_score = (
+        OutdoorSirenPowerSupplyService.SolarChargingScore.GOOD
+    )
+    return power_supply
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"twinguards": [_twinguard_with_readings()]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_twinguard_humidity_is_measurement(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Twinguard humidity is a measurement so long-term statistics are kept."""
+    await setup_integration(hass, mock_config_entry)
+
+    humidity = hass.states.get("sensor.twinguard_humidity")
+    assert humidity is not None
+    assert humidity.state == "48.0"
+    assert humidity.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"outdoor_sirens": [outdoor_siren_device(power_supply=_siren_power_supply())]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_outdoor_siren_power_supply_sensors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The siren reports battery level, power source and solar charging."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.outdoor_siren_siren_battery").state == "80"
+    assert hass.states.get("sensor.outdoor_siren_siren_power_source").state == "solar"
+    assert hass.states.get("sensor.outdoor_siren_siren_solar_charging").state == "good"
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"outdoor_sirens": [outdoor_siren_device()]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_outdoor_siren_without_power_supply(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """No power-supply sensors are created without power-supply support."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.outdoor_siren_siren_battery") is None
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"motion_detectors2": [motion_detector2_device(temperature=21.5)]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_motion_detector2_temperature(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The Motion Detector II reports its temperature."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.motion_detector_temperature").state == "21.5"
+
+
+_MD2_PUSH_DEVICE = motion_detector2_device(temperature=21.5)
+
+
+@pytest.mark.parametrize(
+    "device_buckets", [{"motion_detectors2": [_MD2_PUSH_DEVICE]}], indirect=True
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_motion_detector2_temperature_push_update(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A pushed device update refreshes the Motion Detector II temperature."""
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get("sensor.motion_detector_temperature").state == "21.5"
+
+    service_callback = next(
+        iter(_MD2_PUSH_DEVICE.device_services[0].callbacks.values())
+    )
+    _MD2_PUSH_DEVICE.temperature = 19.0
+    await hass.async_add_executor_job(service_callback)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.motion_detector_temperature").state == "19.0"
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"micromodule_light_controls": [light_control_device()]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_light_control_power_and_energy(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The Light Control reports power and energy."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.light_control_power").state == "12.5"
+    assert hass.states.get("sensor.light_control_energy").state == "3.0"
+
+
+@pytest.mark.parametrize(
+    ("device_buckets", "expected"),
+    [
+        pytest.param(
+            {"motion_detectors": [battery_only_device(batterylevel=level)]},
+            expected,
+            id=level.name.lower(),
+        )
+        for level, expected in (
+            (BatteryLevelService.State.OK, "ok"),
+            (BatteryLevelService.State.LOW_BATTERY, "low_battery"),
+            (BatteryLevelService.State.CRITICAL_LOW, "critically_low_battery"),
+            (
+                BatteryLevelService.State.CRITICALLY_LOW_BATTERY,
+                "critically_low_battery",
+            ),
+            (BatteryLevelService.State.NOT_AVAILABLE, STATE_UNKNOWN),
+        )
+    ],
+    indirect=["device_buckets"],
+)
+@pytest.mark.usefixtures("mock_session", "entity_registry_enabled_by_default")
+async def test_battery_level_sensor(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    expected: str,
+) -> None:
+    """Battery devices report their granular battery level."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("sensor.motion_battery_level")
+    assert state is not None
+    assert state.state == expected
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "shutter_contacts": [
+                battery_only_device(
+                    device_id="hdm:HomeMaticIP:nobattery",
+                    name="No battery",
+                    supports_batterylevel=False,
+                )
+            ],
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session", "entity_registry_enabled_by_default")
+async def test_no_battery_level_without_support(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Devices without the BatteryLevel service get no sensor."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.no_battery_battery_level") is None
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"motion_detectors": [battery_only_device()]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_battery_level_disabled_by_default(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """The battery level is diagnostic detail, so it starts disabled."""
+    await setup_integration(hass, mock_config_entry)
+
+    entry = entity_registry.async_get("sensor.motion_battery_level")
+    assert entry is not None
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    assert entry.unique_id == "serial-hdm:HomeMaticIP:motion1_battery_level"

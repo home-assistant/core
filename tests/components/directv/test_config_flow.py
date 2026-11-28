@@ -4,6 +4,7 @@ import dataclasses
 from unittest.mock import patch
 
 from aiohttp import ClientError as HTTPClientError
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.directv.const import CONF_RECEIVER_ID, DOMAIN
 from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
@@ -21,8 +22,6 @@ from . import (
     mock_connection,
     setup_integration,
 )
-
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_show_user_form(hass: HomeAssistant) -> None:
@@ -71,7 +70,7 @@ async def test_cannot_connect(
 
     aioclient_mock.clear_requests()
     mock_connection(aioclient_mock)
-    with patch("homeassistant.components.directv.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.directv.async_setup_entry", return_value=None):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=user_input,
@@ -238,7 +237,7 @@ async def test_full_user_flow_implementation(
     assert result["step_id"] == "user"
 
     user_input = MOCK_USER_INPUT.copy()
-    with patch("homeassistant.components.directv.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.directv.async_setup_entry", return_value=None):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=user_input,

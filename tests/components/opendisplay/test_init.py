@@ -1,6 +1,7 @@
 """Test the OpenDisplay integration setup and unload."""
 
 import asyncio
+from dataclasses import replace
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from opendisplay import (
@@ -9,17 +10,17 @@ from opendisplay import (
     BLEConnectionError,
     BLETimeoutError,
     OpenDisplayError,
+    Sec2KeyRequiredError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.opendisplay.const import CONF_ENCRYPTION_KEY, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from . import ENCRYPTION_KEY
-
-from tests.common import MockConfigEntry
+from . import DEVICE_CONFIG, ENCRYPTION_KEY
 
 
 async def test_setup_and_unload(
@@ -43,19 +44,19 @@ async def test_setup_encrypted_device(
     hass: HomeAssistant,
     mock_encrypted_config_entry: MockConfigEntry,
     mock_opendisplay_device: MagicMock,
-    mock_opendisplay_device_class: MagicMock,
+    mock_connect: MagicMock,
 ) -> None:
-    """Test setup passes the encryption key to OpenDisplayDevice."""
-    mock_opendisplay_device.is_flex = False
+    """Test setup passes the encryption key to connect."""
+    mock_opendisplay_device.legacy.is_flex = False
     mock_encrypted_config_entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(mock_encrypted_config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert mock_encrypted_config_entry.state is ConfigEntryState.LOADED
-    assert mock_opendisplay_device_class.call_args.kwargs[
-        "encryption_key"
-    ] == bytes.fromhex(ENCRYPTION_KEY)
+    assert mock_connect.call_args.kwargs["encryption_key"] == bytes.fromhex(
+        ENCRYPTION_KEY
+    )
 
 
 async def test_setup_device_not_found(
@@ -91,7 +92,7 @@ async def test_setup_connection_error(
     mock_config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.opendisplay.OpenDisplayDevice",
+        "homeassistant.components.opendisplay.connect",
         return_value=AsyncMock(__aenter__=AsyncMock(side_effect=exception)),
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -115,6 +116,7 @@ async def test_setup_device_registered(
         device_registry, mock_config_entry.entry_id
     )
     assert len(devices) == 1
+    assert devices[0].model == '2.9" BWR'
 
 
 @pytest.mark.parametrize(
@@ -134,7 +136,7 @@ async def test_setup_device_registry_fields(
     expect_config_url: bool,
 ) -> None:
     """Test that hw_version and configuration_url are only set for Flex devices."""
-    mock_opendisplay_device.is_flex = is_flex
+    mock_opendisplay_device.legacy.is_flex = is_flex
     mock_config_entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -171,6 +173,7 @@ async def test_unload_cancels_active_upload_task(
     [
         AuthenticationFailedError("wrong key"),
         AuthenticationRequiredError("auth required"),
+        Sec2KeyRequiredError(1),
     ],
 )
 async def test_setup_authentication_error(
@@ -182,13 +185,45 @@ async def test_setup_authentication_error(
     mock_config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.opendisplay.OpenDisplayDevice",
+        "homeassistant.components.opendisplay.connect",
         return_value=AsyncMock(__aenter__=AsyncMock(side_effect=exception)),
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_setup_device_not_configured(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opendisplay_device: MagicMock,
+) -> None:
+    """Test that a device without a stored config fails setup with a clear error."""
+    mock_opendisplay_device.config.cached = None
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.error_reason_translation_key == "device_not_configured"
+
+
+async def test_setup_device_without_displays(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opendisplay_device: MagicMock,
+) -> None:
+    """Test that a stored config without a display fails setup with a clear error."""
+    mock_opendisplay_device.config.cached = replace(DEVICE_CONFIG, displays=[])
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.error_reason_translation_key == "device_not_configured"
 
 
 async def test_setup_invalid_encryption_key_format(

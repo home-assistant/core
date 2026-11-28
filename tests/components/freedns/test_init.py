@@ -1,14 +1,13 @@
 """Test the FreeDNS component."""
 
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components import freedns
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
-
-from tests.common import async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 ACCESS_TOKEN = "test_token"
 UPDATE_INTERVAL = freedns.DEFAULT_INTERVAL

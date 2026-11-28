@@ -17,20 +17,33 @@ from pyvlx.opening_device import (
 )
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
-    ATTR_SPEED,
-    ATTR_TILT_POSITION,
     CoverDeviceClass,
     CoverEntity,
+    CoverEntityCapabilityAttribute,
     CoverEntityFeature,
+    CoverServiceArgument,
+    CoverSpeed,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import VeluxConfigEntry
+from .const import DOMAIN
 from .entity import VeluxEntity, wrap_pyvlx_call_exceptions
 
 PARALLEL_UPDATES = 1
+
+_SPEED_TO_VELOCITY: dict[str, Velocity] = {
+    CoverSpeed.SLOW: Velocity.SILENT,
+    CoverSpeed.FAST: Velocity.FAST,
+}
+
+# Remove in 2027.6.0 together with their repair issues
+_DEPRECATED_SPEED_TO_VELOCITY: dict[str, Velocity | None] = {
+    "silent": Velocity.SILENT,
+    "default": None,
+}
 
 
 async def async_setup_entry(
@@ -82,17 +95,9 @@ class VeluxCover(VeluxEntity, CoverEntity):
         | CoverEntityFeature.STOP
         | CoverEntityFeature.SPEED
     )
-    _attr_supported_speeds = [
-        Velocity.SILENT.name.lower(),
-        Velocity.FAST.name.lower(),
-        Velocity.DEFAULT.name.lower(),
-    ]
-
-    def _velocity_from_speed(self, speed: str | None) -> Velocity | None:
-        """Return pyvlx Velocity for the given speed string, or None for default."""
-        if speed in self._attr_supported_speeds:
-            return Velocity[speed.upper()]
-        return None
+    # Remove the deprecated speeds in 2027.6.0, they are only listed so the
+    # cover entity passes them on instead of dropping them.
+    _attr_supported_speeds = [*_SPEED_TO_VELOCITY, *_DEPRECATED_SPEED_TO_VELOCITY]
 
     def __init__(
         self, hass: HomeAssistant, node: OpeningDevice, config_entry_id: str
@@ -113,11 +118,42 @@ class VeluxCover(VeluxEntity, CoverEntity):
 
     @property
     @override
+    def capability_attributes(self) -> dict[str, Any]:
+        """Return capability attributes without the deprecated speeds."""
+        # Remove in 2027.6.0 when the deprecated speeds are removed
+        return {
+            **(super().capability_attributes or {}),
+            CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: list(_SPEED_TO_VELOCITY),
+        }
+
+    def _velocity_from_speed(self, speed: str | None) -> Velocity | None:
+        """Return pyvlx Velocity for the given speed string, or None for default."""
+        if speed is None:
+            return None
+        if speed in _DEPRECATED_SPEED_TO_VELOCITY:
+            ir.async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"deprecated_speed_{speed}",
+                breaks_in_ha_version="2027.6.0",
+                is_fixable=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key=f"deprecated_speed_{speed}",
+                translation_placeholders={"entity_id": self.entity_id},
+            )
+            return _DEPRECATED_SPEED_TO_VELOCITY[speed]
+        # The cover entity validated the speed against _attr_supported_speeds.
+        return _SPEED_TO_VELOCITY[speed]
+
+    @property
+    @override
     def current_cover_position(self) -> int | None:
         """Return the current position of the cover."""
         if not self.node.position.known:
             return None
-        return 100 - self.node.position.position_percent
+        # While the cover moves, pyvlx estimates the position from the
+        # gateway's completion time and refreshes it every second.
+        return 100 - self.node.get_position().position_percent
 
     @property
     @override
@@ -143,22 +179,22 @@ class VeluxCover(VeluxEntity, CoverEntity):
     @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
-        velocity = self._velocity_from_speed(kwargs.get(ATTR_SPEED))
+        velocity = self._velocity_from_speed(kwargs.get(CoverServiceArgument.SPEED))
         await self.node.close(velocity=velocity, wait_for_completion=False)
 
     @wrap_pyvlx_call_exceptions
     @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        velocity = self._velocity_from_speed(kwargs.get(ATTR_SPEED))
+        velocity = self._velocity_from_speed(kwargs.get(CoverServiceArgument.SPEED))
         await self.node.open(velocity=velocity, wait_for_completion=False)
 
     @wrap_pyvlx_call_exceptions
     @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        position_percent = 100 - kwargs[ATTR_POSITION]
-        velocity = self._velocity_from_speed(kwargs.get(ATTR_SPEED))
+        position_percent = 100 - kwargs[CoverServiceArgument.POSITION]
+        velocity = self._velocity_from_speed(kwargs.get(CoverServiceArgument.SPEED))
 
         await self.node.set_position(
             Position(position_percent=position_percent),
@@ -234,7 +270,7 @@ class VeluxDualRollerShutter(VeluxCover):
     @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
-        velocity = self._velocity_from_speed(kwargs.get(ATTR_SPEED))
+        velocity = self._velocity_from_speed(kwargs.get(CoverServiceArgument.SPEED))
         await self.node.close(
             curtain=self.part, velocity=velocity, wait_for_completion=False
         )
@@ -243,7 +279,7 @@ class VeluxDualRollerShutter(VeluxCover):
     @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        velocity = self._velocity_from_speed(kwargs.get(ATTR_SPEED))
+        velocity = self._velocity_from_speed(kwargs.get(CoverServiceArgument.SPEED))
         await self.node.open(
             curtain=self.part, velocity=velocity, wait_for_completion=False
         )
@@ -252,8 +288,8 @@ class VeluxDualRollerShutter(VeluxCover):
     @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        position_percent = 100 - kwargs[ATTR_POSITION]
-        velocity = self._velocity_from_speed(kwargs.get(ATTR_SPEED))
+        position_percent = 100 - kwargs[CoverServiceArgument.POSITION]
+        velocity = self._velocity_from_speed(kwargs.get(CoverServiceArgument.SPEED))
 
         await self.node.set_position(
             Position(position_percent=position_percent),
@@ -279,6 +315,8 @@ class VeluxBlind(VeluxCover):
             | CoverEntityFeature.SET_TILT_POSITION
             | CoverEntityFeature.STOP_TILT
         )
+        self._attr_open_tilt_position = 100 - node.open_orientation_target
+        self._attr_closed_tilt_positions = [0, 100]
 
     @property
     @override
@@ -310,7 +348,7 @@ class VeluxBlind(VeluxCover):
     @override
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move cover tilt to a specific position."""
-        position_percent = 100 - kwargs[ATTR_TILT_POSITION]
+        position_percent = 100 - kwargs[CoverServiceArgument.TILT_POSITION]
         orientation = Position(position_percent=position_percent)
         await self.node.set_orientation(
             orientation=orientation, wait_for_completion=False

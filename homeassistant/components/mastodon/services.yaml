@@ -336,6 +336,11 @@ update_profile:
         media:
           accept:
             - "image/*"
+    avatar_description:
+      required: false
+      selector:
+        text:
+          multiline: true
     delete_avatar:
       required: false
       selector:
@@ -348,6 +353,11 @@ update_profile:
         media:
           accept:
             - "image/*"
+    header_description:
+      required: false
+      selector:
+        text:
+          multiline: true
     delete_header:
       required: false
       selector:

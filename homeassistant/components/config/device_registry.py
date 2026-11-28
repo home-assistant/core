@@ -186,7 +186,10 @@ def websocket_update_device(
     # A composite device id has no single underlying device to update; reject it.
     if (
         registry.async_get(
-            device_id, include_main_devices=False, include_child_devices=False
+            device_id,
+            include_main_devices=False,
+            include_child_devices=False,
+            include_composite_devices=True,
         )
         is not None
     ):
@@ -201,10 +204,14 @@ def websocket_update_device(
         return
 
     entry: dr.AnyDeviceEntry | None
-    if isinstance(device, dr.ChildDeviceEntry):
-        entry = registry.async_update_child_device(**msg)
-    else:
-        entry = registry.async_update_device(**msg)
+    try:
+        if isinstance(device, dr.ChildDeviceEntry):
+            entry = registry.async_update_child_device(**msg)
+        else:
+            entry = registry.async_update_device(**msg)
+    except ValueError as err:
+        connection.send_error(msg_id, "invalid_info", str(err))
+        return
     assert entry is not None
 
     connection.send_message(websocket_api.result_message(msg_id, entry.dict_repr))
@@ -230,7 +237,10 @@ async def _async_remove_device(
     # A composite device id has no single underlying device to remove; reject it.
     if (
         registry.async_get(
-            device_id, include_main_devices=False, include_child_devices=False
+            device_id,
+            include_main_devices=False,
+            include_child_devices=False,
+            include_composite_devices=True,
         )
         is not None
     ):

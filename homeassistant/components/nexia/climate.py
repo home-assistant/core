@@ -103,7 +103,7 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
         self, coordinator: NexiaDataUpdateCoordinator, zone: NexiaThermostatZone
     ) -> None:
         """Initialize the thermostat."""
-        super().__init__(coordinator, zone, zone.zone_id)  # type: ignore[arg-type] # until fix issue #139773
+        super().__init__(coordinator, zone, str(zone.zone_id))
         thermostat = self._thermostat
         unit = thermostat.get_unit()
         min_humidity, max_humidity = thermostat.get_humidity_setpoint_limits()
@@ -152,7 +152,9 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
         await self._thermostat.set_fan_mode(fan_mode)
         self._signal_thermostat_update()
 
-    async def async_set_hvac_run_mode(self, run_mode, hvac_mode):
+    async def async_set_hvac_run_mode(
+        self, run_mode: str | None = None, hvac_mode: HVACMode | None = None
+    ) -> None:
         """Set the hvac run mode."""
         if run_mode is not None:
             if run_mode == HOLD_PERMANENT:

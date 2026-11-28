@@ -6,14 +6,11 @@ from typing import Any, override
 from pylutron import Lutron, LutronEntity, Output
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_FLASH,
-    ATTR_TRANSITION,
     ColorMode,
     LightEntity,
     LightEntityFeature,
+    LightServiceArgument,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -69,7 +66,7 @@ class LutronLight(LutronDevice, LightEntity):
         area_name: str,
         lutron_device: LutronEntity,
         controller: Lutron,
-        config_entry: ConfigEntry,
+        config_entry: LutronConfigEntry,
     ) -> None:
         """Initialize the device."""
         super().__init__(
@@ -80,11 +77,14 @@ class LutronLight(LutronDevice, LightEntity):
     @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
-        if flash := kwargs.get(ATTR_FLASH):
+        if flash := kwargs.get(LightServiceArgument.FLASH):
             self._lutron_device.flash(0.5 if flash == "short" else 1.5)
         else:
-            if ATTR_BRIGHTNESS in kwargs and self._lutron_device.is_dimmable:
-                brightness = kwargs[ATTR_BRIGHTNESS]
+            if (
+                LightServiceArgument.BRIGHTNESS in kwargs
+                and self._lutron_device.is_dimmable
+            ):
+                brightness = kwargs[LightServiceArgument.BRIGHTNESS]
             elif self._prev_brightness == 0:
                 brightness = self._config_entry.options.get(
                     CONF_DEFAULT_DIMMER_LEVEL, DEFAULT_DIMMER_LEVEL
@@ -93,8 +93,8 @@ class LutronLight(LutronDevice, LightEntity):
                 brightness = self._prev_brightness
             self._prev_brightness = brightness
             args = {"new_level": to_lutron_level(brightness)}
-            if ATTR_TRANSITION in kwargs:
-                args["fade_time_seconds"] = kwargs[ATTR_TRANSITION]
+            if LightServiceArgument.TRANSITION in kwargs:
+                args["fade_time_seconds"] = kwargs[LightServiceArgument.TRANSITION]
             self._lutron_device.set_level(**args)
             # Publish now rather than waiting for the controller to report back.
             self._publish_level()
@@ -103,8 +103,8 @@ class LutronLight(LutronDevice, LightEntity):
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         args = {"new_level": 0}
-        if ATTR_TRANSITION in kwargs:
-            args["fade_time_seconds"] = kwargs[ATTR_TRANSITION]
+        if LightServiceArgument.TRANSITION in kwargs:
+            args["fade_time_seconds"] = kwargs[LightServiceArgument.TRANSITION]
         self._lutron_device.set_level(**args)
         self._publish_level()
 

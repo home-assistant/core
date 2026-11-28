@@ -6,6 +6,11 @@ from unittest.mock import AsyncMock, call
 from pysmartthings import Attribute, Capability, Command
 from pysmartthings.models import HealthStatus
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_mock_restore_state_shutdown_restart,
+    mock_restore_cache_with_extra_data,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.light import (
@@ -13,14 +18,11 @@ from homeassistant.components.light import (
     ATTR_COLOR_MODE,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
-    ATTR_MAX_COLOR_TEMP_KELVIN,
-    ATTR_MIN_COLOR_TEMP_KELVIN,
-    ATTR_RGB_COLOR,
-    ATTR_SUPPORTED_COLOR_MODES,
     ATTR_TRANSITION,
-    ATTR_XY_COLOR,
     DOMAIN as LIGHT_DOMAIN,
     ColorMode,
+    LightService,
+    LightServiceArgument,
 )
 from homeassistant.components.smartthings.const import MAIN
 from homeassistant.const import (
@@ -32,6 +34,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
@@ -43,8 +46,6 @@ from . import (
     trigger_health_update,
     trigger_update,
 )
-
-from tests.common import MockConfigEntry, mock_restore_cache_with_extra_data
 
 
 async def test_all_entities(
@@ -149,8 +150,8 @@ async def test_turn_on_light(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.standing_light"} | data,
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: "light.standing_light"} | data,
         blocking=True,
     )
     assert devices.execute_device_command.mock_calls == calls
@@ -197,8 +198,8 @@ async def test_turn_off_light(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.standing_light"} | data,
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "light.standing_light"} | data,
         blocking=True,
     )
     assert devices.execute_device_command.mock_calls == calls
@@ -388,35 +389,69 @@ async def test_color_modes(
 
 
 @pytest.mark.parametrize("device_fixture", ["hue_rgbw_color_bulb"])
+@pytest.mark.parametrize(
+    ("switch", "state"),
+    [
+        pytest.param("on", STATE_ON, id="on"),
+        pytest.param("off", STATE_OFF, id="off"),
+    ],
+)
 async def test_color_mode_after_startup(
     hass: HomeAssistant,
     devices: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    switch: str,
+    state: str,
 ) -> None:
-    """Test color mode after startup."""
-    set_attribute_value(devices, Capability.SWITCH, Attribute.SWITCH, "on")
-
-    RESTORE_DATA = {
-        ATTR_BRIGHTNESS: 178,
-        ATTR_COLOR_MODE: ColorMode.COLOR_TEMP,
-        ATTR_COLOR_TEMP_KELVIN: 3000,
-        ATTR_HS_COLOR: (144.0, 60),
-        ATTR_MAX_COLOR_TEMP_KELVIN: 9000,
-        ATTR_MIN_COLOR_TEMP_KELVIN: 2000,
-        ATTR_RGB_COLOR: (255, 128, 0),
-        ATTR_SUPPORTED_COLOR_MODES: [ColorMode.COLOR_TEMP, ColorMode.HS],
-        ATTR_XY_COLOR: (0.61, 0.35),
-    }
+    """Test the color mode is restored after startup, also for a light that was off."""
+    set_attribute_value(devices, Capability.SWITCH, Attribute.SWITCH, switch)
 
     mock_restore_cache_with_extra_data(
-        hass, ((State("light.standing_light", STATE_ON), RESTORE_DATA),)
+        hass,
+        ((State("light.standing_light", state), {"color_mode": "color_temp"}),),
     )
     await setup_integration(hass, mock_config_entry)
+
+    # Turning a light on without a color command keeps the restored color mode
+    await trigger_update(
+        hass,
+        devices,
+        "cb958955-b015-498c-9e62-fc0c51abd054",
+        Capability.SWITCH,
+        Attribute.SWITCH,
+        "on",
+    )
 
     assert (
         hass.states.get("light.standing_light").attributes[ATTR_COLOR_MODE]
         is ColorMode.COLOR_TEMP
     )
+
+
+@pytest.mark.parametrize("device_fixture", ["hue_rgbw_color_bulb"])
+async def test_color_mode_stored(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the color mode is stored for the next startup."""
+    await setup_integration(hass, mock_config_entry)
+
+    await trigger_update(
+        hass,
+        devices,
+        "cb958955-b015-498c-9e62-fc0c51abd054",
+        Capability.COLOR_TEMPERATURE,
+        Attribute.COLOR_TEMPERATURE,
+        3000,
+    )
+
+    restore_data = await async_mock_restore_state_shutdown_restart(hass)
+
+    stored_state = restore_data.async_get_stored_state("light.standing_light")
+    assert stored_state is not None
+    assert stored_state.extra_data is not None
+    assert stored_state.extra_data.as_dict() == {"color_mode": ColorMode.COLOR_TEMP}
 
 
 @pytest.mark.parametrize("device_fixture", ["hue_rgbw_color_bulb"])
@@ -522,8 +557,8 @@ async def test_lamp_component_with_brightness(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: brightness},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id, LightServiceArgument.BRIGHTNESS: brightness},
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -579,8 +614,11 @@ async def test_lamp_from_off(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.range_hood_light", ATTR_BRIGHTNESS: 255},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: "light.range_hood_light",
+            LightServiceArgument.BRIGHTNESS: 255,
+        },
         blocking=True,
     )
     assert devices.execute_device_command.mock_calls == [

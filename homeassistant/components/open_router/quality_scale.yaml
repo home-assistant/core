@@ -55,7 +55,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: Service can't be discovered
@@ -82,9 +82,13 @@ rules:
     status: exempt
     comment: only one conversation entity
   entity-translations: done
-  exception-translations: todo
+  exception-translations: done
   icon-translations: todo
-  reconfiguration-flow: todo
+  reconfiguration-flow:
+    status: todo
+    comment: |
+      Only the subentries support reconfiguration. The config entry itself
+      cannot be reconfigured yet.
   repair-issues:
     status: exempt
     comment: the integration has no repairs

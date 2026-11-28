@@ -4,12 +4,14 @@ from datetime import timedelta
 import logging
 from typing import override
 
-from aionanoleaf2 import InvalidToken, Nanoleaf, Unavailable
+from aionanoleaf2 import AuthError, Nanoleaf, NanoleafError, NoAuthToken
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +40,11 @@ class NanoleafCoordinator(DataUpdateCoordinator[None]):
     async def _async_update_data(self) -> None:
         try:
             await self.nanoleaf.get_info()
-        except Unavailable as err:
-            raise UpdateFailed from err
-        except InvalidToken as err:
-            raise ConfigEntryAuthFailed from err
+        except (AuthError, NoAuthToken) as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN, translation_key="invalid_token"
+            ) from err
+        except NanoleafError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN, translation_key="cannot_connect"
+            ) from err

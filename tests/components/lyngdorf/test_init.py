@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from lyngdorf import LyngdorfModel
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.lyngdorf.const import CONF_SERIAL_NUMBER, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -11,8 +12,6 @@ from homeassistant.const import CONF_HOST, CONF_MODEL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
