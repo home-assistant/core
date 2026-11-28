@@ -1,9 +1,12 @@
 """The tests for the Media group platform."""
 
 import asyncio
+from logging import ERROR
+from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import setup_test_component_platform
 
 from homeassistant.components.group import DOMAIN
 from homeassistant.components.media_player import (
@@ -13,9 +16,11 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MEDIA_DOMAIN,
+    MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerService,
     MediaPlayerServiceArgument,
+    MediaPlayerState,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -671,3 +676,233 @@ async def test_state_listener_removed_with_entity(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert entity.state is None
+
+
+class MockVolumePlayer(MediaPlayerEntity):
+    """Media player with volume controls."""
+
+    _attr_should_poll = False
+    _attr_state = MediaPlayerState.ON
+
+    def __init__(
+        self,
+        name: str,
+        volume_level: float | None,
+        supported_features: MediaPlayerEntityFeature,
+    ) -> None:
+        """Initialize the player."""
+        self._attr_name = name
+        self._attr_volume_level = volume_level
+        self._attr_supported_features = supported_features
+
+    async def async_set_volume_level(self, volume: float) -> None:
+        """Set the volume level."""
+        self._attr_volume_level = volume
+        self.async_write_ha_state()
+
+    async def async_mute_volume(self, mute: bool) -> None:
+        """Mute the volume."""
+        self._attr_is_volume_muted = mute
+        self.async_write_ha_state()
+
+
+class MockStepPlayer(MockVolumePlayer):
+    """Media player that only steps its volume, in its own increments."""
+
+    async def async_volume_up(self) -> None:
+        """Step the volume up."""
+        self._attr_volume_level = round(self.volume_level + 0.05, 2)
+        self.async_write_ha_state()
+
+    async def async_volume_down(self) -> None:
+        """Step the volume down."""
+        self._attr_volume_level = round(self.volume_level - 0.05, 2)
+        self.async_write_ha_state()
+
+
+async def _setup_volume_group(hass: HomeAssistant) -> list[MockVolumePlayer]:
+    """Set up a group of players with different volume features."""
+    players = [
+        MockVolumePlayer(
+            "Bedroom",
+            0.2,
+            MediaPlayerEntityFeature.VOLUME_SET | MediaPlayerEntityFeature.VOLUME_MUTE,
+        ),
+        MockVolumePlayer("Kitchen", 0.5, MediaPlayerEntityFeature.VOLUME_SET),
+        MockStepPlayer("Living room", 0.8, MediaPlayerEntityFeature.VOLUME_STEP),
+        MockVolumePlayer("Mute only", None, MediaPlayerEntityFeature.VOLUME_MUTE),
+    ]
+    setup_test_component_platform(hass, MEDIA_DOMAIN, players)
+    await async_setup_component(
+        hass,
+        MEDIA_DOMAIN,
+        {
+            MEDIA_DOMAIN: [
+                {"platform": "test"},
+                {
+                    "platform": DOMAIN,
+                    "entities": [
+                        "media_player.bedroom",
+                        "media_player.kitchen",
+                        "media_player.living_room",
+                        "media_player.mute_only",
+                    ],
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+    return players
+
+
+def _player_attributes(
+    hass: HomeAssistant, players: list[MockVolumePlayer], attribute: str
+) -> list[Any]:
+    """Return an attribute of each player."""
+    return [
+        hass.states.get(player.entity_id).attributes.get(attribute)
+        for player in players
+    ]
+
+
+@pytest.mark.parametrize(
+    ("member_features", "expected"),
+    [
+        pytest.param(
+            [MediaPlayerEntityFeature.VOLUME_MUTE],
+            MediaPlayerEntityFeature.VOLUME_MUTE,
+            id="mute_only",
+        ),
+        pytest.param(
+            [MediaPlayerEntityFeature.VOLUME_STEP],
+            MediaPlayerEntityFeature.VOLUME_STEP,
+            id="step_only",
+        ),
+        pytest.param(
+            [MediaPlayerEntityFeature.VOLUME_SET],
+            MediaPlayerEntityFeature.VOLUME_SET | MediaPlayerEntityFeature.VOLUME_STEP,
+            id="set_only",
+        ),
+        pytest.param(
+            [MediaPlayerEntityFeature.VOLUME_MUTE, MediaPlayerEntityFeature.VOLUME_SET],
+            MediaPlayerEntityFeature.VOLUME_MUTE
+            | MediaPlayerEntityFeature.VOLUME_SET
+            | MediaPlayerEntityFeature.VOLUME_STEP,
+            id="mute_and_set",
+        ),
+    ],
+)
+async def test_volume_features_follow_members(
+    hass: HomeAssistant,
+    member_features: list[MediaPlayerEntityFeature],
+    expected: MediaPlayerEntityFeature,
+) -> None:
+    """Test the group only supports the volume features of its members."""
+    await async_setup_component(
+        hass,
+        MEDIA_DOMAIN,
+        {
+            MEDIA_DOMAIN: {
+                "platform": DOMAIN,
+                "entities": ["media_player.player_1", "media_player.player_2"],
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    for index, features in enumerate(member_features, start=1):
+        hass.states.async_set(
+            f"media_player.player_{index}",
+            STATE_ON,
+            {ATTR_SUPPORTED_FEATURES: features},
+        )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("media_player.media_group")
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == expected
+
+
+async def test_volume_level_is_average_of_settable_members(
+    hass: HomeAssistant,
+) -> None:
+    """Test the group volume is the average of the members it can set."""
+    players = await _setup_volume_group(hass)
+
+    group = hass.states.get("media_player.media_group")
+    assert group.attributes[ATTR_MEDIA_VOLUME_LEVEL] == pytest.approx(0.35)
+
+    await players[0].async_set_volume_level(0.6)
+    await hass.async_block_till_done()
+
+    group = hass.states.get("media_player.media_group")
+    assert group.attributes[ATTR_MEDIA_VOLUME_LEVEL] == pytest.approx(0.55)
+
+    await hass.services.async_call(
+        MEDIA_DOMAIN,
+        MediaPlayerService.VOLUME_SET,
+        {
+            TargetKey.ENTITY_ID: "media_player.media_group",
+            MediaPlayerServiceArgument.VOLUME_LEVEL: 0.3,
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    group = hass.states.get("media_player.media_group")
+    assert group.attributes[ATTR_MEDIA_VOLUME_LEVEL] == pytest.approx(0.3)
+
+
+@pytest.mark.parametrize(
+    ("service", "data", "attribute", "expected"),
+    [
+        pytest.param(
+            MediaPlayerService.VOLUME_UP,
+            {},
+            ATTR_MEDIA_VOLUME_LEVEL,
+            [0.3, 0.6, 0.85, None],
+            id="volume_up",
+        ),
+        pytest.param(
+            MediaPlayerService.VOLUME_DOWN,
+            {},
+            ATTR_MEDIA_VOLUME_LEVEL,
+            [0.1, 0.4, 0.75, None],
+            id="volume_down",
+        ),
+        pytest.param(
+            MediaPlayerService.VOLUME_SET,
+            {MediaPlayerServiceArgument.VOLUME_LEVEL: 0.3},
+            ATTR_MEDIA_VOLUME_LEVEL,
+            [0.3, 0.3, 0.8, None],
+            id="volume_set",
+        ),
+        pytest.param(
+            MediaPlayerService.VOLUME_MUTE,
+            {MediaPlayerServiceArgument.IS_VOLUME_MUTED: True},
+            ATTR_MEDIA_VOLUME_MUTED,
+            [True, None, None, True],
+            id="volume_mute",
+        ),
+    ],
+)
+async def test_volume_services_target_supporting_members(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    service: str,
+    data: dict[str, Any],
+    attribute: str,
+    expected: list[Any],
+) -> None:
+    """Test volume services reach each member that supports them."""
+    players = await _setup_volume_group(hass)
+
+    await hass.services.async_call(
+        MEDIA_DOMAIN,
+        service,
+        {TargetKey.ENTITY_ID: "media_player.media_group", **data},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    assert _player_attributes(hass, players, attribute) == pytest.approx(expected)
+    assert not [record for record in caplog.records if record.levelno >= ERROR]
