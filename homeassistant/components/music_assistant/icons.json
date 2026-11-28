@@ -5,6 +5,11 @@
         "default": "mdi:heart-plus"
       }
     },
+    "select": {
+      "dsp_preset": {
+        "default": "mdi:tune-vertical"
+      }
+    },
     "switch": {
       "queue_autoplay": {
         "default": "mdi:infinity"
