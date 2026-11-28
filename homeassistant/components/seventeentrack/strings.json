@@ -46,6 +46,11 @@
       }
     }
   },
+  "exceptions": {
+    "add_package_failed": {
+      "message": "17TRACK could not finish adding the package. It may already be in your 17TRACK account."
+    }
+  },
   "options": {
     "step": {
       "init": {
@@ -78,6 +83,10 @@
           "description": "The selected service to add the package to.",
           "name": "17Track service"
         },
+        "first_carrier": {
+          "description": "The numeric code for the first carrier. Leave blank to let 17TRACK detect the carrier.",
+          "name": "First carrier code"
+        },
         "package_friendly_name": {
           "description": "The friendly name of the package to be added.",
           "name": "Package friendly name"
@@ -85,6 +94,10 @@
         "package_tracking_number": {
           "description": "The package with the tracking number will be added.",
           "name": "Package tracking number to add"
+        },
+        "second_carrier": {
+          "description": "The numeric code for the last-mile carrier. Requires a first carrier code. Leave blank to keep the detected last-mile carrier.",
+          "name": "Last-mile carrier code"
         }
       },
       "name": "Add a package"
