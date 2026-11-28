@@ -33,8 +33,34 @@
   },
   "entity": {
     "sensor": {
+      "battery_current": {
+        "name": "Battery current"
+      },
+      "battery_voltage": {
+        "name": "Battery voltage"
+      },
+      "charging_state": {
+        "name": "Charging state",
+        "state": {
+          "charged": "Charged",
+          "charging": "[%key:common::state::charging%]",
+          "discharging": "[%key:common::state::discharging%]"
+        }
+      },
+      "ip_address": {
+        "name": "IP address"
+      },
+      "usb_voltage": {
+        "name": "USB voltage"
+      },
+      "wifi_channel": {
+        "name": "Wi-Fi channel"
+      },
       "wifi_signal": {
         "name": "Wi-Fi signal"
+      },
+      "wifi_ssid": {
+        "name": "Wi-Fi SSID"
       }
     }
   },

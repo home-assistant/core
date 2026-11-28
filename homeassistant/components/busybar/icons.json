@@ -1,0 +1,32 @@
+{
+  "entity": {
+    "sensor": {
+      "charging_state": {
+        "default": "mdi:battery",
+        "state": {
+          "charged": "mdi:battery-check",
+          "charging": "mdi:battery-charging",
+          "discharging": "mdi:battery-arrow-down"
+        }
+      },
+      "ip_address": {
+        "default": "mdi:ip-network"
+      },
+      "wifi_channel": {
+        "default": "mdi:access-point"
+      },
+      "wifi_signal": {
+        "default": "mdi:wifi-strength-off-outline",
+        "range": {
+          "-100": "mdi:wifi-strength-1",
+          "-75": "mdi:wifi-strength-2",
+          "-65": "mdi:wifi-strength-3",
+          "-55": "mdi:wifi-strength-4"
+        }
+      },
+      "wifi_ssid": {
+        "default": "mdi:wifi"
+      }
+    }
+  }
+}
