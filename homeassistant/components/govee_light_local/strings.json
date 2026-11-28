@@ -1,8 +1,14 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "discovery_started": "Discovery has started. Your Govee lights will appear as discovered devices under Settings > Devices & services.",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+    },
+    "flow_title": "{model} ({ip})",
     "step": {
-      "confirm": {
-        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      "discovery_confirm": {
+        "description": "Do you want to set up {model} ({ip})?"
       }
     }
   },
@@ -157,6 +163,9 @@
   "exceptions": {
     "bind_failed": {
       "message": "Could not listen for Govee devices: {error}"
+    },
+    "device_not_responding": {
+      "message": "The light did not respond"
     },
     "no_devices_found": {
       "message": "[%key:common::config_flow::abort::no_devices_found%]"

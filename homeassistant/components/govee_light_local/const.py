@@ -25,3 +25,5 @@ REBIND_INTERVAL = timedelta(minutes=5)
 # socket is still bound and the next setup fails with EADDRINUSE.
 CLEANUP_TIMEOUT = 2
 CLEANUP_WAIT_TIMEOUT = 3
+
+CONF_FINGERPRINT = "fingerprint"
