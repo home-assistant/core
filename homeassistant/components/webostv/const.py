@@ -15,6 +15,7 @@ ATTR_SOUND_OUTPUT = "sound_output"
 
 CONF_ON_ACTION = "turn_on_action"
 CONF_SOURCES = "sources"
+CONF_WAKE_ON_LAN = "wake_on_lan"
 
 
 class WebOsTvService(StrEnum):

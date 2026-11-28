@@ -2,6 +2,7 @@
 
 from collections.abc import AsyncIterator, Mapping
 from contextlib import asynccontextmanager
+from ipaddress import IPv4Address
 from typing import Any, Self, override
 from urllib.parse import urlparse
 
@@ -14,8 +15,14 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlowWithReload,
 )
-from homeassistant.const import CONF_CLIENT_SECRET, CONF_HOST
+from homeassistant.const import (
+    CONF_BROADCAST_ADDRESS,
+    CONF_CLIENT_SECRET,
+    CONF_HOST,
+    CONF_MAC,
+)
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import SectionConfig, section
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.ssdp import (
@@ -24,7 +31,7 @@ from homeassistant.helpers.service_info.ssdp import (
     SsdpServiceInfo,
 )
 
-from .const import CONF_SOURCES, DEFAULT_NAME, DOMAIN
+from .const import CONF_SOURCES, CONF_WAKE_ON_LAN, DEFAULT_NAME, DOMAIN
 from .coordinator import WebOsTvConfigEntry
 from .helpers import get_sources
 
@@ -223,7 +230,11 @@ class OptionsFlowHandler(OptionsFlowWithReload):
         """Manage the options."""
         errors = {}
         if user_input is not None:
-            options_input = {CONF_SOURCES: user_input.get(CONF_SOURCES, [])}
+            options_input: dict[str, Any] = {
+                CONF_SOURCES: user_input.get(CONF_SOURCES, []),
+            }
+            if wake_options := user_input.get(CONF_WAKE_ON_LAN):
+                options_input[CONF_WAKE_ON_LAN] = wake_options
             return self.async_create_entry(title="", data=options_input)
         entry = self.config_entry
         option_sources = entry.options.get(CONF_SOURCES, [])
@@ -240,12 +251,43 @@ class OptionsFlowHandler(OptionsFlowWithReload):
         if not sources:
             sources = sources_list
 
+        wake_options = entry.options.get(CONF_WAKE_ON_LAN, {})
         options_schema = probatio.Schema(
             {
                 probatio.Optional(
                     CONF_SOURCES,
                     description={"suggested_value": sources},
                 ): cv.multi_select({source: source for source in sources_list}),
+                probatio.Optional(CONF_WAKE_ON_LAN): section(
+                    probatio.Schema(
+                        {
+                            probatio.Optional(
+                                CONF_BROADCAST_ADDRESS,
+                                description={
+                                    "suggested_value": wake_options.get(
+                                        CONF_BROADCAST_ADDRESS
+                                    )
+                                },
+                            ): probatio.All(
+                                cv.string,
+                                probatio.Coerce(IPv4Address),
+                                probatio.Coerce(str),
+                            ),
+                            probatio.Optional(
+                                CONF_MAC,
+                                description={
+                                    "suggested_value": wake_options.get(CONF_MAC)
+                                },
+                            ): probatio.All(
+                                cv.string,
+                                probatio.Match(
+                                    r"^(?:[0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}$"
+                                ),
+                            ),
+                        }
+                    ),
+                    SectionConfig(collapsed=True),
+                ),
             }
         )
 
