@@ -1,7 +1,237 @@
 {
+  "config": {
+    "error": {
+      "code_and_code_template": "Set either a code or a code template, not both."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "arming_states": "Arming states",
+          "arming_time": "Arming time",
+          "code": "Code",
+          "code_arm_required": "Code required for arming",
+          "code_template": "Code template",
+          "delay_time": "Delay time",
+          "disarm_after_trigger": "Disarm after trigger",
+          "name": "[%key:common::config_flow::data::name%]",
+          "trigger_time": "Trigger time"
+        },
+        "data_description": {
+          "arming_states": "The arm modes the alarm control panel supports.",
+          "arming_time": "The time it takes to go from arming to armed.",
+          "code": "The code to arm or disarm the alarm. Leave empty to not require a code.",
+          "code_arm_required": "Whether the code is also required to arm the alarm, not just to disarm it.",
+          "code_template": "A template that renders the code, instead of a fixed code. The variables `from_state` and `to_state` are available.",
+          "delay_time": "The time the alarm stays in the pending state after it is triggered, before it goes off.",
+          "disarm_after_trigger": "Disarm the alarm after the trigger time has passed, instead of returning to the previous state.",
+          "name": "The name of the alarm control panel.",
+          "trigger_time": "The time the alarm stays triggered. Set to zero to disable triggering."
+        },
+        "description": "Create an alarm control panel that you arm, disarm and trigger yourself. The times can be overridden per state in the sections below.",
+        "sections": {
+          "armed_away": {
+            "data": {
+              "arming_time": "[%key:component::manual::config::step::user::data::arming_time%]",
+              "delay_time": "[%key:component::manual::config::step::user::data::delay_time%]",
+              "trigger_time": "[%key:component::manual::config::step::user::data::trigger_time%]"
+            },
+            "data_description": {
+              "arming_time": "The time it takes to arm into this state. Overrides the general arming time.",
+              "delay_time": "[%key:component::manual::config::step::user::sections::disarmed::data_description::delay_time%]",
+              "trigger_time": "[%key:component::manual::config::step::user::sections::disarmed::data_description::trigger_time%]"
+            },
+            "name": "[%key:component::alarm_control_panel::entity_component::_::state::armed_away%]"
+          },
+          "armed_custom_bypass": {
+            "data": {
+              "arming_time": "[%key:component::manual::config::step::user::data::arming_time%]",
+              "delay_time": "[%key:component::manual::config::step::user::data::delay_time%]",
+              "trigger_time": "[%key:component::manual::config::step::user::data::trigger_time%]"
+            },
+            "data_description": {
+              "arming_time": "[%key:component::manual::config::step::user::sections::armed_away::data_description::arming_time%]",
+              "delay_time": "[%key:component::manual::config::step::user::sections::disarmed::data_description::delay_time%]",
+              "trigger_time": "[%key:component::manual::config::step::user::sections::disarmed::data_description::trigger_time%]"
+            },
+            "name": "[%key:component::alarm_control_panel::entity_component::_::state::armed_custom_bypass%]"
+          },
+          "armed_home": {
+            "data": {
+              "arming_time": "[%key:component::manual::config::step::user::data::arming_time%]",
+              "delay_time": "[%key:component::manual::config::step::user::data::delay_time%]",
+              "trigger_time": "[%key:component::manual::config::step::user::data::trigger_time%]"
+            },
+            "data_description": {
+              "arming_time": "[%key:component::manual::config::step::user::sections::armed_away::data_description::arming_time%]",
+              "delay_time": "[%key:component::manual::config::step::user::sections::disarmed::data_description::delay_time%]",
+              "trigger_time": "[%key:component::manual::config::step::user::sections::disarmed::data_description::trigger_time%]"
+            },
+            "name": "[%key:component::alarm_control_panel::entity_component::_::state::armed_home%]"
+          },
+          "armed_night": {
+            "data": {
+              "arming_time": "[%key:component::manual::config::step::user::data::arming_time%]",
+              "delay_time": "[%key:component::manual::config::step::user::data::delay_time%]",
+              "trigger_time": "[%key:component::manual::config::step::user::data::trigger_time%]"
+            },
+            "data_description": {
+              "arming_time": "[%key:component::manual::config::step::user::sections::armed_away::data_description::arming_time%]",
+              "delay_time": "[%key:component::manual::config::step::user::sections::disarmed::data_description::delay_time%]",
+              "trigger_time": "[%key:component::manual::config::step::user::sections::disarmed::data_description::trigger_time%]"
+            },
+            "name": "[%key:component::alarm_control_panel::entity_component::_::state::armed_night%]"
+          },
+          "armed_vacation": {
+            "data": {
+              "arming_time": "[%key:component::manual::config::step::user::data::arming_time%]",
+              "delay_time": "[%key:component::manual::config::step::user::data::delay_time%]",
+              "trigger_time": "[%key:component::manual::config::step::user::data::trigger_time%]"
+            },
+            "data_description": {
+              "arming_time": "[%key:component::manual::config::step::user::sections::armed_away::data_description::arming_time%]",
+              "delay_time": "[%key:component::manual::config::step::user::sections::disarmed::data_description::delay_time%]",
+              "trigger_time": "[%key:component::manual::config::step::user::sections::disarmed::data_description::trigger_time%]"
+            },
+            "name": "[%key:component::alarm_control_panel::entity_component::_::state::armed_vacation%]"
+          },
+          "disarmed": {
+            "data": {
+              "delay_time": "[%key:component::manual::config::step::user::data::delay_time%]",
+              "trigger_time": "[%key:component::manual::config::step::user::data::trigger_time%]"
+            },
+            "data_description": {
+              "delay_time": "The delay time when the alarm is triggered while in this state. Overrides the general delay time.",
+              "trigger_time": "The trigger time when the alarm is triggered while in this state. Overrides the general trigger time."
+            },
+            "name": "[%key:component::alarm_control_panel::entity_component::_::state::disarmed%]"
+          }
+        },
+        "title": "Create manual alarm control panel"
+      }
+    }
+  },
   "exceptions": {
     "invalid_code": {
       "message": "Invalid alarm code provided"
     }
-  }
+  },
+  "options": {
+    "error": {
+      "code_and_code_template": "[%key:component::manual::config::error::code_and_code_template%]"
+    },
+    "step": {
+      "init": {
+        "data": {
+          "arming_states": "[%key:component::manual::config::step::user::data::arming_states%]",
+          "arming_time": "[%key:component::manual::config::step::user::data::arming_time%]",
+          "code": "[%key:component::manual::config::step::user::data::code%]",
+          "code_arm_required": "[%key:component::manual::config::step::user::data::code_arm_required%]",
+          "code_template": "[%key:component::manual::config::step::user::data::code_template%]",
+          "delay_time": "[%key:component::manual::config::step::user::data::delay_time%]",
+          "disarm_after_trigger": "[%key:component::manual::config::step::user::data::disarm_after_trigger%]",
+          "trigger_time": "[%key:component::manual::config::step::user::data::trigger_time%]"
+        },
+        "data_description": {
+          "arming_states": "[%key:component::manual::config::step::user::data_description::arming_states%]",
+          "arming_time": "[%key:component::manual::config::step::user::data_description::arming_time%]",
+          "code": "[%key:component::manual::config::step::user::data_description::code%]",
+          "code_arm_required": "[%key:component::manual::config::step::user::data_description::code_arm_required%]",
+          "code_template": "[%key:component::manual::config::step::user::data_description::code_template%]",
+          "delay_time": "[%key:component::manual::config::step::user::data_description::delay_time%]",
+          "disarm_after_trigger": "[%key:component::manual::config::step::user::data_description::disarm_after_trigger%]",
+          "trigger_time": "[%key:component::manual::config::step::user::data_description::trigger_time%]"
+        },
+        "sections": {
+          "armed_away": {
+            "data": {
+              "arming_time": "[%key:component::manual::config::step::user::data::arming_time%]",
+              "delay_time": "[%key:component::manual::config::step::user::data::delay_time%]",
+              "trigger_time": "[%key:component::manual::config::step::user::data::trigger_time%]"
+            },
+            "data_description": {
+              "arming_time": "[%key:component::manual::config::step::user::sections::armed_away::data_description::arming_time%]",
+              "delay_time": "[%key:component::manual::config::step::user::sections::disarmed::data_description::delay_time%]",
+              "trigger_time": "[%key:component::manual::config::step::user::sections::disarmed::data_description::trigger_time%]"
+            },
+            "name": "[%key:component::alarm_control_panel::entity_component::_::state::armed_away%]"
+          },
+          "armed_custom_bypass": {
+            "data": {
+              "arming_time": "[%key:component::manual::config::step::user::data::arming_time%]",
+              "delay_time": "[%key:component::manual::config::step::user::data::delay_time%]",
+              "trigger_time": "[%key:component::manual::config::step::user::data::trigger_time%]"
+            },
+            "data_description": {
+              "arming_time": "[%key:component::manual::config::step::user::sections::armed_away::data_description::arming_time%]",
+              "delay_time": "[%key:component::manual::config::step::user::sections::disarmed::data_description::delay_time%]",
+              "trigger_time": "[%key:component::manual::config::step::user::sections::disarmed::data_description::trigger_time%]"
+            },
+            "name": "[%key:component::alarm_control_panel::entity_component::_::state::armed_custom_bypass%]"
+          },
+          "armed_home": {
+            "data": {
+              "arming_time": "[%key:component::manual::config::step::user::data::arming_time%]",
+              "delay_time": "[%key:component::manual::config::step::user::data::delay_time%]",
+              "trigger_time": "[%key:component::manual::config::step::user::data::trigger_time%]"
+            },
+            "data_description": {
+              "arming_time": "[%key:component::manual::config::step::user::sections::armed_away::data_description::arming_time%]",
+              "delay_time": "[%key:component::manual::config::step::user::sections::disarmed::data_description::delay_time%]",
+              "trigger_time": "[%key:component::manual::config::step::user::sections::disarmed::data_description::trigger_time%]"
+            },
+            "name": "[%key:component::alarm_control_panel::entity_component::_::state::armed_home%]"
+          },
+          "armed_night": {
+            "data": {
+              "arming_time": "[%key:component::manual::config::step::user::data::arming_time%]",
+              "delay_time": "[%key:component::manual::config::step::user::data::delay_time%]",
+              "trigger_time": "[%key:component::manual::config::step::user::data::trigger_time%]"
+            },
+            "data_description": {
+              "arming_time": "[%key:component::manual::config::step::user::sections::armed_away::data_description::arming_time%]",
+              "delay_time": "[%key:component::manual::config::step::user::sections::disarmed::data_description::delay_time%]",
+              "trigger_time": "[%key:component::manual::config::step::user::sections::disarmed::data_description::trigger_time%]"
+            },
+            "name": "[%key:component::alarm_control_panel::entity_component::_::state::armed_night%]"
+          },
+          "armed_vacation": {
+            "data": {
+              "arming_time": "[%key:component::manual::config::step::user::data::arming_time%]",
+              "delay_time": "[%key:component::manual::config::step::user::data::delay_time%]",
+              "trigger_time": "[%key:component::manual::config::step::user::data::trigger_time%]"
+            },
+            "data_description": {
+              "arming_time": "[%key:component::manual::config::step::user::sections::armed_away::data_description::arming_time%]",
+              "delay_time": "[%key:component::manual::config::step::user::sections::disarmed::data_description::delay_time%]",
+              "trigger_time": "[%key:component::manual::config::step::user::sections::disarmed::data_description::trigger_time%]"
+            },
+            "name": "[%key:component::alarm_control_panel::entity_component::_::state::armed_vacation%]"
+          },
+          "disarmed": {
+            "data": {
+              "delay_time": "[%key:component::manual::config::step::user::data::delay_time%]",
+              "trigger_time": "[%key:component::manual::config::step::user::data::trigger_time%]"
+            },
+            "data_description": {
+              "delay_time": "[%key:component::manual::config::step::user::sections::disarmed::data_description::delay_time%]",
+              "trigger_time": "[%key:component::manual::config::step::user::sections::disarmed::data_description::trigger_time%]"
+            },
+            "name": "[%key:component::alarm_control_panel::entity_component::_::state::disarmed%]"
+          }
+        }
+      }
+    }
+  },
+  "selector": {
+    "arming_states": {
+      "options": {
+        "armed_away": "[%key:component::alarm_control_panel::entity_component::_::state::armed_away%]",
+        "armed_custom_bypass": "[%key:component::alarm_control_panel::entity_component::_::state::armed_custom_bypass%]",
+        "armed_home": "[%key:component::alarm_control_panel::entity_component::_::state::armed_home%]",
+        "armed_night": "[%key:component::alarm_control_panel::entity_component::_::state::armed_night%]",
+        "armed_vacation": "[%key:component::alarm_control_panel::entity_component::_::state::armed_vacation%]"
+      }
+    }
+  },
+  "title": "Manual alarm control panel"
 }
