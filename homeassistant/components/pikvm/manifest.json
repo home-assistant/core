@@ -1,0 +1,13 @@
+{
+  "domain": "pikvm",
+  "name": "PiKVM",
+  "categories": ["computers_network.monitoring"],
+  "codeowners": ["@adamoutler"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/pikvm",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "loggers": ["pikvm_aio"],
+  "quality_scale": "bronze",
+  "requirements": ["pikvm-aio==0.1.6"]
+}
