@@ -39,9 +39,11 @@ class CyncCoordinator(DataUpdateCoordinator[dict[str, CyncDevice]]):
             always_update=True,
         )
         self.cync = cync
+        self.state_confirmed: set[str] = set()
 
     async def on_data_update(self, data: dict[str, CyncDevice]) -> None:
         """Update registered devices with new data."""
+        self.state_confirmed.update(data)
         merged_data = self.data | data if self.data else data
         self.async_set_updated_data(merged_data)
 
