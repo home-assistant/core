@@ -351,13 +351,15 @@ class PyNUTData:
             self.device_name = self.name.title()
         return self._status
 
-    async def async_run_command(self, command_name: str) -> None:
+    async def async_run_command(
+        self, command_name: str, param: str | None = None
+    ) -> None:
         """Invoke instant command in UPS."""
         if TYPE_CHECKING:
             assert self._alias is not None
 
         try:
-            await self._client.run_command(self._alias, command_name)
+            await self._client.run_command(self._alias, command_name, param)
         except NUTError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,

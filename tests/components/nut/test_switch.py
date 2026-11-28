@@ -103,7 +103,7 @@ async def test_switch_pdu_dynamic_outlets(
         blocking=True,
     )
 
-    run_command.assert_called_with("ups1", "outlet.1.load.off")
+    run_command.assert_called_with("ups1", "outlet.1.load.off", None)
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -112,7 +112,7 @@ async def test_switch_pdu_dynamic_outlets(
         blocking=True,
     )
 
-    run_command.assert_called_with("ups1", "outlet.1.load.on")
+    run_command.assert_called_with("ups1", "outlet.1.load.on", None)
 
     switch = hass.states.get("switch.device_location_ups1_power_outlet_25")
     assert not switch
@@ -201,7 +201,7 @@ async def test_switch_outlets_without_outlet_count(
         {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
-    run_command.assert_called_with("ups1", "outlet.1.load.off")
+    run_command.assert_called_with("ups1", "outlet.1.load.off", None)
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -209,7 +209,7 @@ async def test_switch_outlets_without_outlet_count(
         {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
-    run_command.assert_called_with("ups1", "outlet.1.load.on")
+    run_command.assert_called_with("ups1", "outlet.1.load.on", None)
 
     # Second outlet is also created
     assert hass.states.get("switch.ups1_power_outlet_powershare_outlet_2")
