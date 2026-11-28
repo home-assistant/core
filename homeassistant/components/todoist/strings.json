@@ -18,11 +18,37 @@
     }
   },
   "exceptions": {
+    "location_reminder_connection_error": {
+      "message": "Task \"{task}\" was created, but the followup request to add its location reminder could not reach Todoist, so the reminder may not have been added"
+    },
+    "location_reminder_rejected": {
+      "message": "Task \"{task}\" was created, but Todoist rejected the followup request to add its location reminder with HTTP status {status}"
+    },
+    "plan_check_failed": {
+      "message": "Could not check whether your Todoist plan includes reminders, so the task was not created"
+    },
     "project_invalid": {
       "message": "Invalid project name \"{project}\""
     },
+    "reminders_premium_only": {
+      "message": "Reminders need a Todoist Pro or Business plan, so the task was not created"
+    },
     "section_invalid": {
       "message": "Project \"{project}\" has no section \"{section}\""
+    },
+    "zone_invalid": {
+      "message": "Unknown zone \"{zone}\""
+    },
+    "zone_radius_invalid": {
+      "message": "Zone \"{zone}\" has a radius of {radius} meters, but Todoist location reminders need a radius of at least 1 meter"
+    }
+  },
+  "selector": {
+    "reminder_location_direction": {
+      "options": {
+        "on_enter": "Entering",
+        "on_leave": "Leaving"
+      }
     }
   },
   "services": {
@@ -76,6 +102,30 @@
         "reminder_date_string": {
           "description": "When the user should be reminded of this task, in natural language.",
           "name": "Reminder date string"
+        },
+        "reminder_latitude": {
+          "description": "The latitude of the location that should trigger the reminder. Note that this location is shared with Todoist.",
+          "name": "Reminder latitude"
+        },
+        "reminder_location_direction": {
+          "description": "Whether the reminder should be triggered when entering or leaving the location.",
+          "name": "Reminder location direction"
+        },
+        "reminder_location_name": {
+          "description": "An alias name for the location that should trigger the reminder.",
+          "name": "Reminder location name"
+        },
+        "reminder_longitude": {
+          "description": "The longitude of the location that should trigger the reminder. Note that this location is shared with Todoist.",
+          "name": "Reminder longitude"
+        },
+        "reminder_radius": {
+          "description": "The radius, in meters, around the location that should trigger the reminder.",
+          "name": "Reminder radius"
+        },
+        "reminder_zone": {
+          "description": "The zone that should trigger the reminder. Note that the zone's location is shared with Todoist. Zones larger than 255 meters use a 255-meter radius.",
+          "name": "Reminder zone"
         },
         "section": {
           "description": "The name of a section within the project to add the task to.",
