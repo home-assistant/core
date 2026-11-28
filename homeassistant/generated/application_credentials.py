@@ -13,6 +13,7 @@ APPLICATION_CREDENTIALS = [
     "electric_kiwi",
     "gentex_homelink",
     "geocaching",
+    "gkp",
     "google",
     "google_assistant_sdk",
     "google_drive",

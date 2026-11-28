@@ -1,0 +1,16 @@
+{
+  "At": { "wattsType": "At", "value": "662" },
+  "Sp": { "wattsType": "Sp", "value": "644" },
+  "Cm": { "wattsType": "Cm", "value": 2 },
+  "Dm": { "wattsType": "Dm", "value": 2 },
+  "ec": { "wattsType": "ec", "value": "644" },
+  "cf": { "wattsType": "cf", "value": "698" },
+  "df": { "wattsType": "df", "value": "464" },
+  "bo": { "wattsType": "bo", "value": "752" },
+  "Bt": { "wattsType": "Bt", "value": 120 },
+  "Hs": { "wattsType": "Hs", "value": 0 },
+  "Dd": { "wattsType": "Dd", "value": "30/9/2026 14:04:30" },
+  "Lo": { "wattsType": "Lo", "value": "PARIS" },
+  "Sv": { "wattsType": "Sv", "value": "v01.04.00" },
+  "Ty": { "wattsType": "Ty", "value": "P08073" }
+}
