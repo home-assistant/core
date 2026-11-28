@@ -4,7 +4,6 @@ from typing import override
 
 import aiopulse
 
-from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr, entity
 
 from .const import DOMAIN, LOGGER
@@ -30,8 +29,7 @@ class AcmedaEntity(entity.Entity):
         """Entity being removed from hass."""
         self.roller.callback_unsubscribe(self.notify_update)
 
-    @callback
-    def notify_update(self) -> None:
+    async def notify_update(self) -> None:
         """Write updated device state information."""
         LOGGER.debug("Device update notification received: %s", self.name)
         self.async_write_ha_state()
