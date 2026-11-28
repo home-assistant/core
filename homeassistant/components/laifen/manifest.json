@@ -1,0 +1,21 @@
+{
+  "domain": "laifen",
+  "name": "Laifen",
+  "bluetooth": [
+    {
+      "connectable": true,
+      "local_name": "LFTB01-P-*"
+    }
+  ],
+  "categories": ["health_wellbeing"],
+  "codeowners": ["@bzumik1", "@UrbanTechIO"],
+  "config_flow": true,
+  "connectivity": ["bluetooth"],
+  "dependencies": ["bluetooth_adapters"],
+  "documentation": "https://www.home-assistant.io/integrations/laifen",
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "loggers": ["laifen_ble"],
+  "quality_scale": "bronze",
+  "requirements": ["laifen-ble==0.4.1"]
+}

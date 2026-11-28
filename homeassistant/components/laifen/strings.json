@@ -1,0 +1,37 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "unsupported_firmware": "The firmware of this toothbrush is not supported."
+    },
+    "error": {
+      "cannot_connect": "Failed to connect. Press the button of the toothbrush to wake it up and try again."
+    },
+    "flow_title": "{name}",
+    "step": {
+      "bluetooth_confirm": {
+        "description": "[%key:component::bluetooth::config::step::bluetooth_confirm::description%]"
+      },
+      "user": {
+        "data": {
+          "address": "[%key:common::config_flow::data::device%]"
+        },
+        "data_description": {
+          "address": "The toothbrush to set up."
+        },
+        "description": "[%key:component::bluetooth::config::step::user::description%]"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "current_brushing_duration": {
+        "name": "Current brushing duration"
+      },
+      "last_brushing_duration": {
+        "name": "Last brushing duration"
+      }
+    }
+  }
+}
