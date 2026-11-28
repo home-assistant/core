@@ -1147,6 +1147,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "001E0C*",
     },
     {
+        "domain": "steamist",
+        "macaddress": "00D0CA*",
+    },
+    {
         "domain": "stiebel_eltron",
         "hostname": "servicewelt*",
     },

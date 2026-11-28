@@ -3,6 +3,7 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock
 
+from aiosteamist import MODEL_550, PROFILE_OFF, PROFILE_SHOWER_1
 import pytest
 from pytest_homeassistant.common import async_fire_time_changed
 
@@ -12,6 +13,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from . import (
+    MOCK_ASYNC_GET_STATUS_550_INACTIVE,
+    MOCK_ASYNC_GET_STATUS_550_SHOWER_ACTIVE,
     MOCK_ASYNC_GET_STATUS_ACTIVE,
     MOCK_ASYNC_GET_STATUS_INACTIVE,
     _async_setup_entry_with_status,
@@ -56,3 +59,52 @@ async def test_steam_inactive(hass: HomeAssistant) -> None:
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=5))
     await hass.async_block_till_done()
     assert hass.states.get("switch.steam_active").state == STATE_ON
+
+
+@pytest.mark.usefixtures("mock_aio_discovery")
+async def test_550_profile_switches(hass: HomeAssistant) -> None:
+    """Test that model 550 sets up shower and steam profile switches."""
+    client, _ = await _async_setup_entry_with_status(
+        hass, MOCK_ASYNC_GET_STATUS_550_INACTIVE, model=MODEL_550
+    )
+    assert len(hass.states.async_all("switch")) == 6
+    assert hass.states.get("switch.shower_active").state == STATE_OFF
+    assert hass.states.get("switch.shower_profile_1").state == STATE_OFF
+
+    client.async_get_status = AsyncMock(
+        return_value=MOCK_ASYNC_GET_STATUS_550_SHOWER_ACTIVE
+    )
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        "turn_on",
+        {ATTR_ENTITY_ID: "switch.shower_profile_1"},
+        blocking=True,
+    )
+    client.async_set_profile.assert_called_once_with(PROFILE_SHOWER_1)
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=5))
+    await hass.async_block_till_done()
+    assert hass.states.get("switch.shower_active").state == STATE_ON
+    assert hass.states.get("switch.shower_profile_1").state == STATE_ON
+
+    # Turning off an already-off profile switch should not stop the active session
+    client.async_set_profile.reset_mock()
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        "turn_off",
+        {ATTR_ENTITY_ID: "switch.steam_profile_1"},
+        blocking=True,
+    )
+    client.async_set_profile.assert_not_called()
+
+    client.async_set_profile.reset_mock()
+    client.async_get_status = AsyncMock(return_value=MOCK_ASYNC_GET_STATUS_550_INACTIVE)
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        "turn_off",
+        {ATTR_ENTITY_ID: "switch.shower_profile_1"},
+        blocking=True,
+    )
+    client.async_set_profile.assert_called_once_with(PROFILE_OFF)
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
+    await hass.async_block_till_done()
+    assert hass.states.get("switch.shower_active").state == STATE_OFF

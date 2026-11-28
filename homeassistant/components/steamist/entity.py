@@ -1,6 +1,6 @@
 """Support for Steamist sensors."""
 
-from aiosteamist import SteamistStatus
+from aiosteamist import MODEL_550, SteamistStatus
 
 from homeassistant.const import CONF_HOST, CONF_MODEL
 from homeassistant.helpers import device_registry as dr
@@ -27,11 +27,15 @@ class SteamistEntity(CoordinatorEntity[SteamistDataUpdateCoordinator], Entity):
         self.entity_description = description
         self._attr_unique_id = f"{entry.entry_id}_{description.key}"
         if entry.unique_id:  # Only present if UDP broadcast works
+            model = entry.data.get(CONF_MODEL)
+            configuration_url = (
+                None if model == MODEL_550 else f"http://{entry.data[CONF_HOST]}"
+            )
             self._attr_device_info = DeviceInfo(
                 connections={(dr.CONNECTION_NETWORK_MAC, entry.unique_id)},
                 manufacturer="Steamist",
-                model=entry.data[CONF_MODEL],
-                configuration_url=f"http://{entry.data[CONF_HOST]}",
+                model=model,
+                configuration_url=configuration_url,
             )
 
     @property

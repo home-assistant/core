@@ -1,7 +1,35 @@
 {
   "entity": {
+    "binary_sensor": {
+      "shower_running": {
+        "default": "mdi:shower-head"
+      },
+      "steam_running": {
+        "default": "mdi:pot-steam"
+      }
+    },
+    "sensor": {
+      "active_profile": {
+        "default": "mdi:account-badge"
+      }
+    },
     "switch": {
+      "shower_active": {
+        "default": "mdi:shower-head"
+      },
+      "shower_profile_1": {
+        "default": "mdi:shower-head"
+      },
+      "shower_profile_2": {
+        "default": "mdi:shower-head"
+      },
       "steam_active": {
+        "default": "mdi:pot-steam"
+      },
+      "steam_profile_1": {
+        "default": "mdi:pot-steam"
+      },
+      "steam_profile_2": {
         "default": "mdi:pot-steam"
       }
     }
