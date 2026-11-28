@@ -34,6 +34,7 @@ from .const import (
 PLATFORMS: list[Platform] = [
     Platform.EVENT,
     Platform.NUMBER,
+    Platform.SENSOR,
 ]
 
 
