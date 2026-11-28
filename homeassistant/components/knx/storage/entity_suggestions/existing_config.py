@@ -28,6 +28,7 @@ from homeassistant.helpers import entity_registry as er
 from ...const import DOMAIN
 from ..const import CONF_GA_PASSIVE, CONF_GA_STATE, CONF_GA_WRITE
 from ..entity_store_schema import KNX_SCHEMA_FOR_PLATFORM
+from .areas import device_space_ids
 from .base import SuggestionProvider
 from .const import (
     PlatformSuggestion,
@@ -258,6 +259,7 @@ def _build_suggestions(
     configuration would only repeat that entity.
     """
     index = build_project_index(project)
+    device_spaces = device_space_ids(project.get("locations") or {})
     # the best suggestion of each channel and platform with its coverage - eg.
     # a dimmable light describes a dimmer channel better than a switched one
     best: dict[tuple[str, str, str], tuple[tuple[int, int], ProviderSuggestion]] = {}
@@ -289,10 +291,7 @@ def _build_suggestions(
                         suggested_name=_suggested_name(project, mapping, knx_config),
                         group_id=mapping.target.device,
                         group_name=mapping.device_name,
-                        # projects parsed before xknxproject 3.11 have no `space_id`
-                        space_id=project["devices"][mapping.target.device].get(
-                            "space_id"
-                        ),
+                        space_id=device_spaces.get(mapping.target.device),
                         secondary_info=mapping.channel_name,
                         platform_options=[platform],
                         suggestions={

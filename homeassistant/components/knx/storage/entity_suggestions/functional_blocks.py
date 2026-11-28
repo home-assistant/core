@@ -39,6 +39,7 @@ from ..knx_selector import (
     knx_selector_in,
 )
 from ..util import dpt_string_to_dict
+from .areas import device_space_ids
 from .base import SuggestionProvider
 from .const import (
     PlatformSuggestion,
@@ -450,6 +451,7 @@ def _build_channel_suggestion(
     device_address: str,
     channel_id: str,
     channel: ProjectChannel,
+    space_id: str | None,
 ) -> ProviderSuggestion | None:
     """Build the suggestion for one channel, if it has supported functional blocks."""
     functional_block_platforms = _functional_block_platforms()
@@ -479,8 +481,7 @@ def _build_channel_suggestion(
         suggested_name=channel["name"] or device["name"],
         group_id=device_address,
         group_name=device["name"],
-        # projects parsed before xknxproject 3.11 have no `space_id`
-        space_id=device.get("space_id"),
+        space_id=space_id,
         secondary_info=channel["name"],
         platform_options=list(suggestions),
         suggestions=suggestions,
@@ -500,13 +501,18 @@ def _disambiguate_names(candidates: list[ProviderSuggestion]) -> None:
 
 def _build_suggestions(project: KNXProject) -> list[ProviderSuggestion]:
     """Build suggestions for all channels with supported functional blocks."""
+    device_spaces = device_space_ids(project.get("locations") or {})
     candidates = [
         candidate
         for device_address, device in project["devices"].items()
         for channel_id, channel in device["channels"].items()
         if (
             candidate := _build_channel_suggestion(
-                project, device_address, channel_id, channel
+                project,
+                device_address,
+                channel_id,
+                channel,
+                device_spaces.get(device_address),
             )
         )
         is not None

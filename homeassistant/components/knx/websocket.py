@@ -626,6 +626,9 @@ async def ws_get_schema(
     )
 
 
+_NON_EMPTY_NAME: Final = probatio.All(str, probatio.Strip, probatio.Length(min=1))
+
+
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
@@ -634,8 +637,8 @@ async def ws_get_schema(
         probatio.Exclusive("area_id", "area"): str,
         # an area of the building structure to get or create, eg. from a suggestion
         probatio.Exclusive("suggested_area", "area"): {
-            probatio.Required("name"): str,
-            probatio.Optional("floor"): probatio.Any(str, None),
+            probatio.Required("name"): _NON_EMPTY_NAME,
+            probatio.Optional("floor"): probatio.Any(_NON_EMPTY_NAME, None),
         },
     }
 )
@@ -658,6 +661,19 @@ async def ws_create_entity(
         validated_data = validate_entity_data(msg)
     except EntityStoreValidationException as exc:
         connection.send_result(msg["id"], exc.validation_error)
+        return
+    entity = validated_data[CONF_DATA].entity
+    if (
+        (area_id is not None or "suggested_area" in msg)
+        and entity.device_info is not None
+        and not entity.name
+    ):
+        # the entity registry refuses an own area for the main entity of a device
+        connection.send_error(
+            msg["id"],
+            websocket_api.ERR_INVALID_FORMAT,
+            "An entity without a name of its own takes the area of its device",
+        )
         return
     try:
         entity_id = await knx.config_store.create_entity(
@@ -692,7 +708,7 @@ def _async_get_or_create_area(hass: HomeAssistant, name: str, floor: str | None)
     if area := area_registry.async_get_area_by_name(name):
         return area.id
     floor_id: str | None = None
-    if floor:
+    if floor is not None:
         floor_registry = fr.async_get(hass)
         floor_entry = floor_registry.async_get_floor_by_name(
             floor

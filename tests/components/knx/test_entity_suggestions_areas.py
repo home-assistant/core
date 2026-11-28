@@ -3,8 +3,9 @@
 from typing import Any
 
 from homeassistant.components.knx.storage.entity_suggestions.areas import (
-    _space_names,
     async_suggested_areas,
+    device_space_ids,
+    space_names,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import area_registry as ar
@@ -15,6 +16,7 @@ def _space(
     space_type: str,
     name: str,
     spaces: dict[str, Any] | None = None,
+    devices: list[str] | None = None,
 ) -> dict[str, Any]:
     return {
         "type": space_type,
@@ -25,7 +27,7 @@ def _space(
         "number": "",
         "description": "",
         "project_uid": None,
-        "devices": [],
+        "devices": devices or [],
         "spaces": spaces or {},
         "functions": [],
     }
@@ -53,20 +55,34 @@ LOCATIONS: dict[str, Any] = {
                                 "DistributionBoard",
                                 "Board",
                                 {"S-2": _space("S-2", "Segment", "Field 1")},
+                                devices=["1.1.2"],
                             ),
                         },
+                        devices=["1.1.1"],
                     ),
                     "C-1": _space("C-1", "Corridor", "Hall"),
                     "T-1": _space("T-1", "Stairway", "Stairs"),
                     "D-2": _space("D-2", "DistributionBoard", "Main board"),
                     "S-3": _space("S-3", "Segment", "Niche"),
+                    "R-5": _space("R-5", "Room", "Bath1"),
+                    # a board named like its room doesn't make the room ambiguous
+                    "R-7": _space(
+                        "R-7",
+                        "Room",
+                        "Technical room",
+                        {"D-3": _space("D-3", "DistributionBoard", "Technical room")},
+                    ),
                 },
             ),
             "F-2": _space(
                 "F-2",
                 "Floor",
                 "First floor",
-                {"R-2": _space("R-2", "Room", "Kitchen")},
+                {
+                    "R-2": _space("R-2", "Room", "Kitchen"),
+                    # the same name as "Bath1" for the area registry
+                    "R-6": _space("R-6", "Room", "bath 1"),
+                },
             ),
             "P-1": _space(
                 "P-1",
@@ -85,7 +101,11 @@ LOCATIONS: dict[str, Any] = {
                 "F-3",
                 "Floor",
                 "Ground floor",
-                {"R-4": _space("R-4", "Room", "Bath")},
+                {"R-4": _space("R-4", "Room", "Bath", devices=["1.1.1"])},
+            ),
+            # floors and areas are told apart in their own registries
+            "F-4": _space(
+                "F-4", "Floor", "Attic", {"R-8": _space("R-8", "Room", "Attic")}
             ),
         },
     ),
@@ -141,7 +161,7 @@ def test_space_names() -> None:
             },
         ),
     }
-    assert _space_names(locations) == {
+    assert space_names(locations) == {
         "P-1": "House",
         "P-2": "House / Ground floor",
         "P-3": "House / Ground floor / Kitchen",
@@ -187,6 +207,27 @@ async def test_suggested_areas(
         },
         "R-3": {"name": "Workshop", "floor": None, "area_id": None},
         "R-4": {"name": "Bath", "floor": "Annex / Ground floor", "area_id": None},
+        "R-5": {
+            "name": "Ground floor / Bath1",
+            "floor": "House / Ground floor",
+            "area_id": None,
+        },
+        "R-6": {
+            "name": "First floor / bath 1",
+            "floor": "First floor",
+            "area_id": None,
+        },
+        "R-7": {
+            "name": "Technical room",
+            "floor": "House / Ground floor",
+            "area_id": None,
+        },
+        "R-8": {"name": "Attic", "floor": "Attic", "area_id": None},
         # an existing area is found by its normalized name
         "A-1": {"name": "Garden", "floor": None, "area_id": garden.id},
     }
+
+
+def test_device_space_ids() -> None:
+    """Test the space listing a device, the first one if several list it."""
+    assert device_space_ids(LOCATIONS) == {"1.1.1": "R-1", "1.1.2": "D-1"}

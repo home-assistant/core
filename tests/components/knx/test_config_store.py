@@ -238,6 +238,14 @@ async def test_create_entity_area(
             "invalid_format",
             id="area_id_and_suggested_area",
         ),
+        pytest.param(
+            {"suggested_area": {"name": " "}}, "invalid_format", id="empty_name"
+        ),
+        pytest.param(
+            {"suggested_area": {"name": "Bath", "floor": ""}},
+            "invalid_format",
+            id="empty_floor",
+        ),
     ],
 )
 async def test_create_entity_area_error(
@@ -264,6 +272,53 @@ async def test_create_entity_area_error(
     assert not res["success"]
     assert res["error"]["code"] == error_code
     assert KNX_CONFIG_STORAGE_KEY not in hass_storage
+
+
+@pytest.mark.usefixtures("areas")
+@pytest.mark.parametrize(
+    "area",
+    [
+        pytest.param({"area_id": "kitchen"}, id="area_id"),
+        pytest.param(
+            {"suggested_area": {"name": "Bath", "floor": "Second floor"}},
+            id="suggested_area",
+        ),
+    ],
+)
+async def test_create_entity_area_of_device_entity(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+    area_registry: ar.AreaRegistry,
+    floor_registry: fr.FloorRegistry,
+    area: dict[str, Any],
+) -> None:
+    """Test an entity named after its device can't get an area of its own."""
+    await knx.setup_integration()
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "knx/create_device", "name": "Device"})
+    res = await client.receive_json()
+    device_info = res["result"]["identifiers"][0][1]
+
+    await client.send_json_auto_id(
+        {
+            "type": "knx/create_entity",
+            "platform": Platform.SWITCH,
+            "data": {
+                "entity": {"device_info": device_info},
+                "knx": {"ga_switch": {"write": "1/2/3"}},
+            },
+            **area,
+        }
+    )
+    res = await client.receive_json()
+    assert not res["success"]
+    assert res["error"]["code"] == "invalid_format"
+    # the request leaves nothing behind
+    assert KNX_CONFIG_STORAGE_KEY not in hass_storage
+    assert area_registry.async_get_area_by_name("Bath") is None
+    assert floor_registry.async_get_floor_by_name("Second floor") is None
 
 
 async def test_create_entity_invalid_data_creates_no_area(

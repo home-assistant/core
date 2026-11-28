@@ -1,12 +1,14 @@
 """Areas for entity suggestions from the building structure of project data."""
 
 from collections import Counter
+from collections.abc import Iterator
 from typing import Final, NamedTuple
 
 from xknxproject.models import Space, SpaceType
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import area_registry as ar
+from homeassistant.helpers.normalized_name_base_registry import normalize_name
 
 from .const import SuggestedArea
 
@@ -28,44 +30,79 @@ class _SpaceArea(NamedTuple):
     floor: str | None
 
 
-def _space_paths(
+def _iter_spaces(
     locations: dict[str, Space], parents: tuple[str, ...] = ()
-) -> dict[str, tuple[str, ...]]:
-    """The names of each space and the spaces containing it, by its identifier."""
-    found: dict[str, tuple[str, ...]] = {}
+) -> Iterator[tuple[Space, tuple[str, ...]]]:
+    """Yield each space with the names of itself and the spaces containing it."""
     for space in locations.values():
         path = (*parents, space["name"])
-        found[space["identifier"]] = path
-        found |= _space_paths(space["spaces"], path)
-    return found
+        yield space, path
+        yield from _iter_spaces(space["spaces"], path)
 
 
-def _space_names(locations: dict[str, Space]) -> dict[str, str]:
-    """The name of each space by its identifier.
+def _unique_names(paths: dict[str, tuple[str, ...]]) -> dict[str, str]:
+    """A unique name for each path, by its identifier.
 
-    A name used by more than one space is prefixed with the names of the spaces
+    A name used by more than one path is prefixed with the names of the spaces
     containing it, as far as needed to tell them apart - eg. "Ground floor /
-    Kitchen" and "First floor / Kitchen".
+    Kitchen" and "First floor / Kitchen". Names are compared like the area and
+    floor registries do, so "Kitchen" and "kitchen" are told apart too.
     """
-    paths = _space_paths(locations)
     depths = dict.fromkeys(paths, 1)
     while True:
         labels = {
-            identifier: path[-depths[identifier] :]
+            identifier: " / ".join(path[-depths[identifier] :])
             for identifier, path in paths.items()
         }
-        counts = Counter(labels.values())
+        counts = Counter(normalize_name(label) for label in labels.values())
         deeper = [
             identifier
             for identifier, label in labels.items()
-            if counts[label] > 1 and depths[identifier] < len(paths[identifier])
+            if counts[normalize_name(label)] > 1
+            and depths[identifier] < len(paths[identifier])
         ]
         if not deeper:
-            return {
-                identifier: " / ".join(label) for identifier, label in labels.items()
-            }
+            return labels
         for identifier in deeper:
             depths[identifier] += 1
+
+
+def space_names(locations: dict[str, Space]) -> dict[str, str]:
+    """A name of each space unique among all spaces, by its identifier."""
+    return _unique_names(
+        {space["identifier"]: path for space, path in _iter_spaces(locations)}
+    )
+
+
+def device_space_ids(locations: dict[str, Space]) -> dict[str, str]:
+    """The identifier of the space listing each device, by its individual address.
+
+    The first listing in project order wins, like `Device["space_id"]` of
+    xknxproject 3.11, which projects parsed by older versions don't have.
+    """
+    found: dict[str, str] = {}
+    for space, _ in _iter_spaces(locations):
+        for device in space["devices"]:
+            found.setdefault(device, space["identifier"])
+    return found
+
+
+def _area_and_floor_names(locations: dict[str, Space]) -> dict[str, str]:
+    """Names of areas unique among areas, and of floors among floors."""
+    spaces = list(_iter_spaces(locations))
+    return _unique_names(
+        {
+            space["identifier"]: path
+            for space, path in spaces
+            if space["type"] in AREA_SPACE_TYPES
+        }
+    ) | _unique_names(
+        {
+            space["identifier"]: path
+            for space, path in spaces
+            if space["type"] == SpaceType.FLOOR.value
+        }
+    )
 
 
 def _space_areas(
@@ -107,6 +144,6 @@ def async_suggested_areas(
             else None,
         )
         for identifier, space_area in _space_areas(
-            locations, _space_names(locations)
+            locations, _area_and_floor_names(locations)
         ).items()
     }

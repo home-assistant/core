@@ -41,7 +41,7 @@ from .. import dpa
 from ..const import CONF_DPT, CONF_GA_PASSIVE
 from ..entity_store_schema import KNX_SCHEMA_FOR_PLATFORM
 from ..knx_selector import GASelector
-from .areas import _space_names
+from .areas import space_names
 from .base import SuggestionProvider
 from .const import (
     PlatformSuggestion,
@@ -506,7 +506,7 @@ def _disambiguate_names(suggestions: list[ProviderSuggestion]) -> None:
 
 def _build_suggestions(project: KNXProject) -> list[ProviderSuggestion]:
     """Build suggestions for all functions of a type with an entity."""
-    space_names = _space_names(project.get("locations") or {})
+    group_names = space_names(project.get("locations") or {})
     linked = _linked_objects(project)
     suggestions: list[ProviderSuggestion] = []
     for function_id, function in (project.get("functions") or {}).items():
@@ -518,7 +518,7 @@ def _build_suggestions(project: KNXProject) -> list[ProviderSuggestion]:
                 id=function_id,
                 suggested_name=function["name"],
                 group_id=function["space_id"],
-                group_name=space_names.get(function["space_id"], ""),
+                group_name=group_names.get(function["space_id"], ""),
                 space_id=function["space_id"],
                 secondary_info=function["usage_text"],
                 platform_options=[platform.value],

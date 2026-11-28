@@ -157,7 +157,6 @@ TEST_PROJECT: dict[str, Any] = {
         },
         "1.1.2": {
             "name": "Jalousieaktor",
-            "space_id": "P-1",
             "channels": {
                 "CH-1": _channel(
                     "Jalousie 1",
@@ -268,6 +267,15 @@ TEST_PROJECT: dict[str, Any] = {
                 "CH-1": _channel("Stromzähler", ["1104"], ["co-160", "co-161"]),
             },
         },
+    },
+    "locations": {
+        "P-1": {
+            "type": "Room",
+            "identifier": "P-1",
+            "name": "Room",
+            "devices": ["1.1.2"],
+            "spaces": {},
+        }
     },
     "communication_objects": {
         "co-1": _com_object(["417.52"], ["1/0/1", "1/0/2"]),
@@ -920,7 +928,7 @@ async def test_ws_get_entity_suggestions(
     assert switch_actuator["source"] == "fb"
     assert switch_actuator["group_id"] == "1.1.1"
     assert switch_actuator["group_name"] == "Schaltaktor"
-    # project data parsed before xknxproject 3.11 has no `space_id`
+    # a device no space lists
     assert switch_actuator["space_id"] is None
     assert suggestions["fb_1.1.2_CH-1"]["space_id"] == "P-1"
     assert switch_actuator["metadata"] == {"functional_blocks": ["417"]}
