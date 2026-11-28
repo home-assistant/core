@@ -663,7 +663,7 @@ autoskope_client==1.4.1
 
 # homeassistant.components.generic
 # homeassistant.components.stream
-av==19.0.0
+av==19.0.2
 
 # homeassistant.components.avea
 avea==1.8.0
