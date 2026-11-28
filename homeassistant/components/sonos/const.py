@@ -199,6 +199,9 @@ MODELS_TV_ONLY = (
 )
 MODELS_LINEIN_AND_TV = ("AMP",)
 MODEL_SONOS_ARC_ULTRA = "SONOS ARC ULTRA"
+MODEL_SONOS_BEAM_ULTRA = "SONOS BEAM ULTRA"
+# Soundbars with a separate speech enhancement switch and a 5-level dialog level
+MODELS_ULTRA_SOUNDBARS = (MODEL_SONOS_ARC_ULTRA, MODEL_SONOS_BEAM_ULTRA)
 
 ATTR_SPEECH_ENHANCEMENT_ENABLED = "speech_enhance_enabled"
 SPEECH_DIALOG_LEVEL = "speech_dialog_level"

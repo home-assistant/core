@@ -15,6 +15,7 @@ from homeassistant.components.sonos.const import (
     DATA_SONOS_DISCOVERY_MANAGER,
     DOMAIN,
     MODEL_SONOS_ARC_ULTRA,
+    MODEL_SONOS_BEAM_ULTRA,
     SCAN_INTERVAL,
 )
 from homeassistant.components.sonos.services import SonosService, SonosServiceArgument
@@ -175,6 +176,7 @@ async def test_switch_attributes(
     [
         ("Sonos One SL", ATTR_SPEECH_ENHANCEMENT),
         (MODEL_SONOS_ARC_ULTRA.lower(), ATTR_SPEECH_ENHANCEMENT_ENABLED),
+        (MODEL_SONOS_BEAM_ULTRA.lower(), ATTR_SPEECH_ENHANCEMENT_ENABLED),
     ],
 )
 async def test_switch_speech_enhancement(
