@@ -44,6 +44,7 @@ from homeassistant.const import (
     STATE_HOME,
     STATE_NOT_HOME,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.helpers import (
@@ -605,18 +606,19 @@ async def test_unique_id_normalization_defers_when_other_entry_owns_the_id(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_duplicate_tracker_removal_repoints_storage_persons(
+async def test_duplicate_tracker_removal_does_not_repoint_persons(
     hass: HomeAssistant,
     mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test a referenced duplicate tracker is removed without deferral.
+    """Test a referenced duplicate tracker is removed without re-pointing.
 
-    The storage person is re-pointed at the surviving tracker, while
-    the YAML person and the device automation keep pointing at the
-    removed duplicate, as the breaking change discloses.
+    The storage person is stripped of the removed tracker by the
+    person integration, and the YAML person and the device automation
+    keep pointing at the removed duplicate, as the breaking change
+    discloses.
     """
     _mock, _ = mock_ubus_by_host
     entry = MockConfigEntry(
@@ -709,9 +711,12 @@ async def test_duplicate_tracker_removal_repoints_storage_persons(
         )
         is None
     )
-    # The YAML person is untouched, and the storage person was
-    # re-pointed at the surviving tracker, so it keeps tracking the
-    # client.
+    # The survivor keeps tracking the client.
+    assert hass.states.get(established.entity_id).state == STATE_HOME
+    # Persons are not re-pointed: the person integration strips the
+    # removed tracker from the storage person, and the YAML person
+    # keeps pointing at the removed duplicate, as the breaking change
+    # discloses.
     assert hass.data[PERSON_DOMAIN].yaml_collection.async_items()[0][
         "device_trackers"
     ] == [duplicate.entity_id]
@@ -720,8 +725,8 @@ async def test_duplicate_tracker_removal_repoints_storage_persons(
         for item in hass.data[PERSON_DOMAIN].storage_collection.async_items()
         if item["id"] == person["id"]
     )
-    assert storage_person["device_trackers"] == [established.entity_id]
-    assert hass.states.get("person.storage_person").state == STATE_HOME
+    assert storage_person["device_trackers"] == []
+    assert hass.states.get("person.storage_person").state == STATE_UNKNOWN
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -736,8 +741,9 @@ async def test_migration_device_merge_removes_duplicate_tracker(
 
     The legacy entry is removed either way, so its device automations
     cannot be re-pointed with their device; the duplicate tracker is
-    removed with the merge and the person follows the survivor, as the
-    breaking change discloses.
+    removed with the merge, and the person is stripped of the removed
+    tracker by the person integration, as the breaking change
+    discloses.
     """
     _mock, ubus = mock_ubus_by_host
     hub = MockConfigEntry(
@@ -815,8 +821,7 @@ async def test_migration_device_merge_removes_duplicate_tracker(
 
     # The legacy device was merged into the established one and the
     # duplicate tracker was removed with it; no repair is raised for
-    # the broken device automation, and the person follows the
-    # survivor.
+    # the broken device automation.
     assert hub.state is ConfigEntryState.LOADED
     assert device_registry.async_get(legacy_device.id) is None
     assert entity_registry.async_get(legacy_tracker.entity_id) is None
@@ -832,13 +837,16 @@ async def test_migration_device_merge_removes_duplicate_tracker(
         )
         is None
     )
+    # The survivor keeps tracking the client, and the person is not
+    # re-pointed: the person integration strips the removed tracker.
+    assert hass.states.get(established.entity_id).state == STATE_HOME
     storage_person = next(
         item
         for item in hass.data[PERSON_DOMAIN].storage_collection.async_items()
         if item["id"] == person["id"]
     )
-    assert storage_person["device_trackers"] == [established.entity_id]
-    assert hass.states.get("person.phone").state == STATE_HOME
+    assert storage_person["device_trackers"] == []
+    assert hass.states.get("person.phone").state == STATE_UNKNOWN
     trackers = [
         registry_entry
         for registry_entry in entity_registry.entities.values()

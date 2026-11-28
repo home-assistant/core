@@ -11,15 +11,9 @@ from homeassistant.components.device_tracker import (
     AsyncSeeCallback,
     ScannerEntity,
 )
-from homeassistant.components.person import (
-    CONF_DEVICE_TRACKERS as PERSON_TRACKERS,
-    DOMAIN as PERSON_DOMAIN,
-    PersonData,
-)
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
-    CONF_ID,
     CONF_PASSWORD,
     CONF_SSL,
     CONF_USERNAME,
@@ -119,8 +113,8 @@ async def async_setup_scanner(
     return True
 
 
-async def _async_migrate_unique_ids(
-    hass: HomeAssistant,
+@callback
+def _async_migrate_unique_ids(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     config_entry_id: str,
@@ -130,8 +124,7 @@ async def _async_migrate_unique_ids(
     Trackers created before MACs were normalized keep the router's raw
     case; re-pointing the unique id reuses the entity, with its entity
     id and customizations, instead of creating a duplicate. Duplicates
-    are removed with their devices; the storage persons that tracked
-    them are re-pointed at the survivor.
+    are removed with their devices.
     """
     by_mac: dict[str, list[er.RegistryEntry]] = {}
     for registry_entry in er.async_entries_for_config_entry(
@@ -164,13 +157,6 @@ async def _async_migrate_unique_ids(
         survivor = min(candidates, key=lambda entry: entry.created_at)
         for entry in entries:
             if entry is not survivor:
-                # The storage persons are re-pointed at the survivor;
-                # YAML persons and automations referencing the
-                # duplicate are broken, as disclosed in the breaking
-                # change.
-                await _async_repoint_person_trackers(
-                    hass, entry.entity_id, survivor.entity_id
-                )
                 entity_registry.async_remove(entry.entity_id)
                 _async_merge_device(device_registry, entity_registry, entry, survivor)
         if survivor.unique_id != survivor.unique_id.lower():
@@ -231,39 +217,6 @@ def _async_merge_device(
 
 
 @callback
-def _async_person_data(hass: HomeAssistant) -> PersonData | None:
-    """Return the person integration's runtime data, if it is set up."""
-    data = hass.data.get(PERSON_DOMAIN)
-    if isinstance(data, PersonData):
-        return data
-    return None
-
-
-async def _async_repoint_person_trackers(
-    hass: HomeAssistant, removed_entity_id: str, survivor_entity_id: str
-) -> None:
-    """Re-point the persons' tracker lists at the surviving tracker.
-
-    Persons from the YAML configuration cannot be re-pointed; the
-    duplicate is removed and the breaking change covers them.
-    """
-    if (person_data := _async_person_data(hass)) is None:
-        return
-    for person in person_data.storage_collection.async_items():
-        if removed_entity_id not in person.get(PERSON_TRACKERS, []):
-            continue
-        await person_data.storage_collection.async_update_item(
-            person[CONF_ID],
-            {
-                PERSON_TRACKERS: [
-                    survivor_entity_id if tracker == removed_entity_id else tracker
-                    for tracker in person[PERSON_TRACKERS]
-                ]
-            },
-        )
-
-
-@callback
 def _async_rename_devices(
     coordinator: UbusDataUpdateCoordinator,
     device_registry: dr.DeviceRegistry,
@@ -300,9 +253,7 @@ async def async_setup_entry(
     entity_registry = er.async_get(hass)
     coordinator: UbusDataUpdateCoordinator = config_entry.runtime_data
 
-    await _async_migrate_unique_ids(
-        hass, device_registry, entity_registry, config_entry.entry_id
-    )
+    _async_migrate_unique_ids(device_registry, entity_registry, config_entry.entry_id)
 
     @callback
     def _async_update_devices() -> None:
