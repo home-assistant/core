@@ -51,7 +51,6 @@ FEATURES_MAIN = (
     | MediaPlayerEntityFeature.VOLUME_MUTE
     | MediaPlayerEntityFeature.TURN_ON
     | MediaPlayerEntityFeature.TURN_OFF
-    | MediaPlayerEntityFeature.SELECT_SOUND_MODE
     | MediaPlayerEntityFeature.SELECT_SOURCE
 )
 
@@ -196,7 +195,7 @@ class LyngdorfZoneBDevice(LyngdorfDevice):
     @property
     def state(self) -> MediaPlayerState | None:
         """Return the state of the device."""
-        if self._zone_b.power_on:
+        if self._zone_b.power.value:
             return MediaPlayerState.ON
         return MediaPlayerState.OFF
 
@@ -204,7 +203,7 @@ class LyngdorfZoneBDevice(LyngdorfDevice):
     @property
     def is_volume_muted(self) -> bool | None:
         """Return boolean if volume is currently muted."""
-        return self._zone_b.muted
+        return self._zone_b.mute.value
 
     @override
     @property
@@ -218,12 +217,12 @@ class LyngdorfZoneBDevice(LyngdorfDevice):
     @override
     async def async_turn_on(self) -> None:
         """Turn on media player."""
-        await self._zone_b.set_power(True)
+        await self._zone_b.power.set(True)
 
     @override
     async def async_turn_off(self) -> None:
         """Turn off media player."""
-        await self._zone_b.set_power(False)
+        await self._zone_b.power.set(False)
 
     @override
     async def async_volume_up(self) -> None:
@@ -244,27 +243,27 @@ class LyngdorfZoneBDevice(LyngdorfDevice):
     @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Send mute command."""
-        await self._zone_b.set_muted(mute)
+        await self._zone_b.mute.set(mute)
 
     @override
     @property
     def source(self) -> str | None:
         """Return the current input source."""
-        return self._zone_b.source
+        return self._zone_b.source_selector.value
 
     @override
     @property
     def source_list(self) -> list[str] | None:
         """Return the list of available sources."""
-        return self._zone_b.sources
+        return self._zone_b.source_selector.options
 
     @override
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
         try:
-            await self._zone_b.set_source(source)
+            await self._zone_b.source_selector.select(source)
         except LyngdorfInvalidValueError as err:
-            raise _invalid_option(source, self._zone_b.sources) from err
+            raise _invalid_option(source, self._zone_b.source_selector.options) from err
 
 
 class LyngdorfMainDevice(LyngdorfDevice):
@@ -320,6 +319,8 @@ class LyngdorfMainDevice(LyngdorfDevice):
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Return the features the device currently offers."""
         features = FEATURES_MAIN
+        if self._receiver.sound_mode_selector is not None:
+            features |= MediaPlayerEntityFeature.SELECT_SOUND_MODE
         player = self._receiver.player
         if player is None or (now_playing := player.now_playing) is None:
             return features
@@ -337,7 +338,7 @@ class LyngdorfMainDevice(LyngdorfDevice):
     @property
     def state(self) -> MediaPlayerState | None:
         """Return the state of the device."""
-        if not self._receiver.power_on:
+        if not self._receiver.power.value:
             return MediaPlayerState.OFF
         if (now_playing := self._now_playing) is None or now_playing.state is None:
             return MediaPlayerState.ON
@@ -467,19 +468,21 @@ class LyngdorfMainDevice(LyngdorfDevice):
     @property
     def source_list(self) -> list[str] | None:
         """Return a list of available input sources."""
-        return self._receiver.sources
+        return self._receiver.source_selector.options
 
     @override
     @property
     def sound_mode_list(self) -> list[str] | None:
         """Return a list of available sound modes."""
-        return self._receiver.sound_modes
+        if (selector := self._receiver.sound_mode_selector) is None:
+            return None
+        return selector.options
 
     @override
     @property
     def is_volume_muted(self) -> bool | None:
         """Return boolean if volume is currently muted."""
-        return self._receiver.muted
+        return self._receiver.mute.value
 
     @override
     @property
@@ -494,23 +497,25 @@ class LyngdorfMainDevice(LyngdorfDevice):
     @property
     def source(self) -> str | None:
         """Return the current input source."""
-        return self._receiver.source
+        return self._receiver.source_selector.value
 
     @override
     @property
     def sound_mode(self) -> str | None:
         """Return the current sound mode."""
-        return self._receiver.sound_mode
+        if (selector := self._receiver.sound_mode_selector) is None:
+            return None
+        return selector.value
 
     @override
     async def async_turn_on(self) -> None:
         """Turn on media player."""
-        await self._receiver.set_power(True)
+        await self._receiver.power.set(True)
 
     @override
     async def async_turn_off(self) -> None:
         """Turn off media player."""
-        await self._receiver.set_power(False)
+        await self._receiver.power.set(False)
 
     @override
     async def async_volume_up(self) -> None:
@@ -531,20 +536,25 @@ class LyngdorfMainDevice(LyngdorfDevice):
     @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Send mute command."""
-        await self._receiver.set_muted(mute)
+        await self._receiver.mute.set(mute)
 
     @override
     async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select sound mode."""
+        selector = self._receiver.sound_mode_selector
+        if TYPE_CHECKING:
+            assert selector is not None
         try:
-            await self._receiver.set_sound_mode(sound_mode)
+            await selector.select(sound_mode)
         except LyngdorfInvalidValueError as err:
-            raise _invalid_option(sound_mode, self._receiver.sound_modes) from err
+            raise _invalid_option(sound_mode, selector.options) from err
 
     @override
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
         try:
-            await self._receiver.set_source(source)
+            await self._receiver.source_selector.select(source)
         except LyngdorfInvalidValueError as err:
-            raise _invalid_option(source, self._receiver.sources) from err
+            raise _invalid_option(
+                source, self._receiver.source_selector.options
+            ) from err

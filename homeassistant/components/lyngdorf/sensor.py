@@ -4,18 +4,21 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, override
 
-from lyngdorf import LyngdorfReceiver, VolumeControl
+from lyngdorf import LyngdorfReceiver, Reading, VolumeControl
 
 from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
 from homeassistant.const import EntityCategory, UnitOfSoundPressure
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .entity import LyngdorfEntity
 from .models import LyngdorfConfigEntry
 
@@ -26,8 +29,8 @@ PARALLEL_UPDATES = 0
 class LyngdorfSensorEntityDescription(SensorEntityDescription):
     """Describe a Lyngdorf sensor entity."""
 
-    value_fn: Callable[[LyngdorfReceiver], str | float | None]
-    options_fn: Callable[[LyngdorfReceiver], list[str]] | None = None
+    value_fn: Callable[[LyngdorfReceiver], float | None] | None = None
+    reading_fn: Callable[[LyngdorfReceiver], Reading | None] | None = None
 
 
 def _known(value: str | None, options: list[str]) -> str | None:
@@ -39,37 +42,34 @@ MAIN_ZONE_SENSORS: tuple[LyngdorfSensorEntityDescription, ...] = (
     LyngdorfSensorEntityDescription(
         key="audio_information",
         translation_key="audio_information",
-        value_fn=lambda r: r.audio_information,
+        reading_fn=lambda r: r.audio_information_reading,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     LyngdorfSensorEntityDescription(
         key="video_information",
         translation_key="video_information",
-        value_fn=lambda r: r.video_information,
+        reading_fn=lambda r: r.video_information_reading,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     LyngdorfSensorEntityDescription(
         key="audio_input",
         translation_key="audio_input",
         device_class=SensorDeviceClass.ENUM,
-        value_fn=lambda r: _known(r.audio_input, r.audio_inputs),
-        options_fn=lambda r: r.audio_inputs,
+        reading_fn=lambda r: r.audio_input_reading,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     LyngdorfSensorEntityDescription(
         key="video_input",
         translation_key="video_input",
         device_class=SensorDeviceClass.ENUM,
-        value_fn=lambda r: _known(r.video_input, r.video_inputs),
-        options_fn=lambda r: r.video_inputs,
+        reading_fn=lambda r: r.video_input_reading,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     LyngdorfSensorEntityDescription(
         key="streaming_source",
         translation_key="streaming_source",
         device_class=SensorDeviceClass.ENUM,
-        value_fn=lambda r: _known(r.streaming_source, r.stream_types),
-        options_fn=lambda r: r.stream_types,
+        reading_fn=lambda r: r.streaming_source_reading,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
@@ -79,20 +79,14 @@ ZONE_B_SENSORS: tuple[LyngdorfSensorEntityDescription, ...] = (
         key="zone_b_audio_input",
         translation_key="zone_b_audio_input",
         device_class=SensorDeviceClass.ENUM,
-        value_fn=lambda r: (
-            _known(zb.audio_input, r.audio_inputs) if (zb := r.zone_b) else None
-        ),
-        options_fn=lambda r: r.audio_inputs,
+        reading_fn=lambda r: zb.audio_input_reading if (zb := r.zone_b) else None,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     LyngdorfSensorEntityDescription(
         key="zone_b_streaming_source",
         translation_key="zone_b_streaming_source",
         device_class=SensorDeviceClass.ENUM,
-        value_fn=lambda r: (
-            _known(zb.streaming_source, r.stream_types) if (zb := r.zone_b) else None
-        ),
-        options_fn=lambda r: r.stream_types,
+        reading_fn=lambda r: zb.streaming_source_reading if (zb := r.zone_b) else None,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
@@ -121,34 +115,38 @@ async def async_setup_entry(
 ) -> None:
     """Set up Lyngdorf sensors from a config entry."""
     runtime_data = config_entry.runtime_data
+    receiver = runtime_data.receiver
+    registry = er.async_get(hass)
 
-    entities: list[LyngdorfSensor] = [
-        LyngdorfSensor(
-            runtime_data.receiver, config_entry, runtime_data.device_info, description
-        )
-        for description in MAIN_ZONE_SENSORS
-    ]
-    if isinstance(runtime_data.receiver.volume, VolumeControl):
+    descriptions = list(MAIN_ZONE_SENSORS)
+    # Zone B sensors stay on the main device so they read "Zone B audio input"
+    # rather than repeating the zone in the Zone B device's own name.
+    if runtime_data.zone_b_device_info is not None:
+        descriptions.extend(ZONE_B_SENSORS)
+
+    entities: list[LyngdorfSensor] = []
+    for description in descriptions:
+        if TYPE_CHECKING:
+            assert description.reading_fn
+        if description.reading_fn(receiver) is not None:
+            entities.append(
+                LyngdorfSensor(
+                    receiver, config_entry, runtime_data.device_info, description
+                )
+            )
+        elif entity_id := registry.async_get_entity_id(
+            SENSOR_DOMAIN, DOMAIN, f"{config_entry.unique_id}_{description.key}"
+        ):
+            registry.async_remove(entity_id)
+
+    if isinstance(receiver.volume, VolumeControl):
         entities.append(
             LyngdorfSensor(
-                runtime_data.receiver,
+                receiver,
                 config_entry,
                 runtime_data.device_info,
                 MAXIMUM_VOLUME_SENSOR,
             )
-        )
-
-    # Zone B sensors stay on the main device so they read "Zone B audio input"
-    # rather than repeating the zone in the Zone B device's own name.
-    if runtime_data.zone_b_device_info is not None:
-        entities.extend(
-            LyngdorfSensor(
-                runtime_data.receiver,
-                config_entry,
-                runtime_data.device_info,
-                description,
-            )
-            for description in ZONE_B_SENSORS
         )
 
     async_add_entities(entities)
@@ -177,12 +175,24 @@ class LyngdorfSensor(LyngdorfEntity, SensorEntity):
     @property
     def options(self) -> list[str] | None:
         """Return the device-reported options for enum sensors."""
-        if (options_fn := self.entity_description.options_fn) is None:
+        if self.entity_description.device_class is not SensorDeviceClass.ENUM:
             return None
-        return options_fn(self._receiver)
+        reading = self._reading()
+        return reading.options if reading is not None else None
 
     @override
     @property
     def native_value(self) -> str | float | None:
         """Return the current sensor value."""
-        return self.entity_description.value_fn(self._receiver)
+        if (value_fn := self.entity_description.value_fn) is not None:
+            return value_fn(self._receiver)
+        if (reading := self._reading()) is None:
+            return None
+        if self.entity_description.device_class is SensorDeviceClass.ENUM:
+            return _known(reading.value, reading.options)
+        return reading.value
+
+    def _reading(self) -> Reading | None:
+        if (reading_fn := self.entity_description.reading_fn) is None:
+            return None
+        return reading_fn(self._receiver)
