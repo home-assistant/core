@@ -4,6 +4,7 @@ from collections.abc import Callable
 from typing import Any
 from unittest.mock import patch
 
+from midealocal.base_classes.climate import MideaHVACAction
 from midealocal.const import DeviceType
 from midealocal.devices.ac import DeviceAttributes as ACAttributes
 from midealocal.devices.c3 import DeviceAttributes as C3Attributes
@@ -18,6 +19,7 @@ from homeassistant.components.climate import (
     ATTR_CURRENT_HUMIDITY,
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
+    ATTR_HVAC_ACTION,
     ATTR_HVAC_MODES,
     ATTR_MAX_TEMP,
     ATTR_MIN_TEMP,
@@ -45,6 +47,7 @@ from homeassistant.components.climate import (
     SWING_VERTICAL,
     ClimateService,
     ClimateServiceArgument,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.components.midea.climate import FAN_FULL_SPEED, FAN_SILENT
@@ -54,7 +57,7 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-from .conftest import DummyDevice, entity_entries
+from .conftest import DummyDevice, SetDeviceAttribute, default_ac_device, entity_entries
 from .const import TEST_DEVICE_ID
 
 
@@ -830,6 +833,90 @@ async def test_ac_hvac_mode_branches(
 
     assert (state := hass.states.get(entity_entry.entity_id))
     assert state.state == expected_state
+
+
+@pytest.mark.parametrize(
+    ("hvac_actions", "expected"),
+    [
+        pytest.param({None: MideaHVACAction.HEATING}, HVACAction.HEATING, id="heating"),
+        pytest.param({None: MideaHVACAction.COOLING}, HVACAction.COOLING, id="cooling"),
+        pytest.param({None: MideaHVACAction.DRYING}, HVACAction.DRYING, id="drying"),
+        pytest.param({None: MideaHVACAction.FAN}, HVACAction.FAN, id="fan"),
+        pytest.param({None: MideaHVACAction.IDLE}, HVACAction.IDLE, id="idle"),
+        pytest.param({None: MideaHVACAction.OFF}, HVACAction.OFF, id="off"),
+        pytest.param({}, None, id="not_reported"),
+    ],
+)
+async def test_ac_hvac_action(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+    hvac_actions: dict[int | None, str],
+    expected: HVACAction | None,
+) -> None:
+    """Test AC hvac_action is the action the device library reports."""
+    device = default_ac_device()
+    device.hvac_actions = hvac_actions
+    config_entry = mock_config_entry(device)
+    await setup_integration(hass, config_entry, device)
+    entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_climate"]
+
+    assert (state := hass.states.get(entity_entry.entity_id))
+    assert state.attributes.get(ATTR_HVAC_ACTION) == expected
+
+
+async def test_ac_hvac_action_follows_device_updates(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+    set_device_attribute: SetDeviceAttribute,
+) -> None:
+    """Test AC hvac_action changes when the device reports an update."""
+    device = default_ac_device()
+    device.hvac_actions[None] = MideaHVACAction.IDLE
+    config_entry = mock_config_entry(device)
+    await setup_integration(hass, config_entry, device)
+    entity_id = entity_entries(hass, config_entry)[
+        f"{TEST_DEVICE_ID}_climate"
+    ].entity_id
+
+    assert (state := hass.states.get(entity_id))
+    assert state.attributes.get(ATTR_HVAC_ACTION) == HVACAction.IDLE
+
+    device.hvac_actions[None] = MideaHVACAction.COOLING
+    await set_device_attribute(device, ACAttributes.compressor_frequency, 52)
+    assert (state := hass.states.get(entity_id))
+    assert state.attributes.get(ATTR_HVAC_ACTION) == HVACAction.COOLING
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_c3_hvac_action_per_zone(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
+    """Test each C3 zone entity reads the hvac action for its own zone."""
+    device = DummyDevice(
+        DeviceType.C3,
+        attributes={
+            C3Attributes.zone_temp_type: [True, False],
+            C3Attributes.mode: 1,
+            C3Attributes.zone1_power: True,
+            C3Attributes.zone2_power: True,
+            C3Attributes.target_temperature: [22, 23],
+            C3Attributes.temp_tw_out: 21.5,
+        },
+    )
+    device.hvac_actions = {0: MideaHVACAction.HEATING, 1: MideaHVACAction.IDLE}
+    config_entry = mock_config_entry(device)
+    await setup_integration(hass, config_entry, device)
+    entries = entity_entries(hass, config_entry)
+
+    assert (
+        zone1 := hass.states.get(entries[f"{TEST_DEVICE_ID}_climate_zone1"].entity_id)
+    )
+    assert zone1.attributes.get(ATTR_HVAC_ACTION) == HVACAction.HEATING
+    assert (
+        zone2 := hass.states.get(entries[f"{TEST_DEVICE_ID}_climate_zone2"].entity_id)
+    )
+    assert zone2.attributes.get(ATTR_HVAC_ACTION) == HVACAction.IDLE
 
 
 async def test_ac_fan_mode_invalid_type_returns_none(

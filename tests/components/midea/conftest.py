@@ -54,6 +54,7 @@ class DummyDevice:
         self.raw_hvac_modes = ["off", "auto", "cool", "dry", "heat", "fan_only"]
         self.raw_fan_modes = ["low", "medium", "high", "auto"]
         self.raw_fan_mode: str | None = "high"
+        self.hvac_actions: dict[int | None, str] = {}
         self.modes = [
             "Auto",
             "ECO",
@@ -90,6 +91,10 @@ class DummyDevice:
         self.attributes[attr] = value
         self.notify_update({attr: value})
         self.calls.append(("set_attribute", attr, value))
+
+    def raw_hvac_action(self, zone: int | None = None) -> str | None:
+        """Return the fake hvac action for a zone."""
+        return self.hvac_actions.get(zone)
 
     def set_raw_target_temperature(self, **kwargs: Any) -> None:
         """Record set target temperature call."""

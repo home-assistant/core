@@ -30,6 +30,7 @@ from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityDescription,
     ClimateEntityFeature,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.const import (
@@ -195,6 +196,15 @@ class MideaClimate(MideaEntity, ClimateEntity):
         if isinstance(mode, int):
             return self._protocol_mode_to_hvac(mode)
         return None
+
+    @property
+    @override
+    def hvac_action(self) -> HVACAction | None:
+        """Midea Climate hvac action, as reported by the device library."""
+        action = self._device.raw_hvac_action(zone=self._zone)
+        if action is None:
+            return None
+        return HVACAction(action)
 
     def _protocol_mode_to_hvac(self, mode: int) -> HVACMode | None:
         """Convert protocol mode value to Home Assistant HVAC mode."""
