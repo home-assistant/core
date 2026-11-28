@@ -48,9 +48,12 @@ LLM_API_NAME = "KNX"
 API_PROMPT = (
     "Tools to inspect a KNX installation: stored bus telegrams, the loaded ETS "
     "project (group addresses, devices and their channels, communication "
-    "objects, functions, topology), KNX data point types, and live bus "
+    "objects, functions, building structure, topology), KNX data point types, "
+    "and live bus "
     'reads and writes. Address formats: group addresses like "1/2/3", individual '
-    'device addresses like "1.1.5", DPTs like "9.001".\n'
+    'device addresses like "1.1.5", DPTs like "9.001". A space_id names a '
+    "building, floor or room: find it with list_spaces, resolve it with "
+    "describe_space.\n"
     "Tools to create KNX entities in Home Assistant: start from "
     "list_entity_suggestions and pass a suggestion id to create_entity, or look "
     "up the options of a platform with get_entity_schema and the group addresses "
@@ -737,7 +740,8 @@ def _tool_specs() -> list[_ToolSpec]:
         _ToolSpec(
             "list_devices",
             "List devices",
-            "List project devices. Text matches individual address/name/manufacturer.",
+            "List project devices. Text matches individual address/name/manufacturer; "
+            "space_id restricts to the devices placed in a space.",
             _schema_from_dataclass(xknxproject_mcp.DeviceFilter),
             _project_func(xknxproject_mcp.list_devices),
             _READ_ONLY,
@@ -834,7 +838,8 @@ def _tool_specs() -> list[_ToolSpec]:
         _ToolSpec(
             "list_functions",
             "List functions",
-            "List project functions/functional blocks. Text matches identifier/name/type.",
+            "List project functions/functional blocks. Text matches "
+            "identifier/name/type; space_id restricts to the functions of a space.",
             _schema_from_dataclass(xknxproject_mcp.FunctionFilter),
             _project_func(xknxproject_mcp.list_functions),
             _READ_ONLY,
@@ -855,6 +860,31 @@ def _tool_specs() -> list[_ToolSpec]:
             _project_func(
                 xknxproject_mcp.describe_function, positional=("identifier",)
             ),
+            _READ_ONLY,
+        ),
+        _ToolSpec(
+            "list_spaces",
+            "List spaces",
+            "List the spaces of the building structure (buildings, floors, rooms, "
+            "...), each with its identifier, the names of the spaces enclosing it "
+            "and the devices and functions placed directly in it.",
+            _schema_from_dataclass(xknxproject_mcp.SpaceFilter),
+            _project_func(xknxproject_mcp.list_spaces),
+            _READ_ONLY,
+        ),
+        _ToolSpec(
+            "describe_space",
+            "Describe a space",
+            "Resolve one space by identifier, e.g. the space_id of a device or "
+            "function, to its name, the spaces enclosing it and its sub-spaces.",
+            probatio.Schema(
+                {
+                    probatio.Required(
+                        "identifier", description="Space identifier to resolve."
+                    ): str
+                }
+            ),
+            _project_func(xknxproject_mcp.describe_space, positional=("identifier",)),
             _READ_ONLY,
         ),
         _ToolSpec(
