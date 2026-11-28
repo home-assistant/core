@@ -676,7 +676,7 @@ async def test_transient_error_in_reauth_keeps_the_stored_session(
 
     built.session.clear_persistence.assert_not_called()
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "unknown"}
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_reauth_login_challenged_asks_for_a_code(
