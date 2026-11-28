@@ -851,3 +851,56 @@ async def test_psi_sensor_unavailable(
         assert state.state == STATE_UNKNOWN
         state = hass.states.get("sensor.system_monitor_io_pressure_some_total")
         assert state.state == STATE_UNKNOWN
+
+
+async def test_dynamic_network_interface_recovery(
+    hass: HomeAssistant,
+    mock_psutil: Mock,
+    mock_os: Mock,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test previously enabled network sensors recover when interface appears."""
+    entry = MockConfigEntry(title="System Monitor", domain=DOMAIN, data={}, options={})
+    entry.add_to_hass(hass)
+
+    ppp0_in = entity_registry.async_get_or_create(
+        SENSOR_DOMAIN, DOMAIN, "network_in_ppp0", config_entry=entry
+    )
+    ppp0_ip = entity_registry.async_get_or_create(
+        SENSOR_DOMAIN, DOMAIN, "ipv4_address_ppp0", config_entry=entry
+    )
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = entry.runtime_data.coordinator
+    assert coordinator.has_pending_network is True
+    assert hass.states.get(ppp0_in.entity_id) is None
+    assert hass.states.get(ppp0_ip.entity_id) is None
+
+    # ppp0 connects alongside an unrelated ephemeral tun0 interface
+    mock_psutil.net_io_counters.return_value["ppp0"] = snetio(
+        50 * 1024**2, 100 * 1024**2, 25, 50, 0, 0, 0, 0
+    )
+    mock_psutil.net_io_counters.return_value["tun0"] = snetio(
+        10 * 1024**2, 10 * 1024**2, 5, 5, 0, 0, 0, 0
+    )
+    mock_psutil.net_if_addrs.return_value["ppp0"] = [
+        snicaddr(socket.AF_INET, "192.0.2.10", "255.255.255.0", "192.0.2.255", None)
+    ]
+    mock_psutil.net_if_addrs.return_value["tun0"] = [
+        snicaddr(socket.AF_INET, "198.51.100.2", "255.255.255.0", None, None)
+    ]
+
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(ppp0_in.entity_id).state == "100.0"
+    assert hass.states.get(ppp0_ip.entity_id).state == "192.0.2.10"
+    assert (
+        entity_registry.async_get_entity_id(SENSOR_DOMAIN, DOMAIN, "network_in_tun0")
+        is None
+    )
+    assert coordinator.has_pending_network is False

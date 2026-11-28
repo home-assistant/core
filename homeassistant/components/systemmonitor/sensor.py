@@ -80,6 +80,8 @@ SENSORS_WITH_ARG = {
     **dict.fromkeys(NET_IO_TYPES, "network_arguments"),
 }
 
+NETWORK_SENSOR_TYPES = (*NET_IO_TYPES, "ipv4_address", "ipv6_address")
+
 
 @lru_cache
 def get_cpu_icon() -> Literal["mdi:cpu-64-bit", "mdi:cpu-32-bit"]:
@@ -718,6 +720,35 @@ IF_ADDRS_FAMILY = {
 }
 
 
+def _restore_network_entities(
+    coordinator: SystemMonitorCoordinator,
+    pending_network: set[str],
+    add_entity: Callable[[str, str, list[SystemMonitorSensor]], None],
+) -> list[SystemMonitorSensor]:
+    """Build sensor entities for newly appeared interfaces that have pending IDs."""
+    discovered = (coordinator.data.io_counters or {}).keys() | (
+        coordinator.data.addresses or {}
+    ).keys()
+    new_entities: list[SystemMonitorSensor] = []
+
+    for interface in discovered:
+        if interface.startswith("veth"):
+            continue
+        if not any(
+            slugify(f"{_type}_{interface}") in pending_network
+            for _type in NETWORK_SENSOR_TYPES
+        ):
+            continue
+        for _type in NETWORK_SENSOR_TYPES:
+            add_entity(_type, interface, new_entities)
+
+    # Remove pending networks for entities that we just added.
+    pending_network.difference_update({e.unique_id for e in new_entities})
+    coordinator.has_pending_network = bool(pending_network)
+
+    return new_entities
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SystemMonitorConfigEntry,
@@ -749,25 +780,30 @@ async def async_setup_entry(
         CONF_PROCESS, []
     )
 
+    def add_sensor_entity(
+        _type: str,
+        argument: str,
+        target: list[SystemMonitorSensor],
+    ) -> None:
+        is_enabled = check_legacy_resource(f"{_type}_{argument}", legacy_resources)
+        if (_add := slugify(f"{_type}_{argument}")) not in loaded_resources:
+            loaded_resources.add(_add)
+            target.append(
+                SystemMonitorSensor(
+                    coordinator,
+                    SENSOR_TYPES[_type],
+                    entry.entry_id,
+                    argument,
+                    is_enabled,
+                )
+            )
+
     _LOGGER.debug("Setup from options %s", entry.options)
     for _type, sensor_description in SENSOR_TYPES.items():
         for sensor_type, sensor_argument in SENSORS_WITH_ARG.items():
             if _type.startswith(sensor_type):
                 for argument in startup_arguments[sensor_argument]:
-                    is_enabled = check_legacy_resource(
-                        f"{_type}_{argument}", legacy_resources
-                    )
-                    if (_add := slugify(f"{_type}_{argument}")) not in loaded_resources:
-                        loaded_resources.add(_add)
-                        entities.append(
-                            SystemMonitorSensor(
-                                coordinator,
-                                sensor_description,
-                                entry.entry_id,
-                                argument,
-                                is_enabled,
-                            )
-                        )
+                    add_sensor_entity(_type, argument, entities)
                 continue
 
         if _type.startswith(SENSORS_NO_ARG):
@@ -829,6 +865,9 @@ async def async_setup_entry(
                     )
                 )
 
+    pending_network: set[str] = set()
+    net_prefixes = tuple(f"{_type}_" for _type in NETWORK_SENSOR_TYPES)
+
     @callback
     def clean_obsolete_entities() -> None:
         """Remove entities which are disabled and not supported from setup."""
@@ -837,20 +876,57 @@ async def async_setup_entry(
             entry.entry_id
         )
         for entity in entities:
-            if (
-                entity.unique_id not in loaded_resources
-                and entity.disabled is True
-                and (
+            if entity.unique_id not in loaded_resources:
+                # We ignore entities that are disabled AND not present on the system
+                if entity.disabled is True and (
                     entity_id := entity_registry.async_get_entity_id(
                         SENSOR_DOMAIN, DOMAIN, entity.unique_id
                     )
-                )
-            ):
-                entity_registry.async_remove(entity_id)
+                ):
+                    entity_registry.async_remove(entity_id)
+                # Missing enabled entities may appear later, so we monitor them.
+                elif (
+                    not entity.disabled
+                    and entity.domain == SENSOR_DOMAIN
+                    and entity.unique_id.startswith(net_prefixes)
+                    and not any(
+                        entity.unique_id.startswith(f"{_type}_veth")
+                        for _type in NETWORK_SENSOR_TYPES
+                    )
+                ):
+                    pending_network.add(entity.unique_id)
+                    coordinator.has_pending_network = True
 
     clean_obsolete_entities()
 
     async_add_entities(entities)
+
+    remove_network_listener: Callable[[], None] | None = None
+
+    @callback
+    def _async_remove_network_listener() -> None:
+        nonlocal remove_network_listener
+        if remove_network_listener is not None:
+            remove_network_listener()
+            remove_network_listener = None
+
+    @callback
+    def _async_check_new_network_interfaces() -> None:
+        """Restore enabled network entities when their interface appears."""
+        if new_entities := _restore_network_entities(
+            coordinator,
+            pending_network,
+            add_sensor_entity,
+        ):
+            async_add_entities(new_entities)
+        if not pending_network:
+            _async_remove_network_listener()
+
+    if pending_network:
+        remove_network_listener = coordinator.async_add_listener(
+            _async_check_new_network_interfaces
+        )
+        entry.async_on_unload(_async_remove_network_listener)
 
 
 class SystemMonitorSensor(CoordinatorEntity[SystemMonitorCoordinator], SensorEntity):
