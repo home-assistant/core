@@ -1,6 +1,6 @@
 """The tests for LG webOS TV automation triggers."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from pytest_homeassistant.common import MockEntity, MockEntityPlatform
@@ -21,9 +21,10 @@ async def test_webostv_turn_on_trigger_device_id(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
     device_registry: dr.DeviceRegistry,
-    client,
+    client: MagicMock,
 ) -> None:
     """Test for turn_on triggers by device_id firing."""
+    client.mac_addresses = {}
     entry = await setup_webostv(hass)
 
     device = device_registry.async_get_device_by_identifier(

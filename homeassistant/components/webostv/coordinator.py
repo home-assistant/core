@@ -51,6 +51,18 @@ class WebOsTvDataUpdateCoordinator(DataUpdateCoordinator[None]):
         self.client = client
         self.turn_on = PluggableAction(self._async_turn_on_changed)
 
+    @property
+    def mac_addresses(self) -> list[str]:
+        """Return the TV MAC addresses persisted in the device registry."""
+        device = dr.async_get(self.hass).async_get_device_by_identifier(
+            (DOMAIN, cast(str, self.config_entry.unique_id)), self.config_entry.entry_id
+        )
+        return [
+            value
+            for kind, value in (device.connections if device else ())
+            if kind == dr.CONNECTION_NETWORK_MAC
+        ]
+
     @override
     async def _async_update_data(self) -> None:
         """Connect to LG webOS TV if not connected."""
@@ -64,6 +76,7 @@ class WebOsTvDataUpdateCoordinator(DataUpdateCoordinator[None]):
             # automation triggers are attached only when Home Assistant is running
             if (
                 not self.turn_on
+                and not self.mac_addresses
                 and self.config_entry.state is ConfigEntryState.LOADED
                 and self.hass.state is CoreState.running
             ):
@@ -106,9 +119,8 @@ class WebOsTvDataUpdateCoordinator(DataUpdateCoordinator[None]):
             device_info.serial_number = serial_number
 
         if connections := {
-            (dr.CONNECTION_NETWORK_MAC, dr.format_mac(mac))
-            for key in ("wiredInfo", "wifiInfo")
-            if (mac := tv_info.connection.get(key, {}).get("macAddress"))
+            (dr.CONNECTION_NETWORK_MAC, mac)
+            for mac in self.client.mac_addresses.values()
         }:
             device_info.connections = connections
 

@@ -89,6 +89,9 @@
     },
     "unhandled_trigger_type": {
       "message": "Unhandled trigger type: {trigger_type}"
+    },
+    "wake_failed": {
+      "message": "Failed to send the wake-up request to the TV."
     }
   },
   "options": {
