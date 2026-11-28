@@ -8,19 +8,17 @@ from typing import Any, override
 from pydaikin.daikin_base import Appliance
 
 from homeassistant.components.climate import (
-    ATTR_FAN_MODE,
-    ATTR_HVAC_MODE,
-    ATTR_SWING_MODE,
     PRESET_AWAY,
     PRESET_BOOST,
     PRESET_ECO,
     PRESET_NONE,
     ClimateEntity,
     ClimateEntityFeature,
+    ClimateServiceArgument,
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -189,9 +187,9 @@ class DaikinClimate(DaikinEntity, ClimateEntity):
         self._attr_fan_modes = self.device.fan_rate
         self._attr_swing_modes = self.device.swing_modes
         self._list: dict[str, list[Any]] = {
-            ATTR_HVAC_MODE: self._attr_hvac_modes,
-            ATTR_FAN_MODE: self._attr_fan_modes,
-            ATTR_SWING_MODE: self._attr_swing_modes,
+            ClimateServiceArgument.HVAC_MODE: self._attr_hvac_modes,
+            ClimateServiceArgument.FAN_MODE: self._attr_fan_modes,
+            ClimateServiceArgument.SWING_MODE: self._attr_swing_modes,
         }
 
         self._attr_supported_features = (
@@ -215,20 +213,20 @@ class DaikinClimate(DaikinEntity, ClimateEntity):
         values: dict[str, Any] = {}
 
         for attr, daikin_attr in (
-            (ATTR_TEMPERATURE, DaikinAttribute.TARGET_TEMPERATURE),
-            (ATTR_FAN_MODE, DaikinAttribute.FAN_MODE),
-            (ATTR_SWING_MODE, DaikinAttribute.SWING_MODE),
-            (ATTR_HVAC_MODE, DaikinAttribute.HVAC_MODE),
+            (ClimateServiceArgument.TEMPERATURE, DaikinAttribute.TARGET_TEMPERATURE),
+            (ClimateServiceArgument.FAN_MODE, DaikinAttribute.FAN_MODE),
+            (ClimateServiceArgument.SWING_MODE, DaikinAttribute.SWING_MODE),
+            (ClimateServiceArgument.HVAC_MODE, DaikinAttribute.HVAC_MODE),
         ):
             if (value := settings.get(attr)) is None:
                 continue
 
-            if attr == ATTR_TEMPERATURE:
+            if attr == ClimateServiceArgument.TEMPERATURE:
                 try:
                     values[daikin_attr] = format_target_temperature(value)
                 except ValueError:
                     _LOGGER.error("Invalid temperature %s", value)
-            elif attr == ATTR_HVAC_MODE:
+            elif attr == ClimateServiceArgument.HVAC_MODE:
                 values[daikin_attr] = HA_STATE_TO_DAIKIN[value]
             elif value in self._list[attr]:
                 values[daikin_attr] = value.lower()
@@ -285,7 +283,7 @@ class DaikinClimate(DaikinEntity, ClimateEntity):
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set HVAC mode."""
-        await self._set({ATTR_HVAC_MODE: hvac_mode})
+        await self._set({ClimateServiceArgument.HVAC_MODE: hvac_mode})
 
     @property
     @override
@@ -296,7 +294,7 @@ class DaikinClimate(DaikinEntity, ClimateEntity):
     @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set fan mode."""
-        await self._set({ATTR_FAN_MODE: fan_mode})
+        await self._set({ClimateServiceArgument.FAN_MODE: fan_mode})
 
     @property
     @override
@@ -307,7 +305,7 @@ class DaikinClimate(DaikinEntity, ClimateEntity):
     @override
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new target temperature."""
-        await self._set({ATTR_SWING_MODE: swing_mode})
+        await self._set({ClimateServiceArgument.SWING_MODE: swing_mode})
 
     @property
     @override
@@ -484,7 +482,7 @@ class DaikinZoneClimate(DaikinEntity, ClimateEntity):
     @daikin_exception_handler
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the zone temperature."""
-        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
+        if (temperature := kwargs.get(ClimateServiceArgument.TEMPERATURE)) is None:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="zone_temperature_missing",
