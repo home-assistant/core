@@ -270,6 +270,7 @@ FLOWS = {
         "flume",
         "fluss",
         "flux_led",
+        "fmd",
         "folder",
         "folder_watcher",
         "foreca",
