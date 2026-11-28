@@ -169,7 +169,9 @@
             "middle": "Middle",
             "off": "[%key:common::state::off%]",
             "on": "[%key:common::state::on%]",
-            "top": "Top"
+            "quiet": "Quiet",
+            "top": "Top",
+            "turbo": "Turbo"
           }
         },
         "fan_modes": {
