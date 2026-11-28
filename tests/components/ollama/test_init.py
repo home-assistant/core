@@ -21,7 +21,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er, llm
 from homeassistant.helpers.device_registry import DeviceEntryDisabler
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
-from homeassistant.setup import async_setup_component
 
 from . import TEST_OPTIONS
 
@@ -58,7 +57,7 @@ async def test_init_error(
         "ollama.AsyncClient.list",
         side_effect=side_effect,
     ):
-        assert await async_setup_component(hass, ollama.DOMAIN, {})
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
         assert error in caplog.text
 
@@ -93,7 +92,7 @@ async def test_init_without_api_key(
     with patch("homeassistant.components.ollama.ollama.AsyncClient") as mock_client:
         mock_client.return_value.list = AsyncMock(return_value={"models": []})
 
-        assert await async_setup_component(hass, ollama.DOMAIN, {})
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
         assert all(
@@ -110,7 +109,7 @@ async def test_init_connect_timeout(
     with patch("homeassistant.components.ollama.ollama.AsyncClient") as mock_client:
         mock_client.return_value.list = AsyncMock(return_value={"models": []})
 
-        assert await async_setup_component(hass, ollama.DOMAIN, {})
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
         assert mock_client.call_args.kwargs["timeout"] == Timeout(None, connect=5.0)

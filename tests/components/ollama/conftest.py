@@ -110,7 +110,7 @@ async def mock_init_component(hass: HomeAssistant, mock_config_entry: MockConfig
     with patch(
         "ollama.AsyncClient.list",
     ):
-        assert await async_setup_component(hass, ollama.DOMAIN, {})
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
         yield
 
