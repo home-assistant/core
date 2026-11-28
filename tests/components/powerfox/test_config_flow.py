@@ -1,5 +1,6 @@
 """Test the Powerfox config flow."""
 
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from powerfox import (
@@ -140,22 +141,28 @@ async def test_duplicate_entry_reconfiguration(
 
 
 @pytest.mark.parametrize(
-    ("exception", "error"),
+    ("device_list", "error"),
     [
-        (PowerfoxConnectionError, "cannot_connect"),
-        (PowerfoxAuthenticationError, "invalid_auth"),
-        (PowerfoxNoDataError, "no_devices"),
+        pytest.param(
+            {"side_effect": PowerfoxConnectionError}, "cannot_connect", id="connection"
+        ),
+        pytest.param(
+            {"side_effect": PowerfoxAuthenticationError}, "invalid_auth", id="auth"
+        ),
+        pytest.param({"side_effect": PowerfoxNoDataError}, "no_devices", id="no_data"),
+        pytest.param({"return_value": []}, "no_devices", id="empty_device_list"),
     ],
 )
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_exceptions(
     hass: HomeAssistant,
     mock_powerfox_client: AsyncMock,
-    exception: Exception,
+    device_list: dict[str, Any],
     error: str,
 ) -> None:
     """Test exceptions during config flow."""
-    mock_powerfox_client.all_devices.side_effect = exception
+    devices = mock_powerfox_client.all_devices.return_value
+    mock_powerfox_client.all_devices.configure_mock(**device_list)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -167,7 +174,9 @@ async def test_exceptions(
     assert result.get("errors") == {"base": error}
 
     # Recover from error
-    mock_powerfox_client.all_devices.side_effect = None
+    mock_powerfox_client.all_devices.configure_mock(
+        side_effect=None, return_value=devices
+    )
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -204,11 +213,16 @@ async def test_step_reauth(
 
 
 @pytest.mark.parametrize(
-    ("exception", "error"),
+    ("device_list", "error"),
     [
-        (PowerfoxConnectionError, "cannot_connect"),
-        (PowerfoxAuthenticationError, "invalid_auth"),
-        (PowerfoxNoDataError, "no_devices"),
+        pytest.param(
+            {"side_effect": PowerfoxConnectionError}, "cannot_connect", id="connection"
+        ),
+        pytest.param(
+            {"side_effect": PowerfoxAuthenticationError}, "invalid_auth", id="auth"
+        ),
+        pytest.param({"side_effect": PowerfoxNoDataError}, "no_devices", id="no_data"),
+        pytest.param({"return_value": []}, "no_devices", id="empty_device_list"),
     ],
 )
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -216,11 +230,12 @@ async def test_step_reauth_exceptions(
     hass: HomeAssistant,
     mock_powerfox_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    exception: Exception,
+    device_list: dict[str, Any],
     error: str,
 ) -> None:
     """Test exceptions during re-authentication flow."""
-    mock_powerfox_client.all_devices.side_effect = exception
+    devices = mock_powerfox_client.all_devices.return_value
+    mock_powerfox_client.all_devices.configure_mock(**device_list)
     mock_config_entry.add_to_hass(hass)
     result = await mock_config_entry.start_reauth_flow(hass)
 
@@ -235,7 +250,9 @@ async def test_step_reauth_exceptions(
     assert result.get("errors") == {"base": error}
 
     # Recover from error
-    mock_powerfox_client.all_devices.side_effect = None
+    mock_powerfox_client.all_devices.configure_mock(
+        side_effect=None, return_value=devices
+    )
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -277,22 +294,28 @@ async def test_reconfigure(
 
 
 @pytest.mark.parametrize(
-    ("exception", "error"),
+    ("device_list", "error"),
     [
-        (PowerfoxConnectionError, "cannot_connect"),
-        (PowerfoxAuthenticationError, "invalid_auth"),
-        (PowerfoxNoDataError, "no_devices"),
+        pytest.param(
+            {"side_effect": PowerfoxConnectionError}, "cannot_connect", id="connection"
+        ),
+        pytest.param(
+            {"side_effect": PowerfoxAuthenticationError}, "invalid_auth", id="auth"
+        ),
+        pytest.param({"side_effect": PowerfoxNoDataError}, "no_devices", id="no_data"),
+        pytest.param({"return_value": []}, "no_devices", id="empty_device_list"),
     ],
 )
 async def test_reconfigure_exceptions(
     hass: HomeAssistant,
     mock_powerfox_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    exception: Exception,
+    device_list: dict[str, Any],
     error: str,
 ) -> None:
     """Test exceptions during reconfiguration flow."""
-    mock_powerfox_client.all_devices.side_effect = exception
+    devices = mock_powerfox_client.all_devices.return_value
+    mock_powerfox_client.all_devices.configure_mock(**device_list)
     mock_config_entry.add_to_hass(hass)
     result = await mock_config_entry.start_reconfigure_flow(hass)
 
@@ -310,7 +333,9 @@ async def test_reconfigure_exceptions(
     assert result.get("errors") == {"base": error}
 
     # Recover from error
-    mock_powerfox_client.all_devices.side_effect = None
+    mock_powerfox_client.all_devices.configure_mock(
+        side_effect=None, return_value=devices
+    )
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
