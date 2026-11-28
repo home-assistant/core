@@ -5,7 +5,7 @@ from collections.abc import Callable, Iterable, Sequence
 import dataclasses
 from datetime import datetime, timedelta
 from functools import lru_cache, partial
-from itertools import chain, groupby
+from itertools import batched, chain, groupby
 import logging
 import math
 from operator import itemgetter
@@ -22,8 +22,10 @@ from sqlalchemy import (
     case,
     func,
     lambda_stmt,
+    literal_column,
     select,
     text,
+    union_all,
     update,
 )
 from sqlalchemy.engine.row import Row
@@ -46,6 +48,7 @@ from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.collection import chunked_or_all
 from homeassistant.util.enum import try_parse_enum
 from homeassistant.util.unit_conversion import (
+    AggregationType,
     ApparentPowerConverter,
     AreaConverter,
     BaseUnitConverter,
@@ -118,6 +121,12 @@ from .util import (
 if TYPE_CHECKING:
     from . import Recorder
 
+# Stay below SQLite's limit of 500 compound SELECT terms.
+MAX_STATISTICS_PERIODS_PER_QUERY = 400
+# Only look up the available range when a bounded request would need
+# more than this number of period query batches.
+MAX_STATISTICS_PERIOD_QUERY_BATCHES_BEFORE_RANGE_LOOKUP = 2
+
 QUERY_STATISTICS = (
     Statistics.metadata_id,
     Statistics.start_ts,
@@ -141,7 +150,9 @@ QUERY_STATISTICS_SHORT_TERM = (
 )
 
 
-def query_circular_mean(table: type[StatisticsBase]) -> tuple[Label, Label]:
+def query_circular_mean(
+    table: type[StatisticsBase], *, missing_weight_as_zero: bool = False
+) -> tuple[Label, Label]:
     """Return the sqlalchemy function for circular mean and the mean_weight.
 
     The result must be modulo 360 to normalize the result [0, 360].
@@ -153,8 +164,13 @@ def query_circular_mean(table: type[StatisticsBase]) -> tuple[Label, Label]:
     # in Python.
     # https://en.wikipedia.org/wiki/Circular_mean
     radians = func.radians(table.mean)
-    weighted_sum_sin = func.sum(func.sin(radians) * table.mean_weight)
-    weighted_sum_cos = func.sum(func.cos(radians) * table.mean_weight)
+    mean_weight = (
+        func.coalesce(table.mean_weight, 0.0)
+        if missing_weight_as_zero
+        else table.mean_weight
+    )
+    weighted_sum_sin = func.sum(func.sin(radians) * mean_weight)
+    weighted_sum_cos = func.sum(func.cos(radians) * mean_weight)
     weight = func.sqrt(
         func.power(weighted_sum_sin, 2) + func.power(weighted_sum_cos, 2)
     )
@@ -383,6 +399,27 @@ def get_display_unit(
     return state_unit
 
 
+def _resolve_statistic_display_unit(
+    unit_class: str | None,
+    statistic_unit: str | None,
+    state_unit: str | None,
+    requested_units: dict[str, str] | None,
+) -> tuple[type[BaseUnitConverter], str | None] | None:
+    """Return the converter and valid target unit for statistics."""
+    if (converter := _get_unit_converter(unit_class, statistic_unit)) is None:
+        return None
+
+    display_unit = (
+        requested_units.get(converter.UNIT_CLASS, state_unit)
+        if requested_units
+        else state_unit
+    )
+    if display_unit not in converter.VALID_UNITS:
+        # Guard against invalid state unit in the DB
+        return None
+    return converter, display_unit
+
+
 def _get_statistic_to_display_unit_converter(
     unit_class: str | None,
     statistic_unit: str | None,
@@ -390,25 +427,69 @@ def _get_statistic_to_display_unit_converter(
     requested_units: dict[str, str] | None,
 ) -> Callable[[float | None], float | None] | None:
     """Prepare a converter from the statistics unit to display unit."""
-    if (converter := _get_unit_converter(unit_class, statistic_unit)) is None:
+    resolved = _resolve_statistic_display_unit(
+        unit_class, statistic_unit, state_unit, requested_units
+    )
+    if resolved is None:
         return None
 
-    display_unit: str | None
-    unit_class = converter.UNIT_CLASS
-    if requested_units and unit_class in requested_units:
-        display_unit = requested_units[unit_class]
-    else:
-        display_unit = state_unit
-
-    if display_unit not in converter.VALID_UNITS:
-        # Guard against invalid state unit in the DB
-        return None
-
+    converter, display_unit = resolved
     if display_unit == statistic_unit:
         return None
 
     return converter.converter_factory_allow_none(
         from_unit=statistic_unit, to_unit=display_unit
+    )
+
+
+def _get_statistic_state_unit(
+    hass: HomeAssistant,
+    statistic_id: str,
+    statistic_unit: str | None,
+    state_units: dict[str, str | None] | None,
+) -> str | None:
+    """Use the same state unit for query selection and result conversion."""
+    if state_units is not None and statistic_id in state_units:
+        return state_units[statistic_id]
+
+    state_unit = statistic_unit
+    if state := hass.states.get(statistic_id):
+        state_unit = state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
+    if state_units is not None:
+        state_units[statistic_id] = state_unit
+    return state_unit
+
+
+def _requires_pre_aggregation_unit_conversion(
+    metadata: StatisticMetaData,
+    state_unit: str | None,
+    requested_units: dict[str, str] | None,
+    aggregations: set[AggregationType],
+) -> bool:
+    """Return whether unit conversion excludes SQL aggregate reduction."""
+    statistic_unit = metadata["unit_of_measurement"]
+    resolved = _resolve_statistic_display_unit(
+        metadata["unit_class"], statistic_unit, state_unit, requested_units
+    )
+    if resolved is None:
+        return False
+
+    converter, display_unit = resolved
+
+    if (
+        display_unit != statistic_unit
+        and "mean" in aggregations
+        and metadata["mean_type"] is StatisticMeanType.CIRCULAR
+    ):
+        return True
+
+    return any(
+        not converter.is_aggregation_preserving(
+            statistic_unit,
+            display_unit,
+            aggregation,
+        )
+        for aggregation in aggregations
     )
 
 
@@ -1492,6 +1573,353 @@ def _generate_statistics_during_period_stmt(
     return stmt
 
 
+def _generate_statistics_period_stmt(
+    metadata_ids: list[int] | None,
+    period_bounds: tuple[tuple[float, float], ...],
+    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
+    mean_type: StatisticMeanType = StatisticMeanType.NONE,
+) -> Select:
+    """Select reduced statistics for each calendar period."""
+    queries = []
+
+    metadata_ids_param = (
+        bindparam(
+            "metadata_ids",
+            value=metadata_ids,
+            type_=Statistics.metadata_id.type,
+            expanding=True,
+            literal_execute=True,
+        )
+        if metadata_ids
+        else None
+    )
+
+    aggregate_types = types & {"mean", "min", "max"}
+    endpoint_types = types & {"sum", "state", "last_reset"}
+
+    mean_columns: tuple[Label, ...] = ()
+    if "mean" in aggregate_types:
+        assert mean_type is not StatisticMeanType.NONE
+        mean_columns = (
+            query_circular_mean(Statistics, missing_weight_as_zero=True)
+            if mean_type is StatisticMeanType.CIRCULAR
+            else (func.avg(Statistics.mean).label("mean"),)
+        )
+
+    # Aggregate statistics are reduced over all rows in the calendar period.
+    aggregate_columns = {
+        "mean": mean_columns,
+        "min": (func.min(Statistics.min).label("min"),),
+        "max": (func.max(Statistics.max).label("max"),),
+    }
+
+    for lower, upper in period_bounds:
+        # The reducer derives period boundaries from the final source row.
+        query = select(
+            Statistics.metadata_id, func.max(Statistics.start_ts).label("last_start_ts")
+        )
+
+        for key, aggregate_columns_for_type in aggregate_columns.items():
+            if key in aggregate_types:
+                query = query.add_columns(*aggregate_columns_for_type)
+
+        query = query.where(
+            Statistics.start_ts >= lower,
+            Statistics.start_ts < upper,
+        )
+
+        if metadata_ids_param is not None:
+            query = query.where(Statistics.metadata_id.in_(metadata_ids_param))
+
+        queries.append(query.group_by(Statistics.metadata_id))
+
+    # One reduced row per metadata id and calendar period.
+    reduced = union_all(*queries).subquery()
+
+    if endpoint_types:
+        columns = select(Statistics.metadata_id, Statistics.start_ts)
+    else:
+        # Aggregate-only requests do not need to join back to Statistics.
+        columns = select(
+            reduced.c.metadata_id,
+            reduced.c.last_start_ts.label("start_ts"),
+        )
+
+    for key, aggregate_columns_for_type in aggregate_columns.items():
+        if key in aggregate_types:
+            columns = columns.add_columns(
+                *(
+                    getattr(reduced.c, aggregate_column.name)
+                    for aggregate_column in aggregate_columns_for_type
+                )
+            )
+
+    if not endpoint_types:
+        return columns
+
+    # Endpoint values must be read from the final actual row in the period.
+    for key, type_columns in _type_column_mapping.items():
+        if key in endpoint_types:
+            columns = columns.add_columns(
+                *(getattr(Statistics, column) for column in type_columns)
+            )
+
+    return columns.join(
+        reduced,
+        and_(
+            Statistics.metadata_id == reduced.c.metadata_id,
+            Statistics.start_ts == reduced.c.last_start_ts,
+        ),
+    )
+
+
+def _generate_statistics_start_end_stmt(
+    metadata_ids: list[int] | None,
+    *,
+    use_indexed_group_by: bool = False,
+) -> StatementLambdaElement:
+    """Find the first and last timestamp for the requested statistics."""
+    if metadata_ids is None:
+        return lambda_stmt(
+            lambda: select(
+                select(func.min(Statistics.start_ts)).scalar_subquery(),
+                select(func.max(Statistics.start_ts)).scalar_subquery(),
+            )
+        )
+
+    if use_indexed_group_by:
+        range_per_id = (
+            select(
+                func.min(Statistics.start_ts).label("first_ts"),
+                func.max(Statistics.start_ts).label("last_ts"),
+            )
+            .where(Statistics.metadata_id.in_(metadata_ids))
+            .group_by(Statistics.metadata_id)
+            .subquery()
+        )
+        return lambda_stmt(
+            lambda: select(
+                func.min(range_per_id.c.first_ts),
+                func.max(range_per_id.c.last_ts),
+            )
+        )
+
+    # Fixed LIMIT/OFFSET leave the bind budget available for the metadata IDs.
+    endpoint = (
+        select(Statistics.start_ts)
+        .where(
+            Statistics.metadata_id == StatisticsMeta.id,
+            Statistics.start_ts.is_not(None),
+        )
+        .correlate(StatisticsMeta)
+        .limit(literal_column("1"))
+        .offset(literal_column("0"))
+    )
+    first_ts = endpoint.order_by(Statistics.start_ts).scalar_subquery()
+    last_ts = endpoint.order_by(Statistics.start_ts.desc()).scalar_subquery()
+
+    return lambda_stmt(
+        lambda: (
+            select(func.min(first_ts), func.max(last_ts))
+            .select_from(StatisticsMeta)
+            .where(StatisticsMeta.id.in_(metadata_ids))
+        )
+    )
+
+
+def _iter_statistics_period_bounds(
+    start_ts: float,
+    end_ts: float,
+    period_start_end: Callable[[float], tuple[float, float]],
+) -> Iterable[tuple[float, float]]:
+    """Yield statistics calendar-period bounds."""
+    while start_ts < end_ts:
+        next_ts = min(period_start_end(start_ts)[1], end_ts)
+        yield start_ts, next_ts
+        start_ts = next_ts
+
+
+def _statistics_periods_per_query(
+    max_bind_vars: int,
+    fixed_binds_per_period: int,
+) -> int:
+    """Return the maximum number of periods per query."""
+    return min(
+        MAX_STATISTICS_PERIODS_PER_QUERY,
+        max_bind_vars // fixed_binds_per_period,
+    )
+
+
+def _statistics_range_exceeds_period_limit(
+    start_ts: float,
+    end_ts: float,
+    period_start_end: Callable[[float], tuple[float, float]],
+    max_periods: int,
+) -> bool:
+    """Return whether the range contains more than max_periods periods."""
+    for index, _ in enumerate(
+        _iter_statistics_period_bounds(start_ts, end_ts, period_start_end),
+        start=1,
+    ):
+        if index > max_periods:
+            return True
+    return False
+
+
+def _clip_bounded_statistics_range(
+    session: Session,
+    start_ts: float,
+    end_ts: float,
+    metadata_ids: list[int] | None,
+    period_start_end: Callable[[float], tuple[float, float]],
+    periods_per_query: int,
+    max_metadata_ids_per_query: int,
+) -> tuple[float, float] | None:
+    """Clip a long bounded request to the available statistics range."""
+    max_periods_without_range_lookup = (
+        periods_per_query * MAX_STATISTICS_PERIOD_QUERY_BATCHES_BEFORE_RANGE_LOOKUP
+    )
+
+    if not _statistics_range_exceeds_period_limit(
+        start_ts,
+        end_ts,
+        period_start_end,
+        max_periods_without_range_lookup,
+    ):
+        return start_ts, end_ts
+
+    first_ts: float | None = None
+    last_ts: float | None = None
+
+    id_chunks = (
+        chunked_or_all(metadata_ids, max_metadata_ids_per_query)
+        if metadata_ids
+        else (None,)
+    )
+    # MySQL and MariaDB can find grouped MIN/MAX through a loose index scan.
+    use_indexed_group_by = session.get_bind().dialect.name == SupportedDialect.MYSQL
+
+    for ids in id_chunks:
+        available_range = cast(
+            Sequence[Row],
+            execute_stmt_lambda_element(
+                session,
+                _generate_statistics_start_end_stmt(
+                    ids, use_indexed_group_by=use_indexed_group_by
+                ),
+                orm_rows=False,
+            ),
+        )
+        chunk_first_ts, chunk_last_ts = available_range[0]
+
+        if chunk_first_ts is not None:
+            first_ts = (
+                chunk_first_ts if first_ts is None else min(first_ts, chunk_first_ts)
+            )
+
+        if chunk_last_ts is not None:
+            last_ts = chunk_last_ts if last_ts is None else max(last_ts, chunk_last_ts)
+
+    if first_ts is None or last_ts is None:
+        return None
+
+    start_ts = max(
+        start_ts,
+        period_start_end(first_ts)[0],
+    )
+    end_ts = min(
+        end_ts,
+        period_start_end(last_ts)[1],
+    )
+
+    if start_ts >= end_ts:
+        return None
+
+    return start_ts, end_ts
+
+
+def _get_statistics_period_rows(
+    session: Session,
+    start_time: datetime,
+    end_time: datetime,
+    metadata_ids: list[int] | None,
+    period_start_end: Callable[[float], tuple[float, float]],
+    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
+    max_bind_vars: int,
+    mean_type: StatisticMeanType = StatisticMeanType.NONE,
+) -> list[Row]:
+    """Fetch reduced rows for each statistic and calendar period."""
+    rows: list[Row] = []
+
+    circular_bind_vars = (
+        6 if "mean" in types and mean_type is StatisticMeanType.CIRCULAR else 0
+    )
+    fixed_binds_per_period = 2 + circular_bind_vars
+
+    max_metadata_ids_per_query = min(
+        MAX_IDS_FOR_INDEXED_GROUP_BY,
+        max_bind_vars,
+    )
+
+    id_chunks = (
+        chunked_or_all(metadata_ids, max_metadata_ids_per_query)
+        if metadata_ids
+        else (None,)
+    )
+
+    requested_start_ts = start_time.timestamp()
+
+    periods_per_query = _statistics_periods_per_query(
+        max_bind_vars,
+        fixed_binds_per_period,
+    )
+
+    bounded_range = _clip_bounded_statistics_range(
+        session,
+        requested_start_ts,
+        end_time.timestamp(),
+        metadata_ids,
+        period_start_end,
+        periods_per_query,
+        max_metadata_ids_per_query,
+    )
+
+    if bounded_range is None:
+        return []
+
+    start_ts, end_ts = bounded_range
+
+    for ids in id_chunks:
+        for period_bounds in batched(
+            _iter_statistics_period_bounds(
+                start_ts,
+                end_ts,
+                period_start_end,
+            ),
+            periods_per_query,
+            strict=False,
+        ):
+            stmt = _generate_statistics_period_stmt(
+                ids,
+                period_bounds,
+                types,
+                mean_type,
+            )
+            rows.extend(
+                cast(
+                    Sequence[Row],
+                    execute_stmt_lambda_element(
+                        session,
+                        stmt,
+                        orm_rows=False,
+                    ),
+                )
+            )
+
+    rows.sort(key=itemgetter(0, 1))
+    return rows
+
+
 def _generate_max_mean_min_statistic_in_sub_period_stmt(
     columns: Select,
     start_time: datetime | None,
@@ -2078,15 +2506,15 @@ def _augment_result_with_change(
     table: type[Statistics | StatisticsShortTerm],
     metadata: dict[str, tuple[int, StatisticMetaData]],
     result: dict[str, list[StatisticsRow]],
+    state_units: dict[str, str | None] | None,
 ) -> None:
     """Add change to the result."""
     drop_sum = "sum" not in _types
     converters: dict[str, Callable[[float | None], float | None] | None] = {}
     for statistic_id in result:
         metadata_by_id = metadata[statistic_id][1]
-        state_unit = unit = metadata_by_id["unit_of_measurement"]
-        if state := hass.states.get(statistic_id):
-            state_unit = state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
+        unit = metadata_by_id["unit_of_measurement"]
+        state_unit = _get_statistic_state_unit(hass, statistic_id, unit, state_units)
         converters[statistic_id] = _get_statistic_to_display_unit_converter(
             metadata_by_id["unit_class"], unit, state_unit, units
         )
@@ -2124,6 +2552,81 @@ def _augment_result_with_change(
                 continue
             statistics_row["change"] = _sum - prev_sum
             prev_sum = _sum
+
+
+def _get_mixed_mean_statistics_period_result(
+    hass: HomeAssistant,
+    session: Session,
+    start_time: datetime,
+    end_time: datetime,
+    statistic_ids: set[str] | None,
+    metadata: dict[str, tuple[int, StatisticMetaData]],
+    period_start_end: Callable[[float], tuple[float, float]],
+    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
+    table: type[StatisticsBase],
+    units: dict[str, str] | None,
+    reducer: Callable[[str, list[StatisticsRow]], list[StatisticsRow]] | None,
+    state_units: dict[str, str | None] | None,
+) -> dict[str, list[StatisticsRow]]:
+    """Fetch reduced statistics for mixed mean types."""
+    result: dict[str, list[StatisticsRow]] = {}
+
+    # Statistics without a mean can use the cheaper arithmetic query
+    # because the existing reducer ignores their mean value.
+    mean_groups = (
+        (
+            StatisticMeanType.ARITHMETIC,
+            {
+                statistic_id: item
+                for statistic_id, item in metadata.items()
+                if item[1]["mean_type"]
+                in {
+                    StatisticMeanType.ARITHMETIC,
+                    StatisticMeanType.NONE,
+                }
+            },
+        ),
+        (
+            StatisticMeanType.CIRCULAR,
+            {
+                statistic_id: item
+                for statistic_id, item in metadata.items()
+                if item[1]["mean_type"] is StatisticMeanType.CIRCULAR
+            },
+        ),
+    )
+
+    for mean_type, group_metadata in mean_groups:
+        group_stats = _get_statistics_period_rows(
+            session,
+            start_time,
+            end_time,
+            [metadata_id for metadata_id, _ in group_metadata.values()],
+            period_start_end,
+            types,
+            get_instance(hass).max_bind_vars,
+            mean_type,
+        )
+
+        if not group_stats:
+            continue
+
+        result.update(
+            _sorted_statistics_to_dict(
+                hass,
+                group_stats,
+                set(group_metadata) if statistic_ids is not None else None,
+                group_metadata,
+                True,
+                table,
+                units,
+                types,
+                reducer=reducer,
+                state_units=state_units,
+            )
+        )
+
+    return result
 
 
 def _statistics_during_period_with_session(
@@ -2212,10 +2715,18 @@ def _statistics_during_period_with_session(
     table: type[Statistics | StatisticsShortTerm] = (
         Statistics if period != "5minute" else StatisticsShortTerm
     )
-    stmt = _generate_statistics_during_period_stmt(
-        start_time, end_time, metadata_ids, table, types
+    # Each optimized query can only use one mean aggregation strategy at a time.
+    mean_types = (
+        {
+            meta["mean_type"]
+            for _, meta in metadata.values()
+            if meta["mean_type"] is not StatisticMeanType.NONE
+        }
+        if "mean" in types
+        else set()
     )
     reducer: Callable[[str, list[StatisticsRow]], list[StatisticsRow]] | None = None
+    period_start_end = None
     if factory := _REDUCE_TS_FACTORIES.get(period):
         # Reduce each statistic as soon as its rows are built so the hourly
         # rows of all statistics never have to be kept in memory at once
@@ -2227,26 +2738,117 @@ def _statistics_during_period_with_session(
             types=types,
             metadata=metadata,
         )
-    to_dict = partial(
-        _sorted_statistics_to_dict,
-        hass,
-        statistic_ids=statistic_ids,
-        _metadata=metadata,
-        convert_units=True,
-        table=table,
-        units=units,
-        types=types,
-        reducer=reducer,
+
+    mean_type = next(iter(mean_types), StatisticMeanType.NONE)
+
+    aggregations = cast(
+        set[AggregationType],
+        types & {"mean", "min", "max"},
     )
-    result = execute_stmt_lambda_element_streamed(
-        session, stmt, lambda rows, fields: to_dict(rows, fields=fields)
+
+    period_query_candidate = (
+        bool(types)
+        and period_start_end is not None
+        and end_time is not None
+        and ("mean" not in types or mean_type is not StatisticMeanType.NONE)
     )
-    if not result:
-        return {}
+
+    state_units: dict[str, str | None] | None = (
+        {} if period_query_candidate and aggregations else None
+    )
+    requires_pre_aggregation_conversion = state_units is not None and any(
+        _requires_pre_aggregation_unit_conversion(
+            meta,
+            _get_statistic_state_unit(
+                hass, statistic_id, meta["unit_of_measurement"], state_units
+            ),
+            units,
+            aggregations,
+        )
+        for statistic_id, (_, meta) in metadata.items()
+    )
+
+    if (
+        period_start_end is not None
+        and end_time is not None
+        and period_query_candidate
+        and not requires_pre_aggregation_conversion
+    ):
+        if len(mean_types) > 1:
+            result = _get_mixed_mean_statistics_period_result(
+                hass,
+                session,
+                start_time,
+                end_time,
+                statistic_ids,
+                metadata,
+                period_start_end,
+                types,
+                table,
+                units,
+                reducer,
+                state_units,
+            )
+        else:
+            stats = _get_statistics_period_rows(
+                session,
+                start_time,
+                end_time,
+                metadata_ids,
+                period_start_end,
+                types,
+                get_instance(hass).max_bind_vars,
+                mean_type,
+            )
+
+            if not stats:
+                return {}
+
+            result = _sorted_statistics_to_dict(
+                hass,
+                stats,
+                statistic_ids,
+                metadata,
+                True,
+                table,
+                units,
+                types,
+                reducer=reducer,
+                state_units=state_units,
+            )
+    else:
+        stmt = _generate_statistics_during_period_stmt(
+            start_time, end_time, metadata_ids, table, types
+        )
+        to_dict = partial(
+            _sorted_statistics_to_dict,
+            hass,
+            statistic_ids=statistic_ids,
+            _metadata=metadata,
+            convert_units=True,
+            table=table,
+            units=units,
+            types=types,
+            reducer=reducer,
+            state_units=state_units,
+        )
+        result = execute_stmt_lambda_element_streamed(
+            session, stmt, lambda rows, fields: to_dict(rows, fields=fields)
+        )
+        if not result:
+            return {}
 
     if "change" in _types:
         _augment_result_with_change(
-            hass, session, start_time, units, _types, table, metadata, result
+            hass,
+            session,
+            start_time,
+            units,
+            _types,
+            table,
+            metadata,
+            result,
+            state_units,
         )
 
     # filter out mean_weight as it is only needed to reduce statistics
@@ -2691,6 +3293,7 @@ def _sorted_statistics_to_dict(
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
     fields: Iterable[str] | None = None,
     reducer: Callable[[str, list[StatisticsRow]], list[StatisticsRow]] | None = None,
+    state_units: dict[str, str | None] | None = None,
 ) -> dict[str, list[StatisticsRow]]:
     """Convert SQL results into JSON friendly data structure.
 
@@ -2725,11 +3328,10 @@ def _sorted_statistics_to_dict(
         statistic_id = metadata_by_id["statistic_id"]
         if convert_units:
             unit_class = metadata_by_id["unit_class"]
-            state_unit = unit = metadata_by_id["unit_of_measurement"]
-            if state := hass.states.get(statistic_id):
-                state_unit = state.attributes.get(
-                    EntityStateAttribute.UNIT_OF_MEASUREMENT
-                )
+            unit = metadata_by_id["unit_of_measurement"]
+            state_unit = _get_statistic_state_unit(
+                hass, statistic_id, unit, state_units
+            )
             convert = _get_statistic_to_display_unit_converter(
                 unit_class, unit, state_unit, units
             )

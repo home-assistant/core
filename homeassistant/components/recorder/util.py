@@ -215,7 +215,7 @@ def execute(qry: Query) -> list[Row]:
 
 def execute_stmt_lambda_element(
     session: Session,
-    stmt: StatementLambdaElement,
+    stmt: StatementLambdaElement | Select,
     orm_rows: bool = True,
     stream: bool = False,
 ) -> Sequence[Row] | Result:

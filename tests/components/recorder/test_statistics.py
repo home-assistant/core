@@ -1772,6 +1772,45 @@ async def test_change_converted_without_offset(
     assert [row["change"] for row in stats["sensor.test"]] == row_changes
 
 
+async def test_statistic_during_period_circular_mean_without_weights(
+    hass: HomeAssistant, recorder_mock: Recorder
+) -> None:
+    """Return no circular mean when all weights are missing."""
+    start = dt_util.utcnow().replace(minute=0, second=0, microsecond=0) - timedelta(
+        hours=2
+    )
+    statistic_id = "test:wind_direction"
+    async_add_external_statistics(
+        hass,
+        {
+            "has_sum": False,
+            "mean_type": StatisticMeanType.CIRCULAR,
+            "name": None,
+            "source": "test",
+            "statistic_id": statistic_id,
+            "unit_class": None,
+            "unit_of_measurement": "°",
+        },
+        [
+            {"start": start, "mean": 90.0},
+            {"start": start + timedelta(hours=1), "mean": 180.0},
+        ],
+    )
+    await async_wait_recording_done(hass)
+
+    result = await recorder_mock.async_add_executor_job(
+        statistics.statistic_during_period,
+        hass,
+        start,
+        start + timedelta(hours=2),
+        statistic_id,
+        {"mean"},
+        None,
+    )
+
+    assert result == {"mean": None}
+
+
 @pytest.mark.freeze_time("2022-10-01 00:00:00+00:00")
 async def test_statistics_during_period_last_reset_not_converted(
     hass: HomeAssistant,
