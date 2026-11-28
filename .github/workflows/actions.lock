@@ -49,7 +49,7 @@ workflows:
         - 'j178/prek-action@v3.1.1'
     '.github/workflows/codeql.yml':
         - 'actions/checkout@v7.0.1'
-        - 'github/codeql-action@v4.39.3'
+        - 'github/codeql-action@v4.39.4'
     '.github/workflows/detect-duplicate-issues.yml':
         - 'actions/ai-inference@v2.1.1'
         - 'actions/github-script@v9.0.0'
@@ -92,7 +92,7 @@ workflows:
         - 'actions/upload-artifact@v7.0.2'
         - 'astral-sh/setup-uv@v10.3.3'
         - 'dorny/paths-filter@v4.0.3'
-        - 'github/codeql-action@v4.39.3'
+        - 'github/codeql-action@v4.39.4'
         - 'j178/prek-action@v3.1.1'
 dependencies:
     'actions/ai-inference@v2.1.1':
@@ -293,9 +293,9 @@ dependencies:
         commit: 'sha1-ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d'
         owner_id: 1588572
         repo_id: 265601040
-    'github/codeql-action@v4.39.3':
-        ref: 'v4.39.3'
-        commit: 'sha1-33d7b85da1a04171e211befe2c739303b9a4c066'
+    'github/codeql-action@v4.39.4':
+        ref: 'v4.39.4'
+        commit: 'sha1-1bd86f2fdb4b86187fa4059f16f31a3202acc9ea'
         owner_id: 9919
         repo_id: 259445878
     'github/gh-aw-actions@b907753c079ddd7d6829a0d8c24e02e818b4b45f':
