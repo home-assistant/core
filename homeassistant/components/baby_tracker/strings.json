@@ -1,0 +1,52 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "email": "The email address of your Baby Tracker account.",
+          "password": "The password of your Baby Tracker account."
+        },
+        "description": "Sign in with the email and password you use in the Baby Tracker app. Home Assistant joins your account's sync group as its own device.",
+        "title": "Connect your Baby Tracker account"
+      }
+    }
+  },
+  "device": {
+    "baby": {
+      "name": "Baby"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "last_diaper": {
+        "name": "Last diaper"
+      },
+      "last_feed": {
+        "name": "Last feed"
+      },
+      "last_sleep": {
+        "name": "Last sleep"
+      }
+    }
+  },
+  "exceptions": {
+    "auth_failed": {
+      "message": "The service rejected the email or password. Remove the entry and add the account again with its current password."
+    },
+    "sync_failed_update": {
+      "message": "Couldn't sync with the service: {error}"
+    }
+  }
+}
