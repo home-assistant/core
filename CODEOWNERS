@@ -2046,6 +2046,8 @@ AGENTS.md @home-assistant/core
 /tests/components/time_date/ @fabaff
 /homeassistant/components/timer_list/ @home-assistant/core @synesthesiam
 /tests/components/timer_list/ @home-assistant/core @synesthesiam
+/homeassistant/components/tis_control/ @KarimTIS
+/tests/components/tis_control/ @KarimTIS
 /homeassistant/components/tmb/ @alemuro
 /homeassistant/components/todo/ @home-assistant/core
 /tests/components/todo/ @home-assistant/core
