@@ -6,13 +6,25 @@ from typing import TYPE_CHECKING
 import pyatmo
 from pyatmo.modules.device_types import DEVICE_DESCRIPTION_MAP
 
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 
 from .const import CONF_URL_CONTROL, DOMAIN, MANUFACTURER
 
 if TYPE_CHECKING:
     from .coordinator import NetatmoConfigEntry
+
+SCHEDULE_SELECT_SUFFIX = "-schedule-select"
+
+
+def legacy_climate_issue_id(home_id: str) -> str:
+    """Return the repair issue id for a home disabled through its old device."""
+    return f"legacy_climate_device_disabled_{home_id}"
 
 
 def _bridged_children(home: pyatmo.Home) -> Iterator[tuple[str, str]]:
@@ -200,3 +212,62 @@ def async_sync_home_disabled_state(
                 and device.disabled_by is dr.DeviceEntryDisabler.INTEGRATION
             ):
                 device_registry.async_update_device(device.id, disabled_by=None)
+
+
+@callback
+def async_hide_schedule_select_instead(
+    hass: HomeAssistant, device_id: str, entity_id: str | None
+) -> None:
+    """Enable a home device, hiding only the schedule select that sat on it."""
+    # Before the device: enabling it re-enables what its disable cascaded to
+    if entity_id is not None:
+        er.async_get(hass).async_update_entity(
+            entity_id, disabled_by=er.RegistryEntryDisabler.USER
+        )
+    dr.async_get(hass).async_update_device(device_id, disabled_by=None)
+
+
+@callback
+def async_migrate_legacy_climate_devices(
+    hass: HomeAssistant, entry: NetatmoConfigEntry
+) -> None:
+    """Undo home disables that only meant to hide the schedule select.
+
+    Up to 2026.8 the schedule select sat alone on a "Climate" device with the
+    home id, so disabling it hid just the select. That device is the home now,
+    and disabling it drops the whole home. 2026.9 already renamed the model of
+    devices it set up, which makes those indistinguishable from a deliberate
+    home disable, so they get a repair instead.
+    """
+    device_registry = dr.async_get(hass)
+    for entity in er.async_entries_for_config_entry(er.async_get(hass), entry.entry_id):
+        if entity.domain != Platform.SELECT or not entity.unique_id.endswith(
+            SCHEDULE_SELECT_SUFFIX
+        ):
+            continue
+
+        home_id = entity.unique_id.removesuffix(SCHEDULE_SELECT_SUFFIX)
+        device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, home_id), entry.entry_id
+        )
+        if device is None or device.disabled_by is not dr.DeviceEntryDisabler.USER:
+            continue
+
+        if device.model == "Climate":
+            async_hide_schedule_select_instead(hass, device.id, entity.entity_id)
+            continue
+
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            legacy_climate_issue_id(home_id),
+            config_entry_id=entry.entry_id,
+            data={"device_id": device.id, "entity_id": entity.id},
+            is_fixable=True,
+            is_persistent=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="legacy_climate_device_disabled",
+            translation_placeholders={
+                "home_name": device.name_by_user or device.name or ""
+            },
+        )
