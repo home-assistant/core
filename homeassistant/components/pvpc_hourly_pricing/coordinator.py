@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 from typing import override
 
-from esios_api import BadApiTokenAuthError, EsiosApiData, PVPCData
+from aiopvpc import BadApiTokenAuthError, EsiosApiData, PVPCData
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_TOKEN

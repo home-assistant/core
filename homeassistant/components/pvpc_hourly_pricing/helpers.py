@@ -1,6 +1,6 @@
 """Helper functions to relate sensors keys and unique ids."""
 
-from esios_api.const import (
+from aiopvpc.const import (
     ALL_SENSORS,
     KEY_INJECTION,
     KEY_MAG,
