@@ -303,10 +303,20 @@ class TemplateEntity(AbstractTemplateEntity):
         switch is 'state'.
         """
 
+        if self._state_option is None:
+            raise NotImplementedError(
+                f"{self.__class__.__name__} does not implement"
+                " '_state_option' for 'setup_state_template'."
+            )
+
+        state_option = self._state_option
+
         @callback
         def _update_state(result: Any) -> None:
             if isinstance(result, TemplateError):
                 setattr(self, attribute, None)
+                # Keep a list update from restoring the item that failed to render.
+                self._rendered_list_items.pop(state_option, None)
                 if self._availability_template:
                     return
 
@@ -324,14 +334,8 @@ class TemplateEntity(AbstractTemplateEntity):
             else:
                 setattr(self, attribute, state)
 
-        if self._state_option is None:
-            raise NotImplementedError(
-                f"{self.__class__.__name__} does not implement"
-                " '_state_option' for 'setup_state_template'."
-            )
-
         self.add_template(
-            self._state_option,
+            state_option,
             attribute,
             on_update=_update_state,
             none_on_template_error=False,

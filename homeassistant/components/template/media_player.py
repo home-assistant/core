@@ -176,10 +176,10 @@ MEDIA_PLAYER_COMMON_SCHEMA = probatio.Schema(
 )
 
 _MEDIA_PLAYER_VALIDATION = (
-    tcv.requires_option(CONF_SOURCE, CONF_SOURCE_LIST),
-    tcv.requires_option(SERVICE_SELECT_SOURCE, CONF_SOURCE_LIST),
-    tcv.requires_option(CONF_SOUND_MODE, CONF_SOUND_MODE_LIST),
-    tcv.requires_option(SERVICE_SELECT_SOUND_MODE, CONF_SOUND_MODE_LIST),
+    tcv.inclusive_group("source", CONF_SOURCE, CONF_SOURCE_LIST, SERVICE_SELECT_SOURCE),
+    tcv.inclusive_group(
+        "sound_mode", CONF_SOUND_MODE, CONF_SOUND_MODE_LIST, SERVICE_SELECT_SOUND_MODE
+    ),
 )
 
 _BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(

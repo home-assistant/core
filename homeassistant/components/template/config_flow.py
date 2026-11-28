@@ -209,6 +209,7 @@ _REQUIRED_OPTIONS: dict[str, tuple[tuple[str, str, str], ...]] = {
     Platform.MEDIA_PLAYER: (
         (CONF_SOURCE, CONF_SOURCE_LIST, "source_list_required"),
         (SERVICE_SELECT_SOURCE, CONF_SOURCE_LIST, "source_list_required"),
+        (CONF_SOURCE_LIST, SERVICE_SELECT_SOURCE, "select_source_required"),
         (SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN, "volume_up_and_down_required"),
         (SERVICE_VOLUME_DOWN, SERVICE_VOLUME_UP, "volume_up_and_down_required"),
     ),

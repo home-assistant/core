@@ -1329,3 +1329,37 @@ async def test_attributes_template_with_blocked_attributes(
         f"Unsupported attribute(s) found for {TEST_WATER_HEATER.entity_id}: {attribute}"
     )
     assert error in caplog.text
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_operation_mode_revalidated_on_list_change(
+    hass: HomeAssistant, style: ConfigurationStyle
+) -> None:
+    """Test an unchanged operation mode becomes valid when the list later includes it."""
+    await setup_entity(
+        hass,
+        TEST_WATER_HEATER,
+        style,
+        1,
+        {
+            **SET_OPERATION_MODE_ACTION,
+            "operation_list": f"{{{{ state_attr('{TEST_STATE_ENTITY_ID}', 'operation_list')"
+            " or [] }}",
+            "operation_mode": f"{{{{ state_attr('{TEST_STATE_ENTITY_ID}', 'operation_mode') }}}}",
+        },
+    )
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "on", {"operation_mode": "eco"})
+    assert hass.states.get(TEST_WATER_HEATER.entity_id).state == STATE_UNKNOWN
+
+    await async_trigger(
+        hass,
+        TEST_STATE_ENTITY_ID,
+        "on",
+        {"operation_mode": "eco", "operation_list": ["eco", "gas"]},
+    )
+    assert hass.states.get(TEST_WATER_HEATER.entity_id).state == "eco"
+
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "on", {"operation_mode": "eco"})
+    assert hass.states.get(TEST_WATER_HEATER.entity_id).state == STATE_UNKNOWN
