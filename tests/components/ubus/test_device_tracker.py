@@ -1395,10 +1395,48 @@ async def test_slow_router_does_not_stretch_sighting_times(
     assert state is not None
     assert state.state == STATE_NOT_HOME
 
-    # The next tick polls both routers fresh; the fast router's newer
-    # sighting must win the source over the slow router's earlier one.
+    # The next tick polls both routers fresh.  Their reads are held on
+    # separate releases, so the settlements are sequenced by the clock and
+    # the fast router's sighting is unambiguously newer than the slow
+    # router's; the observation time must decide the source.
+    slow_release_2 = threading.Event()
+    fast_release_2 = threading.Event()
+
+    def slow_read_2(*args: Any, **kwargs: Any) -> dict[str, Any]:
+        slow_release_2.wait()
+        return {"clients": {MAC_PHONE: {"authorized": True}}}
+
+    def fast_read_2(*args: Any, **kwargs: Any) -> dict[str, Any]:
+        fast_release_2.wait()
+        return {
+            "clients": {
+                MAC_PHONE: {"authorized": True},
+                MAC_LAPTOP: {"authorized": True},
+            }
+        }
+
+    ubus[MOCK_HOST].get_hostapd_clients.side_effect = slow_read_2
+    ubus[MOCK_HOST_B].get_hostapd_clients.side_effect = fast_read_2
+
+    coordinator: UbusDataUpdateCoordinator = two_router_hub.runtime_data
+    subentry_a = next(
+        subentry
+        for subentry in two_router_hub.subentries.values()
+        if subentry.data[CONF_HOST] == MOCK_HOST
+    )
+    stale = coordinator.data[MAC_PHONE][subentry_a.subentry_id].last_seen
     freezer.tick(timedelta(seconds=10))
     async_fire_time_changed(hass)
+    slow_release_2.set()
+    # Wait for the slow router's settlement to publish, so the clock can
+    # advance only before the fast router stamps its newer sighting.
+    for _ in range(1000):
+        if coordinator.data[MAC_PHONE][subentry_a.subentry_id].last_seen != stale:
+            break
+        await asyncio.sleep(0)
+    assert coordinator.data[MAC_PHONE][subentry_a.subentry_id].last_seen != stale
+    freezer.tick(timedelta(seconds=1))
+    fast_release_2.set()
     await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(phone_entity_id)
