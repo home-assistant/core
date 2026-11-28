@@ -897,6 +897,15 @@ async def async_setup_entry(
 
     async_add_entities(entities)
 
+    remove_network_listener: Callable[[], None] | None = None
+
+    @callback
+    def _async_remove_network_listener() -> None:
+        nonlocal remove_network_listener
+        if remove_network_listener is not None:
+            remove_network_listener()
+            remove_network_listener = None
+
     @callback
     def _async_check_new_network_interfaces() -> None:
         """Restore enabled network entities when their interface appears."""
@@ -906,11 +915,14 @@ async def async_setup_entry(
             add_sensor_entity,
         ):
             async_add_entities(new_entities)
+        if not pending_network:
+            _async_remove_network_listener()
 
     if pending_network:
-        entry.async_on_unload(
-            coordinator.async_add_listener(_async_check_new_network_interfaces)
+        remove_network_listener = coordinator.async_add_listener(
+            _async_check_new_network_interfaces
         )
+        entry.async_on_unload(_async_remove_network_listener)
 
 
 class SystemMonitorSensor(CoordinatorEntity[SystemMonitorCoordinator], SensorEntity):
