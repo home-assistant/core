@@ -62,12 +62,14 @@ def mock_palazzetti_client() -> Generator[AsyncMock]:
         mock_client.has_fan_silent = True
         mock_client.has_fan_high = True
         mock_client.has_fan_auto = True
+        mock_client.has_door_control = True
         mock_client.has_on_off_switch = True
         mock_client.has_pellet_level = True
         mock_client.host = "XXXXXXXXXX"
         mock_client.connected = True
         mock_client.status = 6
         mock_client.is_heating = True
+        mock_client.is_door_open = False
         mock_client.room_temperature = 18
         mock_client.T1 = 21.5
         mock_client.T2 = 25.1
@@ -87,6 +89,7 @@ def mock_palazzetti_client() -> Generator[AsyncMock]:
         mock_client.max_fan_speed.return_value = 5
         mock_client.connect.return_value = True
         mock_client.update_state.return_value = True
+        mock_client.set_door.return_value = True
         mock_client.set_on.return_value = True
         mock_client.set_target_temperature.return_value = True
         mock_client.set_fan_speed.return_value = True
