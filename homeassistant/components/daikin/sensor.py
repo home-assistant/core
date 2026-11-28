@@ -152,7 +152,7 @@ async def async_setup_entry(
     if daikin_api.device.support_compressor_frequency:
         sensors.append(ATTR_COMPRESSOR_FREQUENCY)
 
-    entities = [
+    entities: list[SensorEntity] = [
         DaikinSensor(daikin_api, description)
         for description in SENSOR_TYPES
         if description.key in sensors

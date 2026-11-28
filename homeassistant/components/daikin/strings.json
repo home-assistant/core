@@ -24,6 +24,21 @@
     }
   },
   "entity": {
+    "number": {
+      "demand_control_max_power": {
+        "name": "Demand control maximum power for manual mode"
+      }
+    },
+    "select": {
+      "demand_control_mode": {
+        "name": "Demand control mode",
+        "state": {
+          "auto": "Auto",
+          "manual": "Manual",
+          "off": "Off"
+        }
+      }
+    },
     "sensor": {
       "compressor_energy_consumption": {
         "name": "Compressor energy consumption (today)"
@@ -62,6 +77,9 @@
   "exceptions": {
     "demand_control_invalid_device": {
       "message": "No Daikin config entry found for the given device."
+    },
+    "demand_control_invalid_state": {
+      "message": "The Daikin device returned an invalid demand control state."
     },
     "demand_control_unsupported": {
       "message": "This Daikin device does not support demand control."
