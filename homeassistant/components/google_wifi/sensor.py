@@ -51,6 +51,7 @@ class GoogleWifiSensorEntityDescription(SensorEntityDescription):
     """Describes GoogleWifi sensor entity."""
 
     value_fn: Callable[[GoogleWifiStatus], bool | datetime | float | str | None]
+    supported_fn: Callable[[GoogleWifiStatus], bool] = lambda _: True
 
 
 SENSOR_TYPES: dict[str, GoogleWifiSensorEntityDescription] = {
@@ -86,6 +87,7 @@ SENSOR_TYPES: dict[str, GoogleWifiSensorEntityDescription] = {
         value_fn=lambda status: (
             str(status.wan.local_ip_address) if status.wan.online else None
         ),
+        supported_fn=lambda status: status.wan.ip_address,
     ),
     ATTR_STATUS: GoogleWifiSensorEntityDescription(
         key=ATTR_STATUS,
@@ -124,7 +126,7 @@ async def async_setup_entry(
         GoogleWifiSensor(coordinator, description)
         for key, description in SENSOR_TYPES.items()
         if key in entry.data.get(CONF_MONITORED_CONDITIONS, SENSOR_KEYS)
-        if description.value_fn(coordinator.data) is not None
+        and description.supported_fn(coordinator.data)
     )
 
 
@@ -138,7 +140,10 @@ async def async_setup_platform(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_IMPORT}, data=dict(config)
     )
-    if result.get("type") is FlowResultType.ABORT:
+    if (
+        result.get("type") is FlowResultType.ABORT
+        and result["reason"] != "already_configured"
+    ):
         return
 
     ir.async_create_issue(
@@ -175,9 +180,9 @@ class GoogleWifiSensor(CoordinatorEntity[GoogleWifiCoordinator], SensorEntity):
             f"{coordinator.config_entry.title} "
             f"{description.key.replace('_', ' ').title()}"
         )
-        self._attr_unique_id = f"{data.system.hardware_id}_{description.key}"
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, data.system.hardware_id)},
+            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
             name=self.coordinator.config_entry.title,
             manufacturer="Google",
             model_id=data.system.model_id,

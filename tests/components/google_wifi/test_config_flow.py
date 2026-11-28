@@ -72,14 +72,18 @@ async def test_import_already_configured(
 ) -> None:
     """Test we abort if already configured."""
     mock_config_entry.add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={CONF_HOST: "192.168.86.1"},
-    )
+    with patch(
+        "homeassistant.components.google_wifi.config_flow.GoogleWifiAPI.async_update"
+    ) as mock_update:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={CONF_HOST: "192.168.86.1"},
+        )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+    mock_update.assert_not_awaited()
 
 
 @pytest.mark.usefixtures("mock_success")
@@ -147,16 +151,28 @@ async def test_user_cannot_connect(
 
 
 @pytest.mark.parametrize(
-    ("exception", "reason"),
+    ("exception", "expected_result_type", "expected_reason"),
     [
-        (GoogleWifiClientError(), "cannot_connect"),
-        (GoogleWifiDataValidationError(), "unknown"),
+        pytest.param(
+            GoogleWifiClientError(),
+            FlowResultType.CREATE_ENTRY,
+            None,
+            id="cannot_connect",
+        ),
+        pytest.param(
+            GoogleWifiDataValidationError(),
+            FlowResultType.ABORT,
+            "unknown",
+            id="invalid_data",
+        ),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_import_cannot_connect(
     hass: HomeAssistant,
     exception: Exception,
-    reason: str,
+    expected_result_type: FlowResultType,
+    expected_reason: str | None,
 ) -> None:
     """Test YAML import handles an unreachable or invalid response."""
     with patch(
@@ -169,8 +185,8 @@ async def test_import_cannot_connect(
             data={CONF_HOST: "192.168.86.1"},
         )
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == reason
+    assert result["type"] is expected_result_type
+    assert result.get("reason") == expected_reason
 
 
 @pytest.mark.parametrize(
@@ -178,12 +194,16 @@ async def test_import_cannot_connect(
         "mock_device_response_with_optional_error",
         "expected_result_type",
         "expected_reason",
+        "expected_errors",
+        "expected_call_count",
     ),
     [
         pytest.param(
             {"response": DEFAULT_RESPONSE, "host": "192.168.86.2", "error": None},
             FlowResultType.ABORT,
             "reconfigure_successful",
+            {},
+            2,
             id="normal_conditions",
         ),
         pytest.param(
@@ -194,6 +214,8 @@ async def test_import_cannot_connect(
             },
             FlowResultType.FORM,
             None,
+            {"base": "cannot_connect"},
+            1,
             id="cannot_connect",
         ),
         pytest.param(
@@ -204,6 +226,8 @@ async def test_import_cannot_connect(
             },
             FlowResultType.FORM,
             None,
+            {"base": "unknown"},
+            1,
             id="unknown_error",
         ),
     ],
@@ -214,7 +238,9 @@ async def test_reconfigure(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     expected_result_type: FlowResultType,
-    expected_reason: str,
+    expected_reason: str | None,
+    expected_errors: dict[str, str],
+    expected_call_count: int,
     mock_device_response_with_optional_error: AiohttpClientMocker,
 ) -> None:
     """Test reconfigure flow."""
@@ -229,8 +255,7 @@ async def test_reconfigure(
 
     assert result["type"] is expected_result_type
     assert result.get("reason") == expected_reason
+    assert result.get("errors", {}) == expected_errors
     assert (
-        len(mock_device_response_with_optional_error.mock_calls) == 2
-        if expected_result_type is FlowResultType.ABORT
-        else 1
+        len(mock_device_response_with_optional_error.mock_calls) == expected_call_count
     )
