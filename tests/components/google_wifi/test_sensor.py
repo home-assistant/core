@@ -3,17 +3,33 @@
 from datetime import timedelta
 from typing import Any
 
+import aiohttp
 import pytest
-from pytest_homeassistant.common import assert_setup_component, async_fire_time_changed
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    assert_setup_component,
+    async_fire_time_changed,
+)
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.google_wifi import const
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_HOST, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from .const import RESOURCE_URL, UPDATED_RESPONSE
+from .const import (
+    DEFAULT_RESPONSE,
+    LEAF_RESPONSE,
+    RESOURCE_URL,
+    SPEAKER_RESPONSE,
+    UPDATED_RESPONSE,
+)
 
 MONITORED_CONDITIONS = [
     const.ATTR_CURRENT_VERSION,
@@ -64,6 +80,60 @@ async def test_setup_minimum(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("mock_success")
+async def test_config_entry_setup_links_entities_to_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test config-entry setup creates and links entities to the router device."""
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_entry = entity_registry.async_get("sensor.google_wifi_uptime")
+    assert entity_entry is not None
+    assert entity_entry.config_entry_id == mock_config_entry.entry_id
+    assert entity_entry.device_id is not None
+
+    device_entry = device_registry.async_get(entity_entry.device_id)
+    assert device_entry is not None
+    assert (const.DOMAIN, mock_config_entry.entry_id) in device_entry.identifiers
+
+
+async def test_config_entry_setup_creates_separate_devices_for_same_hardware_id(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test units with a shared hardware ID retain separate device identities."""
+    second_host = "192.168.86.2"
+    aioclient_mock.get(RESOURCE_URL, json=DEFAULT_RESPONSE)
+    aioclient_mock.get(f"http://{second_host}/api/v1/status", json=DEFAULT_RESPONSE)
+    entries = [
+        MockConfigEntry(
+            domain=const.DOMAIN,
+            title="Google Wifi",
+            data={CONF_HOST: host},
+        )
+        for host in ("192.168.86.1", second_host)
+    ]
+
+    for entry in entries:
+        entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_entries = [
+        er.async_entries_for_config_entry(entity_registry, entry.entry_id)[0]
+        for entry in entries
+    ]
+    assert entity_entries[0].unique_id != entity_entries[1].unique_id
+    assert entity_entries[0].device_id != entity_entries[1].device_id
+
+
+@pytest.mark.usefixtures("mock_success")
 async def test_setup_get(hass: HomeAssistant) -> None:
     """Test setup with full configuration."""
     await setup_sensor_platform(
@@ -77,7 +147,7 @@ async def test_setup_get(hass: HomeAssistant) -> None:
 
 @pytest.mark.usefixtures("mock_unreachable")
 async def test_setup_when_router_unreachable(hass: HomeAssistant) -> None:
-    """Test platform setup completes when the router does not respond."""
+    """Test YAML setup aborts when the router does not respond."""
     assert await async_setup_component(
         hass,
         "sensor",
@@ -89,9 +159,7 @@ async def test_setup_when_router_unreachable(hass: HomeAssistant) -> None:
         },
     )
     await hass.async_block_till_done()
-    state = hass.states.get("sensor.google_wifi_uptime")
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
+    assert hass.states.get("sensor.google_wifi_uptime") is None
 
 
 @pytest.mark.usefixtures("mock_success")
@@ -111,7 +179,78 @@ async def test_sensor_states_update_from_router_data(hass: HomeAssistant) -> Non
     assert hass.states.get("sensor.test_wifi_status").state == "Online"
 
 
-@pytest.mark.usefixtures("mock_unreachable")
+@pytest.mark.parametrize(
+    ("device_response", "expected_status", "expected_local_ip"),
+    [
+        pytest.param(LEAF_RESPONSE, "Online", "192.168.86.21", id="mesh-point"),
+        pytest.param(SPEAKER_RESPONSE, "Offline", None, id="speaker"),
+    ],
+    indirect=["device_response"],
+)
+@pytest.mark.usefixtures("mock_device_response")
+async def test_sensor_states_for_limited_device_data(
+    hass: HomeAssistant,
+    expected_status: str,
+    expected_local_ip: str | None,
+) -> None:
+    """Test sensor states with leaf and speaker responses."""
+    await setup_sensor_platform(hass, name="Test Wifi")
+
+    status = hass.states.get("sensor.test_wifi_status")
+    local_ip = hass.states.get("sensor.test_wifi_local_ip")
+    assert status is not None
+    assert status.state == expected_status
+    assert (local_ip is not None) is (expected_local_ip is not None)
+    if expected_local_ip:
+        assert local_ip is not None
+        assert local_ip.state == expected_local_ip
+
+
+@pytest.mark.parametrize(
+    "monitored_conditions",
+    [
+        [const.ATTR_UPTIME],
+        [const.ATTR_CURRENT_VERSION, const.ATTR_STATUS],
+        [const.ATTR_LOCAL_IP],
+    ],
+)
+@pytest.mark.usefixtures("mock_success")
+async def test_setup_with_limited_monitored_conditions(
+    hass: HomeAssistant,
+    monitored_conditions: list[str],
+) -> None:
+    """Test setup creates only explicitly monitored sensors."""
+    await setup_sensor_platform(
+        hass,
+        name="Test Wifi",
+        monitored_conditions=monitored_conditions,
+    )
+
+    assert_setup_component(len(monitored_conditions), "sensor")
+
+
+async def test_local_ip_sensor_is_created_when_router_is_offline(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test the local IP sensor appears after connectivity returns."""
+    aioclient_mock.get(RESOURCE_URL, json=UPDATED_RESPONSE)
+    await setup_sensor_platform(hass, monitored_conditions=[const.ATTR_LOCAL_IP])
+
+    local_ip = hass.states.get("sensor.google_wifi_local_ip")
+    assert local_ip is not None
+    assert local_ip.state == STATE_UNKNOWN
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(RESOURCE_URL, json=DEFAULT_RESPONSE)
+    await fire_polling_update(hass, 31)
+
+    local_ip = hass.states.get("sensor.google_wifi_local_ip")
+    assert local_ip is not None
+    assert local_ip.state == "10.0.0.10"
+
+
+@pytest.mark.usefixtures("mock_success")
 async def test_sensor_updates_after_failure_and_recovery(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
@@ -121,6 +260,11 @@ async def test_sensor_updates_after_failure_and_recovery(
         name="Test Wifi",
     )
 
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        RESOURCE_URL,
+        exc=aiohttp.ClientConnectionError("connection refused"),
+    )
     await fire_polling_update(hass, 31)
     assert hass.states.get("sensor.test_wifi_uptime").state == STATE_UNAVAILABLE
     assert hass.states.get("sensor.test_wifi_status").state == STATE_UNAVAILABLE
@@ -134,3 +278,21 @@ async def test_sensor_updates_after_failure_and_recovery(
     assert hass.states.get("sensor.test_wifi_uptime").state == "2.0"
     assert hass.states.get("sensor.test_wifi_local_ip").state == STATE_UNKNOWN
     assert hass.states.get("sensor.test_wifi_status").state == "Offline"
+
+
+@pytest.mark.usefixtures("mock_success")
+async def test_yaml_import_already_configured_creates_deprecation_issue(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test an existing config entry does not hide the YAML deprecation issue."""
+    mock_config_entry.add_to_hass(hass)
+    await setup_sensor_platform(hass, monitored_conditions=[const.ATTR_UPTIME])
+
+    assert (
+        issue_registry.async_get_issue(
+            HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{const.DOMAIN}"
+        )
+        is not None
+    )

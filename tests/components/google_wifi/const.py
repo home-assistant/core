@@ -6,6 +6,8 @@ from googlewifiapi.const import DEFAULT_HOST, ENDPOINT
 
 RESOURCE_URL = f"http://{DEFAULT_HOST}{ENDPOINT}"
 
+# All sample data is available at https://github.com/EReaso/GoogleWifiApi/issues/7
+
 
 def build_response(
     *,
@@ -14,6 +16,10 @@ def build_response(
     uptime: int = 86_400,
     online: bool = True,
     local_ip: str = "10.0.0.10",
+    hardware_id: str = "GALE [REDACTED]",
+    model_id: str = "modelId",
+    group_role: str = "root",
+    country_code: str = "us",
 ) -> dict[str, Any]:
     """Build a Google Wifi status response payload."""
     return {
@@ -29,13 +35,13 @@ def build_response(
             "updateStatus": "idle",
         },
         "system": {
-            "countryCode": "us",
-            "groupRole": "root",
-            "hardwareId": "GALE [REDACTED]",
+            "countryCode": country_code,
+            "groupRole": group_role,
+            "hardwareId": hardware_id,
             "lan0Link": False,
             "ledAnimation": "CONNECTED",
             "ledIntensity": 6,
-            "modelId": "modelId",
+            "modelId": model_id,
             "oobeDetailedStatus": "JOIN_AND_REGISTRATION_STAGE_DEVICE_ONLINE",
             "uptime": uptime,
         },
@@ -74,3 +80,39 @@ UPDATED_RESPONSE = build_response(
     online=False,
     local_ip="10.0.0.11",
 )
+
+LEAF_RESPONSE = build_response(
+    software_version="3.78.518349",
+    uptime=519_060,
+    online=True,
+    local_ip="192.168.86.21",
+    hardware_id="SIROCCO MP-MP1-[REDACTED]",
+    model_id="SIROCCO",
+    group_role="leaf",
+    country_code="au",
+)
+
+SPEAKER_RESPONSE = build_response(
+    software_version="1.56.514310",
+    uptime=129_345,
+    online=False,
+    local_ip="",
+    hardware_id="vento-b4",
+    model_id="VENTO",
+    group_role="none",
+    country_code="AU",
+)
+SPEAKER_RESPONSE["dns"] = {"mode": "automatic", "servers": []}
+SPEAKER_RESPONSE["setupNetwork"] = {"ssid": ""}
+SPEAKER_RESPONSE["software"]["updateProgress"] = -1.0
+SPEAKER_RESPONSE["system"]["lan0Link"] = False
+SPEAKER_RESPONSE["wan"] = {
+    "captivePortal": False,
+    "ethernetLink": False,
+    "invalidCredentials": False,
+    "ipAddress": False,
+    "online": False,
+    "pppoeDetected": False,
+    "vlanScanAttemptCount": 0,
+    "vlanScanComplete": False,
+}

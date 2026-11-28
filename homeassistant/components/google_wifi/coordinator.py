@@ -1,7 +1,7 @@
 """The Google Wifi integration coordinator."""
 
 from datetime import timedelta
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from googlewifiapi import GoogleWifiAPI, GoogleWifiStatus
 from googlewifiapi.exception import GoogleWifiClientError
@@ -11,16 +11,27 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN, LOGGER
 
+if TYPE_CHECKING:
+    from . import GoogleWifiConfigEntry
+
 
 class GoogleWifiCoordinator(DataUpdateCoordinator[GoogleWifiStatus]):
     """Coordinates entities for the Google Wifi integration."""
 
-    def __init__(self, hass: HomeAssistant, api: GoogleWifiAPI) -> None:
+    # pyrefly: ignore[bad-override-mutable-attribute]
+    config_entry: GoogleWifiConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: GoogleWifiConfigEntry,
+        api: GoogleWifiAPI,
+    ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
             LOGGER,
-            config_entry=None,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(seconds=30),
         )
