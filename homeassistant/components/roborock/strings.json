@@ -38,6 +38,17 @@
         "description": "The Roborock integration needs to re-authenticate your account",
         "title": "[%key:common::config_flow::title::reauth%]"
       },
+      "reconfigure": {
+        "data": {
+          "region": "[%key:component::roborock::config::step::user::data::region%]",
+          "username": "[%key:common::config_flow::data::email%]"
+        },
+        "data_description": {
+          "region": "[%key:component::roborock::config::step::user::data_description::region%]",
+          "username": "The email address used to sign in to the Roborock app."
+        },
+        "description": "Re-authenticate your Roborock account."
+      },
       "user": {
         "data": {
           "region": "Roborock server region",
