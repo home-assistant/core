@@ -1,8 +1,12 @@
 """Services for the todo integration."""
 
-from collections.abc import Callable
+import asyncio
+from collections.abc import AsyncIterator, Awaitable, Callable
+import contextlib
 import dataclasses
+import functools
 from typing import Any
+from weakref import WeakKeyDictionary
 
 import probatio
 
@@ -14,6 +18,7 @@ from homeassistant.util import dt as dt_util
 from .const import (
     ATTR_DESCRIPTION,
     ATTR_DUE,
+    ATTR_PARENT_UID,
     DATA_COMPONENT,
     DOMAIN,
     TodoItemStatus,
@@ -60,6 +65,12 @@ TODO_ITEM_FIELDS = [
         todo_item_field=ATTR_DESCRIPTION,
         required_feature=TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM,
     ),
+    TodoItemFieldDescription(
+        service_field=TodoServiceArgument.PARENT,
+        validation=probatio.Any(cv.string, None),
+        todo_item_field=ATTR_PARENT_UID,
+        required_feature=TodoListEntityFeature.SET_PARENT_ON_ITEM,
+    ),
 ]
 
 
@@ -81,6 +92,9 @@ TODO_SERVICE_GET_ITEMS_SCHEMA = {
         [probatio.In({TodoItemStatus.NEEDS_ACTION, TodoItemStatus.COMPLETED})],
     ),
 }
+
+
+_LIST_LOCKS: WeakKeyDictionary[TodoListEntity, asyncio.Lock] = WeakKeyDictionary()
 
 
 def _validate_supported_features(
@@ -108,6 +122,84 @@ def _find_by_uid_or_summary(
     return None
 
 
+def _resolve_parent_uid(
+    entity: TodoListEntity, parent: str | None, item: TodoItem | None
+) -> str | None:
+    """Resolve the parent of a To-do item, given by uid or summary, to its uid."""
+    if not parent:
+        return None
+
+    items = entity.todo_items or []
+    found = _find_by_uid_or_summary(parent, items)
+    if not found or not found.uid:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="parent_not_found",
+            translation_placeholders={"parent": parent},
+        )
+    if item and found.uid == item.uid:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="parent_is_self",
+            translation_placeholders={"parent": parent},
+        )
+    if found.parent_uid is not None:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="parent_is_subtask",
+            translation_placeholders={"parent": parent},
+        )
+    if item and item.uid and any(other.parent_uid == item.uid for other in items):
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="item_has_subtasks",
+            translation_placeholders={"item": item.summary or item.uid},
+        )
+    return found.uid
+
+
+def _todo_item_fields(
+    entity: TodoListEntity, call: ServiceCall, item: TodoItem | None = None
+) -> dict[str, Any]:
+    """Return the TodoItem fields set by a service call."""
+    fields = {
+        desc.todo_item_field: call.data[desc.service_field]
+        for desc in TODO_ITEM_FIELDS
+        if desc.service_field in call.data
+    }
+    if TodoServiceArgument.PARENT in call.data:
+        fields[ATTR_PARENT_UID] = _resolve_parent_uid(
+            entity, call.data[TodoServiceArgument.PARENT], item
+        )
+    return fields
+
+
+type _ItemService = Callable[[TodoListEntity, ServiceCall], Awaitable[None]]
+
+
+@contextlib.asynccontextmanager
+async def async_list_change(entity: TodoListEntity) -> AsyncIterator[None]:
+    """Run changes on a list with subtasks one at a time."""
+    features = entity.supported_features
+    if not features or not features & TodoListEntityFeature.SET_PARENT_ON_ITEM:
+        yield
+        return
+    async with _LIST_LOCKS.setdefault(entity, asyncio.Lock()):
+        yield
+
+
+def _one_call_at_a_time(func: _ItemService) -> _ItemService:
+    """Wrap a service in async_list_change."""
+
+    @functools.wraps(func)
+    async def wrapper(entity: TodoListEntity, call: ServiceCall) -> None:
+        async with async_list_change(entity):
+            await func(entity, call)
+
+    return wrapper
+
+
+@_one_call_at_a_time
 async def _async_add_todo_item(entity: TodoListEntity, call: ServiceCall) -> None:
     """Add an item to the To-do list."""
     _validate_supported_features(entity.supported_features, call.data)
@@ -115,15 +207,12 @@ async def _async_add_todo_item(entity: TodoListEntity, call: ServiceCall) -> Non
         item=TodoItem(
             summary=call.data[TodoServiceArgument.ITEM],
             status=TodoItemStatus.NEEDS_ACTION,
-            **{
-                desc.todo_item_field: call.data[desc.service_field]
-                for desc in TODO_ITEM_FIELDS
-                if desc.service_field in call.data
-            },
+            **_todo_item_fields(entity, call),
         )
     )
 
 
+@_one_call_at_a_time
 async def _async_update_todo_item(entity: TodoListEntity, call: ServiceCall) -> None:
     """Update an item in the To-do list."""
     item = call.data[TodoServiceArgument.ITEM]
@@ -145,13 +234,7 @@ async def _async_update_todo_item(entity: TodoListEntity, call: ServiceCall) -> 
         updated_data["summary"] = summary
     if status := call.data.get(TodoServiceArgument.STATUS):
         updated_data["status"] = status
-    updated_data.update(
-        {
-            desc.todo_item_field: call.data[desc.service_field]
-            for desc in TODO_ITEM_FIELDS
-            if desc.service_field in call.data
-        }
-    )
+    updated_data.update(_todo_item_fields(entity, call, found))
     await entity.async_update_todo_item(item=TodoItem(**updated_data))
 
 

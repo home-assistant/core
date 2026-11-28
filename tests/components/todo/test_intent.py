@@ -1,5 +1,6 @@
 """Tests for the todo intents."""
 
+import asyncio
 import datetime as dt
 from unittest.mock import patch
 
@@ -14,9 +15,13 @@ from homeassistant.components.todo import (
     TodoItem,
     TodoItemStatus,
     TodoListEntity,
+    TodoListEntityFeature,
+    TodoServiceArgument,
+    TodoServices,
     intent as todo_intent,
 )
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
 from homeassistant.setup import async_setup_component
@@ -374,3 +379,63 @@ async def test_remove_item_intent_errors(
             {"item": {"value": "bread"}, "name": {"value": "list 1"}},
             assistant=conversation.DOMAIN,
         )
+
+
+async def test_complete_item_intent_waits_while_parent_is_set(
+    hass: HomeAssistant,
+) -> None:
+    """Test completing an item doesn't write back a parent changed meanwhile."""
+    entity = MockTodoListEntity(
+        [
+            TodoItem(summary="P", uid="p", status=TodoItemStatus.NEEDS_ACTION),
+            TodoItem(
+                summary="A", uid="a", status=TodoItemStatus.NEEDS_ACTION, parent_uid="p"
+            ),
+        ]
+    )
+    entity._attr_name = "List 1"
+    entity.entity_id = "todo.list_1"
+    entity._attr_supported_features = (
+        TodoListEntityFeature.UPDATE_TODO_ITEM
+        | TodoListEntityFeature.SET_PARENT_ON_ITEM
+    )
+    reached, saved = asyncio.Event(), asyncio.Event()
+    update = entity.async_update_todo_item
+
+    async def save(item: TodoItem) -> None:
+        if item.status != TodoItemStatus.COMPLETED:
+            reached.set()
+            await saved.wait()
+        await update(item)
+
+    entity.async_update_todo_item = save
+    await create_mock_platform(hass, [entity])
+
+    set_parent = hass.async_create_task(
+        hass.services.async_call(
+            DOMAIN,
+            TodoServices.UPDATE_ITEM,
+            {TodoServiceArgument.ITEM: "a", TodoServiceArgument.PARENT: ""},
+            target={TargetKey.ENTITY_ID: "todo.list_1"},
+            blocking=True,
+        )
+    )
+    await reached.wait()
+    complete = hass.async_create_task(
+        intent.async_handle(
+            hass,
+            DOMAIN,
+            todo_intent.INTENT_LIST_COMPLETE_ITEM,
+            {"item": {"value": "A"}, "name": {"value": "list 1"}},
+            assistant=conversation.DOMAIN,
+        ),
+        eager_start=True,
+    )
+    saved.set()
+    async with asyncio.timeout(1):
+        await asyncio.gather(set_parent, complete)
+
+    assert {item.uid: (item.parent_uid, item.status) for item in entity.items} == {
+        "p": (None, TodoItemStatus.NEEDS_ACTION),
+        "a": (None, TodoItemStatus.COMPLETED),
+    }

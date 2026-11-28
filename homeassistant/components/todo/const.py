@@ -18,6 +18,7 @@ ATTR_DUE_DATE = "due_date"
 ATTR_DUE_DATETIME = "due_datetime"
 ATTR_DESCRIPTION = "description"
 ATTR_ITEM = "item"
+ATTR_PARENT_UID = "parent_uid"
 ATTR_RENAME = "rename"
 ATTR_STATUS = "status"
 
@@ -42,6 +43,7 @@ class TodoListEntityFeature(IntFlag):
     SET_DUE_DATE_ON_ITEM = 16
     SET_DUE_DATETIME_ON_ITEM = 32
     SET_DESCRIPTION_ON_ITEM = 64
+    SET_PARENT_ON_ITEM = 128
 
 
 class TodoItemStatus(StrEnum):
@@ -61,5 +63,6 @@ class TodoServiceArgument(StrEnum):
     DUE_DATE = "due_date"
     DUE_DATETIME = "due_datetime"
     ITEM = "item"
+    PARENT = "parent"
     RENAME = "rename"
     STATUS = "status"

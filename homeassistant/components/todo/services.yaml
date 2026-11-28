@@ -46,6 +46,13 @@ add_item:
       example: "A more complete description of the to-do item than that provided by the summary."
       selector:
         text:
+    parent:
+      filter:
+        supported_features:
+          - todo.TodoListEntityFeature.SET_PARENT_ON_ITEM
+      example: "File taxes"
+      selector:
+        text:
 update_item:
   target:
     entity:
@@ -89,6 +96,13 @@ update_item:
         supported_features:
           - todo.TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM
       example: "A more complete description of the to-do item than that provided by the summary."
+      selector:
+        text:
+    parent:
+      filter:
+        supported_features:
+          - todo.TodoListEntityFeature.SET_PARENT_ON_ITEM
+      example: "File taxes"
       selector:
         text:
 remove_item:
