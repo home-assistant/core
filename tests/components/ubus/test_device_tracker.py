@@ -1804,6 +1804,64 @@ async def test_reobserved_poll_stamped_at_completion(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_healthy_router_publishes_without_waiting_for_slow_router(
+    hass: HomeAssistant,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    two_router_hub: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a healthy router's sightings publish while another router hangs.
+
+    The tick must not hold every router's sightings until the slowest one
+    settles: a client seen by a responsive router is tracked as soon as
+    that router's poll settles, while the other router keeps settling.
+    """
+    _mock, ubus = mock_ubus_by_host
+    two_router_hub.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(two_router_hub.entry_id)
+    await hass.async_block_till_done()
+
+    # One router's next poll blocks in the executor until it is released;
+    # the other sees a new client immediately.
+    release = threading.Event()
+    settled = threading.Event()
+
+    def _blocked_clients(interface: str) -> dict:
+        release.wait()
+        return {"clients": {}}
+
+    def _settled_clients(interface: str) -> dict:
+        settled.set()
+        return {"clients": {MAC_LAPTOP: {"authorized": True}}}
+
+    ubus[MOCK_HOST].get_hostapd_clients.side_effect = _blocked_clients
+    ubus[MOCK_HOST_B].get_hostapd_clients.side_effect = _settled_clients
+
+    try:
+        freezer.tick(timedelta(seconds=31))
+        async_fire_time_changed(hass)
+        await hass.async_add_executor_job(settled.wait, 10)
+        # The tick is a background task, so poll the registry while the
+        # blocking router is still settling; the loop clock is frozen, so
+        # yield without a deadline and let the poll's real completion
+        # events drive the loop.
+        entity_id: str | None = None
+        for _ in range(1000):
+            entity_id = entity_registry.async_get_entity_id(
+                DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_LAPTOP
+            )
+            if entity_id is not None and hass.states.get(entity_id) is not None:
+                break
+            await asyncio.sleep(0)
+        assert entity_id is not None
+        assert hass.states.get(entity_id).state == STATE_HOME
+    finally:
+        release.set()
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_away_client_reports_not_home_after_restart(
     hass: HomeAssistant,
     mock_ubus: MagicMock,

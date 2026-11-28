@@ -342,9 +342,33 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[ClientPresence]):
         """Return whether the entry's subentries changed since the last poll."""
         return self._subentries_signature() != self._polled_signature
 
+    def _prune_stamps(self, presence: ClientPresence) -> ClientPresence:
+        """Drop the stamps of gone or rehosted routers.
+
+        The rest are kept, as a client stays reported while its newest
+        stamp is within consider_home. A reconfigured router's stamps
+        stand while the host is unchanged.
+        """
+        subentries = self.config_entry.subentries
+        pruned: ClientPresence = {}
+        for mac, per_host in presence.items():
+            for subentry_id, stamp in per_host.items():
+                subentry = subentries.get(subentry_id)
+                if subentry is None or (
+                    self._stamp_hosts.get(subentry_id) != subentry.data[CONF_HOST]
+                ):
+                    continue
+                pruned.setdefault(mac, {})[subentry_id] = stamp
+        return pruned
+
     @override
     async def _async_update_data(self) -> ClientPresence:
-        """Poll every router in parallel and merge their client views."""
+        """Poll every router in parallel and merge their client views.
+
+        Each view is merged and published as soon as it settles, so a
+        router that hangs does not delay the healthy routers' sightings
+        by the full request timeout.
+        """
         hosts = self._reconcile_hosts()
         if not hosts:
             # No routers configured yet; nothing to fetch.
@@ -360,76 +384,98 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[ClientPresence]):
                 poll.add_done_callback(_poll_exception_retrieved)
                 self._inflight[host] = poll
             polls.append(poll)
-        results = await asyncio.gather(
-            *(_poll_observed(poll) for poll in polls),
-            return_exceptions=True,
-        )
-        # A poll whose tick timed out was re-awaited here, so its result is
-        # applied; the next tick starts a fresh poll for the router.
-        for host, poll in zip(hosts.values(), polls, strict=True):
-            if poll.done():
-                self._inflight.pop(host, None)
-        # The subentry id survives a host change, so a removed or reconfigured
-        # router's in-flight result must not feed the merge.
-        active = self.config_entry.subentries
+        old: ClientPresence = self.data_or_none or {}
+        presence = self._prune_stamps(old)
         self._tick_results = {}
         observed_at: dict[str, datetime] = {}
-        for host, result in zip(hosts.values(), results, strict=True):
-            subentry = active.get(host.subentry_id)
-            if subentry is None or host.signature != subentry_signature(subentry):
-                self.latest_views.pop(host.subentry_id, None)
-                continue
-            if isinstance(result, BaseException):
-                self._tick_results[host.subentry_id] = result
-                continue
-            self._tick_results[host.subentry_id] = result[1]
-            observed_at[host.subentry_id] = result[0]
-        old: ClientPresence = self.data_or_none or {}
-        # Stamps of gone or rehosted routers are dropped; the rest are kept,
-        # as a client stays reported while its newest stamp is within
-        # consider_home. A reconfigured router's in-flight result is
-        # discarded above, but its stamps stand while the host is unchanged.
-        presence: ClientPresence = {}
-        for mac, per_host in old.items():
-            for subentry_id, stamp in per_host.items():
-                subentry = active.get(subentry_id)
-                if subentry is None or (
-                    self._stamp_hosts.get(subentry_id) != subentry.data[CONF_HOST]
-                ):
-                    continue
-                presence.setdefault(mac, {})[subentry_id] = stamp
-        failed: set[str] = set()
-        fresh: list[tuple[str, dict[str, str | None]]] = []
-        for subentry_id, view in self._tick_results.items():
-            if isinstance(view, BaseException):
-                failed.add(subentry_id)
-                # A failed poll sees nothing new.
-                self.latest_views.pop(subentry_id, None)
-                continue
-            self.latest_views[subentry_id] = view
-            fresh.append((subentry_id, view))
-        # Stamps are sequenced by observation time, so the newest sighting
-        # reports the client's source.
-        for subentry_id, view in sorted(fresh, key=lambda item: observed_at[item[0]]):
-            for mac, hostname in view.items():
-                self._seq += 1
-                presence.setdefault(mac, {})[subentry_id] = ClientStamp(
-                    observed_at[subentry_id], hostname, self._seq
-                )
-        # Record the host each subentry's stamps now stand under, so stamps
-        # recorded for a different host are dropped on the next merge.
-        self._stamp_hosts = {
-            subentry_id: active[subentry_id].data[CONF_HOST]
-            for per_host in presence.values()
-            for subentry_id in per_host
+        pending: dict[asyncio.Task[tuple[datetime, Any]], _UbusHost] = {
+            asyncio.create_task(_poll_observed(poll)): host
+            for host, poll in zip(hosts.values(), polls, strict=True)
         }
-        # A client which loses every stamp in the merge was last seen on a
-        # router which is no longer monitored.
-        self._ungrounded = (self._ungrounded | set(old)) - set(presence)
+        try:
+            while pending:
+                done, _ = await asyncio.wait(
+                    pending, return_when=asyncio.FIRST_COMPLETED
+                )
+                settled: list[
+                    tuple[_UbusHost, BaseException | tuple[datetime, Any]]
+                ] = []
+                for task in done:
+                    host = pending.pop(task)
+                    # A poll which finished while observed is no longer in
+                    # flight, so the next tick starts a fresh poll for the
+                    # router; one which timed out keeps running and is
+                    # re-awaited by the next tick.
+                    if (poll := self._inflight.get(host)) is not None and poll.done():
+                        self._inflight.pop(host, None)
+                    # The subentry id survives a host change, so a removed
+                    # or reconfigured router's in-flight result must not
+                    # feed the merge.
+                    subentry = self.config_entry.subentries.get(host.subentry_id)
+                    if subentry is None or host.signature != subentry_signature(
+                        subentry
+                    ):
+                        self.latest_views.pop(host.subentry_id, None)
+                        continue
+                    # The observed task is done, so its outcome is
+                    # retrievable without blocking; a cancelled task
+                    # counts as a failure.
+                    if task.cancelled():
+                        settled.append((host, asyncio.CancelledError()))
+                        continue
+                    if (exc := task.exception()) is None:
+                        settled.append((host, task.result()))
+                    else:
+                        settled.append((host, exc))
+                fresh: list[tuple[str, dict[str, str | None]]] = []
+                for host, result in settled:
+                    subentry_id = host.subentry_id
+                    if isinstance(result, BaseException):
+                        # A failed poll sees nothing new.
+                        self.latest_views.pop(subentry_id, None)
+                        self._tick_results[subentry_id] = result
+                        continue
+                    self.latest_views[subentry_id] = result[1]
+                    observed_at[subentry_id] = result[0]
+                    fresh.append((subentry_id, result[1]))
+                    self._tick_results[subentry_id] = result[1]
+                # Stamps are sequenced by observation time, so the newest
+                # sighting reports the client's source.
+                subentries = self.config_entry.subentries
+                for subentry_id, view in sorted(
+                    fresh, key=lambda item: observed_at[item[0]]
+                ):
+                    # Record the host the stamp now stands under, so stamps
+                    # recorded for a different host are dropped on the
+                    # next merge.
+                    self._stamp_hosts[subentry_id] = subentries[subentry_id].data[
+                        CONF_HOST
+                    ]
+                    for mac, hostname in view.items():
+                        self._seq += 1
+                        presence.setdefault(mac, {})[subentry_id] = ClientStamp(
+                            observed_at[subentry_id], hostname, self._seq
+                        )
+                # A router removed or rehosted mid-tick loses its stamps in
+                # the same tick the tick-end merge would have dropped them.
+                presence = self._prune_stamps(presence)
+                # A client which loses every stamp in the merge was last seen
+                # on a router which is no longer monitored.
+                self._ungrounded = (self._ungrounded | set(old)) - set(presence)
+                self.data = presence
+                self.async_signal_clients_updated()
+        finally:
+            for task in pending:
+                task.cancel()
+        failed = {
+            subentry_id
+            for subentry_id, result in self._tick_results.items()
+            if isinstance(result, BaseException)
+        }
         if failed and len(failed) == len(self._tick_results):
-            # Every router failed; the pruned presence stands in for the old
-            # data, as stamps of gone routers would count as healthy.
-            self.data = presence
+            # Every router failed; the pruned presence published above
+            # stands in for the old data, as stamps of gone routers would
+            # count as healthy.
             errors = [
                 result
                 for result in self._tick_results.values()
