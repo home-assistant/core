@@ -7,6 +7,7 @@ from aioproxmox.exceptions import (
     ProxmoxAPIError,
     ProxmoxAuthError,
     ProxmoxConnectionError,
+    ProxmoxNodeUnreachableError,
     ProxmoxResponseError,
     ProxmoxSSLError,
     ProxmoxTimeoutError,
@@ -351,6 +352,68 @@ async def test_offline_node(
     assert state.state == STATE_UNAVAILABLE
 
 
+async def test_failed_node_does_not_fail_other_nodes(
+    hass: HomeAssistant,
+    mock_proxmox_client: MagicMock,
+    mock_pve2_node: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a node whose resources fail only makes its own guests unavailable."""
+    await setup_integration(hass, mock_config_entry)
+
+    # Let the reload from enabling disabled-by-default entities settle
+    freezer.tick(STATUS_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get("binary_sensor.vm_pve2_status").state == STATE_ON
+
+    mock_pve2_node.qemu_all.side_effect = ProxmoxNodeUnreachableError(
+        595, "No route to host", "nodes/pve2/qemu"
+    )
+    freezer.tick(STATUS_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get("binary_sensor.vm_pve2_status").state == STATE_UNAVAILABLE
+    assert hass.states.get("binary_sensor.pve2_status").state == STATE_ON
+    assert hass.states.get("binary_sensor.vm_web_status").state == STATE_ON
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{mock_config_entry.entry_id}_vm_300"), mock_config_entry.entry_id
+    )
+    assert "Failed to fetch the resources of node pve2" in caplog.text
+
+    mock_pve2_node.qemu_all.side_effect = None
+    freezer.tick(STATUS_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get("binary_sensor.vm_pve2_status").state == STATE_ON
+    assert "Fetching the resources of node pve2 works again" in caplog.text
+
+
+async def test_all_nodes_failed(
+    hass: HomeAssistant,
+    mock_proxmox_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the update fails when the resources of every online node fail."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_proxmox_client._node_mock.qemu_all.side_effect = ProxmoxAPIError(
+        500, "Internal Server Error", "nodes/pve1/qemu"
+    )
+    freezer.tick(STATUS_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get("binary_sensor.pve1_status").state == STATE_UNAVAILABLE
+
+
 async def test_new_vm_creates_entity(
     hass: HomeAssistant,
     mock_proxmox_client: MagicMock,
@@ -399,6 +462,11 @@ async def test_new_container_creates_entity(
     mock_proxmox_client._node_mock.lxc_all.return_value = []
     await setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    # Let the reload from enabling disabled-by-default entities settle
+    freezer.tick(STATUS_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     initial_count = len(
         er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)

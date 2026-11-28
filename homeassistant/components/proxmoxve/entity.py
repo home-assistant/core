@@ -108,6 +108,7 @@ class ProxmoxStorageEntity(ProxmoxCoordinatorEntity):
         return (
             super().available
             and self._node_name in self.coordinator.data
+            and self._node_name not in self.coordinator.failed_nodes
             and self.device_id in self.coordinator.data[self._node_name].storages
         )
 
@@ -167,6 +168,7 @@ class ProxmoxVMEntity(ProxmoxCoordinatorEntity):
         return (
             super().available
             and self._node_name in self.coordinator.data
+            and self._node_name not in self.coordinator.failed_nodes
             and self.device_id in self.coordinator.data[self._node_name].vms
         )
 
@@ -229,6 +231,7 @@ class ProxmoxContainerEntity(ProxmoxCoordinatorEntity):
         return (
             super().available
             and self._node_name in self.coordinator.data
+            and self._node_name not in self.coordinator.failed_nodes
             and self.device_id in self.coordinator.data[self._node_name].containers
         )
 

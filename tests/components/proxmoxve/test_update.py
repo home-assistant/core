@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import replace
 from unittest.mock import MagicMock, patch
 
-from aioproxmox.exceptions import ProxmoxConnectionError
+from aioproxmox.exceptions import ProxmoxConnectionError, ProxmoxNodeUnreachableError
 from aioproxmox.model import PVEPermissions
 from aioproxmox.model.pve import (
     AptArchType,
@@ -318,7 +318,7 @@ async def test_new_node_failed_software_retried_on_interval(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert node.version.call_count == 2
+    assert node.version.call_count == 3
     assert hass.states.get(NEW_NODE_ENTITY_ID).state == STATE_UNAVAILABLE
 
     # A failed software refresh must not be retried on every status update
@@ -326,15 +326,54 @@ async def test_new_node_failed_software_retried_on_interval(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert node.version.call_count == 2
+    assert node.version.call_count == 3
 
     node.version.side_effect = None
     freezer.tick(SOFTWARE_UPDATE_INTERVAL - STATUS_UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert node.version.call_count == 4
+    assert node.version.call_count == 5
     assert hass.states.get(NEW_NODE_ENTITY_ID).state == STATE_ON
+
+
+async def test_failed_node_software_retried_on_interval(
+    hass: HomeAssistant,
+    mock_proxmox_client: MagicMock,
+    mock_pve2_node: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a node whose software fails is only retried on the software interval."""
+    mock_pve2_node.version.side_effect = ProxmoxNodeUnreachableError(
+        595, "No route to host", "nodes/pve2/version"
+    )
+    with patch(
+        "homeassistant.components.proxmoxve.PLATFORMS",
+        [Platform.UPDATE],
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
+    assert hass.states.get(NEW_NODE_ENTITY_ID).state == STATE_UNAVAILABLE
+    assert "Failed to fetch the software of node pve2" in caplog.text
+
+    # A failed node must not be retried on every status update
+    freezer.tick(STATUS_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_pve2_node.version.call_count == 1
+
+    mock_pve2_node.version.side_effect = None
+    freezer.tick(SOFTWARE_UPDATE_INTERVAL - STATUS_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_pve2_node.version.call_count == 2
+    assert hass.states.get(NEW_NODE_ENTITY_ID).state == STATE_OFF
+    assert "Fetching the software of node pve2 works again" in caplog.text
 
 
 async def test_update_up_to_date(
