@@ -9,7 +9,6 @@ from pytest_homeassistant.common import MockConfigEntry
 from homeassistant.components.co2signal.const import DOMAIN
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from . import VALID_RESPONSE
 
@@ -51,5 +50,5 @@ async def mock_setup_integration(
     """Fixture for setting up the component."""
     config_entry.add_to_hass(hass)
 
-    assert await async_setup_component(hass, DOMAIN, {})
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
