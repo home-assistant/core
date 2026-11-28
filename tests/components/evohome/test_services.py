@@ -2,9 +2,11 @@
 
 from datetime import UTC, datetime, timedelta
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
+from _evohome.auth import AbstractAuth
 from evohomeasync2 import Zone, exceptions as evo_exc
+from evohomeasync2.comm_task import CommTask
 from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
@@ -690,3 +692,252 @@ async def test_override_rejected_by_client(
         )
 
     assert exc_info.value.translation_key == key
+
+
+def _week(*switchpoints: tuple[str, float]) -> list[dict[str, Any]]:
+    """Return a schedule with the same switchpoints on every day."""
+    days = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday")
+    days += ("Saturday", "Sunday")
+    return [
+        {
+            "day_of_week": day,
+            "switchpoints": [
+                {"time_of_day": time, "heat_setpoint": setpoint}
+                for time, setpoint in switchpoints
+            ],
+        }
+        for day in days
+    ]
+
+
+@pytest.mark.parametrize("install", ["default"])
+async def test_get_zone_schedule(hass: HomeAssistant, zone_id: str) -> None:
+    """Test Evohome's get_zone_schedule service."""
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        EvoService.GET_ZONE_SCHEDULE,
+        target={TargetKey.ENTITY_ID: zone_id},
+        blocking=True,
+        return_response=True,
+    )
+
+    schedule = response[zone_id]["schedule"]
+    assert [day["day_of_week"] for day in schedule][:2] == ["Monday", "Tuesday"]
+    assert len(schedule) == 7
+    assert schedule[0]["switchpoints"][0] == {
+        "time_of_day": "07:00",
+        "heat_setpoint": 18.1,
+    }
+
+
+@pytest.mark.parametrize("install", ["default"])
+async def test_set_zone_schedule(hass: HomeAssistant, zone_id: str) -> None:
+    """Test Evohome's set_zone_schedule service."""
+
+    task = MagicMock(wait=AsyncMock())
+    with patch.object(Zone, "set_schedule", return_value=task) as mock_fcn:
+        response = await hass.services.async_call(
+            DOMAIN,
+            EvoService.SET_ZONE_SCHEDULE,
+            # unsorted, and with a time in HH:MM:SS
+            {"schedule": list(reversed(_week(("21:00", 18.5), ("05:00:00", 19.5))))},
+            target={TargetKey.ENTITY_ID: zone_id},
+            blocking=True,
+            return_response=True,
+        )
+
+    expected = _week(("05:00:00", 19.5), ("21:00:00", 18.5))
+    for day in expected:  # the client wants its own (lower case) enum for the day
+        day["day_of_week"] = day["day_of_week"].lower()
+    mock_fcn.assert_awaited_once_with(expected)
+    task.wait.assert_awaited_once()
+    assert response[zone_id]["previous_schedule"][0]["switchpoints"][0] == {
+        "time_of_day": "07:00",
+        "heat_setpoint": 18.1,
+    }
+    assert "schedule" in response[zone_id]
+
+
+@pytest.mark.parametrize("install", ["default"])
+async def test_set_zone_schedule_payload(hass: HomeAssistant, zone_id: str) -> None:
+    """Test set_zone_schedule sends the schedule in the vendor's format."""
+
+    get_request = AbstractAuth._make_request
+    payloads: list[Any] = []
+
+    async def make_request(self: Any, method: str, url: str, **kwargs: Any) -> Any:
+        if method == "PUT":
+            payloads.append((url, kwargs["json"]))
+            return {"id": "1234567890"}
+        return await get_request(self, method, url, **kwargs)
+
+    with (
+        patch.object(AbstractAuth, "_make_request", make_request),
+        patch.object(CommTask, "wait") as mock_wait,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            EvoService.SET_ZONE_SCHEDULE,
+            {"schedule": _week(("06:30", 19.0), ("22:00", 18.5))},
+            target={TargetKey.ENTITY_ID: zone_id},
+            blocking=True,
+        )
+
+    mock_wait.assert_awaited_once()
+    assert len(payloads) == 1
+    url, payload = payloads[0]
+    assert url.startswith("temperatureZone/") and url.endswith("/schedule")
+    assert payload["dailySchedules"][0] == {
+        "dayOfWeek": "Monday",
+        "switchpoints": [
+            {"heatSetpoint": 19.0, "timeOfDay": "06:30:00"},
+            {"heatSetpoint": 18.5, "timeOfDay": "22:00:00"},
+        ],
+    }
+    assert [day["dayOfWeek"] for day in payload["dailySchedules"]][-1] == "Sunday"
+
+
+@pytest.mark.parametrize("install", ["default"])
+@pytest.mark.parametrize(
+    "schedule",
+    [
+        pytest.param(_week(("06:30", 19.0))[:6], id="missing_day"),
+        pytest.param(_week(("06:30", 19.0)) + _week()[:1], id="duplicate_day"),
+        pytest.param(_week(), id="no_switchpoints"),
+        pytest.param(_week(("6.30", 19.0)), id="bad_time"),
+        pytest.param(_week(("06:30:15", 19.0)), id="time_with_seconds"),
+        pytest.param(_week(("06:30", 40.0)), id="setpoint_too_high"),
+    ],
+)
+async def test_set_zone_schedule_invalid_schema(
+    hass: HomeAssistant, zone_id: str, schedule: list[dict[str, Any]]
+) -> None:
+    """Test set_zone_schedule rejects a schedule that fails the schema."""
+
+    with (
+        patch.object(Zone, "set_schedule") as mock_fcn,
+        pytest.raises(probatio.Invalid),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            EvoService.SET_ZONE_SCHEDULE,
+            {"schedule": schedule},
+            target={TargetKey.ENTITY_ID: zone_id},
+            blocking=True,
+        )
+
+    mock_fcn.assert_not_awaited()
+
+
+@pytest.mark.parametrize("install", ["default"])
+@pytest.mark.parametrize(
+    "switchpoints",
+    [
+        pytest.param([("06:05", 19.0)], id="time_resolution"),
+        pytest.param([("06:30", 19.2)], id="setpoint_resolution"),
+        pytest.param([("06:30", 4.5)], id="below_min_temp"),
+        pytest.param([("06:30", 19.0), ("06:30:00", 18.0)], id="duplicate_time"),
+        pytest.param([(f"0{i}:00", 19.0) for i in range(7)], id="too_many"),
+    ],
+)
+async def test_set_zone_schedule_invalid_for_zone(
+    hass: HomeAssistant, zone_id: str, switchpoints: list[tuple[str, float]]
+) -> None:
+    """Test set_zone_schedule rejects a schedule the zone does not support."""
+
+    with (
+        patch.object(Zone, "set_schedule") as mock_fcn,
+        pytest.raises(ServiceValidationError) as exc_info,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            EvoService.SET_ZONE_SCHEDULE,
+            {"schedule": _week(*switchpoints)},
+            target={TargetKey.ENTITY_ID: zone_id},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "schedule_invalid"
+    mock_fcn.assert_not_awaited()
+
+
+@pytest.mark.parametrize("install", ["default"])
+@pytest.mark.parametrize(
+    ("side_effect", "translation_key"),
+    [
+        (TimeoutError, "schedule_not_confirmed"),
+        (evo_exc.CommTaskFailedError("task failed"), "api_request_failed"),
+    ],
+)
+async def test_set_zone_schedule_not_confirmed(
+    hass: HomeAssistant,
+    zone_id: str,
+    side_effect: Exception | type[Exception],
+    translation_key: str,
+) -> None:
+    """Test set_zone_schedule fails if the vendor does not complete the change."""
+
+    task = MagicMock(wait=AsyncMock(side_effect=side_effect))
+    with (
+        patch.object(Zone, "set_schedule", return_value=task),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            EvoService.SET_ZONE_SCHEDULE,
+            {"schedule": _week(("06:30", 19.0))},
+            target={TargetKey.ENTITY_ID: zone_id},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == translation_key
+
+
+@pytest.mark.parametrize("install", ["default"])
+async def test_zone_schedule_controller(hass: HomeAssistant, ctl_id: str) -> None:
+    """Test the zone schedule services are rejected for a controller."""
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            EvoService.GET_ZONE_SCHEDULE,
+            target={TargetKey.ENTITY_ID: ctl_id},
+            blocking=True,
+            return_response=True,
+        )
+    assert exc_info.value.translation_key == "zone_only_service"
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            EvoService.SET_ZONE_SCHEDULE,
+            {"schedule": _week(("06:30", 19.0))},
+            target={TargetKey.ENTITY_ID: ctl_id},
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "zone_only_service"
+
+
+@pytest.mark.parametrize("install", ["default"])
+async def test_get_zone_schedule_unavailable(hass: HomeAssistant, zone_id: str) -> None:
+    """Test get_zone_schedule fails if the zone has no valid schedule."""
+
+    with (
+        patch.object(
+            Zone,
+            "get_schedule",
+            side_effect=evo_exc.InvalidGetScheduleError("no schedule"),
+        ),
+        patch.object(Zone, "_schedule", None),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            EvoService.GET_ZONE_SCHEDULE,
+            target={TargetKey.ENTITY_ID: zone_id},
+            blocking=True,
+            return_response=True,
+        )
+
+    assert exc_info.value.translation_key == "schedule_unavailable"

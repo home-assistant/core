@@ -1,6 +1,6 @@
 # serializer version: 1
 # name: test_setup[default]
-  dict_keys(['set_system_mode', 'set_zone_override', 'set_dhw_override'])
+  dict_keys(['set_system_mode', 'set_zone_override', 'get_zone_schedule', 'set_zone_schedule', 'set_dhw_override'])
 # ---
 # name: test_setup_non_default_location[sys_004-location_idx_1]
   list([
