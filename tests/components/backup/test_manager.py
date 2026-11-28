@@ -15,6 +15,7 @@ from io import BytesIO, StringIO
 import json
 from pathlib import Path
 import re
+import subprocess
 import tarfile
 from typing import Any
 from unittest.mock import (
@@ -33,7 +34,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import async_fire_time_changed
 from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
-from securetar import SecureTarArchive, SecureTarFile
+from securetar import SecureTarFile
 
 from homeassistant.components.backup import (
     DOMAIN,
@@ -1723,11 +1724,20 @@ async def test_initiate_backup_file_error_create_backup(
     result = await ws_client.receive_json()
     assert result["success"] is True
 
+    original_run = subprocess.run
+
+    def run_archive(args: list[str], **kwargs: Any) -> subprocess.CompletedProcess:
+        if atomic_contents_add_exception is not None:
+            return subprocess.CompletedProcess(
+                args, 1, stderr=str(atomic_contents_add_exception).encode()
+            )
+        return original_run(args, **kwargs)
+
     with (
         patch(
-            "homeassistant.components.backup.manager.atomic_contents_add",
-            side_effect=atomic_contents_add_exception,
-        ) as atomic_contents_add_mock,
+            "homeassistant.components.backup.manager.subprocess.run",
+            side_effect=run_archive,
+        ) as archive_process_mock,
         patch("pathlib.Path.mkdir", side_effect=mkdir_exception) as mkdir_mock,
         patch("pathlib.Path.stat", side_effect=stat_exception) as stat_mock,
     ):
@@ -1769,7 +1779,7 @@ async def test_initiate_backup_file_error_create_backup(
     result = await ws_client.receive_json()
     assert result["event"] == {"manager_state": BackupManagerState.IDLE}
 
-    assert atomic_contents_add_mock.call_count == atomic_contents_add_call_count
+    assert archive_process_mock.call_count == atomic_contents_add_call_count
     assert mkdir_mock.call_count == mkdir_call_count
     assert stat_mock.call_count == stat_call_count
 
@@ -3819,10 +3829,9 @@ async def test_initiate_backup_per_agent_encryption(
     with (
         patch("pathlib.Path.open", mock_open(read_data=b"test")),
         patch(
-            "securetar.SecureTarArchive.__init__",
-            autospec=True,
-            wraps=SecureTarArchive.__init__,
-        ) as mock_secure_tar_archive,
+            "homeassistant.components.backup.manager.subprocess.run",
+            wraps=subprocess.run,
+        ) as archive_process_mock,
     ):
         await ws_client.send_json_auto_id(
             {
@@ -3847,9 +3856,13 @@ async def test_initiate_backup_per_agent_encryption(
 
         await hass.async_block_till_done()
 
-    assert mock_secure_tar_archive.mock_calls[0] == call(
-        ANY, ANY, "w", bufsize=4194304, create_version=3, password=inner_tar_password
+    assert archive_process_mock.call_count == 1
+    header = json.loads(
+        archive_process_mock.call_args.kwargs["input"].split(b"\n", 1)[0]
     )
+    assert header["buf_size"] == 4194304
+    assert header["create_version"] == 3
+    assert header["password"] == inner_tar_password
 
     result = await ws_client.receive_json()
     assert result["event"] == {

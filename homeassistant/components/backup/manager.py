@@ -7,18 +7,17 @@ from collections.abc import AsyncIterator, Callable, Coroutine
 from dataclasses import dataclass, replace
 from enum import StrEnum
 import hashlib
-import io
 from itertools import chain
 import json
-from pathlib import Path, PurePath, PureWindowsPath
+import os
+from pathlib import Path, PureWindowsPath
 import shutil
+import subprocess
 import sys
 import tarfile
-import time
 from typing import IO, TYPE_CHECKING, Any, Protocol, TypedDict, cast, override
 
 import aiohttp
-from securetar import SecureTarArchive, atomic_contents_add
 
 from homeassistant.backup_restore import RESTORE_BACKUP_FILE, RESTORE_BACKUP_RESULT_FILE
 from homeassistant.const import __version__ as HAVERSION
@@ -67,6 +66,8 @@ from .store import BackupStore
 from .util import (
     DecryptedBackupStreamer,
     EncryptedBackupStreamer,
+    cleanup_stale_backup_archives,
+    create_backup_staging_file,
     iter_upload_chunks,
     make_backup_dir,
     read_backup,
@@ -1974,50 +1975,63 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         if not database_included:
             excludes = excludes + EXCLUDE_DATABASE_FROM_BACKUP
 
-        def is_excluded_by_filter(path: PurePath) -> bool:
-            """Filter to filter excludes."""
-
-            for exclude in excludes:
-                # The home assistant core configuration directory is added as "data"
-                # in the tar file, so we need to prefix that path to the filters.
-                if not path.full_match(f"data/{exclude}"):
-                    continue
-                LOGGER.debug("Ignoring %s because of %s", path, exclude)
-                return True
-
-            return False
-
-        with SecureTarArchive(
-            tar_file_path,
-            "w",
-            bufsize=BUF_SIZE,
-            create_version=SECURETAR_CREATE_VERSION,
-            password=password,
-        ) as outer_secure_tarfile:
-            raw_bytes = json_bytes(backup_data)
-            fileobj = io.BytesIO(raw_bytes)
-            tar_info = tarfile.TarInfo(name="./backup.json")
-            tar_info.size = len(raw_bytes)
-            tar_info.mtime = int(time.time())
-            outer_secure_tarfile.tar.addfile(tar_info, fileobj=fileobj)
-            with outer_secure_tarfile.create_tar(
-                "./homeassistant.tar.gz",
-                gzip=True,
-            ) as core_tar:
-                atomic_contents_add(
-                    tar_file=core_tar,
-                    origin_path=Path(self._hass.config.path()),
-                    file_filter=is_excluded_by_filter,
-                    arcname="data",
-                )
+        # A terminated worker may leave an archive containing only backup.json.
+        # Stage the archive beside its destination so it becomes discoverable
+        # only after the full archive has been created successfully.
+        cleanup_stale_backup_archives(tar_file_path.parent)
+        staging_fd, partial_path = create_backup_staging_file(tar_file_path.parent)
+        published = False
         try:
-            stat_result = tar_file_path.stat()
-        except OSError as err:
-            raise BackupReaderWriterError(
-                f"Error getting size of {tar_file_path}: "
-                f"{err} ({err.__class__.__name__})"
-            ) from err
-        return (tar_file_path, stat_result.st_size)
+            request = {
+                "archive_path": str(partial_path),
+                "config_path": self._hass.config.path(),
+                "excludes": excludes,
+                "buf_size": BUF_SIZE,
+                "create_version": SECURETAR_CREATE_VERSION,
+                "password": password,
+            }
+            payload = json.dumps(request).encode() + b"\n" + json_bytes(backup_data)
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    "-P",
+                    str(Path(__file__).with_name("archive_writer.py")),
+                ],
+                input=payload,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.PIPE,
+                pass_fds=(staging_fd,),
+                check=False,
+            )
+            if result.returncode:
+                raise BackupReaderWriterError(
+                    f"Could not create Core backup archive "
+                    f"(exit code {result.returncode}): "
+                    f"{result.stderr.decode(errors='replace').strip()}"
+                )
+            try:
+                stat_result = partial_path.stat()
+            except OSError as err:
+                raise BackupReaderWriterError(
+                    f"Error getting size of {partial_path}: "
+                    f"{err} ({err.__class__.__name__})"
+                ) from err
+            partial_path.replace(tar_file_path)
+            published = True
+            return (tar_file_path, stat_result.st_size)
+        finally:
+            try:
+                if not published:
+                    try:
+                        partial_path.unlink(missing_ok=True)
+                    except OSError as err:
+                        LOGGER.warning(
+                            "Unable to remove failed backup archive %s: %s",
+                            partial_path,
+                            err,
+                        )
+            finally:
+                os.close(staging_fd)
 
     async def _receive_and_move_backup(
         self,
