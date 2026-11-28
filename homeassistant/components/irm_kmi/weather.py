@@ -26,18 +26,17 @@ from .coordinator import IrmKmiConfigEntry, IrmKmiCoordinator
 from .entity import IrmKmiBaseEntity
 from .utils import current_radar_frame
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
-    _hass: HomeAssistant,
+    hass: HomeAssistant,
     entry: IrmKmiConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the weather entry."""
     async_add_entities([IrmKmiWeather(entry)])
-
-
-# Coordinator is used to centralize the data updates
-PARALLEL_UPDATES = 0
 
 
 def _with_templow(forecast: Forecast, templow: float | None) -> Forecast:
@@ -76,12 +75,6 @@ class IrmKmiWeather(
         IrmKmiBaseEntity.__init__(self, entry, coordinator)
         SingleCoordinatorWeatherEntity.__init__(self, coordinator)
         self._attr_unique_id = entry.data[CONF_UNIQUE_ID]
-
-    @property
-    @override
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return super().available
 
     @property
     def current_weather(self) -> CurrentWeatherData:

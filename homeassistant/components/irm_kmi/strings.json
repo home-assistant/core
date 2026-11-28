@@ -5,8 +5,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
-      "api_error": "[%key:common::config_flow::error::cannot_connect%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "api_error": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "error": {
       "out_of_benelux": "The location is outside of Benelux. Pick a location in Benelux."

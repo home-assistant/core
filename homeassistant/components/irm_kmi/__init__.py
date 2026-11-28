@@ -1,7 +1,5 @@
 """Integration for IRM KMI weather."""
 
-import logging
-
 from irm_kmi_api import IrmKmiApiClientHa
 
 from homeassistant.core import HomeAssistant
@@ -17,8 +15,6 @@ from .coordinator import (
     IrmKmiRuntimeData,
 )
 from .services import async_setup_services
-
-_LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -55,8 +51,3 @@ async def async_setup_entry(hass: HomeAssistant, entry: IrmKmiConfigEntry) -> No
 async def async_unload_entry(hass: HomeAssistant, entry: IrmKmiConfigEntry) -> None:
     """Handle removal of an entry."""
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
-
-
-async def async_reload_entry(hass: HomeAssistant, entry: IrmKmiConfigEntry) -> None:
-    """Reload config entry."""
-    await hass.config_entries.async_reload(entry.entry_id)
