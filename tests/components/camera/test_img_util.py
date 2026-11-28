@@ -79,6 +79,132 @@ def test_scale_jpeg_camera_image() -> None:
     assert jpeg_bytes == EMPTY_16_12_JPEG
 
 
+SOI = b"\xff\xd8"
+SOS = b"\xff\xda\x00\x02"
+JFIF_APP0 = b"\xff\xe0\x00\x10JFIF\x00\x01\x01\x00\x00\x01\x00\x01\x00\x00"
+EXIF_PAYLOAD = (
+    b"Exif\x00\x00"
+    b"MM\x00\x2a\x00\x00\x00\x08"  # big endian TIFF header, IFD at offset 8
+    b"\x00\x01"  # one IFD entry
+    b"\x01\x12\x00\x03\x00\x00\x00\x01\x00\x06\x00\x00"  # orientation 6
+    b"\x00\x00\x00\x00"  # no next IFD
+)
+EXIF_APP1 = b"\xff\xe1" + (len(EXIF_PAYLOAD) + 2).to_bytes(2, "big") + EXIF_PAYLOAD
+SCALED = SOI + JFIF_APP0 + SOS + b"scaled"
+
+
+@pytest.mark.parametrize(
+    ("original", "scaled", "expected"),
+    [
+        # EXIF is copied behind the JFIF APP0 segment of the scaled image
+        (
+            SOI + EXIF_APP1 + SOS + b"image",
+            SCALED,
+            SOI + JFIF_APP0 + EXIF_APP1 + SOS + b"scaled",
+        ),
+        # Fill bytes before a marker are skipped
+        (
+            SOI + b"\xff\xff" + EXIF_APP1 + SOS + b"image",
+            SCALED,
+            SOI + JFIF_APP0 + EXIF_APP1 + SOS + b"scaled",
+        ),
+        # Markers without a length field (TEM) are skipped
+        (
+            SOI + b"\xff\x01" + EXIF_APP1 + SOS + b"image",
+            SCALED,
+            SOI + JFIF_APP0 + EXIF_APP1 + SOS + b"scaled",
+        ),
+        # EXIF after another APP segment is found
+        (
+            SOI + JFIF_APP0 + EXIF_APP1 + SOS + b"image",
+            SCALED,
+            SOI + JFIF_APP0 + EXIF_APP1 + SOS + b"scaled",
+        ),
+        # Scaled image without APP0 gets EXIF right after SOI
+        (
+            SOI + EXIF_APP1 + SOS + b"image",
+            SOI + SOS + b"scaled",
+            SOI + EXIF_APP1 + SOS + b"scaled",
+        ),
+        # No EXIF in the source image
+        (SOI + JFIF_APP0 + SOS + b"image", SCALED, SCALED),
+        # Header ends without a start of scan
+        (SOI, SCALED, SCALED),
+        # Invalid segment length
+        (SOI + b"\xff\xe1\x00\x01" + SOS + b"image", SCALED, SCALED),
+        # Truncated EXIF segment
+        (SOI + EXIF_APP1[:-4], SCALED, SCALED),
+        # Scaled data is not a JPEG
+        (SOI + EXIF_APP1 + SOS + b"image", b"not-a-jpeg", b"not-a-jpeg"),
+    ],
+)
+def test_scale_jpeg_camera_image_preserves_exif(
+    original: bytes, scaled: bytes, expected: bytes
+) -> None:
+    """Test scaling keeps the EXIF segment so the orientation still applies."""
+    _clear_turbojpeg_singleton()
+
+    turbo_jpeg = mock_turbo_jpeg(first_width=1600, first_height=1200)
+    turbo_jpeg.scale_with_quality.return_value = scaled
+    with patch(
+        "homeassistant.components.camera.img_util.TurboJPEG", return_value=turbo_jpeg
+    ):
+        TurboJPEGSingleton()
+        jpeg_bytes = scale_jpeg_camera_image(Image("image/jpeg", original), 600, 400)
+
+    assert jpeg_bytes == expected
+
+
+def _exif_app1(tiff: bytes) -> bytes:
+    """Build an EXIF APP1 segment around a TIFF structure."""
+    payload = b"Exif\x00\x00" + tiff
+    return b"\xff\xe1" + (len(payload) + 2).to_bytes(2, "big") + payload
+
+
+ORIENTATION_6_LITTLE_ENDIAN = (
+    b"II\x2a\x00\x08\x00\x00\x00"  # little endian TIFF header, IFD at offset 8
+    b"\x01\x00"  # one IFD entry
+    b"\x12\x01\x03\x00\x01\x00\x00\x00\x06\x00\x00\x00"  # orientation 6
+    b"\x00\x00\x00\x00"  # no next IFD
+)
+
+
+@pytest.mark.parametrize(
+    ("exif_app1", "scaling_factor"),
+    [
+        # Orientation 6: the 1600x1200 image is displayed as 1200x1600
+        (EXIF_APP1, (1, 2)),
+        (_exif_app1(ORIENTATION_6_LITTLE_ENDIAN), (1, 2)),
+        # Orientation 1 and missing or unreadable orientation keep the stored size
+        (_exif_app1(EXIF_PAYLOAD[6:].replace(b"\x00\x06", b"\x00\x01", 1)), (3, 8)),
+        (b"", (3, 8)),
+        (_exif_app1(b"XX" + EXIF_PAYLOAD[8:]), (3, 8)),
+        (_exif_app1(EXIF_PAYLOAD[6:14]), (3, 8)),
+        (_exif_app1(b"MM\x00\x2a\x00\x00\x00\x08\x00\x00"), (3, 8)),
+    ],
+)
+def test_scale_jpeg_camera_image_uses_exif_orientation(
+    exif_app1: bytes, scaling_factor: tuple[int, int]
+) -> None:
+    """Test the scaling factor is chosen for the displayed orientation."""
+    _clear_turbojpeg_singleton()
+
+    turbo_jpeg = mock_turbo_jpeg(first_width=1600, first_height=1200)
+    turbo_jpeg.scale_with_quality.return_value = SCALED
+    with patch(
+        "homeassistant.components.camera.img_util.TurboJPEG", return_value=turbo_jpeg
+    ):
+        TurboJPEGSingleton()
+        scale_jpeg_camera_image(
+            Image("image/jpeg", SOI + exif_app1 + SOS + b"image"), 600, 400
+        )
+
+    assert (
+        turbo_jpeg.scale_with_quality.call_args.kwargs["scaling_factor"]
+        == scaling_factor
+    )
+
+
 def test_turbojpeg_load_failure(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
