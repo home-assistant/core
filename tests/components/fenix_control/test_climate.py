@@ -1,0 +1,1198 @@
+"""Test the FENIX Control climate platform."""
+
+import asyncio
+import dataclasses
+from datetime import timedelta
+from typing import Any
+from unittest.mock import MagicMock
+
+from freezegun.api import FrozenDateTimeFactory
+from pyfenixcontrol import Device, FenixControlConnectionError, PresetMode
+import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
+from syrupy.assertion import SnapshotAssertion
+
+from homeassistant.components.climate import (
+    ATTR_HVAC_ACTION,
+    ATTR_HVAC_MODE,
+    ATTR_HVAC_MODES,
+    ATTR_MAX_TEMP,
+    ATTR_MIN_TEMP,
+    ATTR_PRESET_MODE,
+    ATTR_TARGET_TEMP_STEP,
+    DOMAIN as CLIMATE_DOMAIN,
+    PRESET_BOOST,
+    SERVICE_SET_HVAC_MODE,
+    SERVICE_SET_PRESET_MODE,
+    SERVICE_SET_TEMPERATURE,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
+)
+from homeassistant.components.fenix_control.climate import (
+    PRESET_DEFROST,
+    PRESET_PROGRAM,
+)
+from homeassistant.components.fenix_control.const import DOMAIN, SCAN_INTERVAL
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
+    ATTR_TEMPERATURE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import entity_registry as er
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
+
+from .conftest import DEVICE, DEVICE_ID
+
+ENTITY_ID = "climate.home_living_room"
+
+OFF_DEVICE = dataclasses.replace(DEVICE, preset_mode=int(PresetMode.OFF))
+HOLIDAY_DEVICE = dataclasses.replace(
+    DEVICE,
+    preset_mode=int(PresetMode.HOLIDAYS),
+    hvac_state=2,
+    holiday_start="01/12/2025 12:00:00",
+    holiday_end="10/12/2025 12:00:00",
+    holiday_mode=2,
+    active_holiday_mode=2,
+)
+
+
+async def _set_devices(
+    hass: HomeAssistant,
+    mock_fenix_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    *devices: object,
+) -> None:
+    """Return new device states on the next poll."""
+    mock_fenix_client.get_devices.return_value = list(devices)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Load only the climate platform."""
+    return [Platform.CLIMATE]
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_entities(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the climate entity."""
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_set_temperature(
+    hass: HomeAssistant, mock_fenix_client: MagicMock
+) -> None:
+    """Test setting the target temperature."""
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 21.5},
+        blocking=True,
+    )
+
+    mock_fenix_client.set_setpoint.assert_awaited_once_with(
+        DEVICE_ID, PresetMode.MANUAL, 21.5
+    )
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_TEMPERATURE] == 21.5
+    assert state.state == HVACMode.HEAT
+
+
+# The active setpoint (21.0) differs from the defrost and boost setpoints, which
+# have their own ranges (TFT thermostats report 1.94-15 °C for frost protection)
+SETPOINT_DEVICE = dataclasses.replace(
+    DEVICE,
+    active_target_temperature=21.0,
+    defrost_temperature=7.0,
+    boost_temperature=24.0,
+    target_temperature_range=(5.0, 35.0),
+    defrost_temperature_range=(1.94, 15.0),
+    boost_temperature_range=(5.0, 35.0),
+)
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    ("preset_mode", "setpoint", "min_temp", "max_temp"),
+    [
+        (PresetMode.PROGRAM, 21.0, 5.0, 35.0),
+        (PresetMode.DEFROST, 7.0, 2.0, 15.0),
+        (PresetMode.BOOST, 24.0, 5.0, 35.0),
+    ],
+)
+async def test_target_outside_manual(
+    hass: HomeAssistant,
+    mock_fenix_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    preset_mode: PresetMode,
+    setpoint: float,
+    min_temp: float,
+    max_temp: float,
+) -> None:
+    """Test program, defrost and boost show their setpoint and range."""
+    await _set_devices(
+        hass,
+        mock_fenix_client,
+        freezer,
+        dataclasses.replace(SETPOINT_DEVICE, preset_mode=int(preset_mode)),
+    )
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_TEMPERATURE] == setpoint
+    assert state.attributes[ATTR_MIN_TEMP] == min_temp
+    assert state.attributes[ATTR_MAX_TEMP] == max_temp
+    assert (
+        state.attributes[ATTR_SUPPORTED_FEATURES]
+        & ClimateEntityFeature.TARGET_TEMPERATURE
+    )
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_set_temperature_in_program(
+    hass: HomeAssistant,
+    mock_fenix_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a new target in program mode switches the thermostat to manual."""
+    await _set_devices(
+        hass,
+        mock_fenix_client,
+        freezer,
+        dataclasses.replace(SETPOINT_DEVICE, preset_mode=int(PresetMode.PROGRAM)),
+    )
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 21.5},
+        blocking=True,
+    )
+
+    mock_fenix_client.set_setpoint.assert_called_once_with(
+        DEVICE_ID, PresetMode.MANUAL, 21.5
+    )
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == HVACMode.HEAT
+    assert state.attributes[ATTR_TEMPERATURE] == 21.5
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    ("preset_mode", "preset", "temperature"),
+    [
+        (PresetMode.DEFROST, PRESET_DEFROST, 8.0),
+        (PresetMode.BOOST, PRESET_BOOST, 23.0),
+    ],
+)
+async def test_set_temperature_keeps_defrost_and_boost(
+    hass: HomeAssistant,
+    mock_fenix_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    preset_mode: PresetMode,
+    preset: str,
+    temperature: float,
+) -> None:
+    """Test defrost and boost get a new setpoint and keep their mode."""
+    await _set_devices(
+        hass,
+        mock_fenix_client,
+        freezer,
+        dataclasses.replace(SETPOINT_DEVICE, preset_mode=int(preset_mode)),
+    )
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: temperature},
+        blocking=True,
+    )
+
+    mock_fenix_client.set_setpoint.assert_called_once_with(
+        DEVICE_ID, preset_mode, temperature
+    )
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == HVACMode.AUTO
+    assert state.attributes[ATTR_PRESET_MODE] == preset
+    assert state.attributes[ATTR_TEMPERATURE] == temperature
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_set_temperature_outside_device_range(
+    hass: HomeAssistant,
+    mock_fenix_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a target outside the device's range is rejected before sending."""
+    await _set_devices(
+        hass,
+        mock_fenix_client,
+        freezer,
+        dataclasses.replace(SETPOINT_DEVICE, preset_mode=int(PresetMode.DEFROST)),
+    )
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 16.0},
+            blocking=True,
+        )
+
+    mock_fenix_client.set_setpoint.assert_not_called()
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_set_temperature_leaving_defrost_checks_manual_range(
+    hass: HomeAssistant,
+    mock_fenix_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a target for heat is checked against the manual range, not defrost's."""
+    await _set_devices(
+        hass,
+        mock_fenix_client,
+        freezer,
+        dataclasses.replace(SETPOINT_DEVICE, preset_mode=int(PresetMode.DEFROST)),
+    )
+
+    # Within the defrost range (2-15 °C), so Home Assistant passes it on
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                ATTR_TEMPERATURE: 3.0,
+                ATTR_HVAC_MODE: HVACMode.HEAT,
+            },
+            blocking=True,
+        )
+    assert err.value.translation_key == "temperature_out_of_range"
+    assert err.value.translation_placeholders == {
+        "temperature": "3.0",
+        "min_temp": "5.0",
+        "max_temp": "35.0",
+    }
+
+    # Above the defrost range: Home Assistant rejects it before the integration
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                ATTR_TEMPERATURE: 21.5,
+                ATTR_HVAC_MODE: HVACMode.HEAT,
+            },
+            blocking=True,
+        )
+    assert err.value.translation_key == "temp_out_of_range"
+
+    mock_fenix_client.set_setpoint.assert_not_called()
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_PRESET_MODE] == PRESET_DEFROST
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    ("preset", "temperature"),
+    [
+        # The program's setpoint is only known after the next poll
+        (PRESET_PROGRAM, None),
+        (PRESET_BOOST, 24.0),
+    ],
+)
+async def test_preset_change_shows_new_mode_target(
+    hass: HomeAssistant,
+    mock_fenix_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    preset: str,
+    temperature: float | None,
+) -> None:
+    """Test the old mode's active setpoint doesn't show as the new mode's target."""
+    await _set_devices(
+        hass,
+        mock_fenix_client,
+        freezer,
+        dataclasses.replace(
+            SETPOINT_DEVICE,
+            preset_mode=int(PresetMode.DEFROST),
+            active_target_temperature=7.0,
+        ),
+    )
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: preset},
+        blocking=True,
+    )
+
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_TEMPERATURE] == temperature
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    ("device_range", "min_temp", "max_temp"),
+    [
+        ((10.000001, 30.0), 10.0, 30.0),  # WiFi Box manual range
+        ((10.1, 10.4), 5.0, 35.0),  # no step inside: default range
+        (None, 5.0, 35.0),
+    ],
+)
+async def test_manual_range_follows_device(
+    hass: HomeAssistant,
+    mock_fenix_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    device_range: tuple[float, float] | None,
+    min_temp: float,
+    max_temp: float,
+) -> None:
+    """Test the manual range is the device's, rounded to the step."""
+    await _set_devices(
+        hass,
+        mock_fenix_client,
+        freezer,
+        dataclasses.replace(DEVICE, target_temperature_range=device_range),
+    )
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_MIN_TEMP] == min_temp
+    assert state.attributes[ATTR_MAX_TEMP] == max_temp
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_no_target_when_off(
+    hass: HomeAssistant,
+    mock_fenix_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test an off thermostat shows no target temperature."""
+    await _set_devices(hass, mock_fenix_client, freezer, OFF_DEVICE)
+
+    assert hass.states.get(ENTITY_ID).attributes.get(ATTR_TEMPERATURE) is None
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_command_keeps_poll_schedule(
+    hass: HomeAssistant,
+    mock_fenix_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test an optimistic update doesn't postpone the next poll."""
+    # Align the poll schedule with the frozen clock
+    await _set_devices(hass, mock_fenix_client, freezer, DEVICE)
+    polls = mock_fenix_client.get_devices.call_count
+
+    freezer.tick(SCAN_INTERVAL - timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 21.5},
+        blocking=True,
+    )
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_TEMPERATURE] == 21.5
+    assert mock_fenix_client.get_devices.call_count == polls
+
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_fenix_client.get_devices.call_count == polls + 1
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_running_poll_keeps_command(
+    hass: HomeAssistant,
+    mock_fenix_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a poll that started before a command doesn't revert it."""
+    polling = asyncio.Event()
+    release = asyncio.Event()
+
+    async def slow_get_devices(*args: object) -> list[Device]:
+        polling.set()
+        await release.wait()
+        return [DEVICE]
+
+    mock_fenix_client.get_devices.side_effect = slow_get_devices
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await asyncio.wait_for(polling.wait(), 1)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 21.5},
+        blocking=True,
+    )
+    release.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_TEMPERATURE] == 21.5
+
+    # The next poll reports the thermostat again
+    mock_fenix_client.get_devices.side_effect = None
+    await _set_devices(hass, mock_fenix_client, freezer, DEVICE)
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_TEMPERATURE] == 22.5
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_running_poll_with_holiday_wins_over_command(
+    hass: HomeAssistant,
+    mock_fenix_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a holiday found by a running poll isn't hidden by a command."""
+    polling = asyncio.Event()
+    release = asyncio.Event()
+
+    async def slow_get_devices(*args: object) -> list[Device]:
+        polling.set()
+        await release.wait()
+        return [HOLIDAY_DEVICE]
+
+    mock_fenix_client.get_devices.side_effect = slow_get_devices
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await asyncio.wait_for(polling.wait(), 1)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 21.5},
+        blocking=True,
+    )
+    release.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
+    assert state.attributes[ATTR_HVAC_MODES] == [HVACMode.AUTO]
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    ("devices", "expected_state"),
+    [
+        # A holiday started while the command ran: the holiday mode stays
+        ([HOLIDAY_DEVICE], HVACMode.AUTO),
+        # The cloud stopped reporting the thermostat while the command ran
+        ([], STATE_UNAVAILABLE),
+    ],
+)
+async def test_poll_during_command_wins(
+    hass: HomeAssistant,
+    mock_fenix_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    devices: list[Device],
+    expected_state: str,
+) -> None:
+    """Test a poll that finishes while a command runs isn't overwritten by it."""
+    sending = asyncio.Event()
+    release = asyncio.Event()
+
+    async def slow_set_preset_mode(*args: object) -> None:
+        sending.set()
+        await release.wait()
+
+    mock_fenix_client.set_preset_mode.side_effect = slow_set_preset_mode
+    command = hass.async_create_task(
+        hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.OFF},
+            blocking=True,
+        )
+    )
+    await asyncio.wait_for(sending.wait(), 1)
+
+    # The poll can't wait for all tasks: the command is still running
+    mock_fenix_client.get_devices.return_value = devices
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    for _ in range(100):
+        if hass.states.get(ENTITY_ID).state == expected_state:
+            break
+        await asyncio.sleep(0)
+    assert hass.states.get(ENTITY_ID).state == expected_state
+
+    release.set()
+    await command
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == expected_state
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    ("hvac_mode", "preset_mode"),
+    [
+        (HVACMode.OFF, PresetMode.OFF),
+        (HVACMode.AUTO, PresetMode.PROGRAM),
+    ],
+)
+async def test_set_temperature_with_hvac_mode(
+    hass: HomeAssistant,
+    mock_fenix_client: MagicMock,
+    hvac_mode: HVACMode,
+    preset_mode: PresetMode,
+) -> None:
+    """Test the HVAC mode is applied after the temperature, which selects manual."""
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 21.5, ATTR_HVAC_MODE: hvac_mode},
+        blocking=True,
+    )
+
+    mock_fenix_client.set_setpoint.assert_awaited_once_with(
+        DEVICE_ID, PresetMode.MANUAL, 21.5
+    )
+    mock_fenix_client.set_preset_mode.assert_awaited_once_with(DEVICE_ID, preset_mode)
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == hvac_mode
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_set_temperature_with_heat_mode(
+    hass: HomeAssistant, mock_fenix_client: MagicMock
+) -> None:
+    """Test heat needs no extra command, the temperature already selects manual."""
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: ENTITY_ID,
+            ATTR_TEMPERATURE: 21.5,
+            ATTR_HVAC_MODE: HVACMode.HEAT,
+        },
+        blocking=True,
+    )
+
+    mock_fenix_client.set_setpoint.assert_awaited_once_with(
+        DEVICE_ID, PresetMode.MANUAL, 21.5
+    )
+    mock_fenix_client.set_preset_mode.assert_not_called()
+    assert hass.states.get(ENTITY_ID).state == HVACMode.HEAT
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_set_temperature_with_heat_mode_when_off(
+    hass: HomeAssistant,
+    mock_fenix_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test an off thermostat accepts a target together with the heat mode."""
+    await _set_devices(hass, mock_fenix_client, freezer, OFF_DEVICE)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: ENTITY_ID,
+            ATTR_TEMPERATURE: 21.5,
+            ATTR_HVAC_MODE: HVACMode.HEAT,
+        },
+        blocking=True,
+    )
+
+    mock_fenix_client.set_setpoint.assert_awaited_once_with(
+        DEVICE_ID, PresetMode.MANUAL, 21.5
+    )
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == HVACMode.HEAT
+    assert state.attributes[ATTR_TEMPERATURE] == 21.5
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize("preset_mode", [int(PresetMode.OFF), None, 99])
+async def test_set_temperature_without_target_mode(
+    hass: HomeAssistant,
+    mock_fenix_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    preset_mode: int | None,
+) -> None:
+    """Test a target alone doesn't turn on an off thermostat."""
+    await _set_devices(
+        hass,
+        mock_fenix_client,
+        freezer,
+        dataclasses.replace(DEVICE, preset_mode=preset_mode),
+    )
+    assert hass.states.get(ENTITY_ID).attributes.get(ATTR_TEMPERATURE) is None
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 21.5},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "no_target_mode"
+    mock_fenix_client.set_setpoint.assert_not_called()
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_set_temperature_with_unsupported_hvac_mode(
+    hass: HomeAssistant, mock_fenix_client: MagicMock
+) -> None:
+    """Test an unsupported HVAC mode is rejected before any command is sent."""
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                ATTR_TEMPERATURE: 21.5,
+                ATTR_HVAC_MODE: HVACMode.COOL,
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "unsupported_hvac_mode"
+    mock_fenix_client.set_setpoint.assert_not_called()
+    mock_fenix_client.set_preset_mode.assert_not_called()
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_set_temperature_invalid_step(
+    hass: HomeAssistant, mock_fenix_client: MagicMock
+) -> None:
+    """Test a target off the 0.5 °C step is rejected before any command is sent."""
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 21.25},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "temperature_step_invalid"
+    assert exc_info.value.translation_placeholders == {
+        "temperature": "21.25",
+        "step": "0.5",
+    }
+    mock_fenix_client.set_setpoint.assert_not_called()
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_set_temperature_fahrenheit_rounds_to_step(
+    hass: HomeAssistant, mock_fenix_client: MagicMock
+) -> None:
+    """Test a target converted from °F is rounded to the 0.5 °C step."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 72},
+        blocking=True,
+    )
+
+    assert mock_fenix_client.set_setpoint.call_args.args[2] == 22.0
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_fahrenheit_target_step(
+    hass: HomeAssistant, mock_fenix_client: MagicMock
+) -> None:
+    """Test the UI steps whole °F, and one step down changes the target."""
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_TARGET_TEMP_STEP] == 0.5
+    hass.config.units = US_CUSTOMARY_SYSTEM
+
+    # 20.5 °C shows as 69 °F; one whole step down must reach a new 0.5 °C target
+    for target_f, expected_c in ((69, 20.5), (68, 20.0)):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: target_f},
+            blocking=True,
+        )
+        assert mock_fenix_client.set_setpoint.call_args.args[2] == expected_c
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_TARGET_TEMP_STEP] == 1
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    ("hvac_mode", "preset_mode"),
+    [
+        (HVACMode.OFF, PresetMode.OFF),
+        (HVACMode.AUTO, PresetMode.PROGRAM),
+        (HVACMode.HEAT, PresetMode.MANUAL),
+    ],
+)
+async def test_set_hvac_mode(
+    hass: HomeAssistant,
+    mock_fenix_client: MagicMock,
+    hvac_mode: HVACMode,
+    preset_mode: PresetMode,
+) -> None:
+    """Test setting the HVAC mode."""
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: hvac_mode},
+        blocking=True,
+    )
+
+    mock_fenix_client.set_preset_mode.assert_awaited_once_with(DEVICE_ID, preset_mode)
+    assert hass.states.get(ENTITY_ID).state == hvac_mode
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    ("last_mode", "expected_mode"),
+    [
+        pytest.param(PresetMode.MANUAL, PresetMode.MANUAL, id="heat"),
+        pytest.param(PresetMode.PROGRAM, PresetMode.PROGRAM, id="auto"),
+        pytest.param(PresetMode.DEFROST, PresetMode.PROGRAM, id="preset"),
+    ],
+)
+async def test_turn_on_restores_last_mode(
+    hass: HomeAssistant,
+    mock_fenix_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    last_mode: PresetMode,
+    expected_mode: PresetMode,
+) -> None:
+    """Test turning on restores the last HVAC mode in which it was on."""
+    await _set_devices(
+        hass,
+        mock_fenix_client,
+        freezer,
+        dataclasses.replace(DEVICE, preset_mode=last_mode),
+    )
+    await _set_devices(hass, mock_fenix_client, freezer, OFF_DEVICE)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+    )
+
+    mock_fenix_client.set_preset_mode.assert_awaited_once_with(DEVICE_ID, expected_mode)
+
+
+async def test_turn_on_defaults_to_program(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_fenix_client: MagicMock,
+) -> None:
+    """Test turning on a thermostat that was off since startup starts the program."""
+    mock_fenix_client.get_devices.return_value = [OFF_DEVICE]
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+    )
+
+    mock_fenix_client.set_preset_mode.assert_awaited_once_with(
+        DEVICE_ID, PresetMode.PROGRAM
+    )
+    assert hass.states.get(ENTITY_ID).state == HVACMode.AUTO
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_turn_off(hass: HomeAssistant, mock_fenix_client: MagicMock) -> None:
+    """Test turning off switches the thermostat off."""
+    await hass.services.async_call(
+        CLIMATE_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+    )
+
+    mock_fenix_client.set_preset_mode.assert_awaited_once_with(
+        DEVICE_ID, PresetMode.OFF
+    )
+    assert hass.states.get(ENTITY_ID).state == HVACMode.OFF
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    ("preset", "preset_mode"),
+    [
+        (PRESET_PROGRAM, PresetMode.PROGRAM),
+        (PRESET_DEFROST, PresetMode.DEFROST),
+        (PRESET_BOOST, PresetMode.BOOST),
+    ],
+)
+async def test_set_preset_mode(
+    hass: HomeAssistant,
+    mock_fenix_client: MagicMock,
+    preset: str,
+    preset_mode: PresetMode,
+) -> None:
+    """Test setting a preset."""
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: preset},
+        blocking=True,
+    )
+
+    mock_fenix_client.set_preset_mode.assert_awaited_once_with(DEVICE_ID, preset_mode)
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == HVACMode.AUTO
+    assert state.attributes[ATTR_PRESET_MODE] == preset
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    ("service", "data", "client_method", "translation_key"),
+    [
+        pytest.param(
+            SERVICE_SET_TEMPERATURE,
+            {ATTR_TEMPERATURE: 21.0},
+            "set_setpoint",
+            "set_temperature_failed",
+            id="temperature",
+        ),
+        pytest.param(
+            SERVICE_SET_HVAC_MODE,
+            {ATTR_HVAC_MODE: HVACMode.OFF},
+            "set_preset_mode",
+            "set_hvac_mode_failed",
+            id="hvac_mode",
+        ),
+        pytest.param(
+            SERVICE_SET_PRESET_MODE,
+            {ATTR_PRESET_MODE: PRESET_DEFROST},
+            "set_preset_mode",
+            "set_preset_mode_failed",
+            id="preset",
+        ),
+    ],
+)
+async def test_command_errors(
+    hass: HomeAssistant,
+    mock_fenix_client: MagicMock,
+    service: str,
+    data: dict[str, object],
+    client_method: str,
+    translation_key: str,
+) -> None:
+    """Test a failed command raises a translated error and keeps the state."""
+    getattr(mock_fenix_client, client_method).side_effect = FenixControlConnectionError(
+        "offline"
+    )
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: ENTITY_ID, **data},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == translation_key
+    assert hass.states.get(ENTITY_ID).state == HVACMode.HEAT
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_holiday_locks_controls(
+    hass: HomeAssistant,
+    mock_fenix_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test an active holiday locks the thermostat."""
+    await _set_devices(hass, mock_fenix_client, freezer, HOLIDAY_DEVICE)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == HVACMode.AUTO
+    assert state.attributes[ATTR_HVAC_MODES] == [HVACMode.AUTO]
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
+    # The thermostat still reports whether it heats
+    assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
+    # Without the preset feature Home Assistant omits the attribute
+    assert ATTR_PRESET_MODE not in state.attributes
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.AUTO},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "holiday_active"
+    mock_fenix_client.set_preset_mode.assert_not_called()
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    ("preset_mode", "hvac_state", "hvac_action"),
+    [
+        (PresetMode.MANUAL, 0, HVACAction.IDLE),
+        (PresetMode.MANUAL, 1, HVACAction.HEATING),
+        (PresetMode.MANUAL, 2, HVACAction.IDLE),
+        (PresetMode.MANUAL, 7, None),
+        (PresetMode.MANUAL, None, None),
+        (PresetMode.OFF, 0, HVACAction.OFF),
+        (PresetMode.OFF, 2, HVACAction.OFF),
+        (PresetMode.OFF, None, HVACAction.OFF),
+    ],
+)
+async def test_hvac_action(
+    hass: HomeAssistant,
+    mock_fenix_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    preset_mode: PresetMode,
+    hvac_state: int | None,
+    hvac_action: HVACAction | None,
+) -> None:
+    """Test the heating state is idle unless the thermostat is off."""
+    await _set_devices(
+        hass,
+        mock_fenix_client,
+        freezer,
+        dataclasses.replace(DEVICE, preset_mode=preset_mode, hvac_state=hvac_state),
+    )
+
+    # Home Assistant omits the attribute when the action is unknown
+    assert hass.states.get(ENTITY_ID).attributes.get(ATTR_HVAC_ACTION) == hvac_action
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    ("preset_mode", "holiday_mode", "hvac_mode"),
+    [
+        # A WiFi Box reports mode 7 in every holiday, a TFT in a Sunday holiday
+        (7, 8, HVACMode.AUTO),
+        (7, 2, HVACMode.AUTO),
+        (None, 2, HVACMode.AUTO),
+        (int(PresetMode.DEFROST), 5, HVACMode.AUTO),
+        (7, 1, HVACMode.OFF),
+        (int(PresetMode.OFF), 1, HVACMode.OFF),
+    ],
+)
+async def test_hvac_mode_during_holiday(
+    hass: HomeAssistant,
+    mock_fenix_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    preset_mode: int | None,
+    holiday_mode: int,
+    hvac_mode: HVACMode,
+) -> None:
+    """Test a holiday shows auto, or off if it turns the heating off."""
+    await _set_devices(
+        hass,
+        mock_fenix_client,
+        freezer,
+        dataclasses.replace(
+            HOLIDAY_DEVICE, preset_mode=preset_mode, holiday_mode=holiday_mode
+        ),
+    )
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == hvac_mode
+    assert state.attributes[ATTR_HVAC_MODES] == [hvac_mode]
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    ("service", "service_data", "translation_key"),
+    [
+        (
+            SERVICE_SET_PRESET_MODE,
+            {ATTR_PRESET_MODE: PRESET_DEFROST},
+            "holiday_active",
+        ),
+        # Home Assistant checks the feature again when the command gets its turn
+        (
+            SERVICE_SET_TEMPERATURE,
+            {ATTR_TEMPERATURE: 21.5},
+            "missing_target_temperature_entity_feature",
+        ),
+    ],
+)
+async def test_queued_command_rejected_when_holiday_starts(
+    hass: HomeAssistant,
+    mock_fenix_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    service: str,
+    service_data: dict[str, Any],
+    translation_key: str,
+) -> None:
+    """Test a command waiting behind another isn't sent once a holiday is found."""
+    sending = asyncio.Event()
+    release = asyncio.Event()
+
+    async def slow_set_preset_mode(*args: object) -> None:
+        sending.set()
+        await release.wait()
+
+    mock_fenix_client.set_preset_mode.side_effect = slow_set_preset_mode
+    first = asyncio.create_task(
+        hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_PRESET_MODE,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: PRESET_BOOST},
+            blocking=True,
+        )
+    )
+    await asyncio.wait_for(sending.wait(), 1)
+    # Accepted while the controls are still offered, then waits for the first
+    queued = asyncio.create_task(
+        hass.services.async_call(
+            CLIMATE_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: ENTITY_ID, **service_data},
+            blocking=True,
+        )
+    )
+    for _ in range(5):
+        await asyncio.sleep(0)
+
+    # A poll finds the holiday while the first command is still being sent
+    polled = asyncio.Event()
+
+    async def holiday_devices(*args: object) -> list[Device]:
+        polled.set()
+        return [HOLIDAY_DEVICE]
+
+    mock_fenix_client.get_devices.side_effect = holiday_devices
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await asyncio.wait_for(polled.wait(), 1)
+    for _ in range(5):
+        await asyncio.sleep(0)
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_SUPPORTED_FEATURES] == 0
+    release.set()
+    await first
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await queued
+    assert exc_info.value.translation_key == translation_key
+    mock_fenix_client.set_preset_mode.assert_awaited_once()
+    mock_fenix_client.set_setpoint.assert_not_called()
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_hvac_action_during_holiday(
+    hass: HomeAssistant,
+    mock_fenix_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the thermostat reports heating during a holiday."""
+    await _set_devices(
+        hass,
+        mock_fenix_client,
+        freezer,
+        dataclasses.replace(HOLIDAY_DEVICE, hvac_state=1),
+    )
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.HEATING
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    ("device", "hvac_modes"),
+    [
+        pytest.param(
+            dataclasses.replace(DEVICE, preset_mode=None),
+            [HVACMode.OFF, HVACMode.AUTO, HVACMode.HEAT],
+            id="unreported",
+        ),
+        pytest.param(
+            dataclasses.replace(DEVICE, preset_mode=3),
+            [HVACMode.OFF, HVACMode.AUTO, HVACMode.HEAT],
+            id="unrecognized",
+        ),
+    ],
+)
+async def test_unknown_preset(
+    hass: HomeAssistant,
+    mock_fenix_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    device: Device,
+    hvac_modes: list[HVACMode],
+) -> None:
+    """Test an unreported or unrecognized operating mode is unknown."""
+    await _set_devices(hass, mock_fenix_client, freezer, device)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == STATE_UNKNOWN
+    # A holiday removes the preset feature, so the attribute is omitted
+    assert state.attributes.get(ATTR_PRESET_MODE) is None
+    assert state.attributes[ATTR_HVAC_MODES] == hvac_modes
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_turn_on_skips_unknown_mode(
+    hass: HomeAssistant,
+    mock_fenix_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test an unknown operating mode doesn't replace the last mode it was on in."""
+    await _set_devices(
+        hass, mock_fenix_client, freezer, dataclasses.replace(DEVICE, preset_mode=None)
+    )
+    await _set_devices(hass, mock_fenix_client, freezer, OFF_DEVICE)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+    )
+
+    mock_fenix_client.set_preset_mode.assert_awaited_once_with(
+        DEVICE_ID, PresetMode.MANUAL
+    )
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_device_removed(
+    hass: HomeAssistant,
+    mock_fenix_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a thermostat no longer reported by the cloud becomes unavailable."""
+    await _set_devices(hass, mock_fenix_client, freezer)
+
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_cloud_unavailable(
+    hass: HomeAssistant,
+    mock_fenix_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the thermostat is unavailable while the cloud can't be reached."""
+    mock_fenix_client.get_installations.side_effect = FenixControlConnectionError(
+        "offline"
+    )
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+
+    mock_fenix_client.get_installations.side_effect = None
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(ENTITY_ID).state == HVACMode.HEAT
