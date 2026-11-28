@@ -9,15 +9,14 @@ import sqlite3
 import subprocess
 import sys
 import tarfile
+import tempfile
 from unittest.mock import patch
-import venv
 
 import pytest
 from securetar import AddFileError
 
 from homeassistant.components.backup import DOMAIN, archive_writer
-from homeassistant.components.backup.manager import CoreBackupReaderWriter
-from homeassistant.components.backup.models import BackupReaderWriterError
+from homeassistant.components.backup.models import BackupManagerError
 from homeassistant.components.backup.services import BackupService
 from homeassistant.core import HomeAssistant
 
@@ -89,14 +88,37 @@ async def test_core_backup_uses_one_archive_process(hass: HomeAssistant) -> None
     Path(hass.config.path("first.txt")).write_text("first", encoding="utf-8")
     Path(hass.config.path("second.txt")).write_text("second", encoding="utf-8")
 
-    with patch(
-        "homeassistant.components.backup.manager.subprocess.run",
-        wraps=subprocess.run,
-    ) as runner:
-        await hass.services.async_call(DOMAIN, BackupService.CREATE, blocking=True)
-        await hass.async_block_till_done()
+    # -P runs Python site hooks, which can print to stdout. No stdout bytes
+    # from the child should be mistaken for part of the archive.
+    with (
+        tempfile.TemporaryDirectory() as startup_dir,
+        patch.dict(
+            os.environ,
+            {
+                "PYTHONPATH": f"{startup_dir}{os.pathsep}"
+                f"{os.environ.get('PYTHONPATH', '')}"
+            },
+        ),
+    ):
+        Path(startup_dir, "sitecustomize.py").write_text(
+            'import sys; sys.stdout.write("CORRUPTION"); sys.stdout.flush()\n',
+            encoding="utf-8",
+        )
+        probe = await hass.async_add_executor_job(
+            subprocess.check_output,
+            [sys.executable, "-P", "-c", "print('ready')"],
+        )
+        assert b"CORRUPTION" in probe
+        with patch(
+            "homeassistant.components.backup.manager.subprocess.run",
+            wraps=subprocess.run,
+        ) as runner:
+            await hass.services.async_call(DOMAIN, BackupService.CREATE, blocking=True)
+            await hass.async_block_till_done()
 
     assert runner.call_count == 1
+    assert runner.call_args.args[0][1] == "-P"
+    assert runner.call_args.kwargs["stdout"] == subprocess.DEVNULL
     [archive_path] = Path(hass.config.path("backups")).glob("*.tar")
     with tarfile.open(archive_path) as outer:
         stream = outer.extractfile("homeassistant.tar.gz")
@@ -122,7 +144,7 @@ def test_archive_worker_rejects_file_truncated_after_stat(
     request = {
         "archive_path": str(archive_path),
         "config_path": hass.config.path(),
-        "excludes": [],
+        "excludes": [archive_path.name],
         "buf_size": 4194304,
         "create_version": 3,
         "password": None,
@@ -157,14 +179,12 @@ def test_archive_worker_rejects_file_truncated_after_stat(
     assert source_modified
 
 
-def test_archive_process_error_reports_stderr(
-    hass: HomeAssistant, tmp_path: Path
-) -> None:
-    """Child failures must preserve their actual stderr instead of hiding it."""
-    archive_path = tmp_path / "tmp_backups" / "failure.tar"
+async def test_core_backup_reports_worker_early_exit(hass: HomeAssistant) -> None:
+    """Public backup creation reports the child's status and stderr on failure."""
+    await setup_backup_integration(hass)
     failing_command = [
         sys.executable,
-        "-I",
+        "-P",
         "-c",
         'import sys;sys.stderr.write("reader failed: deliberate test error\\n");sys.exit(42)',
     ]
@@ -184,72 +204,8 @@ def test_archive_process_error_reports_stderr(
             "homeassistant.components.backup.manager.json_bytes",
             return_value=b"x" * (1024 * 1024),
         ),
-        pytest.raises(BackupReaderWriterError, match="deliberate test error"),
+        pytest.raises(BackupManagerError, match="exit code 42") as exc_info,
     ):
-        CoreBackupReaderWriter(hass)._mkdir_and_generate_backup_contents(
-            {"slug": "failure"},
-            database_included=False,
-            password=None,
-            tar_file_path=archive_path,
-        )
+        await hass.services.async_call(DOMAIN, BackupService.CREATE, blocking=True)
 
-
-def test_site_startup_output_cannot_contaminate_archive(
-    hass: HomeAssistant, tmp_path: Path
-) -> None:
-    """Startup code writing stdout cannot alter the generated tar file."""
-    environment = tmp_path / "test_env"
-    venv.EnvBuilder(with_pip=False).create(environment)
-    executable = environment / (
-        "Scripts/python.exe" if os.name == "nt" else "bin/python"
-    )
-    site_packages = environment / (
-        "Lib/site-packages"
-        if os.name == "nt"
-        else f"lib/python{sys.version_info.major}.{sys.version_info.minor}/site-packages"
-    )
-    original_sites = [path for path in sys.path if path.endswith("site-packages")]
-    (site_packages / "inject_stdout.pth").write_text(
-        'import sys;sys.stdout.buffer.write(b"CORRUPTION");sys.stdout.flush()\n'
-        + "\n".join(original_sites)
-        + "\n",
-        encoding="utf-8",
-    )
-
-    probe = subprocess.run(
-        [str(executable), "-I", "-c", "print('ready')"],
-        capture_output=True,
-        check=True,
-    )
-    assert b"CORRUPTION" in probe.stdout
-
-    file_path = Path(hass.config.path("uncontaminated.txt"))
-    file_path.write_bytes(b"expected bytes")
-    archive_path = tmp_path / "tmp_backups" / "hook.tar"
-    original_run = subprocess.run
-
-    def run_in_injected_venv(
-        command: list[str], **kwargs: object
-    ) -> subprocess.CompletedProcess:
-        assert kwargs["stdout"] == subprocess.DEVNULL
-        return original_run([str(executable), *command[1:]], **kwargs)
-
-    with patch(
-        "homeassistant.components.backup.manager.subprocess.run",
-        side_effect=run_in_injected_venv,
-    ):
-        CoreBackupReaderWriter(hass)._mkdir_and_generate_backup_contents(
-            {"slug": "startup-hook"},
-            database_included=False,
-            password=None,
-            tar_file_path=archive_path,
-        )
-
-    with tarfile.open(archive_path) as outer:
-        data = outer.extractfile("homeassistant.tar.gz")
-        assert data is not None
-        with data, tarfile.open(fileobj=data, mode="r:gz") as inner:
-            content = inner.extractfile("data/uncontaminated.txt")
-            assert content is not None
-            with content:
-                assert content.read() == b"expected bytes"
+    assert "deliberate test error" in str(exc_info.value)

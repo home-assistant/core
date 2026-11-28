@@ -1984,7 +1984,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         result = subprocess.run(
             [
                 sys.executable,
-                "-I",
+                "-P",
                 str(Path(__file__).with_name("archive_writer.py")),
             ],
             input=payload,
@@ -1994,7 +1994,8 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         )
         if result.returncode:
             raise BackupReaderWriterError(
-                f"Could not create Core backup archive: "
+                f"Could not create Core backup archive "
+                f"(exit code {result.returncode}): "
                 f"{result.stderr.decode(errors='replace').strip()}"
             )
         try:
