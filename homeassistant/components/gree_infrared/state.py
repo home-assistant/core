@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Callable, Coroutine
+from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.core import HomeAssistant, callback
@@ -42,6 +43,9 @@ class GreeAcState:
         self.selects: list = []
         self.numbers: list = []
         self.command_lock = asyncio.Lock()
+        # Last I-Feel room temperature report sent to the unit (diagnostics).
+        self.last_ifeel_report: int | None = None
+        self.last_ifeel_report_time: datetime | None = None
         # Staging flags consumed by the climate entity's coalesced flush.
         self.pending_timer_reset = False
         self.pending_power_change = False

@@ -17,6 +17,7 @@ from homeassistant.components.config import config_entries as config_entries_api
 from homeassistant.components.gree_infrared.const import (
     CONF_GENERIC_OPTIONS,
     CONF_HVAC_MODES,
+    CONF_IFEEL_SENSOR_ENTITY_ID,
     CONF_INFRARED_EMITTER_ENTITY_ID,
     CONF_INFRARED_RECEIVER_ENTITY_ID,
     DOMAIN,
@@ -257,6 +258,7 @@ async def test_user_flow_form_serialized_by_rest_api(
     assert set(fields) == {
         CONF_GENERIC_OPTIONS,
         CONF_HVAC_MODES,
+        CONF_IFEEL_SENSOR_ENTITY_ID,
         CONF_INFRARED_EMITTER_ENTITY_ID,
         CONF_INFRARED_RECEIVER_ENTITY_ID,
         CONF_MODEL,
@@ -306,3 +308,61 @@ async def test_reconfigure_model(
     }
     assert hass.config_entries.async_entries(DOMAIN) == [mock_config_entry]
     reload.assert_awaited_once_with(mock_config_entry.entry_id)
+
+
+@pytest.mark.usefixtures("mock_infrared_emitter_entity")
+async def test_user_flow_stores_ifeel_sensor(hass: HomeAssistant) -> None:
+    """The optional I-Feel sensor is stored in the entry data."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_INFRARED_EMITTER_ENTITY_ID: mock_infrared_emitter_entity_id,
+            CONF_MODEL: MODEL_YAP1F,
+            CONF_HVAC_MODES: [HVACMode.COOL],
+            CONF_IFEEL_SENSOR_ENTITY_ID: "sensor.room_temperature",
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_IFEEL_SENSOR_ENTITY_ID] == "sensor.room_temperature"
+
+
+@pytest.mark.usefixtures(
+    "mock_infrared_emitter_entity", "mock_infrared_receiver_entity"
+)
+async def test_reconfigure_sets_and_clears_ifeel_sensor(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Reconfigure stores the sensor, prefills it, and clearing it removes it."""
+    mock_config_entry.add_to_hass(hass)
+    original_data = dict(mock_config_entry.data)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    with patch.object(hass.config_entries, "async_reload", return_value=True):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_MODEL: MODEL_YAP1F,
+                CONF_IFEEL_SENSOR_ENTITY_ID: "sensor.room_temperature",
+            },
+        )
+        await hass.async_block_till_done()
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {
+        **original_data,
+        CONF_MODEL: MODEL_YAP1F,
+        CONF_GENERIC_OPTIONS: False,
+        CONF_IFEEL_SENSOR_ENTITY_ID: "sensor.room_temperature",
+    }
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    with patch.object(hass.config_entries, "async_reload", return_value=True):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_MODEL: MODEL_YAP1F}
+        )
+        await hass.async_block_till_done()
+    assert result["reason"] == "reconfigure_successful"
+    assert CONF_IFEEL_SENSOR_ENTITY_ID not in mock_config_entry.data
+    assert mock_config_entry.data[CONF_INFRARED_RECEIVER_ENTITY_ID]

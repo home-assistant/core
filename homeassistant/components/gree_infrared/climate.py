@@ -1,9 +1,11 @@
 """Climate platform for Gree IR integration — Gree AC."""
 
+import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
+import math
 from typing import Any, Self, override
 
 from infrared_protocols.commands.gree_ac import (
@@ -11,10 +13,12 @@ from infrared_protocols.commands.gree_ac import (
     MAX_TEMP_F,
     MIN_TEMP,
     MIN_TEMP_F,
+    YAP1F_REPORT_MAX_TEMP,
     YAP1F_SWING_POSITIONS,
     GreeAcCommand,
     GreeAcFanSpeed,
     GreeAcFreshAir,
+    GreeAcIFeelReport,
     GreeAcMode,
     GreeAcModel,
 )
@@ -42,6 +46,7 @@ from homeassistant.components.infrared import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
+    ATTR_UNIT_OF_MEASUREMENT,
     CONF_MODEL,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -49,10 +54,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import (
+    async_track_entity_registry_updated_event,
     async_track_point_in_utc_time,
     async_track_state_change_event,
+    async_track_time_interval,
 )
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import TemperatureConverter
@@ -61,6 +69,7 @@ from . import GreeInfraredConfigEntry
 from .const import (
     CONF_GENERIC_OPTIONS,
     CONF_HVAC_MODES,
+    CONF_IFEEL_SENSOR_ENTITY_ID,
     CONF_INFRARED_EMITTER_ENTITY_ID,
     CONF_INFRARED_RECEIVER_ENTITY_ID,
     DOMAIN,
@@ -71,6 +80,10 @@ from .entity import GreeIrEntity
 from .state import GreeAcState
 
 PARALLEL_UPDATES = 1
+
+#: The physical remote repeats its I-Feel report about every ten minutes; the
+#: unit falls back to its own sensor when reports stop.
+IFEEL_REPORT_INTERVAL = timedelta(minutes=10)
 
 _HA_FAN_TO_LIB: dict[str, GreeAcFanSpeed] = {
     FAN_AUTO: GreeAcFanSpeed.AUTO,
@@ -326,6 +339,23 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
         self._timer_deadline: datetime | None = None
         self._timer_expiry_power: bool | None = None
         self._timer_expiry_unsub: Callable[[], None] | None = None
+        # Stored value may be an entity registry id; resolved when added to hass.
+        self._ifeel_sensor_configured: str | None = (
+            entry.data.get(CONF_IFEEL_SENSOR_ENTITY_ID)
+            if model == MODEL_YAP1F
+            else None
+        )
+        self._ifeel_sensor_entity_id: str | None = None
+        self._ifeel_last_value: int | None = None
+        self._ifeel_tasks: set[asyncio.Task[None]] = set()
+        self._ifeel_closed = False
+        self._ifeel_report_pending = False
+        self._ifeel_live = False
+        self._ifeel_sensor_unsubs: list[Callable[[], None]] = []
+        self._ifeel_state_handler: Callable[[Event[EventStateChangedData]], None]
+        self._ifeel_registry_handler: Callable[
+            [Event[er.EventEntityRegistryUpdatedData]], None
+        ]
         self._state.climate = self
 
     @override
@@ -337,6 +367,7 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
         final deadline. Any expiry listener the flush schedules is dropped so
         no callback outlives the removed entity.
         """
+        self._cancel_ifeel_tasks()
         self._cancel_timer_expiry()
         await self._state.async_unload_coalesced_flush(self._async_flush_coalesced)
         self._cancel_timer_expiry()
@@ -369,6 +400,7 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
                 self.hass, [self.entity_id], _handle_climate_state_change
             )
         )
+        self._async_setup_ifeel_reports()
         last_state = await self.async_get_last_state()
         if last_state is not None and last_state.state not in (
             STATE_UNAVAILABLE,
@@ -487,6 +519,7 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
                 self._expire_timer_power()
             else:
                 self._schedule_timer_expiry()
+        self._mark_ifeel_transmitted()
         self._state.async_notify_switches()
 
     @property
@@ -656,6 +689,172 @@ class GreeAcClimateEntity(GreeIrEntity, InfraredEmitterConsumerEntity, RestoreCl
             state.pending_power_change = False
             self.async_write_ha_state()
             state.async_notify_switches()
+            self._mark_ifeel_transmitted()
+            await self._async_send_ifeel_report_locked()
+
+    def _ifeel_sensor_celsius(self) -> int | None:
+        """Return the I-Feel sensor reading as whole clamped Celsius, if numeric."""
+        if self._ifeel_sensor_entity_id is None:
+            return None
+        sensor = self.hass.states.get(self._ifeel_sensor_entity_id)
+        if sensor is None or sensor.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+            return None
+        try:
+            value = float(sensor.state)
+        except ValueError:
+            return None
+        unit = sensor.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        if unit not in TemperatureConverter.VALID_UNITS:
+            return None
+        if not math.isfinite(value):
+            return None
+        value = TemperatureConverter.convert(value, unit, UnitOfTemperature.CELSIUS)
+        return int(max(0, min(YAP1F_REPORT_MAX_TEMP, round(value))))
+
+    @callback
+    def _mark_ifeel_transmitted(self) -> None:
+        """Record whether the unit is, as far as known, on with I-Feel enabled.
+
+        Called when a frame was sent or received from the remote, never for
+        staged changes, so listener reports follow what the unit last saw.
+        """
+        self._ifeel_live = (
+            self._is_yap1f
+            and self._state.ifeel
+            and self._attr_hvac_mode not in (None, HVACMode.OFF)
+        )
+
+    async def _async_send_ifeel_report_locked(self) -> None:
+        """Send the sensor temperature as an I-Feel report; hold the command lock.
+
+        The unit thermostats on the latest report while I-Feel is on, so reports
+        are only sent while the last transmitted state has I-Feel on and the
+        unit powered. Failures are logged and never propagate to the caller.
+        """
+        if not self._ifeel_live or self._ifeel_sensor_entity_id is None:
+            return
+        temperature = self._ifeel_sensor_celsius()
+        if temperature is None:
+            _LOGGER.debug(
+                "Skipping I-Feel report: %s has no usable temperature",
+                self._ifeel_sensor_entity_id,
+            )
+            return
+        try:
+            await self._send_command(GreeAcIFeelReport(temperature=temperature))
+        except HomeAssistantError as err:
+            _LOGGER.warning("Gree I-Feel report send failed: %s", err)
+            return
+        self._state.last_ifeel_report = temperature
+        self._state.last_ifeel_report_time = dt_util.utcnow()
+
+    async def _async_send_ifeel_report(self) -> None:
+        """Send an I-Feel report, serialized with state frames."""
+        async with self._state.command_lock:
+            # Reads the latest sensor value now, covering every change queued
+            # while waiting for the lock.
+            self._ifeel_report_pending = False
+            if self._ifeel_closed:
+                return
+            await self._async_send_ifeel_report_locked()
+
+    @callback
+    def _schedule_ifeel_report(self) -> None:
+        """Queue one tracked report send; a pending one already covers this call."""
+        if self._ifeel_closed or self._ifeel_report_pending:
+            return
+        self._ifeel_report_pending = True
+        task = self.hass.async_create_task(
+            self._async_send_ifeel_report(), "gree_infrared_ifeel_report"
+        )
+        self._ifeel_tasks.add(task)
+        task.add_done_callback(self._ifeel_tasks.discard)
+
+    @callback
+    def _cancel_ifeel_tasks(self) -> None:
+        """Stop listener-driven reports and cancel any queued or running one."""
+        self._ifeel_closed = True
+        for task in tuple(self._ifeel_tasks):
+            task.cancel()
+
+    @callback
+    def _async_setup_ifeel_reports(self) -> None:
+        """Report the sensor on every change of its rounded value and periodically."""
+        if self._ifeel_sensor_configured is None:
+            return
+        self._ifeel_sensor_entity_id = er.async_resolve_entity_id(
+            er.async_get(self.hass), self._ifeel_sensor_configured
+        )
+        if self._ifeel_sensor_entity_id is None:
+            _LOGGER.warning(
+                "I-Feel sensor %s does not exist; no reports will be sent",
+                self._ifeel_sensor_configured,
+            )
+            return
+        self._ifeel_last_value = self._ifeel_sensor_celsius()
+
+        @callback
+        def _handle_sensor_change(event: Event[EventStateChangedData]) -> None:
+            value = self._ifeel_sensor_celsius()
+            if value is None or value == self._ifeel_last_value:
+                # An unusable reading forgets the last value so recovery at
+                # the same rounded temperature is reported at once.
+                self._ifeel_last_value = value
+                return
+            self._ifeel_last_value = value
+            self._schedule_ifeel_report()
+
+        @callback
+        def _handle_registry_update(
+            event: Event[er.EventEntityRegistryUpdatedData],
+        ) -> None:
+            if event.data["action"] != "update" or "entity_id" not in event.data.get(
+                "changes", {}
+            ):
+                return
+            self._ifeel_sensor_entity_id = event.data["entity_id"]
+            self._ifeel_bind_sensor()
+
+        @callback
+        def _handle_heartbeat(now: datetime) -> None:
+            self._schedule_ifeel_report()
+
+        self._ifeel_state_handler = _handle_sensor_change
+        self._ifeel_registry_handler = _handle_registry_update
+        self._ifeel_bind_sensor()
+        self.async_on_remove(self._ifeel_unbind_sensor)
+        self.async_on_remove(
+            async_track_time_interval(
+                self.hass, _handle_heartbeat, IFEEL_REPORT_INTERVAL
+            )
+        )
+
+    @callback
+    def _ifeel_unbind_sensor(self) -> None:
+        """Drop the listeners tied to the current sensor entity id."""
+        for unsub in self._ifeel_sensor_unsubs:
+            unsub()
+        self._ifeel_sensor_unsubs = []
+
+    @callback
+    def _ifeel_bind_sensor(self) -> None:
+        """Track the sensor's state and registry updates under its current id."""
+        self._ifeel_unbind_sensor()
+        entity_id = self._ifeel_sensor_entity_id
+        assert entity_id is not None
+        self._ifeel_sensor_unsubs = [
+            async_track_state_change_event(
+                self.hass, [entity_id], self._ifeel_state_handler
+            ),
+            async_track_entity_registry_updated_event(
+                self.hass, [entity_id], self._ifeel_registry_handler
+            ),
+        ]
+        # The renamed sensor may carry another reading; report it at once.
+        value = self._ifeel_sensor_celsius()
+        if value is not None and value != self._ifeel_last_value:
+            self._ifeel_last_value = value
+            self._schedule_ifeel_report()
 
     def _options_for_mode(self, new_hvac_mode: HVACMode) -> dict[str, bool]:
         """Build option cancellations without publishing unconfirmed values."""
@@ -1043,6 +1242,7 @@ class GreeAcClimateWithReceiver(GreeAcClimateEntity, InfraredReceiverConsumerEnt
             if self._state.climate is not self:
                 return
             self._handle_signal_locked(signal)
+            self._mark_ifeel_transmitted()
 
     def _handle_signal_locked(self, signal: InfraredReceivedSignal) -> None:
         """Apply a received physical remote signal."""

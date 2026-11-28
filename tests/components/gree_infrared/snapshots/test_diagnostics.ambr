@@ -2,15 +2,22 @@
 # name: test_diagnostics
   dict({
     'ac_state': dict({
-      'blow': False,
-      'display': True,
-      'fan': 'auto',
-      'mode': 'cool',
-      'power': False,
+      'absence': False,
+      'display_temp': 2,
+      'econo': False,
+      'fahrenheit': False,
+      'fresh_air': 0,
+      'health': False,
+      'ifeel': False,
+      'light': True,
+      'sleep': False,
       'swing_h': False,
+      'swing_h_position': 0,
       'swing_v': False,
-      'temperature': 16,
+      'swing_v_position': None,
+      'timer_hours': None,
       'turbo': False,
+      'xfan': False,
     }),
     'entry_data': dict({
       'hvac_modes': list([
@@ -19,6 +26,10 @@
       ]),
       'infrared_emitter_entity_id': 'infrared.test_ir_emitter',
       'infrared_receiver_entity_id': 'infrared.test_ir_receiver',
+    }),
+    'ifeel_report': dict({
+      'last_time': None,
+      'last_value': None,
     }),
   })
 # ---

@@ -10,8 +10,9 @@ from homeassistant.components.infrared import (
     async_get_emitters,
     async_get_receivers,
 )
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_MODEL
+from homeassistant.const import CONF_MODEL, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.selector import (
@@ -26,6 +27,7 @@ from homeassistant.helpers.selector import (
 from .const import (
     CONF_GENERIC_OPTIONS,
     CONF_HVAC_MODES,
+    CONF_IFEEL_SENSOR_ENTITY_ID,
     CONF_INFRARED_EMITTER_ENTITY_ID,
     CONF_INFRARED_RECEIVER_ENTITY_ID,
     DOMAIN,
@@ -41,6 +43,11 @@ _HVAC_MODE_OPTIONS = [
     HVACMode.AUTO,
 ]
 _DEFAULT_HVAC_MODES = [HVACMode.COOL, HVACMode.DRY]
+_IFEEL_SENSOR_SELECTOR = EntitySelector(
+    EntitySelectorConfig(
+        domain=Platform.SENSOR, device_class=SensorDeviceClass.TEMPERATURE
+    )
+)
 
 
 @callback
@@ -68,6 +75,7 @@ def _user_schema(hass: HomeAssistant) -> probatio.Schema:
                 )
             ),
             probatio.Optional(CONF_GENERIC_OPTIONS, default=False): BooleanSelector(),
+            probatio.Optional(CONF_IFEEL_SENSOR_ENTITY_ID): _IFEEL_SENSOR_SELECTOR,
             probatio.Required(
                 CONF_HVAC_MODES, default=_DEFAULT_HVAC_MODES
             ): probatio.All(
@@ -129,25 +137,35 @@ class GreeIrConfigFlow(ConfigFlow, domain=DOMAIN):
         """Change the remote profile without replacing the entry or IR bindings."""
         entry = self._get_reconfigure_entry()
         if user_input is not None:
-            return self.async_update_reload_and_abort(entry, data_updates=user_input)
+            data = {**entry.data, **user_input}
+            if CONF_IFEEL_SENSOR_ENTITY_ID not in user_input:
+                data.pop(CONF_IFEEL_SENSOR_ENTITY_ID, None)
+            return self.async_update_reload_and_abort(entry, data=data)
 
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=probatio.Schema(
-                {
-                    probatio.Required(
-                        CONF_MODEL, default=entry.data.get(CONF_MODEL, MODEL_GENERIC)
-                    ): SelectSelector(
-                        SelectSelectorConfig(
-                            options=[MODEL_GENERIC, MODEL_YAP1F],
-                            translation_key=CONF_MODEL,
-                            mode=SelectSelectorMode.DROPDOWN,
-                        )
-                    ),
-                    probatio.Optional(
-                        CONF_GENERIC_OPTIONS,
-                        default=entry.data.get(CONF_GENERIC_OPTIONS, False),
-                    ): BooleanSelector(),
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema(
+                    {
+                        probatio.Required(
+                            CONF_MODEL,
+                            default=entry.data.get(CONF_MODEL, MODEL_GENERIC),
+                        ): SelectSelector(
+                            SelectSelectorConfig(
+                                options=[MODEL_GENERIC, MODEL_YAP1F],
+                                translation_key=CONF_MODEL,
+                                mode=SelectSelectorMode.DROPDOWN,
+                            )
+                        ),
+                        probatio.Optional(
+                            CONF_GENERIC_OPTIONS,
+                            default=entry.data.get(CONF_GENERIC_OPTIONS, False),
+                        ): BooleanSelector(),
+                        probatio.Optional(
+                            CONF_IFEEL_SENSOR_ENTITY_ID
+                        ): _IFEEL_SENSOR_SELECTOR,
+                    }
+                ),
+                entry.data,
             ),
         )

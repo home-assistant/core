@@ -11,6 +11,7 @@ CONF_GENERIC_OPTIONS = "generic_options"
 CONF_INFRARED_EMITTER_ENTITY_ID = "infrared_emitter_entity_id"
 CONF_INFRARED_RECEIVER_ENTITY_ID = "infrared_receiver_entity_id"
 CONF_HVAC_MODES = "hvac_modes"
+CONF_IFEEL_SENSOR_ENTITY_ID = "ifeel_sensor_entity_id"
 
 DEFAULT_HVAC_MODES = [HVACMode.COOL, HVACMode.DRY]
 

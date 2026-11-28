@@ -34,4 +34,10 @@ async def async_get_config_entry_diagnostics(
     return {
         "entry_data": dict(entry.data),
         "ac_state": {field: getattr(state, field) for field in _STATE_FIELDS},
+        "ifeel_report": {
+            "last_value": state.last_ifeel_report,
+            "last_time": state.last_ifeel_report_time.isoformat()
+            if state.last_ifeel_report_time
+            else None,
+        },
     }
