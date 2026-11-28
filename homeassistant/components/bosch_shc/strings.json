@@ -55,6 +55,9 @@
       "schedule_override_active": {
         "name": "Schedule override active"
       },
+      "shutter_calibration_required": {
+        "name": "Calibration required"
+      },
       "siren_ac_dc_error": {
         "name": "AC/DC error"
       },

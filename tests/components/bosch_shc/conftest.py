@@ -321,6 +321,7 @@ def shutter_control_device(
     device_model: str = "BBL",
     level: float = 1.0,
     operation_state: ShutterControlService.State = ShutterControlService.State.STOPPED,
+    calibrated: bool = True,
 ) -> SHCShutterControl:
     """Build a minimal device double for the shutter_controls/micromodule_shutter_controls buckets."""
     device = create_autospec(SHCShutterControl, instance=True, spec_set=True)
@@ -335,6 +336,7 @@ def shutter_control_device(
     device.status = "AVAILABLE"
     device.level = level
     device.operation_state = operation_state
+    device.calibrated = calibrated
     return device
 
 
@@ -344,6 +346,7 @@ def micromodule_blinds_device(
     level: float = 1.0,
     current_angle: float = 0.0,
     operation_state: ShutterControlService.State = ShutterControlService.State.STOPPED,
+    calibrated: bool = True,
 ) -> SHCMicromoduleBlinds:
     """Build a minimal device double for the micromodule_blinds bucket."""
     device = create_autospec(SHCMicromoduleBlinds, instance=True, spec_set=True)
@@ -359,6 +362,7 @@ def micromodule_blinds_device(
     device.level = level
     device.current_angle = current_angle
     device.operation_state = operation_state
+    device.calibrated = calibrated
     return device
 
 

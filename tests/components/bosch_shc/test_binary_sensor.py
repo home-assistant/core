@@ -14,18 +14,26 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.bosch_shc.binary_sensor import RETRY_DELAY
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
+from homeassistant.const import (
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    EntityCategory,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import (
     climate_control_device,
+    micromodule_blinds_device,
     motion_detector2_device,
     outdoor_siren_device,
     setup_integration,
     shutter_contact2_device,
     shutter_contact2_plus_device,
     shutter_contact_device,
+    shutter_control_device,
     smoke_detection_system_device,
     twinguard_device,
 )
@@ -542,3 +550,33 @@ async def test_shutter_contact2_without_vibration_sensor(
     await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get("binary_sensor.shutter_contact_vibration") is None
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "shutter_controls": [shutter_control_device(calibrated=False)],
+            "micromodule_blinds": [micromodule_blinds_device(calibrated=True)],
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_shutter_calibration_required(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """An uncalibrated shutter reports a problem, a calibrated blind does not."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert (
+        hass.states.get("binary_sensor.shutter_calibration_required").state == STATE_ON
+    )
+    assert (
+        hass.states.get("binary_sensor.blinds_calibration_required").state == STATE_OFF
+    )
+    entry = entity_registry.async_get("binary_sensor.shutter_calibration_required")
+    assert entry is not None
+    assert entry.entity_category is EntityCategory.DIAGNOSTIC
