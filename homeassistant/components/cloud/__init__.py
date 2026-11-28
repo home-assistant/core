@@ -117,6 +117,7 @@ ALEXA_ENTITY_SCHEMA = probatio.Schema(
     {
         probatio.Optional(CONF_DESCRIPTION): cv.string,
         probatio.Optional(alexa.CONF_DISPLAY_CATEGORIES): cv.string,
+        probatio.Optional(alexa.CONF_EXPOSE_POWER_CONTROLLER): cv.boolean,
         probatio.Optional(CONF_NAME): cv.string,
     }
 )
