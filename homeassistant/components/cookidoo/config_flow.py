@@ -17,6 +17,7 @@ import probatio
 
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
+    SOURCE_SSDP,
     SOURCE_USER,
     ConfigFlow,
     ConfigFlowResult,
@@ -38,8 +39,9 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
+from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
-from .const import DOMAIN
+from .const import CONF_UDN, DOMAIN
 from .helpers import cookidoo_from_config_data
 
 _LOGGER = logging.getLogger(__name__)
@@ -71,6 +73,7 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
 
     user_input: dict[str, Any]
     user_uuid: str
+    _discovered_udn: str | None = None
     # A login whose token response carries no refresh token leaves the library
     # with nothing to hand us, and the entry is then created without tokens
     token: dict[str, Any] = {}
@@ -80,6 +83,29 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Perform reconfigure upon an user action."""
         return await self.async_step_user(user_input)
+
+    @override
+    async def async_step_ssdp(
+        self, discovery_info: SsdpServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle a flow initialized by SSDP discovery of a Thermomix."""
+        udn = discovery_info.ssdp_udn
+        await self.async_set_unique_id(udn)
+        # Abort concurrent discoveries and rediscovery of a device that is still
+        # keyed by its UDN.
+        self._abort_if_unique_id_configured()
+        # A completed setup is keyed by the account UUID, not the UDN, so also
+        # abort when a configured entry already tracks this Thermomix.
+        if any(
+            udn in entry.data.get(CONF_UDN, [])
+            for entry in self._async_current_entries()
+        ):
+            return self.async_abort(reason="already_configured")
+
+        self._discovered_udn = udn
+        self.context["title_placeholders"] = {"name": "Thermomix"}
+
+        return await self.async_step_user()
 
     @override
     async def async_step_user(
@@ -93,8 +119,30 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
             errors := await self.validate_input(user_input)
         ):
             await self.async_set_unique_id(self.user_uuid)
-            if self.source == SOURCE_USER:
-                self._abort_if_unique_id_configured()
+            if self.source in (SOURCE_USER, SOURCE_SSDP):
+                # When a discovered Thermomix turns out to belong to an already
+                # configured account, append its UDN to that entry's collection
+                # (an account can pair multiple Thermomixes) so future SSDP
+                # announcements are deduplicated instead of re-prompting.
+                updates: dict[str, Any] | None = None
+                if self._discovered_udn is not None:
+                    existing_entry = next(
+                        (
+                            entry
+                            for entry in self._async_current_entries()
+                            if entry.unique_id == self.user_uuid
+                        ),
+                        None,
+                    )
+                    known_udns = (
+                        list(existing_entry.data.get(CONF_UDN, []))
+                        if existing_entry
+                        else []
+                    )
+                    if self._discovered_udn not in known_udns:
+                        known_udns.append(self._discovered_udn)
+                    updates = {CONF_UDN: known_udns}
+                self._abort_if_unique_id_configured(updates=updates)
             if self.source == SOURCE_RECONFIGURE:
                 self._abort_if_unique_id_mismatch()
             self.user_input = user_input
@@ -130,15 +178,15 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
         if language_input is not None and not (
             errors := await self.validate_input(self.user_input, language_input)
         ):
-            if self.source == SOURCE_USER:
-                return self.async_create_entry(
-                    title="Cookidoo",
-                    data={
-                        **self.user_input,
-                        **language_input,
-                        CONF_TOKEN: self.token,
-                    },
-                )
+            if self.source in (SOURCE_USER, SOURCE_SSDP):
+                data = {
+                    **self.user_input,
+                    **language_input,
+                    CONF_TOKEN: self.token,
+                }
+                if self._discovered_udn is not None:
+                    data[CONF_UDN] = [self._discovered_udn]
+                return self.async_create_entry(title="Cookidoo", data=data)
             reconfigure_entry = self._get_reconfigure_entry()
             return self.async_update_reload_and_abort(
                 reconfigure_entry,
