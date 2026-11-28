@@ -78,6 +78,47 @@ async def test_setup_missing_conf(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
 
+@pytest.mark.parametrize("device_class", ["humidifier", "dehumidifier"])
+@pytest.mark.parametrize("is_on", [False, True])
+@pytest.mark.parametrize("core_state", [CoreState.starting, CoreState.running])
+async def test_action_from_existing_output_state(
+    hass: HomeAssistant, device_class: str, is_on: bool, core_state: CoreState
+) -> None:
+    """Initialize action from an unchanged output during startup or reload."""
+    calls = await _setup_switch(hass, is_on)
+    humidity = 41 if is_on == (device_class == "humidifier") else 43
+    _setup_sensor(hass, humidity)
+    hass.set_state(core_state)
+    mock_restore_cache(hass, [State(ENTITY, STATE_ON, {ATTR_HUMIDITY: 42})])
+
+    assert await async_setup_component(
+        hass,
+        HUMIDIFIER_DOMAIN,
+        {
+            HUMIDIFIER_DOMAIN: {
+                "platform": "generic_hygrostat",
+                "name": "test",
+                "humidifier": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+                "device_class": device_class,
+                "target_humidity": 42,
+                "initial_state": True,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY)
+    assert state is not None
+    expected = "idle"
+    if is_on:
+        expected = "humidifying" if device_class == "humidifier" else "drying"
+    assert state.attributes["action"] == expected
+    assert state.attributes[ATTR_HUMIDITY] == 42
+    assert hass.states.get(ENT_SWITCH).state == (STATE_ON if is_on else STATE_OFF)
+    assert calls == []
+
+
 async def test_valid_conf(hass: HomeAssistant) -> None:
     """Test set up generic_hygrostat with valid config values."""
     assert await async_setup_component(
