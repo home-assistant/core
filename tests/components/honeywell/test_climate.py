@@ -293,6 +293,100 @@ async def test_fan_modes_service_calls(
         )
 
 
+@pytest.mark.parametrize("error", [TimeoutError, ClientConnectionError])
+@pytest.mark.parametrize(
+    ("system_mode", "service", "service_data", "failing_call", "translation_key"),
+    [
+        pytest.param(
+            "heat",
+            ClimateService.SET_HVAC_MODE,
+            {ClimateServiceArgument.HVAC_MODE: HVACMode.COOL},
+            "set_system_mode",
+            "sys_mode_failed",
+            id="hvac_mode",
+        ),
+        pytest.param(
+            "heat",
+            ClimateService.SET_FAN_MODE,
+            {ClimateServiceArgument.FAN_MODE: FAN_AUTO},
+            "set_fan_mode",
+            "fan_mode_failed",
+            id="fan_mode",
+        ),
+        pytest.param(
+            "heat",
+            ClimateService.SET_TEMPERATURE,
+            {ClimateServiceArgument.TEMPERATURE: 25},
+            "set_hold_heat",
+            "temp_failed",
+            id="temperature",
+        ),
+        pytest.param(
+            "auto",
+            ClimateService.SET_TEMPERATURE,
+            {
+                ClimateServiceArgument.TARGET_TEMP_LOW: 20,
+                ClimateServiceArgument.TARGET_TEMP_HIGH: 25,
+            },
+            "set_setpoint_cool",
+            "temp_failed",
+            id="temperature_range",
+        ),
+        pytest.param(
+            "heat",
+            ClimateService.SET_PRESET_MODE,
+            {ClimateServiceArgument.PRESET_MODE: PRESET_AWAY},
+            "set_hold_heat",
+            "away_mode_failed",
+            id="preset_away",
+        ),
+        pytest.param(
+            "heat",
+            ClimateService.SET_PRESET_MODE,
+            {ClimateServiceArgument.PRESET_MODE: PRESET_HOLD},
+            "set_hold_heat",
+            "set_hold_failed",
+            id="preset_hold",
+        ),
+        pytest.param(
+            "heat",
+            ClimateService.SET_PRESET_MODE,
+            {ClimateServiceArgument.PRESET_MODE: PRESET_NONE},
+            "set_hold_cool",
+            "stop_hold_failed",
+            id="preset_none",
+        ),
+    ],
+)
+async def test_service_calls_connection_errors(
+    hass: HomeAssistant,
+    device: MagicMock,
+    config_entry: MockConfigEntry,
+    system_mode: str,
+    service: str,
+    service_data: dict,
+    failing_call: str,
+    translation_key: str,
+    error: type[Exception],
+) -> None:
+    """Test timeouts and connection errors raise HomeAssistantError."""
+    device.system_mode = system_mode
+    getattr(device, failing_call).side_effect = error
+    await init_integration(hass, config_entry)
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            service,
+            {TargetKey.ENTITY_ID: ENTITY_ID, **service_data},
+            blocking=True,
+        )
+
+    assert not isinstance(exc_info.value, ServiceValidationError)
+    assert exc_info.value.translation_key == translation_key
+    assert isinstance(exc_info.value.__cause__, error)
+
+
 async def test_service_calls_off_mode(
     hass: HomeAssistant,
     device: MagicMock,
@@ -1639,6 +1733,13 @@ async def test_set_hold_until_invalid_schema(
             "set_hold_heat",
             aiosomecomfort.UnexpectedResponse,
             id="heat_unexpected_response",
+        ),
+        pytest.param("heat", "set_hold_heat", TimeoutError, id="heat_timeout"),
+        pytest.param(
+            "heat",
+            "set_hold_heat",
+            ClientConnectionError,
+            id="heat_client_connection_error",
         ),
         pytest.param(
             "cool", "set_hold_cool", aiosomecomfort.SomeComfortError, id="cool"

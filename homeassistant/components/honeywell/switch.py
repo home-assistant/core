@@ -2,6 +2,7 @@
 
 from typing import Any, override
 
+from aiohttp import ClientConnectionError
 from aiosomecomfort import SomeComfortError
 from aiosomecomfort.device import Device as SomeComfortDevice
 
@@ -71,7 +72,7 @@ class HoneywellSwitch(SwitchEntity):
         """Turn the switch on if heat mode is enabled."""
         try:
             await self._device.set_system_mode("emheat")
-        except SomeComfortError as err:
+        except (TimeoutError, ClientConnectionError, SomeComfortError) as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="switch_failed_on"
             ) from err
@@ -83,7 +84,7 @@ class HoneywellSwitch(SwitchEntity):
             try:
                 await self._device.set_system_mode("off")
 
-            except SomeComfortError as err:
+            except (TimeoutError, ClientConnectionError, SomeComfortError) as err:
                 raise HomeAssistantError(
                     translation_domain=DOMAIN, translation_key="switch_failed_off"
                 ) from err

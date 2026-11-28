@@ -391,7 +391,12 @@ class HoneywellUSThermostat(ClimateEntity):
                 if mode in ["heat", "emheat"]:
                     await self._device.set_setpoint_heat(temperature)
 
-        except (AscConnectionError, UnexpectedResponse) as err:
+        except (
+            TimeoutError,
+            AscConnectionError,
+            ClientConnectionError,
+            UnexpectedResponse,
+        ) as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="temp_failed",
@@ -415,7 +420,12 @@ class HoneywellUSThermostat(ClimateEntity):
                 if temperature := kwargs.get(ATTR_TARGET_TEMP_LOW):
                     await self._device.set_setpoint_heat(temperature)
 
-            except (AscConnectionError, UnexpectedResponse) as err:
+            except (
+                TimeoutError,
+                AscConnectionError,
+                ClientConnectionError,
+                UnexpectedResponse,
+            ) as err:
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="temp_failed",
@@ -434,7 +444,7 @@ class HoneywellUSThermostat(ClimateEntity):
         try:
             await self._device.set_fan_mode(self._fan_mode_map[fan_mode])
 
-        except SomeComfortError as err:
+        except (TimeoutError, ClientConnectionError, SomeComfortError) as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="fan_mode_failed",
@@ -446,7 +456,7 @@ class HoneywellUSThermostat(ClimateEntity):
         try:
             await self._device.set_system_mode(self._hvac_mode_map[hvac_mode])
 
-        except SomeComfortError as err:
+        except (TimeoutError, ClientConnectionError, SomeComfortError) as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="sys_mode_failed",
@@ -470,7 +480,12 @@ class HoneywellUSThermostat(ClimateEntity):
             if mode in HEATING_MODES:
                 await self._device.set_hold_heat(True, self._heat_away_temp)
 
-        except (AscConnectionError, UnexpectedResponse) as err:
+        except (
+            TimeoutError,
+            AscConnectionError,
+            ClientConnectionError,
+            UnexpectedResponse,
+        ) as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="away_mode_failed",
@@ -500,7 +515,7 @@ class HoneywellUSThermostat(ClimateEntity):
                 if mode in HEATING_MODES:
                     await self._device.set_hold_heat(True)
 
-            except SomeComfortError as err:
+            except (TimeoutError, ClientConnectionError, SomeComfortError) as err:
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="set_hold_failed",
@@ -520,7 +535,7 @@ class HoneywellUSThermostat(ClimateEntity):
             await self._device.set_hold_cool(False)
             await self._device.set_hold_heat(False)
 
-        except SomeComfortError as err:
+        except (TimeoutError, ClientConnectionError, SomeComfortError) as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="stop_hold_failed",
@@ -582,7 +597,7 @@ class HoneywellUSThermostat(ClimateEntity):
             if mode in HEATING_MODES:
                 await self._device.set_hold_heat(until, temperature)
 
-        except SomeComfortError as err:
+        except (TimeoutError, ClientConnectionError, SomeComfortError) as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="set_hold_until_failed",
