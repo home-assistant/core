@@ -8,11 +8,13 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, load_json_array_fixture
 from solyx_energy_api.client import SolyxEnergyApiClient
 
+from homeassistant.components.solyx_energy_cloud import PLATFORMS
 from homeassistant.components.solyx_energy_cloud.const import (
     CONF_NYMO_CLIENT_ID,
     CONF_NYMO_CLIENT_SECRET,
     DOMAIN,
 )
+from homeassistant.const import Platform
 
 from .const import NYMO_CLIENT_ID, NYMO_CLIENT_SECRET
 
@@ -40,6 +42,7 @@ def mock_solyx_api_client() -> AsyncMock:
     data = load_json_array_fixture("assets_data.json", DOMAIN)
     client = AsyncMock(spec=SolyxEnergyApiClient)
     client.async_get_assets.return_value = data
+    client.async_set_asset_attribute.return_value = None
     client.async_test_connection.return_value = None
     return client
 
@@ -71,13 +74,21 @@ def mock_setup_entry() -> Generator[None]:
 
 
 @pytest.fixture
+def load_platforms() -> list[Platform]:
+    """Platforms to set up; snapshot tests limit this to a single platform."""
+    return PLATFORMS
+
+
+@pytest.fixture
 async def init_integration(
     hass: HomeAssistant,
     mock_api_client_class: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    load_platforms: list[Platform],
 ) -> MockConfigEntry:
     """Set up the Solyx Energy integration and return the config entry."""
     mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    with patch("homeassistant.components.solyx_energy_cloud.PLATFORMS", load_platforms):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     return mock_config_entry

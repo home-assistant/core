@@ -24,3 +24,14 @@ def parse_float(raw: dict[str, Any], attr_name: str) -> float | None:
     except (TypeError, ValueError) as _err:
         _LOGGER.warning("Unable to parse float value %s", value)
         return None
+
+
+def parse_str(raw: dict[str, Any], attr_name: str) -> str | None:
+    """Parse a string value from a Solyx device attribute."""
+    value = parse_attr_value(raw, attr_name)
+    if value is None:
+        return None
+    if not isinstance(value, str):
+        _LOGGER.warning("Unable to parse string value %s", value)
+        return None
+    return value

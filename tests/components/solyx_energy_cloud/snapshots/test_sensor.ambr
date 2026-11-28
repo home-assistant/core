@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_entities[sensor.nymo_boiler_current-entry]
+# name: test_all_entities[load_platforms0][sensor.nymo_boiler_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -41,7 +41,7 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_all_entities[sensor.nymo_boiler_current-state]
+# name: test_all_entities[load_platforms0][sensor.nymo_boiler_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
@@ -57,7 +57,7 @@
     'state': '5.2',
   })
 # ---
-# name: test_all_entities[sensor.nymo_boiler_current_2-entry]
+# name: test_all_entities[load_platforms0][sensor.nymo_boiler_current_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -99,7 +99,7 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_all_entities[sensor.nymo_boiler_current_2-state]
+# name: test_all_entities[load_platforms0][sensor.nymo_boiler_current_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
@@ -115,7 +115,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_all_entities[sensor.nymo_boiler_power-entry]
+# name: test_all_entities[load_platforms0][sensor.nymo_boiler_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -157,7 +157,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_all_entities[sensor.nymo_boiler_power-state]
+# name: test_all_entities[load_platforms0][sensor.nymo_boiler_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
@@ -173,7 +173,7 @@
     'state': '1234.0',
   })
 # ---
-# name: test_all_entities[sensor.nymo_boiler_power_2-entry]
+# name: test_all_entities[load_platforms0][sensor.nymo_boiler_power_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -215,7 +215,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_all_entities[sensor.nymo_boiler_power_2-state]
+# name: test_all_entities[load_platforms0][sensor.nymo_boiler_power_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
@@ -231,7 +231,7 @@
     'state': '567.0',
   })
 # ---
-# name: test_all_entities[sensor.nymo_boiler_voltage-entry]
+# name: test_all_entities[load_platforms0][sensor.nymo_boiler_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -273,7 +273,7 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_all_entities[sensor.nymo_boiler_voltage-state]
+# name: test_all_entities[load_platforms0][sensor.nymo_boiler_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
@@ -289,7 +289,7 @@
     'state': '230.0',
   })
 # ---
-# name: test_all_entities[sensor.nymo_boiler_voltage_2-entry]
+# name: test_all_entities[load_platforms0][sensor.nymo_boiler_voltage_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -331,7 +331,7 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_all_entities[sensor.nymo_boiler_voltage_2-state]
+# name: test_all_entities[load_platforms0][sensor.nymo_boiler_voltage_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
@@ -347,7 +347,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_all_entities[sensor.nymo_days_since_last_legionella_prevention-entry]
+# name: test_all_entities[load_platforms0][sensor.nymo_days_since_last_legionella_prevention-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -389,7 +389,7 @@
     'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
   })
 # ---
-# name: test_all_entities[sensor.nymo_days_since_last_legionella_prevention-state]
+# name: test_all_entities[load_platforms0][sensor.nymo_days_since_last_legionella_prevention-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
@@ -405,7 +405,7 @@
     'state': '7.0',
   })
 # ---
-# name: test_all_entities[sensor.nymo_days_since_last_legionella_prevention_2-entry]
+# name: test_all_entities[load_platforms0][sensor.nymo_days_since_last_legionella_prevention_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -447,7 +447,7 @@
     'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
   })
 # ---
-# name: test_all_entities[sensor.nymo_days_since_last_legionella_prevention_2-state]
+# name: test_all_entities[load_platforms0][sensor.nymo_days_since_last_legionella_prevention_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
@@ -463,7 +463,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_all_entities[sensor.nymo_days_since_maximum_temperature-entry]
+# name: test_all_entities[load_platforms0][sensor.nymo_days_since_maximum_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -505,7 +505,7 @@
     'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
   })
 # ---
-# name: test_all_entities[sensor.nymo_days_since_maximum_temperature-state]
+# name: test_all_entities[load_platforms0][sensor.nymo_days_since_maximum_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
@@ -521,7 +521,7 @@
     'state': '3.0',
   })
 # ---
-# name: test_all_entities[sensor.nymo_days_since_maximum_temperature_2-entry]
+# name: test_all_entities[load_platforms0][sensor.nymo_days_since_maximum_temperature_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -563,7 +563,7 @@
     'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
   })
 # ---
-# name: test_all_entities[sensor.nymo_days_since_maximum_temperature_2-state]
+# name: test_all_entities[load_platforms0][sensor.nymo_days_since_maximum_temperature_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
@@ -579,7 +579,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_all_entities[sensor.nymo_grid_power-entry]
+# name: test_all_entities[load_platforms0][sensor.nymo_grid_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -621,7 +621,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_all_entities[sensor.nymo_grid_power-state]
+# name: test_all_entities[load_platforms0][sensor.nymo_grid_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
@@ -637,7 +637,7 @@
     'state': '-100.0',
   })
 # ---
-# name: test_all_entities[sensor.nymo_grid_power_2-entry]
+# name: test_all_entities[load_platforms0][sensor.nymo_grid_power_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -679,7 +679,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_all_entities[sensor.nymo_grid_power_2-state]
+# name: test_all_entities[load_platforms0][sensor.nymo_grid_power_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
@@ -695,7 +695,7 @@
     'state': '42.0',
   })
 # ---
-# name: test_all_entities[sensor.nymo_saved_this_month-entry]
+# name: test_all_entities[load_platforms0][sensor.nymo_saved_this_month-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -737,7 +737,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_all_entities[sensor.nymo_saved_this_month-state]
+# name: test_all_entities[load_platforms0][sensor.nymo_saved_this_month-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
@@ -753,7 +753,7 @@
     'state': '12.5',
   })
 # ---
-# name: test_all_entities[sensor.nymo_saved_this_month_2-entry]
+# name: test_all_entities[load_platforms0][sensor.nymo_saved_this_month_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -795,7 +795,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_all_entities[sensor.nymo_saved_this_month_2-state]
+# name: test_all_entities[load_platforms0][sensor.nymo_saved_this_month_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
@@ -811,7 +811,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_all_entities[sensor.nymo_saved_this_week-entry]
+# name: test_all_entities[load_platforms0][sensor.nymo_saved_this_week-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -853,7 +853,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_all_entities[sensor.nymo_saved_this_week-state]
+# name: test_all_entities[load_platforms0][sensor.nymo_saved_this_week-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
@@ -869,7 +869,7 @@
     'state': '3.2',
   })
 # ---
-# name: test_all_entities[sensor.nymo_saved_this_week_2-entry]
+# name: test_all_entities[load_platforms0][sensor.nymo_saved_this_week_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -911,7 +911,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_all_entities[sensor.nymo_saved_this_week_2-state]
+# name: test_all_entities[load_platforms0][sensor.nymo_saved_this_week_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
@@ -927,7 +927,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_all_entities[sensor.nymo_saved_today-entry]
+# name: test_all_entities[load_platforms0][sensor.nymo_saved_today-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -969,7 +969,7 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_all_entities[sensor.nymo_saved_today-state]
+# name: test_all_entities[load_platforms0][sensor.nymo_saved_today-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
@@ -985,7 +985,7 @@
     'state': '0.4',
   })
 # ---
-# name: test_all_entities[sensor.nymo_saved_today_2-entry]
+# name: test_all_entities[load_platforms0][sensor.nymo_saved_today_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1027,7 +1027,7 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_all_entities[sensor.nymo_saved_today_2-state]
+# name: test_all_entities[load_platforms0][sensor.nymo_saved_today_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',

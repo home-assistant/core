@@ -6,6 +6,7 @@ DOMAIN = "solyx_energy_cloud"
 BASE_URL = "https://cloud.solyxenergy.nl"
 REALM_ID = "solyx"
 DATA_INTERVAL_SECONDS = 60
+DATA_SETTLE_SECONDS = 2
 
 # Config entry keys
 CONF_NYMO_CLIENT_ID = "nymo_client_id"
@@ -18,6 +19,10 @@ ATTRIBUTE_BOILER_VOLTAGE = "boilerVoltage"
 ATTRIBUTE_DAYS_SINCE_MAX_TEMPERATURE = "daysSinceMaximumTemperature"
 ATTRIBUTE_GRID_POWER = "gridPower"
 ATTRIBUTE_LEGIONELLA_DAYS = "legionellaDays"
+ATTRIBUTE_OPERATING_MODE = "operatingMode"
 ATTRIBUTE_SAVED_THIS_MONTH = "savedThisMonth"
 ATTRIBUTE_SAVED_THIS_WEEK = "savedThisWeek"
 ATTRIBUTE_SAVED_TODAY = "savedToday"
+
+# Values the operatingMode attribute accepts, in the casing the cloud API uses.
+OPERATING_MODES = ("NORMAL", "DIRECT", "MUTED")

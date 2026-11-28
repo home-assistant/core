@@ -4,10 +4,15 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 
+@pytest.mark.parametrize(
+    "load_platforms",
+    [[Platform.SENSOR]],
+)
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_all_entities(
     hass: HomeAssistant,
