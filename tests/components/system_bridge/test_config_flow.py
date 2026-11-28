@@ -19,6 +19,7 @@ from systembridgeconnector.models.modules import ModulesData
 from systembridgeconnector.models.system_control import PowerState, PowerStateEvent
 
 from homeassistant import config_entries
+from homeassistant.components.system_bridge.config_flow import async_get_key_client
 from homeassistant.components.system_bridge.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -31,6 +32,7 @@ from . import (
     FIXTURE_NEW_KEY,
     FIXTURE_OLD_TOKEN,
     FIXTURE_PAIRING_CODE,
+    FIXTURE_PAIRING_CODE_GROUPED,
     FIXTURE_USER_INPUT,
     FIXTURE_UUID,
     FIXTURE_ZEROCONF,
@@ -127,6 +129,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     "entered",
     [
         pytest.param(FIXTURE_PAIRING_CODE, id="code"),
+        pytest.param(FIXTURE_PAIRING_CODE_GROUPED, id="grouped"),
         pytest.param(
             f"http://test-bridge.local:9170/?ip=127.0.0.1&pair={FIXTURE_PAIRING_CODE}",
             id="link",
@@ -196,10 +199,19 @@ async def test_user_flow_pairing_failed(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.parametrize(
+    ("retry_input", "pair_calls"),
+    [
+        pytest.param({}, 1, id="same"),
+        pytest.param({CONF_TOKEN: FIXTURE_PAIRING_CODE_GROUPED}, 1, id="grouped"),
+        pytest.param({CONF_HOST: "127.0.0.2"}, 2, id="other_host"),
+        pytest.param({CONF_PORT: "9171"}, 2, id="other_port"),
+    ],
+)
 async def test_user_flow_pairing_kept_after_failed_connection(
-    hass: HomeAssistant,
+    hass: HomeAssistant, retry_input: dict[str, str], pair_calls: int
 ) -> None:
-    """Test a retry reuses the key from a used pairing code."""
+    """Test a retry reuses the key from a used pairing code, on the same computer."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -222,13 +234,22 @@ async def test_user_flow_pairing_kept_after_failed_connection(
 
         with _patch_success():
             result = await hass.config_entries.flow.async_configure(
-                result["flow_id"], user_input
+                result["flow_id"], {**user_input, **retry_input}
             )
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == FIXTURE_USER_INPUT
-    mock_pair.assert_called_once()
+    assert result["data"][CONF_TOKEN] == FIXTURE_KEY
+    assert mock_pair.call_count == pair_calls
+
+
+async def test_key_client_blank_location_name(hass: HomeAssistant) -> None:
+    """Test a blank location name still gives System Bridge a client name."""
+    hass.config.location_name = " "
+
+    client = await async_get_key_client(hass)
+
+    assert client.name == "Home Assistant"
 
 
 async def test_reauth_pairing_kept_after_failed_connection(

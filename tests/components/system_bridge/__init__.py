@@ -38,6 +38,7 @@ FIXTURE_NEW_KEY = (
 # The shared token System Bridge used before each client had its own key
 FIXTURE_OLD_TOKEN = "abc-123-def-456-ghi"
 FIXTURE_PAIRING_CODE = "MZXW6YTBOI4DQNZXGQ2DGMBQGE3TSNBR"
+FIXTURE_PAIRING_CODE_GROUPED = "mzxw-6ytb-oi4d-qnzx gq2d-gmbq-ge3t-snbr"
 
 FIXTURE_AUTH_INPUT = {
     CONF_TOKEN: FIXTURE_KEY,
