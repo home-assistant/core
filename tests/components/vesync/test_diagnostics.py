@@ -16,7 +16,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.setup import async_setup_component
 
 
 async def test_async_get_config_entry_diagnostics__no_devices(
@@ -28,7 +27,7 @@ async def test_async_get_config_entry_diagnostics__no_devices(
     manager,
 ) -> None:
     """Test diagnostics for config entry."""
-    assert await async_setup_component(hass, DOMAIN, config)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     diag = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
@@ -49,7 +48,7 @@ async def test_async_get_config_entry_diagnostics__single_humidifier(
     """Test diagnostics for config entry."""
     manager._dev_list["humidifiers"].append(humidifier)
 
-    assert await async_setup_component(hass, DOMAIN, config)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     diag = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
@@ -71,7 +70,7 @@ async def test_async_get_device_diagnostics__single_fan(
     """Test diagnostics for config entry."""
     manager._dev_list["fans"].append(fan)
 
-    assert await async_setup_component(hass, DOMAIN, config)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     device = device_registry.async_get_device_by_identifier(
@@ -113,7 +112,7 @@ async def test_async_get_device_diagnostics__subdevice_redacts_values(
     fan.mac_id = "device-mac"
     manager.devices.fans.append(fan)
 
-    assert await async_setup_component(hass, DOMAIN, config)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     device = device_registry.async_get_device_by_identifier(
