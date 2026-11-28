@@ -26,6 +26,8 @@ from .const import (
     ATTR_ACTIVITY_STARTING,
     ATTR_DEVICES_LIST,
     ATTR_LAST_ACTIVITY,
+    CONF_ACTIVITY,
+    CONF_DELAY_SECS,
     DOMAIN,
     HARMONY_OPTIONS_UPDATE,
     PREVIOUS_ACTIVE_ACTIVITY,
@@ -51,8 +53,8 @@ async def async_setup_entry(
 
     _LOGGER.debug("HarmonyData : %s", data)
 
-    default_activity: str | None = entry.options.get(ATTR_ACTIVITY)
-    delay_secs: float = entry.options.get(ATTR_DELAY_SECS, DEFAULT_DELAY_SECS)
+    default_activity: str | None = entry.options.get(CONF_ACTIVITY)
+    delay_secs: float = entry.options.get(CONF_DELAY_SECS, DEFAULT_DELAY_SECS)
 
     device = HarmonyRemote(
         data, default_activity, delay_secs, config_file_path(hass, entry.unique_id)
@@ -84,11 +86,11 @@ class HarmonyRemote(HarmonyEntity, RemoteEntity, RestoreEntity):
 
     async def _async_update_options(self, data: dict[str, Any]) -> None:
         """Change options when the options flow does."""
-        if ATTR_DELAY_SECS in data:
-            self.delay_secs = data[ATTR_DELAY_SECS]
+        if CONF_DELAY_SECS in data:
+            self.delay_secs = data[CONF_DELAY_SECS]
 
-        if ATTR_ACTIVITY in data:
-            self.default_activity = data[ATTR_ACTIVITY]
+        if CONF_ACTIVITY in data:
+            self.default_activity = data[CONF_ACTIVITY]
 
     def _setup_callbacks(self) -> None:
         self.async_on_remove(

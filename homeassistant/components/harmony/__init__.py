@@ -4,14 +4,19 @@ from functools import partial
 import logging
 from pathlib import Path
 
-from homeassistant.components.remote import ATTR_ACTIVITY, ATTR_DELAY_SECS
 from homeassistant.const import CONF_HOST, CONF_NAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, HARMONY_OPTIONS_UPDATE, PLATFORMS
+from .const import (
+    CONF_ACTIVITY,
+    CONF_DELAY_SECS,
+    DOMAIN,
+    HARMONY_OPTIONS_UPDATE,
+    PLATFORMS,
+)
 from .data import HarmonyConfigEntry, HarmonyData
 from .services import async_setup_services
 from .util import config_file_path
@@ -89,7 +94,7 @@ def _async_import_options_from_data_if_missing(
 ) -> None:
     options = dict(entry.options)
     modified = 0
-    for importable_option in (ATTR_ACTIVITY, ATTR_DELAY_SECS):
+    for importable_option in (CONF_ACTIVITY, CONF_DELAY_SECS):
         if importable_option not in entry.options and importable_option in entry.data:
             options[importable_option] = entry.data[importable_option]
             modified = 1
