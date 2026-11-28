@@ -39,6 +39,23 @@ def render_with_context(
     template_str: str, template: jinja2.Template, **kwargs: Any
 ) -> str:
     """Store template being rendered in a ContextVar to aid error handling."""
+    environment = template.environment
+    environment_globals = environment.globals
+
+    if template.globals is environment_globals:
+        # A context never writes to its parent, so the globals can be shared
+        parent = {**environment_globals, **kwargs} if kwargs else environment_globals
+        context = environment.context_class(
+            environment, parent, template.name, template.blocks
+        )
+    else:
+        # Globals of its own have to be tracked, to pass them on to imports
+        context = template.new_context(kwargs)
+
     with template_context_manager as cm:
         cm.set_template(template_str, "rendering")
-        return template.render(**kwargs)
+        try:
+            return environment.concat(template.root_render_func(context))
+        except Exception:  # noqa: BLE001
+            # Re-raises with the traceback pointing at the template line
+            environment.handle_exception()
