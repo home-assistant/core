@@ -1,0 +1,25 @@
+[
+  {
+    "_id": "00000000-0000-4000-8000-000000000110",
+    "id": "00000000-0000-4000-8000-000000000110",
+    "type": "homehub",
+    "deviceModel": "homehub",
+    "isCloudConnectionUp": {
+      "settable": false,
+      "value": true
+    },
+    "managementPoints": [
+      {
+        "embeddedId": "gateway",
+        "managementPointType": "gateway",
+        "managementPointCategory": "secondary",
+        "softwareVersion": {
+          "settable": false,
+          "value": "2.3.0"
+        }
+      }
+    ],
+    "embeddedId": "test-embedded-118",
+    "timestamp": "2024-07-14T05:02:10.478Z"
+  }
+]

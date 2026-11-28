@@ -1,0 +1,57 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "daylightsavingtimeenabled": { "default": "mdi:information-outline" },
+      "iscoolheatmaster": { "default": "mdi:information-outline" },
+      "isfirmwareupdatesupported": { "default": "mdi:information-outline" },
+      "isholidaymodeactive": { "default": "mdi:information-outline" },
+      "isininstallerstate": { "default": "mdi:information-outline" },
+      "islockfunctionenabled": { "default": "mdi:information-outline" },
+      "ispowerfulmodeactive": { "default": "mdi:information-outline" },
+      "ledenabled": { "default": "mdi:information-outline" }
+    },
+    "number": {
+      "leaving_water_offset": { "default": "mdi:thermometer-plus" }
+    },
+    "select": {
+      "schedule": { "default": "mdi:calendar-clock" }
+    },
+    "sensor": {
+      "airpurificationmode": { "default": "mdi:alphabetical" },
+      "controlmode": { "default": "mdi:alphabetical" },
+      "currentpowerconsumption": { "default": "mdi:lightning-bolt" },
+      "currentthermaloutput": { "default": "mdi:fire" },
+      "datetime": { "default": "mdi:information-outline" },
+      "errorcode": { "default": "mdi:information-outline" },
+      "fanmotorrotationspeed": { "default": "mdi:fan" },
+      "heatupmode": { "default": "mdi:alphabetical" },
+      "holiday_end_date": { "default": "mdi:calendar-end" },
+      "holiday_start_date": { "default": "mdi:calendar-start" },
+      "ipaddress": { "default": "mdi:ip-network" },
+      "operationmode": { "default": "mdi:alphabetical" },
+      "ratelimitremainingday": { "default": "mdi:information-outline" },
+      "regioncode": { "default": "mdi:information-outline" },
+      "setpointmode": { "default": "mdi:alphabetical" },
+      "sgtin": { "default": "mdi:information-outline" },
+      "ssid": { "default": "mdi:access-point-network" },
+      "tanktemperature": { "default": "mdi:bathtub-outline" },
+      "timezone": { "default": "mdi:information-outline" },
+      "wificonnectionssid": { "default": "mdi:access-point-network" },
+      "wificonnectionstrength": { "default": "mdi:wifi" }
+    },
+    "switch": {
+      "economode": { "default": "mdi:leaf" },
+      "onoffmode": { "default": "mdi:power" },
+      "powerfulmode": { "default": "mdi:rocket-launch" },
+      "streamermode": { "default": "mdi:air-filter" }
+    },
+    "update": {
+      "firmwareupdate": { "default": "mdi:update" }
+    }
+  },
+  "services": {
+    "get_schedule_data": { "service": "mdi:download" },
+    "set_holiday_period": { "service": "mdi:calendar-range" },
+    "set_schedule_data": { "service": "mdi:upload" }
+  }
+}
