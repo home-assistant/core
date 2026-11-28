@@ -1,0 +1,14 @@
+{
+  "domain": "geosphere_austria_forecast",
+  "name": "GeoSphere Austria Forecast",
+  "categories": ["weather_alerts.forecasts"],
+  "codeowners": ["@Ziykuna"],
+  "config_flow": true,
+  "connectivity": ["cloud"],
+  "documentation": "https://www.home-assistant.io/integrations/geosphere_austria_forecast",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "loggers": ["zamg"],
+  "quality_scale": "bronze",
+  "requirements": ["zamg==0.5.0"]
+}
