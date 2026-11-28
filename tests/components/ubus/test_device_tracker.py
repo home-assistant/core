@@ -20,7 +20,10 @@ from homeassistant.components.device_tracker.const import (
 from homeassistant.components.person import DOMAIN as PERSON_DOMAIN
 from homeassistant.components.ubus.config_flow import HUB_TITLE
 from homeassistant.components.ubus.const import DOMAIN, SUBENTRY_TYPE_ROUTER
-from homeassistant.components.ubus.coordinator import LEASE_REREAD_INTERVAL
+from homeassistant.components.ubus.coordinator import (
+    LEASE_REREAD_INTERVAL,
+    UbusDataUpdateCoordinator,
+)
 from homeassistant.components.ubus.device_tracker import UbusScannerEntity
 from homeassistant.config_entries import (
     SOURCE_IMPORT,
@@ -1931,6 +1934,61 @@ async def test_removed_router_failed_poll_does_not_log_unretrieved(
     # The exceptions of all settled polls were retrieved; an unretrieved
     # one marks the task for a "never retrieved" log once collected.
     assert all(not task._log_traceback for task in finished)
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_router_health_applies_while_other_router_stalls(
+    hass: HomeAssistant,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    two_router_hub: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a failing router's health update does not wait for the tick end.
+
+    A router which settles while another is stalled must have its health
+    applied at its own settlement, or its sightings wait up to the full
+    timeout for the transition.
+    """
+    _mock, ubus = mock_ubus_by_host
+    two_router_hub.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(two_router_hub.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator: UbusDataUpdateCoordinator = two_router_hub.runtime_data
+    subentry_a = next(
+        subentry
+        for subentry in two_router_hub.subentries.values()
+        if subentry.data[CONF_HOST] == MOCK_HOST
+    )
+
+    release = threading.Event()
+    failed = threading.Event()
+
+    def _blocked_clients(interface: str) -> dict:
+        release.wait()
+        return {"clients": {}}
+
+    def _failing_clients(interface: str) -> dict:
+        failed.set()
+        raise ConnectionError("unreachable")
+
+    ubus[MOCK_HOST].get_hostapd_clients.side_effect = _failing_clients
+    ubus[MOCK_HOST_B].get_hostapd_clients.side_effect = _blocked_clients
+
+    try:
+        freezer.tick(timedelta(seconds=31))
+        async_fire_time_changed(hass)
+        await hass.async_add_executor_job(failed.wait, 10)
+        # A has failed while B is still settling; A's health transition
+        # must have been applied at A's settlement.
+        for _ in range(1000):
+            if not coordinator.host_health.get(subentry_a.subentry_id, True):
+                break
+            await asyncio.sleep(0)
+        assert coordinator.host_health[subentry_a.subentry_id] is False
+    finally:
+        release.set()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

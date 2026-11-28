@@ -434,15 +434,34 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[ClientPresence]):
                 fresh: list[tuple[str, dict[str, str | None]]] = []
                 for host, result in settled:
                     subentry_id = host.subentry_id
+                    was_healthy = self.host_health.get(subentry_id, True)
                     if isinstance(result, BaseException):
                         # A failed poll sees nothing new.
                         self.latest_views.pop(subentry_id, None)
                         self._tick_results[subentry_id] = result
+                        self.host_health[subentry_id] = False
+                        if isinstance(result, InvalidCredentialsError):
+                            self._async_create_credentials_issue(subentry_id)
+                        if was_healthy:
+                            # With another router carrying the tick, this
+                            # failure would otherwise be discarded unlogged.
+                            _LOGGER.warning(
+                                "Router %s is unreachable: %s",
+                                self._router_host(subentry_id),
+                                result,
+                            )
                         continue
                     self.latest_views[subentry_id] = result[1]
                     observed_at[subentry_id] = result[0]
                     fresh.append((subentry_id, result[1]))
                     self._tick_results[subentry_id] = result[1]
+                    self.host_health[subentry_id] = True
+                    self._async_delete_credentials_issue(subentry_id)
+                    if not was_healthy:
+                        _LOGGER.info(
+                            "Router %s is reachable again",
+                            self._router_host(subentry_id),
+                        )
                 # Stamps are sequenced by observation time, so the newest
                 # sighting reports the client's source.
                 subentries = self.config_entry.subentries
@@ -576,30 +595,7 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[ClientPresence]):
     @callback
     @override
     def _async_refresh_finished(self) -> None:
-        """Record host health, manage credential issues, signal changes."""
-        for subentry_id, result in self._tick_results.items():
-            was_healthy = self.host_health.get(subentry_id, True)
-            if isinstance(result, BaseException):
-                self.host_health[subentry_id] = False
-                if isinstance(result, InvalidCredentialsError):
-                    self._async_create_credentials_issue(subentry_id)
-                if was_healthy:
-                    # With another router carrying the tick, this failure
-                    # would otherwise be discarded unlogged.
-                    _LOGGER.warning(
-                        "Router %s is unreachable: %s",
-                        self._router_host(subentry_id),
-                        result,
-                    )
-            else:
-                self.host_health[subentry_id] = True
-                self._async_delete_credentials_issue(subentry_id)
-                if not was_healthy:
-                    _LOGGER.info(
-                        "Router %s is reachable again",
-                        self._router_host(subentry_id),
-                    )
-        self._tick_results = {}
+        """Drop the health record of removed routers and signal changes."""
         subentries = self.config_entry.subentries
         for subentry_id in list(self.host_health):
             if subentry_id not in subentries:
