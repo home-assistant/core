@@ -484,7 +484,14 @@ def async_update_corrupt_database_issue(
             # The fix flow deletes only these files.
             data={"files": names},
             translation_placeholders={
-                "count": str(len(corrupt_files)),
+                "date": dt_util.as_local(
+                    max(
+                        datetime.fromisoformat(file.name.rpartition(".corrupt.")[2])
+                        for file in corrupt_files
+                    )
+                )
+                .date()
+                .isoformat(),
                 "size": f"{sum(corrupt_files.values()) / 1_000_000:.1f}",
                 "path": str(next(iter(corrupt_files)).parent),
             },

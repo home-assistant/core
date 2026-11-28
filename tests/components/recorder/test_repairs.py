@@ -17,6 +17,10 @@ from pytest_homeassistant.typing import (
 )
 
 from homeassistant.components.recorder.const import DOMAIN
+from homeassistant.components.recorder.util import (
+    async_update_corrupt_database_issue,
+    find_corrupt_database_files,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -85,7 +89,8 @@ async def test_corrupt_database_files_repair(
     assert issue is not None
     assert issue.is_fixable
     assert issue.translation_placeholders == {
-        "count": "4",
+        # The newest corruption, as a date in the US/Pacific test time zone.
+        "date": "2026-01-31",
         "size": "2.0",
         "path": str(db_file.resolve().parent),
     }
@@ -93,7 +98,10 @@ async def test_corrupt_database_files_repair(
     assert await async_setup_component(hass, "repairs", {})
     client = await hass_client()
     flow = await start_repair_fix_flow(client, DOMAIN, issue_id)
-    assert flow["step_id"] == "confirm"
+    assert flow["type"] == "menu"
+    assert flow["step_id"] == "init"
+    assert flow["menu_options"] == ["delete", "keep"]
+    assert flow["description_placeholders"] == issue.translation_placeholders
     # Corruptions after the issue was shown must not be deleted with it,
     # even when the clock went back in between.
     later_files = [
@@ -103,7 +111,9 @@ async def test_corrupt_database_files_repair(
     for later_file in later_files:
         await hass.async_add_executor_job(later_file.write_bytes, b"")
 
-    result = await process_repair_fix_flow(client, flow["flow_id"])
+    result = await process_repair_fix_flow(
+        client, flow["flow_id"], json={"next_step_id": "delete"}
+    )
     assert result["type"] == "create_entry"
 
     for corrupt_file in corrupt_files:
@@ -139,12 +149,87 @@ async def test_corrupt_database_files_delete_failed(
         "homeassistant.components.recorder.repairs.delete_corrupt_database_files",
         side_effect=PermissionError,
     ):
-        result = await process_repair_fix_flow(client, flow["flow_id"])
+        result = await process_repair_fix_flow(
+            client, flow["flow_id"], json={"next_step_id": "delete"}
+        )
 
     assert result["type"] == "abort"
     assert result["reason"] == "delete_failed"
     assert "Could not delete the corrupt database files" in caplog.text
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
+
+
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
+@pytest.mark.parametrize("persistent_database", [True])
+async def test_corrupt_database_files_keep(
+    hass: HomeAssistant,
+    recorder_db_url: str,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    hass_client: ClientSessionGenerator,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test keeping the files ignores the issue, also after the next scan."""
+    db_file = Path(recorder_db_url.removeprefix("sqlite:///"))
+    corrupt_files = await hass.async_add_executor_job(_write_corrupt_files, db_file)
+    await async_setup_recorder_instance(hass)
+    await hass.async_block_till_done()
+
+    issue_id = _issue_id(corrupt_files)
+    assert await async_setup_component(hass, "repairs", {})
+    client = await hass_client()
+    flow = await start_repair_fix_flow(client, DOMAIN, issue_id)
+    result = await process_repair_fix_flow(
+        client, flow["flow_id"], json={"next_step_id": "keep"}
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "files_kept"
+    for corrupt_file in corrupt_files:
+        assert await hass.async_add_executor_job(corrupt_file.exists)
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.dismissed_version is not None
+
+    # The next startup finds the same files and must not show them again.
+    async_update_corrupt_database_issue(
+        hass,
+        await hass.async_add_executor_job(find_corrupt_database_files, str(db_file)),
+    )
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.dismissed_version is not None
+
+
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
+@pytest.mark.parametrize("persistent_database", [True])
+async def test_corrupt_database_files_keep_issue_removed(
+    hass: HomeAssistant,
+    recorder_db_url: str,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    hass_client: ClientSessionGenerator,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test keeping the files after the issue was removed while the menu was open."""
+    db_file = Path(recorder_db_url.removeprefix("sqlite:///"))
+    corrupt_files = await hass.async_add_executor_job(_write_corrupt_files, db_file)
+    await async_setup_recorder_instance(hass)
+    await hass.async_block_till_done()
+
+    issue_id = _issue_id(corrupt_files)
+    assert await async_setup_component(hass, "repairs", {})
+    client = await hass_client()
+    flow = await start_repair_fix_flow(client, DOMAIN, issue_id)
+    ir.async_delete_issue(hass, DOMAIN, issue_id)
+
+    result = await process_repair_fix_flow(
+        client, flow["flow_id"], json={"next_step_id": "keep"}
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "files_kept"
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 
 @pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
