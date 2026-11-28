@@ -17,9 +17,10 @@
       },
       "scan": {
         "data": {
-          "QR": "QR code"
+          "QR": "QR code",
+          "refresh_qr_code": "Generate a new QR code"
         },
-        "description": "Use the Smart Life app or Tuya Smart app to scan the following QR code to complete the login.\n\nContinue to the next step once you have completed this step in the app."
+        "description": "Use the Smart Life app or Tuya Smart app to scan the following QR code to complete the login. If the code has expired, select **Generate a new QR code** and select **Submit** to refresh it before scanning.\n\nContinue to the next step once you have completed this step in the app."
       },
       "user": {
         "data": {
