@@ -79,6 +79,13 @@ class LEDBLEEntity(CoordinatorEntity[LEDBLECoordinator], LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         brightness = cast(int, kwargs.get(ATTR_BRIGHTNESS, self.brightness))
+        if not self._device.on and any(
+            attr in kwargs
+            for attr in (ATTR_EFFECT, ATTR_RGB_COLOR, ATTR_BRIGHTNESS, ATTR_WHITE)
+        ):
+            # The device ignores colour, brightness and effect writes while it
+            # is off, so power it on first.
+            await self._device.turn_on()
         if effect := kwargs.get(ATTR_EFFECT):
             await self._async_set_effect(effect, brightness)
             return
