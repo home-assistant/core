@@ -38,6 +38,8 @@ from .const import (
     DOMAIN,
     DOMAIN_DATA,
     LOGGER,
+    MAX_BROWSE_ATTEMPTS,
+    MAX_BROWSE_CHILDREN,
     MEDIA_CLASS_MAP,
     PATH_OBJECT_ID_FLAG,
     PATH_SEARCH_FLAG,
@@ -452,8 +454,8 @@ class DmsDeviceSource:
                     continue
 
             # Nothing was found via search, fall back to iterating children
-            result = await self._device.async_browse_direct_children(
-                object_id, metadata_filter=DLNA_PATH_FILTER
+            result = await self._async_browse_direct_children_paged(
+                object_id, limit=None, metadata_filter=DLNA_PATH_FILTER
             )
 
             if result.total_matches == 0 or not result.result:
@@ -501,13 +503,55 @@ class DmsDeviceSource:
             object_id, metadata_filter=DLNA_BROWSE_FILTER
         )
 
-        children = await self._device.async_browse_direct_children(
+        children = await self._async_browse_direct_children_paged(
             object_id,
+            limit=MAX_BROWSE_CHILDREN,
             metadata_filter=DLNA_BROWSE_FILTER,
             sort_criteria=self._sort_criteria,
         )
 
-        return self._didl_to_media_source(base_object, children)
+        media = self._didl_to_media_source(base_object, children)
+        media.not_shown = max(0, children.total_matches - len(media.children or []))
+        return media
+
+    async def _async_browse_direct_children_paged(
+        self, object_id: str, limit: int | None, **kwargs: Any
+    ) -> DmsDevice.BrowseResult:
+        """Browse direct children, requesting more pages if the server limits them.
+
+        A limit of None fetches every child.
+        """
+        assert self._device
+
+        for _ in range(MAX_BROWSE_ATTEMPTS):
+            # A requested count of 0 asks the server for all children
+            children = await self._device.async_browse_direct_children(
+                object_id, requested_count=limit or 0, **kwargs
+            )
+            wanted = children.total_matches
+            if limit is not None:
+                wanted = min(wanted, limit)
+            returned = page_returned = children.number_returned
+            while page_returned > 0 and returned < wanted:
+                page = await self._device.async_browse_direct_children(
+                    object_id,
+                    starting_index=returned,
+                    requested_count=wanted - returned,
+                    **kwargs,
+                )
+                if page.update_id != children.update_id:
+                    # Container changed while paging, so start again
+                    break
+                page_returned = page.number_returned
+                returned += page_returned
+                children.result.extend(page.result)
+            else:
+                break
+
+        if limit is not None:
+            # Servers may return more than requested
+            del children.result[limit:]
+        return children
 
     @catch_request_errors
     async def async_browse_search(self, query: str) -> BrowseMediaSource:

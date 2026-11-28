@@ -5,6 +5,7 @@ from typing import Final, cast
 from unittest.mock import AsyncMock, MagicMock, Mock, create_autospec, patch, seal
 
 from async_upnp_client.client import UpnpDevice, UpnpService
+from async_upnp_client.profiles.dlna import DmsDevice
 from async_upnp_client.utils import absolute_url
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -121,6 +122,9 @@ def dms_device_mock(upnp_factory_mock: Mock) -> Generator[Mock]:
         device.name = "device_name"
         device.get_absolute_url.side_effect = lambda url: absolute_url(
             MOCK_DEVICE_BASE_URL, url
+        )
+        device.async_browse_direct_children.return_value = DmsDevice.BrowseResult(
+            [], 0, 0, 0
         )
 
         yield device
