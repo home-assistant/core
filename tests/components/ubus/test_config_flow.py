@@ -496,6 +496,37 @@ async def test_import_flow_adds_subentry_to_hub(
     }
 
 
+async def test_import_flow_adds_subentry_to_populated_hub(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_ubus: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test an import joins the populated hub over an empty shell."""
+    shell = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        title=HUB_TITLE,
+        entry_id="00000000000000000000000000A",
+    )
+    shell.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=MOCK_HOST_CONFIG_B
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert {
+        subentry.unique_id for subentry in mock_config_entry.subentries.values()
+    } == {
+        MOCK_HOST,
+        MOCK_HOST_B,
+    }
+    assert not shell.subentries
+
+
 async def test_import_flow_joins_hub_created_during_validation(
     hass: HomeAssistant, mock_ubus: MagicMock
 ) -> None:

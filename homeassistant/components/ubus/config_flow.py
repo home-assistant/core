@@ -141,11 +141,14 @@ def _async_hub_candidates(hass: HomeAssistant) -> list[ConfigEntry]:
 def _async_find_hub(entries: list[ConfigEntry]) -> ConfigEntry | None:
     """Return the entry which is, or becomes, the hub of the install.
 
-    A hub has no data; in a pre-migration install the entry which is
+    A hub has no data and holds routers, so an empty shell left by a
+    failed removal never wins over one. Otherwise the entry which is
     set up first (the lowest id) becomes the hub, so an import joins
     the same entry the setup migration will use.
     """
-    hub = next((entry for entry in entries if not entry.data), None)
+    hub = next(
+        (entry for entry in entries if not entry.data and entry.subentries), None
+    )
     if hub is None and entries:
         hub = min(entries, key=lambda entry: entry.entry_id)
     return hub

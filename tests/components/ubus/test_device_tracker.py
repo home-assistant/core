@@ -4012,6 +4012,58 @@ async def test_migration_failure_after_transfer_empties_leftover_entry(
     )
 
 
+async def test_migration_prefers_populated_hub_over_shell(
+    hass: HomeAssistant,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+) -> None:
+    """Test the migration keeps the populated hub over an empty shell.
+
+    A failed removal can leave an empty shell with a lower id than the
+    hub; picking it would delete the real hub and lose its options.
+    """
+    _mock, _ubus = mock_ubus_by_host
+    shell = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        title=HUB_TITLE,
+        entry_id="00000000000000000000000000A",
+    )
+    hub = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        title=HUB_TITLE,
+        entry_id="00000000000000000000000000B",
+        options={CONF_CONSIDER_HOME: 300},
+        subentries_data=[router_subentry_data(MOCK_CONFIG)],
+    )
+    legacy = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_HOST_CONFIG_B,
+        title=MOCK_HOST_B,
+        entry_id="00000000000000000000000000C",
+    )
+    shell.add_to_hass(hass)
+    hub.add_to_hass(hass)
+    legacy.add_to_hass(hass)
+    # The lowest-id entry is set up first, as in a boot; the migration
+    # runs in component setup, before any entry setup, so the removed
+    # shell never reaches the loaded state.
+    assert not await hass.config_entries.async_setup(shell.entry_id)
+    await hass.async_block_till_done()
+
+    # The populated hub kept its identity, its option, and every router;
+    # the empty shell was deleted with the rest.
+    assert [entry.entry_id for entry in hass.config_entries.async_entries(DOMAIN)] == [
+        hub.entry_id
+    ]
+    assert hub.state is ConfigEntryState.LOADED
+    assert hub.options == {CONF_CONSIDER_HOME: 300}
+    assert {subentry.unique_id for subentry in hub.subentries.values()} == {
+        MOCK_HOST,
+        MOCK_HOST_B,
+    }
+
+
 async def test_late_hub_merge_removal_failure_creates_repair(
     hass: HomeAssistant,
     mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
