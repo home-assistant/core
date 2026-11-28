@@ -1,0 +1,25 @@
+set_window_close:
+  fields:
+    entity_id:
+      required: true
+      selector:
+        entity:
+          integration: fritzbox
+          domain: climate
+
+set_window_open:
+  fields:
+    entity_id:
+      required: true
+      selector:
+        entity:
+          integration: fritzbox
+          domain: climate
+    duration:
+      default: 600
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 86400
+          unit_of_measurement: seconds

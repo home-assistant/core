@@ -120,5 +120,31 @@
     "manual_switching_disabled": {
       "message": "Can't toggle switch while manual switching is disabled for the device."
     }
+  },
+  "services": {
+    "set_window_close": {
+      "description": "Notify the device about a closed window, taking over the internal detection.",
+      "fields": {
+        "entity_id": {
+          "description": "Select the climate entity to notify",
+          "name": "Climate entity"
+        }
+      },
+      "name": "Notify closed window"
+    },
+    "set_window_open": {
+      "description": "Notify the device about an open window, taking over the internal detection.",
+      "fields": {
+        "duration": {
+          "description": "Duration that the device will assume an open window. Afterwards the device will return to normal schedule. At most 24h.",
+          "name": "Window open duration"
+        },
+        "entity_id": {
+          "description": "Select the climate entity to notify",
+          "name": "Climate entity"
+        }
+      },
+      "name": "Notify open window"
+    }
   }
 }
