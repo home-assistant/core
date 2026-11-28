@@ -570,7 +570,7 @@
         "name": "Tire pressure rear right"
       },
       "vin": {
-        "name": "Vehicle"
+        "name": "Vehicle VIN"
       },
       "vpp_backup_reserve_percent": {
         "name": "VPP backup reserve"
