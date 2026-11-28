@@ -11,6 +11,7 @@ from roborock.data import (
     CleanPathPreferenceMapping,
     RoborockDockDustCollectionModeCode,
     RoborockEnum,
+    SCWindMapping,
     WaterLevelMapping,
     ZeoDetergentType,
     ZeoDryingMode,
@@ -105,6 +106,14 @@ class RoborockSelectDescriptionA01(SelectEntityDescription):
 
 
 B01_SELECT_DESCRIPTIONS: list[RoborockB01SelectDescription] = [
+    RoborockB01SelectDescription(
+        key="suction_power",
+        translation_key="suction_power",
+        api_fn=lambda api, value: api.set_fan_speed(SCWindMapping.from_value(value)),
+        value_fn=lambda data: data.wind_name,
+        options_lambda=lambda _: SCWindMapping.keys(),
+        entity_category=EntityCategory.CONFIG,
+    ),
     RoborockB01SelectDescription(
         key="water_flow",
         translation_key="water_flow",
