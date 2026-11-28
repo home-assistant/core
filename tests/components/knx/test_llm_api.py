@@ -19,7 +19,9 @@ from pytest_homeassistant.common import MockUser
 from xknx.dpt import DPTArray, DPTTime
 
 from homeassistant.components.knx import llm_api
-from homeassistant.components.knx.const import DOMAIN, KNX_MODULE_KEY
+from homeassistant.components.knx.const import DOMAIN, KNX_ADDRESS, KNX_MODULE_KEY
+from homeassistant.components.knx.project import STORAGE_KEY as KNX_PROJECT_STORAGE_KEY
+from homeassistant.components.knx.schema import SwitchSchema
 from homeassistant.components.knx.storage.entity_suggestions.base import (
     SuggestionProvider,
 )
@@ -29,7 +31,7 @@ from homeassistant.components.knx.storage.entity_suggestions.const import (
     ProviderSuggestion,
     SuggestedGroupAddress,
 )
-from homeassistant.const import STATE_ON
+from homeassistant.const import CONF_NAME, STATE_ON
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import (
@@ -55,6 +57,7 @@ _EXPECTED_TOOLS = {
     "delete_entity",
     "describe_dpt",
     "describe_channel",
+    "describe_entity_group_addresses",
     "describe_function",
     "describe_group_address",
     "encode_value",
@@ -74,6 +77,7 @@ _EXPECTED_TOOLS = {
     "list_entities",
     "list_entity_suggestions",
     "list_functions",
+    "list_group_address_usage",
     "list_group_addresses",
     "query_telegrams",
     "update_entity",
@@ -1356,3 +1360,327 @@ async def test_delete_device_refuses_other_devices(
             hass, hass_admin_user, "delete_device", {"device_id": "unknown"}
         )
     assert device_registry.async_get(interface.id) is not None
+
+
+async def test_list_group_address_usage(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    entity_registry: er.EntityRegistry,
+    hass_admin_user: MockUser,
+) -> None:
+    """Used addresses are listed with their entities, UI and YAML."""
+    await knx.setup_integration(
+        {SwitchSchema.PLATFORM: {CONF_NAME: "yaml", KNX_ADDRESS: "1/2/3"}}
+    )
+    await _create_switch(hass, hass_admin_user, "A", "1/2/3")
+    await _create_switch(hass, hass_admin_user, "B", "1/2/10")
+    entity_registry.async_update_entity(
+        "switch.b", disabled_by=er.RegistryEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+
+    result = await _call_api(hass, hass_admin_user, "list_group_address_usage", {})
+    assert result["group_addresses"] == [
+        {
+            "address": "1/2/3",
+            "name": None,
+            "entities": [
+                {
+                    "entity_id": "switch.a",
+                    "platform": "switch",
+                    "ui": True,
+                    "disabled": False,
+                },
+                {
+                    "entity_id": "switch.yaml",
+                    "platform": "switch",
+                    "ui": False,
+                    "disabled": False,
+                },
+            ],
+        },
+        {
+            "address": "1/2/10",
+            "name": None,
+            "entities": [
+                {
+                    "entity_id": "switch.b",
+                    "platform": "switch",
+                    "ui": True,
+                    "disabled": True,
+                }
+            ],
+        },
+    ]
+
+    result = await _call_api(
+        hass,
+        hass_admin_user,
+        "list_group_address_usage",
+        {"group_addresses": ["9/7/9", "1/2/10"], "limit": 1},
+    )
+    assert result["total_count"] == 2
+    assert result["next_offset"] == 1
+    assert result["group_addresses"] == [
+        {
+            "address": "1/2/10",
+            "name": None,
+            "entities": [
+                {
+                    "entity_id": "switch.b",
+                    "platform": "switch",
+                    "ui": True,
+                    "disabled": True,
+                }
+            ],
+        }
+    ]
+
+    result = await _call_api(
+        hass,
+        hass_admin_user,
+        "list_group_address_usage",
+        {"group_addresses": ["9/7/9"]},
+    )
+    assert result["group_addresses"] == [
+        {"address": "9/7/9", "name": None, "entities": []}
+    ]
+
+
+@pytest.mark.usefixtures("load_knxproj")
+async def test_list_group_address_usage_names_project_addresses(
+    hass: HomeAssistant, knx: KNXTestKit, hass_admin_user: MockUser
+) -> None:
+    """With a project loaded, addresses carry their name from the project."""
+    await knx.setup_integration()
+    await _create_switch(hass, hass_admin_user, "A", "0/0/1")
+    await _create_switch(hass, hass_admin_user, "B", "9/7/9")
+
+    result = await _call_api(hass, hass_admin_user, "list_group_address_usage", {})
+    assert [
+        (ga["address"], ga["name"], [entity["entity_id"] for entity in ga["entities"]])
+        for ga in result["group_addresses"]
+    ] == [("0/0/1", "Binary", ["switch.a"]), ("9/7/9", None, ["switch.b"])]
+
+
+async def test_project_group_addresses_name_their_entities(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_admin_user: MockUser,
+    hass_storage: dict[str, Any],
+    current_project_data: dict[str, Any],
+) -> None:
+    """The group addresses of the project carry the entities using them."""
+    hass_storage[KNX_PROJECT_STORAGE_KEY] = {"version": 1, "data": current_project_data}
+    await knx.setup_integration()
+    await _create_switch(hass, hass_admin_user, "B", "1/0/0")
+    await _create_switch(hass, hass_admin_user, "A", "1/0/0")
+
+    result = await _call_api(hass, hass_admin_user, "list_group_addresses", {})
+    assert result["total_count"] == 19
+    assert {
+        ga["address"]: ga["entity_ids"]
+        for ga in result["group_addresses"]
+        if ga["entity_ids"]
+    } == {"1/0/0": ["switch.a", "switch.b"]}
+
+    result = await _call_api(
+        hass, hass_admin_user, "describe_group_address", {"address": "1/0/0"}
+    )
+    assert result["group_address"]["entity_ids"] == ["switch.a", "switch.b"]
+
+    result = await _call_api(
+        hass, hass_admin_user, "describe_group_address", {"address": "9/7/9"}
+    )
+    assert result["found"] is False
+    assert result["group_address"] is None
+
+    result = await _call_api(
+        hass, hass_admin_user, "list_group_addresses", {"text": "matches nothing"}
+    )
+    assert result["group_addresses"] == []
+    assert result["total_count"] == 0
+
+
+def _addressed_channel_project() -> dict[str, Any]:
+    """The channel project with its group addresses, and one central address."""
+    project = _channel_project(devices=2, channels=12)
+    group_addresses: dict[str, Any] = {}
+    for co_id, communication_object in project["communication_objects"].items():
+        if communication_object["number"] % 10 == 0:
+            communication_object["group_address_links"].append("0/0/1")
+        for address in communication_object["group_address_links"]:
+            group_addresses.setdefault(
+                address,
+                {
+                    "address": address,
+                    "name": f"GA {address}",
+                    "dpt": {"main": 1, "sub": 1},
+                    "communication_object_ids": [],
+                },
+            )["communication_object_ids"].append(co_id)
+    for address, device in project["devices"].items():
+        device["name"] = f"Actuator {address}"
+    return project | {"group_addresses": group_addresses}
+
+
+async def test_describe_entity_group_addresses(
+    hass: HomeAssistant, knx: KNXTestKit, hass_admin_user: MockUser
+) -> None:
+    """Addresses resolve to their channels; the one on another channel stands out."""
+    await knx.setup_integration()
+    result = await _call_api(
+        hass,
+        hass_admin_user,
+        "create_entity",
+        {
+            "platform": "switch",
+            "entity": {"name": "A"},
+            "knx": {
+                "ga_switch": {
+                    "write": "1/1/0",
+                    "state": "1/2/1",
+                    "passive": ["0/0/1", "9/7/9"],
+                }
+            },
+        },
+    )
+    assert result["success"] is True
+    await _state_read_started()
+    await knx.assert_read("1/2/1", response=True)
+
+    with patch.object(
+        hass.data[KNX_MODULE_KEY].project,
+        "get_knxproject",
+        AsyncMock(return_value=_addressed_channel_project()),
+    ):
+        result = await _call_api(
+            hass,
+            hass_admin_user,
+            "describe_entity_group_addresses",
+            {"entity_id": "switch.a"},
+        )
+
+    assert result["platform"] == "switch"
+    assert result["ui"] is True
+    assert [
+        (
+            ga["address"],
+            ga["options"],
+            ga["in_project"],
+            ga["link_count"],
+            len(ga["linked"]),
+        )
+        for ga in result["group_addresses"]
+    ] == [
+        ("0/0/1", ["ga_switch.passive"], True, 24, 20),
+        ("1/1/0", ["ga_switch.write"], True, 1, 1),
+        ("1/2/1", ["ga_switch.state"], True, 1, 1),
+        ("9/7/9", ["ga_switch.passive"], False, 0, 0),
+    ]
+    assert result["group_addresses"][1]["linked"] == [
+        {
+            "device_address": "1.1.1",
+            "device_name": "Actuator 1.1.1",
+            "channel": "CH-1",
+            "channel_name": "Output 1",
+            "communication_object": "Switch",
+            "number": 10,
+        }
+    ]
+    assert [
+        (channel["channel"], channel["group_addresses"])
+        for channel in result["channels"]
+    ] == [("CH-1", ["1/1/0"]), ("CH-2", ["1/2/1"])]
+
+
+def test_group_address_options_of_nested_configuration() -> None:
+    """Options nested in a group, as the colors of a light, keep their path."""
+    assert llm_api._group_address_options(
+        {
+            "ga_switch": {"write": "3/0/1", "state": None, "passive": []},
+            "sync_state": True,
+            "color": {
+                "ga_hue": {"write": "3/2/1", "state": "3/2/0", "passive": []},
+                "ga_saturation": {
+                    "write": "3/3/1",
+                    "state": None,
+                    "passive": ["3/2/0"],
+                },
+            },
+        }
+    ) == {
+        "3/0/1": ["ga_switch.write"],
+        "3/2/1": ["color.ga_hue.write"],
+        "3/2/0": ["color.ga_hue.state", "color.ga_saturation.passive"],
+        "3/3/1": ["color.ga_saturation.write"],
+    }
+
+
+async def test_describe_entity_group_addresses_of_yaml_entity(
+    hass: HomeAssistant, knx: KNXTestKit, hass_admin_user: MockUser
+) -> None:
+    """A YAML entity has its addresses resolved, without the options they are set in."""
+    await knx.setup_integration(
+        {SwitchSchema.PLATFORM: {CONF_NAME: "yaml", KNX_ADDRESS: "1/1/0"}}
+    )
+
+    with patch.object(
+        hass.data[KNX_MODULE_KEY].project,
+        "get_knxproject",
+        AsyncMock(return_value=_addressed_channel_project()),
+    ):
+        result = await _call_api(
+            hass,
+            hass_admin_user,
+            "describe_entity_group_addresses",
+            {"entity_id": "switch.yaml"},
+        )
+
+    assert result["ui"] is False
+    assert [(ga["address"], ga["options"]) for ga in result["group_addresses"]] == [
+        ("1/1/0", [])
+    ]
+    assert [channel["channel"] for channel in result["channels"]] == ["CH-1"]
+
+
+async def test_describe_entity_group_addresses_channel_not_in_device(
+    hass: HomeAssistant, knx: KNXTestKit, hass_admin_user: MockUser
+) -> None:
+    """A channel the device does not list, as in older project data, has no name."""
+    await knx.setup_integration()
+    await _create_switch(hass, hass_admin_user, "A", "1/1/0")
+    project = _addressed_channel_project()
+    del project["devices"]["1.1.1"]["channels"]["CH-1"]
+
+    with patch.object(
+        hass.data[KNX_MODULE_KEY].project,
+        "get_knxproject",
+        AsyncMock(return_value=project),
+    ):
+        result = await _call_api(
+            hass,
+            hass_admin_user,
+            "describe_entity_group_addresses",
+            {"entity_id": "switch.a"},
+        )
+
+    assert [
+        (channel["channel"], channel["channel_name"]) for channel in result["channels"]
+    ] == [("CH-1", None)]
+
+
+@pytest.mark.usefixtures("load_knxproj")
+async def test_describe_entity_group_addresses_unknown_entity(
+    hass: HomeAssistant, knx: KNXTestKit, hass_admin_user: MockUser
+) -> None:
+    """An entity that is not a KNX entity is reported as a tool error."""
+    await knx.setup_integration()
+
+    with pytest.raises(HomeAssistantError, match="KNX entity not found"):
+        await _call_api(
+            hass,
+            hass_admin_user,
+            "describe_entity_group_addresses",
+            {"entity_id": "switch.unknown"},
+        )
