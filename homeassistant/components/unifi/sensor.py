@@ -254,6 +254,32 @@ def async_device_battery_pool_value_fn(
 
 
 @callback
+def async_device_speedtest_discovery_fn(hub: UnifiHub, obj_id: str) -> bool:
+    """Determine if a device reports speedtest results."""
+    return hub.api.devices[obj_id].speedtest_status is not None
+
+
+@callback
+def async_device_speedtest_value_fn(
+    field: str, hub: UnifiHub, device: Device
+) -> float | None:
+    """Retrieve a field of the last completed speedtest."""
+    status = device.speedtest_status
+    # While a test runs, UniFi empties the status or reports rundate 0
+    if not status or not status.get("rundate"):
+        return None
+    return cast(dict[str, float | None], status).get(field)
+
+
+@callback
+def async_speedtest_value_changed_fn(
+    old: StateType | date | datetime | Decimal, new: datetime | float | str | None
+) -> bool:
+    """Keep the last completed result while a new speedtest runs."""
+    return new is not None and new != old
+
+
+@callback
 def async_device_outlet_power_value_fn(
     hub: UnifiHub, outlet: Outlet
 ) -> float | str | None:
@@ -985,6 +1011,54 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         supported_fn=async_firewall_policy_supported_fn,
         unique_id_fn=lambda hub, obj_id: f"firewall_policy_schedule_status-{obj_id}",
         value_fn=async_firewall_policy_schedule_status_value_fn,
+    ),
+    UnifiSensorEntityDescription[Devices, Device](
+        key="Speedtest download",
+        translation_key="speedtest_download",
+        device_class=SensorDeviceClass.DATA_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
+        api_handler_fn=lambda api: api.devices,
+        available_fn=async_device_available_fn,
+        device_info_fn=async_device_device_info_fn,
+        object_fn=lambda api, obj_id: api.devices[obj_id],
+        discovery_fn=async_device_speedtest_discovery_fn,
+        supported_fn=async_device_supported_fn,
+        unique_id_fn=lambda hub, obj_id: f"speedtest_download-{obj_id}",
+        value_fn=partial(async_device_speedtest_value_fn, "xput_download"),
+        value_changed_fn=async_speedtest_value_changed_fn,
+    ),
+    UnifiSensorEntityDescription[Devices, Device](
+        key="Speedtest upload",
+        translation_key="speedtest_upload",
+        device_class=SensorDeviceClass.DATA_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
+        api_handler_fn=lambda api: api.devices,
+        available_fn=async_device_available_fn,
+        device_info_fn=async_device_device_info_fn,
+        object_fn=lambda api, obj_id: api.devices[obj_id],
+        discovery_fn=async_device_speedtest_discovery_fn,
+        supported_fn=async_device_supported_fn,
+        unique_id_fn=lambda hub, obj_id: f"speedtest_upload-{obj_id}",
+        value_fn=partial(async_device_speedtest_value_fn, "xput_upload"),
+        value_changed_fn=async_speedtest_value_changed_fn,
+    ),
+    UnifiSensorEntityDescription[Devices, Device](
+        key="Speedtest ping",
+        translation_key="speedtest_ping",
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTime.MILLISECONDS,
+        api_handler_fn=lambda api: api.devices,
+        available_fn=async_device_available_fn,
+        device_info_fn=async_device_device_info_fn,
+        object_fn=lambda api, obj_id: api.devices[obj_id],
+        discovery_fn=async_device_speedtest_discovery_fn,
+        supported_fn=async_device_supported_fn,
+        unique_id_fn=lambda hub, obj_id: f"speedtest_ping-{obj_id}",
+        value_fn=partial(async_device_speedtest_value_fn, "latency"),
+        value_changed_fn=async_speedtest_value_changed_fn,
     ),
 )
 

@@ -62,6 +62,15 @@
       "port_link_speed": {
         "default": "mdi:speedometer"
       },
+      "speedtest_download": {
+        "default": "mdi:download"
+      },
+      "speedtest_ping": {
+        "default": "mdi:speedometer"
+      },
+      "speedtest_upload": {
+        "default": "mdi:upload"
+      },
       "wlan_clients": {
         "default": "mdi:account-multiple"
       }

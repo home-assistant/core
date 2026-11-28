@@ -172,6 +172,15 @@
       "smartpower_ac_power_consumption": {
         "name": "AC power consumption"
       },
+      "speedtest_download": {
+        "name": "Speedtest download"
+      },
+      "speedtest_ping": {
+        "name": "Speedtest ping"
+      },
+      "speedtest_upload": {
+        "name": "Speedtest upload"
+      },
       "ups_battery_level": {
         "name": "Battery level"
       },
