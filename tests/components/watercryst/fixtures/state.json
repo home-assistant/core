@@ -1,0 +1,19 @@
+{
+  "online": true,
+  "mode": {
+    "id": "water_treatment",
+    "name": "Water Treatment"
+  },
+  "event": {
+    "eventId": 0,
+    "category": "info",
+    "title": "Unknown Event",
+    "description": "Unknown Event",
+    "timestamp": "2026-06-08T13:13:00Z"
+  },
+  "waterProtection": {
+    "absenceModeEnabled": false,
+    "pauseLeakageProtectionUntilUTC": "2026-06-08T13:13:00Z"
+  },
+  "mlState": "success"
+}

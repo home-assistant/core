@@ -1,0 +1,37 @@
+# serializer version: 1
+# name: test_initialization
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
+      'configuration_url': 'https://app.watercryst.com/devices/2026123456789123',
+      'connections': set({
+        tuple(
+          'mac',
+          '00:a2:aa:bb:cc:dd',
+        ),
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': '2',
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'watercryst',
+          '2026123456789123',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'WATERCryst',
+      'model': 'BIOCAT KLS 3000-C',
+      'model_id': '12000273',
+      'name': 'HA Device',
+      'name_by_user': None,
+      'serial_number': '2026123456789123',
+      'sw_version': 'V01.05.07',
+      'via_device_id': None,
+    }),
+  ])
+# ---

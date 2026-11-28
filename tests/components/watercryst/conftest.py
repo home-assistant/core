@@ -1,0 +1,256 @@
+"""Common fixtures for the WATERCryst BIOCAT tests."""
+
+from collections.abc import AsyncGenerator, Generator
+from datetime import UTC, datetime, timedelta
+from unittest.mock import AsyncMock, patch
+
+from freezegun.api import FrozenDateTimeFactory
+from pyocat.models import (
+    DeviceResponse,
+    EventResponse,
+    MeasurementResponse,
+    ModeId,
+    ModeResponse,
+    StateResponse,
+    WaterProtectionResponse,
+)
+import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+
+from homeassistant.components.watercryst.const import DOMAIN
+from homeassistant.const import CONF_API_KEY
+from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
+
+from .common import InitIntegrationFunc, TriggerPollFunc
+from .helpers import async_load_model_fixture
+
+BIOCAT_ELECTRONICS_SERIAL = "0123456789"
+BIOCAT_SERIAL = "2026123456789123"
+CONFIG_ENTRY_ID = "6D9GB5RKL9691HH3RT895JNH56"
+DEVICE_MANUFACTURER = "WATERCryst"
+DEVICE_NAME = "HA Device"
+DEVICE_TYPE_NUMBER = "12000273"
+DEVICE_TYPE_LINE = "BIOCAT"
+DEVICE_TYPE_SERIES = "KLS 3000-C"
+LATEST_FW_VERSION = "V01.08.05"
+FW_VERSION = "V01.05.07"
+HW_VERSION = "2"
+SYSTEM_MAC = "00:A2:AA:BB:CC:DD"
+SYSTEM_MAC_NORMALIZED = "00:a2:aa:bb:cc:dd"
+
+
+def default_info_response() -> DeviceResponse:
+    """Default device info response."""
+    return DeviceResponse(
+        biocat_serial=BIOCAT_SERIAL,
+        electronics_serial=BIOCAT_ELECTRONICS_SERIAL,
+        device_type_number=DEVICE_TYPE_NUMBER,
+        line=DEVICE_TYPE_LINE,
+        series=DEVICE_TYPE_SERIES,
+        has_flow_rate_sensor=True,
+        has_leakage_protection_system=True,
+        has_lime_scale_protection=True,
+        has_pressure_sensor=True,
+        has_temperature_sensor=True,
+        has_wireless_sensor_option=True,
+        name=DEVICE_NAME,
+        current_firmware_version=FW_VERSION,
+        current_hardware_version=HW_VERSION,
+        latest_firmware_version=LATEST_FW_VERSION,
+        system_mac_address=SYSTEM_MAC,
+    )
+
+
+ALT_DEVICE_NAME = "HA Device 2"
+ALT_DEVICE_TYPE_NUMBER = "12000274"
+ALT_DEVICE_TYPE_SERIES = "KLS 4000-C"
+ALT_FW_VERSION = "V01.08.04"
+ALT_HW_VERSION = "3"
+
+
+def alternative_info_response() -> DeviceResponse:
+    """Default device info response."""
+    return DeviceResponse(
+        biocat_serial=BIOCAT_SERIAL,
+        electronics_serial=BIOCAT_ELECTRONICS_SERIAL,
+        device_type_number=ALT_DEVICE_TYPE_NUMBER,
+        line=DEVICE_TYPE_LINE,
+        series=ALT_DEVICE_TYPE_SERIES,
+        has_flow_rate_sensor=True,
+        has_leakage_protection_system=True,
+        has_lime_scale_protection=True,
+        has_pressure_sensor=True,
+        has_temperature_sensor=True,
+        has_wireless_sensor_option=True,
+        name=ALT_DEVICE_NAME,
+        current_firmware_version=ALT_FW_VERSION,
+        current_hardware_version=ALT_HW_VERSION,
+        latest_firmware_version=LATEST_FW_VERSION,
+        system_mac_address=SYSTEM_MAC,
+    )
+
+
+def default_measurement_response() -> MeasurementResponse:
+    """Default measurements response."""
+    return MeasurementResponse(
+        water_temp=24,
+        pressure=3.68,
+        flow_rate=5.41,
+        todays_consumption=31.11,
+        total_consumption=532.34,
+        last_water_tap_volume=4.23,
+        last_water_tap_duration=15,
+    )
+
+
+def alternative_measurement_response() -> MeasurementResponse:
+    """Default measurements response."""
+    return MeasurementResponse(
+        water_temp=23,
+        pressure=3.86,
+        flow_rate=4.22,
+        todays_consumption=33.45,
+        total_consumption=542.67,
+        last_water_tap_volume=2.11,
+        last_water_tap_duration=7,
+    )
+
+
+def default_state_response() -> StateResponse:
+    """Default state response."""
+    return StateResponse(
+        online=True,
+        mode=ModeResponse(id=ModeId.WATER_TREATMENT, name="Water Treatment"),
+        event=EventResponse(
+            type="event",
+            event_id=0,
+            category="info",
+            title="Unknown Event",
+            description="Unknown Event",
+            timestamp=datetime(2026, 6, 8, 13, 13, tzinfo=UTC),
+        ),
+        water_protection=WaterProtectionResponse(
+            absence_mode_enabled=False,
+            pause_leakage_protection_until_utc=datetime(2026, 6, 8, 13, 13, tzinfo=UTC),
+        ),
+        ml_state="success",
+    )
+
+
+def alternative_state_response() -> StateResponse:
+    """Default state response."""
+    return StateResponse(
+        online=True,
+        mode=ModeResponse(id=ModeId.ERROR_MODE, name="Error Mode"),
+        event=EventResponse(
+            type="event",
+            event_id=3,
+            category="error",
+            title="Some Error",
+            description="Some Error",
+            timestamp=datetime(2026, 11, 5, 10, 56, tzinfo=UTC),
+        ),
+        water_protection=WaterProtectionResponse(
+            absence_mode_enabled=True,
+            pause_leakage_protection_until_utc=datetime(
+                2026, 11, 8, 10, 56, tzinfo=UTC
+            ),
+        ),
+        ml_state="success",
+    )
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.watercryst.async_setup_entry", return_value=None
+    ) as mock_setup_entry:
+        yield mock_setup_entry
+
+
+@pytest.fixture
+def mock_config_entry(
+    hass: HomeAssistant, mock_api_client: AsyncMock
+) -> MockConfigEntry:
+    """Default config entry mock."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title=BIOCAT_SERIAL,
+        unique_id=BIOCAT_SERIAL,
+        entry_id=CONFIG_ENTRY_ID,
+        data={CONF_API_KEY: "<api-key>"},
+    )
+
+
+@pytest.fixture
+async def mock_api_client(hass: HomeAssistant) -> AsyncGenerator[AsyncMock]:
+    """Mock WATERCryst Smart Home client."""
+    with (
+        patch("homeassistant.components.watercryst.AsyncApiClient") as mock,
+        patch(
+            "homeassistant.components.watercryst.config_flow.AsyncApiClient", new=mock
+        ),
+    ):
+        device_info = await async_load_model_fixture(
+            hass, "device_info.json", DeviceResponse
+        )
+        measurements = await async_load_model_fixture(
+            hass, "measurements.json", MeasurementResponse
+        )
+        state = await async_load_model_fixture(hass, "state.json", StateResponse)
+
+        client = mock.return_value
+        client.get_device_info = AsyncMock(return_value=device_info)
+        client.get_measurements = AsyncMock(return_value=measurements)
+        client.get_state = AsyncMock(return_value=state)
+        yield client
+
+
+@pytest.fixture
+async def setup_integration(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Set up the integration for testing."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+
+@pytest.fixture
+def init_integration(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+) -> InitIntegrationFunc:
+    """Initialize the integration."""
+
+    async def run() -> bool:
+        mock_config_entry.add_to_hass(hass)
+        result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+        return result
+
+    return run
+
+
+@pytest.fixture
+def advance_time(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> TriggerPollFunc:
+    """A helper to advance time to trigger a polling event."""
+
+    async def run(interval: timedelta) -> None:
+        freezer.tick(interval + timedelta(seconds=1))
+        async_fire_time_changed(hass, dt_util.utcnow())
+        await hass.async_block_till_done()
+
+    return run
+
+
+def assert_state(hass: HomeAssistant, id: str, value: str) -> None:
+    """Assert that an entity has a given value."""
+    assert hass.states.get(id).state == value

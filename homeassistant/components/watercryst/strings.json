@@ -1,0 +1,96 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "api_disabled": "API endpoint disabled. Please visit {app_url} and navigate to your device. Under 'Smart Home API' enable the API for your device and/or your specific API endpoint.",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "BIOCAT Smart Home API Endpoint Key. Please visit {app_url} and navigate to your device. Under 'Smart Home API' copy the key for your API endpoint."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "event_category": {
+        "name": "Event category",
+        "state": {
+          "error": "Error",
+          "info": "Info",
+          "warning": "Warning"
+        }
+      },
+      "event_id": {
+        "name": "Event ID"
+      },
+      "last_water_tap_duration": {
+        "name": "Last water tap duration"
+      },
+      "last_water_tap_volume": {
+        "name": "Last water tap volume"
+      },
+      "ml_state": {
+        "name": "Microleakage measurement state",
+        "state": {
+          "cancelled": "Cancelled",
+          "failure_pressure_drop": "Pressure drop during measurement",
+          "failure_start_pressure": "Start pressure error",
+          "failure_unknown": "Unknown error",
+          "failure_water_tap": "Water draw-off during measurement",
+          "idle": "Idle",
+          "leakage": "Leakage",
+          "running": "Running",
+          "success": "Success"
+        }
+      },
+      "mode_id": {
+        "name": "Device mode",
+        "state": {
+          "error_mode": "Error",
+          "fail_safe": "Fail-safe",
+          "leakage_protection": "Leakage protection",
+          "manual_control": "Manual control",
+          "rinse": "Rinsing",
+          "self_test": "Self-test",
+          "thermal_disinfection": "Thermal disinfection",
+          "update": "Update",
+          "water_off": "Water supply locked",
+          "water_treatment": "Water treatment"
+        }
+      },
+      "pause_leakage_protection_until": {
+        "name": "Pause leakage protection until"
+      },
+      "todays_consumption": {
+        "name": "Today's water consumption"
+      },
+      "total_consumption": {
+        "name": "Total water consumption"
+      },
+      "water_temp": {
+        "name": "Water temperature"
+      }
+    }
+  },
+  "exceptions": {
+    "update_failed": {
+      "message": "Error communicating with the WATERCryst API"
+    },
+    "update_failed_api_disabled": {
+      "message": "WATERCryst API disabled"
+    },
+    "update_failed_unauthorized": {
+      "message": "WATERCryst API authorization failed"
+    }
+  }
+}
