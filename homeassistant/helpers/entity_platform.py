@@ -1310,6 +1310,7 @@ class EntityPlatform:
             self.platform_name,
             name,
             entity_device_classes=entity_device_classes,
+            entity_domain=self.domain,
             entities=self.domain_platform_entities,
             func=func,
             job_type=None,

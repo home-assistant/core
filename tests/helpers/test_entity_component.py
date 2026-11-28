@@ -39,7 +39,12 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-from homeassistant.exceptions import HomeAssistantError, PlatformNotReady, Unauthorized
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    PlatformNotReady,
+    ServiceNotSupported,
+    Unauthorized,
+)
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.entity_component import EntityComponent, async_update_entity
 from homeassistant.helpers.entity_platform import (
@@ -593,6 +598,45 @@ async def test_register_entity_service(
         DOMAIN, "hello", {"area_id": ENTITY_MATCH_NONE} | service_data, blocking=True
     )
     assert len(calls) == 2
+
+
+@pytest.mark.parametrize("batched", [False, True])
+async def test_register_entity_service_other_domain_entity(
+    hass: HomeAssistant, batched: bool
+) -> None:
+    """Test an entity service raises for an available entity of another domain."""
+    called: list[str] = []
+
+    async def handle_service(entity: MockEntity, call: ServiceCall) -> None:
+        called.append(entity.entity_id)
+
+    async def handle_batched_service(
+        entities: list[MockEntity], call: ServiceCall
+    ) -> None:
+        called.extend(entity.entity_id for entity in entities)
+
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    await component.async_setup({})
+    await component.async_add_entities([MockEntity(entity_id=f"{DOMAIN}.entity")])
+    if batched:
+        component.async_register_batched_entity_service(
+            "hello", {}, handle_batched_service
+        )
+    else:
+        component.async_register_entity_service("hello", {}, handle_service)
+    hass.states.async_set("switch.heater", "on")
+
+    with pytest.raises(
+        ServiceNotSupported,
+        match=f"Entity switch.heater does not support action {DOMAIN}.hello",
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "hello",
+            {"entity_id": [f"{DOMAIN}.entity", "switch.heater"]},
+            blocking=True,
+        )
+    assert called == []
 
 
 async def test_register_entity_service_admin_only(
