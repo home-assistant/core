@@ -18,6 +18,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import find_device_listener, trigger_availability_callback
@@ -96,6 +97,35 @@ async def test_turn_off_light(
     )
 
     mock_devices[0].turn_off.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("service", "method"),
+    [
+        pytest.param(SERVICE_TURN_ON, "turn_on", id="turn_on"),
+        pytest.param(SERVICE_TURN_OFF, "turn_off", id="turn_off"),
+    ],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_light_action_gateway_disconnected(
+    hass: HomeAssistant,
+    mock_gateway: MagicMock,
+    mock_devices: list[MagicMock],
+    service: str,
+    method: str,
+) -> None:
+    """Test light actions raise when the gateway is disconnected."""
+    mock_gateway.is_connected = False
+
+    with pytest.raises(HomeAssistantError, match="The DALI gateway is not connected"):
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: TEST_DIMMER_ENTITY_ID},
+            blocking=True,
+        )
+
+    getattr(mock_devices[0], method).assert_not_called()
 
 
 async def test_turn_on_with_brightness(

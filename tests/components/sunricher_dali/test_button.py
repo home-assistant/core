@@ -9,6 +9,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 
@@ -43,3 +44,23 @@ async def test_identify_button_press(
     )
 
     mock_devices[0].identify.assert_called_once()
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_identify_button_press_gateway_disconnected(
+    hass: HomeAssistant,
+    mock_gateway: MagicMock,
+    mock_devices: list[MagicMock],
+) -> None:
+    """Test pressing the identify button raises when the gateway is disconnected."""
+    mock_gateway.is_connected = False
+
+    with pytest.raises(HomeAssistantError, match="The DALI gateway is not connected"):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: "button.dimmer_0000_02"},
+            blocking=True,
+        )
+
+    mock_devices[0].identify.assert_not_called()
