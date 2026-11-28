@@ -40,6 +40,9 @@
       },
       "weekday": {
         "name": "Weekday restrictions"
+      },
+      "zone_restrictions": {
+        "name": "{zone_name} restrictions"
       }
     },
     "select": {
@@ -71,6 +74,100 @@
       },
       "rain_sensor_rain_start": {
         "name": "Rain sensor rain start"
+      },
+      "zone_area": {
+        "name": "{zone_name} area"
+      },
+      "zone_current_cycle": {
+        "name": "{zone_name} current cycle"
+      },
+      "zone_field_capacity": {
+        "name": "{zone_name} field capacity"
+      },
+      "zone_id": {
+        "name": "{zone_name} ID"
+      },
+      "zone_number_of_cycles": {
+        "name": "{zone_name} number of cycles"
+      },
+      "zone_precipitation_rate": {
+        "name": "{zone_name} precipitation rate"
+      },
+      "zone_run_time_from_app": {
+        "name": "{zone_name} run time from app"
+      },
+      "zone_slope": {
+        "name": "{zone_name} slope",
+        "state": {
+          "flat": "Flat",
+          "high": "High",
+          "moderate": "Moderate",
+          "not_set": "Not set",
+          "other": "Other",
+          "very_high": "Very high"
+        }
+      },
+      "zone_soil_type": {
+        "name": "{zone_name} soil type",
+        "state": {
+          "clay": "Clay",
+          "clay_loam": "Clay loam",
+          "loam": "Loam",
+          "loamy_sand": "Loamy sand",
+          "not_set": "Not set",
+          "other": "Other",
+          "sand": "Sand",
+          "sandy_clay": "Sandy clay",
+          "sandy_loam": "Sandy loam",
+          "silt": "Silt",
+          "silt_loam": "Silt loam",
+          "silty_clay": "Silty clay"
+        }
+      },
+      "zone_sprinkler_head_type": {
+        "name": "{zone_name} sprinkler head type",
+        "state": {
+          "bubblers_drip": "Bubblers drip",
+          "not_set": "Not set",
+          "other": "Other",
+          "popup_spray": "Popup spray",
+          "rotors_high_rate": "Rotors high rate",
+          "rotors_low_rate": "Rotors low rate",
+          "surface_drip": "Surface drip"
+        }
+      },
+      "zone_status": {
+        "name": "{zone_name} status",
+        "state": {
+          "not_running": "Not running",
+          "queued": "Queued",
+          "running": "Running"
+        }
+      },
+      "zone_sun_exposure": {
+        "name": "{zone_name} sun exposure",
+        "state": {
+          "full_shade": "Full shade",
+          "full_sun": "Full sun",
+          "not_set": "Not set",
+          "partial_shade": "Partial shade"
+        }
+      },
+      "zone_vegetation_type": {
+        "name": "{zone_name} vegetation type",
+        "state": {
+          "bushes": "Bushes",
+          "citrus": "Citrus",
+          "cool_season_grass": "Cool season grass",
+          "drought_tolerant_plants": "Drought tolerant plants",
+          "flowers": "Flowers",
+          "fruit_trees": "Fruit trees",
+          "not_set": "Not set",
+          "other": "Other",
+          "trees": "Trees",
+          "vegetables": "Vegetables",
+          "warm_season_grass": "Warm season grass"
+        }
       }
     },
     "switch": {
