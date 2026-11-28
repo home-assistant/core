@@ -10,10 +10,34 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "connection_initialization_failed": "Successfully connected, but failed to read data from the panel. Please check the integration encryption key is correct if your panel requires encryption.",
+      "nothing_found": "No resources of the selected types were found.",
       "panel_busy": "Successfully connected, but alarm panel reports it's busy. Please check no other connections are active.",
+      "scan_failed": "Could not complete the discovery scan.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
+    "progress": {
+      "scanning": "Scanning the alarm panel…"
+    },
     "step": {
+      "discover": {
+        "data": {
+          "scan_outputs": "Outputs",
+          "scan_partitions": "Partitions",
+          "scan_zones": "Zones"
+        },
+        "data_description": {
+          "scan_outputs": "Find configured outputs and add them as switches or read-only binary sensors, depending on the output type.",
+          "scan_partitions": "Find partitions configured on the alarm panel.",
+          "scan_zones": "Find zones assigned to a partition."
+        },
+        "description": "Home Assistant adds everything it finds for the selected types. Turn off all options to skip discovery.",
+        "submit": "Continue",
+        "title": "Choose what to scan"
+      },
+      "finish_scan": {
+        "description": "Continue to set up the panel without adding discovered resources. You can add them manually later.",
+        "title": "Continue without discovery results"
+      },
       "reconfigure": {
         "data": {
           "encryption_key": "[%key:component::satel_integra::common::encryption_key%]",

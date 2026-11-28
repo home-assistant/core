@@ -115,7 +115,9 @@ def mock_satel() -> Generator[AsyncMock]:
         client.set_output = AsyncMock()
 
         # Immediately push baseline values so entities have stable states for snapshots
-        async def _start(**_: object) -> None:
+        async def _start(enable_monitoring: bool = True) -> None:
+            if not enable_monitoring:
+                return
             get_alarm_status_callback(client)()
             get_zone_changed_callback(client)()
             get_output_changed_callback(client)()

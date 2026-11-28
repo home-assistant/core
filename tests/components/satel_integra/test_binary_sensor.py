@@ -1,6 +1,8 @@
 """Test Satel Integra Binary Sensor."""
 
 from collections.abc import AsyncGenerator
+from dataclasses import replace
+from types import MappingProxyType
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -19,7 +21,7 @@ from satel_integra import (
 )
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.satel_integra.const import DOMAIN
+from homeassistant.components.satel_integra.const import CONF_ZONE_TYPE, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     STATE_OFF,
@@ -35,6 +37,8 @@ from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
 from . import (
+    MOCK_OUTPUT_SUBENTRY,
+    MOCK_ZONE_SUBENTRY,
     get_output_changed_callback,
     get_system_status_callback,
     get_zone_changed_callback,
@@ -149,6 +153,38 @@ async def test_binary_sensors(
         (DOMAIN, "1234567890_outputs_1"), mock_config_entry_with_subentries.entry_id
     )
     assert device_entry == snapshot(name="device-output")
+
+
+@pytest.mark.usefixtures("mock_satel")
+async def test_binary_sensors_without_device_class(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: EntityRegistry,
+) -> None:
+    """Register generic binary sensors when no device class is configured."""
+    mock_config_entry.subentries = {
+        subentry.subentry_id: replace(
+            subentry,
+            data=MappingProxyType(
+                {
+                    key: value
+                    for key, value in subentry.data.items()
+                    if key != CONF_ZONE_TYPE
+                }
+            ),
+        )
+        for subentry in (MOCK_ZONE_SUBENTRY, MOCK_OUTPUT_SUBENTRY)
+    }
+    await setup_integration(hass, mock_config_entry)
+
+    for suffix in ("zones_1", "outputs_1"):
+        entity_id = entity_registry.async_get_entity_id(
+            "binary_sensor", DOMAIN, f"{mock_config_entry.entry_id}_{suffix}"
+        )
+        assert entity_id is not None
+        registry_entry = entity_registry.async_get(entity_id)
+        assert registry_entry is not None
+        assert registry_entry.original_device_class is None
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
