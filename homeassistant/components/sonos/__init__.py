@@ -84,7 +84,7 @@ CONFIG_SCHEMA = probatio.Schema(
         DOMAIN: probatio.Schema(
             {
                 MP_DOMAIN: probatio.All(
-                    cv.deprecated(CONF_INTERFACE_ADDR),
+                    cv.deprecated(CONF_INTERFACE_ADDR, breaks_in_ha_version="2027.6.0"),
                     probatio.Schema(
                         {
                             probatio.Optional(CONF_ADVERTISE_ADDR): cv.string,

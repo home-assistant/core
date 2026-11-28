@@ -148,7 +148,7 @@ ACTION_LIST_SCHEMA = probatio.All(probatio.EnsureList(), [ACTION_SCHEMA])
 CONFIG_SCHEMA = probatio.Schema(
     {
         DOMAIN: probatio.All(
-            cv.deprecated(CONF_PUSH),
+            cv.deprecated(CONF_PUSH, breaks_in_ha_version="2027.6.0"),
             {
                 CONF_PUSH: {CONF_PUSH_CATEGORIES: PUSH_CATEGORY_LIST_SCHEMA},
                 CONF_ACTIONS: ACTION_LIST_SCHEMA,

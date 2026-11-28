@@ -30,7 +30,7 @@ from .coordinator import CanaryConfigEntry, CanaryDataUpdateCoordinator
 FORCE_CAMERA_REFRESH_INTERVAL: Final = timedelta(minutes=15)
 
 PLATFORM_SCHEMA: Final = probatio.All(
-    cv.deprecated(CONF_FFMPEG_ARGUMENTS),
+    cv.deprecated(CONF_FFMPEG_ARGUMENTS, breaks_in_ha_version="2027.6.0"),
     CAMERA_PLATFORM_SCHEMA.extend(
         {
             probatio.Optional(

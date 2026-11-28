@@ -54,7 +54,7 @@ from .services import async_setup_services
 from .util import _async_cleanup_registry_entries
 
 CONFIG_SCHEMA = probatio.Schema(
-    cv.deprecated(DOMAIN),
+    cv.deprecated(DOMAIN, breaks_in_ha_version="2027.6.0"),
     extra=probatio.ALLOW_EXTRA,
 )
 

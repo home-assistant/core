@@ -32,7 +32,7 @@ INTERFACE_SCHEMA = probatio.Schema(
 )
 
 CONFIG_SCHEMA = probatio.All(
-    cv.deprecated(DOMAIN),
+    cv.deprecated(DOMAIN, breaks_in_ha_version="2027.6.0"),
     probatio.Schema(
         {
             DOMAIN: {

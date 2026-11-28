@@ -34,7 +34,7 @@ PLATFORMS = [
 CONFIG_SCHEMA = probatio.Schema(
     {
         DOMAIN: probatio.All(
-            cv.deprecated(CONF_SCAN_INTERVAL),
+            cv.deprecated(CONF_SCAN_INTERVAL, breaks_in_ha_version="2027.6.0"),
             probatio.Schema(
                 {
                     probatio.Required(CONF_CLIENT_ID): cv.string,
