@@ -193,7 +193,7 @@ async def async_unload_entry(
 ) -> None:
     """Unload a config entry."""
     await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)
-    await hass.async_add_executor_job(config_entry.runtime_data.api.api.close)
+    await hass.async_add_executor_job(config_entry.runtime_data.api.disconnect)
 
 
 async def async_remove_config_entry_device(

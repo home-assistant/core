@@ -24,10 +24,11 @@ from homeassistant.components.mikrotik.const import (
     INTERFACE,
     MIKROTIK_SERVICES,
     PING,
+    RESOURCE,
     ROUTERBOARD,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import CONF_VERIFY_SSL
+from homeassistant.const import CONF_VERIFY_SSL, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     device_registry as dr,
@@ -50,9 +51,12 @@ from .const import (
     INTERFACE_DATA,
     MOCK_DATA,
     ROUTERBOARD_DATA,
+    SYSTEM_DATA,
     TEST_SERIAL_NUMBER,
     WLAN1_INTERFACE,
 )
+
+CPU_USAGE_ENTITY_ID = "sensor.mikrotik_cpu_usage"
 
 _BASE_COMMAND_RESPONSES: dict[str, list[dict[str, Any]]] = {
     MIKROTIK_SERVICES[IDENTITY]: [{"name": "Mikrotik"}]
@@ -299,6 +303,54 @@ async def test_hub_reconnect_error_during_refresh_raises_update_failed(
     assert entry.state is ConfigEntryState.LOADED
     assert coordinator.last_update_success is False
     assert isinstance(coordinator.last_exception, UpdateFailed)
+
+
+@pytest.mark.parametrize(
+    "reconnect",
+    [
+        pytest.param({"side_effect": OSError()}, id="reconnect_fails"),
+        pytest.param(
+            {"return_value": MagicMock(side_effect=ConnectionClosed())},
+            id="retry_fails",
+        ),
+    ],
+)
+async def test_failed_reconnect_discards_dropped_connection(
+    hass: HomeAssistant,
+    mock_api: MagicMock,
+    mock_config_entry: MockConfigEntryFactory,
+    freezer: FrozenDateTimeFactory,
+    reconnect: dict[str, Any],
+) -> None:
+    """Test a dropped connection is never reused once the reconnect fails.
+
+    A reply cut off by the drop stays unread on the old socket, so reusing it
+    would hand every following command the reply of an earlier one.
+    """
+    responses = _BASE_COMMAND_RESPONSES | {MIKROTIK_SERVICES[RESOURCE]: SYSTEM_DATA}
+    entry = mock_config_entry()
+    await setup_integration(hass, entry, command_responses=responses)
+    assert hass.states.get(CPU_USAGE_ENTITY_ID).state == "15"
+
+    mock_api.side_effect = ConnectionClosed()
+
+    with patch("librouteros.connect", **reconnect):
+        freezer.tick(timedelta(seconds=10))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(CPU_USAGE_ENTITY_ID).state == STATE_UNAVAILABLE
+    mock_api.close.assert_called_once()
+
+    new_api = MagicMock(side_effect=lambda cmd, **params: responses.get(cmd, []))
+    with patch("librouteros.connect", return_value=new_api) as mock_connect:
+        freezer.tick(timedelta(seconds=10))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(CPU_USAGE_ENTITY_ID).state == "15"
+    mock_connect.assert_called_once()
+    mock_api.close.assert_called_once()
 
 
 async def test_connection_dropped_during_refresh_reconnects_and_succeeds(
