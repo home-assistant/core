@@ -3,6 +3,7 @@
   "serial": "LR5P010001",
   "type": "LR5_PRO",
   "timezone": "America/New_York",
+  "isOnboarded": true,
   "powerStatus": "AC",
   "setupDateTime": "2022-08-28T17:01:12.644Z",
   "nextFilterReplacementDate": "2023-02-28T17:01:12.644Z",

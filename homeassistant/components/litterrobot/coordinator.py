@@ -1,11 +1,10 @@
 """The Litter-Robot coordinator."""
 
-from collections.abc import Generator
 from datetime import timedelta
 import logging
 from typing import override
 
-from pylitterbot import Account, FeederRobot, LitterRobot
+from pylitterbot import Account, FeederRobot, LitterRobot, Robot
 from pylitterbot.exceptions import LitterRobotException, LitterRobotLoginException
 
 from homeassistant.config_entries import ConfigEntry
@@ -75,7 +74,7 @@ class LitterRobotDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 translation_placeholders={"error": str(ex)},
             ) from ex
 
-        current_members = {robot.serial for robot in self.account.robots} | {
+        current_members = {robot.serial for robot in self.all_robots()} | {
             pet.id for pet in self.account.pets
         }
         if stale_members := self.previous_members - current_members:
@@ -110,14 +109,14 @@ class LitterRobotDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 translation_placeholders={"error": str(ex)},
             ) from ex
 
-    def litter_robots(self) -> Generator[LitterRobot]:
-        """Get Litter-Robots from the account."""
-        return (
-            robot for robot in self.account.robots if isinstance(robot, LitterRobot)
-        )
+    def all_robots(self) -> list[Robot]:
+        """Get onboarded robots from the account."""
+        return self.account.get_robots(Robot, ignore_removed=True)  # type: ignore[type-abstract]
 
-    def feeder_robots(self) -> Generator[FeederRobot]:
-        """Get Feeder-Robots from the account."""
-        return (
-            robot for robot in self.account.robots if isinstance(robot, FeederRobot)
-        )
+    def litter_robots(self) -> list[LitterRobot]:
+        """Get onboarded Litter-Robots from the account."""
+        return self.account.get_robots(LitterRobot, ignore_removed=True)  # type: ignore[type-abstract]
+
+    def feeder_robots(self) -> list[FeederRobot]:
+        """Get onboarded Feeder-Robots from the account."""
+        return self.account.get_robots(FeederRobot, ignore_removed=True)

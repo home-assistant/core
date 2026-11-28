@@ -5,7 +5,7 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from pylitterbot import LitterRobot4
+from pylitterbot import LitterRobot3, LitterRobot4
 from pylitterbot.exceptions import LitterRobotException, LitterRobotLoginException
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
@@ -26,6 +26,7 @@ from homeassistant.setup import async_setup_component
 from .common import ACCOUNT_USER_ID, CONFIG, DOMAIN, VACUUM_ENTITY_ID
 from .conftest import (
     ROBOT_4_DATA,
+    ROBOT_DATA,
     create_mock_account,
     create_mock_pet,
     setup_integration,
@@ -268,6 +269,60 @@ async def test_device_remove_devices(
     )
     response = await client.remove_device(dead_device_entry.id)
     assert response["success"]
+
+
+async def test_removed_robot_is_ignored(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a robot that is no longer onboarded gets no entities and can be removed."""
+    assert await async_setup_component(hass, "config", {})
+    account = create_mock_account(robot_data={"isOnboarded": False})
+    config_entry = await setup_integration(hass, account)
+
+    assert not er.async_entries_for_config_entry(entity_registry, config_entry.entry_id)
+    assert not dr.async_entries_for_config_entry(device_registry, config_entry.entry_id)
+
+    # A device left over from before the robot was removed can be deleted.
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, ROBOT_DATA["litterRobotSerial"])},
+    )
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(device_entry.id)
+    assert response["success"]
+
+
+async def test_robot_removed_and_onboarded_again(
+    hass: HomeAssistant,
+    mock_account: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a robot's device is removed and recreated as its onboarding changes."""
+    entry = await setup_integration(hass, mock_account)
+    assert len(dr.async_entries_for_config_entry(device_registry, entry.entry_id)) == 1
+    assert hass.states.get(VACUUM_ENTITY_ID)
+
+    mock_account.robots[0] = LitterRobot3(
+        data={**ROBOT_DATA, "isOnboarded": False}, account=mock_account
+    )
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert not dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+    assert not hass.states.get(VACUUM_ENTITY_ID)
+
+    mock_account.robots[0] = LitterRobot3(data=ROBOT_DATA, account=mock_account)
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert len(dr.async_entries_for_config_entry(device_registry, entry.entry_id)) == 1
+    assert hass.states.get(VACUUM_ENTITY_ID)
 
 
 async def test_update_auth_error_triggers_reauth(

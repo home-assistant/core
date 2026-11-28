@@ -114,8 +114,10 @@ def create_mock_account(
             )
         ]
     )
-    account.get_robots = lambda robot_class: [
-        robot for robot in account.robots if isinstance(robot, robot_class)
+    account.get_robots = lambda robot_class, ignore_removed=False: [
+        robot
+        for robot in account.robots
+        if isinstance(robot, robot_class) and (robot.is_onboarded or not ignore_removed)
     ]
     account.pets = [create_mock_pet(PET_DATA, account, side_effect)] if pet else []
     return account
