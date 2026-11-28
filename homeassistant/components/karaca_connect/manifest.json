@@ -1,0 +1,13 @@
+{
+  "domain": "karaca_connect",
+  "name": "Karaca Connect",
+  "categories": ["appliances_cleaning.cooking"],
+  "codeowners": ["@Azadglr"],
+  "config_flow": true,
+  "connectivity": ["cloud"],
+  "documentation": "https://www.home-assistant.io/integrations/karaca_connect",
+  "integration_type": "device",
+  "iot_class": "cloud_polling",
+  "quality_scale": "bronze",
+  "requirements": ["karaca-connect-client==0.1.0a1"]
+}

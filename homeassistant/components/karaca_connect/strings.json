@@ -1,0 +1,34 @@
+{
+  "config": {
+    "abort": { "already_configured": "This device is already configured." },
+    "error": {
+      "cannot_connect": "Unable to connect to Karaca Connect.",
+      "device_not_found": "The selected device could not be found.",
+      "invalid_auth": "Invalid username or password.",
+      "no_devices": "No devices were found in this account."
+    },
+    "step": {
+      "select_device": {
+        "data": { "device_id": "Device" },
+        "data_description": {
+          "device_id": "Choose one device from the Karaca Connect account."
+        },
+        "description": "Choose a device to add.",
+        "title": "Select a Karaca device"
+      },
+      "user": {
+        "data": {
+          "email": "Email",
+          "password": "Password"
+        },
+        "data_description": {
+          "email": "Email address used to sign in to the Karaca Connect app.",
+          "password": "Password for the Karaca Connect account."
+        },
+        "description": "Sign in with your Karaca Connect account.",
+        "title": "Connect to Karaca Connect"
+      }
+    }
+  },
+  "entity": { "sensor": { "status": { "name": "Status" } } }
+}
