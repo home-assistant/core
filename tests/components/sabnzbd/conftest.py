@@ -9,7 +9,6 @@ from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixtur
 from homeassistant.components.sabnzbd.const import DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_URL
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 
 @pytest.fixture
@@ -55,5 +54,5 @@ async def mock_setup_integration(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
     """Fixture for setting up the component."""
-    assert await async_setup_component(hass, DOMAIN, {})
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
