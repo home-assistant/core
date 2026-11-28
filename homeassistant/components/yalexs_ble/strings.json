@@ -41,6 +41,26 @@
     }
   },
   "entity": {
+    "event": {
+      "operation": {
+        "name": "Operation",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "door_ajar": "Door ajar",
+              "door_closed": "Door closed",
+              "door_opened": "Door opened",
+              "lock_jammed": "Lock jammed",
+              "lock_locked": "Locked",
+              "lock_locking": "Locking",
+              "lock_securemode": "Secure mode",
+              "lock_unlocked": "Unlocked",
+              "lock_unlocking": "Unlocking"
+            }
+          }
+        }
+      }
+    },
     "lock": {
       "secure_mode": {
         "name": "Secure mode"
