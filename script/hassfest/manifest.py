@@ -89,6 +89,7 @@ NO_IOT_CLASS = [
     "homeassistant_green",
     "homeassistant_hardware",
     "homeassistant_sky_connect",
+    "homeassistant_upgrade_check",
     "homeassistant_yellow",
     "humidity",
     "illuminance",
