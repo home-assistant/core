@@ -22,7 +22,9 @@ from homeassistant.components.http.ban import (
     IP_BANS_FILE,
     KEY_BAN_MANAGER,
     KEY_FAILED_LOGIN_ATTEMPTS,
+    AccessMethod,
     process_success_login,
+    process_wrong_login,
     setup_bans,
 )
 from homeassistant.components.http.view import request_handler_factory
@@ -380,17 +382,84 @@ async def test_ip_bans_file_creation(
         notifications = async_get_persistent_notifications(hass)
         assert len(notifications) == 2
         assert (
-            notifications["http-login"]["message"]
-            == "Login attempt or request with invalid authentication"
+            notifications["http-login"]["message"] == "Failed API access attempt"
             " from example.com (200.201.202.204)."
             " See the log for details."
         )
 
         assert (
-            "Login attempt or request with invalid authentication"
+            "Failed API access attempt"
             " from example.com (200.201.202.204)."
             " Requested URL: '/example'." in caplog.text
         )
+
+
+@pytest.mark.parametrize(
+    ("access_method", "body", "expected_msg"),
+    [
+        pytest.param(
+            AccessMethod.LOGIN,
+            {"username": "admin", "password": "wrong"},
+            "Failed login attempt (with username: 'admin')",
+            id="login_wrong_password",
+        ),
+        pytest.param(
+            AccessMethod.LOGIN,
+            {"client_id": "https://example.com/", "code": "123456"},
+            "Failed login attempt (incorrect MFA code)",
+            id="login_wrong_mfa_code",
+        ),
+        pytest.param(
+            AccessMethod.HTTP,
+            {"username": "admin"},
+            "Failed API access attempt",
+            id="http_invalid_token",
+        ),
+        pytest.param(
+            AccessMethod.WEBSOCKET,
+            {"username": "admin"},
+            "Failed API access attempt",
+            id="websocket_invalid_token",
+        ),
+    ],
+)
+async def test_failed_login_messages(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+    access_method: AccessMethod,
+    body: dict,
+    expected_msg: str,
+) -> None:
+    """Test the log and notification messages for each kind of failed login."""
+    app = web.Application()
+    app[KEY_HASS] = hass
+
+    async def wrong_login_handler(request: web.Request) -> web.Response:
+        """Process a wrong login with the parametrized access method."""
+        await process_wrong_login(request, access_method)
+        return web.Response(status=HTTPStatus.BAD_REQUEST)
+
+    app.router.add_post("/login", wrong_login_handler)
+    setup_bans(hass, app, 5)
+    mock_real_ip(app)("200.201.202.204")
+    client = await aiohttp_client(app)
+
+    resp = await client.post("/login", json=body, headers={"User-Agent": "test-agent"})
+
+    assert resp.status == HTTPStatus.BAD_REQUEST
+    assert app[KEY_FAILED_LOGIN_ATTEMPTS][ip_address("200.201.202.204")] == 1
+
+    base_msg = f"{expected_msg} from example.com (200.201.202.204)."
+    assert (
+        f"{base_msg} Requested URL: '/login'."
+        f" Access method: '{access_method}'. (test-agent)" in caplog.text
+    )
+
+    notifications = async_get_persistent_notifications(hass)
+    assert (
+        notifications["http-login"]["message"] == f"{base_msg} See the log for details."
+    )
 
 
 async def test_failed_login_attempts_counter(
@@ -530,13 +599,12 @@ async def test_failed_login_reverse_dns_failure(
     assert resp.status == HTTPStatus.UNAUTHORIZED
     assert app[KEY_FAILED_LOGIN_ATTEMPTS][ip_address("200.201.202.204")] == 1
     assert (
-        "Login attempt or request with invalid authentication"
+        "Failed API access attempt"
         " from 200.201.202.204 (200.201.202.204)." in caplog.text
     )
     notifications = async_get_persistent_notifications(hass)
     assert (
-        notifications["http-login"]["message"]
-        == "Login attempt or request with invalid authentication"
+        notifications["http-login"]["message"] == "Failed API access attempt"
         " from 200.201.202.204 (200.201.202.204)."
         " See the log for details."
     )
