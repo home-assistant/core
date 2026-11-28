@@ -32,6 +32,32 @@
       "real_setpoint": {
         "default": "mdi:thermostat"
       }
+    },
+    "switch": {
+      "gateway_disabled": {
+        "default": "mdi:power-plug",
+        "state": {
+          "on": "mdi:power-plug-off"
+        }
+      },
+      "master": {
+        "default": "mdi:crown-outline",
+        "state": {
+          "on": "mdi:crown"
+        }
+      },
+      "remote_controller_lock": {
+        "default": "mdi:remote",
+        "state": {
+          "on": "mdi:remote-off"
+        }
+      },
+      "window_contact": {
+        "default": "mdi:window-closed-variant",
+        "state": {
+          "on": "mdi:window-open-variant"
+        }
+      }
     }
   }
 }

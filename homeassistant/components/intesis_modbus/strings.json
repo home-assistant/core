@@ -136,6 +136,20 @@
       "undervoltage_hours": {
         "name": "Undervoltage time"
       }
+    },
+    "switch": {
+      "gateway_disabled": {
+        "name": "Gateway disabled"
+      },
+      "master": {
+        "name": "XY bus master"
+      },
+      "remote_controller_lock": {
+        "name": "Remote controller lock"
+      },
+      "window_contact": {
+        "name": "Window contact"
+      }
     }
   },
   "exceptions": {
