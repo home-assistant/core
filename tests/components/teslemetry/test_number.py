@@ -5,9 +5,7 @@ from copy import deepcopy
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.exceptions import InvalidCommand
 from teslemetry_stream import Signal
@@ -23,7 +21,6 @@ from homeassistant.components.teslemetry.const import (
     DOMAIN,
     LABS_CHARGE_ON_SOLAR_FEATURE,
 )
-from homeassistant.components.teslemetry.coordinator import VEHICLE_INTERVAL
 from homeassistant.components.teslemetry.number import (
     TeslemetryChargeOnSolarLowerLimitNumberEntity,
 )
@@ -33,7 +30,13 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from . import assert_entities, mock_config_entry, reload_platform, setup_platform
+from . import (
+    assert_entities,
+    mock_config_entry,
+    refresh_entity,
+    reload_platform,
+    setup_platform,
+)
 from .const import (
     COMMAND_ERRORS,
     COMMAND_OK,
@@ -289,7 +292,6 @@ async def test_charge_on_solar_lower_limit_capped_by_charge_limit(
 
 async def test_charge_on_solar_lower_limit_capped_by_charge_limit_polling(
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
     mock_vehicle_data: AsyncMock,
     mock_legacy: AsyncMock,
 ) -> None:
@@ -314,9 +316,7 @@ async def test_charge_on_solar_lower_limit_capped_by_charge_limit_polling(
     lowered_data = deepcopy(VEHICLE_DATA)
     lowered_data["response"]["charge_state"]["charge_limit_soc"] = 50
     mock_vehicle_data.return_value = lowered_data
-    freezer.tick(VEHICLE_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await refresh_entity(hass, "number.test_charge_limit")
 
     state = hass.states.get("number.test_charge_on_solar_lower_limit")
     assert state is not None
@@ -327,7 +327,6 @@ async def test_charge_on_solar_lower_limit_capped_by_charge_limit_polling(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_old_firmware")
 async def test_charge_on_solar_lower_limit_old_firmware_follows_polled_charge_limit(
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a stream-only vehicle on pre-streaming firmware is capped by the polled charge limit."""
     await _async_enable_charge_on_solar_preview_feature(hass)
@@ -354,9 +353,7 @@ async def test_charge_on_solar_lower_limit_old_firmware_follows_polled_charge_li
             blocking=True,
         )
 
-    freezer.tick(VEHICLE_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await refresh_entity(hass, "number.test_charge_limit")
 
     assert hass.states.get("number.test_charge_limit").state == "80"
     state = hass.states.get("number.test_charge_on_solar_lower_limit")

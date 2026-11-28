@@ -3,9 +3,7 @@
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
-from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.exceptions import InvalidCommand, InvalidRequest, TeslaFleetError
 from teslemetry_stream import Signal
@@ -26,7 +24,6 @@ from homeassistant.components.teslemetry.const import (
     DOMAIN,
     LABS_CHARGE_ON_SOLAR_FEATURE,
 )
-from homeassistant.components.teslemetry.coordinator import VEHICLE_INTERVAL
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -37,6 +34,7 @@ from . import (
     assert_entities,
     assert_entities_alt,
     mock_config_entry,
+    refresh_entity,
     reload_platform,
     setup_platform,
 )
@@ -420,18 +418,15 @@ async def test_charge_on_solar_switch_services_polling(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_old_firmware")
 async def test_charge_on_solar_switch_services_old_firmware(
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a non-polling vehicle below the streaming firmware still fetches the polled charge limit."""
     await _async_enable_charge_on_solar_preview_feature(hass)
-    # The charge limit number is the polling entity that keeps the coordinator running.
+    # The charge limit number is the polling entity that reads the coordinator.
     await setup_platform(hass, [Platform.SWITCH, Platform.NUMBER])
 
     # This vehicle's raw poll flag is off, so its coordinator gets no initial
-    # refresh; wait for the first poll so the charge limit is known.
-    freezer.tick(VEHICLE_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    # refresh; refresh it so the charge limit is known.
+    await refresh_entity(hass, "number.test_charge_limit")
 
     with patch(
         "tesla_fleet_api.teslemetry.Vehicle.charge_on_solar",

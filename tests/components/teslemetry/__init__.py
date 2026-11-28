@@ -8,6 +8,10 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.homeassistant import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
 from homeassistant.components.teslemetry.const import (
     CONF_SITE_ID,
     CONF_VIN,
@@ -16,9 +20,16 @@ from homeassistant.components.teslemetry.const import (
     SUBENTRY_TYPE_VEHICLE,
 )
 from homeassistant.config_entries import ConfigSubentryData
-from homeassistant.const import CONF_ADDRESS, CONF_HOST, CONF_PASSWORD, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_ADDRESS,
+    CONF_HOST,
+    CONF_PASSWORD,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from .const import ADDRESS, VIN
 
@@ -111,6 +122,17 @@ async def setup_platform(
     await hass.async_block_till_done()
 
     return mock_entry
+
+
+async def refresh_entity(hass: HomeAssistant, entity_id: str) -> None:
+    """Refresh an entity's data, as a user would."""
+    await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
 
 
 async def setup_paired_platform(

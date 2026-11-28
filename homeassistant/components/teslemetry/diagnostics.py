@@ -42,7 +42,6 @@ VEHICLE_REDACT = [
 ENERGY_LIVE_REDACT = ["vin", "din"]
 ENERGY_INFO_REDACT = ["id", "installation_date", "din", "serial_number"]
 
-SOURCE_POLLING = "polling"
 SOURCE_STREAMING = "streaming"
 SOURCE_COMMAND = "command"
 SOURCE_ENABLED = "enabled"
@@ -54,31 +53,14 @@ def _async_vehicle_entity_sources(
     entities: dict[str, Entity],
     vehicle: TeslemetryVehicleData,
 ) -> dict[str, str]:
-    """Map each enabled vehicle entity to its data source.
-
-    Listeners only count as polling when the coordinator will actually refresh,
-    mirroring the guards in DataUpdateCoordinator._schedule_refresh.
-    """
-    coordinator = vehicle.coordinator
-    polling_ids: set[str] = set()
-    if (
-        coordinator.update_interval is not None
-        and not coordinator.config_entry.pref_disable_polling
-    ):
-        polling_ids = {
-            context.entity_id
-            for context in coordinator.async_contexts()
-            if isinstance(context, Entity)
-        }
+    """Map each enabled vehicle entity to its data source."""
     prefix = f"{vehicle.vin}-"
     sources: dict[str, str] = {}
     for entry in entity_entries:
         if entry.disabled_by or not entry.unique_id.startswith(prefix):
             continue
         entity = entities.get(entry.entity_id)
-        if entry.entity_id in polling_ids:
-            sources[entry.entity_id] = SOURCE_POLLING
-        elif isinstance(entity, TeslemetryVehicleStreamEntity):
+        if isinstance(entity, TeslemetryVehicleStreamEntity):
             sources[entry.entity_id] = SOURCE_STREAMING
         elif isinstance(entity, TeslemetryVehicleCommandEntity):
             sources[entry.entity_id] = SOURCE_COMMAND

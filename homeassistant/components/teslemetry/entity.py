@@ -139,8 +139,6 @@ class TeslemetryVehiclePollingEntity(TeslemetryPollingEntity):
             self._attr_entity_registry_enabled_default = False
 
         super().__init__(data.coordinator, key)
-        # Lets diagnostics name the entities keeping the vehicle polling.
-        self.coordinator_context = self
 
     @property
     @override

@@ -95,9 +95,7 @@ from homeassistant.components.teslemetry.coordinator import (
     ENERGY_CONFIG_INTERVAL,
     ENERGY_LIVE_INTERVAL,
     ENERGY_LIVE_STREAM_TIMEOUT,
-    INSUFFICIENT_CREDITS_RETRY_AFTER,
     METADATA_INTERVAL,
-    VEHICLE_INTERVAL,
 )
 from homeassistant.components.teslemetry.helpers import async_get_ble_parent
 from homeassistant.components.teslemetry.models import TeslemetryData
@@ -134,16 +132,18 @@ from homeassistant.helpers import (
     issue_registry as ir,
 )
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
-from homeassistant.helpers.update_coordinator import UpdateFailed
+from homeassistant.helpers.update_coordinator import REQUEST_REFRESH_DEFAULT_COOLDOWN
 from homeassistant.setup import async_setup_component
+from homeassistant.util.json import JsonObjectType
 
-from . import mock_ble_config_entry, mock_config_entry, setup_platform
+from . import mock_ble_config_entry, mock_config_entry, refresh_entity, setup_platform
 from .const import (
     ADDRESS,
     COMMAND_OK,
     CONFIG_V1,
     LIVE_STATUS,
     METADATA,
+    METADATA_LEGACY,
     METADATA_NOSCOPE,
     PRODUCTS,
     PRODUCTS_MODERN,
@@ -156,6 +156,7 @@ from .const import (
 )
 
 LIVE_STATUS_ENTITY_ID = "sensor.energy_site_battery_power"
+BATTERY_LEVEL_ENTITY_ID = "sensor.test_battery_level"
 STREAMING_ALLOWANCE_ISSUE_ID = f"streaming_allowance_{VIN}"
 
 
@@ -354,22 +355,37 @@ async def test_no_live_status(
     assert hass.states.get("sensor.energy_site_grid_power") is None
 
 
-async def test_modern_no_poll(
+@pytest.mark.parametrize(
+    ("products", "metadata"),
+    [
+        pytest.param(PRODUCTS, METADATA_LEGACY, id="polling_command_signing_off"),
+        pytest.param(
+            PRODUCTS_MODERN, METADATA_LEGACY, id="polling_command_signing_required"
+        ),
+        pytest.param(PRODUCTS, METADATA, id="streaming"),
+    ],
+)
+async def test_vehicle_never_polls_automatically(
     hass: HomeAssistant,
     mock_vehicle_data: AsyncMock,
     mock_products: AsyncMock,
+    mock_metadata: AsyncMock,
     freezer: FrozenDateTimeFactory,
+    products: JsonObjectType,
+    metadata: JsonObjectType,
 ) -> None:
-    """Test that modern vehicles do not poll vehicle_data."""
-
-    mock_products.return_value = PRODUCTS_MODERN
+    """Test vehicle_data is never polled on a timer, as each poll can cost credits."""
+    mock_products.return_value = products
+    mock_metadata.return_value = metadata
     entry = await setup_platform(hass)
     assert entry.state is ConfigEntryState.LOADED
-    assert mock_vehicle_data.called is False
-    freezer.tick(VEHICLE_INTERVAL)
-    assert mock_vehicle_data.called is False
-    freezer.tick(VEHICLE_INTERVAL)
-    assert mock_vehicle_data.called is False
+
+    mock_vehicle_data.reset_mock()
+    freezer.tick(timedelta(hours=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_vehicle_data.assert_not_called()
 
 
 async def test_stale_device_removal(
@@ -1019,10 +1035,7 @@ async def test_vehicle_polling_version_update(
     updated_vehicle_data["response"]["vehicle_state"]["car_version"] = "2026.2.0 def456"
     mock_vehicle_data.return_value = updated_vehicle_data
 
-    # Trigger coordinator refresh
-    freezer.tick(VEHICLE_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await refresh_entity(hass, BATTERY_LEVEL_ENTITY_ID)
 
     # Check device sw_version was updated (build hash removed)
     device = device_registry.async_get_device_by_identifier(
@@ -1044,53 +1057,6 @@ async def test_polling_vehicle_skips_stream_setup(
 
     mock_stream_get_config.assert_not_called()
     mock_stream_update_config.assert_not_called()
-
-
-@pytest.mark.parametrize(
-    ("keep_one_enabled", "expected_polled"),
-    [
-        (False, False),
-        (True, True),
-    ],
-    ids=["all_disabled", "one_enabled"],
-)
-async def test_vehicle_polling_stops_when_all_entities_disabled(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    mock_vehicle_data: AsyncMock,
-    mock_legacy: AsyncMock,
-    freezer: FrozenDateTimeFactory,
-    keep_one_enabled: bool,
-    expected_polled: bool,
-) -> None:
-    """Test the vehicle coordinator stops polling once every entity is disabled."""
-    vin = "LRW3F7EK4NC700000"
-    entry = await setup_platform(hass, [Platform.SENSOR])
-
-    vehicle_entities = [
-        entity
-        for entity in er.async_entries_for_config_entry(entity_registry, entry.entry_id)
-        if entity.unique_id.startswith(vin)
-    ]
-    keep = {vehicle_entities[0].unique_id} if keep_one_enabled else set()
-    for entity in vehicle_entities:
-        if entity.unique_id not in keep:
-            entity_registry.async_update_entity(
-                entity.entity_id, disabled_by=er.RegistryEntryDisabler.USER
-            )
-
-    # Flush the debounced reload that disabling entities schedules.
-    freezer.tick(VEHICLE_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    # A scheduled poll only fires while the coordinator still has a listener.
-    mock_vehicle_data.reset_mock()
-    freezer.tick(VEHICLE_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    assert (mock_vehicle_data.call_count > 0) is expected_polled
 
 
 @pytest.mark.parametrize(
@@ -1135,21 +1101,6 @@ async def test_polling_only_entities_require_metadata(
         is not None
     )
     assert entry.state is ConfigEntryState.LOADED
-
-
-async def test_streaming_vehicle_coordinator_never_polls(
-    hass: HomeAssistant,
-    mock_vehicle_data: AsyncMock,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """A plain streaming vehicle is never polled."""
-    await setup_platform(hass, [Platform.BINARY_SENSOR])
-
-    freezer.tick(VEHICLE_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    assert mock_vehicle_data.call_count == 0
 
 
 async def test_stale_polling_only_entity_removed_on_setup(
@@ -1330,38 +1281,24 @@ async def test_dynamic_device_discovery_no_reload_without_changes(
     mock_reload.assert_not_called()
 
 
-async def test_insufficient_credits_backs_off_polling(
+@pytest.mark.usefixtures("mock_legacy")
+async def test_insufficient_credits_refresh_fails(
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
     mock_vehicle_data: AsyncMock,
-    mock_legacy: AsyncMock,
 ) -> None:
-    """Running out of command credits should back off, not hammer the API every poll."""
-    call_count = 0
-
-    def vehicle_data_side_effect(**kwargs):
-        nonlocal call_count
-        call_count += 1
-        if call_count == 1:
-            return deepcopy(VEHICLE_DATA)
-        raise InsufficientCredits
-
-    mock_vehicle_data.side_effect = vehicle_data_side_effect
+    """Test a refresh without enough command credits fails with its own reason."""
+    mock_vehicle_data.side_effect = [deepcopy(VEHICLE_DATA), InsufficientCredits()]
 
     entry = await setup_platform(hass)
     assert entry.state is ConfigEntryState.LOADED
-    assert call_count == 1
 
-    freezer.tick(VEHICLE_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await refresh_entity(hass, BATTERY_LEVEL_ENTITY_ID)
 
-    assert call_count == 2
+    assert mock_vehicle_data.call_count == 2
     assert entry.state is ConfigEntryState.LOADED
-
-    coordinator = entry.runtime_data.vehicles[0].coordinator
-    assert isinstance(coordinator.last_exception, UpdateFailed)
-    assert coordinator.last_exception.retry_after == INSUFFICIENT_CREDITS_RETRY_AFTER
+    assert hass.states.get(BATTERY_LEVEL_ENTITY_ID).state == STATE_UNAVAILABLE
+    assert "insufficient command credits" in caplog.text
 
 
 async def test_vehicle_data_missing_scopes_repair(
@@ -1377,12 +1314,10 @@ async def test_vehicle_data_missing_scopes_repair(
     issue_id = f"missing_scopes_{entry.entry_id}"
 
     mock_vehicle_data.side_effect = Forbidden
-    freezer.tick(VEHICLE_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await refresh_entity(hass, BATTERY_LEVEL_ENTITY_ID)
 
     assert entry.state is ConfigEntryState.LOADED
-    assert hass.states.get("sensor.test_battery_level").state == STATE_UNAVAILABLE
+    assert hass.states.get(BATTERY_LEVEL_ENTITY_ID).state == STATE_UNAVAILABLE
     issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert issue is not None
     assert (
@@ -1390,10 +1325,12 @@ async def test_vehicle_data_missing_scopes_repair(
     )
 
     mock_vehicle_data.side_effect = None
-    freezer.tick(VEHICLE_INTERVAL)
+    # Outlast the request refresh debouncer so the next refresh runs at once.
+    freezer.tick(timedelta(seconds=REQUEST_REFRESH_DEFAULT_COOLDOWN))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await refresh_entity(hass, BATTERY_LEVEL_ENTITY_ID)
 
+    assert mock_vehicle_data.call_count == 3
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 

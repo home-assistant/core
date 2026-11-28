@@ -3,20 +3,18 @@
 import copy
 from unittest.mock import AsyncMock, patch
 
-from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import async_fire_time_changed, mock_restore_cache
+from pytest_homeassistant.common import mock_restore_cache
 from syrupy.assertion import SnapshotAssertion
 from teslemetry_stream import Signal
 
-from homeassistant.components.teslemetry.coordinator import VEHICLE_INTERVAL
 from homeassistant.components.teslemetry.update import INSTALLING
 from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN, UpdateService
 from homeassistant.const import STATE_ON, Platform, TargetKey
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 
-from . import assert_entities, reload_platform, setup_platform
+from . import assert_entities, refresh_entity, reload_platform, setup_platform
 from .const import COMMAND_OK, VEHICLE_DATA, VEHICLE_DATA_ALT
 
 
@@ -49,7 +47,6 @@ async def test_update_alt(
 async def test_update_services(
     hass: HomeAssistant,
     mock_vehicle_data: AsyncMock,
-    freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
     mock_legacy: AsyncMock,
 ) -> None:
@@ -76,9 +73,7 @@ async def test_update_services(
         INSTALLING
     )
     mock_vehicle_data.return_value = VEHICLE_INSTALLING
-    freezer.tick(VEHICLE_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await refresh_entity(hass, entity_id)
 
     state = hass.states.get(entity_id)
     assert state.attributes["in_progress"] == 1

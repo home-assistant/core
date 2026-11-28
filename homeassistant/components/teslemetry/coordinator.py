@@ -64,7 +64,6 @@ def _get_retry_after(e: TeslaFleetError) -> float:
     return 10.0
 
 
-VEHICLE_INTERVAL = timedelta(seconds=60)
 VEHICLE_WAIT = timedelta(minutes=15)
 METADATA_INTERVAL = timedelta(hours=1)
 # A paired Powerwall's LAN gateway is not on the stream, so it is polled: the
@@ -93,10 +92,6 @@ TARIFF_SKIP_KEYS = ["daily_charges", "demand_charges", "energy_charges", "season
 # that re-asks for declined scopes can restore them.
 ISSUE_MISSING_SCOPES = "missing_scopes"
 MISSING_SCOPES_URL = "https://teslemetry.com/login?prompt_missing_scopes=1"
-
-# Insufficient credits will not resolve themselves quickly, so back off polling
-# instead of hammering the API at the coordinator's normal interval.
-INSUFFICIENT_CREDITS_RETRY_AFTER = timedelta(hours=1).total_seconds()
 
 ENDPOINTS = [
     VehicleDataEndpoint.CHARGE_STATE,
@@ -173,10 +168,6 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             config_entry=config_entry,
             name="Teslemetry Vehicle",
         )
-        if product["command_signing"] == "off":
-            # Only allow automatic polling if its included
-            self.update_interval = VEHICLE_INTERVAL
-
         self.api = api
         self.vin = product["vin"]
         self.data = flatten(product)
@@ -192,7 +183,6 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed_insufficient_credits",
-                retry_after=INSUFFICIENT_CREDITS_RETRY_AFTER,
             ) from e
         except Forbidden as e:
             ir.async_create_issue(

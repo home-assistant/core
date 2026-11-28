@@ -27,10 +27,7 @@ from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.bluetooth.const import UNAVAILABLE_TRACK_SECONDS
 from homeassistant.components.bluetooth.manager import HomeAssistantBluetoothManager
 from homeassistant.components.teslemetry.const import DOMAIN, SUBENTRY_TYPE_VEHICLE
-from homeassistant.components.teslemetry.coordinator import (
-    LOCAL_STATUS_INTERVAL,
-    VEHICLE_INTERVAL,
-)
+from homeassistant.components.teslemetry.coordinator import LOCAL_STATUS_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -49,6 +46,7 @@ from . import (
     assert_entities,
     assert_entities_alt,
     mock_ble_config_entry,
+    refresh_entity,
     setup_ble_platform,
     setup_paired_platform,
     setup_platform,
@@ -85,7 +83,6 @@ async def test_binary_sensor_refresh(
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     mock_vehicle_data: AsyncMock,
-    freezer: FrozenDateTimeFactory,
     mock_legacy: AsyncMock,
 ) -> None:
     """Tests that the binary sensor entities are correct."""
@@ -94,9 +91,7 @@ async def test_binary_sensor_refresh(
 
     # Refresh
     mock_vehicle_data.return_value = VEHICLE_DATA_ALT
-    freezer.tick(VEHICLE_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await refresh_entity(hass, "binary_sensor.test_status")
 
     assert_entities_alt(hass, entry.entry_id, entity_registry, snapshot)
 

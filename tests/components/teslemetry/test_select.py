@@ -6,7 +6,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.const import EnergyExportMode, EnergyOperationMode
 from tesla_fleet_api.exceptions import InvalidCommand
@@ -17,14 +16,13 @@ from homeassistant.components.select import (
     SelectService,
     SelectServiceArgument,
 )
-from homeassistant.components.teslemetry.coordinator import VEHICLE_INTERVAL
 from homeassistant.components.teslemetry.select import HIGH, LEVEL, LOW, MEDIUM, OFF
 from homeassistant.const import STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from . import assert_entities, reload_platform, setup_platform
+from . import assert_entities, refresh_entity, reload_platform, setup_platform
 from .const import (
     COMMAND_ERRORS,
     COMMAND_OK,
@@ -437,8 +435,7 @@ async def _drive_polling(
     data = deepcopy(VEHICLE_DATA_ALT)
     data["response"]["climate_state"]["steering_wheel_heat_level"] = value
     mock_vehicle_data.return_value = data
-    freezer.tick(VEHICLE_INTERVAL)
-    async_fire_time_changed(hass)
+    await refresh_entity(hass, "select.test_steering_wheel_heater")
 
 
 async def _drive_streaming(

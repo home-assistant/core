@@ -2,6 +2,7 @@
 
 from collections.abc import Generator
 from copy import deepcopy
+from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -33,10 +34,7 @@ from homeassistant.components.teslemetry.const import (
     RSA_PARENT_KEY,
     SUBENTRY_TYPE_ENERGY_SITE,
 )
-from homeassistant.components.teslemetry.coordinator import (
-    METADATA_INTERVAL,
-    VEHICLE_INTERVAL,
-)
+from homeassistant.components.teslemetry.coordinator import METADATA_INTERVAL
 from homeassistant.components.teslemetry.repairs import async_create_fix_flow
 from homeassistant.config_entries import ConfigEntryState, ConfigSubentryData
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
@@ -49,6 +47,7 @@ from . import mock_config_entry, setup_paired_platform, setup_platform
 from .const import METADATA, PRODUCTS
 
 VEHICLE_VIN = "LRW3F7EK4NC700000"
+VEHICLE_INTERVAL = timedelta(seconds=60)
 SITE_ID = 123456
 HOST = "192.168.91.1"
 NEW_HOST = "192.168.91.2"
