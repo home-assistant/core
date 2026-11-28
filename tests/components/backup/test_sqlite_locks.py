@@ -1,6 +1,8 @@
 """Regression tests for SQLite locks during Core backups."""
 
 from contextlib import closing
+import io
+import json
 import os
 from pathlib import Path
 import sqlite3
@@ -8,12 +10,18 @@ import subprocess
 import sys
 import tarfile
 from unittest.mock import patch
+import venv
 
 import pytest
 from securetar import AddFileError
 
+from homeassistant.components.backup import DOMAIN, archive_writer
 from homeassistant.components.backup.manager import CoreBackupReaderWriter
+from homeassistant.components.backup.models import BackupReaderWriterError
+from homeassistant.components.backup.services import BackupService
 from homeassistant.core import HomeAssistant
+
+from .common import setup_backup_integration
 
 
 def _sqlite_locks(path: Path) -> list[str]:
@@ -21,7 +29,7 @@ def _sqlite_locks(path: Path) -> list[str]:
     inode = path.stat().st_ino
     return [
         line
-        for line in Path("/proc/locks").read_text().splitlines()
+        for line in Path("/proc/locks").read_text(encoding="utf-8").splitlines()
         if f" {os.getpid()} " in line and f":{inode} " in line
     ]
 
@@ -30,10 +38,11 @@ def _sqlite_locks(path: Path) -> list[str]:
 @pytest.mark.parametrize(
     "db_filename", ["home-assistant_v2.db", "custom_recorder.db", "nonstandard_file"]
 )
-def test_core_backup_preserves_sqlite_locks(
-    hass: HomeAssistant, tmp_path: Path, db_filename: str
+async def test_core_backup_preserves_sqlite_locks(
+    hass: HomeAssistant, db_filename: str
 ) -> None:
     """Archiving any SQLite file must not revoke Recorder's POSIX locks."""
+    await setup_backup_integration(hass)
     db_path = Path(hass.config.path(db_filename))
 
     with closing(sqlite3.connect(db_path)) as recorder:
@@ -44,14 +53,9 @@ def test_core_backup_preserves_sqlite_locks(
 
         assert _sqlite_locks(db_path), "Recorder must hold a lock before backup"
 
-        # The tmp_backups directory is excluded from the archive itself.
-        tar_path = tmp_path / "tmp_backups" / "test-backup.tar"
-        CoreBackupReaderWriter(hass)._mkdir_and_generate_backup_contents(
-            {"slug": "sqlite-lock-regression"},
-            database_included=True,
-            password=None,
-            tar_file_path=tar_path,
-        )
+        await hass.services.async_call(DOMAIN, BackupService.CREATE, blocking=True)
+        await hass.async_block_till_done()
+        [tar_path] = Path(hass.config.path("backups")).glob("*.tar")
 
         assert _sqlite_locks(db_path), (
             "Core backup opened and closed the live SQLite file in the "
@@ -79,26 +83,21 @@ def test_core_backup_preserves_sqlite_locks(
             ).fetchone() == (2,)
 
 
-def test_core_backup_uses_one_reader_process(
-    hass: HomeAssistant, tmp_path: Path
-) -> None:
-    """All regular file contents should be streamed through one child."""
-    Path(hass.config.path("first.txt")).write_text("first")
-    Path(hass.config.path("second.txt")).write_text("second")
-    archive_path = tmp_path / "tmp_backups" / "files.tar"
+async def test_core_backup_uses_one_archive_process(hass: HomeAssistant) -> None:
+    """A public Core backup archives all files in one child process."""
+    await setup_backup_integration(hass)
+    Path(hass.config.path("first.txt")).write_text("first", encoding="utf-8")
+    Path(hass.config.path("second.txt")).write_text("second", encoding="utf-8")
 
     with patch(
-        "homeassistant.components.backup.manager.subprocess.Popen",
-        wraps=subprocess.Popen,
-    ) as popen:
-        CoreBackupReaderWriter(hass)._mkdir_and_generate_backup_contents(
-            {"slug": "one-child"},
-            database_included=False,
-            password=None,
-            tar_file_path=archive_path,
-        )
+        "homeassistant.components.backup.manager.subprocess.run",
+        wraps=subprocess.run,
+    ) as runner:
+        await hass.services.async_call(DOMAIN, BackupService.CREATE, blocking=True)
+        await hass.async_block_till_done()
 
-    assert popen.call_count == 1
+    assert runner.call_count == 1
+    [archive_path] = Path(hass.config.path("backups")).glob("*.tar")
     with tarfile.open(archive_path) as outer:
         stream = outer.extractfile("homeassistant.tar.gz")
         assert stream is not None
@@ -113,12 +112,22 @@ def test_core_backup_uses_one_reader_process(
                     assert content.read() == expected
 
 
-def test_core_backup_rejects_truncated_file(
+def test_archive_worker_rejects_file_truncated_after_stat(
     hass: HomeAssistant, tmp_path: Path
 ) -> None:
-    """Do not silently accept files shortened after their tar header is read."""
+    """A changed file must cause the worker to reject the backup."""
     source = Path(hass.config.path("shrinking_file"))
     source.write_bytes(b"a" * 8192)
+    archive_path = tmp_path / "truncated.tar"
+    request = {
+        "archive_path": str(archive_path),
+        "config_path": hass.config.path(),
+        "excludes": [],
+        "buf_size": 4194304,
+        "create_version": 3,
+        "password": None,
+    }
+    payload = json.dumps(request).encode() + b"\n" + b'{"slug":"truncate"}'
     original_gettarinfo = tarfile.TarFile.gettarinfo
     source_modified = False
 
@@ -136,16 +145,111 @@ def test_core_backup_rejects_truncated_file(
         return info
 
     with (
+        patch.object(
+            archive_writer.sys,
+            "stdin",
+            io.TextIOWrapper(io.BytesIO(payload), encoding="utf-8"),
+        ),
         patch.object(tarfile.TarFile, "gettarinfo", truncate_after_stat),
-        pytest.raises(AddFileError) as exc_info,
+        pytest.raises(AddFileError, match="unexpected end of data"),
+    ):
+        archive_writer.main()
+    assert source_modified
+
+
+def test_archive_process_error_reports_stderr(
+    hass: HomeAssistant, tmp_path: Path
+) -> None:
+    """Child failures must preserve their actual stderr instead of hiding it."""
+    archive_path = tmp_path / "tmp_backups" / "failure.tar"
+    failing_command = [
+        sys.executable,
+        "-I",
+        "-c",
+        'import sys;sys.stderr.write("reader failed: deliberate test error\\n");sys.exit(42)',
+    ]
+    original_run = subprocess.run
+
+    def fail_in_child(
+        command: list[str], **kwargs: object
+    ) -> subprocess.CompletedProcess:
+        return original_run(failing_command, **kwargs)
+
+    with (
+        patch(
+            "homeassistant.components.backup.manager.subprocess.run",
+            side_effect=fail_in_child,
+        ),
+        patch(
+            "homeassistant.components.backup.manager.json_bytes",
+            return_value=b"x" * (1024 * 1024),
+        ),
+        pytest.raises(BackupReaderWriterError, match="deliberate test error"),
     ):
         CoreBackupReaderWriter(hass)._mkdir_and_generate_backup_contents(
-            {"slug": "short-file"},
+            {"slug": "failure"},
             database_included=False,
             password=None,
-            tar_file_path=tmp_path / "tmp_backups" / "short.tar",
+            tar_file_path=archive_path,
         )
-    assert source_modified
-    assert any(
-        "Source changed during backup" in note for note in exc_info.value.__notes__
+
+
+def test_site_startup_output_cannot_contaminate_archive(
+    hass: HomeAssistant, tmp_path: Path
+) -> None:
+    """Startup code writing stdout cannot alter the generated tar file."""
+    environment = tmp_path / "test_env"
+    venv.EnvBuilder(with_pip=False).create(environment)
+    executable = environment / (
+        "Scripts/python.exe" if os.name == "nt" else "bin/python"
     )
+    site_packages = environment / (
+        "Lib/site-packages"
+        if os.name == "nt"
+        else f"lib/python{sys.version_info.major}.{sys.version_info.minor}/site-packages"
+    )
+    original_sites = [path for path in sys.path if path.endswith("site-packages")]
+    (site_packages / "inject_stdout.pth").write_text(
+        'import sys;sys.stdout.buffer.write(b"CORRUPTION");sys.stdout.flush()\n'
+        + "\n".join(original_sites)
+        + "\n",
+        encoding="utf-8",
+    )
+
+    probe = subprocess.run(
+        [str(executable), "-I", "-c", "print('ready')"],
+        capture_output=True,
+        check=True,
+    )
+    assert b"CORRUPTION" in probe.stdout
+
+    file_path = Path(hass.config.path("uncontaminated.txt"))
+    file_path.write_bytes(b"expected bytes")
+    archive_path = tmp_path / "tmp_backups" / "hook.tar"
+    original_run = subprocess.run
+
+    def run_in_injected_venv(
+        command: list[str], **kwargs: object
+    ) -> subprocess.CompletedProcess:
+        assert kwargs["stdout"] == subprocess.DEVNULL
+        return original_run([str(executable), *command[1:]], **kwargs)
+
+    with patch(
+        "homeassistant.components.backup.manager.subprocess.run",
+        side_effect=run_in_injected_venv,
+    ):
+        CoreBackupReaderWriter(hass)._mkdir_and_generate_backup_contents(
+            {"slug": "startup-hook"},
+            database_included=False,
+            password=None,
+            tar_file_path=archive_path,
+        )
+
+    with tarfile.open(archive_path) as outer:
+        data = outer.extractfile("homeassistant.tar.gz")
+        assert data is not None
+        with data, tarfile.open(fileobj=data, mode="r:gz") as inner:
+            content = inner.extractfile("data/uncontaminated.txt")
+            assert content is not None
+            with content:
+                assert content.read() == b"expected bytes"
