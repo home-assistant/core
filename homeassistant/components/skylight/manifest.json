@@ -1,0 +1,13 @@
+{
+  "domain": "skylight",
+  "name": "Skylight",
+  "codeowners": ["@devinslick", "@megathelegend"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/skylight",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "loggers": ["skylight_api"],
+  "quality_scale": "bronze",
+  "requirements": ["skylight-api==0.1.0"],
+  "single_config_entry": false
+}
