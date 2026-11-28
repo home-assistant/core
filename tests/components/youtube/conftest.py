@@ -133,7 +133,7 @@ async def mock_setup_integration(
     async def func() -> MockYouTube:
         mock = MockYouTube(hass)
         with patch("homeassistant.components.youtube.api.YouTube", return_value=mock):
-            assert await async_setup_component(hass, DOMAIN, {})
+            await hass.config_entries.async_setup(config_entry.entry_id)
             await hass.async_block_till_done()
         return mock
 
