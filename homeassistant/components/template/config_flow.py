@@ -219,6 +219,9 @@ _REQUIRED_OPTIONS: dict[str, tuple[tuple[str, str, str], ...]] = {
     ),
 }
 
+_CLIMATE_HVAC_MODE_SECTION = "hvac_mode_options"
+_CLIMATE_TEMPERATURE_SECTION = "temperature_options"
+
 # Device class can only be chosen when the entity is created.
 _CONFIG_DEVICE_CLASS_DOMAINS = (
     Platform.BUTTON,
@@ -285,35 +288,47 @@ def generate_schema(
 
     if domain == Platform.CLIMATE:
         schema |= {
-            probatio.Required(CONF_HVAC_MODES): selector.TemplateSelector(),
-            probatio.Optional(CONF_HVAC_MODE): selector.TemplateSelector(),
-            probatio.Required(SET_HVAC_MODE_ACTION): selector.ActionSelector(),
-            probatio.Optional(CONF_HVAC_ACTION): selector.TemplateSelector(),
-            probatio.Optional(CONF_CURRENT_TEMPERATURE): selector.TemplateSelector(),
-            probatio.Optional(CONF_TARGET_TEMPERATURE): selector.TemplateSelector(),
-            probatio.Optional(SET_TEMPERATURE_ACTION): selector.ActionSelector(),
-            probatio.Optional(CONF_TEMPERATURE_UNIT): selector.SelectSelector(
-                selector.SelectSelectorConfig(
-                    options=[cls.value for cls in UnitOfTemperature],
-                    mode=selector.SelectSelectorMode.DROPDOWN,
-                    sort=True,
-                ),
+            probatio.Required(_CLIMATE_HVAC_MODE_SECTION): _section(
+                {
+                    probatio.Required(CONF_HVAC_MODES): selector.TemplateSelector(),
+                    probatio.Optional(CONF_HVAC_MODE): selector.TemplateSelector(),
+                    probatio.Required(SET_HVAC_MODE_ACTION): selector.ActionSelector(),
+                    probatio.Optional(CONF_HVAC_ACTION): selector.TemplateSelector(),
+                }
             ),
-        }
-        additional_options |= {
-            probatio.Optional(CONF_MIN_TEMPERATURE): selector.NumberSelector(
-                selector.NumberSelectorConfig(
-                    mode=selector.NumberSelectorMode.BOX,
-                    unit_of_measurement=DEGREE,
-                    step=0.1,
-                )
-            ),
-            probatio.Optional(CONF_MAX_TEMPERATURE): selector.NumberSelector(
-                selector.NumberSelectorConfig(
-                    mode=selector.NumberSelectorMode.BOX,
-                    unit_of_measurement=DEGREE,
-                    step=0.1,
-                )
+            probatio.Optional(_CLIMATE_TEMPERATURE_SECTION): _section(
+                {
+                    probatio.Optional(
+                        CONF_CURRENT_TEMPERATURE
+                    ): selector.TemplateSelector(),
+                    probatio.Optional(
+                        CONF_TARGET_TEMPERATURE
+                    ): selector.TemplateSelector(),
+                    probatio.Optional(
+                        SET_TEMPERATURE_ACTION
+                    ): selector.ActionSelector(),
+                    probatio.Optional(CONF_TEMPERATURE_UNIT): selector.SelectSelector(
+                        selector.SelectSelectorConfig(
+                            options=[cls.value for cls in UnitOfTemperature],
+                            mode=selector.SelectSelectorMode.DROPDOWN,
+                            sort=True,
+                        ),
+                    ),
+                    probatio.Optional(CONF_MIN_TEMPERATURE): selector.NumberSelector(
+                        selector.NumberSelectorConfig(
+                            mode=selector.NumberSelectorMode.BOX,
+                            unit_of_measurement=DEGREE,
+                            step=0.1,
+                        )
+                    ),
+                    probatio.Optional(CONF_MAX_TEMPERATURE): selector.NumberSelector(
+                        selector.NumberSelectorConfig(
+                            mode=selector.NumberSelectorMode.BOX,
+                            unit_of_measurement=DEGREE,
+                            step=0.1,
+                        )
+                    ),
+                }
             ),
         }
 
@@ -600,18 +615,57 @@ def generate_schema(
 
     schema |= {
         probatio.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
-        probatio.Optional(CONF_ADDITIONAL_OPTIONS): section(
-            probatio.Schema(
-                {
-                    probatio.Optional(CONF_AVAILABILITY): selector.TemplateSelector(),
-                    **additional_options,
-                }
-            ),
-            {"collapsed": True},
+        probatio.Optional(CONF_ADDITIONAL_OPTIONS): _section(
+            {
+                probatio.Optional(CONF_AVAILABILITY): selector.TemplateSelector(),
+                **additional_options,
+            }
         ),
     }
 
     return probatio.Schema(schema)
+
+
+def _section(fields: dict[probatio.Marker, Any]) -> section:
+    """Return a section that is collapsed unless it has a required field."""
+    collapsed = not any(isinstance(key, probatio.Required) for key in fields)
+    return section(probatio.Schema(fields), {"collapsed": collapsed})
+
+
+def _section_fields(schema: probatio.Schema) -> dict[str, list[probatio.Marker]]:
+    """Return the fields of each section in the schema."""
+    return {
+        key.schema: list(value.schema.schema)
+        for key, value in schema.schema.items()
+        if isinstance(value, section)
+    }
+
+
+def _flatten_sections(
+    schema: probatio.Schema, user_input: Mapping[str, Any]
+) -> dict[str, Any]:
+    """Move the values of each section to the top level.
+
+    Sections only group fields in the UI, the options are stored flat.
+    """
+    flat = dict(user_input)
+    for section_key in _section_fields(schema):
+        flat |= flat.pop(section_key, {})
+    return flat
+
+
+def _nest_sections(
+    schema: probatio.Schema, options: Mapping[str, Any]
+) -> dict[str, Any]:
+    """Move the options shown in a section into that section."""
+    nested = dict(options)
+    for section_key, fields in _section_fields(schema).items():
+        nested[section_key] = {
+            field.schema: nested.pop(field.schema)
+            for field in fields
+            if field.schema in nested
+        }
+    return nested
 
 
 options_schema = partial(generate_schema, flow_type="options")
@@ -622,6 +676,16 @@ config_schema = partial(generate_schema, flow_type="config")
 async def _light_options_schema(handler: SchemaCommonFlowHandler) -> probatio.Schema:
     """Return the light options schema for the options of the config entry."""
     return options_schema(Platform.LIGHT, options=handler.options)
+
+
+async def _options_suggested_values(
+    handler: SchemaCommonFlowHandler,
+) -> dict[str, Any]:
+    """Return the stored options, nested in the sections of the options schema."""
+    template_type = handler.options["template_type"]
+    return _nest_sections(
+        options_schema(template_type, options=handler.options), handler.options
+    )
 
 
 async def _get_forecast_description_place_holders(
@@ -699,7 +763,7 @@ def validate_user_input(
 
     For sensors: Validate unit of measurement.
     For media players and vacuums: Validate options that require another option.
-    For all domaines: Set template type.
+    For all domaines: Flatten sections and set template type.
     """
 
     async def _validate_user_input(
@@ -707,6 +771,9 @@ def validate_user_input(
         user_input: dict[str, Any],
     ) -> dict[str, Any]:
         """Add template type to user input."""
+        # Sections are the same in the config and options flows
+        schema = options_schema(template_type, options=handler.options)
+        user_input = _flatten_sections(schema, user_input)
         if template_type == Platform.SENSOR:
             _validate_unit(user_input)
             _validate_state_class(user_input)
@@ -734,16 +801,21 @@ def validate_user_input(
                 CONF_WATER_HEATER_TARGET_TEMPERATURE,
                 SET_WATER_HEATER_TEMPERATURE_ACTION,
             )(user_input)
-            additional_options = user_input.get(CONF_ADDITIONAL_OPTIONS, {})
-            tcv.requires_option(CONF_AWAY_MODE, TURN_AWAY_MODE_ON_ACTION)(
-                additional_options
-            )
+            tcv.requires_option(CONF_AWAY_MODE, TURN_AWAY_MODE_ON_ACTION)(user_input)
             tcv.requires_option(TURN_AWAY_MODE_ON_ACTION, TURN_AWAY_MODE_OFF_ACTION)(
-                additional_options
+                user_input
             )
             tcv.requires_option(TURN_AWAY_MODE_OFF_ACTION, TURN_AWAY_MODE_ON_ACTION)(
-                additional_options
+                user_input
             )
+        # The flow only removes omitted options at the top level of the schema
+        for fields in _section_fields(schema).values():
+            for field in fields:
+                if (
+                    isinstance(field, probatio.Optional)
+                    and field.schema not in user_input
+                ):
+                    handler.options.pop(field.schema, None)
         return {"template_type": template_type} | user_input
 
     return _validate_user_input
@@ -882,99 +954,119 @@ OPTIONS_FLOW = {
         options_schema(Platform.ALARM_CONTROL_PANEL),
         preview="template",
         validate_user_input=validate_user_input(Platform.ALARM_CONTROL_PANEL),
+        suggested_values=_options_suggested_values,
     ),
     Platform.BINARY_SENSOR: SchemaFlowFormStep(
         options_schema(Platform.BINARY_SENSOR),
         preview="template",
         validate_user_input=validate_user_input(Platform.BINARY_SENSOR),
+        suggested_values=_options_suggested_values,
     ),
     Platform.BUTTON: SchemaFlowFormStep(
         options_schema(Platform.BUTTON),
         validate_user_input=validate_user_input(Platform.BUTTON),
+        suggested_values=_options_suggested_values,
     ),
     Platform.CLIMATE: SchemaFlowFormStep(
         options_schema(Platform.CLIMATE),
         preview="template",
         validate_user_input=validate_user_input(Platform.CLIMATE),
+        suggested_values=_options_suggested_values,
     ),
     Platform.COVER: SchemaFlowFormStep(
         options_schema(Platform.COVER),
         preview="template",
         validate_user_input=validate_user_input(Platform.COVER),
+        suggested_values=_options_suggested_values,
     ),
     Platform.DEVICE_TRACKER: SchemaFlowFormStep(
         options_schema(Platform.DEVICE_TRACKER),
         preview="template",
         validate_user_input=validate_user_input(Platform.DEVICE_TRACKER),
+        suggested_values=_options_suggested_values,
     ),
     Platform.EVENT: SchemaFlowFormStep(
         options_schema(Platform.EVENT),
         preview="template",
         validate_user_input=validate_user_input(Platform.EVENT),
+        suggested_values=_options_suggested_values,
     ),
     Platform.FAN: SchemaFlowFormStep(
         options_schema(Platform.FAN),
         preview="template",
         validate_user_input=validate_user_input(Platform.FAN),
+        suggested_values=_options_suggested_values,
     ),
     Platform.IMAGE: SchemaFlowFormStep(
         options_schema(Platform.IMAGE),
         validate_user_input=validate_user_input(Platform.IMAGE),
+        suggested_values=_options_suggested_values,
     ),
     Platform.LIGHT: SchemaFlowFormStep(
         _light_options_schema,
         preview="template",
         validate_user_input=validate_user_input(Platform.LIGHT),
+        suggested_values=_options_suggested_values,
     ),
     Platform.LOCK: SchemaFlowFormStep(
         options_schema(Platform.LOCK),
         preview="template",
         validate_user_input=validate_user_input(Platform.LOCK),
+        suggested_values=_options_suggested_values,
     ),
     Platform.MEDIA_PLAYER: SchemaFlowFormStep(
         options_schema(Platform.MEDIA_PLAYER),
         preview="template",
         validate_user_input=validate_user_input(Platform.MEDIA_PLAYER),
+        suggested_values=_options_suggested_values,
     ),
     Platform.NUMBER: SchemaFlowFormStep(
         options_schema(Platform.NUMBER),
         preview="template",
         validate_user_input=validate_user_input(Platform.NUMBER),
+        suggested_values=_options_suggested_values,
     ),
     Platform.SELECT: SchemaFlowFormStep(
         options_schema(Platform.SELECT),
         preview="template",
         validate_user_input=validate_user_input(Platform.SELECT),
+        suggested_values=_options_suggested_values,
     ),
     Platform.SENSOR: SchemaFlowFormStep(
         options_schema(Platform.SENSOR),
         preview="template",
         validate_user_input=validate_user_input(Platform.SENSOR),
+        suggested_values=_options_suggested_values,
     ),
     Platform.SWITCH: SchemaFlowFormStep(
         options_schema(Platform.SWITCH),
         preview="template",
         validate_user_input=validate_user_input(Platform.SWITCH),
+        suggested_values=_options_suggested_values,
     ),
     Platform.UPDATE: SchemaFlowFormStep(
         options_schema(Platform.UPDATE),
         preview="template",
         validate_user_input=validate_user_input(Platform.UPDATE),
+        suggested_values=_options_suggested_values,
     ),
     Platform.VACUUM: SchemaFlowFormStep(
         options_schema(Platform.VACUUM),
         preview="template",
         validate_user_input=validate_user_input(Platform.VACUUM),
+        suggested_values=_options_suggested_values,
     ),
     Platform.WATER_HEATER: SchemaFlowFormStep(
         options_schema(Platform.WATER_HEATER),
         preview="template",
         validate_user_input=validate_user_input(Platform.WATER_HEATER),
+        suggested_values=_options_suggested_values,
     ),
     Platform.WEATHER: SchemaFlowFormStep(
         options_schema(Platform.WEATHER),
         preview="template",
         validate_user_input=validate_user_input(Platform.WEATHER),
+        suggested_values=_options_suggested_values,
         description_placeholders=_get_forecast_description_place_holders,
     ),
 }
@@ -1012,6 +1104,7 @@ class TemplateConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     options_flow_reloads = True
 
     VERSION = 2
+    MINOR_VERSION = 2
 
     @callback
     @override
@@ -1055,6 +1148,7 @@ def ws_start_preview(
             except probatio.Invalid as ex:
                 errors[key.schema] = str(ex.msg)
 
+        user_input = _flatten_sections(schema, user_input)
         if domain == Platform.SENSOR:
             try:
                 _validate_unit(user_input)
@@ -1143,10 +1237,8 @@ def ws_start_preview(
         )
         return
 
-    config: dict = msg["user_input"]
-    additional_options = config.pop(CONF_ADDITIONAL_OPTIONS, {})
     preview_entity = CREATE_PREVIEW_ENTITY[template_type](
-        hass, name, {**config, **additional_options}
+        hass, name, _flatten_sections(schema, msg["user_input"])
     )
     preview_entity.hass = hass
     preview_entity.registry_entry = entity_registry_entry

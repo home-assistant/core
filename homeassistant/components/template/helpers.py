@@ -36,13 +36,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify
 from homeassistant.util.hass_dict import HassKey
 
-from .const import (
-    CONF_ADDITIONAL_OPTIONS,
-    CONF_DEFAULT_ENTITY_ID,
-    DOMAIN,
-    PLATFORMS,
-    TemplateService,
-)
+from .const import CONF_DEFAULT_ENTITY_ID, DOMAIN, PLATFORMS, TemplateService
 from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .template_entity import TemplateEntity
@@ -273,9 +267,6 @@ async def async_setup_template_entry(
     """Setup the Template from a config entry."""
     options = dict(config_entry.options)
     options.pop("template_type")
-
-    if additional_options := options.pop(CONF_ADDITIONAL_OPTIONS, None):
-        options = {**options, **additional_options}
 
     if replace_value_template and CONF_VALUE_TEMPLATE in options:
         options[CONF_STATE] = options.pop(CONF_VALUE_TEMPLATE)

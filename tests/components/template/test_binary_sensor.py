@@ -703,7 +703,7 @@ async def test_config_flow_binary_sensor_delay_options(
         "name": "My template",
         "template_type": "binary_sensor",
         "state": "{{ true }}",
-        "additional_options": expected_advanced_options,
+        **expected_advanced_options,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -713,7 +713,7 @@ async def test_config_flow_binary_sensor_delay_options(
         "name": "My template",
         "template_type": "binary_sensor",
         "state": "{{ true }}",
-        "additional_options": expected_advanced_options,
+        **expected_advanced_options,
     }
     state = hass.states.get("binary_sensor.my_template")
     assert state.state == expected_state
