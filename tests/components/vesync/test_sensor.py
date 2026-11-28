@@ -229,3 +229,30 @@ async def test_humidity(
     """Test the state of humidity sensor entity."""
 
     assert hass.states.get(ENTITY_HUMIDIFIER_HUMIDITY).state == "35"
+
+
+async def test_drying_time_remaining(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test the drying time remaining sensor reports the device countdown."""
+    mock_devices_response(
+        aioclient_mock,
+        "Humidifier 6000s",
+        details_override={
+            "dryingMode": {
+                "dryingLevel": 1,
+                "autoDryingSwitch": 1,
+                "dryingState": 1,
+                "dryingRemain": 1664,
+            }
+        },
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.humidifier_6000s_drying_time_remaining")
+    assert state is not None
+    assert state.state == "1664"

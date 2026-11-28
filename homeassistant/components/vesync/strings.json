@@ -49,6 +49,9 @@
   },
   "entity": {
     "binary_sensor": {
+      "drying": {
+        "name": "Drying"
+      },
       "sync_chambers": {
         "name": "Sync baskets"
       },
@@ -216,6 +219,9 @@
       },
       "current_voltage": {
         "name": "Current voltage"
+      },
+      "drying_time_remaining": {
+        "name": "Drying time remaining"
       },
       "energy_month": {
         "name": "Energy use monthly"

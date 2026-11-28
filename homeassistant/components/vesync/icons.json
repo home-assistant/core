@@ -1,6 +1,9 @@
 {
   "entity": {
     "binary_sensor": {
+      "drying": {
+        "default": "mdi:weather-windy"
+      },
       "sync_chambers": {
         "default": "mdi:sync",
         "state": {
@@ -130,6 +133,9 @@
           "ready": "mdi:check",
           "standby": "mdi:power-standby"
         }
+      },
+      "drying_time_remaining": {
+        "default": "mdi:timer-sand"
       },
       "hepa_filter_life": {
         "default": "mdi:air-filter"
