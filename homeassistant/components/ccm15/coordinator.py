@@ -16,14 +16,19 @@ import httpx2
 from homeassistant.components.climate import SWING_ON, HVACMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.httpx_client import get_async_client
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    UpdateFailedUnreachable,
+)
 
 from .const import (
     CONST_FAN_CMD_MAP,
     CONST_STATE_CMD_MAP,
     DEFAULT_INTERVAL,
     DEFAULT_TIMEOUT,
+    DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -56,20 +61,33 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
 
     @override
     async def _async_update_data(self) -> CCM15DeviceState:
-        """Fetch data from Rain Bird device."""
+        """Fetch data from the CCM15 device."""
         try:
             return await self._fetch_data()
         except httpx2.RequestError as err:
-            raise UpdateFailed("Error communicating with Device") from err
+            raise UpdateFailedUnreachable(
+                "Error communicating with the CCM15 controller"
+            ) from err
 
     async def _fetch_data(self) -> CCM15DeviceState:
         """Get the current status of all AC devices."""
         return await self._ccm15.get_status_async()
 
-    async def async_set_state(self, ac_index: int, data) -> None:
+    async def async_set_state(self, ac_index: int, data: CCM15SlaveDevice) -> None:
         """Set new target states."""
-        if await self._ccm15.async_set_state(ac_index, data) is CCM15ReturnCode.OK:
-            await self.async_request_refresh()
+        try:
+            result = await self._ccm15.async_set_state(ac_index, data)
+        except httpx2.RequestError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="cannot_connect"
+            ) from err
+        if result is not CCM15ReturnCode.OK:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_rejected",
+                translation_placeholders={"code": str(int(result))},
+            )
+        await self.async_request_refresh()
 
     def get_ac_data(self, ac_index: int) -> CCM15SlaveDevice | None:
         """Get ac data from the ac_index."""

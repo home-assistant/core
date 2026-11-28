@@ -28,6 +28,8 @@ from .coordinator import CCM15ConfigEntry, CCM15Coordinator
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 1
+
 
 async def async_setup_entry(
     hass: HomeAssistant,

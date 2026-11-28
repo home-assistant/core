@@ -32,22 +32,20 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: todo
-    comment: Error return codes are ignored and httpx errors are not handled in climate actions
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
     comment: This integration has no options flow.
-  docs-installation-parameters: todo
-  entity-unavailable: todo
+  docs-installation-parameters: done
+  entity-unavailable: done
   integration-owner: done
-  log-when-unavailable: todo
-  parallel-updates: todo
+  log-when-unavailable: done
+  parallel-updates: done
   reauthentication-flow:
     status: exempt
     comment: The device connection is unauthenticated; revisit when optional password (pwd=) support lands.
-  test-coverage: todo
+  test-coverage: done
 
   # Gold
   devices: done

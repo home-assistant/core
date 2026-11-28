@@ -19,5 +19,13 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Could not send the command to the CCM15 controller."
+    },
+    "command_rejected": {
+      "message": "The CCM15 controller did not complete the command (return code {code})."
+    }
   }
 }
