@@ -11,6 +11,7 @@ REGISTRATIONS_FILE = "html5_push_registrations.conf"
 
 ATTR_ACTION = "action"
 ATTR_DATA = "data"
+ATTR_TARGET = "target"
 ATTR_REQUIRE_INTERACTION = "require_interaction"
 ATTR_TAG = "tag"
 ATTR_TIMESTAMP = "timestamp"
