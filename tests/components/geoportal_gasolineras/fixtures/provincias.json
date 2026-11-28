@@ -1,0 +1,20 @@
+[
+  {
+    "IDPovincia": "02",
+    "IDCCAA": "07",
+    "Provincia": "ALBACETE",
+    "CCAA": "Castilla la Mancha"
+  },
+  {
+    "IDPovincia": "28",
+    "IDCCAA": "13",
+    "Provincia": "MADRID",
+    "CCAA": "Madrid"
+  },
+  {
+    "IDPovincia": "41",
+    "IDCCAA": "01",
+    "Provincia": "SEVILLA",
+    "CCAA": "Andalucia"
+  }
+]
