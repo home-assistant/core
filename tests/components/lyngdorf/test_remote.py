@@ -18,12 +18,16 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
     Platform,
     TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
+
+from .conftest import notify_receiver_update
 
 REMOTE = "remote.mock_lyngdorf"
 
@@ -113,6 +117,28 @@ async def test_send_unsupported_command(
 
 
 @pytest.mark.parametrize(
+    ("power", "expected"),
+    [
+        pytest.param(True, STATE_ON, id="on"),
+        pytest.param(False, STATE_OFF, id="off"),
+    ],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_is_on(
+    hass: HomeAssistant,
+    mock_receiver: MagicMock,
+    power: bool,
+    expected: str,
+) -> None:
+    """Test the remote state follows the receiver power."""
+    mock_receiver.power.value = power
+    notify_receiver_update(mock_receiver)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(REMOTE).state == expected
+
+
+@pytest.mark.parametrize(
     ("service", "expected"),
     [
         (SERVICE_TURN_ON, True),
@@ -134,7 +160,7 @@ async def test_power(
         blocking=True,
     )
 
-    mock_receiver.set_power.assert_awaited_once_with(expected)
+    mock_receiver.power.set.assert_awaited_once_with(expected)
 
 
 @pytest.mark.usefixtures("mock_receiver")
