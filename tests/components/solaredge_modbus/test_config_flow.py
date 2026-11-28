@@ -20,7 +20,12 @@ from homeassistant.components.solaredge_modbus.const import (
     TYPE_SERIAL,
     TYPE_TCP,
 )
-from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF, ConfigEntryState
+from homeassistant.config_entries import (
+    SOURCE_IGNORE,
+    SOURCE_USER,
+    SOURCE_ZEROCONF,
+    ConfigEntryState,
+)
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -33,26 +38,31 @@ SERIAL_PORT = "/dev/ttyUSB0"
 
 # An inverter announcing itself, as captured from a real one.
 DISCOVERY_HOST = "10.148.42.116"
-DISCOVERY_NAME = "solaredgeinv-7E1DBB39"
+DISCOVERY_TYPE = "_solaredge-modbus._tcp.local."
 
 
 def _discovery(
     host: str = DISCOVERY_HOST,
     properties: dict[str, Any] | None = None,
+    instance: str | None = None,
 ) -> ZeroconfServiceInfo:
     """An mDNS announcement from a SolarEdge inverter."""
+    if instance is None:
+        instance = f"solaredgeinv-{SERIAL_NUMBER}"
+
     return ZeroconfServiceInfo(
         ip_address=ip_address(host),
         ip_addresses=[ip_address(host)],
         port=PORT,
-        hostname=f"{DISCOVERY_NAME}.local.",
-        type="_solaredge-modbus._tcp.local.",
-        name=f"{DISCOVERY_NAME}._solaredge-modbus._tcp.local.",
+        hostname=f"{instance}.local.",
+        type=DISCOVERY_TYPE,
+        name=f"{instance}.{DISCOVERY_TYPE}",
         properties={"MODBUS_ID": "1"} if properties is None else properties,
     )
 
 
 # The serial number of a second, different inverter: "OTHER123".
+OTHER_SERIAL_NUMBER = "OTHER123"
 OTHER_SERIAL_REGISTERS = [20308, 18501, 21041, 12851]
 
 
@@ -582,12 +592,116 @@ async def test_zeroconf_known_inverter_is_dropped(
     """
     mock_config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_discovery(host=HOST)
-    )
+    with patch(
+        "homeassistant.components.solaredge_modbus.config_flow.async_get_temporary_unit"
+    ) as mock_temporary_unit:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_discovery(host=HOST)
+        )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+    assert not mock_temporary_unit.called
+
+
+@pytest.mark.parametrize(
+    ("state", "reloads"),
+    [
+        pytest.param(ConfigEntryState.SETUP_RETRY, 1, id="retrying"),
+        pytest.param(ConfigEntryState.LOADED, 0, id="loaded"),
+    ],
+)
+async def test_zeroconf_known_inverter_on_its_address_reloads_when_retrying(
+    hass: HomeAssistant, state: ConfigEntryState, reloads: int
+) -> None:
+    """A known inverter announcing its configured address reloads a retrying entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, title=TITLE, unique_id=SERIAL_NUMBER, data=tcp_data()
+    )
+    entry.add_to_hass(hass)
+    entry.mock_state(hass, state)
+
+    with (
+        patch.object(hass.config_entries, "async_schedule_reload") as mock_reload,
+        patch(
+            "homeassistant.components.solaredge_modbus.config_flow.async_get_temporary_unit"
+        ) as mock_temporary_unit,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_discovery(host=HOST)
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_reload.call_count == reloads
+    assert not mock_temporary_unit.called
+
+
+async def test_zeroconf_ignored_inverter_is_not_probed(hass: HomeAssistant) -> None:
+    """An ignored inverter is dropped without a connection being opened."""
+    MockConfigEntry(
+        domain=DOMAIN, unique_id=SERIAL_NUMBER, source=SOURCE_IGNORE
+    ).add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.solaredge_modbus.config_flow.async_get_temporary_unit"
+    ) as mock_temporary_unit:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_discovery()
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert not mock_temporary_unit.called
+
+
+@pytest.mark.parametrize(
+    "instance",
+    [
+        pytest.param("someinverter", id="no serial number"),
+        pytest.param("solaredgeinv-", id="empty serial number"),
+        pytest.param(f"otherdevice-{SERIAL_NUMBER}", id="another vendor"),
+    ],
+)
+async def test_zeroconf_unreadable_instance_name_is_probed(
+    hass: HomeAssistant, instance: str
+) -> None:
+    """An instance name without a readable serial number falls back to asking."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=_discovery(instance=instance),
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == SERIAL_NUMBER
+
+
+async def test_zeroconf_known_inverter_behind_a_proxy_is_kept(
+    hass: HomeAssistant, mock_modbus_unit: MockModbusUnit
+) -> None:
+    """A known inverter not answering at its announced address keeps its entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=TITLE,
+        unique_id=SERIAL_NUMBER,
+        data={**tcp_data(), CONF_HOST: "192.168.1.10", CONF_PORT: 5020},
+    )
+    entry.add_to_hass(hass)
+    mock_modbus_unit.fail_read(40000, ModbusTimeoutError("timed out"))
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_discovery()
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+    assert entry.data[CONF_HOST] == "192.168.1.10"
+    assert entry.data[CONF_PORT] == 5020
 
 
 async def test_zeroconf_another_inverter_on_a_configured_address(
@@ -611,7 +725,11 @@ async def test_zeroconf_another_inverter_on_a_configured_address(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
-        data=_discovery(host=HOST, properties={"MODBUS_ID": "2"}),
+        data=_discovery(
+            host=HOST,
+            properties={"MODBUS_ID": "2"},
+            instance=f"solaredgeinv-{OTHER_SERIAL_NUMBER}",
+        ),
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -621,7 +739,7 @@ async def test_zeroconf_another_inverter_on_a_configured_address(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"].unique_id == "OTHER123"
+    assert result["result"].unique_id == OTHER_SERIAL_NUMBER
 
 
 async def test_zeroconf_unresponsive_device(

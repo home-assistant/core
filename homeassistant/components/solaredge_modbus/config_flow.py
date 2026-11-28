@@ -7,7 +7,12 @@ import probatio
 from solaredged import SolarEdge, SolarEdgeConnectionError, SolarEdgeError
 
 from homeassistant.components.modbus import async_get_temporary_unit
-from homeassistant.config_entries import ConfigEntryState, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_IGNORE,
+    ConfigEntryState,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.data_entry_flow import section
 from homeassistant.exceptions import HomeAssistantError
@@ -26,6 +31,7 @@ from .const import (
     DEFAULT_BAUDRATE,
     DEFAULT_PORT,
     DEFAULT_UNIT_ID,
+    DISCOVERY_INSTANCE_PREFIX,
     DOMAIN,
     SUBSYSTEM_COMMON,
     SUBSYSTEM_INVERTER,
@@ -145,6 +151,16 @@ def _discovered_unit_id(discovery_info: ZeroconfServiceInfo) -> int:
     return unit_id
 
 
+def _discovered_serial_number(discovery_info: ZeroconfServiceInfo) -> str | None:
+    """Read the inverter's serial number out of the announcement's instance name."""
+    instance = discovery_info.name.removesuffix(f".{discovery_info.type}")
+    prefix, separator, serial = instance.partition("-")
+    if not separator or prefix.lower() != DISCOVERY_INSTANCE_PREFIX or not serial:
+        return None
+
+    return serial
+
+
 class SolarEdgeModbusFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a SolarEdge Modbus config flow."""
 
@@ -165,10 +181,21 @@ class SolarEdgeModbusFlowHandler(ConfigFlow, domain=DOMAIN):
             CONF_UNIT_ID: _discovered_unit_id(discovery_info),
         }
 
-        # The announcement carries no serial number, and every identity here
-        # derives from one, so the inverter has to be asked. An address is not
-        # an identity: the one an entry is configured with can end up hosting
-        # another inverter, and that one deserves to be offered.
+        if announced_serial_number := _discovered_serial_number(discovery_info):
+            await self.async_set_unique_id(announced_serial_number)
+            if (
+                entry := self.hass.config_entries.async_entry_for_domain_unique_id(
+                    DOMAIN, announced_serial_number
+                )
+            ) and (
+                entry.source == SOURCE_IGNORE
+                or (
+                    entry.data.get(CONF_HOST) == data[CONF_HOST]
+                    and entry.data.get(CONF_PORT) == data[CONF_PORT]
+                )
+            ):
+                self._abort_if_unique_id_configured()
+
         errors, solaredge = await self._async_validate(data)
         if solaredge is None:
             return self.async_abort(reason=errors["base"])
