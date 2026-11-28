@@ -37,8 +37,10 @@ from pytest_homeassistant.typing import (
     RecorderInstanceContextManager,
     RecorderInstanceGenerator,
 )
-from sqlalchemy import make_url
+from sqlalchemy import event as sqlalchemy_event, make_url
 from sqlalchemy.exc import DatabaseError, OperationalError, SQLAlchemyError
+from sqlalchemy.orm import Session
+from sqlalchemy.orm.unitofwork import UOWTransaction
 from sqlalchemy.pool import QueuePool
 
 from homeassistant.components import recorder
@@ -1561,6 +1563,67 @@ async def test_compile_missing_statistics(
         await async_wait_recording_done(hass)
         await async_wait_recording_done(hass)
         await hass.async_stop()
+
+
+@pytest.mark.parametrize(
+    "entity_count",
+    [pytest.param(1, id="one-entity"), pytest.param(2, id="interleaved")],
+)
+async def test_long_state_chains_are_committed_early(
+    hass: HomeAssistant,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    entity_count: int,
+) -> None:
+    """Bound pending state chains without losing history or predecessor links."""
+    await async_setup_recorder_instance(hass, {"commit_interval": 3600})
+    instance = get_instance(hass)
+    flush_sizes: list[int] = []
+
+    def after_flush(session: Session, flush_context: UOWTransaction) -> None:
+        flush_sizes.append(sum(isinstance(obj, States) for obj in session.new))
+
+    sqlalchemy_event.listen(instance.event_session, "after_flush", after_flush)
+    for value in range(501):
+        for entity in range(entity_count):
+            hass.states.async_set(f"sensor.chain_{entity}", str(value))
+    await async_wait_recording_done(hass)
+
+    assert max(flush_sizes) <= 250 * entity_count
+    with session_scope(hass=hass, read_only=True) as session:
+        for entity in range(entity_count):
+            states = (
+                session.query(States)
+                .join(StatesMeta, States.metadata_id == StatesMeta.metadata_id)
+                .filter(StatesMeta.entity_id == f"sensor.chain_{entity}")
+                .order_by(States.state_id)
+                .all()
+            )
+            assert [state.state for state in states] == [
+                str(value) for value in range(501)
+            ]
+            assert [state.old_state_id for state in states] == [None] + [
+                state.state_id for state in states[:-1]
+            ]
+
+
+async def test_independent_states_remain_in_one_commit(
+    hass: HomeAssistant,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+) -> None:
+    """Many independent states should not trigger the chain length limit."""
+    await async_setup_recorder_instance(hass, {"commit_interval": 3600})
+    instance = get_instance(hass)
+    flush_sizes: list[int] = []
+
+    def after_flush(session: Session, flush_context: UOWTransaction) -> None:
+        flush_sizes.append(sum(isinstance(obj, States) for obj in session.new))
+
+    sqlalchemy_event.listen(instance.event_session, "after_flush", after_flush)
+    for entity in range(501):
+        hass.states.async_set(f"sensor.independent_{entity}", "on")
+    await async_wait_recording_done(hass)
+
+    assert flush_sizes == [501]
 
 
 async def test_saving_sets_old_state(hass: HomeAssistant, setup_recorder: None) -> None:
