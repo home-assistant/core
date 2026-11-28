@@ -26,6 +26,8 @@ from aiohomeconnect.model.error import (
     HomeConnectApiError,
     HomeConnectError,
     HomeConnectRequestError,
+    NoProgramActiveError,
+    NoProgramSelectedError,
     TooManyRequestsError,
     UnauthorizedError,
 )
@@ -614,6 +616,10 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
         for listener, _ in self._listeners.values():
             listener()
 
+    def async_start_reauth(self) -> None:
+        """Start the reauthentication flow for this config entry."""
+        self._config_entry.async_start_reauth(self.hass)
+
     @override
     async def _async_update_data(self) -> HomeConnectApplianceData:
         """Fetch data from Home Connect."""
@@ -637,9 +643,7 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                 )
                 await asyncio_sleep(delay)
             except UnauthorizedError as error:
-                # Reauth flow need to be started explicitly as
-                # we don't use the default config entry coordinator.
-                self._config_entry.async_start_reauth(self.hass)
+                self.async_start_reauth()
                 raise ConfigEntryAuthFailed(
                     translation_domain=DOMAIN,
                     translation_key="auth_error",
@@ -870,6 +874,106 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
         for option_key in options_to_notify:
             for listener in self._get_listeners_for_event_key(EventKey(option_key)):
                 listener()
+
+    async def update_setting(self, setting_key: SettingKey) -> None:
+        """Update a setting for appliance."""
+        updated_setting = await self.client.get_setting(
+            self.data.info.ha_id,
+            setting_key=setting_key,
+        )
+
+        self.data.settings[setting_key] = updated_setting
+
+        for listener in self._get_listeners_for_event_key(EventKey(setting_key)):
+            listener()
+
+    async def update_status(self, status_key: StatusKey) -> None:
+        """Update a status for appliance."""
+        updated_status = await self.client.get_status_value(
+            self.data.info.ha_id,
+            status_key=status_key,
+        )
+
+        self.data.status[status_key] = updated_status
+
+        for listener in self._get_listeners_for_event_key(EventKey(status_key)):
+            listener()
+
+    async def update_current_program(self, key: EventKey) -> None:
+        """Update the current program for appliance."""
+        try:
+            if key == EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM:
+                updated_program = await self.client.get_active_program(
+                    self.data.info.ha_id,
+                )
+            else:
+                assert key == EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM
+                updated_program = await self.client.get_selected_program(
+                    self.data.info.ha_id,
+                )
+        except NoProgramActiveError, NoProgramSelectedError:
+            current_program_key = None
+        else:
+            current_program_key = updated_program.key
+            program_options = updated_program.options
+            if current_program_key in FAVORITE_PROGRAMS and program_options:
+                for option in program_options:
+                    if option.key == OptionKey.BSH_COMMON_BASE_PROGRAM:
+                        event_key = EventKey.BSH_COMMON_OPTION_BASE_PROGRAM
+                        if (event := self.data.events.get(event_key)) is None:
+                            self.data.events[event_key] = event = Event(
+                                event_key,
+                                event_key.value,
+                                0,
+                                "",
+                                "",
+                                option.value,
+                            )
+                        event.value = option.value
+
+        self.data.events[key] = Event(
+            key,
+            key.value,
+            0,
+            "",
+            "",
+            str(current_program_key) if current_program_key is not None else None,
+        )
+
+        for listener in self._get_listeners_for_event_key(key):
+            listener()
+
+    async def update_option(self, option_key: OptionKey) -> None:
+        """Update an option for appliance."""
+        try:
+            updated_option = await self.client.get_active_program_option(
+                self.data.info.ha_id,
+                option_key=option_key,
+            )
+        except NoProgramActiveError:
+            updated_option = await self.client.get_selected_program_option(
+                self.data.info.ha_id,
+                option_key=option_key,
+            )
+
+        event_key = EventKey(option_key)
+        if event := self.data.events.get(event_key):
+            event.value = updated_option.value
+        else:
+            self.data.events[event_key] = event = Event(
+                event_key,
+                option_key.value,
+                0,
+                "",
+                "",
+                updated_option.value,
+                updated_option.name,
+                display_value=updated_option.display_value,
+                unit=updated_option.unit,
+            )
+
+        for listener in self._get_listeners_for_event_key(event_key):
+            listener()
 
     def refreshed_too_often_recently(self) -> bool:
         """Check if the appliance data hasn't been refreshed too often recently."""

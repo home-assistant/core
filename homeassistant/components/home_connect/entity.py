@@ -7,11 +7,13 @@ from datetime import datetime
 import logging
 from typing import Any, Concatenate, cast, override
 
-from aiohomeconnect.model import EventKey, OptionKey
+from aiohomeconnect.model import EventKey, OptionKey, SettingKey, StatusKey
 from aiohomeconnect.model.error import (
     ActiveProgramNotSetError,
+    ConflictError,
     HomeConnectError,
     TooManyRequestsError,
+    UnauthorizedError,
 )
 
 from homeassistant.core import callback
@@ -60,7 +62,13 @@ class HomeConnectEntity(CoordinatorEntity[HomeConnectApplianceCoordinator]):
     @callback
     @override
     def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
+        """Handle updated data from the coordinator.
+
+        If we receive an update from the coordinator,
+        the entity is available, unless derived classes use additional
+        logic to determine availability.
+        """
+        self._attr_available = True
         self.update_native_value()
         self.async_write_ha_state()
         _LOGGER.debug("Updated %s", self)
@@ -69,6 +77,30 @@ class HomeConnectEntity(CoordinatorEntity[HomeConnectApplianceCoordinator]):
     def bsh_key(self) -> str:
         """Return the BSH key."""
         return self.entity_description.key
+
+    def _handle_update_error(
+        self, err: HomeConnectError, *, update_availability: bool = True
+    ) -> HomeAssistantError:
+        """Create a translated fetch error and start reauth if required."""
+        if isinstance(err, UnauthorizedError):
+            self.coordinator.async_start_reauth()
+        if update_availability and isinstance(err, ConflictError):
+            if err.key in (
+                "SDK.Error.UnsupportedStatus",
+                "SDK.Error.UnsupportedSetting",
+                "SDK.Error.UnsupportedOption",
+                "SDK.Error.InvalidOptionState",
+            ):
+                self._attr_available = False
+                self.async_write_ha_state()
+        return HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="fetch_entity_state",
+            translation_placeholders={
+                "entity_id": self.entity_id,
+                **get_dict_from_home_connect_error(err),
+            },
+        )
 
     @property
     @override
@@ -80,6 +112,29 @@ class HomeConnectEntity(CoordinatorEntity[HomeConnectApplianceCoordinator]):
         refresh.
         """
         return self.appliance.info.connected and self._attr_available
+
+    @override
+    async def async_update(self) -> None:
+        # Ignore manual update requests if the entity is disabled
+        # Copied from CoordinatorEntity.async_update
+        if not self.enabled:
+            return
+
+        key = self.bsh_key
+        try:
+            if key in SettingKey:
+                await self.coordinator.update_setting(cast(SettingKey, key))
+                return
+            if key in StatusKey:
+                await self.coordinator.update_status(cast(StatusKey, key))
+                return
+            if key in OptionKey:
+                await self.coordinator.update_option(cast(OptionKey, key))
+                return
+        except HomeConnectError as err:
+            raise self._handle_update_error(err) from err
+
+        await super().async_update()
 
     async def async_set_option_with_key(
         self, option_key: OptionKey, value: Any

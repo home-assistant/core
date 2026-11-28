@@ -5,7 +5,7 @@ import logging
 from typing import Any, cast, override
 
 from aiohomeconnect.model import EventKey, SettingKey
-from aiohomeconnect.model.error import HomeConnectError
+from aiohomeconnect.model.error import HomeConnectError, UnauthorizedError
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -15,7 +15,7 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityDescription,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import color as color_util
@@ -140,6 +140,43 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
             case (_, _):
                 self._attr_color_mode = ColorMode.HS
                 self._attr_supported_color_modes = {ColorMode.HS, ColorMode.RGB}
+
+    @override
+    async def async_update(self) -> None:
+        """Fetch all settings used by the light."""
+        if not self.enabled:
+            return
+
+        try:
+            await self.coordinator.update_setting(SettingKey(self.bsh_key))
+        except HomeConnectError as err:
+            raise self._handle_update_error(err) from err
+
+        update_errors: list[HomeConnectError] = []
+        for setting_key in (
+            self._brightness_key,
+            self._color_key,
+            self._custom_color_key,
+        ):
+            if setting_key is None:
+                continue
+            try:
+                await self.coordinator.update_setting(setting_key)
+            except HomeConnectError as err:
+                update_errors.append(err)
+
+        if update_errors:
+            update_error = next(
+                (
+                    error
+                    for error in update_errors
+                    if isinstance(error, UnauthorizedError)
+                ),
+                update_errors[0],
+            )
+            raise self._handle_update_error(
+                update_error, update_availability=False
+            ) from update_error
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -283,10 +320,17 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
         for key in keys_to_listen:
             self.async_on_remove(
                 self.coordinator.async_add_listener(
-                    self._handle_coordinator_update,
+                    self._handle_dependent_setting_update,
                     EventKey(key),
                 )
             )
+
+    @callback
+    def _handle_dependent_setting_update(self) -> None:
+        """Update light attributes without changing primary-key availability."""
+        self.update_native_value()
+        self.async_write_ha_state()
+        _LOGGER.debug("Updated %s", self)
 
     @override
     def update_native_value(self) -> None:

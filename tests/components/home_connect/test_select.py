@@ -23,8 +23,11 @@ from aiohomeconnect.model.error import (
     ActiveProgramNotSetError,
     HomeConnectApiError,
     HomeConnectError,
+    NoProgramActiveError,
+    NoProgramSelectedError,
     SelectedProgramNotSetError,
     TooManyRequestsError,
+    UnauthorizedError,
 )
 from aiohomeconnect.model.program import (
     EnumerateProgram,
@@ -40,6 +43,10 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.home_connect.const import DOMAIN
+from homeassistant.components.homeassistant import (
+    DOMAIN as HA_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
 from homeassistant.components.select import (
     ATTR_OPTIONS,
     DOMAIN as SELECT_DOMAIN,
@@ -57,6 +64,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.setup import async_setup_component
 
 
 @pytest.fixture
@@ -422,6 +430,263 @@ async def test_select_program_functionality(
     )
     await hass.async_block_till_done()
     assert hass.states.is_state(entity_id, STATE_UNKNOWN)
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "client_method"),
+    [
+        (
+            "select.dishwasher_active_program",
+            "get_active_program",
+        ),
+        (
+            "select.dishwasher_selected_program",
+            "get_selected_program",
+        ),
+    ],
+)
+@pytest.mark.parametrize("appliance", [ApplianceType.DISHWASHER], indirect=True)
+async def test_program_select_async_update(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+    entity_id: str,
+    client_method: str,
+) -> None:
+    """Test manual updates fetch the active or selected program."""
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+    await async_setup_component(hass, HA_DOMAIN, {})
+
+    setattr(
+        client,
+        client_method,
+        method := AsyncMock(
+            return_value=Program(key=ProgramKey.DISHCARE_DISHWASHER_ECO_50)
+        ),
+    )
+
+    await hass.services.async_call(
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    method.assert_awaited_once_with(appliance.ha_id)
+    assert hass.states.is_state(entity_id, "dishcare_dishwasher_program_eco_50")
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "client_method", "error"),
+    [
+        (
+            "select.dishwasher_active_program",
+            "get_active_program",
+            NoProgramActiveError("no active program"),
+        ),
+        (
+            "select.dishwasher_selected_program",
+            "get_selected_program",
+            NoProgramSelectedError("no selected program"),
+        ),
+    ],
+    ids=["no active program", "no selected program"],
+)
+@pytest.mark.parametrize("appliance", [ApplianceType.DISHWASHER], indirect=True)
+async def test_program_select_async_update_without_program(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+    entity_id: str,
+    client_method: str,
+    error: HomeConnectError,
+) -> None:
+    """Test manual updates set the program state to unknown when no program exists."""
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+    await async_setup_component(hass, HA_DOMAIN, {})
+
+    method = AsyncMock(side_effect=error)
+    setattr(client, client_method, method)
+
+    await hass.services.async_call(
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    method.assert_awaited_once_with(appliance.ha_id)
+    assert hass.states.is_state(entity_id, STATE_UNKNOWN)
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "client_method"),
+    [
+        ("select.dishwasher_active_program", "get_active_program"),
+        ("select.dishwasher_selected_program", "get_selected_program"),
+    ],
+    ids=["active program", "selected program"],
+)
+@pytest.mark.parametrize(
+    ("options", "expected_state"),
+    [
+        (None, STATE_UNKNOWN),
+        (
+            [
+                Option(
+                    OptionKey.BSH_COMMON_BASE_PROGRAM,
+                    ProgramKey.DISHCARE_DISHWASHER_ECO_50.value,
+                )
+            ],
+            "dishcare_dishwasher_program_eco_50",
+        ),
+    ],
+)
+@pytest.mark.parametrize("appliance", [ApplianceType.DISHWASHER], indirect=True)
+async def test_program_select_async_update_favorite_program(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+    entity_id: str,
+    client_method: str,
+    options: list[Option] | None,
+    expected_state: str,
+) -> None:
+    """Test manual updates resolve favorite programs to their base program."""
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+    await async_setup_component(hass, HA_DOMAIN, {})
+
+    assert not hass.states.is_state(entity_id, expected_state)
+
+    method = AsyncMock(
+        return_value=Program(key=ProgramKey.BSH_COMMON_FAVORITE_001, options=options)
+    )
+    setattr(client, client_method, method)
+
+    await hass.services.async_call(
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    method.assert_awaited_once_with(appliance.ha_id)
+    assert hass.states.is_state(entity_id, expected_state)
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "client_method"),
+    [
+        ("select.dishwasher_active_program", "get_active_program"),
+        ("select.dishwasher_selected_program", "get_selected_program"),
+    ],
+)
+@pytest.mark.parametrize("appliance", [ApplianceType.DISHWASHER], indirect=True)
+async def test_program_select_async_update_error(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    caplog: pytest.LogCaptureFixture,
+    entity_id: str,
+    client_method: str,
+) -> None:
+    """Test API errors while updating a program select are translated."""
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+    await async_setup_component(hass, HA_DOMAIN, {})
+
+    error = HomeConnectError("error.key")
+    setattr(client, client_method, AsyncMock(side_effect=error))
+
+    await hass.services.async_call(
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    assert f"Error fetching state of {entity_id}: {error}" in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "client_method"),
+    [
+        ("select.dishwasher_active_program", "get_active_program"),
+        ("select.dishwasher_selected_program", "get_selected_program"),
+    ],
+    ids=["active program", "selected program"],
+)
+@pytest.mark.parametrize("appliance", [ApplianceType.DISHWASHER], indirect=True)
+async def test_program_select_async_update_unauthorized_error_starts_reauth(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+    entity_id: str,
+    client_method: str,
+) -> None:
+    """Test unauthorized program updates start reauthentication."""
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+    await async_setup_component(hass, HA_DOMAIN, {})
+
+    method = AsyncMock(side_effect=UnauthorizedError("unauthorized"))
+    setattr(client, client_method, method)
+
+    await hass.services.async_call(
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    method.assert_awaited_once_with(appliance.ha_id)
+    flows_in_progress = hass.config_entries.flow.async_progress()
+    assert len(flows_in_progress) == 1
+    assert flows_in_progress[0]["context"]["entry_id"] == config_entry.entry_id
+    assert flows_in_progress[0]["context"]["source"] == "reauth"
+
+
+@pytest.mark.parametrize("appliance", [ApplianceType.DISHWASHER], indirect=True)
+async def test_disabled_program_select_async_update_does_not_fetch_data(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test manual updates do not fetch program data for a disabled select."""
+    entity_id = "select.dishwasher_active_program"
+
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+    await async_setup_component(hass, HA_DOMAIN, {})
+
+    entity_registry.async_update_entity(
+        entity_id, disabled_by=er.RegistryEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+
+    client.get_active_program = AsyncMock()
+    await hass.services.async_call(
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    client.get_active_program.assert_not_awaited()
 
 
 @pytest.mark.parametrize(
