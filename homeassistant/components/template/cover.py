@@ -1,6 +1,8 @@
 """Support for covers which integrate with other components."""
 
+from collections.abc import Callable
 from dataclasses import asdict, dataclass
+import logging
 from typing import TYPE_CHECKING, Any, Self, override
 
 import probatio
@@ -19,7 +21,9 @@ from homeassistant.components.cover import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, CONF_STATE, Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -44,6 +48,8 @@ from .schemas import (
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
 
+_LOGGER = logging.getLogger(__name__)
+
 OPEN_STATE = "open"
 OPENING_STATE = "opening"
 CLOSED_STATE = "closed"
@@ -58,6 +64,11 @@ STOP_ACTION = "stop_cover"
 POSITION_ACTION = "set_cover_position"
 TILT_ACTION = "set_cover_tilt_position"
 CONF_TILT_OPTIMISTIC = "tilt_optimistic"
+CONF_OPEN_TILT_POSITION = "open_tilt_position"
+CONF_CLOSED_TILT_POSITIONS = "closed_tilt_positions"
+CONF_TILT_START_ANGLE = "tilt_start_angle"
+CONF_TILT_END_ANGLE = "tilt_end_angle"
+CONF_TILT_ANGLES = "tilt_angles"
 
 CONF_OPEN_AND_CLOSE = "open_or_close"
 
@@ -75,6 +86,13 @@ TILT_FEATURES = (
     | CoverEntityFeature.STOP_TILT
     | CoverEntityFeature.SET_TILT_POSITION
 )
+
+TILT_CAPABILITY_ATTRIBUTES = {
+    CONF_OPEN_TILT_POSITION: "_attr_open_tilt_position",
+    CONF_CLOSED_TILT_POSITIONS: "_attr_closed_tilt_positions",
+    CONF_TILT_START_ANGLE: "_attr_tilt_start_angle",
+    CONF_TILT_END_ANGLE: "_attr_tilt_end_angle",
+}
 
 DEFAULT_NAME = DEFAULT_NAMES[Platform.COVER]
 
@@ -104,6 +122,10 @@ COVER_YAML_SCHEMA = probatio.All(
                 probatio.EnsureList(), [cv.string]
             ),
             probatio.Optional(CONF_TILT_OPTIMISTIC): cv.boolean,
+            probatio.Optional(CONF_OPEN_TILT_POSITION): cv.template,
+            probatio.Optional(CONF_CLOSED_TILT_POSITIONS): cv.template,
+            probatio.Inclusive(CONF_TILT_START_ANGLE, CONF_TILT_ANGLES): cv.template,
+            probatio.Inclusive(CONF_TILT_END_ANGLE, CONF_TILT_ANGLES): cv.template,
         }
     )
     .extend(COVER_COMMON_SCHEMA.schema)
@@ -114,6 +136,10 @@ COVER_YAML_SCHEMA = probatio.All(
         ).schema
     ),
     probatio.AtLeastOne(OPEN_ACTION, POSITION_ACTION),
+    *(
+        tcv.requires_option(option, TILT_ACTION)
+        for option in TILT_CAPABILITY_ATTRIBUTES
+    ),
 )
 
 COVER_CONFIG_ENTRY_SCHEMA = probatio.All(
@@ -171,6 +197,47 @@ def async_create_preview_cover(
         COVER_CONFIG_ENTRY_SCHEMA,
         True,
     )
+
+
+def closed_tilt_positions(
+    entity: Entity, attribute: str
+) -> Callable[[Any], list[int] | None]:
+    """Convert the result to a sorted list of the closed tilt positions 0 and 100."""
+
+    def convert(result: Any) -> list[int] | None:
+        if tcv.check_result_for_none(result):
+            return None
+
+        if (
+            not isinstance(result, list)
+            or not result
+            or any(
+                type(position) is bool or position not in (0, 100)
+                for position in result
+            )
+        ):
+            tcv.log_validation_result_error(
+                entity, attribute, result, "expected a list of 0, 100 or both"
+            )
+            return None
+
+        return sorted({int(position) for position in result})
+
+    return convert
+
+
+def tilt_capability(
+    entity: AbstractTemplateCover,
+    attribute: str,
+    validator: Callable[[Any], Any],
+) -> Callable[[Any], None]:
+    """Validate a rendered tilt capability, then check it with the others."""
+
+    def update(result: Any) -> None:
+        value = None if isinstance(result, TemplateError) else validator(result)
+        entity.check_tilt_capabilities(attribute, value)
+
+    return update
 
 
 @dataclass(kw_only=True)
@@ -243,6 +310,35 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity, RestoreEntity):
             TILT_ACTION,
             optimistic_option=CONF_TILT_OPTIMISTIC,
         )
+        self._rendered_tilt_capabilities: dict[str, Any] = dict.fromkeys(
+            TILT_CAPABILITY_ATTRIBUTES
+        )
+        self._tilt_capabilities_valid = True
+        self._tilt_conflict_log_scheduled = False
+        for option, validator in (
+            (
+                CONF_OPEN_TILT_POSITION,
+                tcv.number(self, CONF_OPEN_TILT_POSITION, 0, 100, return_type=int),
+            ),
+            (
+                CONF_CLOSED_TILT_POSITIONS,
+                closed_tilt_positions(self, CONF_CLOSED_TILT_POSITIONS),
+            ),
+            (
+                CONF_TILT_START_ANGLE,
+                tcv.number(self, CONF_TILT_START_ANGLE, -90, 90, return_type=int),
+            ),
+            (
+                CONF_TILT_END_ANGLE,
+                tcv.number(self, CONF_TILT_END_ANGLE, -90, 90, return_type=int),
+            ),
+        ):
+            self.setup_template(
+                option,
+                TILT_CAPABILITY_ATTRIBUTES[option],
+                on_update=tilt_capability(self, option, validator),
+                none_on_template_error=False,
+            )
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._attr_supported_speeds = config.get(CONF_SUPPORTED_SPEEDS) or None
 
@@ -272,6 +368,49 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity, RestoreEntity):
             return None
 
         return self._attr_current_cover_position == 0
+
+    @callback
+    def check_tilt_capabilities(self, option: str, value: Any) -> None:
+        """Store a rendered tilt capability and apply all of them if they agree.
+
+        The base class raises on conflicting tilt capabilities while writing the
+        state, so a conflict falls back to the default tilt positions instead.
+        """
+        if self._rendered_tilt_capabilities[option] == value:
+            return
+        self._rendered_tilt_capabilities[option] = value
+        for rendered_option, attribute in TILT_CAPABILITY_ATTRIBUTES.items():
+            setattr(self, attribute, self._rendered_tilt_capabilities[rendered_option])
+        try:
+            self._tilt_angles()
+            self._resolved_closed_tilt_positions()
+        except ValueError:
+            self._tilt_capabilities_valid = False
+            for attribute in TILT_CAPABILITY_ATTRIBUTES.values():
+                setattr(self, attribute, None)
+            # The options of one render update one at a time, only log a conflict
+            # that is still there once all of them are updated
+            if not self._tilt_conflict_log_scheduled:
+                self._tilt_conflict_log_scheduled = True
+                self.hass.loop.call_soon(self._log_tilt_conflict)
+        else:
+            self._tilt_capabilities_valid = True
+
+    @callback
+    def _log_tilt_conflict(self) -> None:
+        """Log conflicting tilt capabilities."""
+        self._tilt_conflict_log_scheduled = False
+        if self._tilt_capabilities_valid:
+            return
+        _LOGGER.error(
+            "Received conflicting tilt options for %s: %s, using the default tilt"
+            " positions",
+            self.entity_id or self.name,
+            ", ".join(
+                f"{option}={value}"
+                for option, value in self._rendered_tilt_capabilities.items()
+            ),
+        )
 
     def _update_cover_state(self, state: CoverState | None) -> None:
         """Update the state of the cover."""
@@ -363,12 +502,20 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity, RestoreEntity):
     @override
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Tilt the cover open."""
-        await self._set_tilt_position(100)
+        await self._set_tilt_position(self._resolved_open_tilt_position())
 
     @override
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Tilt the cover closed."""
-        await self._set_tilt_position(0)
+        closed_positions = self._resolved_closed_tilt_positions()
+        position = closed_positions[0]
+        if (
+            len(closed_positions) > 1
+            and (tilt := self.current_cover_tilt_position) is not None
+        ):
+            # Close at the end on the current side, without turning through open
+            position = 100 if tilt > self._resolved_open_tilt_position() else 0
+        await self._set_tilt_position(position)
 
     @override
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
