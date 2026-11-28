@@ -1,15 +1,13 @@
 rules:
   # Bronze
-  action-setup:
-    status: todo
-    comment: The action is registered before the connection is made; when setup fails, calling it raises a KeyError instead of a ServiceValidationError.
+  action-setup: done
   appropriate-polling:
     status: exempt
     comment: The integration is push based and does not poll.
   brands: done
   common-modules: done
-  config-flow-test-coverage: todo
-  config-flow: todo
+  config-flow-test-coverage: done
+  config-flow: done
   dependency-transparency:
     status: todo
     comment: pyads 3.4.0 was not published from a public CI pipeline; 3.6.0 is, but its sdist does not build on Alpine yet.
@@ -30,14 +28,14 @@ rules:
     status: todo
     comment: The unique ID is the ADS variable name, which changes when the entity is pointed at another variable.
   has-entity-name: todo
-  runtime-data: todo
-  test-before-configure: todo
-  test-before-setup: todo
-  unique-config-entry: todo
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
 
   # Silver
   action-exceptions: todo
-  config-entry-unloading: todo
+  config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
     comment: The integration has no options flow.
@@ -70,7 +68,7 @@ rules:
   entity-translations: todo
   exception-translations: todo
   icon-translations: todo
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues: todo
   stale-devices: todo
 

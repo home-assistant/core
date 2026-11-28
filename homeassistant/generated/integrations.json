@@ -144,8 +144,9 @@
       "connectivity": [
         "network"
       ],
-      "config_flow": false,
-      "iot_class": "local_push"
+      "config_flow": true,
+      "iot_class": "local_push",
+      "single_config_entry": true
     },
     "advantage_air": {
       "name": "Advantage Air",

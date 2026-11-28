@@ -1,14 +1,34 @@
 """Support for Automation Device Specification (ADS)."""
 
+import asyncio
 from collections import namedtuple
+from contextlib import suppress
 import ctypes
 import logging
+import socket
 import struct
 import threading
+from typing import TYPE_CHECKING
 
 import pyads
 
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import PlatformNotReady
+
+from .const import DATA_SETUP_DONE, DOMAIN
+
+if TYPE_CHECKING:
+    from .entity import AdsEntity
+
 _LOGGER = logging.getLogger(__name__)
+
+# The AMS router talks to the device over this TCP port.
+ADS_TCP_PORT = 48898
+# How long to wait for the device to accept a TCP connection.
+REACHABLE_TIMEOUT = 5
+# How long a YAML platform waits for the entry's setup attempt to finish.
+HUB_WAIT_TIMEOUT = 30
 
 # Tuple to hold data needed for notification
 NotificationItem = namedtuple(  # noqa: PYI024
@@ -19,14 +39,20 @@ NotificationItem = namedtuple(  # noqa: PYI024
 class AdsHub:
     """Representation of an ADS connection."""
 
-    def __init__(self, ads_client):
+    def __init__(self, ads_client) -> None:
         """Initialize the ADS hub."""
         self._client = ads_client
         self._client.open()
 
+        # Cancelled on unload, before the notifications are torn down.
+        self.resubscribe_task: asyncio.Task[None] | None = None
+
         # All ADS devices are registered here
-        self._devices = []
-        self._notification_items = {}
+        self._devices: list[AdsEntity] = []
+        # Separate from the I/O locks, so registering an entity never waits on
+        # a blocking PLC call from the event loop.
+        self._devices_lock = threading.Lock()
+        self._notification_items: dict[int, NotificationItem] = {}
         self._closed = False
         self._lock = threading.Lock()
         # Held across a notification delete, so shutdown cannot close the
@@ -65,9 +91,34 @@ class AdsHub:
             except pyads.ADSError as err:
                 _LOGGER.error(err)
 
-    def register_device(self, device):
+        # Entities hold this hub directly and stop hearing from the PLC now.
+        for device in self.devices:
+            device.mark_unavailable()
+
+    @property
+    def devices(self) -> list[AdsEntity]:
+        """Return the entities registered with this hub."""
+        with self._devices_lock:
+            return list(self._devices)
+
+    def register_device(self, device: AdsEntity) -> None:
         """Register a new device."""
-        self._devices.append(device)
+        with self._devices_lock:
+            self._devices.append(device)
+
+    def unregister_device(self, device: AdsEntity) -> None:
+        """Unregister a device."""
+        with self._devices_lock:
+            self._devices.remove(device)
+
+    def read_state(self) -> tuple[int, int]:
+        """Read the device state, raising if the device does not answer."""
+        with self._lock:
+            state = self._client.read_state()
+        if state is None:
+            # pyads returns None instead of raising when the port is closed.
+            raise pyads.ADSError(err_code=1864)
+        return state
 
     def write_by_name(self, name, value, plc_datatype):
         """Write a value to the device."""
@@ -95,7 +146,9 @@ class AdsHub:
             except pyads.ADSError as err:
                 _LOGGER.error("Error reading %s: %s", name, err)
 
-    def add_device_notification(self, name, plc_datatype, callback) -> int | None:
+    def add_device_notification(
+        self, name, plc_datatype, notification_callback
+    ) -> int | None:
         """Add a notification to the ADS devices, returning its handle."""
 
         attr = pyads.NotificationAttrib(ctypes.sizeof(plc_datatype))
@@ -121,7 +174,7 @@ class AdsHub:
             hnotify, huser = handles
             hnotify = int(hnotify)
             self._notification_items[hnotify] = NotificationItem(
-                hnotify, huser, name, plc_datatype, callback
+                hnotify, huser, name, plc_datatype, notification_callback
             )
 
             _LOGGER.debug("Added device notification %d for variable %s", hnotify, name)
@@ -214,3 +267,59 @@ class AdsHub:
             _LOGGER.warning("No callback available for this datatype")
 
         notification_item.callback(notification_item.name, value)
+
+
+def check_reachable(device: str, ip_address: str | None) -> None:
+    """Raise OSError unless the device accepts a TCP connection on the ADS port.
+
+    The AMS router keeps retrying the connection to a device that does not
+    answer, about 75 seconds per attempt, so the first request through pyads
+    would block for minutes instead of failing.
+    """
+    # pyads derives the address from the AMS NetID the same way.
+    host = ip_address or ".".join(device.split(".")[:4])
+    with socket.create_connection((host, ADS_TCP_PORT), timeout=REACHABLE_TIMEOUT):
+        pass
+
+
+def connect(device: str, port: int, ip_address: str | None) -> AdsHub:
+    """Connect to the ADS device and verify it responds.
+
+    Raises OSError when the device does not answer at all, and RuntimeError
+    when the AMS router refuses to open a port.
+    """
+    check_reachable(device, ip_address)
+    hub = AdsHub(pyads.Connection(device, port, ip_address))
+    try:
+        hub.read_state()
+    except pyads.ADSError:
+        # Nothing is subscribed yet, so this cannot wait on a callback.
+        hub.shutdown()
+        raise
+    return hub
+
+
+type AdsConfigEntry = ConfigEntry[AdsHub]
+
+
+async def async_wait_for_hub(hass: HomeAssistant) -> AdsHub:
+    """Return the hub once the entry's setup attempt finished.
+
+    YAML platforms are set up while the entry imported from YAML is still being
+    created and connected, so they wait for that attempt instead of failing at
+    once and retrying on a timer of their own. When the attempt does not load
+    the entry, they still raise PlatformNotReady and retry on their timer.
+    """
+    with suppress(TimeoutError):
+        async with asyncio.timeout(HUB_WAIT_TIMEOUT):
+            await hass.data[DATA_SETUP_DONE].wait()
+    return async_get_hub(hass)
+
+
+@callback
+def async_get_hub(hass: HomeAssistant) -> AdsHub:
+    """Return the hub of the loaded ADS config entry."""
+    entries: list[AdsConfigEntry] = hass.config_entries.async_loaded_entries(DOMAIN)
+    if not entries:
+        raise PlatformNotReady("The ADS connection is not set up")
+    return entries[0].runtime_data

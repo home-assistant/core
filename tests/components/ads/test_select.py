@@ -182,3 +182,25 @@ async def test_write_error(
     )
 
     assert f"Error writing {ADS_VAR}: ADSError: timeout elapsed (1861)" in caplog.text
+
+
+async def test_unknown_for_an_out_of_range_value_after_a_reload(
+    hass: HomeAssistant, mock_ads_device: MockAdsDevice
+) -> None:
+    """Test a reload to a PLC with no matching option drops the previous option."""
+    mock_ads_device.values[ADS_VAR] = int_payload(1)
+    assert await setup_ads_platform(
+        hass, mock_ads_device, SELECT_DOMAIN, PLATFORM_CONFIG
+    )
+    assert hass.states.get(ENTITY_ID).state == "day"
+    (entry,) = hass.config_entries.async_entries("ads")
+
+    # Reconfigured to another PLC, whose value has no option.
+    mock_ads_device.values[ADS_VAR] = int_payload(7)
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    for delivery in mock_ads_device.deliveries:
+        await hass.async_add_executor_job(delivery.join)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == STATE_UNKNOWN

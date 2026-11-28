@@ -1,5 +1,6 @@
 """Support for Automation Device Specification (ADS)."""
 
+import asyncio
 from enum import StrEnum
 from typing import TYPE_CHECKING
 
@@ -12,7 +13,15 @@ if TYPE_CHECKING:
 
 DOMAIN = "ads"
 
+# The hub of an unloaded entry, kept as the registry of the YAML entities that
+# outlive it, so they can be rebound once the entry is set up again.
 DATA_ADS: HassKey[AdsHub] = HassKey(DOMAIN)
+
+# Set once the entry's latest setup attempt finished, loaded or not, so the
+# YAML platforms can wait for it instead of retrying on a timer of their own.
+DATA_SETUP_DONE: HassKey[asyncio.Event] = HassKey(f"{DOMAIN}_setup_done")
+
+DEFAULT_PORT = 851
 
 CONF_ADS_VAR = "adsvar"
 
