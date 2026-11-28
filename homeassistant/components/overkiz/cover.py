@@ -22,6 +22,7 @@ from homeassistant.components.cover import (
     CoverEntityDescription,
     CoverEntityFeature,
     CoverSpeed,
+    CoverState,
 )
 from homeassistant.components.script import scripts_with_entity
 from homeassistant.const import Platform
@@ -34,6 +35,7 @@ from homeassistant.helpers.issue_registry import (
     async_create_issue,
     async_delete_issue,
 )
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.start import async_at_started
 
 from . import OverkizDataConfigEntry
@@ -686,11 +688,13 @@ def _async_check_deprecated_low_speed_cover(
     return True
 
 
-class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
+class OverkizCover(OverkizDescriptiveEntity, CoverEntity, RestoreEntity):
     """Representation of an Overkiz Cover."""
 
     entity_description: OverkizCoverDescription
     _attr_translation_key = "cover"
+    # Devices without state feedback assume the state of their last command
+    _assumed_is_closed: bool | None = None
 
     def __init__(
         self,
@@ -783,6 +787,66 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
         if (tilt_position := self.current_cover_tilt_position) is not None:
             return tilt_position == 0
 
+        if self.assumed_state:
+            return self._assumed_is_closed
+
+        return None
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Restore the assumed state of a device without state feedback."""
+        await super().async_added_to_hass()
+
+        if not self.assumed_state:
+            return
+
+        if (last_state := await self.async_get_last_state()) and last_state.state in (
+            CoverState.OPEN,
+            CoverState.CLOSED,
+        ):
+            self._assumed_is_closed = last_state.state == CoverState.CLOSED
+
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Assume the state of the last full movement of the device.
+
+        Running commands of the device are followed whatever started them, for
+        example the my position button or the vendor app.
+        """
+        if self.assumed_state:
+            for device_commands in self.coordinator.executions.values():
+                for device_command in device_commands:
+                    if (
+                        device_command.device_url == self.device.device_url
+                        and (closed := self._closed_after(device_command.command_name))
+                        is not None
+                    ):
+                        self._assumed_is_closed = closed
+
+        super()._handle_coordinator_update()
+
+    def _closed_after(self, command_name: str) -> bool | None:
+        """Return if a command fully closes the cover, None if it is not known."""
+        description = self.entity_description
+        # A cycle command toggles the cover, so its end state is not known
+        if command_name == OverkizCommand.CYCLE:
+            return None
+        if command_name == description.close_command:
+            return True
+        if command_name == description.open_command:
+            return False
+        # Tilt commands with arguments only move the tilt one step
+        if (
+            command_name == description.close_tilt_command
+            and not description.close_tilt_command_args
+        ):
+            return True
+        if (
+            command_name == description.open_tilt_command
+            and not description.open_tilt_command_args
+        ):
+            return False
         return None
 
     @property

@@ -9,7 +9,11 @@ from aiohttp import ClientConnectorError, ServerDisconnectedError
 from freezegun.api import FrozenDateTimeFactory
 from pyoverkiz.enums import ExecutionState, OverkizCommandParam, OverkizState
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    mock_restore_cache,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.cover import (
@@ -32,6 +36,7 @@ from homeassistant.components.cover import (
     CoverState,
 )
 from homeassistant.components.overkiz import DOMAIN
+from homeassistant.components.overkiz.const import UPDATE_INTERVAL_ALL_ASSUMED_STATE
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
@@ -41,7 +46,7 @@ from homeassistant.const import (
     Platform,
     TargetKey,
 )
-from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -668,6 +673,198 @@ async def test_external_execution_tracks_movement(
             )
         ],
     )
+
+    assert hass.states.get(SHUTTER.entity_id).state == CoverState.CLOSED
+
+
+async def _async_call_and_complete(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    device: FixtureDevice,
+    service: str,
+) -> None:
+    """Call a cover service and complete the execution it started.
+
+    Setups where every device lacks state feedback refresh with the long
+    interval of stateless setups.
+    """
+    mock_client.execute_action_group.side_effect = None
+    mock_client.execute_action_group.return_value = "exec"
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        service,
+        {TargetKey.ENTITY_ID: device.entity_id},
+        blocking=True,
+    )
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            execution_state_changed_event(
+                exec_id="exec",
+                new_state=ExecutionState.COMPLETED,
+                old_state=ExecutionState.IN_PROGRESS,
+            )
+        ],
+        update_interval=UPDATE_INTERVAL_ALL_ASSUMED_STATE,
+    )
+
+
+@pytest.mark.parametrize(
+    ("device", "service", "stop_service", "expected_state"),
+    [
+        pytest.param(
+            TILT_ONLY_VENETIAN_BLIND,
+            CoverService.OPEN_TILT,
+            CoverService.STOP_TILT,
+            CoverState.OPEN,
+            id="open-tilt",
+        ),
+        pytest.param(
+            TILT_ONLY_VENETIAN_BLIND,
+            CoverService.CLOSE_TILT,
+            CoverService.STOP_TILT,
+            CoverState.CLOSED,
+            id="close-tilt",
+        ),
+        pytest.param(
+            UP_DOWN_VENETIAN_BLIND,
+            CoverService.OPEN,
+            CoverService.STOP,
+            CoverState.OPEN,
+            id="open",
+        ),
+        pytest.param(
+            UP_DOWN_VENETIAN_BLIND,
+            CoverService.CLOSE,
+            CoverService.STOP,
+            CoverState.CLOSED,
+            id="close",
+        ),
+    ],
+)
+async def test_assumed_state_follows_last_command(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+    device: FixtureDevice,
+    service: str,
+    stop_service: str,
+    expected_state: CoverState,
+) -> None:
+    """Test that a cover without state feedback assumes its last full movement."""
+    await setup_overkiz_integration(fixture=device.fixture)
+    assert hass.states.get(device.entity_id).state == STATE_UNKNOWN
+
+    await _async_call_and_complete(hass, freezer, mock_client, device, service)
+    assert hass.states.get(device.entity_id).state == expected_state
+
+    # Stopping doesn't tell where the cover ended up, so the assumed state stays
+    await _async_call_and_complete(hass, freezer, mock_client, device, stop_service)
+    assert hass.states.get(device.entity_id).state == expected_state
+
+
+@pytest.mark.parametrize(
+    ("device", "service"),
+    [
+        pytest.param(UP_DOWN_VENETIAN_BLIND, CoverService.OPEN_TILT, id="tilt-step"),
+        pytest.param(RTS_GATE_4T, CoverService.OPEN, id="cycle"),
+    ],
+)
+async def test_no_assumed_state_without_known_end_state(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+    device: FixtureDevice,
+    service: str,
+) -> None:
+    """Test that tilt steps and toggles don't change the assumed state."""
+    await setup_overkiz_integration(fixture=device.fixture)
+
+    await _async_call_and_complete(hass, freezer, mock_client, device, service)
+    assert hass.states.get(device.entity_id).state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    ("command_name", "expected_state"),
+    [
+        pytest.param("my", CoverState.OPEN, id="my"),
+        pytest.param("close", CoverState.CLOSED, id="close"),
+        pytest.param("tiltPositive", STATE_UNKNOWN, id="tilt-step"),
+    ],
+)
+async def test_assumed_state_follows_other_executions(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+    command_name: str,
+    expected_state: CoverState | str,
+) -> None:
+    """Test that the assumed state follows commands not sent by the cover.
+
+    For example the my position button or the vendor app.
+    """
+    await setup_overkiz_integration(fixture=TILT_ONLY_VENETIAN_BLIND.fixture)
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            execution_registered_event(
+                exec_id="app-exec",
+                device_url=TILT_ONLY_VENETIAN_BLIND.device_url,
+                command_name=command_name,
+                label="Jaloezie - TaHoma",
+                source="mobile:app",
+            )
+        ],
+        [
+            execution_state_changed_event(
+                exec_id="app-exec",
+                new_state=ExecutionState.COMPLETED,
+                old_state=ExecutionState.IN_PROGRESS,
+            )
+        ],
+        update_interval=UPDATE_INTERVAL_ALL_ASSUMED_STATE,
+    )
+    await async_deliver_events(
+        hass, freezer, mock_client, update_interval=UPDATE_INTERVAL_ALL_ASSUMED_STATE
+    )
+
+    assert hass.states.get(TILT_ONLY_VENETIAN_BLIND.entity_id).state == expected_state
+
+
+@pytest.mark.parametrize("restored_state", [CoverState.OPEN, CoverState.CLOSED])
+async def test_assumed_state_restored(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    restored_state: CoverState,
+) -> None:
+    """Test that a cover without state feedback restores its assumed state."""
+    mock_restore_cache(
+        hass, [State(TILT_ONLY_VENETIAN_BLIND.entity_id, restored_state)]
+    )
+
+    await setup_overkiz_integration(fixture=TILT_ONLY_VENETIAN_BLIND.fixture)
+
+    assert hass.states.get(TILT_ONLY_VENETIAN_BLIND.entity_id).state == restored_state
+
+
+async def test_assumed_state_not_restored_with_state_feedback(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test that a cover with state feedback ignores a restored state."""
+    mock_restore_cache(hass, [State(SHUTTER.entity_id, CoverState.OPEN)])
+
+    await setup_overkiz_integration(fixture=SHUTTER.fixture)
 
     assert hass.states.get(SHUTTER.entity_id).state == CoverState.CLOSED
 
