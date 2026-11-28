@@ -23,11 +23,17 @@ from homeassistant.components.water_heater import (
     WaterHeaterService,
     WaterHeaterServiceArgument,
 )
-from homeassistant.const import ATTR_SUPPORTED_FEATURES, ATTR_TEMPERATURE, TargetKey
+from homeassistant.const import (
+    ATTR_SUPPORTED_FEATURES,
+    ATTR_TEMPERATURE,
+    STATE_OFF,
+    STATE_UNKNOWN,
+    TargetKey,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
-from .conftest import MockGenericDeviceEntryType
+from .conftest import MockESPHomeDeviceType, MockGenericDeviceEntryType
 
 
 async def test_water_heater_entity(
@@ -72,6 +78,68 @@ async def test_water_heater_entity(
     assert state.attributes["min_temp"] == 10.0
     assert state.attributes["max_temp"] == 85.0
     assert state.attributes["operation_list"] == ["eco", "gas"]
+
+
+async def test_water_heater_missing_state(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test a water heater that has no state yet is unknown rather than off."""
+    entity_info = [
+        WaterHeaterInfo(
+            object_id="my_boiler",
+            key=1,
+            name="My Boiler",
+            min_temperature=10.0,
+            max_temperature=85.0,
+            supported_modes=[
+                WaterHeaterMode.OFF,
+                WaterHeaterMode.ECO,
+            ],
+        )
+    ]
+    states = [
+        WaterHeaterState(
+            key=1,
+            mode=WaterHeaterMode.OFF,
+            missing_state=True,
+        )
+    ]
+
+    mock_device = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=states,
+    )
+
+    state = hass.states.get("water_heater.test_my_boiler")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    mock_device.set_state(
+        WaterHeaterState(
+            key=1,
+            mode=WaterHeaterMode.OFF,
+            missing_state=False,
+        )
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("water_heater.test_my_boiler")
+    assert state is not None
+    assert state.state == STATE_OFF
+
+    mock_device.set_state(
+        WaterHeaterState(
+            key=1,
+            mode=WaterHeaterMode.OFF,
+            missing_state=True,
+        )
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("water_heater.test_my_boiler")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_water_heater_entity_no_modes(
