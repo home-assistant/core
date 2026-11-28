@@ -1,0 +1,13 @@
+# serializer version: 1
+# name: test_send_message_creates_plugin_once
+  tuple(
+    7,
+    dict({
+      'message': dict({
+        'sent_at': '2026-11-13T12:00:00+00:00',
+        'text': 'Door open',
+        'title': 'Home',
+      }),
+    }),
+  )
+# ---

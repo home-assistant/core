@@ -46,6 +46,7 @@ APPLICATION_CREDENTIALS = [
     "tesla_fleet",
     "teslemetry",
     "tibber",
+    "trmnl",
     "twitch",
     "vicare",
     "volvo",

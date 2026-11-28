@@ -24,8 +24,12 @@ class TRMNLEntity(CoordinatorEntity[TRMNLCoordinator]):
         super().__init__(coordinator)
         self._device_id = device_id
         device = self._device
+        # TRMNL masks the MAC address for OAuth and scoped API key callers.
+        masked = "•" in device.mac_address
         self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, device.mac_address)},
+            connections=set()
+            if masked
+            else {(CONNECTION_NETWORK_MAC, device.mac_address)},
             identifiers={(DOMAIN, str(device_id))},
             name=device.name,
             manufacturer="TRMNL",
@@ -52,6 +56,7 @@ def exception_handler[_EntityT: TRMNLEntity, **_P](
     """
 
     async def handler(self: _EntityT, *args: _P.args, **kwargs: _P.kwargs) -> None:
+        await self.coordinator.async_ensure_token_valid()
         try:
             await func(self, *args, **kwargs)
         except TRMNLError as error:
