@@ -13,7 +13,11 @@ from .coordinator import (
     ElectraSmartCoordinator,
 )
 
-PLATFORMS: list[Platform] = [Platform.CLIMATE, Platform.SENSOR]
+PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.SENSOR,
+]
 
 
 async def async_setup_entry(

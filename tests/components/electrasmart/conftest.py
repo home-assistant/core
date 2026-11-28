@@ -42,6 +42,7 @@ def _mock_device(mac: str, name: str) -> Mock:
         is_horizontal_swing=Mock(return_value=False),
         is_vertical_swing=Mock(return_value=False),
         get_fan_speed=Mock(return_value=OperationMode.FAN_SPEED_AUTO),
+        get_filter_clean_required=Mock(return_value=False),
         get_mode=Mock(return_value=OperationMode.MODE_COOL),
         get_sensor_temperature=Mock(return_value=24),
         get_temperature=Mock(return_value=22),
@@ -57,10 +58,23 @@ def _mock_device(mac: str, name: str) -> Mock:
     )
     # `name` is a reserved Mock kwarg, so it must be set after construction.
     device.name = name
-    # Bind the library's own accessor over the mocked telemetry, so a test that
-    # changes or drops a measurement sees the getter follow it.
+    # The library reads the telemetry off the device object and this mock
+    # carries it, so bind the library's own accessors to the mock: a test that
+    # changes or drops a field then sees the getter follow it, and the real
+    # decoding runs. The filter reminder is left as a plain mock: it reads the
+    # OPER map through a private helper, and pyElectra's own tests cover that
+    # decoding, including the unit that does not report the field.
     device.get_measurement_temperature = Mock(
         side_effect=partial(ElectraAirConditioner.get_measurement_temperature, device)
+    )
+    device.get_measurement_fault = Mock(
+        side_effect=partial(ElectraAirConditioner.get_measurement_fault, device)
+    )
+    device.get_indoor_coil_sensor_fault = Mock(
+        side_effect=partial(ElectraAirConditioner.get_indoor_coil_sensor_fault, device)
+    )
+    device.get_return_air_sensor_fault = Mock(
+        side_effect=partial(ElectraAirConditioner.get_return_air_sensor_fault, device)
     )
     return device
 

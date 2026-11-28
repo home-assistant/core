@@ -28,6 +28,17 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "filter_clean_required": {
+        "name": "Filter cleaning required"
+      },
+      "indoor_coil_sensor_fault": {
+        "name": "Indoor coil sensor fault"
+      },
+      "return_air_sensor_fault": {
+        "name": "Return air sensor fault"
+      }
+    },
     "sensor": {
       "indoor_coil_temperature": {
         "name": "Indoor coil temperature"
