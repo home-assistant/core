@@ -147,6 +147,51 @@ SERVICE_CREDENTIAL_TYPES = [
     CRED_TYPE_FACE,
 ]
 
+# --- Lock schedule (WDSCH/YDSCH/HDSCH) constants ---
+
+ATTR_WEEK_DAY_INDEX = "week_day_index"
+ATTR_DAYS = "days"
+ATTR_START_TIME = "start_time"
+ATTR_END_TIME = "end_time"
+
+ATTR_YEAR_DAY_INDEX = "year_day_index"
+ATTR_START_DATE_TIME = "start_date_time"
+ATTR_END_DATE_TIME = "end_date_time"
+
+ATTR_HOLIDAY_INDEX = "holiday_index"
+ATTR_OPERATING_MODE = "operating_mode"
+
+# Matter spec: pass to Clear*Schedule as the schedule index to clear all
+# schedules of that type for the given user. Distinct from CLEAR_ALL_INDEX,
+# which is the 16-bit sentinel used for user/credential indices.
+SCHEDULE_CLEAR_ALL_INDEX = 0xFE
+
+# Day-of-week mapping (Matter DoorLock DaysMaskBitmap)
+_DaysMaskBitmap = clusters.DoorLock.Bitmaps.DaysMaskBitmap
+WEEKDAY_MAP: dict[str, int] = {
+    "monday": _DaysMaskBitmap.kMonday,
+    "tuesday": _DaysMaskBitmap.kTuesday,
+    "wednesday": _DaysMaskBitmap.kWednesday,
+    "thursday": _DaysMaskBitmap.kThursday,
+    "friday": _DaysMaskBitmap.kFriday,
+    "saturday": _DaysMaskBitmap.kSaturday,
+    "sunday": _DaysMaskBitmap.kSunday,
+}
+
+# Operating mode mapping (Matter DoorLock OperatingModeEnum), used by
+# HolidaySchedule to set the lock's behavior for the schedule's duration.
+_OperatingMode = clusters.DoorLock.Enums.OperatingModeEnum
+OPERATING_MODE_MAP: dict[int, str] = {
+    _OperatingMode.kNormal: "normal",
+    _OperatingMode.kVacation: "vacation",
+    _OperatingMode.kPrivacy: "privacy",
+    _OperatingMode.kNoRemoteLockUnlock: "no_remote_lock_unlock",
+    _OperatingMode.kPassage: "passage",
+}
+OPERATING_MODE_REVERSE_MAP: dict[str, int] = {
+    v: k for k, v in OPERATING_MODE_MAP.items()
+}
+
 CONCENTRATION_BECQUERELS_PER_CUBIC_METER: Final = "Bq/m³"
 
 # Seconds from Matter 2000 epoch to Unix epoch
