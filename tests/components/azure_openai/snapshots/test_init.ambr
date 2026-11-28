@@ -1,0 +1,25 @@
+# serializer version: 1
+# name: test_devices
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': <DeviceEntryType.SERVICE: 'service'>,
+    'hw_version': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'manufacturer': 'Azure OpenAI',
+    'model': 'chat-deployment',
+    'model_id': None,
+    'name': 'Azure OpenAI Conversation',
+    'name_by_user': None,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
