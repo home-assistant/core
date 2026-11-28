@@ -1,5 +1,7 @@
 """Test Home Assistant template helper methods."""
 
+from collections import deque
+from collections.abc import Callable, Generator, MutableSequence
 from datetime import datetime
 from enum import Enum, IntEnum, IntFlag, StrEnum
 import gc
@@ -8,17 +10,20 @@ from unittest.mock import patch
 
 from freezegun import freeze_time
 import jinja2
+from jinja2.sandbox import ImmutableSandboxedEnvironment
+from jinja2.utils import Namespace
 import probatio
 import pytest
 
 from homeassistant.const import EntityStateAttribute
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import entity_registry as er, template
 from homeassistant.helpers.template.render_info import (
     ALL_STATES_RATE_LIMIT,
     DOMAIN_STATES_RATE_LIMIT,
 )
+from homeassistant.helpers.template.states import AllStates, DomainStates, TemplateState
 from homeassistant.helpers.typing import Undefined
 from homeassistant.util import dt as dt_util
 from homeassistant.util.read_only_dict import ReadOnlyDict
@@ -871,6 +876,361 @@ def test_jinja_namespace(hass: HomeAssistant) -> None:
 
     hass.states.async_set("sensor.dummy", "another value")
     assert test_template.async_render() == "another value"
+
+
+class AttributeNamesake:
+    """Object with attributes named like the ones the sandbox blocks elsewhere."""
+
+    _private = "private"
+    add = "add"
+    append = "append"
+    clear = "clear"
+    gi_code = "gi_code"
+    mro = "mro"
+    pop = "pop"
+    update = "update"
+
+    def method(self) -> None:
+        """Expose a bound method."""
+
+
+class ClassProxy(AttributeNamesake):
+    """Object reporting another class through __class__, like a mock with a spec."""
+
+    def __init__(self, reported_class: type) -> None:
+        """Initialize the proxy."""
+        self._reported_class = reported_class
+
+    @property
+    def __class__(self) -> type:
+        """Return the reported class."""
+        return self._reported_class
+
+
+class ClassUnavailable(AttributeNamesake):
+    """Object that cannot report a class, which isinstance tolerates."""
+
+    @property
+    def __class__(self) -> type:
+        """Raise like an attribute that does not exist."""
+        raise AttributeError("__class__")
+
+
+class EqualsEveryTypeMeta(type):
+    """Metaclass of a class that hashes and compares like type."""
+
+    def __eq__(cls, other: object) -> bool:
+        """Claim to be equal to anything."""
+        return True
+
+    def __hash__(cls) -> int:
+        """Hash like type."""
+        return hash(type)
+
+
+class TypeLookalike(AttributeNamesake, metaclass=EqualsEveryTypeMeta):
+    """Object whose class is equal to type, without being a type."""
+
+
+class CountLookalike(str):
+    """Attribute name that hashes and compares like the safe name count."""
+
+    __slots__ = ()
+
+    def __eq__(self, other: object) -> bool:
+        """Claim to be equal to anything."""
+        return True
+
+    def __hash__(self) -> int:
+        """Hash like count."""
+        return hash("count")
+
+
+class ListSubclass(list):
+    """Subclass of a builtin mutable type."""
+
+
+class DictSubclass(dict):
+    """Subclass of a builtin mutable type."""
+
+
+def _generator() -> Generator[None]:
+    """Yield nothing, only used as a generator object."""
+    yield
+
+
+@pytest.fixture
+def clear_safe_attribute_cache() -> None:
+    """Start with an empty sandbox verdict cache."""
+    template._SAFE_ATTRIBUTE_CACHE.clear()
+
+
+@pytest.mark.usefixtures("clear_safe_attribute_cache")
+@pytest.mark.parametrize(
+    ("template_str", "value", "unsafe_attribute", "unsafe_type"),
+    [
+        pytest.param(
+            "{{ value._private }}",
+            AttributeNamesake(),
+            "_private",
+            "AttributeNamesake",
+            id="private",
+        ),
+        pytest.param("{{ value.__class__ }}", [], "__class__", "list", id="dunder"),
+        pytest.param(
+            "{{ value.method.__globals__ }}",
+            AttributeNamesake(),
+            "__globals__",
+            "method",
+            id="method_globals",
+        ),
+        pytest.param(
+            "{{ value.method.__code__ }}",
+            AttributeNamesake(),
+            "__code__",
+            "method",
+            id="method_code",
+        ),
+        pytest.param("{{ value.mro }}", list, "mro", "type", id="type_mro"),
+        pytest.param(
+            "{{ value.gi_code }}", _generator(), "gi_code", "generator", id="gi_code"
+        ),
+        pytest.param(
+            "{% do value.append(1) %}", [], "append", "list", id="list_append"
+        ),
+        pytest.param(
+            "{% do value.update({'a': 1}) %}", {}, "update", "dict", id="dict_update"
+        ),
+        pytest.param("{% do value.add(1) %}", set(), "add", "set", id="set_add"),
+        pytest.param(
+            "{% do value.append(1) %}",
+            ListSubclass(),
+            "append",
+            "ListSubclass",
+            id="list_subclass_append",
+        ),
+        pytest.param(
+            "{% do value.update({'a': 1}) %}",
+            DictSubclass(),
+            "update",
+            "DictSubclass",
+            id="dict_subclass_update",
+        ),
+    ],
+)
+def test_unsafe_attribute_stays_blocked(
+    hass: HomeAssistant,
+    template_str: str,
+    value: object,
+    unsafe_attribute: str,
+    unsafe_type: str,
+) -> None:
+    """Test an unsafe attribute is blocked on every render, not only the first."""
+    tpl = template.Template(template_str, hass)
+    message = (
+        f"access to attribute '{unsafe_attribute}' of '{unsafe_type}' object is unsafe"
+    )
+
+    for _ in range(2):
+        with pytest.raises(TemplateError, match=message):
+            tpl.async_render({"value": value}, strict=True)
+
+
+@pytest.mark.usefixtures("clear_safe_attribute_cache")
+@pytest.mark.parametrize(
+    ("attribute", "unsafe_value"),
+    [
+        pytest.param("append", [], id="list_append"),
+        pytest.param("clear", {}, id="dict_clear"),
+        pytest.param("pop", [], id="list_pop"),
+        pytest.param("update", {}, id="dict_update"),
+        pytest.param("add", set(), id="set_add"),
+        pytest.param("append", ListSubclass(), id="list_subclass_append"),
+        pytest.param("update", DictSubclass(), id="dict_subclass_update"),
+        pytest.param("mro", list, id="type_mro"),
+        pytest.param("gi_code", _generator(), id="generator_gi_code"),
+        pytest.param("append", ClassProxy(list), id="list_proxy_append"),
+        pytest.param("update", ClassProxy(dict), id="dict_proxy_update"),
+    ],
+)
+def test_attribute_verdict_is_per_type(
+    hass: HomeAssistant, attribute: str, unsafe_value: object
+) -> None:
+    """Test a verdict for an attribute name on one type does not leak to another."""
+    variables = {"safe": AttributeNamesake(), "unsafe": unsafe_value}
+
+    safe_first = template.Template(
+        f"{{{{ safe.{attribute} }}}}|{{{{ unsafe.{attribute} }}}}", hass
+    )
+    assert safe_first.async_render(variables) == f"{attribute}|"
+
+    template._SAFE_ATTRIBUTE_CACHE.clear()
+
+    unsafe_first = template.Template(
+        f"{{{{ unsafe.{attribute} }}}}|{{{{ safe.{attribute} }}}}", hass
+    )
+    assert unsafe_first.async_render(variables) == f"|{attribute}"
+
+
+@pytest.mark.usefixtures("clear_safe_attribute_cache")
+def test_attribute_verdict_follows_reported_class(hass: HomeAssistant) -> None:
+    """Test objects of one type that report different classes get their own verdict."""
+    variables = {
+        "plain": ClassProxy(AttributeNamesake),
+        "fake_list": ClassProxy(list),
+    }
+
+    plain_first = template.Template(
+        "{{ plain.append }}|{{ fake_list.append }}|{{ plain.append }}", hass
+    )
+    assert plain_first.async_render(variables) == "append||append"
+
+    template._SAFE_ATTRIBUTE_CACHE.clear()
+
+    fake_list_first = template.Template(
+        "{{ fake_list.append }}|{{ plain.append }}|{{ fake_list.append }}", hass
+    )
+    assert fake_list_first.async_render(variables) == "|append|"
+
+
+@pytest.mark.usefixtures("clear_safe_attribute_cache")
+def test_attribute_verdict_uses_type_identity(hass: HomeAssistant) -> None:
+    """Test a class cannot share a verdict with type through its metaclass."""
+    variables = {"safe": TypeLookalike(), "unsafe": list}
+
+    safe_first = template.Template("{{ safe.mro }}|{{ unsafe.mro }}", hass)
+    assert safe_first.async_render(variables) == "mro|"
+
+    template._SAFE_ATTRIBUTE_CACHE.clear()
+
+    unsafe_first = template.Template("{{ unsafe.mro }}|{{ safe.mro }}", hass)
+    assert unsafe_first.async_render(variables) == "|mro"
+
+
+@pytest.mark.usefixtures("clear_safe_attribute_cache")
+def test_attribute_verdict_uses_real_attribute_name() -> None:
+    """Test an attribute name cannot share a verdict with a name it equals."""
+    env = template.TemplateEnvironment(None)
+
+    assert env.is_safe_attribute([], "count", None) is True
+    assert env.is_safe_attribute([], CountLookalike("__class__"), None) is False
+
+
+@pytest.mark.usefixtures("clear_safe_attribute_cache")
+def test_attribute_verdict_follows_late_registration() -> None:
+    """Test a class registered as a mutable type afterwards loses its verdict."""
+
+    class RegisteredLater(AttributeNamesake):
+        """Object whose class becomes a mutable sequence after its first use."""
+
+    env = template.TemplateEnvironment(None)
+    obj = RegisteredLater()
+
+    assert env.is_safe_attribute(obj, "append", None) is True
+
+    MutableSequence.register(RegisteredLater)
+
+    assert env.is_safe_attribute(obj, "append", None) is False
+
+
+SANDBOX_OBJECTS = [
+    pytest.param([], id="list"),
+    pytest.param({}, id="dict"),
+    pytest.param(set(), id="set"),
+    pytest.param(deque(), id="deque"),
+    pytest.param(ListSubclass(), id="list_subclass"),
+    pytest.param(DictSubclass(), id="dict_subclass"),
+    pytest.param((), id="tuple"),
+    pytest.param("text", id="str"),
+    pytest.param(datetime(2026, 1, 1), id="datetime"),
+    pytest.param(State("sensor.test", "on"), id="state"),
+    pytest.param(AttributeNamesake(), id="namesake"),
+    pytest.param(AttributeNamesake().method, id="method"),
+    pytest.param(_generator, id="function"),
+    pytest.param(_generator.__code__, id="code"),
+    pytest.param(_generator(), id="generator"),
+    pytest.param(list, id="type"),
+    pytest.param(ClassProxy(list), id="list_proxy"),
+    pytest.param(ClassProxy(AttributeNamesake), id="namesake_proxy"),
+    pytest.param(ClassUnavailable(), id="class_unavailable"),
+    pytest.param(TypeLookalike(), id="class_equal_to_type"),
+]
+
+
+@pytest.mark.parametrize("obj", SANDBOX_OBJECTS)
+@pytest.mark.parametrize(
+    "attribute",
+    [
+        "_private",
+        "__class__",
+        "__globals__",
+        "add",
+        "append",
+        "clear",
+        "co_name",
+        "gi_code",
+        "items",
+        "mro",
+        "pop",
+        "state",
+        "update",
+    ],
+)
+def test_attribute_verdict_matches_jinja(obj: object, attribute: str) -> None:
+    """Test the cached verdict equals the Jinja sandbox verdict, on every call."""
+    env = template.TemplateEnvironment(None)
+    expected = ImmutableSandboxedEnvironment.is_safe_attribute(
+        env, obj, attribute, None
+    )
+
+    assert env.is_safe_attribute(obj, attribute, None) is expected
+    assert env.is_safe_attribute(obj, attribute, None) is expected
+
+
+@pytest.mark.parametrize(
+    ("obj_factory", "attribute", "expected"),
+    [
+        pytest.param(AllStates, "sensor", True, id="all_states"),
+        pytest.param(AllStates, "_hass", False, id="all_states_private"),
+        pytest.param(
+            lambda hass: DomainStates(hass, "sensor"), "s1", True, id="domain_states"
+        ),
+        pytest.param(
+            lambda hass: DomainStates(hass, "sensor"),
+            "_domain",
+            False,
+            id="domain_states_private",
+        ),
+        pytest.param(
+            lambda hass: TemplateState(hass, State("sensor.test", "on")),
+            "state",
+            True,
+            id="template_state",
+        ),
+        pytest.param(
+            lambda hass: TemplateState(hass, State("sensor.test", "on")),
+            "_state",
+            False,
+            id="template_state_private",
+        ),
+        pytest.param(lambda hass: Namespace(), "total", True, id="namespace"),
+        pytest.param(
+            lambda hass: Namespace(), "_private", True, id="namespace_private"
+        ),
+    ],
+)
+def test_home_assistant_attribute_verdict(
+    hass: HomeAssistant,
+    obj_factory: Callable[[HomeAssistant], object],
+    attribute: str,
+    expected: bool,
+) -> None:
+    """Test the verdict for Home Assistant's own template types, on every call."""
+    env = template.TemplateEnvironment(hass)
+    obj = obj_factory(hass)
+
+    assert env.is_safe_attribute(obj, attribute, None) is expected
+    assert env.is_safe_attribute(obj, attribute, None) is expected
 
 
 @pytest.mark.parametrize(

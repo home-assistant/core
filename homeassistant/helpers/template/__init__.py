@@ -1,5 +1,6 @@
 """Template helper methods for rendering strings with Home Assistant data."""
 
+from abc import get_cache_token
 from ast import literal_eval
 import asyncio
 import collections.abc
@@ -132,6 +133,17 @@ EVAL_CACHE_SIZE = 512
 # can reuse them via the weak cache. Bounded so one-off template strings
 # (like template editor keystrokes) cannot grow it indefinitely.
 COMPILED_CODE_PIN_SIZE = 256
+
+# Number of sandbox verdicts to remember. Bounded because attribute names can
+# come from the template itself.
+SAFE_ATTRIBUTE_CACHE_SIZE = 1024
+
+# Keyed by the id of the type, as a metaclass can make two types compare equal.
+# The entry holds the type, which keeps that id from being reused. The ABC cache
+# token changes when a class is registered as a mutable type later on.
+_SAFE_ATTRIBUTE_CACHE: LRU[tuple[int, str, object], tuple[type, bool]] = LRU(
+    SAFE_ATTRIBUTE_CACHE_SIZE
+)
 
 MAX_CUSTOM_TEMPLATE_SIZE = 5 * 1024 * 1024
 MAX_TEMPLATE_OUTPUT = 256 * 1024  # 256KiB
@@ -988,6 +1000,12 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
     @override
     def is_safe_attribute(self, obj, attr, value):
         """Test if attribute is safe."""
+        obj_type = type(obj)
+
+        # Namespace overrides __getattribute__, which makes isinstance on it slow
+        if obj_type is Namespace:
+            return True
+
         if isinstance(
             obj,
             (
@@ -1000,6 +1018,29 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         ):
             return attr[0] != "_"
 
+        try:
+            reported_class = obj.__class__
+        except AttributeError:
+            reported_class = None
+
+        # isinstance also consults __class__, so only cache when it is the real type.
+        # A str subclass can compare equal to another attribute name.
+        if reported_class is not obj_type or type(attr) is not str:
+            return self._is_safe_attribute_uncached(obj, attr, value)
+
+        cache_key = (id(obj_type), attr, get_cache_token())
+        cached = _SAFE_ATTRIBUTE_CACHE.get(cache_key)
+
+        if cached is not None and cached[0] is obj_type:
+            return cached[1]
+
+        verdict = self._is_safe_attribute_uncached(obj, attr, value)
+        _SAFE_ATTRIBUTE_CACHE[cache_key] = (obj_type, verdict)
+
+        return verdict
+
+    def _is_safe_attribute_uncached(self, obj: Any, attr: str, value: Any) -> bool:
+        """Test if attribute is safe, using the Jinja sandbox rules."""
         if isinstance(obj, Namespace):
             return True
 
