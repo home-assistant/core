@@ -16,7 +16,6 @@ from plugwise.exceptions import (
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
-from homeassistant.components.plugwise import migrate_entities
 from homeassistant.components.plugwise.const import (
     DEFAULT_UPDATE_INTERVAL,
     DOMAIN,
@@ -274,6 +273,7 @@ async def test_migrate_unique_id_relay(
 async def test_remove_thermozone_temperature_sensor(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_smile_adam_jip: MagicMock,
     *,
     entity_registry: er.EntityRegistry,
     gateway_name: str,
@@ -281,6 +281,7 @@ async def test_remove_thermozone_temperature_sensor(
     temperature_should_remain: bool,
 ) -> None:
     """Test removal of the obsolete ThermoZone temperature sensor."""
+    mock_smile_adam_jip.smile.name = gateway_name
     mock_config_entry.add_to_hass(hass)
     temperature_unique_id = f"{CLIMATE_ID}-temperature"
     thermozone_temperature = (
@@ -309,16 +310,8 @@ async def test_remove_thermozone_temperature_sensor(
         suggested_object_id=f"{HEATER_ID}-temperature",
         config_entry=mock_config_entry,
     )
-    coordinator = MagicMock(
-        config_entry=mock_config_entry,
-        data={
-            CLIMATE_ID: {"dev_class": "climate"},
-            HEATER_ID: {"dev_class": "thermostat"},
-        },
-    )
-    coordinator.api.smile.name = gateway_name
-
-    migrate_entities(hass, coordinator)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert (
         entity_registry.async_get_entity_id(
