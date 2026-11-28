@@ -42,7 +42,10 @@ from lifx.protocol.models import (
     MAC_OFFSET_FIRMWARE_MIN_MINOR,
 )
 
+from homeassistant.components.lifx.const import DOMAIN
 from homeassistant.components.lifx.light import LIFX_MIN_COLOR_RAMP
+from homeassistant.const import Platform
+from homeassistant.helpers import entity_registry as er
 
 IP_ADDRESS = "127.0.0.1"
 SERIAL = "d073d5ddeecc"
@@ -52,6 +55,7 @@ MAC_ADDRESS = "d0:73:d5:dd:ee:cc"
 LABEL = "My Bulb"
 GROUP = "My Group"
 INFRARED_SELECT_ENTITY_ID = "select.my_group_my_bulb_infrared_brightness"
+INFRARED_NUMBER_ENTITY_ID = "number.my_group_my_bulb_infrared_brightness"
 POWER_ON = 65535
 
 # Product ids, zone counts, tile sizes and firmware follow the lifx-emulator
@@ -105,6 +109,23 @@ type MockState = (
     | HevLightState
     | InfraredLightState
 )
+
+
+def register_legacy_infrared_select(
+    entity_registry: er.EntityRegistry,
+    disabled_by: er.RegistryEntryDisabler | None = None,
+) -> er.RegistryEntry:
+    """Register the infrared select an upgraded installation already has."""
+    return entity_registry.async_get_or_create(
+        Platform.SELECT,
+        DOMAIN,
+        f"{SERIAL}_infrared_brightness",
+        suggested_object_id="my_group_my_bulb_infrared_brightness",
+        disabled_by=disabled_by,
+        # A registry entry written by an earlier run already carries the name
+        original_name="Infrared brightness",
+        has_entity_name=True,
+    )
 
 
 def assert_color_written(

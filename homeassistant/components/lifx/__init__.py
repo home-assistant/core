@@ -16,6 +16,7 @@ from .discovery import async_setup_discovery
 from .entity import async_repair_device_registry
 from .manager import LIFXManager
 from .migration import async_migrate_serials
+from .repairs import async_deprecate_infrared_select
 from .services import async_setup_services
 from .util import async_resolve_host, normalize_serial
 
@@ -50,6 +51,7 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.LIGHT,
+    Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
 ]
@@ -143,6 +145,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: LIFXConfigEntry) -> None
     async_repair_device_registry(hass, entry, coordinator.data)
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    # The issue names the number entity, which only exists once it is set up
+    async_deprecate_infrared_select(hass, entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: LIFXConfigEntry) -> None:
