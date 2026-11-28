@@ -355,6 +355,7 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
             self._state = False
 
         await _async_startup(None)  # init the sensor
+        self._async_switch_changed(self.hass.states.get(self._switch_entity_id))
 
     @override
     async def async_will_remove_from_hass(self) -> None:
