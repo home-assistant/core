@@ -3,7 +3,13 @@
 from datetime import timedelta
 from typing import Any
 
-from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from freezegun.api import FrozenDateTimeFactory
+import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_fixture,
+)
 from requests_mock import Mocker
 
 from homeassistant.components.media_player import (
@@ -13,10 +19,13 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_DURATION,
+    ATTR_MEDIA_POSITION,
+    ATTR_MEDIA_POSITION_UPDATED_AT,
     ATTR_MEDIA_TITLE,
     ATTR_MEDIA_TRACK,
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
+    SCAN_INTERVAL,
 )
 from homeassistant.components.soundtouch.const import DOMAIN
 from homeassistant.components.soundtouch.media_player import (
@@ -30,7 +39,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from .conftest import DEVICE_1_ENTITY_ID, DEVICE_2_ENTITY_ID
+from .conftest import DEVICE_1_ENTITY_ID, DEVICE_1_URL, DEVICE_2_ENTITY_ID
 
 
 async def setup_soundtouch(hass: HomeAssistant, *mock_entries: MockConfigEntry):
@@ -57,6 +66,7 @@ async def _test_key_service(
     assert f">{key_name}</key>" in requests_mock_key.last_request.text
 
 
+@pytest.mark.usefixtures("freezer")
 async def test_playing_media(
     hass: HomeAssistant,
     device1_config: MockConfigEntry,
@@ -72,6 +82,88 @@ async def test_playing_media(
     assert entity_state.attributes[ATTR_MEDIA_ARTIST] == "MockArtist"
     assert entity_state.attributes[ATTR_MEDIA_ALBUM_NAME] == "MockAlbum"
     assert entity_state.attributes[ATTR_MEDIA_DURATION] == 42
+    assert entity_state.attributes[ATTR_MEDIA_POSITION] == 7
+    assert entity_state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT] == dt_util.utcnow()
+
+
+@pytest.mark.parametrize(
+    (
+        "initial_fixture",
+        "next_fixture",
+        "expected_position",
+        "expected_updated_after",
+    ),
+    [
+        pytest.param(
+            "device1_now_playing_upnp.xml",
+            "device1_now_playing_upnp_advanced.xml",
+            7,
+            timedelta(0),
+            id="playing_as_expected",
+        ),
+        pytest.param(
+            "device1_now_playing_upnp.xml",
+            "device1_now_playing_upnp.xml",
+            7,
+            SCAN_INTERVAL,
+            id="playing_same_position_after_jump",
+        ),
+        pytest.param(
+            "device1_now_playing_upnp_paused.xml",
+            "device1_now_playing_upnp_paused.xml",
+            7,
+            timedelta(0),
+            id="paused_unchanged",
+        ),
+        pytest.param(
+            "device1_now_playing_upnp.xml",
+            "device1_now_playing_upnp_paused.xml",
+            7,
+            SCAN_INTERVAL,
+            id="paused",
+        ),
+        pytest.param(
+            "device1_now_playing_upnp_paused.xml",
+            "device1_now_playing_upnp.xml",
+            7,
+            SCAN_INTERVAL,
+            id="resumed",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("device1_requests_mock")
+async def test_media_position_updated_at(
+    hass: HomeAssistant,
+    device1_config: MockConfigEntry,
+    requests_mock: Mocker,
+    freezer: FrozenDateTimeFactory,
+    initial_fixture: str,
+    next_fixture: str,
+    expected_position: int,
+    expected_updated_after: timedelta,
+) -> None:
+    """Test the position only refreshes when it differs from the expected position."""
+    requests_mock.get(
+        f"{DEVICE_1_URL}/now_playing",
+        text=await async_load_fixture(hass, initial_fixture, DOMAIN),
+    )
+    setup_time = dt_util.utcnow()
+    await setup_soundtouch(hass, device1_config)
+
+    requests_mock.get(
+        f"{DEVICE_1_URL}/now_playing",
+        text=await async_load_fixture(hass, next_fixture, DOMAIN),
+    )
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_state = hass.states.get(DEVICE_1_ENTITY_ID)
+    assert entity_state.attributes[ATTR_MEDIA_POSITION] == expected_position
+    assert (
+        entity_state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT]
+        == setup_time + expected_updated_after
+    )
 
 
 async def test_playing_radio(
@@ -85,6 +177,8 @@ async def test_playing_radio(
     entity_state = hass.states.get(DEVICE_1_ENTITY_ID)
     assert entity_state.state == STATE_PLAYING
     assert entity_state.attributes[ATTR_MEDIA_TITLE] == "MockStation"
+    assert ATTR_MEDIA_POSITION not in entity_state.attributes
+    assert ATTR_MEDIA_POSITION_UPDATED_AT not in entity_state.attributes
 
 
 async def test_playing_aux(
