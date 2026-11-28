@@ -110,6 +110,15 @@ WATER_VALVE_PROBLEM_PROPERTY_KEYS: set[str | int | None] = {
     "Valve jammed status",
 }
 
+# Water Alarm state keys can't be used to tell the variables apart:
+# zwave-js replaces the state id with the enum values for these variables.
+WATER_ALARM_PROBLEM_PROPERTY_KEYS: set[str | int | None] = {
+    "Water flow alarm status",
+    "Water pressure alarm status",
+    "Water temperature alarm status",
+    "Water level alarm status",
+}
+
 # Deprecated/legacy synthetic Access Control door state notification
 # event IDs that don't exist in zwave-js-server
 ACCESS_CONTROL_DOOR_STATE_OPEN_REGULAR = 5632
@@ -1948,37 +1957,16 @@ DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
         platform=Platform.BINARY_SENSOR,
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.NOTIFICATION},
+            property_key={"Sensor status"},
             type={ValueType.NUMBER},
-            any_available_states_keys={
-                WaterAlarmNotificationEvent.SENSOR_STATUS_WATER_LEAK_DETECTED_LOCATION_PROVIDED,
-                WaterAlarmNotificationEvent.SENSOR_STATUS_WATER_LEAK_DETECTED,
-                WaterAlarmNotificationEvent.WATER_LEVEL_DROPPED_LOCATION_PROVIDED,
-                WaterAlarmNotificationEvent.WATER_LEVEL_DROPPED,
-                WaterAlarmNotificationEvent.WATER_FLOW_ALARM,
-                WaterAlarmNotificationEvent.WATER_PRESSURE_ALARM,
-                WaterAlarmNotificationEvent.WATER_TEMPERATURE_ALARM,
-                WaterAlarmNotificationEvent.WATER_LEVEL_ALARM,
-                WaterAlarmNotificationEvent.PUMP_STATUS_SUMP_PUMP_ACTIVE,
-            },
             any_available_cc_specific={
                 (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.WATER_ALARM)
             },
         ),
         allow_multi=True,
         entity_description=NotificationZWaveJSEntityDescription(
-            # NotificationType 5: Water - State Id's 1, 2, 3, 4, 6, 7, 8, 9, 0A
+            # NotificationType 5: Water - water leak
             key=NOTIFICATION_WATER,
-            states={
-                WaterAlarmNotificationEvent.SENSOR_STATUS_WATER_LEAK_DETECTED_LOCATION_PROVIDED,
-                WaterAlarmNotificationEvent.SENSOR_STATUS_WATER_LEAK_DETECTED,
-                WaterAlarmNotificationEvent.WATER_LEVEL_DROPPED_LOCATION_PROVIDED,
-                WaterAlarmNotificationEvent.WATER_LEVEL_DROPPED,
-                WaterAlarmNotificationEvent.WATER_FLOW_ALARM,
-                WaterAlarmNotificationEvent.WATER_PRESSURE_ALARM,
-                WaterAlarmNotificationEvent.WATER_TEMPERATURE_ALARM,
-                WaterAlarmNotificationEvent.WATER_LEVEL_ALARM,
-                WaterAlarmNotificationEvent.PUMP_STATUS_SUMP_PUMP_ACTIVE,
-            },
             device_class=BinarySensorDeviceClass.MOISTURE,
         ),
         entity_class=ZWaveNotificationBinarySensor,
@@ -1987,21 +1975,54 @@ DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
         platform=Platform.BINARY_SENSOR,
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.NOTIFICATION},
+            property_key=WATER_ALARM_PROBLEM_PROPERTY_KEYS,
             type={ValueType.NUMBER},
-            any_available_states_keys={
-                WaterAlarmNotificationEvent.PUMP_STATUS_SUMP_PUMP_FAILURE,
-            },
             any_available_cc_specific={
                 (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.WATER_ALARM)
             },
         ),
         allow_multi=True,
         entity_description=NotificationZWaveJSEntityDescription(
-            # NotificationType 5: Water - State Id's B
+            # NotificationType 5: Water - flow, pressure, temperature, level alarms
             key=NOTIFICATION_WATER,
-            states={
-                WaterAlarmNotificationEvent.PUMP_STATUS_SUMP_PUMP_FAILURE,
+            device_class=BinarySensorDeviceClass.PROBLEM,
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            property_key={"Pump status"},
+            type={ValueType.NUMBER},
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.WATER_ALARM)
             },
+        ),
+        allow_multi=True,
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 5: Water - sump pump active
+            key=NOTIFICATION_WATER,
+            states={WaterAlarmNotificationEvent.PUMP_STATUS_SUMP_PUMP_ACTIVE},
+            device_class=BinarySensorDeviceClass.RUNNING,
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            property_key={"Pump status"},
+            type={ValueType.NUMBER},
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.WATER_ALARM)
+            },
+        ),
+        allow_multi=True,
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 5: Water - sump pump failure
+            key=NOTIFICATION_WATER,
+            states={WaterAlarmNotificationEvent.PUMP_STATUS_SUMP_PUMP_FAILURE},
             device_class=BinarySensorDeviceClass.PROBLEM,
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
@@ -2011,6 +2032,7 @@ DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
         platform=Platform.BINARY_SENSOR,
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.NOTIFICATION},
+            not_property_key={"Sensor status", *WATER_ALARM_PROBLEM_PROPERTY_KEYS},
             type={ValueType.NUMBER},
             any_available_cc_specific={
                 (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.WATER_ALARM)
@@ -2018,19 +2040,11 @@ DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
         ),
         allow_multi=True,
         entity_description=NotificationZWaveJSEntityDescription(
-            # NotificationType 5: Water - All other State Id's
+            # NotificationType 5: Water - All other notification values
             key=NOTIFICATION_WATER,
             entity_category=EntityCategory.DIAGNOSTIC,
             not_states={
                 WaterAlarmNotificationEvent.IDLE,
-                WaterAlarmNotificationEvent.SENSOR_STATUS_WATER_LEAK_DETECTED_LOCATION_PROVIDED,
-                WaterAlarmNotificationEvent.SENSOR_STATUS_WATER_LEAK_DETECTED,
-                WaterAlarmNotificationEvent.WATER_LEVEL_DROPPED_LOCATION_PROVIDED,
-                WaterAlarmNotificationEvent.WATER_LEVEL_DROPPED,
-                WaterAlarmNotificationEvent.WATER_FLOW_ALARM,
-                WaterAlarmNotificationEvent.WATER_PRESSURE_ALARM,
-                WaterAlarmNotificationEvent.WATER_TEMPERATURE_ALARM,
-                WaterAlarmNotificationEvent.WATER_LEVEL_ALARM,
                 WaterAlarmNotificationEvent.PUMP_STATUS_SUMP_PUMP_ACTIVE,
                 WaterAlarmNotificationEvent.PUMP_STATUS_SUMP_PUMP_FAILURE,
             },
