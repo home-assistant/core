@@ -919,15 +919,13 @@ async def test_auth_status_at_login_starts_reauth(
         ),
     ],
 )
-async def test_a_challenge_that_cannot_send_a_code_is_retried(
+async def test_a_challenge_that_cannot_send_a_code_keeps_its_session(
     hass: HomeAssistant, service_2fa: Mock, failure: Exception
 ) -> None:
-    """Test that setup is retried when the challenge can deliver no code.
+    """Test that a challenge with an unknown route still opens code entry.
 
-    The options fetch that sets a delivery route up can be refused on its own.
-    iCloud still reports the challenge, but nothing can send a code for it, so
-    asking leaves the user on a form they cannot complete. Retrying is what
-    recovers this, and both shapes the challenge arrives in have to do it.
+    The code may already be displayed on a trusted device, so both shapes the
+    challenge arrives in have to keep the session for the reauth flow.
     """
     service_2fa.return_value.requires_2fa = False
     service_2fa.return_value.requires_2sa = False
@@ -942,18 +940,20 @@ async def test_a_challenge_that_cannot_send_a_code_is_retried(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert not [
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert [
         flow
         for flow in hass.config_entries.flow.async_progress()
         if flow["context"]["source"] == "reauth"
     ]
+    assert config_entry.runtime_data.api is service_2fa.return_value
+    assert config_entry.runtime_data.requires_verification_code
 
 
-async def test_a_flagged_challenge_that_cannot_send_a_code_is_retried(
+async def test_a_flagged_challenge_that_cannot_send_a_code_opens_code_entry(
     hass: HomeAssistant, service_2fa: Mock
 ) -> None:
-    """Test that setup is retried when the login ends in a challenge nothing can send.
+    """Test that a flagged challenge with no known route is not discarded.
 
     This is the shape where the service reports the challenge itself instead of
     raising it, and it has to be treated like the other two.
@@ -968,24 +968,19 @@ async def test_a_flagged_challenge_that_cannot_send_a_code_is_retried(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert not [
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert [
         flow
         for flow in hass.config_entries.flow.async_progress()
         if flow["context"]["source"] == "reauth"
     ]
+    assert config_entry.runtime_data.api is service_2fa.return_value
 
 
-async def test_reauth_challenge_without_a_delivery_route_asks_for_the_password(
+async def test_reauth_challenge_without_a_delivery_route_accepts_an_existing_code(
     hass: HomeAssistant, service_auth_required: Mock
 ) -> None:
-    """Test that a challenge that can send no code does not open code entry.
-
-    The options fetch that establishes a delivery route can be refused on its
-    own. iCloud still reports the challenge, but the code entry form is then a
-    dead end. Going back to the password is what recovers it: a fresh login
-    raises the challenge again with a route behind it.
-    """
+    """Test that a challenged login with no known route still offers code entry."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
     )
@@ -1023,24 +1018,18 @@ async def test_reauth_challenge_without_a_delivery_route_asks_for_the_password(
         )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "send_verification_code"}
-    # The forced challenge goes with the session, or the retry below reads it
-    # and comes straight back here even though the login succeeded.
-    working_api = MagicMock()
-    working_api.requires_2fa = False
-    working_api.requires_2sa = False
-    working_api.two_factor_delivery_method = "unknown"
-    working_api.devices = MockDevices([MockDevice(DEVICE)])
+    assert result["step_id"] == "verification_code"
+    challenged_api.use_existing_trusted_device_code.assert_called()
 
-    with patch(
-        "homeassistant.components.icloud.config_flow.PyiCloudService",
-        return_value=working_api,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_PASSWORD: "new-password"}
-        )
+    challenged_api.validate_2fa_code.side_effect = lambda code: (
+        setattr(challenged_api, "requires_2fa", False) or True
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_VERIFICATION_CODE: "123456"}
+    )
 
     assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
 
 
 async def test_reauth_device_fetch_rejected_as_a_failed_login_is_reported(
@@ -1087,14 +1076,13 @@ async def test_reauth_device_fetch_rejected_as_a_failed_login_is_reported(
     assert result["errors"] == {"base": "unknown"}
 
 
-async def test_an_undeliverable_challenge_drops_the_stored_session(
+async def test_an_undeliverable_challenge_keeps_the_stored_session(
     hass: HomeAssistant, service_2fa: Mock
 ) -> None:
-    """Test that a challenge with no delivery route clears the stored session.
+    """Test that a challenge with no delivery route keeps its session and code form.
 
-    Dropping the service only clears it from memory. The stored session is
-    what the next login reads back, and it is the one that produced a
-    challenge nothing can deliver a code for, so it has to go too.
+    The code may already be on a trusted device, so clearing the session and
+    sending the user back to the password would discard a usable challenge.
     """
     service_2fa.return_value.requires_2fa = True
     service_2fa.return_value.requires_2sa = False
@@ -1107,27 +1095,15 @@ async def test_an_undeliverable_challenge_drops_the_stored_session(
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    await config_entry.start_reauth_flow(hass)
 
     flows = [
         flow
         for flow in hass.config_entries.flow.async_progress()
         if flow["context"]["source"] == "reauth"
     ]
-
-    service_2fa.return_value.session.clear_persistence.reset_mock()
-
-    with patch(
-        "homeassistant.components.icloud.config_flow.PyiCloudService",
-        return_value=service_2fa.return_value,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            flows[0]["flow_id"], {CONF_PASSWORD: "new-password"}
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "send_verification_code"}
-    assert service_2fa.return_value.session.clear_persistence.called
+    assert [flow["step_id"] for flow in flows] == ["verification_code"]
+    service_2fa.return_value.use_existing_trusted_device_code.assert_called()
+    service_2fa.return_value.session.clear_persistence.assert_not_called()
 
 
 @pytest.mark.usefixtures("mock_icloud_service")
