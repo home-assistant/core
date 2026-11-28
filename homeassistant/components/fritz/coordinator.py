@@ -168,7 +168,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         self.mesh_wifi_uplink = False
         self.device_conn_type: str | None = None
         self.device_is_router: bool = False
-        self.hosts: dict[str, Device] = {}
+        self.hosts: dict[str, Device] | None = None
         self.password = password
         self.port = port
         self.username = username
@@ -424,7 +424,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             "port_mappings": {},
         }
         self.connection.clear_cache()
-        self.hosts = {}
+        self.hosts = None
         try:
             await self.async_update_device_info()
 
@@ -702,12 +702,12 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             consider_home = _default_consider_home
 
         new_device = False
-        self.hosts = await self._async_update_hosts_info()
 
         if not self.fritz_status.device_has_mesh_support or (
             self._options
             and self._options.get(CONF_OLD_DISCOVERY, DEFAULT_CONF_OLD_DISCOVERY)
         ):
+            self.hosts = await self._async_update_hosts_info()
             LOGGER.debug(
                 "Using old hosts discovery method. (Mesh not supported or user option)"
             )
@@ -759,6 +759,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                     self.mesh_role = MeshRoles(node["mesh_role"])
 
         # second get all client devices
+        self.hosts = await self._async_update_hosts_info()
         for node in topology.get("nodes", []):
             if node["is_meshed"]:
                 continue
@@ -837,6 +838,9 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         LOGGER.debug("Device tracker cleanup triggered")
         device_hosts = {self.mac: Device(True, "", "", "", "", None)}
         if self.device_discovery_enabled:
+            if self.hosts is None:
+                # Hosts were not fetched in this update, so clients can't be judged stale
+                return
             device_hosts.update(self.hosts)
         entity_reg: er.EntityRegistry = er.async_get(self.hass)
         config_entry = self.config_entry

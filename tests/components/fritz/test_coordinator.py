@@ -11,6 +11,7 @@ from fritzconnection.core.exceptions import (
     FritzConnectionException,
     FritzSecurityError,
 )
+from fritzconnection.lib.fritzhosts import FritzHosts
 from fritzconnection.lib.fritzstatus import FritzStatus
 from fritzconnection.lib.fritztools import ArgumentNamespace
 import pytest
@@ -771,6 +772,71 @@ async def test_async_trigger_cleanup_preserves_fritz_device(
     )
     assert fritz_device_after is not None
     assert fritz_device_after.id == fritz_device.id
+
+
+@pytest.mark.usefixtures("fc_class_mock", "fs_class_mock")
+async def test_hosts_not_fetched_without_mesh_topology_access(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    fh_class_mock: type[FritzHosts],
+) -> None:
+    """Test hosts are never fetched when the device has no access to the mesh topology."""
+    fh_class_mock.get_mesh_topology.side_effect = FritzActionError(
+        "Error 404: Device has no access to topology information."
+    )
+
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert entry.state is ConfigEntryState.LOADED
+    assert hass.states.async_entity_ids("device_tracker") == []
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # The topology is retried on every update, but hosts are never fetched
+    fh_class_mock.get_hosts_attributes.assert_not_called()
+    assert fh_class_mock.get_mesh_topology.call_count == 2
+    assert hass.states.async_entity_ids("device_tracker") == []
+
+
+@pytest.mark.usefixtures("fc_class_mock", "fs_class_mock")
+async def test_cleanup_keeps_clients_on_mesh_topology_error(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    fh_class_mock: type[FritzHosts],
+) -> None:
+    """Test a failing mesh topology fetch does not remove tracked clients."""
+    fh_class_mock.get_hosts_attributes.return_value = [
+        MOCK_HOST_PRINTER,
+        MOCK_HOST_FRITZBOX,
+    ]
+
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert entry.state is ConfigEntryState.LOADED
+    assert entity_registry.async_get("device_tracker.printer")
+    assert hass.states.get("switch.printer_internet_access")
+
+    fh_class_mock.get_mesh_topology.side_effect = FritzActionError(
+        "Error 500: Device has no access to topology information."
+    )
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:00:11:22"), entry.entry_id
+    )
+    assert entity_registry.async_get("device_tracker.printer")
+    assert entity_registry.async_get("switch.printer_internet_access")
+    assert hass.states.get("switch.printer_internet_access")
 
 
 async def test_old_discovery_does_not_self_reference_box(
