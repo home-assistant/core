@@ -1,0 +1,15 @@
+{
+  "entity": {
+    "sensor": {
+      "current_energy_price": {
+        "default": "mdi:cash"
+      },
+      "next_energy_price": {
+        "default": "mdi:cash-clock"
+      },
+      "yesterdays_consumption": {
+        "default": "mdi:home-lightning-bolt"
+      }
+    }
+  }
+}
