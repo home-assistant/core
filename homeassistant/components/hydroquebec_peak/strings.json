@@ -2,15 +2,31 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_offers": "Hydro-Québec is not publishing any offers for this customer type right now."
     },
     "step": {
-      "user": {
+      "business": {
+        "data": {
+          "offer": "[%key:component::hydroquebec_peak::config::step::residential::data::offer%]"
+        },
+        "data_description": {
+          "offer": "[%key:component::hydroquebec_peak::config::step::residential::data_description::offer%]"
+        }
+      },
+      "residential": {
         "data": {
           "offer": "Offer"
         },
         "data_description": {
-          "offer": "The Hydro-Québec peak savings offer you are enrolled in. The list comes from Hydro-Québec's open data for the current season."
+          "offer": "The Hydro-Québec peak savings offer you are enrolled in. The list comes from Hydro-Québec's open data."
+        }
+      },
+      "user": {
+        "description": "Select your Hydro-Québec customer type.",
+        "menu_options": {
+          "business": "Business",
+          "residential": "Residential"
         }
       }
     }
