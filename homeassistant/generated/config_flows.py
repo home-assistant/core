@@ -346,6 +346,7 @@ FLOWS = {
         "haven_iaq",
         "hdfury",
         "hegel",
+        "heiman_local",
         "helty",
         "helty_cloud",
         "heos",

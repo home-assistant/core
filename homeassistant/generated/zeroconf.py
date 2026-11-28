@@ -574,6 +574,11 @@ ZEROCONF = {
             "domain": "haven_iaq",
         },
     ],
+    "_heiman._tcp.local.": [
+        {
+            "domain": "heiman_local",
+        },
+    ],
     "_heos-audio._tcp.local.": [
         {
             "domain": "heos",
@@ -645,6 +650,10 @@ ZEROCONF = {
         {
             "domain": "hdfury",
             "name": "vrroom-*",
+        },
+        {
+            "domain": "heiman_local",
+            "name": "heiman-sw-*",
         },
         {
             "domain": "homevolt",
