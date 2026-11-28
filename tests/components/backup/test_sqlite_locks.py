@@ -18,6 +18,7 @@ from securetar import AddFileError
 from homeassistant.components.backup import DOMAIN, archive_writer
 from homeassistant.components.backup.models import BackupManagerError
 from homeassistant.components.backup.services import BackupService
+from homeassistant.components.backup.util import read_backup
 from homeassistant.core import HomeAssistant
 
 from .common import setup_backup_integration
@@ -87,6 +88,10 @@ async def test_core_backup_uses_one_archive_process(hass: HomeAssistant) -> None
     await setup_backup_integration(hass)
     Path(hass.config.path("first.txt")).write_text("first", encoding="utf-8")
     Path(hass.config.path("second.txt")).write_text("second", encoding="utf-8")
+    # A staging file left behind by a crash must never become backup content.
+    Path(hass.config.path("backups/.ha-backup-orphan.partial")).write_bytes(
+        b"incomplete archive"
+    )
 
     # -P runs Python site hooks, which can print to stdout. No stdout bytes
     # from the child should be mistaken for part of the archive.
@@ -119,11 +124,18 @@ async def test_core_backup_uses_one_archive_process(hass: HomeAssistant) -> None
     assert runner.call_count == 1
     assert runner.call_args.args[0][1] == "-P"
     assert runner.call_args.kwargs["stdout"] == subprocess.DEVNULL
+    request = json.loads(runner.call_args.kwargs["input"].split(b"\n", 1)[0])
+    assert request["archive_path"].endswith(".partial")
+    assert sorted(
+        path.name
+        for path in Path(hass.config.path("backups")).glob(".ha-backup-*.partial")
+    ) == [".ha-backup-orphan.partial"]
     [archive_path] = Path(hass.config.path("backups")).glob("*.tar")
     with tarfile.open(archive_path) as outer:
         stream = outer.extractfile("homeassistant.tar.gz")
         assert stream is not None
         with stream, tarfile.open(fileobj=stream, mode="r:gz") as inner:
+            assert not any(name.endswith(".partial") for name in inner.getnames())
             for filename, expected in (
                 ("first.txt", b"first"),
                 ("second.txt", b"second"),
@@ -209,3 +221,47 @@ async def test_core_backup_reports_worker_early_exit(hass: HomeAssistant) -> Non
         await hass.services.async_call(DOMAIN, BackupService.CREATE, blocking=True)
 
     assert "deliberate test error" in str(exc_info.value)
+
+
+async def test_core_backup_does_not_publish_partial_archive(
+    hass: HomeAssistant,
+) -> None:
+    """A worker dying after backup.json must not leave a discoverable backup."""
+    await setup_backup_integration(hass)
+    original_run = subprocess.run
+    partially_written = False
+    worker = (
+        "import io, json, os, sys, tarfile; "
+        "request = json.loads(sys.stdin.buffer.readline()); "
+        "metadata = sys.stdin.buffer.read(); "
+        "archive = tarfile.open(request['archive_path'], 'w'); "
+        "info = tarfile.TarInfo('./backup.json'); "
+        "info.size = len(metadata); "
+        "archive.addfile(info, io.BytesIO(metadata)); "
+        "archive.close(); "
+        "os._exit(37)"
+    )
+
+    def fail_after_writing_metadata(
+        command: list[str], **kwargs: object
+    ) -> subprocess.CompletedProcess:
+        nonlocal partially_written
+        result = original_run([command[0], "-P", "-c", worker], **kwargs)
+        request = json.loads(kwargs["input"].split(b"\n", 1)[0])
+        partial_path = Path(request["archive_path"])
+        assert read_backup(partial_path).homeassistant_included
+        partially_written = True
+        return result
+
+    with (
+        patch(
+            "homeassistant.components.backup.manager.subprocess.run",
+            side_effect=fail_after_writing_metadata,
+        ),
+        pytest.raises(BackupManagerError, match="exit code 37"),
+    ):
+        await hass.services.async_call(DOMAIN, BackupService.CREATE, blocking=True)
+
+    assert partially_written
+    assert not list(Path(hass.config.path("backups")).glob("*.tar"))
+    assert not list(Path(hass.config.path("backups")).glob("*.partial"))

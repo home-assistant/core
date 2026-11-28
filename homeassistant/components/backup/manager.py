@@ -9,11 +9,13 @@ from enum import StrEnum
 import hashlib
 from itertools import chain
 import json
+import os
 from pathlib import Path, PureWindowsPath
 import shutil
 import subprocess
 import sys
 import tarfile
+import tempfile
 from typing import IO, TYPE_CHECKING, Any, Protocol, TypedDict, cast, override
 
 import aiohttp
@@ -1972,40 +1974,55 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         if not database_included:
             excludes = excludes + EXCLUDE_DATABASE_FROM_BACKUP
 
-        request = {
-            "archive_path": str(tar_file_path),
-            "config_path": self._hass.config.path(),
-            "excludes": excludes,
-            "buf_size": BUF_SIZE,
-            "create_version": SECURETAR_CREATE_VERSION,
-            "password": password,
-        }
-        payload = json.dumps(request).encode() + b"\n" + json_bytes(backup_data)
-        result = subprocess.run(
-            [
-                sys.executable,
-                "-P",
-                str(Path(__file__).with_name("archive_writer.py")),
-            ],
-            input=payload,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.PIPE,
-            check=False,
+        # A terminated worker may leave an archive containing only backup.json.
+        # Stage the archive beside its destination so it becomes discoverable
+        # only after the full archive has been created successfully.
+        fd, temp_path = tempfile.mkstemp(
+            prefix=".ha-backup-", suffix=".partial", dir=tar_file_path.parent
         )
-        if result.returncode:
-            raise BackupReaderWriterError(
-                f"Could not create Core backup archive "
-                f"(exit code {result.returncode}): "
-                f"{result.stderr.decode(errors='replace').strip()}"
-            )
+        os.close(fd)
+        partial_path = Path(temp_path)
+        published = False
         try:
-            stat_result = tar_file_path.stat()
-        except OSError as err:
-            raise BackupReaderWriterError(
-                f"Error getting size of {tar_file_path}: "
-                f"{err} ({err.__class__.__name__})"
-            ) from err
-        return (tar_file_path, stat_result.st_size)
+            request = {
+                "archive_path": str(partial_path),
+                "config_path": self._hass.config.path(),
+                "excludes": excludes,
+                "buf_size": BUF_SIZE,
+                "create_version": SECURETAR_CREATE_VERSION,
+                "password": password,
+            }
+            payload = json.dumps(request).encode() + b"\n" + json_bytes(backup_data)
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    "-P",
+                    str(Path(__file__).with_name("archive_writer.py")),
+                ],
+                input=payload,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.PIPE,
+                check=False,
+            )
+            if result.returncode:
+                raise BackupReaderWriterError(
+                    f"Could not create Core backup archive "
+                    f"(exit code {result.returncode}): "
+                    f"{result.stderr.decode(errors='replace').strip()}"
+                )
+            try:
+                stat_result = partial_path.stat()
+            except OSError as err:
+                raise BackupReaderWriterError(
+                    f"Error getting size of {partial_path}: "
+                    f"{err} ({err.__class__.__name__})"
+                ) from err
+            partial_path.replace(tar_file_path)
+            published = True
+            return (tar_file_path, stat_result.st_size)
+        finally:
+            if not published:
+                partial_path.unlink(missing_ok=True)
 
     async def _receive_and_move_backup(
         self,

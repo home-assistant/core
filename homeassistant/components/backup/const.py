@@ -22,6 +22,7 @@ EXCLUDE_FROM_BACKUP = [
     "*.log",
     "backups/*.tar",
     "tmp_backups/*.tar",
+    "**/.ha-backup-*.partial",
     "OZW_Log.txt",
     "tts/*",
     ".cache/*",
