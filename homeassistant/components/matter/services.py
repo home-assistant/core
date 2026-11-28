@@ -1,22 +1,41 @@
 """Services for Matter devices."""
 
+from collections.abc import Callable
+
 import probatio
 
+from homeassistant.components.climate import ATTR_PRESET_MODE, DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.components.water_heater import DOMAIN as WATER_HEATER_DOMAIN
 from homeassistant.core import HomeAssistant, SupportsResponse, callback
 from homeassistant.helpers import config_validation as cv, service
 
 from .const import (
+    ATTR_COOLING_SETPOINT,
+    ATTR_HEATING_SETPOINT,
+    ATTR_PRESET_NAME,
+    ATTR_PRESET_SCENARIO,
     CLEAR_ALL_INDEX,
     CREDENTIAL_RULE_REVERSE_MAP,
     CREDENTIAL_TYPE_REVERSE_MAP,
     DOMAIN,
+    PRESET_SCENARIO_REVERSE_MAP,
     SERVICE_CREDENTIAL_TYPES,
     USER_TYPE_REVERSE_MAP,
     MatterService,
     MatterServiceArgument,
 )
+
+
+def _max_utf8_bytes(max_bytes: int) -> Callable[[str], str]:
+    """Return a validator for a string of at most `max_bytes` UTF-8 bytes."""
+
+    def validate(value: str) -> str:
+        if len(value.encode()) > max_bytes:
+            raise probatio.Invalid(f"must be at most {max_bytes} bytes long")
+        return value
+
+    return validate
 
 
 @callback
@@ -39,6 +58,41 @@ def async_setup_services(hass: HomeAssistant) -> None:
             ),
         },
         func="async_set_boost",
+    )
+
+    # Thermostat services - Preset CRUD
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        "set_thermostat_preset",
+        entity_domain=CLIMATE_DOMAIN,
+        schema={
+            probatio.Optional(ATTR_PRESET_MODE): cv.string,
+            probatio.Optional(ATTR_PRESET_SCENARIO): probatio.In(
+                PRESET_SCENARIO_REVERSE_MAP.keys()
+            ),
+            probatio.Optional(ATTR_PRESET_NAME): probatio.All(
+                cv.string, _max_utf8_bytes(64)
+            ),
+            probatio.Optional(ATTR_HEATING_SETPOINT): probatio.All(
+                probatio.Coerce(float), probatio.Range(min=-50, max=100)
+            ),
+            probatio.Optional(ATTR_COOLING_SETPOINT): probatio.All(
+                probatio.Coerce(float), probatio.Range(min=-50, max=100)
+            ),
+        },
+        func="async_set_thermostat_preset",
+    )
+
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        "clear_thermostat_preset",
+        entity_domain=CLIMATE_DOMAIN,
+        schema={
+            probatio.Required(ATTR_PRESET_MODE): cv.string,
+        },
+        func="async_clear_thermostat_preset",
     )
 
     # Lock services - Full user CRUD
