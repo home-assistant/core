@@ -1735,6 +1735,15 @@ def check_value(
         )
     ):
         return False
+    if (
+        schema.not_available_states_keys is not None
+        and value.metadata.states is not None
+        and any(
+            str(key) in value.metadata.states
+            for key in schema.not_available_states_keys
+        )
+    ):
+        return False
     # check available cc specific
     if schema.all_available_cc_specific is not None and (
         value.metadata.cc_specific is None

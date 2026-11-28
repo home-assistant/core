@@ -1,5 +1,6 @@
 """Test the Z-Wave JS binary sensor platform."""
 
+from collections.abc import Awaitable, Callable
 import copy
 from datetime import timedelta
 from typing import Any
@@ -10,7 +11,7 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
 
-from homeassistant.components import automation
+from homeassistant.components import automation, script
 from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
@@ -20,13 +21,14 @@ from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
+    EVENT_HOMEASSISTANT_STARTED,
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
     EntityCategory,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.setup import async_setup_component
@@ -583,21 +585,34 @@ async def test_power_management_mains_disconnected_sensor(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test the AC mains disconnected sensor is kept as a diagnostic sensor.
+    """Test the deprecated AC mains disconnected sensor is disabled by default.
 
     State 3 (AC mains re-connected) is the PLUG sensor, with state 2 (AC mains
-    disconnected) as its off state. State 2 also gets its own entity without a
-    device class, kept for backwards compatibility to be deprecated separately.
+    disconnected) as its off state. State 2 also gets its own deprecated entity
+    without a device class, kept for backwards compatibility.
     """
-    entity_id = "binary_sensor.keypad_v2_ac_mains_disconnected"
-    state = hass.states.get(entity_id)
+    assert hass.states.get(MAINS_DISCONNECTED_SENSOR) is None
+
+    entity_entry = entity_registry.async_get(MAINS_DISCONNECTED_SENSOR)
+    assert entity_entry
+    assert entity_entry.unique_id == MAINS_DISCONNECTED_UNIQUE_ID
+    assert entity_entry.original_name == "AC mains disconnected"
+    assert entity_entry.original_device_class is None
+    assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
+    assert entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+
+@pytest.mark.usefixtures(
+    "entity_registry_enabled_by_default", "ring_keypad", "integration"
+)
+async def test_power_management_mains_disconnected_sensor_enabled(
+    hass: HomeAssistant,
+) -> None:
+    """Test the state of the deprecated AC mains disconnected sensor when enabled."""
+    state = hass.states.get(MAINS_DISCONNECTED_SENSOR)
     assert state
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_DEVICE_CLASS) is None
-
-    entity_entry = entity_registry.async_get(entity_id)
-    assert entity_entry
-    assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
 
 
 @pytest.mark.usefixtures("zooz_zac36_titan_valve_actuator", "integration")
@@ -2601,6 +2616,327 @@ async def test_legacy_door_open_state_stale_repair_issue_cleaned_up(
         )
         is None
     )
+
+
+MAINS_DISCONNECTED_SENSOR = "binary_sensor.keypad_v2_ac_mains_disconnected"
+MAINS_RE_CONNECTED_SENSOR = "binary_sensor.keypad_v2_ac_mains_re_connected"
+MAINS_STATUS_VALUE_ID = "4-113-0-Power Management-Mains status"
+MAINS_DISCONNECTED_UNIQUE_ID = f"3245146787.{MAINS_STATUS_VALUE_ID}.2"
+MAINS_DISCONNECTED_ISSUE_ID = (
+    f"deprecated_mains_disconnected.{MAINS_DISCONNECTED_SENSOR}"
+)
+
+
+def _set_mains_status_metadata_states(
+    node_state: dict[str, Any], states: dict[str, str]
+) -> dict[str, Any]:
+    """Return a node state with updated Mains status metadata states."""
+    updated_state = copy.deepcopy(node_state)
+    for value_data in updated_state["values"]:
+        if (
+            value_data.get("commandClass") == 113
+            and value_data.get("property") == "Power Management"
+            and value_data.get("propertyKey") == "Mains status"
+        ):
+            value_data["metadata"]["states"] = states
+            break
+    return updated_state
+
+
+def _register_mains_entities(
+    entity_registry: er.EntityRegistry,
+    entry: MockConfigEntry,
+    home_id: int,
+    *,
+    disabled_by: er.RegistryEntryDisabler | None = None,
+) -> None:
+    """Register the mains entities as they exist for users upgrading."""
+    entity_registry.async_get_or_create(
+        BINARY_SENSOR_DOMAIN,
+        DOMAIN,
+        f"{home_id}.{MAINS_STATUS_VALUE_ID}.2",
+        config_entry=entry,
+        suggested_object_id="keypad_v2_ac_mains_disconnected",
+        original_name="AC mains disconnected",
+        disabled_by=disabled_by,
+    )
+    entity_registry.async_get_or_create(
+        BINARY_SENSOR_DOMAIN,
+        DOMAIN,
+        f"{home_id}.{MAINS_STATUS_VALUE_ID}.3",
+        config_entry=entry,
+        suggested_object_id="keypad_v2_ac_mains_re_connected",
+        original_name="AC mains re-connected",
+    )
+
+
+async def _setup_automation(hass: HomeAssistant, entity_id: str) -> None:
+    """Set up an automation that references the entity."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "id": "test_automation",
+                "alias": "test",
+                "trigger": {"platform": "state", "entity_id": entity_id},
+                "action": {
+                    "action": "automation.turn_on",
+                    "target": {"entity_id": "automation.test_automation"},
+                },
+            }
+        },
+    )
+
+
+async def _setup_no_reference(hass: HomeAssistant, entity_id: str) -> None:
+    """Set up nothing that references the entity."""
+
+
+async def _setup_automation_without_id(hass: HomeAssistant, entity_id: str) -> None:
+    """Set up an automation without an ID, so it has no registry entry."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": "test",
+                "trigger": {"platform": "state", "entity_id": entity_id},
+                "action": {"delay": 0},
+            }
+        },
+    )
+
+
+async def _setup_script(hass: HomeAssistant, entity_id: str) -> None:
+    """Set up a script that references the entity."""
+    assert await async_setup_component(
+        hass,
+        script.DOMAIN,
+        {
+            script.DOMAIN: {
+                "test_script": {
+                    "alias": "test script",
+                    "sequence": [
+                        {
+                            "condition": "state",
+                            "entity_id": entity_id,
+                            "state": "on",
+                        }
+                    ],
+                }
+            }
+        },
+    )
+
+
+def _add_entry(hass: HomeAssistant) -> MockConfigEntry:
+    """Add the Z-Wave JS config entry."""
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://test.org"})
+    entry.add_to_hass(hass)
+    return entry
+
+
+async def _setup_entry(hass: HomeAssistant, entry: MockConfigEntry) -> None:
+    """Set up the Z-Wave JS config entry."""
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize(
+    ("setup_reference", "expected_items"),
+    [
+        pytest.param(
+            _setup_automation,
+            "- [test](/config/automation/edit/test_automation)",
+            id="automation",
+        ),
+        pytest.param(
+            _setup_automation_without_id,
+            "- automation.test",
+            id="automation_without_id",
+        ),
+        pytest.param(
+            _setup_script,
+            "- [test script](/config/script/edit/test_script)",
+            id="script",
+        ),
+    ],
+)
+async def test_mains_disconnected_repair_issue(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    client: MagicMock,
+    ring_keypad_state: NodeDataType,
+    setup_reference: Callable[[HomeAssistant, str], Awaitable[None]],
+    expected_items: str,
+) -> None:
+    """Test a used mains disconnected entity creates a repair issue."""
+    node = Node(client, ring_keypad_state)
+    client.driver.controller.nodes[node.node_id] = node
+    entry = _add_entry(hass)
+    _register_mains_entities(entity_registry, entry, client.driver.controller.home_id)
+    await setup_reference(hass, MAINS_DISCONNECTED_SENSOR)
+
+    await _setup_entry(hass, entry)
+
+    state = hass.states.get(MAINS_DISCONNECTED_SENSOR)
+    assert state
+    assert state.state == STATE_ON
+    issue = issue_registry.async_get_issue(DOMAIN, MAINS_DISCONNECTED_ISSUE_ID)
+    assert issue is not None
+    assert issue.severity is IssueSeverity.WARNING
+    assert issue.is_fixable is False
+    assert issue.is_persistent is False
+    assert issue.breaks_in_ha_version == "2027.7.0"
+    assert issue.translation_key == "deprecated_mains_disconnected"
+    assert issue.config_entry_id == entry.entry_id
+    assert issue.translation_placeholders == {
+        "entity_id": MAINS_DISCONNECTED_SENSOR,
+        "entity_name": "AC mains disconnected",
+        "replacement_entity_id": MAINS_RE_CONNECTED_SENSOR,
+        "items": expected_items,
+    }
+
+
+@pytest.mark.parametrize(
+    ("disabled_by", "setup_reference"),
+    [
+        pytest.param(er.RegistryEntryDisabler.USER, _setup_automation, id="disabled"),
+        pytest.param(None, _setup_no_reference, id="not_referenced"),
+    ],
+)
+async def test_mains_disconnected_no_repair_issue(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    client: MagicMock,
+    ring_keypad_state: NodeDataType,
+    disabled_by: er.RegistryEntryDisabler | None,
+    setup_reference: Callable[[HomeAssistant, str], Awaitable[None]],
+) -> None:
+    """Test no repair issue is created when the entity is disabled or unused."""
+    node = Node(client, ring_keypad_state)
+    client.driver.controller.nodes[node.node_id] = node
+    entry = _add_entry(hass)
+    _register_mains_entities(
+        entity_registry,
+        entry,
+        client.driver.controller.home_id,
+        disabled_by=disabled_by,
+    )
+    await setup_reference(hass, MAINS_DISCONNECTED_SENSOR)
+
+    await _setup_entry(hass, entry)
+
+    assert issue_registry.async_get_issue(DOMAIN, MAINS_DISCONNECTED_ISSUE_ID) is None
+
+
+async def test_mains_disconnected_no_repair_issue_without_replacement(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    client: MagicMock,
+    ring_keypad_state: NodeDataType,
+) -> None:
+    """Test no repair issue is created when the replacement entity is gone."""
+    node = Node(client, ring_keypad_state)
+    client.driver.controller.nodes[node.node_id] = node
+    entry = _add_entry(hass)
+    _register_mains_entities(entity_registry, entry, client.driver.controller.home_id)
+    await _setup_automation(hass, MAINS_DISCONNECTED_SENSOR)
+    hass.set_state(CoreState.not_running)
+
+    await _setup_entry(hass, entry)
+    # The check runs once Home Assistant has started.
+    entity_registry.async_remove(MAINS_RE_CONNECTED_SENSOR)
+    hass.set_state(CoreState.running)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, MAINS_DISCONNECTED_ISSUE_ID) is None
+
+
+@pytest.mark.parametrize(
+    ("disabled_by", "setup_reference"),
+    [
+        pytest.param(er.RegistryEntryDisabler.USER, _setup_automation, id="disabled"),
+        pytest.param(None, _setup_no_reference, id="reference_removed"),
+    ],
+)
+async def test_mains_disconnected_stale_repair_issue_deleted(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    client: MagicMock,
+    ring_keypad_state: NodeDataType,
+    disabled_by: er.RegistryEntryDisabler | None,
+    setup_reference: Callable[[HomeAssistant, str], Awaitable[None]],
+) -> None:
+    """Test a stale repair issue is deleted on the next start."""
+    node = Node(client, ring_keypad_state)
+    client.driver.controller.nodes[node.node_id] = node
+    entry = _add_entry(hass)
+    _register_mains_entities(
+        entity_registry,
+        entry,
+        client.driver.controller.home_id,
+        disabled_by=disabled_by,
+    )
+    await setup_reference(hass, MAINS_DISCONNECTED_SENSOR)
+    async_create_issue(
+        hass,
+        DOMAIN,
+        MAINS_DISCONNECTED_ISSUE_ID,
+        is_fixable=False,
+        is_persistent=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_mains_disconnected",
+        translation_placeholders={
+            "entity_id": MAINS_DISCONNECTED_SENSOR,
+            "entity_name": "AC mains disconnected",
+            "replacement_entity_id": MAINS_RE_CONNECTED_SENSOR,
+            "items": "- [test](/config/automation/edit/test_automation)",
+        },
+    )
+
+    await _setup_entry(hass, entry)
+
+    assert issue_registry.async_get_issue(DOMAIN, MAINS_DISCONNECTED_ISSUE_ID) is None
+
+
+async def test_mains_disconnected_without_re_connected_state(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    client: MagicMock,
+    ring_keypad_state: NodeDataType,
+) -> None:
+    """Test the mains disconnected entity is not deprecated without state 3."""
+    node = Node(
+        client,
+        _set_mains_status_metadata_states(
+            ring_keypad_state,
+            {"2": "AC mains disconnected", "4": "Surge detected"},
+        ),
+    )
+    client.driver.controller.nodes[node.node_id] = node
+    await _setup_automation(hass, MAINS_DISCONNECTED_SENSOR)
+
+    await _setup_entry(hass, _add_entry(hass))
+
+    state = hass.states.get(MAINS_DISCONNECTED_SENSOR)
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes.get(ATTR_DEVICE_CLASS) is None
+    entity_entry = entity_registry.async_get(MAINS_DISCONNECTED_SENSOR)
+    assert entity_entry
+    assert entity_entry.unique_id == MAINS_DISCONNECTED_UNIQUE_ID
+    assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
+    assert entity_entry.disabled_by is None
+    assert hass.states.get(MAINS_RE_CONNECTED_SENSOR) is None
+    assert issue_registry.async_get_issue(DOMAIN, MAINS_DISCONNECTED_ISSUE_ID) is None
 
 
 ZSE43_VIBRATION_SENSOR = "binary_sensor.tilt_shock_xs_sensor_vibration"

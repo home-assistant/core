@@ -51,6 +51,7 @@ from .entity import NewZwaveDiscoveryInfo, ZWaveBaseEntity
 from .helpers import (
     get_device_id,
     get_opening_state_notification_value,
+    get_unique_id,
     is_opening_state_notification_value,
 )
 from .models import (
@@ -214,6 +215,18 @@ LEGACY_DOOR_STATE_REPAIR_ISSUE_KEYS = frozenset(
     }
 )
 
+DEPRECATED_MAINS_DISCONNECTED_ISSUE_KEY = "deprecated_mains_disconnected"
+
+# DEPRECATED: duplicate of the AC mains re-connected PLUG sensor with the
+# opposite state. To be removed in 2027.7.
+DEPRECATED_MAINS_DISCONNECTED_DESCRIPTION = NotificationZWaveJSEntityDescription(
+    # NotificationType 8: Power Management - State Id 2 (Mains disconnected)
+    key=NOTIFICATION_POWER_MANAGEMENT,
+    states={PowerManagementNotificationEvent.MAINS_STATUS_AC_MAINS_DISCONNECTED},
+    entity_category=EntityCategory.DIAGNOSTIC,
+    entity_registry_enabled_default=False,
+)
+
 
 # Mappings for Notification sensors
 # https://github.com/zwave-js/specs/blob/master/Registries/Notification%20Command%20Class%2C%20list%20of%20assigned%20Notifications.xlsx
@@ -322,6 +335,30 @@ def is_valid_notification_binary_sensor(
 
 
 @callback
+def _async_format_automation_script_items(
+    ent_reg: er.EntityRegistry,
+    entity_automations: list[str],
+    entity_scripts: list[str],
+) -> str:
+    """Return a Markdown list of links to the automations and scripts."""
+    items = []
+    for domain, entity_ids in (
+        ("automation", entity_automations),
+        ("script", entity_scripts),
+    ):
+        for eid in entity_ids:
+            item = ent_reg.async_get(eid)
+            if item:
+                items.append(
+                    f"- [{item.name or item.original_name or eid}]"
+                    f"(/config/{domain}/edit/{item.unique_id})"
+                )
+            else:
+                items.append(f"- {eid}")
+    return "\n".join(items)
+
+
+@callback
 def _async_delete_legacy_entity_repairs(hass: HomeAssistant, entity_id: str) -> None:
     """Delete all stale legacy door state repair issues for an entity."""
     for issue_key in LEGACY_DOOR_STATE_REPAIR_ISSUE_KEYS:
@@ -384,21 +421,6 @@ def _async_check_legacy_entity_repair(
             _async_delete_legacy_entity_repairs(hass, entity_id)
             return
 
-        items = []
-        for domain, entity_ids in (
-            ("automation", entity_automations),
-            ("script", entity_scripts),
-        ):
-            for eid in entity_ids:
-                item = ent_reg.async_get(eid)
-                if item:
-                    items.append(
-                        f"- [{item.name or item.original_name or eid}]"
-                        f"(/config/{domain}/edit/{item.unique_id})"
-                    )
-                else:
-                    items.append(f"- {eid}")
-
         async_create_issue(
             hass,
             DOMAIN,
@@ -414,7 +436,77 @@ def _async_check_legacy_entity_repair(
                     entity_entry.name or entity_entry.original_name or entity_id
                 ),
                 "replacement_entity_id": replacement_entity_id,
-                "items": "\n".join(items),
+                "items": _async_format_automation_script_items(
+                    ent_reg, entity_automations, entity_scripts
+                ),
+            },
+        )
+
+    async_at_started(hass, _async_do_check)
+
+
+@callback
+def _async_check_deprecated_mains_disconnected_repair(
+    hass: HomeAssistant,
+    driver: Driver,
+    entity: ZWaveNotificationBinarySensor,
+) -> None:
+    """Schedule a repair issue check once HA has fully started."""
+
+    @callback
+    def _async_do_check(hass: HomeAssistant) -> None:
+        """Create or delete a repair issue for a deprecated mains disconnected entity."""
+        ent_reg = er.async_get(hass)
+        if TYPE_CHECKING:
+            assert entity.unique_id is not None
+        entity_id = ent_reg.async_get_entity_id(
+            BINARY_SENSOR_DOMAIN, DOMAIN, entity.unique_id
+        )
+        if entity_id is None:
+            return
+        issue_id = f"{DEPRECATED_MAINS_DISCONNECTED_ISSUE_KEY}.{entity_id}"
+
+        entity_entry = ent_reg.async_get(entity_id)
+        if entity_entry is None or entity_entry.disabled:
+            async_delete_issue(hass, DOMAIN, issue_id)
+            return
+
+        entity_automations = automations_with_entity(hass, entity_id)
+        entity_scripts = scripts_with_entity(hass, entity_id)
+        if not entity_automations and not entity_scripts:
+            async_delete_issue(hass, DOMAIN, issue_id)
+            return
+
+        replacement_unique_id = (
+            f"{get_unique_id(driver, entity.info.primary_value.value_id)}."
+            f"{PowerManagementNotificationEvent.MAINS_STATUS_AC_MAINS_RE_CONNECTED}"
+        )
+        replacement_entity_id = ent_reg.async_get_entity_id(
+            BINARY_SENSOR_DOMAIN, DOMAIN, replacement_unique_id
+        )
+        if replacement_entity_id is None:
+            async_delete_issue(hass, DOMAIN, issue_id)
+            return
+
+        async_create_issue(
+            hass,
+            DOMAIN,
+            issue_id,
+            breaks_in_ha_version="2027.7.0",
+            config_entry_id=entity_entry.config_entry_id,
+            is_fixable=False,
+            is_persistent=False,
+            severity=IssueSeverity.WARNING,
+            translation_key=DEPRECATED_MAINS_DISCONNECTED_ISSUE_KEY,
+            translation_placeholders={
+                "entity_id": entity_id,
+                "entity_name": (
+                    entity_entry.name or entity_entry.original_name or entity_id
+                ),
+                "replacement_entity_id": replacement_entity_id,
+                "items": _async_format_automation_script_items(
+                    ent_reg, entity_automations, entity_scripts
+                ),
             },
         )
 
@@ -446,7 +538,7 @@ async def async_setup_entry(
             )
             and is_valid_notification_binary_sensor(info)
         ):
-            entities.extend(
+            notification_entities = [
                 ZWaveNotificationBinarySensor(config_entry, driver, info, state_key)
                 for state_key in info.primary_value.metadata.states
                 if int(state_key) not in info.entity_description.not_states
@@ -454,7 +546,13 @@ async def async_setup_entry(
                     not info.entity_description.states
                     or int(state_key) in info.entity_description.states
                 )
-            )
+            ]
+            entities.extend(notification_entities)
+            if info.entity_description is DEPRECATED_MAINS_DISCONNECTED_DESCRIPTION:
+                for notification_entity in notification_entities:
+                    _async_check_deprecated_mains_disconnected_repair(
+                        hass, driver, notification_entity
+                    )
         elif (
             isinstance(info, NewZwaveDiscoveryInfo)
             and info.entity_class is ZWaveBooleanBinarySensor
@@ -1415,6 +1513,49 @@ DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
             command_class={CommandClass.NOTIFICATION},
             type={ValueType.NUMBER},
             any_available_states_keys={
+                PowerManagementNotificationEvent.MAINS_STATUS_AC_MAINS_RE_CONNECTED
+            },
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.POWER_MANAGEMENT)
+            },
+        ),
+        allow_multi=True,
+        entity_description=DEPRECATED_MAINS_DISCONNECTED_DESCRIPTION,
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            type={ValueType.NUMBER},
+            any_available_states_keys={
+                PowerManagementNotificationEvent.MAINS_STATUS_AC_MAINS_DISCONNECTED
+            },
+            not_available_states_keys={
+                PowerManagementNotificationEvent.MAINS_STATUS_AC_MAINS_RE_CONNECTED
+            },
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.POWER_MANAGEMENT)
+            },
+        ),
+        allow_multi=True,
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 8: Power Management - State Id 2 (Mains disconnected)
+            # without State Id 3, so there is no PLUG sensor to replace it
+            key=NOTIFICATION_POWER_MANAGEMENT,
+            states={
+                PowerManagementNotificationEvent.MAINS_STATUS_AC_MAINS_DISCONNECTED
+            },
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            type={ValueType.NUMBER},
+            any_available_states_keys={
                 PowerManagementNotificationEvent.OVER_CURRENT_STATUS_OVER_CURRENT_DETECTED,
                 PowerManagementNotificationEvent.OVER_VOLTAGE_STATUS_OVER_VOLTAGE_DETECTED,
                 PowerManagementNotificationEvent.OVER_LOAD_STATUS_OVER_LOAD_DETECTED,
@@ -1512,6 +1653,7 @@ DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
             entity_category=EntityCategory.DIAGNOSTIC,
             not_states={
                 PowerManagementNotificationEvent.IDLE,
+                PowerManagementNotificationEvent.MAINS_STATUS_AC_MAINS_DISCONNECTED,
                 PowerManagementNotificationEvent.MAINS_STATUS_AC_MAINS_RE_CONNECTED,
                 PowerManagementNotificationEvent.OVER_CURRENT_STATUS_OVER_CURRENT_DETECTED,
                 PowerManagementNotificationEvent.OVER_VOLTAGE_STATUS_OVER_VOLTAGE_DETECTED,
