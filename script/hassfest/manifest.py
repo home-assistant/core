@@ -101,6 +101,7 @@ NO_IOT_CLASS = [
     "input_text",
     "intent_script",
     "intent",
+    "location",
     "logbook",
     "logger",
     "lovelace",
@@ -319,6 +320,7 @@ INTEGRATION_MANIFEST_SCHEMA = probatio.Schema(
                 }
             )
         ],
+        probatio.Optional("locations"): probatio.All([cv.country], probatio.Unique()),
         probatio.Required("documentation"): probatio.All(
             probatio.Url(), core_documentation_url
         ),

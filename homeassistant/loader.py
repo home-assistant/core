@@ -41,6 +41,7 @@ from .generated.application_credentials import APPLICATION_CREDENTIALS
 from .generated.bluetooth import BLUETOOTH
 from .generated.config_flows import FLOWS
 from .generated.dhcp import DHCP
+from .generated.locations import LOCATIONS
 from .generated.lorawan import LORAWAN
 from .generated.mqtt import MQTT
 from .generated.ssdp import SSDP
@@ -326,6 +327,7 @@ class Manifest(TypedDict, total=False):
     dhcp: list[dict[str, bool | str]]
     usb: list[dict[str, str]]
     homekit: dict[str, list[str]]
+    locations: list[str]
     is_built_in: bool
     overwrites_built_in: bool
     version: str
@@ -633,6 +635,32 @@ async def async_get_bluetooth(hass: HomeAssistant) -> list[BluetoothMatcher]:
             )
 
     return bluetooth
+
+
+async def async_get_locations(hass: HomeAssistant) -> dict[str, list[str]]:
+    """Return the domains of the integrations serving each country."""
+    integrations = await async_get_custom_components(hass)
+    # A custom integration replaces the built-in integration with the same domain,
+    # so only the countries in the custom manifest apply.
+    locations = {
+        country: [domain for domain in domains if domain not in integrations]
+        for country, domains in LOCATIONS.items()
+    }
+    for integration in integrations.values():
+        countries = integration.locations
+        if not countries:
+            continue
+        # Custom manifests are not validated against the manifest schema.
+        if not isinstance(countries, list) or not all(
+            isinstance(country, str) for country in countries
+        ):
+            _LOGGER.warning(
+                "Ignoring invalid locations registration for %s", integration.domain
+            )
+            continue
+        for country in countries:
+            locations.setdefault(country, []).append(integration.domain)
+    return locations
 
 
 async def async_get_dhcp(hass: HomeAssistant) -> list[DHCPMatcher]:
@@ -1083,6 +1111,11 @@ class Integration:
     def homekit(self) -> dict[str, list[str]] | None:
         """Return Integration homekit entries."""
         return self.manifest.get("homekit")
+
+    @property
+    def locations(self) -> list[str] | None:
+        """Return Integration location countries."""
+        return self.manifest.get("locations")
 
     @property
     def is_built_in(self) -> bool:

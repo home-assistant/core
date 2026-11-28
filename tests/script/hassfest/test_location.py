@@ -1,0 +1,64 @@
+"""Tests for hassfest location generation."""
+
+from pathlib import Path
+
+from hassfest.model import Config
+import pytest
+
+from script.hassfest import location
+
+from . import get_integration
+
+
+@pytest.fixture
+def config(tmp_path: Path) -> Config:
+    """Return a hassfest config."""
+    return Config(
+        root=tmp_path,
+        specific_integrations=None,
+        action="validate",
+        requirements=False,
+    )
+
+
+def test_generate(config: Config) -> None:
+    """Test the integrations are grouped by country."""
+    integration_1 = get_integration("test_1", config)
+    integration_1.manifest["locations"] = ["NL", "BE"]
+    integration_2 = get_integration("test_2", config)
+    integration_2.manifest["locations"] = ["NL"]
+
+    content = location.generate_and_validate(
+        {"test_2": integration_2, "test_1": integration_1}, config
+    )
+
+    assert config.errors == []
+    assert '"BE": [\n        "test_1",\n    ],' in content
+    assert '"NL": [\n        "test_1",\n        "test_2",\n    ],' in content
+
+
+def test_validate_missing_file(config: Config) -> None:
+    """Test a missing locations file is reported as fixable."""
+    location.validate({}, config)
+
+    assert len(config.errors) == 1
+    assert config.errors[0].fixable
+
+
+@pytest.mark.parametrize(
+    "locations",
+    [
+        pytest.param(None, id="none"),
+        pytest.param("NL", id="string"),
+        pytest.param([["NL"]], id="nested_list"),
+    ],
+)
+def test_generate_malformed_locations(config: Config, locations: object) -> None:
+    """Test malformed locations are reported and skipped."""
+    integration = get_integration("test_1", config)
+    integration.manifest["locations"] = locations
+
+    content = location.generate_and_validate({"test_1": integration}, config)
+
+    assert len(integration.errors) == 1
+    assert "test_1" not in content

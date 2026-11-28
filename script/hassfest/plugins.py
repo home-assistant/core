@@ -19,6 +19,7 @@ INTEGRATION_PLUGINS = [
     "integration_type",
     "json",
     "labs",
+    "location",
     "lorawan",
     "manifest",
     "mqtt",
