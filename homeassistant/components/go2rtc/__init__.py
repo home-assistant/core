@@ -1,12 +1,17 @@
 """The go2rtc component."""
 
+import asyncio
+from collections import defaultdict
+from contextlib import suppress
 from dataclasses import dataclass
+from datetime import datetime
 import logging
 import re
 from secrets import token_hex
 import shutil
 from tempfile import mkdtemp
 from typing import override
+from urllib.parse import quote, unquote, urlparse
 
 from aiohttp import ClientSession, UnixConnector, encode_basic_auth
 from aiohttp.client_exceptions import ClientConnectionError, ServerConnectionError
@@ -44,7 +49,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryError,
     ConfigEntryNotReady,
@@ -59,6 +64,8 @@ from homeassistant.helpers.aiohttp_client import (
     async_create_clientsession,
     async_get_clientsession,
 )
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.package import is_docker_env
@@ -67,8 +74,10 @@ from .const import (
     CONF_DEBUG_UI,
     DEBUG_UI_URL_MESSAGE,
     DOMAIN,
+    HA_MANAGED_RTSP_PORT,
     HA_MANAGED_URL,
     RECOMMENDED_VERSION,
+    SIGNAL_SERVER_RESTARTED,
 )
 from .server import Server
 from .util import get_camera_identifier, get_go2rtc_unix_socket_path
@@ -125,6 +134,10 @@ CONFIG_SCHEMA = probatio.Schema(
 
 _DATA_GO2RTC: HassKey[Go2RtcConfig] = HassKey(DOMAIN)
 _RETRYABLE_ERRORS = (ClientConnectionError, ServerConnectionError)
+# Seconds before each retry of the stream updates, the last repeating
+# Time limit for one camera's stream update, after which it's retried
+_UPDATE_TIMEOUT = 10
+_UPDATE_RETRY_DELAYS = (5, 15, 30, 60, 300)
 type Go2RtcConfigEntry = ConfigEntry[WebRTCProvider]
 
 
@@ -133,6 +146,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     url: str | None = None
     username: str | None = None
     password: str | None = None
+    managed = False
 
     if DOMAIN not in config and DEFAULT_CONFIG_DOMAIN not in config:
         await _remove_go2rtc_entries(hass)
@@ -193,6 +207,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, on_stop)
 
         url = HA_MANAGED_URL
+        managed = True
     elif username and password:
         session = async_create_clientsession(
             hass, headers={"Authorization": encode_basic_auth(username, password)}
@@ -200,7 +215,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     else:
         session = async_get_clientsession(hass)
 
-    hass.data[_DATA_GO2RTC] = Go2RtcConfig(url, session)
+    hass.data[_DATA_GO2RTC] = Go2RtcConfig(url, session, managed)
     discovery_flow.async_create_flow(
         hass, DOMAIN, context={"source": SOURCE_SYSTEM}, data={}
     )
@@ -272,9 +287,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: Go2RtcConfigEntry) -> No
 
     ir.async_delete_issue(hass, DOMAIN, "unsupported_version")
 
-    provider = entry.runtime_data = WebRTCProvider(hass, url, session, client)
+    provider = entry.runtime_data = WebRTCProvider(
+        hass, url, session, client, managed=config.managed
+    )
     await provider.initialize()
     entry.async_on_unload(async_register_webrtc_provider(hass, provider))
+    if config.managed:
+        entry.async_on_unload(
+            async_dispatcher_connect(
+                hass, SIGNAL_SERVER_RESTARTED, provider.async_restore_restreams
+            )
+        )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: Go2RtcConfigEntry) -> None:
@@ -304,15 +327,31 @@ class WebRTCProvider(CameraWebRTCProvider):
         url: str,
         session: ClientSession,
         rest_client: Go2RtcRestClient,
+        *,
+        managed: bool = False,
     ) -> None:
         """Initialize the WebRTC provider."""
         self._hass = hass
         self._url = url
+        self._managed = managed
         self._session = session
         self._rest_client = rest_client
         self._sessions: dict[str, _SessionInfo] = {}
         self._supported_schemes: set[str] = set()
         self._added_stream_sources: dict[str, str] = {}
+        self._restreamed_cameras: dict[str, Camera] = {}
+        # The sources last added to go2rtc per camera: once running, go2rtc
+        # reports a source's connection, not the source that was added
+        self._added_sources: dict[str, list[str]] = {}
+        self._stopping = False
+        self._rerun_updates = False
+        self._server_restarts = 0
+        self._stream_locks: defaultdict[str, asyncio.Lock] = defaultdict(asyncio.Lock)
+        # Cameras whose go2rtc stream must be updated, and the retry state
+        self._pending_updates: dict[str, Camera] = {}
+        self._update_attempt = 0
+        self._update_task: asyncio.Task[None] | None = None
+        self._cancel_update_retry: CALLBACK_TYPE | None = None
 
     @property
     @override
@@ -415,11 +454,176 @@ class WebRTCProvider(CameraWebRTCProvider):
         except Go2RtcClientError as err:
             raise HomeAssistantError("Unable to get image from go2rtc") from err
 
+    @callback
+    @override
+    def async_supports_stream_source(self, camera: Camera) -> bool:
+        """Return if go2rtc can restream the camera, see async_get_stream_source."""
+        return self._managed
+
+    @override
+    async def async_get_stream_source(self, camera: Camera) -> str | None:
+        """Return go2rtc's RTSP restream of a camera without a stream source.
+
+        Only the go2rtc server Home Assistant manages has a known RTSP address.
+        The restream carries AAC audio, which HLS needs.
+        """
+        if not self._managed:
+            return None
+        restarts = self._server_restarts
+        try:
+            await self._update_stream_source(camera)
+        except Go2RtcClientError:
+            # Without the client error, which can carry the source's credentials
+            raise HomeAssistantError("Unable to update the stream in go2rtc") from None
+        identifier = get_camera_identifier(camera)
+        # A restarted server has lost the stream, but HLS and recording keep
+        # reading its address
+        self._restreamed_cameras[identifier] = camera
+        if self._server_restarts != restarts:
+            # The server restarted during the update, maybe after the stream was
+            # added, and restored the restreams without this one
+            self.async_refresh_stream_source(camera)
+        return (
+            f"rtsp://127.0.0.1:{HA_MANAGED_RTSP_PORT}/"
+            f"{quote(identifier, safe='')}?video&audio=aac"
+        )
+
+    @callback
+    def async_restore_restreams(self) -> None:
+        """Add the restreams again to the managed server, which restarted."""
+        self._server_restarts += 1
+        # The restarted server has none of the sources added before
+        self._added_sources.clear()
+        self._pending_updates.update(self._restreamed_cameras)
+        self._start_updates()
+
+    @callback
+    @override
+    def async_refresh_stream_source(self, camera: Camera) -> None:
+        """Update the camera's stream in go2rtc to its changed source."""
+        self._pending_updates[get_camera_identifier(camera)] = camera
+        self._start_updates()
+
+    @callback
+    def _async_retry_updates(self, _now: datetime) -> None:
+        """Retry the pending stream updates."""
+        self._cancel_update_retry = None
+        self._start_updates(retry=True)
+
+    @callback
+    def _start_updates(self, *, retry: bool = False) -> None:
+        """Start the pending stream updates.
+
+        Each attempt reads the cameras' current sources, so the latest wins. A
+        running attempt isn't cancelled, as go2rtc may already have its write,
+        but runs again once done.
+        """
+        if self._stopping:
+            return
+        if not retry:
+            self._update_attempt = 0
+        if self._update_task and not self._update_task.done():
+            self._rerun_updates = True
+            return
+        if self._cancel_update_retry:
+            self._cancel_update_retry()
+            self._cancel_update_retry = None
+        self._update_task = self._hass.async_create_task(
+            self._async_update_pending(), "go2rtc stream updates"
+        )
+
+    @callback
+    def _stop_updates(self) -> None:
+        """Cancel a running or pending attempt of the stream updates."""
+        if self._cancel_update_retry:
+            self._cancel_update_retry()
+            self._cancel_update_retry = None
+        if self._update_task:
+            self._update_task.cancel()
+            self._update_task = None
+
+    async def _async_update_pending(self) -> None:
+        """Update the pending cameras' streams, retrying until done.
+
+        HLS and recording keep reading a restream without asking for it again,
+        so a failure is retried until it succeeds.
+        """
+        while True:
+            self._rerun_updates = False
+            failed = await self._async_update_pending_once()
+            if not self._rerun_updates:
+                break
+        self._update_task = None
+        if not failed:
+            if self._update_attempt:
+                _LOGGER.info("Updated the streams in go2rtc")
+            self._update_attempt = 0
+            return
+        if not self._update_attempt:
+            _LOGGER.warning(
+                "Unable to update the streams of %s in go2rtc, retrying",
+                ", ".join(failed),
+            )
+        delay = _UPDATE_RETRY_DELAYS[
+            min(self._update_attempt, len(_UPDATE_RETRY_DELAYS) - 1)
+        ]
+        self._update_attempt += 1
+        self._cancel_update_retry = async_call_later(
+            self._hass, delay, self._async_retry_updates
+        )
+
+    async def _async_update_pending_once(self) -> list[str]:
+        """Update each pending camera's stream, returning those that failed."""
+        failed: list[str] = []
+        for identifier in list(self._pending_updates):
+            # Taken off first, so a change during the update is kept for the
+            # next run
+            if (camera := self._pending_updates.pop(identifier, None)) is None:
+                # Unregistered while an earlier camera was updated
+                continue
+            try:
+                # A stalled camera mustn't hold up the others
+                async with (
+                    asyncio.timeout(_UPDATE_TIMEOUT),
+                    self._stream_locks[identifier],
+                ):
+                    # Only a stream go2rtc has; others get the current source
+                    # when they are next used
+                    if (
+                        identifier in self._restreamed_cameras
+                        or identifier in self._added_stream_sources
+                    ):
+                        await self._update_stream_source_locked(camera)
+            except Go2RtcClientError, HomeAssistantError, TimeoutError:
+                # Not logged, as the error can carry the source's credentials
+                failed.append(camera.entity_id)
+                # Unless unregistered meanwhile
+                if (
+                    identifier in self._restreamed_cameras
+                    or identifier in self._added_stream_sources
+                ):
+                    self._pending_updates.setdefault(identifier, camera)
+        return failed
+
     async def _update_stream_source(self, camera: Camera) -> None:
         """Update the stream source in go2rtc config if needed."""
-        if not (stream_source := await camera.stream_source()):
+        async with self._stream_locks[get_camera_identifier(camera)]:
+            await self._update_stream_source_locked(camera)
+
+    async def _update_stream_source_locked(self, camera: Camera) -> None:
+        """Update the stream source, holding the camera's stream lock."""
+        # Resolve each source once, as stream_source can be slow (e.g. it asks
+        # the camera for its URLs) and is the default webrtc_source
+        ffmpeg_source = await camera.stream_source()
+        if getattr(camera.webrtc_source, "__func__", None) is Camera.webrtc_source:
+            stream_source = ffmpeg_source
+        else:
+            stream_source = await camera.webrtc_source()
+        if not stream_source:
             await self._close_camera_sessions(camera)
             raise HomeAssistantError("Camera has no stream source")
+        # A source native to go2rtc, which FFmpeg can't open
+        native_source = stream_source != ffmpeg_source
 
         if camera.platform.platform_name == "generic":
             # This is a workaround to use ffmpeg for generic cameras
@@ -434,7 +638,12 @@ class WebRTCProvider(CameraWebRTCProvider):
         camera_prefs = await get_dynamic_camera_stream_settings(
             self._hass, camera.entity_id
         )
-        if camera_prefs.orientation is not Orientation.NO_TRANSFORM:
+        # FFmpeg applies the orientation, so live view of a native source
+        # isn't transformed
+        if (
+            camera_prefs.orientation is not Orientation.NO_TRANSFORM
+            and not native_source
+        ):
             # Camera orientation manually set by user
             if not stream_source.startswith(_FFMPEG):
                 stream_source = _FFMPEG + ":" + stream_source
@@ -457,25 +666,86 @@ class WebRTCProvider(CameraWebRTCProvider):
                 case Orientation.ROTATE_RIGHT:
                     stream_source += "#rotate=90"
 
-        streams = await self._rest_client.streams.list()
         identifier = get_camera_identifier(camera)
-
-        if (stream := streams.get(identifier)) is None or not any(
-            self._is_added_stream_source(identifier, stream_source, producer.url)
-            for producer in stream.producers
+        sources = [
+            stream_source,
+            # We are setting any ffmpeg rtsp related logs to debug
+            # Connection problems to the camera will be
+            # logged by the first stream
+            # Therefore setting it to debug will not hide any important logs
+            f"ffmpeg:{identifier}#audio=opus#query=log_level=debug",
+        ]
+        aac_source = f"ffmpeg:{identifier}#audio=aac#query=log_level=debug"
+        # FFmpeg reads go2rtc's restream instead (async_get_stream_source),
+        # with AAC audio transcoded only while someone reads it. A camera that
+        # gained a source of its own may still have a worker reading it.
+        # Only the managed server restreams
+        if self._managed and (
+            not ffmpeg_source or identifier in self._restreamed_cameras
         ):
-            await self._rest_client.streams.add(
-                identifier,
-                [
-                    stream_source,
-                    # We are setting any ffmpeg rtsp related logs to debug
-                    # Connection problems to the camera will be
-                    # logged by the first stream
-                    # Therefore setting it to debug will not hide any important logs
-                    f"ffmpeg:{identifier}#audio=opus#query=log_level=debug",
-                ],
+            sources.append(aac_source)
+
+        streams = await self._rest_client.streams.list()
+
+        if (stream := streams.get(identifier)) is None:
+            add = True
+        elif (added := self._added_sources.get(identifier)) is not None:
+            # Also when go2rtc has a source that isn't ours, e.g. one changed
+            # outside Home Assistant
+            add = added != sources or not all(
+                self._is_own_producer(identifier, stream_source, sources, producer.url)
+                for producer in stream.producers
             )
-            self._added_stream_sources[identifier] = stream_source
+        else:
+            # Not added by this provider, e.g. after a reload: compare with the
+            # sources go2rtc has, which are reported as added until they run
+            add = not any(
+                self._is_added_stream_source(identifier, stream_source, producer.url)
+                for producer in stream.producers
+            ) or (aac_source in sources) != any(
+                producer.url == aac_source for producer in stream.producers
+            )
+        if add:
+            # Unknown until the write succeeds, as go2rtc may apply a write that
+            # fails here, so a retry always writes
+            self._added_sources[identifier] = []
+            await self._rest_client.streams.add(identifier, sources)
+        # Also when go2rtc has the stream already, e.g. after a reload, so
+        # later source changes reach it
+        self._added_stream_sources[identifier] = stream_source
+        self._added_sources[identifier] = sources
+
+    def _is_own_producer(
+        self,
+        identifier: str,
+        stream_source: str,
+        sources: list[str],
+        producer_url: str | None,
+    ) -> bool:
+        """Return if a producer go2rtc reports is one of the sources added.
+
+        go2rtc reports a running source as its connection: without a URL for
+        some native sources, or with the URL FFmpeg reads, which is go2rtc's own
+        restream for a transcode of the stream.
+        """
+        if not producer_url or producer_url in sources:
+            return True
+        if self._is_added_stream_source(identifier, stream_source, producer_url):
+            return True
+        url = urlparse(producer_url)
+        if (
+            url.scheme == "rtsp"
+            and url.hostname in ("127.0.0.1", "localhost")
+            # The path is URL-escaped, e.g. % as %25
+            and unquote(url.path) == f"/{identifier}"
+        ):
+            return True
+        # The input of an FFmpeg source, e.g. one transformed for orientation
+        return any(
+            producer_url == source.removeprefix(f"{_FFMPEG}:").partition("#")[0]
+            for source in sources
+            if source.startswith(f"{_FFMPEG}:")
+        )
 
     def _is_added_stream_source(
         self, identifier: str, stream_source: str, producer_url: str
@@ -518,6 +788,13 @@ class WebRTCProvider(CameraWebRTCProvider):
 
     async def teardown(self) -> None:
         """Tear down the provider."""
+        # A restart signalled while this waits mustn't start another attempt
+        self._stopping = True
+        task = self._update_task
+        self._stop_updates()
+        if task:
+            with suppress(asyncio.CancelledError):
+                await task
         while self._sessions:
             _, session_info = self._sessions.popitem()
             await session_info.ws_client.close()
@@ -538,7 +815,13 @@ class WebRTCProvider(CameraWebRTCProvider):
         """Will be called when the provider is unregistered for a camera."""
         await self._close_camera_sessions(camera)
         identifier = get_camera_identifier(camera)
-        self._added_stream_sources.pop(identifier, None)
+        self._pending_updates.pop(identifier, None)
+        # After an update in progress, so it can't bring the state back. The
+        # lock stays, so a camera registered again under the identifier uses it
+        async with self._stream_locks[identifier]:
+            self._added_stream_sources.pop(identifier, None)
+            self._added_sources.pop(identifier, None)
+            self._restreamed_cameras.pop(identifier, None)
         if identifier in await self._rest_client.preload.list():
             await self._rest_client.preload.disable(identifier)
 
@@ -557,3 +840,4 @@ class Go2RtcConfig:
 
     url: str
     session: ClientSession
+    managed: bool = False

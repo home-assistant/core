@@ -12,8 +12,14 @@ from go2rtc_client import Go2RtcRestClient
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import HA_MANAGED_API_PORT, HA_MANAGED_URL
+from .const import (
+    HA_MANAGED_API_PORT,
+    HA_MANAGED_RTSP_PORT,
+    HA_MANAGED_URL,
+    SIGNAL_SERVER_RESTARTED,
+)
 from .util import get_go2rtc_unix_socket_path
 
 _LOGGER = logging.getLogger(__name__)
@@ -50,7 +56,7 @@ exec:
     - ffmpeg
 
 rtsp:
-  listen: "127.0.0.1:18554"
+  listen: "127.0.0.1:{rtsp_port}"
 
 webrtc:
   listen: ":18555/tcp"
@@ -169,6 +175,7 @@ def _create_temp_file(
                 api_allow_paths=_format_list_for_yaml(api_paths),
                 username=username,
                 password=password,
+                rtsp_port=HA_MANAGED_RTSP_PORT,
             ).encode()
         )
         return file.name
@@ -301,6 +308,8 @@ class Server:
                         _LOGGER.debug("Spawning new go2rtc server")
                         with suppress(Go2RTCServerStartError):
                             await self._start()
+                            # The new server starts without the added streams
+                            async_dispatcher_send(self._hass, SIGNAL_SERVER_RESTARTED)
                     except Exception:
                         _LOGGER.exception(
                             "Unexpected error when restarting go2rtc server"
