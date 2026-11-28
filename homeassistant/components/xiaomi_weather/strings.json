@@ -25,7 +25,7 @@
       },
       "user": {
         "data": {
-          "location": "Location"
+          "location": "[%key:common::config_flow::data::location%]"
         },
         "data_description": {
           "location": "Select the weather location on the map."

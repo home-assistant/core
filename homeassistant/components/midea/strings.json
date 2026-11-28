@@ -36,7 +36,7 @@
       },
       "auto": {
         "data": {
-          "device": "Device"
+          "device": "[%key:common::config_flow::data::device%]"
         },
         "data_description": {
           "device": "Select the discovered device to configure"
@@ -55,7 +55,7 @@
         },
         "data_description": {
           "account": "Your Midea cloud account username or email address",
-          "password": "Your Midea cloud account password",
+          "password": "Your Midea cloud account password. The Midea cloud supports passwords of up to 20 characters.",
           "server": "The Midea cloud server for your region"
         },
         "title": "Cloud login"

@@ -13,7 +13,7 @@
           "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of your Roth Touchline controller."
+          "host": "The URL of your Roth Touchline controller, for example `http://192.168.1.1`."
         }
       }
     }
@@ -34,11 +34,20 @@
     }
   },
   "exceptions": {
+    "cannot_connect": {
+      "message": "The Touchline controller at {url} cannot be reached."
+    },
+    "communication_error": {
+      "message": "An error occurred while communicating with the Touchline controller at {url}."
+    },
     "error_set_preset": {
       "message": "An error occurred while setting the preset mode."
     },
     "error_set_temperature": {
       "message": "An error occurred while setting the temperature."
+    },
+    "missing_device_id": {
+      "message": "The Touchline controller at {url} returned no ID for thermostat {index}."
     }
   }
 }

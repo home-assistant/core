@@ -10,7 +10,7 @@ import re
 from typing import NamedTuple
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
-from aiohttp import UnixConnector, encode_basic_auth
+from aiohttp import ClientResponseError, UnixConnector, encode_basic_auth
 from aiohttp.client_exceptions import ClientConnectionError, ServerConnectionError
 from awesomeversion import AwesomeVersion
 from freezegun.api import FrozenDateTimeFactory
@@ -30,7 +30,7 @@ from pytest_homeassistant.common import (
     async_fire_time_changed,
     load_fixture_bytes,
 )
-from pytest_homeassistant.typing import ClientSessionGenerator
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 from webrtc_models import RTCIceCandidateInit
 
 from homeassistant.components.camera import (
@@ -943,9 +943,15 @@ async def test_setup_with_version_error(
     expected_log_message: str,
 ) -> None:
     """Test setup integration entry fails."""
-    rest_client.validate_server_version.side_effect = [None, go2rtc_error]
-    assert await async_setup_component(hass, DOMAIN, config)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    rest_client.validate_server_version.side_effect = go2rtc_error
+    # The server checks the version too, at start and in its watchdog, which
+    # can run before the entry setup, so it gets a client of its own
+    with patch(
+        "homeassistant.components.go2rtc.server.Go2RtcRestClient",
+        return_value=AsyncMock(),
+    ):
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done(wait_background_tasks=True)
     config_entries = hass.config_entries.async_entries(DOMAIN)
     assert len(config_entries) == 1
     assert config_entries[0].state is expected_config_entry_state
@@ -1686,3 +1692,49 @@ async def test_preload_no_change_when_already_disabled(
     # Verify preload enable/disable were not called
     rest_client.preload.enable.assert_not_called()
     rest_client.preload.disable.assert_not_called()
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_offer_go2rtc_error_is_sent_not_logged(
+    hass_ws_client: WebSocketGenerator,
+    init_test_integration: MockCamera,
+    rest_client: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a go2rtc error on an offer goes to the client without the source."""
+    camera = init_test_integration
+    camera.set_stream_source("rtsp://user:secret@192.168.1.124:554/stream1")
+    # Like the client's error for a rejected source: its URL holds the sources
+    go2rtc_error = Go2RtcClientError()
+    go2rtc_error.__cause__ = ClientResponseError(
+        Mock(real_url="http://localhost:11984/api/streams?src=rtsp://user:secret@"),
+        (),
+        status=400,
+        message="Bad Request",
+    )
+    rest_client.streams.add.side_effect = go2rtc_error
+
+    client = await hass_ws_client()
+    await client.send_json_auto_id(
+        {
+            "type": "camera/webrtc/offer",
+            "entity_id": camera.entity_id,
+            "offer": OFFER_SDP,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    subscription_id = response["id"]
+
+    response = await client.receive_json()
+    assert response["id"] == subscription_id
+    assert response["event"]["type"] == "session"
+
+    response = await client.receive_json()
+    assert response["id"] == subscription_id
+    assert response["event"] == {
+        "type": "error",
+        "code": "go2rtc_webrtc_offer_failed",
+        "message": "Unable to update the stream in go2rtc",
+    }
+    assert "secret" not in caplog.text

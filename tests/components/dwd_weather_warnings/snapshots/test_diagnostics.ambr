@@ -1,0 +1,73 @@
+# serializer version: 1
+# name: test_diagnostics_device_tracker
+  dict({
+    'api': dict({
+      'current_warning_level': None,
+      'current_warnings': None,
+      'data_valid': False,
+      'expected_warning_level': None,
+      'expected_warnings': None,
+      'last_update': None,
+      'warncell_id': None,
+      'warncell_name': None,
+    }),
+    'entry': dict({
+      'data': dict({
+        'monitored_conditions': list([
+          'current_warning_level',
+          'advance_warning_level',
+        ]),
+        'name': 'Unit Test',
+        'region_device_tracker': '**REDACTED**',
+      }),
+      'options': dict({
+      }),
+    }),
+    'last_update_success': True,
+    'region_source': 'region_device_tracker',
+  })
+# ---
+# name: test_diagnostics_identifier
+  dict({
+    'api': dict({
+      'current_warning_level': 2,
+      'current_warnings': list([
+        dict({
+          'color': '#ffaf00',
+          'description': 'Es treten Sturmböen um 70 km/h auf.',
+          'end_time': '2026-11-22T18:00:00+00:00',
+          'event': 'STURMBÖEN',
+          'event_code': 52,
+          'headline': 'Amtliche WARNUNG: STURMBÖEN',
+          'instruction': None,
+          'level': 2,
+          'parameters': dict({
+            'Böen': '~70 [km/h]',
+          }),
+          'start_time': '2026-11-22T10:00:00+00:00',
+        }),
+      ]),
+      'data_valid': True,
+      'expected_warning_level': 0,
+      'expected_warnings': list([
+      ]),
+      'last_update': '2026-11-22T09:30:00+00:00',
+      'warncell_id': 807111000,
+      'warncell_name': 'Kreis Mayen-Koblenz',
+    }),
+    'entry': dict({
+      'data': dict({
+        'monitored_conditions': list([
+          'current_warning_level',
+          'advance_warning_level',
+        ]),
+        'name': 'Unit Test',
+        'region_identifier': '807111000',
+      }),
+      'options': dict({
+      }),
+    }),
+    'last_update_success': True,
+    'region_source': 'region_identifier',
+  })
+# ---

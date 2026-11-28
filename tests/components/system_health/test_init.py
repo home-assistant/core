@@ -203,6 +203,7 @@ async def test_check_can_reach_url_session(
 ) -> None:
     """Test the reachability check uses the session passed to it."""
     session = AsyncMock()
+    session.get.return_value = Mock()
 
     assert (
         await system_health.async_check_can_reach_url(
@@ -213,4 +214,5 @@ async def test_check_can_reach_url_session(
 
     session.get.assert_awaited_once()
     assert session.get.await_args.args == ("http://localhost/status",)
+    session.get.return_value.release.assert_called_once()
     assert len(aioclient_mock.mock_calls) == 0

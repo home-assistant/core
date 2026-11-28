@@ -13,7 +13,7 @@ from pywilight.const import (
     WL_STOPPED,
 )
 
-from homeassistant.components.cover import ATTR_POSITION, CoverEntity
+from homeassistant.components.cover import CoverEntity, CoverServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -110,7 +110,7 @@ class WiLightCover(WiLightDevice, CoverEntity):
     @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        position = hass_to_wilight_position(kwargs[ATTR_POSITION])
+        position = hass_to_wilight_position(kwargs[CoverServiceArgument.POSITION])
         await self._client.set_cover_position(self._index, position)
 
     @override

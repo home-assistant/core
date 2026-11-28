@@ -21,6 +21,8 @@ from .helpers import fetch_latest_carbon_intensity
 
 _LOGGER = logging.getLogger(__name__)
 
+AUTH_RETRIES = 4
+
 type CO2SignalConfigEntry = ConfigEntry[CO2SignalCoordinator]
 
 
@@ -44,6 +46,8 @@ class CO2SignalCoordinator(DataUpdateCoordinator[HomeAssistantCarbonIntensityRes
             update_interval=timedelta(minutes=15),
         )
         self.client = client
+        # No retries until an update has succeeded, so setup starts reauth right away
+        self._auth_retries_left = 0
 
     @property
     def entry_id(self) -> str:
@@ -55,10 +59,16 @@ class CO2SignalCoordinator(DataUpdateCoordinator[HomeAssistantCarbonIntensityRes
         """Fetch the latest data from the source."""
 
         try:
-            return await fetch_latest_carbon_intensity(
+            data = await fetch_latest_carbon_intensity(
                 self.hass, self.client, self.config_entry.data
             )
         except ElectricityMapsInvalidTokenError as err:
+            if self._auth_retries_left > 0:
+                self._auth_retries_left -= 1
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="auth_error_retrying",
+                ) from err
             raise ConfigEntryAuthFailed from err
         except ElectricityMapsError as err:
             raise UpdateFailed(
@@ -66,3 +76,6 @@ class CO2SignalCoordinator(DataUpdateCoordinator[HomeAssistantCarbonIntensityRes
                 translation_key="update_error",
                 translation_placeholders={"error": str(err)},
             ) from err
+
+        self._auth_retries_left = AUTH_RETRIES
+        return data

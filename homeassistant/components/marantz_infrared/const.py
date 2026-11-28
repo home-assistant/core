@@ -1,6 +1,6 @@
 """Constants for the Marantz IR integration."""
 
-from infrared_protocols.codes.marantz import models as marantz_models
+import infrared_protocols.codes.marantz.models as marantz_models
 
 from homeassistant.util import slugify
 

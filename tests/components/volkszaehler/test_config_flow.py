@@ -9,7 +9,11 @@ from volkszaehler.exceptions import (
     VolkszaehlerNoDataAvailable,
 )
 
-from homeassistant.components.volkszaehler.const import DOMAIN, SUBENTRY_TYPE_CHANNEL
+from homeassistant.components.volkszaehler.const import (
+    CONF_MIDDLEWARE,
+    DOMAIN,
+    SUBENTRY_TYPE_CHANNEL,
+)
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_HOST,
@@ -42,6 +46,7 @@ async def test_create_entry(
             CONF_UUID: "test-uuid",
             CONF_HOST: "localhost",
             CONF_PORT: 80,
+            CONF_MIDDLEWARE: False,
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -49,6 +54,7 @@ async def test_create_entry(
     assert result["data"] == {
         CONF_HOST: "localhost",
         CONF_PORT: 80,
+        CONF_MIDDLEWARE: False,
     }
 
     entry = result["result"]
@@ -60,6 +66,7 @@ async def test_create_entry(
     assert subentry.data == {CONF_UUID: "test-uuid"}
 
     assert mock_api.get_data.call_count == 1
+    assert mock_api.call_args.kwargs["middleware"] is False
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -82,6 +89,7 @@ async def test_user_errors(
         CONF_UUID: "test-uuid",
         CONF_HOST: "localhost",
         CONF_PORT: 80,
+        CONF_MIDDLEWARE: True,
     }
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -104,6 +112,7 @@ async def test_user_errors(
     assert result["data"] == {
         CONF_HOST: "localhost",
         CONF_PORT: 80,
+        CONF_MIDDLEWARE: True,
     }
 
 
@@ -261,6 +270,7 @@ async def test_user_duplicate_uuid_from_entry_unique_id(
             CONF_UUID: "existing-uuid",
             CONF_HOST: "new-host",
             CONF_PORT: 80,
+            CONF_MIDDLEWARE: True,
         },
     )
 
@@ -309,16 +319,25 @@ async def test_reconfigure(
     result = await mock_config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
+    assert (
+        get_schema_suggested_value(result["data_schema"].schema, CONF_MIDDLEWARE)
+        is True
+    )
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_HOST: "new-host", CONF_PORT: 9080},
+        {CONF_HOST: "new-host", CONF_PORT: 9080, CONF_MIDDLEWARE: False},
     )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    assert mock_config_entry.data == {CONF_HOST: "new-host", CONF_PORT: 9080}
+    assert mock_config_entry.data == {
+        CONF_HOST: "new-host",
+        CONF_PORT: 9080,
+        CONF_MIDDLEWARE: False,
+    }
     assert mock_api.get_data.call_count == 1
+    assert mock_api.call_args.kwargs["middleware"] is False
     await hass.async_block_till_done()
     assert mock_setup_entry.await_count == 1
 

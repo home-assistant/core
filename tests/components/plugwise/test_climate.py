@@ -775,7 +775,7 @@ async def test_tom_without_temperature_measurement(
 ) -> None:
     """Test Tom without temperature measurement."""
     data = mock_smile_adam_heat_cool.async_update.return_value
-    del data["f871b8c4d63549319221e294e4f88074"]["sensors"]["temperature"]
+    del data["f871b8c4d63549319221e294e4f88074"]["thermostat"]["current"]
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()

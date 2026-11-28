@@ -3,16 +3,27 @@
 from collections.abc import Generator, Iterator
 from contextlib import contextmanager
 from pathlib import Path
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
-from velbusaio.exceptions import VelbusConnectionFailed
+from velbusaio.exceptions import VelbusAuthenticationFailed, VelbusConnectionFailed
 
+from homeassistant.components.velbus.config_flow import (
+    VelbusConfigFlow,
+    format_manager_dsn,
+)
 from homeassistant.components.velbus.const import CONF_TLS, CONF_VLP_FILE, DOMAIN
-from homeassistant.config_entries import SOURCE_USB, SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_SOURCE
+from homeassistant.config_entries import SOURCE_USB, SOURCE_USER, ConfigFlow
+from homeassistant.const import (
+    CONF_ACCESS_TOKEN,
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SOURCE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
@@ -78,6 +89,546 @@ def mock_controller_connection_failed():
         yield
 
 
+@pytest.mark.parametrize(
+    ("host", "port", "expected_dsn"),
+    [
+        ("127.0.0.1", 4201, "manager://127.0.0.1:4201"),
+        ("2001:db8::1", 4201, "manager://[2001:db8::1]:4201"),
+        ("[2001:db8::1]", 4201, "manager://[2001:db8::1]:4201"),
+        ("manager", 4201, "manager://manager:4201"),
+        ("velbus.local", 4201, "manager://velbus.local:4201"),
+    ],
+)
+def test_format_manager_dsn(host: str, port: int, expected_dsn: str) -> None:
+    """Test manager DSN formatting including IPv6 bracketing."""
+    assert format_manager_dsn(host, port) == expected_dsn
+
+
+@pytest.mark.usefixtures("controller")
+async def test_user_manager_success(hass: HomeAssistant) -> None:
+    """Test user Velbus Manager config."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result.get("flow_id"),
+        {"next_step_id": "manager"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result.get("step_id") == "manager"
+    result = await hass.config_entries.flow.async_configure(
+        result.get("flow_id"),
+        {
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 4201,
+            CONF_ACCESS_TOKEN: "token",
+        },
+    )
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id is None
+    assert result.get("title") == "Velbus Manager"
+    data = result.get("data")
+    assert data
+    assert data[CONF_PORT] == "manager://127.0.0.1:4201"
+    assert data[CONF_ACCESS_TOKEN] == "token"
+    assert data[CONF_VLP_FILE] is None
+
+
+@pytest.mark.usefixtures("controller")
+async def test_user_manager_invalid_access_token(hass: HomeAssistant) -> None:
+    """Test invalid access token during Manager setup."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result.get("flow_id"),
+        {"next_step_id": "manager"},
+    )
+    with patch(
+        "velbusaio.controller.Velbus",
+        side_effect=VelbusAuthenticationFailed(),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result.get("flow_id"),
+            {
+                CONF_HOST: "127.0.0.1",
+                CONF_PORT: 4201,
+                CONF_ACCESS_TOKEN: "bad-token",
+            },
+        )
+    assert result.get("errors") == {CONF_ACCESS_TOKEN: "invalid_access_token"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result.get("flow_id"),
+        {
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 4201,
+            CONF_ACCESS_TOKEN: "good-token",
+        },
+    )
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id is None
+
+
+@pytest.mark.usefixtures("controller_connection_failed")
+async def test_user_manager_connect_failure(hass: HomeAssistant) -> None:
+    """Test Velbus Manager connection failure."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result.get("flow_id"),
+        {"next_step_id": "manager"},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result.get("flow_id"),
+        {CONF_HOST: "127.0.0.1", CONF_PORT: 4201},
+    )
+    assert result.get("errors") == {CONF_HOST: "cannot_connect"}
+
+    with patch("velbusaio.controller.Velbus", return_value=AsyncMock()):
+        result = await hass.config_entries.flow.async_configure(
+            result.get("flow_id"),
+            {CONF_HOST: "127.0.0.1", CONF_PORT: 4201},
+        )
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id is None
+
+
+@pytest.mark.usefixtures("controller")
+async def test_user_manager_aborts_on_duplicate(hass: HomeAssistant) -> None:
+    """Test manager setup aborts when an entry for the DSN already exists."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        title="Velbus Manager",
+        data={CONF_PORT: "manager://127.0.0.1:4201", CONF_ACCESS_TOKEN: "existing"},
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": "manager"},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "127.0.0.1", CONF_PORT: 4201, CONF_ACCESS_TOKEN: "token"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_manager_duplicate_check_runs_after_connect(hass: HomeAssistant) -> None:
+    """Test the duplicate DSN check runs only after connection validation."""
+    events: list[str] = []
+
+    async def _track_test(self, *, error_field: str = CONF_HOST) -> str | None:
+        events.append("connect")
+        return None
+
+    def _track_abort(self, match: dict[str, Any]) -> None:
+        events.append("duplicate")
+        return ConfigFlow._async_abort_entries_match(self, match)
+
+    with (
+        patch("velbusaio.controller.Velbus", return_value=AsyncMock()),
+        patch.object(VelbusConfigFlow, "_test_connection", _track_test),
+        patch.object(VelbusConfigFlow, "_async_abort_entries_match", _track_abort),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"next_step_id": "manager"},
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "127.0.0.1", CONF_PORT: 4201},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id is None
+    assert events == ["connect", "duplicate"]
+
+
+@pytest.mark.usefixtures("controller")
+async def test_manager_reconfigure_ipv6(hass: HomeAssistant) -> None:
+    """Reconfiguring a manager entry keeps IPv6 hosts bracketed in the DSN."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Velbus Manager",
+        data={CONF_PORT: "manager://[2001:db8::1]:4201"},
+    )
+    entry.add_to_hass(hass)
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result.get("step_id") == "manager"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "2001:db8::1", CONF_PORT: 4201},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_PORT] == "manager://[2001:db8::1]:4201"
+
+
+@pytest.mark.usefixtures("controller")
+async def test_manager_reconfigure_aborts_on_duplicate(
+    hass: HomeAssistant,
+) -> None:
+    """Reconfiguring a manager entry to an existing DSN aborts."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        title="Velbus Manager A",
+        data={CONF_PORT: "manager://127.0.0.1:4201"},
+    ).add_to_hass(hass)
+    entry_b = MockConfigEntry(
+        domain=DOMAIN,
+        title="Velbus Manager B",
+        data={CONF_PORT: "manager://192.168.0.2:4201"},
+    )
+    entry_b.add_to_hass(hass)
+
+    result = await entry_b.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "127.0.0.1", CONF_PORT: 4201},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("controller")
+async def test_reauth_manager(hass: HomeAssistant) -> None:
+    """Update a Velbus Manager access token through the reauth flow."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Velbus Manager",
+        data={
+            CONF_PORT: "manager://127.0.0.1:4201",
+            CONF_ACCESS_TOKEN: "old-token",
+        },
+    )
+    entry.add_to_hass(hass)
+    result = await entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result.get("step_id") == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_ACCESS_TOKEN: "new-token"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert entry.data[CONF_ACCESS_TOKEN] == "new-token"
+
+
+@pytest.mark.usefixtures("controller")
+@pytest.mark.parametrize(
+    "user_input",
+    [
+        pytest.param({CONF_ACCESS_TOKEN: ""}, id="empty_token"),
+        pytest.param({}, id="omitted_token"),
+    ],
+)
+async def test_reauth_manager_clears_access_token(
+    hass: HomeAssistant,
+    user_input: dict[str, str],
+) -> None:
+    """Reauth can remove a stored Manager token while keeping connection data."""
+    manager_dsn = "manager://127.0.0.1:4201"
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Velbus Manager",
+        data={
+            CONF_PORT: manager_dsn,
+            CONF_ACCESS_TOKEN: "old-token",
+        },
+    )
+    entry.add_to_hass(hass)
+    result = await entry.start_reauth_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input,
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert CONF_ACCESS_TOKEN not in entry.data
+    assert entry.data[CONF_PORT] == manager_dsn
+
+
+@pytest.mark.usefixtures("controller_connection_failed")
+async def test_reauth_manager_cannot_connect(hass: HomeAssistant) -> None:
+    """Test reauth reports connection errors on the base field."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Velbus Manager",
+        data={
+            CONF_PORT: "manager://127.0.0.1:4201",
+            CONF_ACCESS_TOKEN: "old-token",
+        },
+    )
+    entry.add_to_hass(hass)
+    result = await entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_ACCESS_TOKEN: "new-token"},
+    )
+    assert result.get("errors") == {"base": "cannot_connect"}
+    suggested_values = {
+        key.schema: key.description["suggested_value"]
+        for key in result["data_schema"].schema
+    }
+    assert suggested_values[CONF_ACCESS_TOKEN] == "new-token"
+
+    with patch("velbusaio.controller.Velbus", return_value=AsyncMock()):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_ACCESS_TOKEN: "new-token"},
+        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert entry.data[CONF_ACCESS_TOKEN] == "new-token"
+
+
+@pytest.mark.usefixtures("controller")
+async def test_reauth_manager_invalid_token_then_success(
+    hass: HomeAssistant,
+) -> None:
+    """Test reauth handles invalid tokens before accepting a valid one."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Velbus Manager",
+        data={
+            CONF_PORT: "manager://127.0.0.1:4201",
+            CONF_ACCESS_TOKEN: "old-token",
+        },
+    )
+    entry.add_to_hass(hass)
+    result = await entry.start_reauth_flow(hass)
+
+    with patch(
+        "velbusaio.controller.Velbus",
+        side_effect=VelbusAuthenticationFailed(),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_ACCESS_TOKEN: "bad-token"},
+        )
+    assert result.get("errors") == {CONF_ACCESS_TOKEN: "invalid_access_token"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_ACCESS_TOKEN: "good-token"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert entry.data[CONF_ACCESS_TOKEN] == "good-token"
+
+
+@pytest.mark.usefixtures("controller")
+async def test_manager_reconfigure_flow(hass: HomeAssistant) -> None:
+    """Test reconfigure routes manager entries to the manager step."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Velbus Manager",
+        data={CONF_PORT: "manager://127.0.0.1:4201"},
+    )
+    entry.add_to_hass(hass)
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result.get("step_id") == "manager"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "127.0.0.1", CONF_PORT: 4201},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+
+@pytest.mark.usefixtures("controller")
+async def test_manager_reconfigure_suggests_stored_access_token(
+    hass: HomeAssistant,
+) -> None:
+    """Test manager reconfigure pre-fills a stored access token."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Velbus Manager",
+        data={
+            CONF_PORT: "manager://127.0.0.1:4201",
+            CONF_ACCESS_TOKEN: "saved-token",
+        },
+    )
+    entry.add_to_hass(hass)
+    result = await entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result.get("step_id") == "manager"
+    suggested_values = {
+        key.schema: key.description["suggested_value"]
+        for key in result["data_schema"].schema
+    }
+    assert suggested_values[CONF_ACCESS_TOKEN] == "saved-token"
+
+
+@pytest.mark.usefixtures("controller_connection_failed")
+async def test_manager_reconfigure_keeps_pending_token_on_retry(
+    hass: HomeAssistant,
+) -> None:
+    """Test failed reconfigure keeps a replacement token for the next attempt."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Velbus Manager",
+        data={
+            CONF_PORT: "manager://127.0.0.1:4201",
+            CONF_ACCESS_TOKEN: "old-token",
+        },
+    )
+    entry.add_to_hass(hass)
+    result = await entry.start_reconfigure_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 4201,
+            CONF_ACCESS_TOKEN: "new-token",
+        },
+    )
+    assert result.get("errors") == {CONF_HOST: "cannot_connect"}
+
+    created: list[MagicMock] = []
+
+    def _capture_velbus(*args: Any, **kwargs: Any) -> MagicMock:
+        controller = MagicMock()
+        controller.connect = AsyncMock()
+        controller.stop = AsyncMock()
+        controller.__init_kwargs__ = kwargs
+        created.append(controller)
+        return controller
+
+    with patch(
+        "homeassistant.components.velbus.config_flow.velbusaio.controller.Velbus",
+        side_effect=_capture_velbus,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "127.0.0.1", CONF_PORT: 4201},
+        )
+
+    assert len(created) == 1
+    assert created[0].__init_kwargs__["access_token"] == "new-token"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_ACCESS_TOKEN] == "new-token"
+
+
+@pytest.mark.usefixtures("controller")
+async def test_manager_reconfigure_replaces_access_token(
+    hass: HomeAssistant,
+) -> None:
+    """Test manager reconfigure can replace a stored access token."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Velbus Manager",
+        data={
+            CONF_PORT: "manager://127.0.0.1:4201",
+            CONF_ACCESS_TOKEN: "old-token",
+        },
+    )
+    entry.add_to_hass(hass)
+    result = await entry.start_reconfigure_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 4201,
+            CONF_ACCESS_TOKEN: "new-token",
+        },
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_ACCESS_TOKEN] == "new-token"
+
+
+@pytest.mark.usefixtures("controller")
+async def test_manager_reconfigure_clears_access_token(
+    hass: HomeAssistant,
+) -> None:
+    """Test manager reconfigure can remove a stored access token."""
+    manager_dsn = "manager://127.0.0.1:4201"
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Velbus Manager",
+        data={
+            CONF_PORT: manager_dsn,
+            CONF_ACCESS_TOKEN: "old-token",
+        },
+    )
+    entry.add_to_hass(hass)
+    result = await entry.start_reconfigure_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 4201,
+            CONF_ACCESS_TOKEN: "",
+        },
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert CONF_ACCESS_TOKEN not in entry.data
+    assert entry.data[CONF_PORT] == manager_dsn
+
+
+async def test_manager_reconfigure_keeps_token_when_unchanged(
+    hass: HomeAssistant,
+) -> None:
+    """Test manager reconfigure keeps the token when it is not resubmitted."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Velbus Manager",
+        data={
+            CONF_PORT: "manager://127.0.0.1:4201",
+            CONF_ACCESS_TOKEN: "keep-me",
+        },
+    )
+    entry.add_to_hass(hass)
+    result = await entry.start_reconfigure_flow(hass)
+
+    created: list[MagicMock] = []
+
+    def _capture_velbus(*args: Any, **kwargs: Any) -> MagicMock:
+        controller = MagicMock()
+        controller.connect = AsyncMock()
+        controller.stop = AsyncMock()
+        controller.__init_kwargs__ = kwargs
+        created.append(controller)
+        return controller
+
+    with patch(
+        "homeassistant.components.velbus.config_flow.velbusaio.controller.Velbus",
+        side_effect=_capture_velbus,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "192.168.0.10", CONF_PORT: 4201},
+        )
+    assert len(created) == 1
+    assert created[0].__init_kwargs__["access_token"] == "keep-me"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_ACCESS_TOKEN] == "keep-me"
+    assert entry.data[CONF_PORT] == "manager://192.168.0.10:4201"
+
+
 @pytest.mark.usefixtures("controller")
 @pytest.mark.parametrize(
     ("inputParams", "expected"),
@@ -112,7 +663,7 @@ async def test_user_network_succes(
     assert result.get("flow_id")
     assert result.get("type") is FlowResultType.MENU
     assert result.get("step_id") == "user"
-    assert result.get("menu_options") == ["network", "usbselect"]
+    assert result.get("menu_options") == ["network", "manager", "usbselect"]
     # select the network option
     result = await hass.config_entries.flow.async_configure(
         result.get("flow_id"),
@@ -156,7 +707,7 @@ async def test_user_network_connect_failure(
     assert result.get("flow_id")
     assert result.get("type") is FlowResultType.MENU
     assert result.get("step_id") == "user"
-    assert result.get("menu_options") == ["network", "usbselect"]
+    assert result.get("menu_options") == ["network", "manager", "usbselect"]
     # select the network option
     result = await hass.config_entries.flow.async_configure(
         result.get("flow_id"),

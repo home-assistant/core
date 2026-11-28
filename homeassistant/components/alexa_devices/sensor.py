@@ -21,6 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
+from .const import AMAZON_TO_UNIT
 from .coordinator import AmazonConfigEntry
 from .entity import AmazonEntity, DescriptionFn
 from .utils import async_remove_unsupported_notification_sensors
@@ -59,12 +60,19 @@ class AmazonSensorEntityDescription(AmazonBaseEntityDescription):
 class AmazonNotificationEntityDescription(AmazonBaseEntityDescription):
     """Amazon Devices notification entity description."""
 
-    is_available_fn: DescriptionFn[bool] = lambda device, key, _: (
+    is_available_fn: DescriptionFn[bool] = lambda device, key, coordinator: (
         device.online
-        and (notification := device.notifications.get(key)) is not None
+        and (
+            notification := coordinator.notifications.get(device.serial_number, {}).get(
+                key
+            )
+        )
+        is not None
         and notification.next_occurrence is not None
     )
-    value_fn: ValueFn = lambda device, key, _: device.notifications[key].next_occurrence
+    value_fn: ValueFn = lambda device, key, coordinator: (
+        coordinator.notifications[device.serial_number][key].next_occurrence
+    )
 
 
 SENSORS: Final = (
@@ -72,9 +80,8 @@ SENSORS: Final = (
         key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement_fn=lambda device, key, coordinator: (
-            UnitOfTemperature.CELSIUS
+            AMAZON_TO_UNIT.get(sensor.scale or "", UnitOfTemperature.FAHRENHEIT)
             if (sensor := coordinator.device_sensor(device.serial_number, key))
-            and sensor.scale == "CELSIUS"
             else UnitOfTemperature.FAHRENHEIT
         ),
         state_class=SensorStateClass.MEASUREMENT,

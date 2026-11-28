@@ -2,10 +2,17 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+import logging
 from typing import override
 
 from velbusaio.channels import ButtonCounter, SensorNumber, Temperature
-from velbusaio.properties import LightValue
+from velbusaio.properties import (
+    BusErrorOff,
+    BusErrorRx,
+    BusErrorTx,
+    LightValue,
+    PSUPower,
+)
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -15,6 +22,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     PERCENTAGE,
+    EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -27,11 +35,22 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import VelbusConfigEntry
 from .entity import VelbusEntity
 
+_LOGGER = logging.getLogger(__name__)
+
 PARALLEL_UPDATES = 0
 
 COUNTER_SENSOR_KEYS = frozenset({"energy", "gas", "water"})
 
-type VelbusSensorChannel = ButtonCounter | Temperature | LightValue | SensorNumber
+type VelbusSensorChannel = (
+    ButtonCounter
+    | BusErrorOff
+    | BusErrorRx
+    | BusErrorTx
+    | LightValue
+    | PSUPower
+    | SensorNumber
+    | Temperature
+)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -86,6 +105,17 @@ SENSOR_DESCRIPTIONS: dict[str, VelbusSensorEntityDescription] = {
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         unit_fn=lambda channel: channel.get_unit(),
+    ),
+    "illuminance": VelbusSensorEntityDescription(
+        key="illuminance",
+        device_class=SensorDeviceClass.ILLUMINANCE,
+        state_class=SensorStateClass.MEASUREMENT,
+        unit_fn=lambda channel: channel.get_unit(),
+    ),
+    "bus_error": VelbusSensorEntityDescription(
+        key="bus_error",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "measurement": VelbusSensorEntityDescription(
         key="measurement",
@@ -145,14 +175,22 @@ async def async_setup_entry(
     await entry.runtime_data.scan_task
     entities: list[VelbusSensor] = []
     for channel in entry.runtime_data.controller.get_all_sensor():
-        entities.extend(
-            VelbusSensor(
-                channel,
-                SENSOR_DESCRIPTIONS[sensor_type],
-                is_counter=sensor_type in COUNTER_SENSOR_KEYS,
+        for sensor_type in channel.get_sensor_types():
+            description = SENSOR_DESCRIPTIONS.get(sensor_type)
+            if description is None:
+                _LOGGER.warning(
+                    "Skipping unknown Velbus sensor type %r on %s",
+                    sensor_type,
+                    channel.get_full_name(),
+                )
+                continue
+            entities.append(
+                VelbusSensor(
+                    channel,
+                    description,
+                    is_counter=sensor_type in COUNTER_SENSOR_KEYS,
+                )
             )
-            for sensor_type in channel.get_sensor_types()
-        )
 
     async_add_entities(entities)
 

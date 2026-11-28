@@ -2,17 +2,27 @@
   "config": {
     "abort": {
       "already_configured": "This Sony device is already set up with this infrared emitter.",
-      "no_infrared_emitters": "[%key:common::config_flow::abort::no_infrared_emitters%]"
+      "no_infrared_emitters": "[%key:component::infrared::common::no_infrared_emitters%]"
     },
     "step": {
+      "reconfigure": {
+        "data": {
+          "infrared_entity_id": "[%key:component::infrared::common::infrared_entity_id%]"
+        },
+        "data_description": {
+          "infrared_entity_id": "[%key:component::infrared::common::infrared_entity_id_description%]"
+        },
+        "description": "Change the infrared emitter used to control your Sony device.",
+        "title": "Reconfigure Sony device"
+      },
       "user": {
         "data": {
           "device_type": "[%key:common::generic::device_type%]",
-          "infrared_entity_id": "[%key:common::config_flow::data::infrared_entity_id%]"
+          "infrared_entity_id": "[%key:component::infrared::common::infrared_entity_id%]"
         },
         "data_description": {
           "device_type": "The type of Sony device to control.",
-          "infrared_entity_id": "[%key:common::config_flow::data_description::infrared_entity_id%]"
+          "infrared_entity_id": "[%key:component::infrared::common::infrared_entity_id_description%]"
         },
         "description": "Select the type of Sony device and the infrared emitter that points at it.",
         "title": "Set up a Sony device"

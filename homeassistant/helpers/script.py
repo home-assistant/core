@@ -1,7 +1,7 @@
 """Helpers to execute scripts."""
 
 import asyncio
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Coroutine, Iterator, Mapping, Sequence
 from contextvars import ContextVar
 from copy import copy
 from dataclasses import dataclass
@@ -20,11 +20,8 @@ from homeassistant.components import scene
 from homeassistant.components.device_automation import action as device_action
 from homeassistant.components.logger import LOGSEVERITY
 from homeassistant.const import (
-    ATTR_AREA_ID,
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
-    ATTR_FLOOR_ID,
-    ATTR_LABEL_ID,
     CONF_ALIAS,
     CONF_CHOOSE,
     CONF_CONDITION,
@@ -38,6 +35,7 @@ from homeassistant.const import (
     CONF_DOMAIN,
     CONF_ELSE,
     CONF_ENABLED,
+    CONF_ENTITY_ID,
     CONF_ERROR,
     CONF_EVENT,
     CONF_EVENT_DATA,
@@ -59,6 +57,7 @@ from homeassistant.const import (
     CONF_TARGET,
     CONF_THEN,
     CONF_TIMEOUT,
+    CONF_TRIGGERS,
     CONF_UNTIL,
     CONF_VARIABLES,
     CONF_WAIT_FOR_TRIGGER,
@@ -114,6 +113,11 @@ from .trace import (
     trace_update_result,
 )
 from .typing import ConfigType, TemplateVarsType, Undefined
+from .validation_errors import (
+    ValidationErrorInfo,
+    ValidationErrors,
+    iter_validation_errors,
+)
 
 SCRIPT_MODE_PARALLEL = "parallel"
 SCRIPT_MODE_QUEUED = "queued"
@@ -450,8 +454,204 @@ async def async_validate_action_config(
     if (layout := _NESTED_BLOCKS.get(action_type)) is None:
         raise ValueError(f"No validation for {action_type}")
 
+    # Only the nested blocks are validated: _async_collect_platform_errors
+    # relies on an action with nested blocks having no errors of its own
     await _async_validate_nested_blocks(hass, config, layout)
     return config
+
+
+_BLOCK_SCHEMAS: dict[_BlockKind, Callable[[Any], list[Any]]] = {
+    "triggers": cv.TRIGGER_SCHEMA,
+    "conditions": cv.CONDITIONS_SCHEMA,
+    "actions": cv.SCRIPT_SCHEMA,
+}
+
+# The schema and the platform validator of a single item of a block
+_ITEM_SCHEMAS: dict[_BlockKind, Callable[[Any], Any]] = {
+    "triggers": cv._TRIGGER_ITEM_SCHEMA,  # noqa: SLF001
+    "conditions": cv.CONDITION_SCHEMA,
+    "actions": cv.script_action,
+}
+
+_ITEM_VALIDATORS: dict[
+    _BlockKind, Callable[[HomeAssistant, Any], Coroutine[Any, Any, Any]]
+] = {
+    "triggers": trigger_helper._async_validate_trigger,  # noqa: SLF001
+    "conditions": condition.async_validate_condition_config,
+    "actions": async_validate_action_config,
+}
+
+type _SubmittedPath = tuple[str | int, ...]
+type _SubmittedItem = tuple[_BlockKind, Any, _SubmittedPath]
+
+
+def _iter_list_items(
+    value: Any, path: _SubmittedPath
+) -> Iterator[tuple[Any, _SubmittedPath]]:
+    """Yield the items of a value validated by cv._list_of, with their paths.
+
+    A single item has no index in its path, and None has no items.
+    """
+    if cv._is_item_list(value):  # noqa: SLF001
+        for index, item in enumerate(value):
+            yield item, (*path, index)
+    elif value is not None:
+        yield value, path
+
+
+def _submitted_layout(kind: _BlockKind, item: Any) -> _Layout | None:
+    """Return the layout of the blocks nested in a submitted item, if it has any.
+
+    The item is a condition or an action. The keys of the layout are the ones
+    in the item as written.
+    """
+    if kind == "actions":
+        if not isinstance(item, dict):
+            return None
+        try:
+            action_type = cv.determine_script_action(item)
+        except ValueError:
+            return None
+        if action_type != cv.SCRIPT_ACTION_CHECK_CONDITION:
+            return _NESTED_BLOCKS.get(action_type)
+    if (key := cv._condition_list_key(item)) is None:  # noqa: SLF001
+        return None
+    return {key: _Block("conditions")}
+
+
+def _iter_leaf_items(
+    kind: _BlockKind, block: Any, path: _SubmittedPath
+) -> Iterator[_SubmittedItem]:
+    """Yield the items without nested blocks of a block as it was submitted.
+
+    The items are yielded in the order they are validated, with the kind of
+    the block they are an item of and their path. Nothing is validated here:
+    the walk descends into what the schema takes for a nested block, and
+    yields anything else for the schema of an item to accept or reject.
+    """
+    for item, item_path in _iter_list_items(block, path):
+        if kind == "triggers":
+            if not cv._is_trigger_sublist(item):  # noqa: SLF001
+                yield kind, item, item_path
+                continue
+            # A sublist can't hold sublists
+            for trigger, trigger_path in _iter_list_items(
+                item[CONF_TRIGGERS], (*item_path, CONF_TRIGGERS)
+            ):
+                yield kind, trigger, trigger_path
+        elif (layout := _submitted_layout(kind, item)) is None:
+            yield kind, item, item_path
+        else:
+            yield from _iter_nested_leaf_items(item, layout, item_path)
+
+
+def _iter_nested_leaf_items(
+    config: Any, layout: _Layout, path: _SubmittedPath
+) -> Iterator[_SubmittedItem]:
+    """Yield the leaf items of the blocks in config as submitted, following layout.
+
+    Mirrors _async_validate_nested_blocks for a config which is not validated:
+    what is missing or malformed is skipped, and the forms the schema
+    normalizes are followed as written.
+    """
+    if not isinstance(config, dict):
+        return
+    for key, nested in layout.items():
+        if key not in config:
+            continue
+        if isinstance(nested, _Block):
+            yield from _iter_leaf_items(nested.kind, config[key], (*path, key))
+        elif isinstance(nested, list):
+            for item, item_path in _iter_list_items(config[key], (*path, key)):
+                if key != CONF_PARALLEL or cv._is_parallel_sequence_branch(item):  # noqa: SLF001
+                    yield from _iter_nested_leaf_items(item, nested[0], item_path)
+                else:
+                    # The schema wraps the actions of such a branch in a sequence
+                    yield from _iter_leaf_items("actions", item, item_path)
+        else:
+            yield from _iter_nested_leaf_items(config[key], nested, (*path, key))
+
+
+async def _async_collect_platform_errors(
+    hass: HomeAssistant, kind: _BlockKind, submitted: Any
+) -> list[ValidationErrorInfo]:
+    """Return the errors of the platforms for a block as it was submitted.
+
+    Only the leaf items which pass their own schema are validated by their
+    platform. An item with nested blocks is not validated itself: this assumes
+    async_validate_action_config and async_validate_condition_config only
+    validate the blocks of such an item.
+    """
+    errors: list[ValidationErrorInfo] = []
+    for item_kind, item, path in _iter_leaf_items(kind, submitted, ()):
+        try:
+            validated = _ITEM_SCHEMAS[item_kind](item)
+        except probatio.Invalid:
+            # Reported by the schema of the block
+            continue
+        try:
+            await _ITEM_VALIDATORS[item_kind](hass, validated)
+        except (probatio.Invalid, exceptions.HomeAssistantError) as err:
+            errors.extend(iter_validation_errors(err, path))
+    return errors
+
+
+def _is_same_error(error: ValidationErrorInfo, other: ValidationErrorInfo) -> bool:
+    """Return if two errors are the same, wherever they are located."""
+    return (
+        type(error.exception) is type(other.exception)
+        and error.message == other.message
+    )
+
+
+async def async_validate_block_collect_errors(
+    hass: HomeAssistant,
+    kind: Literal["triggers", "conditions", "actions"],
+    submitted: Any,
+) -> list[Any]:
+    """Validate a block of triggers, conditions or actions, collecting all errors.
+
+    The block is validated as it was submitted, with its schema and then by
+    the platforms. The result is the one of the schema of the block followed
+    by async_validate_trigger_config, async_validate_conditions_config or
+    async_validate_actions_config.
+
+    Raises ValidationErrors if the block is not valid. The path of each error
+    is its path in the submitted block. The errors of the schema come first,
+    followed by the errors of the platforms for the items which pass their
+    own schema.
+    """
+    validated: list[Any] | None = None
+    schema_errors: list[ValidationErrorInfo] = []
+    fail_fast_errors: list[ValidationErrorInfo] = []
+    try:
+        validated = _BLOCK_SCHEMAS[kind](submitted)
+    except probatio.Invalid as err:
+        schema_errors = list(iter_validation_errors(err))
+
+    if validated is not None:
+        try:
+            return await _async_validate_block(hass, kind, validated)
+        except (probatio.Invalid, exceptions.HomeAssistantError) as err:
+            fail_fast_errors = list(iter_validation_errors(err))
+
+    # Not awaited in an except block: each error would be chained in a cycle
+    platform_errors = await _async_collect_platform_errors(hass, kind, submitted)
+    if fail_fast_errors and not (
+        platform_errors and _is_same_error(platform_errors[0], fail_fast_errors[0])
+    ):
+        # The walk should find the error the block's validator raised. If it
+        # doesn't, the walk misses a submitted form (a bug in the walk), or a
+        # platform answered differently the second time, for example because a
+        # device was removed in between. Keep the error so it isn't lost.
+        _LOGGER.warning(
+            "Validating the items of a block of %s one by one did not give the "
+            "error of the block: %s",
+            kind,
+            fail_fast_errors[0],
+        )
+        platform_errors = [*fail_fast_errors, *platform_errors]
+    raise ValidationErrors([*schema_errors, *platform_errors])
 
 
 class _HaltScript(Exception):
@@ -838,8 +1038,9 @@ class _ScriptRun:
         )
         # The enabled option was already rendered with the run variables when
         # this step started, don't let the condition render it again.
-        cond = await self._async_get_condition(
-            {key: value for key, value in self._action.items() if key != CONF_ENABLED}
+        cond = await self._script._async_get_condition(  # noqa: SLF001
+            {key: value for key, value in self._action.items() if key != CONF_ENABLED},
+            cache_key=id(self._action),
         )
         try:
             trace_element = trace_stack_top(trace_stack_cv)
@@ -1344,6 +1545,9 @@ class _ScriptRun:
             self._async_set_remaining_time_var(timeout_handle)
             self._variables["wait"]["completed"] = True
             self._variables["wait"]["trigger"] = variables["trigger"]
+            for key, value in variables.items():
+                if key != "trigger":
+                    self._variables[key] = value
             _set_result_unless_done(done)
 
         def log_cb(level: int, msg: str, **kwargs: Any) -> None:
@@ -1612,7 +1816,7 @@ class Script:
         self._max_exceeded = max_exceeded
         if script_mode == SCRIPT_MODE_QUEUED:
             self._queue_lck = asyncio.Lock()
-        self._condition_cache: dict[frozenset[tuple[str, str]], ConditionChecker] = {}
+        self._condition_cache: dict[int, ConditionChecker] = {}
         self._repeat_script: dict[int, Script] = {}
         self._choose_data: dict[int, _ChooseData] = {}
         self._if_data: dict[int, _IfData] = {}
@@ -1698,26 +1902,32 @@ class Script:
     def referenced_labels(self) -> set[str]:
         """Return a set of referenced labels."""
         referenced_labels: set[str] = set()
-        Script._find_referenced_target(ATTR_LABEL_ID, referenced_labels, self.sequence)
+        Script._find_referenced_target(
+            TargetKey.LABEL_ID, referenced_labels, self.sequence
+        )
         return referenced_labels
 
     @cached_property
     def referenced_floors(self) -> set[str]:
         """Return a set of referenced fooors."""
         referenced_floors: set[str] = set()
-        Script._find_referenced_target(ATTR_FLOOR_ID, referenced_floors, self.sequence)
+        Script._find_referenced_target(
+            TargetKey.FLOOR_ID, referenced_floors, self.sequence
+        )
         return referenced_floors
 
     @cached_property
     def referenced_areas(self) -> set[str]:
         """Return a set of referenced areas."""
         referenced_areas: set[str] = set()
-        Script._find_referenced_target(ATTR_AREA_ID, referenced_areas, self.sequence)
+        Script._find_referenced_target(
+            TargetKey.AREA_ID, referenced_areas, self.sequence
+        )
         return referenced_areas
 
     @staticmethod
     def _find_referenced_target(
-        target: Literal["area_id", "floor_id", "label_id"],
+        target: Literal[TargetKey.AREA_ID, TargetKey.FLOOR_ID, TargetKey.LABEL_ID],
         referenced: set[str],
         sequence: Sequence[dict[str, Any]],
     ) -> None:
@@ -1883,7 +2093,7 @@ class Script:
                 # id during validation; unvalidated configs hold an entity
                 # registry id.
                 if isinstance(
-                    entity_id := step.get(ATTR_ENTITY_ID), str
+                    entity_id := step.get(CONF_ENTITY_ID), str
                 ) and valid_entity_id(entity_id):
                     referenced.add(entity_id)
 
@@ -2133,11 +2343,14 @@ class Script:
             sub_script._async_unload()  # noqa: SLF001
         self._sequence_scripts.clear()
 
-    async def _async_get_condition(self, config: ConfigType) -> ConditionChecker:
-        config_cache_key = frozenset((k, str(v)) for k, v in config.items())
-        if not (cond := self._condition_cache.get(config_cache_key)):
+    async def _async_get_condition(
+        self, config: ConfigType, *, cache_key: int | None = None
+    ) -> ConditionChecker:
+        if cache_key is None:
+            cache_key = id(config)
+        if not (cond := self._condition_cache.get(cache_key)):
             cond = await condition.async_from_config(self._hass, config)
-            self._condition_cache[config_cache_key] = cond
+            self._condition_cache[cache_key] = cond
         return cond
 
     def _prep_repeat_script(self, step: int) -> Script:

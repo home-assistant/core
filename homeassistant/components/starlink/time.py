@@ -22,6 +22,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up all time entities for this entry."""
+    if config_entry.runtime_data.data.sleep is None:
+        return
     async_add_entities(
         StarlinkTimeEntity(config_entry.runtime_data, description)
         for description in TIMES
@@ -93,21 +95,25 @@ TIMES = [
     StarlinkTimeEntityDescription(
         key="sleep_start",
         translation_key="sleep_start",
-        value_fn=lambda data, timezone: _utc_minutes_to_time(data.sleep[0], timezone),
+        value_fn=lambda data, timezone: (
+            _utc_minutes_to_time(data.sleep[0], timezone) if data.sleep else None
+        ),
         update_fn=lambda coordinator, time: coordinator.async_set_sleep_start(
             _time_to_utc_minutes(time, coordinator.timezone)
         ),
-        available_fn=lambda data: data.sleep[2],
+        available_fn=lambda data: data.sleep is not None and data.sleep[2],
     ),
     StarlinkTimeEntityDescription(
         key="sleep_end",
         translation_key="sleep_end",
-        value_fn=lambda data, timezone: _utc_minutes_to_time(
-            data.sleep[0] + data.sleep[1], timezone
+        value_fn=lambda data, timezone: (
+            _utc_minutes_to_time(data.sleep[0] + data.sleep[1], timezone)
+            if data.sleep
+            else None
         ),
         update_fn=lambda coordinator, time: coordinator.async_set_sleep_duration(
             _time_to_utc_minutes(time, coordinator.timezone)
         ),
-        available_fn=lambda data: data.sleep[2],
+        available_fn=lambda data: data.sleep is not None and data.sleep[2],
     ),
 ]

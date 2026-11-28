@@ -14,6 +14,7 @@ from homeassistant.components.update import (
     UpdateDeviceClass,
     UpdateEntity,
     UpdateEntityFeature,
+    UpdateReleaseNotesMessage,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -26,6 +27,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
+from .const import DOMAIN
 from .entity import ZHASupportedFeaturesEntity
 from .helpers import (
     SIGNAL_ADD_ENTITIES,
@@ -37,16 +39,16 @@ from .helpers import (
 
 _LOGGER = logging.getLogger(__name__)
 
-OTA_MESSAGE_BATTERY_POWERED = (
-    "Battery powered devices can sometimes take multiple hours to update and you may"
-    " need to wake the device for the update to begin."
-)
-
 ZHA_DOCS_NETWORK_RELIABILITY = "https://www.home-assistant.io/integrations/zha/#zigbee-interference-avoidance-and-network-rangecoverage-optimization"
-OTA_MESSAGE_RELIABILITY = (
-    "If you are having issues updating a specific device, make sure that you've"
-    f" eliminated [common environmental issues]({ZHA_DOCS_NETWORK_RELIABILITY}) that"
-    " could be affecting network reliability. OTA updates require a reliable network."
+
+RELEASE_NOTES_MESSAGE_BATTERY_POWERED = UpdateReleaseNotesMessage(
+    translation_domain=DOMAIN,
+    translation_key="battery_powered",
+)
+RELEASE_NOTES_MESSAGE_NETWORK_RELIABILITY = UpdateReleaseNotesMessage(
+    translation_domain=DOMAIN,
+    translation_key="network_reliability",
+    translation_placeholders={"docs_url": ZHA_DOCS_NETWORK_RELIABILITY},
 )
 
 
@@ -183,6 +185,17 @@ class ZHAFirmwareUpdateEntity(
         """
         return self._zha_state.release_summary
 
+    @property
+    @override
+    def release_notes_messages(self) -> tuple[UpdateReleaseNotesMessage, ...]:
+        """Messages shown before the release notes."""
+        if self.entity_data.device_proxy.device.is_mains_powered:
+            return (RELEASE_NOTES_MESSAGE_NETWORK_RELIABILITY,)
+        return (
+            RELEASE_NOTES_MESSAGE_BATTERY_POWERED,
+            RELEASE_NOTES_MESSAGE_NETWORK_RELIABILITY,
+        )
+
     @override
     async def async_release_notes(self) -> str | None:
         """Return full release notes.
@@ -190,17 +203,7 @@ class ZHAFirmwareUpdateEntity(
         This is suitable for a long changelog that does not fit in the release_summary
         property. The returned string can contain markdown.
         """
-
-        if self.entity_data.device_proxy.device.is_mains_powered:
-            header = f"<ha-alert alert-type='info'>{OTA_MESSAGE_RELIABILITY}</ha-alert>"
-        else:
-            header = (
-                "<ha-alert alert-type='info'>"
-                f"{OTA_MESSAGE_BATTERY_POWERED} {OTA_MESSAGE_RELIABILITY}"
-                "</ha-alert>"
-            )
-
-        return f"{header}\n\n{self._zha_state.release_notes or ''}"
+        return self._zha_state.release_notes
 
     @property
     @override

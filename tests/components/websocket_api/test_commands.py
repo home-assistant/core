@@ -51,12 +51,15 @@ from homeassistant.components.websocket_api.commands import (
 )
 from homeassistant.components.websocket_api.const import FEATURE_COALESCE_MESSAGES, URL
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import (
-    CONF_EXTERNAL_URL,
-    SIGNAL_BOOTSTRAP_INTEGRATIONS,
-    EntityCategory,
+from homeassistant.const import CONF_EXTERNAL_URL, EntityCategory
+from homeassistant.core import (
+    Context,
+    HomeAssistant,
+    ServiceCall,
+    State,
+    SupportsResponse,
+    callback,
 )
-from homeassistant.core import Context, HomeAssistant, State, SupportsResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import (
     area_registry as ar,
@@ -66,20 +69,18 @@ from homeassistant.helpers import (
     system_state,
     trace,
 )
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.bootstrap_progress import (
+    BootstrapIntegrationsProgress,
+    BootstrapPhase,
+    BootstrapProgress,
+    _async_set_bootstrap_progress_source,
+)
 from homeassistant.helpers.event import (
     async_track_state_change_event,
     async_track_time_interval,
 )
 from homeassistant.loader import Integration, async_get_integration
-from homeassistant.setup import (
-    BootstrapIntegrationsProgress,
-    BootstrapPhase,
-    BootstrapProgress,
-    _async_set_bootstrap_progress_source,
-    async_set_domains_to_be_loaded,
-    async_setup_component,
-)
+from homeassistant.setup import async_set_domains_to_be_loaded, async_setup_component
 from homeassistant.util.json import json_loads
 from homeassistant.util.yaml.loader import JSON_TYPE, parse_yaml
 
@@ -878,6 +879,71 @@ async def test_call_service_error(
     assert msg["error"]["code"] == "unknown_error"
     assert msg["error"]["message"] == "value_error"
     assert "Traceback" in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("call_data", "log_message"),
+    [
+        pytest.param(
+            {},
+            "Error during service call to domain_test.ha_error: device did not respond",
+            id="no_target",
+        ),
+        pytest.param(
+            {"service_data": {"brightness": 10}},
+            "Error during service call to domain_test.ha_error: device did not respond",
+            id="no_target_in_service_data",
+        ),
+        pytest.param(
+            {"target": {"entity_id": "light.kitchen"}},
+            "Error during service call to domain_test.ha_error with target "
+            "{'entity_id': ['light.kitchen']}: device did not respond",
+            id="target",
+        ),
+        pytest.param(
+            {"service_data": {"entity_id": "light.kitchen", "brightness": 10}},
+            "Error during service call to domain_test.ha_error with target "
+            "{'entity_id': 'light.kitchen'}: device did not respond",
+            id="target_in_service_data",
+        ),
+        pytest.param(
+            {
+                "target": {"area_id": "kitchen"},
+                "service_data": {"device_id": "abc123"},
+            },
+            "Error during service call to domain_test.ha_error with target "
+            "{'device_id': 'abc123', 'area_id': ['kitchen']}: device did not respond",
+            id="target_and_service_data",
+        ),
+    ],
+)
+async def test_call_service_error_logs_target(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    websocket_client: MockHAClientWebSocket,
+    call_data: dict[str, Any],
+    log_message: str,
+) -> None:
+    """Test the error log of a failed service call names the target."""
+
+    @callback
+    def ha_error_call(_: ServiceCall) -> None:
+        raise HomeAssistantError("device did not respond")
+
+    hass.services.async_register("domain_test", "ha_error", ha_error_call)
+
+    await websocket_client.send_json_auto_id(
+        {
+            "type": "call_service",
+            "domain": "domain_test",
+            "service": "ha_error",
+            **call_data,
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["success"] is False
+    assert log_message in caplog.text
 
 
 async def test_subscribe_unsubscribe_events(
@@ -3859,30 +3925,6 @@ async def test_execute_script_config_error(
     assert msg["error"] == expected_error
 
 
-async def test_subscribe_unsubscribe_bootstrap_integrations(
-    hass: HomeAssistant,
-    websocket_client: MockHAClientWebSocket,
-    hass_admin_user: MockUser,
-) -> None:
-    """Test subscribe/unsubscribe bootstrap_integrations."""
-    await websocket_client.send_json_auto_id(
-        {"type": "subscribe_bootstrap_integrations"}
-    )
-
-    msg = await websocket_client.receive_json()
-    subscription = msg["id"]
-    assert msg["type"] == const.TYPE_RESULT
-    assert msg["success"]
-
-    message = {"august": 12.5, "isy994": 12.8}
-
-    async_dispatcher_send(hass, SIGNAL_BOOTSTRAP_INTEGRATIONS, message)
-    msg = await websocket_client.receive_json()
-    assert msg["id"] == subscription
-    assert msg["type"] == "event"
-    assert msg["event"] == message
-
-
 async def test_subscribe_bootstrap_progress(
     hass: HomeAssistant,
     websocket_client: MockHAClientWebSocket,
@@ -4016,7 +4058,7 @@ async def test_integration_setup_info(
     websocket_client: MockHAClientWebSocket,
     hass_admin_user: MockUser,
 ) -> None:
-    """Test subscribe/unsubscribe bootstrap_integrations."""
+    """Test integration setup info."""
     with patch(
         "homeassistant.components.websocket_api.commands.async_get_setup_timings",
         return_value={
@@ -4063,125 +4105,217 @@ async def test_validate_config_works(
     msg = await websocket_client.receive_json()
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
-    assert msg["result"] == {key: {"valid": True, "error": None}}
+    assert msg["result"] == {key: {"valid": True, "error": None, "errors": []}}
+
+
+_UNKNOWN_DEVICE_CONDITION = {
+    "condition": "device",
+    "device_id": "a51a57e5af051eb403d56eb9e6fd691c",
+    "domain": "sensor",
+    "entity_id": "7d18a157b7c00adbf2982ea7de0d0362",
+    "type": "is_carbon_dioxide",
+    "above": 50,
+}
+_UNKNOWN_DEVICE_ACTION = {
+    "device_id": "a51a57e5af051eb403d56eb9e6fd691c",
+    "domain": "light",
+    "entity_id": "7d18a157b7c00adbf2982ea7de0d0362",
+    "type": "turn_on",
+}
+_UNKNOWN_TRIGGER = {"platform": "non_existing"}
+_VALID_TRIGGER = {"platform": "event", "event_type": "hello"}
+_VALID_ACTION = {"delay": 1}
 
 
 @pytest.mark.parametrize(
-    ("key", "config", "error"),
+    "config",
     [
-        # Raises probatio.Invalid
-        (
-            "triggers",
-            {"platform": "non_existing", "event_type": "hello"},
-            "Invalid trigger 'non_existing' specified",
-        ),
-        # Raises probatio.Invalid
-        ("triggers", [5], "expected a mapping at '[0]'"),
         pytest.param(
-            "triggers",
-            [{"platform": "non_existing"}],
-            "Invalid trigger 'non_existing' specified at '[0]'",
-            id="trigger_list",
+            {"triggers": {"platform": "non_existing", "event_type": "hello"}},
+            id="single_trigger",
         ),
+        pytest.param({"triggers": [5]}, id="trigger_list_not_a_mapping"),
+        pytest.param({"triggers": [_UNKNOWN_TRIGGER]}, id="trigger_list"),
         pytest.param(
-            "triggers",
-            {"platform": "state"},
-            "required key not provided at 'entity_id'",
+            {"triggers": {"platform": "state"}},
             id="single_trigger_with_path",
         ),
         pytest.param(
-            "triggers",
-            [{"platform": "state"}],
-            "required key not provided at '[0].entity_id'",
+            {"triggers": [{"platform": "state"}]},
             id="trigger_list_with_path",
         ),
         pytest.param(
-            "triggers",
-            {"triggers": [{"platform": "event", "event_type": "a"}, {"platform": "x"}]},
-            "Invalid trigger 'x' specified at '[1]'",
+            {"triggers": {"triggers": [_VALID_TRIGGER, {"platform": "x"}]}},
             id="single_trigger_sublist",
         ),
         pytest.param(
-            "conditions",
-            {"condition": "state", "entity_id": "abcd" * 8, "state": "on"},
-            f"Unknown entity registry entry {'abcd' * 8}",
-            id="single_condition",
-        ),
-        pytest.param(
-            "conditions",
-            [{"condition": "state", "entity_id": "abcd" * 8, "state": "on"}],
-            f"Unknown entity registry entry {'abcd' * 8} at '[0]'",
-            id="condition_list",
-        ),
-        pytest.param(
-            "conditions",
             {
-                "condition": "and",
                 "conditions": {
                     "condition": "state",
                     "entity_id": "abcd" * 8,
                     "state": "on",
-                },
+                }
             },
-            f"Unknown entity registry entry {'abcd' * 8} at 'conditions[0]'",
+            id="single_condition",
+        ),
+        pytest.param(
+            {
+                "conditions": [
+                    {"condition": "state", "entity_id": "abcd" * 8, "state": "on"}
+                ]
+            },
+            id="condition_list",
+        ),
+        pytest.param(
+            {
+                "conditions": {
+                    "condition": "and",
+                    "conditions": {
+                        "condition": "state",
+                        "entity_id": "abcd" * 8,
+                        "state": "on",
+                    },
+                }
+            },
             id="single_condition_nested_single_condition",
         ),
         pytest.param(
-            "actions",
-            {"wait_for_trigger": {"platform": "non_existing"}},
-            "Invalid trigger 'non_existing' specified at 'wait_for_trigger[0]'",
+            {"actions": {"wait_for_trigger": _UNKNOWN_TRIGGER}},
             id="single_action_nested_single_trigger",
         ),
         pytest.param(
-            "actions",
-            [{"wait_for_trigger": [{"platform": "non_existing"}]}],
-            "Invalid trigger 'non_existing' specified at '[0].wait_for_trigger[0]'",
+            {"actions": [{"wait_for_trigger": [_UNKNOWN_TRIGGER]}]},
             id="action_list",
         ),
-        # Raises probatio.Invalid
-        (
-            "conditions",
+        pytest.param(
             {
-                "condition": "non_existing",
-                "entity_id": "hello.world",
-                "state": "paulus",
+                "conditions": {
+                    "condition": "non_existing",
+                    "entity_id": "hello.world",
+                    "state": "paulus",
+                }
             },
-            'Invalid condition "non_existing" specified',
+            id="single_condition_unknown_condition",
         ),
-        # Raises HomeAssistantError
-        (
-            "conditions",
+        pytest.param(
+            {"conditions": _UNKNOWN_DEVICE_CONDITION},
+            id="single_condition_home_assistant_error",
+        ),
+        pytest.param(
+            {"actions": {"non_existing": "domain_test.test_service"}},
+            id="single_action_unknown_action",
+        ),
+        pytest.param(
+            {"actions": [_VALID_ACTION, {"delay": 1, "bogus": 2}, {"delay": "abc"}]},
+            id="schema_errors",
+        ),
+        pytest.param(
             {
-                "above": 50,
-                "condition": "device",
-                "device_id": "a51a57e5af051eb403d56eb9e6fd691c",
-                "domain": "sensor",
-                "entity_id": "7d18a157b7c00adbf2982ea7de0d0362",
-                "type": "is_carbon_dioxide",
+                "triggers": [
+                    _VALID_TRIGGER,
+                    {"platform": "state"},
+                    _UNKNOWN_TRIGGER,
+                ]
             },
-            "Unknown device 'a51a57e5af051eb403d56eb9e6fd691c'",
+            id="platform_errors",
         ),
-        # Raises probatio.Invalid
-        (
-            "actions",
-            {"non_existing": "domain_test.test_service"},
-            "Unable to determine action",
+        pytest.param(
+            {"conditions": [_UNKNOWN_DEVICE_CONDITION]},
+            id="home_assistant_error",
+        ),
+        pytest.param(
+            {
+                "actions": [
+                    {
+                        "if": [_UNKNOWN_DEVICE_CONDITION],
+                        "then": [{"wait_for_trigger": [_UNKNOWN_TRIGGER]}],
+                        "else": [
+                            {
+                                "choose": [
+                                    {
+                                        "conditions": [_UNKNOWN_DEVICE_CONDITION],
+                                        "sequence": [
+                                            _VALID_ACTION,
+                                            _UNKNOWN_DEVICE_ACTION,
+                                        ],
+                                    }
+                                ],
+                                "default": [_UNKNOWN_DEVICE_ACTION],
+                            }
+                        ],
+                    }
+                ]
+            },
+            id="nested_blocks",
+        ),
+        pytest.param(
+            {"actions": {"repeat": {"count": 2, "sequence": _UNKNOWN_DEVICE_ACTION}}},
+            id="nested_single_items",
+        ),
+        pytest.param(
+            {
+                "conditions": [
+                    {"or": [_UNKNOWN_DEVICE_CONDITION]},
+                    {"not": _UNKNOWN_DEVICE_CONDITION},
+                ]
+            },
+            id="condition_shorthand",
+        ),
+        pytest.param(
+            {
+                "triggers": [
+                    _VALID_TRIGGER,
+                    {"triggers": [_VALID_TRIGGER, _UNKNOWN_TRIGGER]},
+                ]
+            },
+            id="trigger_sublist",
+        ),
+        pytest.param(
+            {
+                "actions": [
+                    {
+                        "parallel": [
+                            _UNKNOWN_DEVICE_ACTION,
+                            [_VALID_ACTION, _UNKNOWN_DEVICE_ACTION],
+                            {"sequence": [_UNKNOWN_DEVICE_ACTION]},
+                        ]
+                    }
+                ]
+            },
+            id="parallel",
+        ),
+        pytest.param(
+            {
+                "actions": [
+                    {"delay": 1, "bogus": 2},
+                    _UNKNOWN_DEVICE_ACTION,
+                    {"wait_for_trigger": [_UNKNOWN_TRIGGER]},
+                ]
+            },
+            id="schema_and_platform_errors",
+        ),
+        pytest.param(
+            {
+                "triggers": [_UNKNOWN_TRIGGER],
+                "conditions": [_UNKNOWN_DEVICE_CONDITION],
+                "actions": [_VALID_ACTION],
+            },
+            id="errors_in_two_keys",
         ),
     ],
 )
 async def test_validate_config_invalid(
     websocket_client: MockHAClientWebSocket,
-    key: str,
-    config: dict[str, Any] | list[Any],
-    error: str,
+    snapshot: SnapshotAssertion,
+    config: dict[str, Any],
 ) -> None:
-    """Test config validation."""
-    await websocket_client.send_json_auto_id({"type": "validate_config", key: config})
+    """Test the errors of each key are returned, with their paths."""
+    await websocket_client.send_json_auto_id({"type": "validate_config", **config})
 
     msg = await websocket_client.receive_json()
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
-    assert msg["result"] == {key: {"valid": False, "error": error}}
+    assert msg["result"] == snapshot
 
 
 async def test_message_coalescing(

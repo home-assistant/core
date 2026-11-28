@@ -29,6 +29,7 @@ from pytest_homeassistant.common import (
 from pytest_homeassistant.components.common import assert_trigger_options_supported
 
 from homeassistant.components import automation, calendar
+from homeassistant.components.automation import AutomationService
 from homeassistant.components.calendar.trigger import (
     CONF_OFFSET_TYPE,
     EVENT_END,
@@ -38,15 +39,11 @@ from homeassistant.components.calendar.trigger import (
     CalendarEventListener,
 )
 from homeassistant.const import (
-    ATTR_AREA_ID,
-    ATTR_DEVICE_ID,
-    ATTR_ENTITY_ID,
-    ATTR_LABEL_ID,
     CONF_OFFSET,
     CONF_OPTIONS,
     CONF_PLATFORM,
     CONF_TARGET,
-    SERVICE_TURN_OFF,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -411,8 +408,8 @@ async def create_automation(
         # Disable automation to cleanup lingering timers
         await hass.services.async_call(
             automation.DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: f"automation.{event_type}"},
+            AutomationService.TURN_OFF,
+            {TargetKey.ENTITY_ID: f"automation.{event_type}"},
             blocking=True,
         )
 
@@ -2016,49 +2013,49 @@ async def test_config_entry_unload(
     [
         ({}, [], [], [], []),
         (
-            {ATTR_ENTITY_ID: "calendar.calendar_2"},
+            {TargetKey.ENTITY_ID: "calendar.calendar_2"},
             [],
             [],
             TARGET_TEST_SECOND_START_CALL_DATA,
             TARGET_TEST_SECOND_END_CALL_DATA,
         ),
         (
-            {ATTR_ENTITY_ID: ["calendar.calendar_1", "calendar.calendar_2"]},
+            {TargetKey.ENTITY_ID: ["calendar.calendar_1", "calendar.calendar_2"]},
             TARGET_TEST_FIRST_START_CALL_DATA,
             TARGET_TEST_FIRST_END_CALL_DATA,
             TARGET_TEST_SECOND_START_CALL_DATA,
             TARGET_TEST_SECOND_END_CALL_DATA,
         ),
         (
-            {ATTR_AREA_ID: "area_both_calendars"},
+            {TargetKey.AREA_ID: "area_both_calendars"},
             TARGET_TEST_FIRST_START_CALL_DATA,
             TARGET_TEST_FIRST_END_CALL_DATA,
             TARGET_TEST_SECOND_START_CALL_DATA,
             TARGET_TEST_SECOND_END_CALL_DATA,
         ),
         (
-            {ATTR_LABEL_ID: "calendar_1_label"},
+            {TargetKey.LABEL_ID: "calendar_1_label"},
             TARGET_TEST_FIRST_START_CALL_DATA,
             TARGET_TEST_FIRST_END_CALL_DATA,
             [],
             [],
         ),
         (
-            {ATTR_DEVICE_ID: "device_calendar_1"},
+            {TargetKey.DEVICE_ID: "device_calendar_1"},
             TARGET_TEST_FIRST_START_CALL_DATA,
             TARGET_TEST_FIRST_END_CALL_DATA,
             [],
             [],
         ),
         (
-            {ATTR_DEVICE_ID: "device_calendar_2"},
+            {TargetKey.DEVICE_ID: "device_calendar_2"},
             [],
             [],
             TARGET_TEST_SECOND_START_CALL_DATA,
             TARGET_TEST_SECOND_END_CALL_DATA,
         ),
         (
-            {ATTR_LABEL_ID: "label_on_devices"},
+            {TargetKey.LABEL_ID: "label_on_devices"},
             TARGET_TEST_FIRST_START_CALL_DATA,
             TARGET_TEST_FIRST_END_CALL_DATA,
             TARGET_TEST_SECOND_START_CALL_DATA,
@@ -2161,13 +2158,13 @@ async def test_trigger_with_targets(
     # Disable automations to cleanup lingering timers
     await hass.services.async_call(
         automation.DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "automation.start_trigger"},
+        AutomationService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "automation.start_trigger"},
         blocking=True,
     )
     await hass.services.async_call(
         automation.DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "automation.end_trigger"},
+        AutomationService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "automation.end_trigger"},
         blocking=True,
     )

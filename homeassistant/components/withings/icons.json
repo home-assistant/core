@@ -19,8 +19,14 @@
       "activity_steps_today": {
         "default": "mdi:shoe-print"
       },
+      "apnea_hypopnea_index": {
+        "default": "mdi:lungs"
+      },
       "average_heart_rate": {
         "default": "mdi:heart-pulse"
+      },
+      "awake_after_sleep_onset": {
+        "default": "mdi:sleep-off"
       },
       "basal_metabolic_rate": {
         "default": "mdi:fire"
@@ -54,6 +60,12 @@
       "heart_pulse": {
         "default": "mdi:heart-pulse"
       },
+      "heart_rate_variability_end": {
+        "default": "mdi:heart-pulse"
+      },
+      "heart_rate_variability_start": {
+        "default": "mdi:heart-pulse"
+      },
       "height": {
         "default": "mdi:human-male-height-variant"
       },
@@ -75,7 +87,16 @@
       "muscle_mass_for_segments_right_arm": {
         "default": "mdi:arm-flex"
       },
+      "out_of_bed_count": {
+        "default": "mdi:bed-empty"
+      },
       "rem_sleep": {
+        "default": "mdi:sleep"
+      },
+      "rem_sleep_phase_count": {
+        "default": "mdi:sleep"
+      },
+      "sleep_efficiency": {
         "default": "mdi:sleep"
       },
       "sleep_goal": {
@@ -87,11 +108,17 @@
       "step_goal": {
         "default": "mdi:shoe-print"
       },
+      "time_in_bed": {
+        "default": "mdi:bed-clock"
+      },
       "time_to_sleep": {
         "default": "mdi:sleep"
       },
       "time_to_wakeup": {
         "default": "mdi:sleep-off"
+      },
+      "total_sleep_time": {
+        "default": "mdi:sleep"
       },
       "wakeup_count": {
         "default": "mdi:sleep-off"

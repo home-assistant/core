@@ -1,5 +1,6 @@
 """Coordinator for handling data fetching and updates."""
 
+import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -16,6 +17,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
+from .helpers import format_device_identifier
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -111,7 +113,8 @@ class LunatoneInfoDataUpdateCoordinator(DataUpdateCoordinator[InfoData]):
         device_registry = dr.async_get(self.hass)
         assert self.config_entry.unique_id is not None
         current_devices = {
-            f"{self.config_entry.unique_id}-line{line_id}" for line_id in data.lines
+            format_device_identifier(self.config_entry.unique_id, int(line_id))
+            for line_id in data.lines
         }
         stale_devices = self.previous_devices - current_devices
         remove_devices(device_registry, self.config_entry.entry_id, stale_devices)
@@ -229,8 +232,12 @@ class LunatoneSensorsDataUpdateCoordinator(DataUpdateCoordinator[dict[int, Senso
         assert self.config_entry.unique_id is not None
         current_devices = {
             (
-                f"{self.config_entry.unique_id}"
-                f"-line{sensor.data.dali_sensor_address.line}"
+                f"{
+                    format_device_identifier(
+                        self.config_entry.unique_id,
+                        sensor.data.dali_sensor_address.line,
+                    )
+                }"
                 f"-d24-address{sensor.data.dali_sensor_address.address}"
             )
             for sensor in data.values()
@@ -265,6 +272,7 @@ class LunatoneScanDataUpdateCoordinator(DataUpdateCoordinator[ScanData]):
         )
         self.dali_scan_api = dali_scan_api
         self.line_scan_status: dict[int, ScanLineData] = {}
+        self.scan_lock = asyncio.Lock()
 
     @override
     async def _async_update_data(self) -> ScanData:
@@ -277,12 +285,12 @@ class LunatoneScanDataUpdateCoordinator(DataUpdateCoordinator[ScanData]):
                 translation_key="cannot_retrieve_scan_data",
             ) from ex
 
+        data = self.dali_scan_api.data
+
         update_interval = DEFAULT_SCAN_UPDATE_INTERVAL
-        if self.dali_scan_api.data.busy:
+        if data.busy:
             update_interval = timedelta(seconds=1)
         self.update_interval = update_interval
 
-        self.line_scan_status = {
-            scan_data.line: scan_data for scan_data in self.dali_scan_api.data.lines
-        }
-        return self.dali_scan_api.data
+        self.line_scan_status = {scan_data.line: scan_data for scan_data in data.lines}
+        return data

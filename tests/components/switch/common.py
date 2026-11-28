@@ -6,15 +6,13 @@ components. Instead call the service directly.
 
 from typing import Any
 
-from homeassistant.components.switch import DOMAIN, SwitchDeviceClass, SwitchEntity
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ENTITY_MATCH_ALL,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
+from homeassistant.components.switch import (
+    DOMAIN,
+    SwitchDeviceClass,
+    SwitchEntity,
+    SwitchService,
 )
+from homeassistant.const import ENTITY_MATCH_ALL, STATE_OFF, STATE_ON, TargetKey
 from homeassistant.core import HomeAssistant
 
 
@@ -25,8 +23,8 @@ def turn_on(hass: HomeAssistant, entity_id: str = ENTITY_MATCH_ALL) -> None:
 
 async def async_turn_on(hass: HomeAssistant, entity_id: str = ENTITY_MATCH_ALL) -> None:
     """Turn all or specified switch on."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    await hass.services.async_call(DOMAIN, SERVICE_TURN_ON, data, blocking=True)
+    data = {TargetKey.ENTITY_ID: entity_id} if entity_id else None
+    await hass.services.async_call(DOMAIN, SwitchService.TURN_ON, data, blocking=True)
 
 
 def turn_off(hass: HomeAssistant, entity_id: str = ENTITY_MATCH_ALL) -> None:
@@ -38,8 +36,8 @@ async def async_turn_off(
     hass: HomeAssistant, entity_id: str = ENTITY_MATCH_ALL
 ) -> None:
     """Turn all or specified switch off."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    await hass.services.async_call(DOMAIN, SERVICE_TURN_OFF, data, blocking=True)
+    data = {TargetKey.ENTITY_ID: entity_id} if entity_id else None
+    await hass.services.async_call(DOMAIN, SwitchService.TURN_OFF, data, blocking=True)
 
 
 class MockSwitch(SwitchEntity):

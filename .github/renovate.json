@@ -13,7 +13,7 @@
     "homeassistant-manifest"
   ],
 
-  "ignorePaths": ["**/node_modules/**"],
+  "ignorePaths": ["**/node_modules/**", ".github/workflows/*.lock.yml"],
 
   "pre-commit": {
     "enabled": true
@@ -30,6 +30,11 @@
     "managerFilePatterns": ["/^Dockerfile$/"]
   },
 
+  "github-actions": {
+    "description": "Also bump the action pins in the gh-aw workflow sources. Their generated .lock.yml files are ignored, so a bump needs gh aw compile.",
+    "managerFilePatterns": ["/^\\.github/workflows/[^/]+\\.md$/"]
+  },
+
   "homeassistant-manifest": {
     "managerFilePatterns": [
       "/^homeassistant/components/[^/]+/manifest\\.json$/"
@@ -37,7 +42,7 @@
   },
 
   "constraints": {
-    "ghActionsLock": "v0.5.0"
+    "ghActionsLock": "v0.5.1"
   },
 
   "customManagers": [
@@ -259,7 +264,7 @@
       "labels": ["dependency", "github_actions"]
     },
     {
-      "description": "No cooldown for our own actions. A # master pin has no release timestamp, so a cooldown would hold its digest updates indefinitely",
+      "description": "No cooldown for our own actions",
       "matchManagers": ["github-actions"],
       "matchPackageNames": ["home-assistant/**"],
       "minimumReleaseAge": null

@@ -1,17 +1,18 @@
 """Tests for the MeteoAlarm binary sensor platform."""
 
+import logging
 from typing import Any
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
-from meteoalarmapi import ServerError, WrongCountry
+from meteoalarmapi import ServerError, UnexpectedError, WrongCountry
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.meteoalarm.binary_sensor import SCAN_INTERVAL
 from homeassistant.components.meteoalarm.const import CONF_PROVINCE, DOMAIN
+from homeassistant.components.meteoalarm.coordinator import SCAN_INTERVAL
 from homeassistant.const import (
     CONF_COUNTRY,
     CONF_LANGUAGE,
@@ -19,6 +20,7 @@ from homeassistant.const import (
     CONF_PLATFORM,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
@@ -157,6 +159,56 @@ async def test_alert_withdrawn(
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_OFF
     assert "event" not in state.attributes
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [ServerError("500"), WrongCountry("no feed"), UnexpectedError("timeout")],
+)
+async def test_unavailable_when_update_fails(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_meteoalert: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    exception: Exception,
+) -> None:
+    """Test the sensor becomes unavailable when MeteoAlarm can't be reached."""
+    await _setup(hass, mock_config_entry)
+
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
+
+    caplog.set_level(logging.INFO)
+    mock_meteoalert.return_value.get_alert.side_effect = exception
+    for _ in range(2):
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+
+    # Two failed updates log one line at info level, without a traceback.
+    records = [
+        record
+        for record in caplog.records
+        if record.name.startswith("homeassistant.components.meteoalarm")
+        and record.levelno >= logging.INFO
+    ]
+    assert [(record.levelno, record.getMessage()) for record in records] == [
+        (
+            logging.INFO,
+            f"meteoalarm is unavailable: Error fetching MeteoAlarm data: {exception}",
+        )
+    ]
+    assert "Traceback" not in caplog.text
+
+    mock_meteoalert.return_value.get_alert.side_effect = None
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
+    assert caplog.text.count("Fetching meteoalarm data recovered") == 1
 
 
 async def test_yaml_import(

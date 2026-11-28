@@ -18,14 +18,13 @@ import logging
 import pizone
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_EXCLUDE, CONF_HOST, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, async_noop, callback
 from homeassistant.helpers import aiohttp_client, discovery_flow
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
-from .const import DATA_CONFIG, DISCOVERY_IDLE_SECONDS, DISCOVERY_SCAN_INTERVAL, DOMAIN
+from .const import DISCOVERY_IDLE_SECONDS, DISCOVERY_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,14 +57,6 @@ class DiscoveryServiceState:
 
 
 DATA_DISCOVERY_SERVICE: HassKey[DiscoveryServiceState] = HassKey("izone_discovery")
-
-
-def yaml_excluded_uids(hass: HomeAssistant) -> set[str]:
-    """Return controller UIDs listed in deprecated YAML ``exclude``."""
-    conf: ConfigType | None = hass.data.get(DATA_CONFIG)
-    if not conf:
-        return set()
-    return set(conf.get(CONF_EXCLUDE, ()))
 
 
 @callback
@@ -242,7 +233,7 @@ async def async_discover_by_host(
     Raises:
         OSError: Discovery UDP socket could not be bound.
         UnpairedBridgeError: Probed UID is the unpaired placeholder.
-        ControllerAlreadyClaimedError: Host or UID is already claimed on the service.
+        EndpointVerifyError: No address answers as an iZone controller.
     """
     service = await async_ensure_discovery(hass)
     return await service.discover_by_host(host)

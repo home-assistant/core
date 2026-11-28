@@ -29,8 +29,14 @@
       "active_calories": {
         "name": "Active calories"
       },
+      "active_zone_minutes": {
+        "name": "Active zone minutes"
+      },
       "body_fat": {
         "name": "Body fat"
+      },
+      "body_mass_index": {
+        "name": "Body mass index"
       },
       "calories_consumed": {
         "name": "Calories consumed"
@@ -38,11 +44,26 @@
       "calories_from_fat": {
         "name": "Calories from fat"
       },
+      "cardio_active_zone_minutes": {
+        "name": "Cardio active zone minutes"
+      },
       "dietary_fiber": {
         "name": "Dietary fiber"
       },
+      "elevation": {
+        "name": "Elevation"
+      },
+      "fat_burn_active_zone_minutes": {
+        "name": "Fat burn active zone minutes"
+      },
       "floors": {
         "name": "Floors"
+      },
+      "heart_rate_variability": {
+        "name": "Heart rate variability"
+      },
+      "height": {
+        "name": "Height"
       },
       "hydration": {
         "name": "Water intake"
@@ -50,11 +71,29 @@
       "last_sync_time": {
         "name": "Last sync time"
       },
+      "light_activity": {
+        "name": "Light activity"
+      },
+      "moderate_activity": {
+        "name": "Moderate activity"
+      },
+      "oxygen_saturation": {
+        "name": "Oxygen saturation"
+      },
+      "peak_active_zone_minutes": {
+        "name": "Peak active zone minutes"
+      },
       "protein": {
         "name": "Protein"
       },
+      "respiratory_rate": {
+        "name": "Respiratory rate"
+      },
       "resting_heart_rate": {
         "name": "Resting heart rate"
+      },
+      "sedentary_time": {
+        "name": "Sedentary time"
       },
       "sleep_after_wakeup": {
         "name": "Time after waking up"
@@ -104,6 +143,12 @@
       },
       "total_fat": {
         "name": "Total fat"
+      },
+      "vigorous_activity": {
+        "name": "Vigorous activity"
+      },
+      "vo2_max": {
+        "name": "VO2 max"
       }
     }
   },

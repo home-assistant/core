@@ -50,7 +50,7 @@
           "password": "[%key:component::fritz::common::data_description_password%]",
           "username": "[%key:component::fritz::common::data_description_username%]"
         },
-        "description": "Update FRITZ!Box Tools credentials for: {host}.\n\nFRITZ!Box Tools is unable to log in to your FRITZ!Box.",
+        "description": "Update FRITZ!Box Tools credentials for: {host}.\n\nFRITZ!Box Tools is unable to log in to your FRITZ!Box. To find out which user and permissions to use, see the [Credentials]({credential_docs_url}) section of the integration documentation.",
         "title": "FRITZ!Box Tools - Update credentials"
       },
       "reconfigure": {
@@ -183,6 +183,11 @@
       },
       "wi_fi_main_5ghz_high_6ghz": {
         "name": "Wi-Fi Main 5GHz High / 6GHz"
+      }
+    },
+    "update": {
+      "release_notes_messages": {
+        "internet_interruption": "If this FRITZ!Box is your main internet router, your internet connection will be interrupted during the update. Depending on the model and the connection type, this can take up to 10 minutes."
       }
     }
   },

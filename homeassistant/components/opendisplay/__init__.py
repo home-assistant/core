@@ -12,8 +12,9 @@ from opendisplay import (
     BLETimeoutError,
     ColorScheme,
     GlobalConfig,
-    OpenDisplayDevice,
     OpenDisplayError,
+    Sec2KeyRequiredError,
+    connect,
 )
 
 from homeassistant.components.bluetooth import (
@@ -24,7 +25,11 @@ from homeassistant.components.bluetooth import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH
 from homeassistant.helpers.typing import ConfigType
@@ -104,12 +109,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenDisplayConfigEntry) 
     encryption_key = _get_encryption_key(entry)
 
     try:
-        async with OpenDisplayDevice(
-            mac_address=address, ble_device=ble_device, encryption_key=encryption_key
+        async with connect(
+            address=address, ble_device=ble_device, encryption_key=encryption_key
         ) as device:
-            fw = await device.read_firmware_version()
-            is_flex = device.is_flex
-    except (AuthenticationFailedError, AuthenticationRequiredError) as err:
+            fw = device.profile.firmware
+            is_flex = device.legacy.is_flex
+            device_config = device.config.cached
+    except (
+        AuthenticationFailedError,
+        AuthenticationRequiredError,
+        Sec2KeyRequiredError,
+    ) as err:
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="authentication_error",
@@ -119,9 +129,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenDisplayConfigEntry) 
             translation_domain=DOMAIN,
             translation_key="setup_connection_error",
         ) from err
-    device_config = device.config
-    if TYPE_CHECKING:
-        assert device_config is not None
+    if device_config is None or not device_config.displays:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="device_not_configured",
+        )
 
     coordinator = OpenDisplayCoordinator(hass, address)
 

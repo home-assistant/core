@@ -5,8 +5,9 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any, override
 
-from homematicip.base.enums import FunctionalChannelType, ValveState
+from homematicip.base.enums import FunctionalChannelType, UserRole, ValveState
 from homematicip.base.functionalChannels import FunctionalChannel
+from homematicip.client import Client
 from homematicip.device import (
     Device,
     EnergySensorsInterface,
@@ -26,6 +27,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     DEGREE,
     LIGHT_LUX,
+    EntityCategory,
     UnitOfDensity,
     UnitOfEnergy,
     UnitOfLength,
@@ -41,6 +43,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
+from .const import HMIPC_CLIENT_ID, HMIPC_HAPID
 from .entity import HomematicipGenericEntity
 from .hap import HomematicIPConfigEntry, HomematicipHAP
 from .helpers import (
@@ -124,6 +127,8 @@ class HmipSensorDescription(SensorEntityDescription):
     # sensors that predate the lookup by channel type keep the fixed channel of
     # their unique id, even where the channel sits at another index
     unique_id_channel: int | None = None
+    # one sensor per channel, told apart by the channel label in the name
+    name_by_channel: bool = False
 
 
 ATTR_ACCELERATION_SENSOR_NEUTRAL_POSITION = "acceleration_sensor_neutral_position"
@@ -171,6 +176,7 @@ ILLUMINATION_DEVICE_ATTRIBUTES = {
 }
 
 TILT_STATE_VALUES = ["neutral", "tilted", "non_neutral"]
+VALVE_STATE_VALUES = [valve_state.name.lower() for valve_state in ValveState]
 WINDOW_STATE_VALUES = ["open", "closed", "tilted"]
 
 
@@ -363,6 +369,19 @@ VALVE_POSITION_DESC = HmipSensorDescription(
     unique_id_channel=1,
 )
 
+VALVE_STATE_DESC = HmipSensorDescription(
+    key="ftb_valve_state",
+    translation_key="valve_state",
+    device_class=SensorDeviceClass.ENUM,
+    entity_category=EntityCategory.DIAGNOSTIC,
+    options=VALVE_STATE_VALUES,
+    value_fn=lambda channel: (
+        channel.valveState.name.lower() if channel.valveState is not None else None
+    ),
+    exists_fn=lambda channel: getattr(channel, "valveState", None) is not None,
+    name_by_channel=True,
+)
+
 PASSAGE_COUNTER_DESC = HmipSensorDescription(
     key="passage_counter",
     value_fn=lambda channel: channel.leftRightCounterDelta,
@@ -428,6 +447,7 @@ SENSOR_DESCRIPTIONS_BY_CHANNEL: dict[
         VALVE_POSITION_DESC,
         TEMPERATURE_DESC,
     ),
+    FunctionalChannelType.FLOOR_TERMINAL_BLOCK_MECHANIC_CHANNEL: (VALVE_STATE_DESC,),
     FunctionalChannelType.WALL_MOUNTED_THERMOSTAT_PRO_CHANNEL: (
         TEMPERATURE_DESC,
         HUMIDITY_DESC,
@@ -631,7 +651,49 @@ async def async_setup_entry(
         if getattr(channel, "carbonDioxideConcentration", None) is not None
     )
 
+    if (client_id := config_entry.data.get(HMIPC_CLIENT_ID)) and (
+        client := hap.home.search_client_by_id(client_id)
+    ):
+        entities.extend(
+            HomematicipClientRoleSensor(hap, device, client)
+            for device in hap.home.devices
+            if device.id == config_entry.data[HMIPC_HAPID]
+        )
     async_add_entities(entities)
+
+
+class HomematicipClientRoleSensor(HomematicipGenericEntity, SensorEntity):
+    """Role of the Home Assistant client in the HomematicIP user management."""
+
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_options = [role.name.lower() for role in UserRole]
+    _attr_translation_key = "client_role"
+
+    def __init__(self, hap: HomematicipHAP, device: Device, client: Client) -> None:
+        """Initialize the client role sensor."""
+        super().__init__(
+            hap, device, feature_id="client_role", use_description_name=True
+        )
+        self._client = client
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Register callbacks."""
+        await super().async_added_to_hass()
+        # a role change updates the client, not the access point
+        self._client.on_update(self._async_device_changed)
+        self.async_on_remove(
+            lambda: self._client.remove_callback(self._async_device_changed)
+        )
+
+    @property
+    @override
+    def native_value(self) -> str | None:
+        """Return the role of this client."""
+        if self._client.userRole is None:
+            return None
+        return self._client.userRole.name.lower()
 
 
 class HomematicipCarbonDioxideSensor(HomematicipGenericEntity, SensorEntity):
@@ -845,7 +907,9 @@ class HomematicipFloorTerminalBlockMechanicChannelValve(
         """Return the floor terminal block valve position."""
         if self._adaption_pending():
             return None
-        return round(self._valve_channel().valvePosition * 100)
+        if (valve_position := self._valve_channel().valvePosition) is None:
+            return None
+        return round(valve_position * 100)
 
     def _valve_channel(self) -> FunctionalChannel:
         return next(
@@ -983,6 +1047,7 @@ class HmipEsiGasCurrentGasFlow(HmipEsiSensorEntity):
     _attr_device_class = SensorDeviceClass.VOLUME_FLOW_RATE
     _attr_native_unit_of_measurement = UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR
     _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_suggested_display_precision = 2
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the device."""
@@ -1108,6 +1173,10 @@ class HomematicipSensor(HomematicipGenericEntity, SensorEntity):
         self._unique_id_channel = (
             description.unique_id_channel if keep_unique_id_channel else None
         )
+        if description.name_by_channel:
+            self._attr_translation_placeholders = {
+                "channel": channel.label or str(channel.index)
+            }
 
     @property
     @override

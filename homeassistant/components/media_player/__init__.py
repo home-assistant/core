@@ -127,8 +127,8 @@ DEVICE_CLASSES = [cls.value for cls in MediaPlayerDeviceClass]
 
 
 MEDIA_PLAYER_BROWSE_MEDIA_SCHEMA = {
-    probatio.Optional(ATTR_MEDIA_CONTENT_TYPE): cv.string,
-    probatio.Optional(ATTR_MEDIA_CONTENT_ID): cv.string,
+    probatio.Optional(MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE): cv.string,
+    probatio.Optional(MediaPlayerServiceArgument.MEDIA_CONTENT_ID): cv.string,
 }
 
 

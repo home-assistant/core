@@ -4,6 +4,7 @@ import asyncio
 from collections.abc import Iterable
 from typing import Any
 
+from homeassistant.const import TargetKey
 from homeassistant.core import Context, HomeAssistant, State
 
 from .const import (
@@ -43,7 +44,7 @@ async def _async_reproduce_states(
     ) -> None:
         """Call service with the given state attributes."""
         data = data or {}
-        data["entity_id"] = state.entity_id
+        data[TargetKey.ENTITY_ID] = state.entity_id
         for attribute in attributes:
             if (value := state.attributes.get(attribute)) is not None:
                 data[_STATE_ATTRIBUTE_TO_SERVICE_ARG[attribute]] = value

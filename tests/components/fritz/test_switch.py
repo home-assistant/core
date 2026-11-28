@@ -36,6 +36,7 @@ from .conftest import FritzConnectionMock, wifi_services_with_ssids
 from .const import (
     MOCK_CALL_DEFLECTION_DATA,
     MOCK_FB_SERVICES,
+    MOCK_FB_SERVICES_GUEST_WIFI_NOT_ACCESSIBLE,
     MOCK_HOST_ATTRIBUTES_DATA,
     MOCK_MESH_MASTER_MAC,
     MOCK_SERIAL_NUMBER,
@@ -935,6 +936,35 @@ async def test_switch_wifi_coordinator_update(
     assert state.state == STATE_OFF
 
 
+@pytest.mark.parametrize("fc_data", [MOCK_FB_SERVICES_GUEST_WIFI_NOT_ACCESSIBLE])
+@pytest.mark.usefixtures("fc_class_mock", "fh_class_mock")
+async def test_switch_guest_wifi_not_accessible(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the guest Wi-Fi switch is skipped when the guest Wi-Fi is not accessible."""
+    entity_id = "switch.mock_title_wi_fi_main_2_4ghz"
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.fritz.PLATFORMS", [Platform.SWITCH]):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert [
+        e for e in entity_registry.entities if e.startswith("switch.mock_title_wi_fi")
+    ] == [entity_id]
+
+    # Coordinator updates must not poll the inaccessible guest Wi-Fi
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
+
+
 async def test_switch_port_coordinator_update(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -1053,6 +1083,40 @@ async def test_migrate_to_new_unique_id(
         entity_entry = entity_registry.async_get(entity_id)
         assert entity_entry
         assert entity_entry.unique_id == new_unique_id
+
+
+@pytest.mark.usefixtures("fh_class_mock", "fs_class_mock")
+async def test_migrate_to_identical_unique_id(
+    hass: HomeAssistant,
+    fc_class_mock: MagicMock,
+    entity_registry: EntityRegistry,
+) -> None:
+    """Test switch setup preserves an entity whose unique ID is unchanged."""
+    fc_class_mock.return_value.override_services(
+        wifi_services_with_ssids("Main WiFi", "Guest")
+    )
+
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    unique_id = f"{MOCK_SERIAL_NUMBER}-wi_fi_guest"
+    existing_entity = entity_registry.async_get_or_create(
+        domain=Platform.SWITCH,
+        platform=DOMAIN,
+        unique_id=unique_id,
+        config_entry=entry,
+        disabled_by=None,
+    )
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (existing_entry := entity_registry.async_get(existing_entity.entity_id))
+    assert existing_entry.unique_id == unique_id
+    assert (state := hass.states.get(existing_entity.entity_id))
+    assert state.state == STATE_ON
+    assert (state := hass.states.get("switch.mock_title_wi_fi_main_2_4ghz"))
+    assert state.state == STATE_ON
 
 
 @pytest.mark.parametrize(

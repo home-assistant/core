@@ -6,12 +6,14 @@ from typing import Any, Final, override
 from aioairzone.const import (
     AZD_AIR_DEMAND,
     AZD_BATTERY_LOW,
+    AZD_CLOUD_CONNECTED,
     AZD_COLD_DEMAND,
     AZD_ERRORS,
     AZD_FLOOR_DEMAND,
     AZD_HEAT_DEMAND,
     AZD_PROBLEMS,
     AZD_SYSTEMS,
+    AZD_WEBSERVER,
     AZD_ZONES,
 )
 
@@ -25,7 +27,12 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import AirzoneConfigEntry, AirzoneUpdateCoordinator
-from .entity import AirzoneEntity, AirzoneSystemEntity, AirzoneZoneEntity
+from .entity import (
+    AirzoneEntity,
+    AirzoneSystemEntity,
+    AirzoneWebServerEntity,
+    AirzoneZoneEntity,
+)
 
 
 @dataclass(frozen=True)
@@ -43,6 +50,17 @@ SYSTEM_BINARY_SENSOR_TYPES: Final[tuple[AirzoneBinarySensorEntityDescription, ..
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
         key=AZD_PROBLEMS,
+    ),
+)
+
+WEBSERVER_BINARY_SENSOR_TYPES: Final[
+    tuple[AirzoneBinarySensorEntityDescription, ...]
+] = (
+    AirzoneBinarySensorEntityDescription(
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        key=AZD_CLOUD_CONNECTED,
+        translation_key="cloud_connected",
     ),
 )
 
@@ -89,6 +107,13 @@ async def async_setup_entry(
 ) -> None:
     """Add Airzone binary sensors from a config_entry."""
     coordinator = entry.runtime_data
+
+    if AZD_WEBSERVER in coordinator.data:
+        async_add_entities(
+            AirzoneWebServerBinarySensor(coordinator, description, entry)
+            for description in WEBSERVER_BINARY_SENSOR_TYPES
+            if description.key in coordinator.data[AZD_WEBSERVER]
+        )
 
     added_systems: set[str] = set()
     added_zones: set[str] = set()
@@ -198,5 +223,22 @@ class AirzoneZoneBinarySensor(AirzoneZoneEntity, AirzoneBinarySensor):
         self._attr_unique_id = (
             f"{self._attr_unique_id}_{system_zone_id}_{description.key}"
         )
+        self.entity_description = description
+        self._async_update_attrs()
+
+
+class AirzoneWebServerBinarySensor(AirzoneWebServerEntity, AirzoneBinarySensor):
+    """Define an Airzone WebServer binary sensor."""
+
+    def __init__(
+        self,
+        coordinator: AirzoneUpdateCoordinator,
+        description: AirzoneBinarySensorEntityDescription,
+        entry: AirzoneConfigEntry,
+    ) -> None:
+        """Initialize."""
+        super().__init__(coordinator, entry)
+
+        self._attr_unique_id = f"{self._attr_unique_id}_ws_{description.key}"
         self.entity_description = description
         self._async_update_attrs()

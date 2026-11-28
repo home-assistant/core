@@ -60,13 +60,26 @@
       }
     }
   },
+  "device": {
+    "outlet": {
+      "name": "Outlet {index}"
+    }
+  },
   "entity": {
     "button": {
       "port_power_cycle": {
-        "name": "{port_name} power cycle"
+        "name": "Power cycle"
       },
       "wlan_regenerate_password": {
         "name": "Regenerate password"
+      }
+    },
+    "date": {
+      "firewall_policy_schedule_end_date": {
+        "name": "Schedule end date"
+      },
+      "firewall_policy_schedule_start_date": {
+        "name": "Schedule start date"
       }
     },
     "image": {
@@ -77,6 +90,18 @@
     "light": {
       "led_control": {
         "name": "LED"
+      }
+    },
+    "select": {
+      "firewall_policy_schedule_mode": {
+        "name": "Schedule",
+        "state": {
+          "always": "Always",
+          "custom": "Custom",
+          "every_day": "Every day",
+          "every_week": "Every week",
+          "one_time": "One time"
+        }
       }
     },
     "sensor": {
@@ -119,7 +144,7 @@
         "name": "Uplink MAC"
       },
       "firewall_policy_schedule_status": {
-        "name": "{policy_name} schedule status",
+        "name": "Schedule status",
         "state": {
           "active": "[%key:common::state::active%]",
           "disabled": "[%key:common::state::disabled%]",
@@ -127,19 +152,19 @@
         }
       },
       "outlet_power": {
-        "name": "{outlet_name} outlet power"
+        "name": "Outlet power"
       },
       "port_bandwidth_rx": {
-        "name": "{port_name} RX"
+        "name": "RX"
       },
       "port_bandwidth_tx": {
-        "name": "{port_name} TX"
+        "name": "TX"
       },
       "port_link_speed": {
-        "name": "{port_name} link speed"
+        "name": "Link speed"
       },
       "port_poe_power": {
-        "name": "{port_name} PoE power"
+        "name": "PoE power"
       },
       "smartpower_ac_power_budget": {
         "name": "AC power budget"
@@ -186,10 +211,18 @@
         "name": "Blocked"
       },
       "poe_port_control": {
-        "name": "{port_name} PoE"
+        "name": "PoE"
       },
       "wlan_control": {
         "name": "Enabled"
+      }
+    },
+    "time": {
+      "firewall_policy_schedule_end": {
+        "name": "Schedule end"
+      },
+      "firewall_policy_schedule_start": {
+        "name": "Schedule start"
       }
     },
     "update": {
@@ -213,6 +246,15 @@
     },
     "remove_clients_request_failed": {
       "message": "Failed to remove clients from UniFi Network"
+    },
+    "schedule_dates_out_of_order": {
+      "message": "The schedule's start date must be before its end date"
+    },
+    "schedule_mode_not_supported": {
+      "message": "This schedule mode can only be set in UniFi Network"
+    },
+    "schedule_setting_unused_in_mode": {
+      "message": "The policy's current schedule mode doesn't use this setting"
     },
     "site_not_found": {
       "message": "The configured UniFi Network site no longer exists"
