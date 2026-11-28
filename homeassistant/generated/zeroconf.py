@@ -1006,6 +1006,11 @@ ZEROCONF = {
             },
         },
     ],
+    "_recamera._tcp.local.": [
+        {
+            "domain": "recamera_pro",
+        },
+    ],
     "_rio._tcp.local.": [
         {
             "domain": "russound_rio",
