@@ -49,7 +49,7 @@
     },
     "sensor": {
       "valve_opening": {
-        "name": "Valve opening"
+        "name": "Valve {number} opening"
       }
     }
   },
