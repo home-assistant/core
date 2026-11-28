@@ -17,7 +17,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+from .const import DOMAIN, VERIFY_FAILURE_KEYS
 from .coordinator import IZoneConfigEntry, IZoneCoordinator
 from .discovery import (
     async_discover_endpoint,
@@ -83,6 +83,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+def _verify_failure_not_ready(err: pizone.EndpointVerifyError) -> ConfigEntryNotReady:
+    """Return a setup retry that says why the controller failed the HTTP check."""
+    placeholders = {"host": err.host}
+    if err.answered_uid is not None:
+        placeholders["answered_uid"] = err.answered_uid
+    return ConfigEntryNotReady(
+        translation_domain=DOMAIN,
+        translation_key=VERIFY_FAILURE_KEYS[err.failure],
+        translation_placeholders=placeholders,
+    )
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> None:
     """Set up from a config entry."""
     try:
@@ -104,11 +116,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> Non
         try:
             endpoint = await async_discover_endpoint(hass, uid)
         except pizone.EndpointVerifyError as err:
-            raise ConfigEntryNotReady(
-                translation_domain=DOMAIN,
-                translation_key="cannot_connect",
-                translation_placeholders={"host": err.host},
-            ) from err
+            raise _verify_failure_not_ready(err) from err
         except (OSError, RuntimeError) as err:
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
@@ -145,6 +153,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> Non
             translation_domain=DOMAIN,
             translation_key="bridge_unpaired",
         ) from err
+    except pizone.EndpointVerifyError as err:
+        raise _verify_failure_not_ready(err) from err
     except ConnectionError as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
