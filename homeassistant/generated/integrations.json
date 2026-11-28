@@ -11,6 +11,18 @@
       ],
       "supported_by": "motion_blinds"
     },
+    "ablago": {
+      "name": "Ablago",
+      "integration_type": "service",
+      "categories": [
+        "productivity_information.documents_photos"
+      ],
+      "connectivity": [
+        "network"
+      ],
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "abode": {
       "name": "Abode",
       "integration_type": "hub",

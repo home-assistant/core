@@ -123,6 +123,9 @@ TwitterAPI==2.7.12
 # homeassistant.components.onvif
 WSDiscovery==2.1.2
 
+# homeassistant.components.ablago
+ablago==0.1.1
+
 # homeassistant.components.accuweather
 accuweather==5.1.0
 
