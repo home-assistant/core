@@ -1,0 +1,489 @@
+"""Tests for Zentraly setup and device metadata through Home Assistant."""
+
+import asyncio
+from collections.abc import Callable
+from datetime import timedelta
+from ipaddress import ip_address
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from zentraly import (
+    ClimateCapability,
+    ZentralyAuthenticationError,
+    ZentralyConnectionError,
+    ZentralyDeviceInfo,
+)
+
+from homeassistant import config_entries
+from homeassistant.components.climate import ATTR_CURRENT_TEMPERATURE
+from homeassistant.components.zentraly.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    CONF_DEVICE_ID,
+    CONF_HOST,
+    CONF_MAC,
+    CONF_PORT,
+    EVENT_HOMEASSISTANT_STOP,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import ConfigEntryError
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
+from homeassistant.util import dt as dt_util
+
+from .conftest import DEVICE_ID, ENTITY_ID, HOST, MAC, PORT
+
+pytestmark = pytest.mark.usefixtures("mock_api", "mock_climate_api", "mock_device_info")
+
+
+@pytest.mark.parametrize(
+    ("error", "expected", "key"),
+    [
+        pytest.param(
+            ZentralyAuthenticationError,
+            ConfigEntryState.SETUP_ERROR,
+            "authentication_failed",
+            id="authentication",
+        ),
+        pytest.param(
+            ZentralyConnectionError,
+            ConfigEntryState.SETUP_RETRY,
+            "setup_cannot_connect",
+            id="connection",
+        ),
+    ],
+)
+async def test_translated_setup_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api: MagicMock,
+    error: type[Exception],
+    expected: ConfigEntryState,
+    key: str,
+) -> None:
+    """Setup failures expose translated errors through the config entry."""
+    mock_api.async_validate_password.side_effect = error
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert mock_config_entry.state is expected
+    assert mock_config_entry.error_reason_translation_key == key
+    assert mock_config_entry.error_reason_translation_placeholders == {
+        "device_id": DEVICE_ID
+    }
+
+
+async def test_translated_unsupported_model(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """An unsupported stored model fails setup with a translated explanation."""
+    hass.config_entries.async_update_entry(
+        mock_config_entry, data={**mock_config_entry.data, CONF_DEVICE_ID: "UNKNOWN"}
+    )
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.error_reason_translation_key == "unsupported_model"
+    assert mock_config_entry.error_reason_translation_placeholders == {
+        "device_id": "UNKNOWN"
+    }
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_setup_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Load one climate entity and register the physical thermostat."""
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert len(hass.states.async_all()) == 1
+    assert hass.states.get(ENTITY_ID).state == "heat"
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, DEVICE_ID), mock_config_entry.entry_id
+    )
+    assert device is not None
+    assert device.manufacturer == "Zentraly"
+    assert device.model == "Termostato Inalámbrico Wi-Fi"
+    assert device.model_id == "ZTTIN"
+    assert device.name == DEVICE_ID
+    assert device.serial_number == DEVICE_ID
+    assert (dr.CONNECTION_NETWORK_MAC, dr.format_mac(MAC)) in device.connections
+    mock_api.async_connect.assert_awaited_once_with()
+
+
+async def test_initial_state_before_entity_registration(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_climate_api: MagicMock,
+) -> None:
+    """Read before adding climate and preserve reports received during that read."""
+    started = asyncio.Event()
+    release = asyncio.Event()
+
+    async def read() -> float:
+        started.set()
+        await release.wait()
+        return 19.0
+
+    mock_climate_api.async_get_current_temperature.side_effect = read
+    setup = hass.async_create_task(
+        hass.config_entries.async_setup(mock_config_entry.entry_id)
+    )
+    await started.wait()
+    try:
+        assert hass.states.get(ENTITY_ID) is None
+        mock_climate_api.add_state_listener.call_args.args[0](
+            {ClimateCapability.LOCAL_TEMPERATURE: 22.0}
+        )
+    finally:
+        release.set()
+    assert await setup
+    await hass.async_block_till_done()
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == "heat"
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 22.0
+    assert state.attributes[ATTR_TEMPERATURE] == 21.0
+    mock_climate_api.async_get_current_temperature.assert_awaited_once_with()
+
+
+async def test_setup_retries_when_persistent_connection_times_out(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api: MagicMock,
+    mock_climate_api: MagicMock,
+) -> None:
+    """A missing connection retries setup and releases listeners and transport."""
+    mock_api.connected = False
+    with patch("homeassistant.components.zentraly.coordinator.CONNECTION_TIMEOUT", 0):
+        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == "setup_cannot_connect"
+    assert hass.states.get(ENTITY_ID) is None
+    mock_climate_api.async_get_current_temperature.assert_not_awaited()
+    mock_climate_api.add_state_listener.return_value.assert_called_once_with()
+    mock_api.async_disconnect.assert_awaited_once_with()
+    mock_api.connected = True
+    assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == "heat"
+    mock_climate_api.async_get_current_temperature.assert_awaited_once_with()
+
+
+async def test_setup_retries_when_connection_drops_before_initial_read(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api: MagicMock,
+    mock_climate_api: MagicMock,
+    connection_state: Callable[[bool], None],
+) -> None:
+    """A brief connection cannot complete setup without the initial state read."""
+    hass.config_entries.async_update_entry(mock_config_entry, pref_disable_polling=True)
+    mock_api.connected = False
+
+    def subscribe(listener: Callable[[bool], None]) -> MagicMock:
+        hass.loop.call_soon(connection_state, True)
+        hass.loop.call_soon(connection_state, False)
+        return MagicMock()
+
+    mock_api.add_connection_state_listener.side_effect = subscribe
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == "setup_cannot_connect"
+    assert hass.states.get(ENTITY_ID) is None
+    mock_climate_api.async_get_current_temperature.assert_not_awaited()
+    mock_api.async_disconnect.assert_awaited_once_with()
+
+    mock_api.add_connection_state_listener.side_effect = None
+    mock_api.connected = True
+    assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == "heat"
+    mock_climate_api.async_get_current_temperature.assert_awaited_once_with()
+
+
+async def test_setup_unexpected_mac(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: MagicMock
+) -> None:
+    """A different MAC fails setup without retrying or replacing the identity."""
+    mock_api.async_validate_password.return_value = "001122334455"
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.data[CONF_MAC] == MAC
+    assert mock_config_entry.error_reason_translation_key == "unexpected_device"
+    mock_api.async_connect.assert_not_awaited()
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_device_info_has_no_periodic_refresh(
+    hass: HomeAssistant,
+    mock_device_info: AsyncMock,
+) -> None:
+    """Metadata reads are event driven even when state polling is enabled."""
+    mock_device_info.assert_awaited_once_with()
+    mock_device_info.reset_mock()
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(days=2))
+    await hass.async_block_till_done(wait_background_tasks=True)
+    mock_device_info.assert_not_awaited()
+
+
+@pytest.mark.parametrize(
+    ("info", "firmware", "hardware"),
+    [
+        pytest.param(
+            ZentralyDeviceInfo(firmware_version="1.1"), "1.1", "2.0", id="firmware-only"
+        ),
+        pytest.param(
+            ZentralyDeviceInfo(hardware_version="2.1"), "1.0", "2.1", id="hardware-only"
+        ),
+        pytest.param(ZentralyDeviceInfo(), "1.0", "2.0", id="no-readings"),
+        pytest.param(ZentralyConnectionError(), "1.0", "2.0", id="read-error"),
+    ],
+)
+async def test_partial_device_info_after_restart(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_device_info: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+    info: ZentralyDeviceInfo | ZentralyConnectionError,
+    firmware: str,
+    hardware: str,
+) -> None:
+    """A fresh setup preserves stored versions absent from the first reading."""
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, DEVICE_ID)},
+        sw_version="1.0",
+        hw_version="2.0",
+    )
+    mock_device_info.side_effect = [info]
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    updated = device_registry.async_get(device.id)
+    assert updated.sw_version == firmware
+    assert updated.hw_version == hardware
+
+
+@pytest.mark.parametrize(
+    "initial_read",
+    [
+        pytest.param(19.0, id="success"),
+        pytest.param(ZentralyConnectionError(), id="connection-error"),
+    ],
+)
+async def test_climate_periodic_refresh_lifecycle(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_climate_api: MagicMock,
+    initial_read: float | ZentralyConnectionError,
+) -> None:
+    """Even after an initial read failure the entity registers and retries on schedule."""
+    mock_climate_api.async_get_current_temperature.side_effect = [initial_read, 19.0]
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert len(hass.states.async_all()) == 1
+    mock_climate_api.async_get_current_temperature.reset_mock()
+    now = dt_util.utcnow()
+    async_fire_time_changed(hass, now + timedelta(minutes=4))
+    await hass.async_block_till_done(wait_background_tasks=True)
+    mock_climate_api.async_get_current_temperature.assert_not_awaited()
+    async_fire_time_changed(hass, now + timedelta(minutes=5))
+    await hass.async_block_till_done(wait_background_tasks=True)
+    mock_climate_api.async_get_current_temperature.assert_awaited_once_with()
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_TEMPERATURE] == 21.0
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    async_fire_time_changed(hass, now + timedelta(minutes=10))
+    await hass.async_block_till_done(wait_background_tasks=True)
+    mock_climate_api.async_get_current_temperature.assert_awaited_once_with()
+
+
+async def test_setup_failure_disconnects(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: MagicMock
+) -> None:
+    """A platform setup failure still releases the library connection."""
+    with patch.object(
+        hass.config_entries,
+        "async_forward_entry_setups",
+        side_effect=ConfigEntryError("Platform setup failed"),
+    ):
+        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    mock_api.async_disconnect.assert_awaited_once_with()
+
+
+async def test_device_info_connection_and_unload(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api: MagicMock,
+    mock_device_info: AsyncMock,
+    connection_state: Callable[[bool], None],
+) -> None:
+    """Connection events deduplicate pending metadata reads; unloading cancels them."""
+    mock_api.connected = False
+    listening = asyncio.Event()
+    started = asyncio.Event()
+    cancelled = asyncio.Event()
+
+    def register_connection_listener(listener: Callable[[bool], None]) -> MagicMock:
+        listening.set()
+        return mock_api.add_connection_state_listener.return_value
+
+    mock_api.add_connection_state_listener.side_effect = register_connection_listener
+
+    async def read() -> ZentralyDeviceInfo:
+        started.set()
+        try:
+            await asyncio.Future()
+        finally:
+            cancelled.set()
+        return ZentralyDeviceInfo()
+
+    mock_device_info.side_effect = read
+    setup = hass.async_create_task(
+        hass.config_entries.async_setup(mock_config_entry.entry_id)
+    )
+    await listening.wait()
+    mock_device_info.assert_not_awaited()
+    assert hass.states.get(ENTITY_ID) is None
+    connection_state(False)
+    mock_device_info.assert_not_awaited()
+    connection_state(True)
+    assert await setup
+    await started.wait()
+    connection_state(True)
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=24))
+    await hass.async_block_till_done()
+    mock_device_info.assert_awaited_once_with()
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    assert cancelled.is_set()
+    assert mock_api.add_connection_state_listener.return_value.call_count == 2
+
+
+async def test_disabled_periodic_polling(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_climate_api: MagicMock,
+    mock_device_info: AsyncMock,
+    connection_state: Callable[[bool], None],
+) -> None:
+    """Disabling polling retains initial and reconnect reads without periodic reads."""
+    hass.config_entries.async_update_entry(mock_config_entry, pref_disable_polling=True)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    mock_climate_api.async_get_current_temperature.assert_awaited_once_with()
+    mock_device_info.assert_awaited_once_with()
+    mock_climate_api.async_get_current_temperature.reset_mock()
+    mock_device_info.reset_mock()
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(days=1, minutes=1))
+    await hass.async_block_till_done()
+    mock_climate_api.async_get_current_temperature.assert_not_awaited()
+    mock_device_info.assert_not_awaited()
+    connection_state(True)
+    await hass.async_block_till_done()
+    mock_climate_api.async_get_current_temperature.assert_awaited_once_with()
+    mock_device_info.assert_awaited_once_with()
+
+
+async def test_setup_and_reconnect_without_versions(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_device_info: AsyncMock,
+    connection_state: Callable[[bool], None],
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Missing metadata never prevents a new device from loading or reconnecting."""
+    mock_device_info.return_value = ZentralyDeviceInfo()
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, DEVICE_ID), mock_config_entry.entry_id
+    )
+    assert device.sw_version is None
+    assert device.hw_version is None
+    connection_state(False)
+    connection_state(True)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get(ENTITY_ID).state == "heat"
+    assert mock_device_info.await_count == 2
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_shutdown_disconnects(hass: HomeAssistant, mock_api: MagicMock) -> None:
+    """Home Assistant shutdown awaits the library connection cleanup."""
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    mock_api.async_disconnect.assert_awaited_once_with()
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_unload_removes_shutdown_listener(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api: MagicMock,
+) -> None:
+    """An unloaded entry does not disconnect again when Home Assistant stops."""
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    mock_api.async_disconnect.assert_awaited_once_with()
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    mock_api.async_disconnect.assert_awaited_once_with()
+
+
+@pytest.mark.parametrize(
+    ("host", "port"),
+    [
+        pytest.param("192.168.1.99", PORT, id="new-address"),
+        pytest.param(HOST, PORT + 1, id="new-port"),
+        pytest.param(HOST, PORT, id="unchanged-endpoint"),
+    ],
+)
+async def test_zeroconf_recovery_after_identity_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    host: str,
+    port: int,
+) -> None:
+    """Only a corrected endpoint reloads an entry stopped by an unexpected MAC."""
+    mock_api.async_validate_password.return_value = "001122334455"
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    mock_api.async_validate_password.return_value = MAC
+    mock_api.async_validate_password.reset_mock()
+    address = ip_address(host)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=ZeroconfServiceInfo(
+            ip_address=address,
+            ip_addresses=[address],
+            hostname=f"{DEVICE_ID}.local.",
+            name=f"{DEVICE_ID}._zentraly._tcp.local.",
+            port=port,
+            properties={},
+            type="_zentraly._tcp.local.",
+        ),
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_MAC] == MAC
+    assert mock_config_entry.data[CONF_HOST] == host
+    assert mock_config_entry.data[CONF_PORT] == port
+    expected_calls = int((host, port) != (HOST, PORT))
+    assert mock_api.async_validate_password.await_count == expected_calls
+    assert len(hass.states.async_all()) == expected_calls
+    assert (
+        len(
+            dr.async_entries_for_config_entry(
+                device_registry, mock_config_entry.entry_id
+            )
+        )
+        == expected_calls
+    )

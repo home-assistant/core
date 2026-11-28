@@ -17688,6 +17688,15 @@
       ],
       "supported_by": "fibaro"
     },
+    "zentraly": {
+      "name": "Zentraly",
+      "integration_type": "device",
+      "categories": [
+        "climate.thermostats_heating"
+      ],
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "zerproc": {
       "name": "Zerproc",
       "integration_type": "hub",
