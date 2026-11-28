@@ -1064,6 +1064,16 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "local_name": "Ruuvi *",
     },
     {
+        "connectable": True,
+        "domain": "ryse",
+        "manufacturer_id": 1033,
+    },
+    {
+        "connectable": True,
+        "domain": "ryse",
+        "service_uuid": "a72f2800-b0bd-498b-b4cd-4a3901388238",
+    },
+    {
         "connectable": False,
         "domain": "schlage",
         "manufacturer_data_start": [
