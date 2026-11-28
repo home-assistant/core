@@ -449,6 +449,9 @@ def climate_control_device(
     has_demand: bool = False,
     ventilation_mode: bool = False,
     setpoint_temperature_offset_active: bool = False,
+    next_setpoint_temperature: float | None = None,
+    next_setpoint_temperature_change: str | None = None,
+    next_operation_mode: RoomClimateControlService.OperationMode | None = None,
 ) -> SHCClimateControl:
     """Build a minimal device double for the climate_controls bucket."""
     device = create_autospec(SHCClimateControl, instance=True, spec_set=True)
@@ -475,6 +478,9 @@ def climate_control_device(
     device.has_demand = has_demand
     device.ventilation_mode = ventilation_mode
     device.setpoint_temperature_offset_active = setpoint_temperature_offset_active
+    device.next_setpoint_temperature = next_setpoint_temperature
+    device.next_setpoint_temperature_change = next_setpoint_temperature_change
+    device.next_operation_mode = next_operation_mode
     return device
 
 

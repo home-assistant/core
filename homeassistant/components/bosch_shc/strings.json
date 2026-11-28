@@ -365,6 +365,9 @@
       "humidity_rating": {
         "name": "Humidity rating"
       },
+      "next_setpoint_temperature": {
+        "name": "Next setpoint temperature"
+      },
       "open_windows_doors": {
         "name": "Open doors and windows"
       },

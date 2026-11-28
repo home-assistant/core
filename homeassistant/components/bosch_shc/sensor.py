@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, override
 from boschshcpy import (
     BatteryLevelService,
     SHCBatteryDevice,
+    SHCClimateControl,
     SHCLightControl,
     SHCLightSwitchBSM,
     SHCMicromoduleShutterControl,
@@ -208,6 +209,24 @@ _BATTERY_LEVEL_DESCRIPTION: SHCSensorEntityDescription[SHCBatteryDevice] = (
             "critically_low_battery",
         ],
         value_fn=lambda device: _BATTERY_LEVEL_STATES.get(device.batterylevel),
+    )
+)
+_NEXT_SETPOINT_DESCRIPTION: SHCSensorEntityDescription[SHCClimateControl] = (
+    SHCSensorEntityDescription(
+        key="next_setpoint_temperature",
+        translation_key="next_setpoint_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda device: device.next_setpoint_temperature,
+        attributes_fn=lambda device: {
+            "next_change_at": device.next_setpoint_temperature_change,
+            "next_operation_mode": (
+                device.next_operation_mode.value
+                if device.next_operation_mode is not None
+                else None
+            ),
+        },
     )
 )
 _TWINGUARD_TEMPERATURE_DESCRIPTION: SHCSensorEntityDescription[SHCTwinguard] = (
@@ -424,6 +443,18 @@ async def async_setup_entry(
         SHCSensor(
             hass,
             device,
+            _NEXT_SETPOINT_DESCRIPTION,
+            shc_info.unique_id,
+            config_entry.entry_id,
+            room_name=session.room(device.room_id).name,
+        )
+        for device in session.device_helper.climate_controls
+    )
+
+    entities.extend(
+        SHCSensor(
+            hass,
+            device,
             description,
             shc_info.unique_id,
             config_entry.entry_id,
@@ -594,9 +625,14 @@ class SHCSensor[_DeviceT: SHCDevice](SHCEntity, SensorEntity):
         entity_description: SHCSensorEntityDescription[_DeviceT],
         parent_id: str,
         entry_id: str,
+        room_name: str | None = None,
     ) -> None:
         """Initialize sensor."""
         super().__init__(hass, device, parent_id, entry_id)
+        if room_name is not None:
+            if TYPE_CHECKING:
+                assert self._attr_device_info is not None
+            self._attr_device_info.name = room_name
         self._device: _DeviceT = device
         self.entity_description = entity_description
         self._attr_unique_id = f"{device.serial}_{entity_description.key}"

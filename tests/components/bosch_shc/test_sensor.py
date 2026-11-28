@@ -5,7 +5,11 @@ from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
 from boschshcpy import BatteryLevelService, SHCRoomThermostat2, TerminalConfiguration
-from boschshcpy.services_impl import OutdoorSirenPowerSupplyService, ValveTappetService
+from boschshcpy.services_impl import (
+    OutdoorSirenPowerSupplyService,
+    RoomClimateControlService,
+    ValveTappetService,
+)
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
@@ -18,6 +22,7 @@ from homeassistant.util import dt as dt_util
 
 from .conftest import (
     battery_only_device,
+    climate_control_device,
     light_control_device,
     motion_detector2_device,
     outdoor_siren_device,
@@ -469,3 +474,55 @@ async def test_battery_level_disabled_by_default(
     assert entry is not None
     assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
     assert entry.unique_id == "serial-hdm:HomeMaticIP:motion1_battery_level"
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "climate_controls": [
+                climate_control_device(
+                    next_setpoint_temperature=18.5,
+                    next_setpoint_temperature_change="2026-11-25T22:00:00Z",
+                    next_operation_mode=RoomClimateControlService.OperationMode.MANUAL,
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_next_setpoint_temperature(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The room climate reports its next scheduled setpoint and when it applies."""
+    mock_session.room.return_value.name = "Living Room"
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("sensor.living_room_next_setpoint_temperature")
+    assert state is not None
+    assert state.state == "18.5"
+    assert state.attributes["next_change_at"] == "2026-11-25T22:00:00Z"
+    assert state.attributes["next_operation_mode"] == "MANUAL"
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"climate_controls": [climate_control_device()]}],
+    indirect=True,
+)
+async def test_next_setpoint_temperature_unknown(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Without a scheduled change the sensor is unknown."""
+    mock_session.room.return_value.name = "Living Room"
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("sensor.living_room_next_setpoint_temperature")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes["next_operation_mode"] is None
