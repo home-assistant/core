@@ -353,12 +353,13 @@ class RuntimeEntryData:
             for callback_ in entity_callbacks:
                 callback_(new_info)
 
-    async def _ensure_platforms_loaded(
+    async def async_ensure_platforms_loaded(
         self,
         hass: HomeAssistant,
         entry: ESPHomeConfigEntry,
         platforms: set[Platform],
     ) -> None:
+        """Forward the setup of the platforms that are not loaded yet."""
         async with self.platform_load_lock:
             if needed := platforms - self.loaded_platforms:
                 await hass.config_entries.async_forward_entry_setups(entry, needed)
@@ -425,7 +426,7 @@ class RuntimeEntryData:
                 "in this version of Home Assistant, ignoring them and their entities",
                 sorted(unsupported_device_ids),
             )
-        await self._ensure_platforms_loaded(hass, entry, needed_platforms)
+        await self.async_ensure_platforms_loaded(hass, entry, needed_platforms)
 
         for type_, callbacks in self.entity_info_callbacks.items():
             # If all entities for a type are removed, we

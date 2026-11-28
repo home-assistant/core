@@ -829,12 +829,10 @@ class ESPHomeManager:
             api_version
         )
         if voice_assistant_flags:
-            if Platform.ASSIST_SATELLITE not in entry_data.loaded_platforms:
-                # Create assist satellite entity
-                await self.hass.config_entries.async_forward_entry_setups(
-                    self.entry, [Platform.ASSIST_SATELLITE]
-                )
-                entry_data.loaded_platforms.add(Platform.ASSIST_SATELLITE)
+            # Create assist satellite entity, under the lock setup waits for
+            await entry_data.async_ensure_platforms_loaded(
+                hass, entry, {Platform.ASSIST_SATELLITE}
+            )
         else:
             # Neither platform is reliably loaded here, so removal cannot live in them.
             _async_remove_voice_assistant_entities(hass, device_info.mac_address)
@@ -842,11 +840,9 @@ class ESPHomeManager:
         # Unlike the satellite, the timer list stays loaded across disconnects so
         # that its timers keep running.
         if voice_assistant_flags & VoiceAssistantFeature.TIMERS:
-            if Platform.TIMER_LIST not in entry_data.loaded_platforms:
-                await self.hass.config_entries.async_forward_entry_setups(
-                    self.entry, [Platform.TIMER_LIST]
-                )
-                entry_data.loaded_platforms.add(Platform.TIMER_LIST)
+            await entry_data.async_ensure_platforms_loaded(
+                hass, entry, {Platform.TIMER_LIST}
+            )
         else:
             await self._async_remove_timer_list(device_info.mac_address)
 
@@ -1380,6 +1376,10 @@ class ESPHomeManager:
                     "%s: Timed out waiting for Bluetooth scanner to register",
                     self.host,
                 )
+                # A platform forward that already started must finish before
+                # setup releases the config entry setup lock
+                async with entry_data.platform_load_lock:
+                    pass
 
 
 @callback
