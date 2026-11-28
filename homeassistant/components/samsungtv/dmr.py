@@ -1,6 +1,7 @@
 """Samsung TV DMR/UPnP device handling."""
 
 from collections.abc import Callable, Sequence
+from datetime import datetime, timedelta
 
 from async_upnp_client.aiohttp import AiohttpNotifyServer, AiohttpSessionRequester
 from async_upnp_client.client import UpnpService, UpnpStateVariable
@@ -19,8 +20,14 @@ from async_upnp_client.utils import async_get_local_ip
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, LOGGER
+
+# Back off between failed re-subscriptions, so a TV that is on but refuses
+# DMR connections is not retried (and logged) on every coordinator refresh.
+RESUBSCRIBE_BACKOFF_INITIAL = timedelta(seconds=30)
+RESUBSCRIBE_BACKOFF_MAX = timedelta(minutes=5)
 
 
 class SamsungTVDmrDevice:
@@ -40,6 +47,8 @@ class SamsungTVDmrDevice:
         self._on_event_callback = on_event_callback
         self._dmr_device: DmrDevice | None = None
         self._upnp_server: AiohttpNotifyServer | None = None
+        self._resubscribe_backoff: timedelta | None = None
+        self._next_resubscribe: datetime | None = None
 
     @property
     def volume_level(self) -> float | None:
@@ -62,10 +71,32 @@ class SamsungTVDmrDevice:
             return
         if dmr_device.is_subscribed:
             return
+        now = dt_util.utcnow()
+        if self._next_resubscribe is not None and now < self._next_resubscribe:
+            return
         try:
             await dmr_device.async_subscribe_services(auto_resubscribe=True)
         except UpnpCommunicationError as err:
-            LOGGER.debug("Device rejected re-subscription: %r", err, exc_info=True)
+            backoff = (
+                RESUBSCRIBE_BACKOFF_INITIAL
+                if self._resubscribe_backoff is None
+                else min(self._resubscribe_backoff * 2, RESUBSCRIBE_BACKOFF_MAX)
+            )
+            self._resubscribe_backoff = backoff
+            self._next_resubscribe = now + backoff
+            LOGGER.debug(
+                "Device rejected re-subscription, retrying in %s: %r",
+                backoff,
+                err,
+                exc_info=True,
+            )
+            return
+        self._reset_resubscribe_backoff()
+
+    def _reset_resubscribe_backoff(self) -> None:
+        """Allow the next re-subscription attempt right away."""
+        self._resubscribe_backoff = None
+        self._next_resubscribe = None
 
     async def _async_startup(self) -> None:
         """Create the UPnP device, start the notify server and subscribe to events."""
@@ -109,6 +140,8 @@ class SamsungTVDmrDevice:
 
     async def async_unsubscribe(self) -> None:
         """Unsubscribe from DMR events, keeping the device for a later re-subscribe."""
+        # The TV is off; once it is back on, re-subscribe without waiting.
+        self._reset_resubscribe_backoff()
         if self._dmr_device is not None and self._dmr_device.is_subscribed:
             await self._dmr_device.async_unsubscribe_services()
 
