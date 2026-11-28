@@ -17,10 +17,6 @@ from homeassistant.exceptions import HomeAssistantError, Unauthorized
 
 async def test_local_media_source(hass: HomeAssistant, init_components: None) -> None:
     """Test that the image media source is created."""
-    item = await media_source.async_browse_media(hass, "media-source://")
-
-    assert any(c.title == "AI generated images" for c in item.children)
-
     source = await async_get_media_source(hass)
     assert isinstance(source, media_source.local_source.LocalSource)
     assert source.name == "AI generated images"
@@ -32,6 +28,30 @@ async def test_local_media_source(hass: HomeAssistant, init_components: None) ->
         hass.config.path("media/ai_task/image"),
     )
     assert source.url_prefix == "/ai_task"
+
+
+@pytest.mark.parametrize(
+    ("image_subdir", "expected_listed"),
+    [
+        pytest.param("", True, id="images_generated"),
+        pytest.param("missing", False, id="no_images_generated"),
+    ],
+)
+async def test_root_lists_source_when_image_dir_exists(
+    hass: HomeAssistant,
+    init_components: None,
+    tmp_path: Path,
+    image_subdir: str,
+    expected_listed: bool,
+) -> None:
+    """Test the source is only listed in the root once its image dir exists."""
+    hass.data[DATA_MEDIA_SOURCE].media_dirs["image"] = str(tmp_path / image_subdir)
+
+    item = await media_source.async_browse_media(hass, "media-source://")
+
+    assert (
+        any(c.title == "AI generated images" for c in item.children) is expected_listed
+    )
 
 
 async def test_media_source_no_media_dirs(hass: HomeAssistant) -> None:
