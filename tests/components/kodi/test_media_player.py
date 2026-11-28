@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
+from http import HTTPStatus
 import logging
 from typing import Any
 from unittest.mock import MagicMock
@@ -18,6 +19,8 @@ from pytest_homeassistant.common import (
     async_load_json_object_fixture,
     snapshot_platform,
 )
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
@@ -37,6 +40,7 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
+from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
     EVENT_HOMEASSISTANT_STARTED,
@@ -947,3 +951,154 @@ async def test_empty_series_title_and_album(
     attributes = hass.states.get(ENTITY_ID).attributes
     assert ATTR_MEDIA_SERIES_TITLE not in attributes
     assert ATTR_MEDIA_ALBUM_NAME not in attributes
+
+
+@pytest.mark.usefixtures("mock_connection")
+async def test_browse_media_proxies_thumbnails(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_kodi: MagicMock,
+    hass_ws_client: WebSocketGenerator,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test browse thumbnails use the media player proxy without exposing Kodi URLs."""
+    mock_kodi.thumbnail_url.side_effect = lambda thumbnail: (
+        f"http://user:pass@1.1.1.1:8080/image/{thumbnail}" if thumbnail else None
+    )
+    mock_kodi.get_episodes.return_value = {
+        "episodes": [
+            {
+                "episodeid": 42,
+                "seasonid": 1,
+                "tvshowid": 10,
+                "label": "Pilot",
+                "art": {"poster": "episode_42.jpg"},
+            },
+            {
+                "episodeid": 43,
+                "seasonid": 1,
+                "tvshowid": 10,
+                "label": "Episode 2",
+                "art": {},
+                "thumbnail": "",
+            },
+        ]
+    }
+    mock_kodi.get_season_details.return_value = {
+        "seasondetails": {
+            "label": "Season 1",
+            "art": {"poster": "season_1.jpg"},
+        }
+    }
+    mock_kodi.get_album_details.return_value = {
+        "albumdetails": {
+            "label": "Album 5",
+            "art": {"poster": "album_5.jpg"},
+        }
+    }
+    mock_kodi.get_songs.return_value = {
+        "songs": [
+            {
+                "songid": 7,
+                "albumid": 5,
+                "label": "Opening Theme",
+                "track": 1,
+                "art": {},
+                "thumbnail": "song_7.jpg",
+            }
+        ]
+    }
+
+    async def call_method(method: str, **kwargs: Any) -> dict[str, Any]:
+        if method == "VideoLibrary.GetEpisodeDetails":
+            assert kwargs == {"episodeid": 42, "properties": ["thumbnail", "art"]}
+            return {
+                "episodedetails": {
+                    "label": "Pilot",
+                    "art": {"poster": "episode_42.jpg"},
+                    "thumbnail": "episode_42_thumb.jpg",
+                }
+            }
+        assert method == "AudioLibrary.GetSongDetails"
+        assert kwargs == {"songid": 7, "properties": ["thumbnail", "art"]}
+        return {
+            "songdetails": {
+                "label": "Opening Theme",
+                "art": {},
+                "thumbnail": "song_7.jpg",
+            }
+        }
+
+    mock_kodi.call_method.side_effect = call_method
+
+    await setup_integration(hass, mock_config_entry)
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            "entity_id": ENTITY_ID,
+            "media_content_type": MediaType.SEASON,
+            "media_content_id": "10/1",
+        }
+    )
+    season_msg = await ws_client.receive_json()
+    assert season_msg["type"] == TYPE_RESULT
+    assert season_msg["success"]
+    season_result = season_msg["result"]
+    assert season_result["thumbnail"].startswith(
+        f"/api/media_player_proxy/{ENTITY_ID}/browse_media/season/10/1?token="
+    )
+    episodes_by_id = {
+        child["media_content_id"]: child["thumbnail"]
+        for child in season_result["children"]
+    }
+    assert set(episodes_by_id) == {"42", "43"}
+    episode_thumb = episodes_by_id["42"]
+    assert episode_thumb is not None
+    assert episode_thumb.startswith(
+        f"/api/media_player_proxy/{ENTITY_ID}/browse_media/episode/42?token="
+    )
+    assert "user:pass" not in episode_thumb
+    assert episodes_by_id["43"] is None
+
+    await ws_client.send_json(
+        {
+            "id": 2,
+            "type": "media_player/browse_media",
+            "entity_id": ENTITY_ID,
+            "media_content_type": MediaType.ALBUM,
+            "media_content_id": "5",
+        }
+    )
+    album_msg = await ws_client.receive_json()
+    assert album_msg["type"] == TYPE_RESULT
+    assert album_msg["success"]
+    track_thumb = album_msg["result"]["children"][0]["thumbnail"]
+    assert track_thumb is not None
+    assert track_thumb.startswith(
+        f"/api/media_player_proxy/{ENTITY_ID}/browse_media/track/7?token="
+    )
+    assert "user:pass" not in track_thumb
+
+    aioclient_mock.get(
+        "http://user:pass@1.1.1.1:8080/image/episode_42.jpg",
+        content=b"episode-bytes",
+        headers={"Content-Type": "image/jpeg"},
+    )
+    aioclient_mock.get(
+        "http://user:pass@1.1.1.1:8080/image/song_7.jpg",
+        content=b"track-bytes",
+        headers={"Content-Type": "image/jpeg"},
+    )
+
+    http_client = await hass_client_no_auth()
+    episode_resp = await http_client.get(episode_thumb)
+    assert episode_resp.status == HTTPStatus.OK
+    assert await episode_resp.read() == b"episode-bytes"
+
+    track_resp = await http_client.get(track_thumb)
+    assert track_resp.status == HTTPStatus.OK
+    assert await track_resp.read() == b"track-bytes"

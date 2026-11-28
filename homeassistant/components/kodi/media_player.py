@@ -32,7 +32,6 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.network import is_internal_request
 from homeassistant.util import dt as dt_util
 
 from . import KodiConfigEntry
@@ -848,7 +847,6 @@ class KodiEntity(MediaPlayerEntity):
         media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
-        is_internal = is_internal_request(self.hass)
 
         async def _get_thumbnail_url(
             media_content_type,
@@ -856,8 +854,11 @@ class KodiEntity(MediaPlayerEntity):
             media_image_id=None,
             thumbnail_url=None,
         ):
-            if is_internal:
-                return self._kodi.thumbnail_url(thumbnail_url)
+            if (
+                thumbnail_url is not None
+                and self._kodi.thumbnail_url(thumbnail_url) is None
+            ):
+                return None
 
             return self.get_browse_image_url(
                 media_content_type,

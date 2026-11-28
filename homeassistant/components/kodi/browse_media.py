@@ -350,6 +350,34 @@ async def get_media_info(media_library, search_id, search_type):
             )
             title = season["seasondetails"]["label"]
 
+    elif search_type == MediaType.EPISODE:
+        if search_id:
+            episode = await media_library.call_method(
+                "VideoLibrary.GetEpisodeDetails",
+                episodeid=int(search_id),
+                properties=properties,
+            )
+            thumbnail = media_library.thumbnail_url(
+                episode["episodedetails"]["art"].get(
+                    "poster", episode["episodedetails"].get("thumbnail")
+                )
+            )
+            title = episode["episodedetails"]["label"]
+
+    elif search_type == MediaType.TRACK:
+        if search_id:
+            song = await media_library.call_method(
+                "AudioLibrary.GetSongDetails",
+                songid=int(search_id),
+                properties=properties,
+            )
+            thumbnail = media_library.thumbnail_url(
+                song["songdetails"]["art"].get(
+                    "poster", song["songdetails"].get("thumbnail")
+                )
+            )
+            title = song["songdetails"]["label"]
+
     elif search_type == MediaType.CHANNEL:
         # A channel is asked for by id when its thumbnail is fetched through the
         # media player proxy, the route an external client takes. There is no
