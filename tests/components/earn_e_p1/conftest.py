@@ -9,16 +9,21 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.earn_e_p1.const import CONF_SERIAL, DOMAIN
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 MOCK_HOST = "192.168.1.100"
 MOCK_HOST_2 = "192.168.1.101"
 MOCK_NEW_HOST = "192.168.1.200"
-MOCK_SERIAL = "E0012345678901234"
-MOCK_SERIAL_2 = "E0012345678905678"
-MOCK_MAC = "aabbcc112233"
+# The dongle serial is its Wi-Fi MAC.
+MOCK_SERIAL = "EC64C9C0D674"
+MOCK_SERIAL_2 = "B48A0AD0E0A6"
+MOCK_NEW_SERIAL = "CCBA97F52084"
+MOCK_MAC = "ec64c9c0d674"
+MOCK_NEW_MAC = "ccba97f52084"
+MOCK_EQUIPMENT_ID = "4530303839303031303232323237353234"
+MOCK_EQUIPMENT_ID_2 = "4530303638303031303132333638353230"
 # Devices announce themselves as "Energiemonitor-<4 hex>"; DHCP lowercases it.
 MOCK_HOSTNAME = "energiemonitor-d674"
 
@@ -52,6 +57,7 @@ def trigger_callback(
     seen_packet_types: set[PacketType] | None = None,
     model: str | None = "P1 Meter",
     sw_version: str | None = "1.0.0",
+    equipment_id: str | None = MOCK_EQUIPMENT_ID,
 ) -> None:
     """Trigger the registered listener callback with device data."""
     if device_data is None:
@@ -59,7 +65,9 @@ def trigger_callback(
     if seen_packet_types is None:
         seen_packet_types = set(PacketType)
     callback = mock_listener.register.call_args[0][1]
-    device = EarnEP1Device(host=MOCK_HOST, serial=MOCK_SERIAL)
+    device = EarnEP1Device(
+        host=MOCK_HOST, serial=MOCK_SERIAL, equipment_id=equipment_id
+    )
     device.model = model
     device.sw_version = sw_version
     device.data = device_data
@@ -84,16 +92,28 @@ def mock_listener() -> Generator[MagicMock]:
 
 
 @pytest.fixture
-def mock_config_entry(
-    hass: HomeAssistant, request: pytest.FixtureRequest
-) -> MockConfigEntry:
-    """Create a mock config entry, optionally extended with indirect data."""
+def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
+    """Create a mock config entry keyed on the meter."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         title=f"EARN-E P1 ({MOCK_HOST})",
-        data={CONF_HOST: MOCK_HOST, CONF_SERIAL: MOCK_SERIAL}
-        | getattr(request, "param", {}),
+        data={CONF_HOST: MOCK_HOST, CONF_SERIAL: MOCK_SERIAL},
+        unique_id=MOCK_EQUIPMENT_ID,
+        minor_version=2,
+    )
+    entry.add_to_hass(hass)
+    return entry
+
+
+@pytest.fixture
+def mock_legacy_config_entry(hass: HomeAssistant) -> MockConfigEntry:
+    """Create a config entry from before entries were keyed on the meter."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=f"EARN-E P1 ({MOCK_HOST})",
+        data={CONF_HOST: MOCK_HOST, CONF_SERIAL: MOCK_SERIAL, CONF_MAC: MOCK_MAC},
         unique_id=MOCK_SERIAL,
+        minor_version=1,
     )
     entry.add_to_hass(hass)
     return entry
@@ -106,7 +126,8 @@ def mock_config_entry_2(hass: HomeAssistant) -> MockConfigEntry:
         domain=DOMAIN,
         title=f"EARN-E P1 ({MOCK_HOST_2})",
         data={CONF_HOST: MOCK_HOST_2, CONF_SERIAL: MOCK_SERIAL_2},
-        unique_id=MOCK_SERIAL_2,
+        unique_id=MOCK_EQUIPMENT_ID_2,
+        minor_version=2,
     )
     entry.add_to_hass(hass)
     return entry

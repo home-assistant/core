@@ -33,7 +33,6 @@ class EarnEP1Coordinator(DataUpdateCoordinator[dict[str, Any]]):
         host: str,
         serial: str,
         listener: EarnEP1Listener,
-        mac: str | None,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -46,15 +45,17 @@ class EarnEP1Coordinator(DataUpdateCoordinator[dict[str, Any]]):
             # second early, hence the margin over the timeout.
             update_interval=NO_DATA_TIMEOUT + timedelta(seconds=1),
         )
+        if TYPE_CHECKING:
+            assert entry.unique_id is not None
         self.host = host
         self.serial = serial
-        self.identifier = serial
-        self.mac = mac
+        self.identifier = entry.unique_id
         self.model: str | None = None
         self.sw_version: str | None = None
         self.data_complete = False
         self._listener = listener
         self._last_packet: float | None = None
+        self._migration_started = False
 
     @override
     async def _async_update_data(self) -> dict[str, Any]:
@@ -85,12 +86,40 @@ class EarnEP1Coordinator(DataUpdateCoordinator[dict[str, Any]]):
                     model=self.model,
                     sw_version=self.sw_version,
                 )
+        if (
+            device.equipment_id
+            and self.identifier == self.serial
+            and not self._migration_started
+        ):
+            self._migration_started = True
+            self._migrate_to_meter(device.equipment_id)
         self._last_packet = self.hass.loop.time()
         if not self.last_update_success:
             _LOGGER.info("Device at %s is available", self.host)
         # Listeners run synchronously from async_set_updated_data and read this.
         self.data_complete = device.data_complete
         self.async_set_updated_data(device.data)
+
+    def _migrate_to_meter(self, equipment_id: str) -> None:
+        """Re-key an entry keyed on the dongle serial onto the meter.
+
+        The reload moves the device and entities over before they load.
+        """
+        entry = self.config_entry
+        if (
+            other := self.hass.config_entries.async_entry_for_domain_unique_id(
+                DOMAIN, equipment_id
+            )
+        ) is not None:
+            _LOGGER.warning(
+                "Not migrating %s to meter %s, because %s already uses that meter",
+                entry.title,
+                equipment_id,
+                other.title,
+            )
+            return
+        self.hass.config_entries.async_update_entry(entry, unique_id=equipment_id)
+        self.hass.config_entries.async_schedule_reload(entry.entry_id)
 
     def start(self) -> None:
         """Register with the shared listener."""

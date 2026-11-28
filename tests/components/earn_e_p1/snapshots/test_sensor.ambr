@@ -11,7 +11,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('earn_e_p1', 'E0012345678901234')]>,
+    'device_id': <DeviceEntry identifiers=[('earn_e_p1', '4530303839303031303232323237353234')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -37,7 +37,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_phase',
-    'unique_id': 'E0012345678901234_current_l1',
+    'unique_id': '4530303839303031303232323237353234_current_l1',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -69,7 +69,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('earn_e_p1', 'E0012345678901234')]>,
+    'device_id': <DeviceEntry identifiers=[('earn_e_p1', '4530303839303031303232323237353234')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -95,7 +95,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_phase',
-    'unique_id': 'E0012345678901234_current_l2',
+    'unique_id': '4530303839303031303232323237353234_current_l2',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -127,7 +127,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('earn_e_p1', 'E0012345678901234')]>,
+    'device_id': <DeviceEntry identifiers=[('earn_e_p1', '4530303839303031303232323237353234')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -153,7 +153,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_phase',
-    'unique_id': 'E0012345678901234_current_l3',
+    'unique_id': '4530303839303031303232323237353234_current_l3',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -185,7 +185,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('earn_e_p1', 'E0012345678901234')]>,
+    'device_id': <DeviceEntry identifiers=[('earn_e_p1', '4530303839303031303232323237353234')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -211,7 +211,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_exported_tariff1',
-    'unique_id': 'E0012345678901234_energy_returned_tariff1',
+    'unique_id': '4530303839303031303232323237353234_energy_returned_tariff1',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -243,7 +243,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('earn_e_p1', 'E0012345678901234')]>,
+    'device_id': <DeviceEntry identifiers=[('earn_e_p1', '4530303839303031303232323237353234')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -269,7 +269,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_exported_tariff2',
-    'unique_id': 'E0012345678901234_energy_returned_tariff2',
+    'unique_id': '4530303839303031303232323237353234_energy_returned_tariff2',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -301,7 +301,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('earn_e_p1', 'E0012345678901234')]>,
+    'device_id': <DeviceEntry identifiers=[('earn_e_p1', '4530303839303031303232323237353234')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -327,7 +327,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_imported_tariff1',
-    'unique_id': 'E0012345678901234_energy_delivered_tariff1',
+    'unique_id': '4530303839303031303232323237353234_energy_delivered_tariff1',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -359,7 +359,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('earn_e_p1', 'E0012345678901234')]>,
+    'device_id': <DeviceEntry identifiers=[('earn_e_p1', '4530303839303031303232323237353234')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -385,7 +385,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_imported_tariff2',
-    'unique_id': 'E0012345678901234_energy_delivered_tariff2',
+    'unique_id': '4530303839303031303232323237353234_energy_delivered_tariff2',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -417,7 +417,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('earn_e_p1', 'E0012345678901234')]>,
+    'device_id': <DeviceEntry identifiers=[('earn_e_p1', '4530303839303031303232323237353234')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -443,7 +443,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gas_consumed',
-    'unique_id': 'E0012345678901234_gas_delivered',
+    'unique_id': '4530303839303031303232323237353234_gas_delivered',
     'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
   })
 # ---
@@ -475,7 +475,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('earn_e_p1', 'E0012345678901234')]>,
+    'device_id': <DeviceEntry identifiers=[('earn_e_p1', '4530303839303031303232323237353234')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -501,7 +501,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_exported',
-    'unique_id': 'E0012345678901234_power_returned',
+    'unique_id': '4530303839303031303232323237353234_power_returned',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
@@ -533,7 +533,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('earn_e_p1', 'E0012345678901234')]>,
+    'device_id': <DeviceEntry identifiers=[('earn_e_p1', '4530303839303031303232323237353234')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -559,7 +559,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_imported',
-    'unique_id': 'E0012345678901234_power_delivered',
+    'unique_id': '4530303839303031303232323237353234_power_delivered',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
@@ -591,7 +591,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('earn_e_p1', 'E0012345678901234')]>,
+    'device_id': <DeviceEntry identifiers=[('earn_e_p1', '4530303839303031303232323237353234')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -617,7 +617,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_phase',
-    'unique_id': 'E0012345678901234_voltage_l1',
+    'unique_id': '4530303839303031303232323237353234_voltage_l1',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -649,7 +649,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('earn_e_p1', 'E0012345678901234')]>,
+    'device_id': <DeviceEntry identifiers=[('earn_e_p1', '4530303839303031303232323237353234')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -675,7 +675,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_phase',
-    'unique_id': 'E0012345678901234_voltage_l2',
+    'unique_id': '4530303839303031303232323237353234_voltage_l2',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -707,7 +707,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('earn_e_p1', 'E0012345678901234')]>,
+    'device_id': <DeviceEntry identifiers=[('earn_e_p1', '4530303839303031303232323237353234')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -733,7 +733,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_phase',
-    'unique_id': 'E0012345678901234_voltage_l3',
+    'unique_id': '4530303839303031303232323237353234_voltage_l3',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -765,7 +765,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('earn_e_p1', 'E0012345678901234')]>,
+    'device_id': <DeviceEntry identifiers=[('earn_e_p1', '4530303839303031303232323237353234')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -788,7 +788,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_rssi',
-    'unique_id': 'E0012345678901234_wifiRSSI',
+    'unique_id': '4530303839303031303232323237353234_wifiRSSI',
     'unit_of_measurement': 'dBm',
   })
 # ---

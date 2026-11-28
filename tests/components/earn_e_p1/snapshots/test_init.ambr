@@ -6,6 +6,10 @@
     'config_subentry_id': None,
     'configuration_url': None,
     'connections': set({
+      tuple(
+        'mac',
+        'ec:64:c9:c0:d6:74',
+      ),
     }),
     'disabled_by': None,
     'entry_type': None,
@@ -14,7 +18,7 @@
     'identifiers': set({
       tuple(
         'earn_e_p1',
-        'E0012345678901234',
+        '4530303839303031303232323237353234',
       ),
     }),
     'labels': set({
@@ -24,7 +28,7 @@
     'model_id': None,
     'name': 'EARN-E P1 Meter',
     'name_by_user': None,
-    'serial_number': 'E0012345678901234',
+    'serial_number': 'EC64C9C0D674',
     'sw_version': '1.0.0',
     'via_device_id': None,
   })
