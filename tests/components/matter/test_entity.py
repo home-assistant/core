@@ -195,6 +195,75 @@ async def test_composed_part_on_child_device_keeps_postfix(
 
 
 @pytest.mark.usefixtures("matter_node")
+@pytest.mark.parametrize(
+    "node_fixture",
+    [
+        pytest.param("mock_thermostat_area_tags", id="standard"),
+        pytest.param("mock_thermostat_area_tags_bridge", id="bridge"),
+    ],
+)
+async def test_area_tag_modified_entity_translation_key(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that endpoints with a Common Area semantic tag get a room name postfix.
+
+    When a device's endpoints are tagged with a Common Area namespace semantic
+    tag (e.g. Bedroom, Living Room), the entity name gets postfixed with the
+    translated room name, instead of the endpoint ID.
+    """
+    # Endpoint 1, tagged Bedroom
+    entry_1 = entity_registry.async_get("climate.mock_thermostat_thermostat_bedroom")
+    assert entry_1 is not None
+    assert entry_1.translation_key == "thermostat"
+    assert entry_1.original_name == "Thermostat (Bedroom)"
+
+    state_1 = hass.states.get("climate.mock_thermostat_thermostat_bedroom")
+    assert state_1 is not None
+    assert state_1.name == "Mock Thermostat Thermostat (Bedroom)"
+
+    # Endpoint 2, tagged Living Room
+    entry_2 = entity_registry.async_get(
+        "climate.mock_thermostat_thermostat_living_room"
+    )
+    assert entry_2 is not None
+    assert entry_2.translation_key == "thermostat"
+    assert entry_2.original_name == "Thermostat (Living Room)"
+
+    state_2 = hass.states.get("climate.mock_thermostat_thermostat_living_room")
+    assert state_2 is not None
+    assert state_2.name == "Mock Thermostat Thermostat (Living Room)"
+
+
+@pytest.mark.usefixtures("matter_node")
+@pytest.mark.parametrize("node_fixture", ["mock_thermostat_area_tags_shared_room"])
+async def test_area_tag_shared_by_siblings_uses_endpoint_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that sibling endpoints in the same room keep their endpoint ID postfix."""
+    entry_1 = entity_registry.async_get("climate.mock_thermostat_thermostat_1")
+    assert entry_1 is not None
+    assert entry_1.original_name == "Thermostat (1)"
+
+    entry_2 = entity_registry.async_get("climate.mock_thermostat_thermostat_2")
+    assert entry_2 is not None
+    assert entry_2.original_name == "Thermostat (2)"
+
+
+@pytest.mark.usefixtures("matter_node")
+@pytest.mark.parametrize("node_fixture", ["mock_thermostat_area_tags_label"])
+async def test_label_matching_area_key_is_not_translated(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that a vendor label is used as-is even if it matches an area key."""
+    entry = entity_registry.async_get("climate.mock_thermostat_thermostat_area_bedroom")
+    assert entry is not None
+    assert entry.original_name == "Thermostat (area_bedroom)"
+
+
+@pytest.mark.usefixtures("matter_node")
 @pytest.mark.parametrize("node_fixture", ["eve_thermo_v4"])
 async def test_description_translation_key_not_overridden(
     hass: HomeAssistant,

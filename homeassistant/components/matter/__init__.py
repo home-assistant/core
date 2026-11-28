@@ -39,6 +39,7 @@ from homeassistant.helpers.issue_registry import (
     async_create_issue,
     async_delete_issue,
 )
+from homeassistant.helpers.translation import async_get_translations
 from homeassistant.helpers.typing import ConfigType
 
 from .adapter import MatterAdapter
@@ -228,6 +229,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> No
                 LOGGER.exception("Unexpected error connecting BLE proxy")
                 ble_proxy = None
 
+    # entity names read the Common Area room names from the cache synchronously
+    await async_get_translations(hass, hass.config.language, "common", {DOMAIN})
     entry.runtime_data = MatterEntryData(matter, listen_task, ble_proxy)
 
     setup_error: BaseException | None = None
