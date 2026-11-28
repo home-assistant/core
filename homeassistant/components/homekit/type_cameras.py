@@ -9,9 +9,10 @@ import logging
 import math
 import re
 import shlex
+import time
 from typing import TYPE_CHECKING, Any, override
 
-from haffmpeg.core import FFMPEG_STDERR, HAFFmpeg
+from haffmpeg.core import FFMPEG_STDERR, FFMPEG_STDOUT, HAFFmpeg
 from homekit_audio_proxy import AudioProxy
 from pyhap.camera import (
     VIDEO_CODEC_PARAM_LEVEL_TYPES,
@@ -91,6 +92,13 @@ from .doorbell import HomeDoorbellAccessory
 from .util import pid_is_alive, state_changed_event_is_same_state
 
 _LOGGER = logging.getLogger(__name__)
+
+_WEBRTC_SNAPSHOT_CACHE_SECONDS = 10
+_WEBRTC_IDLE_SECONDS = 30
+_EVENT_SNAPSHOT_WINDOW_SECONDS = 30
+WEBRTC_STREAM = "webrtc_stream"
+WEBRTC_VIEWER_ID = "webrtc_viewer_id"
+WEBRTC_START_TASK = "webrtc_start_task"
 
 
 VIDEO_OUTPUT = (
@@ -402,6 +410,16 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
         self._recording_transport_stop: asyncio.Task[None] | None = None
         self._recording_with_audio = False
         self._cancel_motion_reset: CALLBACK_TYPE | None = None
+        self._webrtc_snapshot: bytes | None = None
+        self._webrtc_snapshot_expires = 0.0
+        self._webrtc_source: Any = None
+        self._webrtc_start_lock = asyncio.Lock()
+        self._webrtc_idle_cancel: CALLBACK_TYPE | None = None
+        self._webrtc_stopping = False
+        self._event_snapshot: bytes | None = None
+        self._event_snapshot_active = False
+        self._event_snapshot_expires = 0.0
+        self._event_snapshot_generation = 0
         self.linked_motion_sensor: str | None = self.config.get(
             CONF_LINKED_MOTION_SENSOR
         )
@@ -456,7 +474,60 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
         if not state_changed_event_is_same_state(event) and (
             new_state := event.data["new_state"]
         ):
-            self._async_update_motion_state(event.data["old_state"], new_state)
+            old_state = event.data["old_state"]
+            if self.motion_is_event:
+                self.hass.async_create_task(
+                    self._async_handle_motion_event(old_state, new_state)
+                )
+            else:
+                self._async_update_motion_state(old_state, new_state)
+
+    async def _async_handle_motion_event(
+        self, old_state: State | None, new_state: State
+    ) -> None:
+        """Resolve event media before signaling HomeKit activity."""
+        generation = await self._async_set_event_snapshot(new_state)
+        if generation is None or generation == self._event_snapshot_generation:
+            self._async_update_motion_state(old_state, new_state)
+
+    async def _async_set_event_snapshot(self, event_state: State) -> int | None:
+        """Fetch an event still before emitting the corresponding HomeKit event."""
+        try:
+            camera_entity = camera.get_camera_from_entity_id(self.hass, self.entity_id)
+        except HomeAssistantError:
+            return None
+        if not camera_entity.supports_event_image:
+            return None
+        self._event_snapshot_generation += 1
+        generation = self._event_snapshot_generation
+        self._event_snapshot = None
+        self._event_snapshot_active = True
+        self._event_snapshot_expires = time.monotonic() + _EVENT_SNAPSHOT_WINDOW_SECONDS
+        event_id = event_state.attributes.get("nest_event_id")
+        if not isinstance(event_id, str) or not event_id:
+            return generation
+        try:
+            image = await camera_entity.async_get_event_image(event_id)
+        except (HomeAssistantError, OSError, TimeoutError, ValueError):
+            image = None
+        if generation != self._event_snapshot_generation:
+            return generation
+        self._event_snapshot = (
+            image.content
+            if image is not None and image.content_type == "image/jpeg"
+            else None
+        )
+        self._event_snapshot_expires = time.monotonic() + _EVENT_SNAPSHOT_WINDOW_SECONDS
+        return generation
+
+    @override
+    async def async_handle_event_doorbell_state(
+        self, old_state: State | None, new_state: State
+    ) -> None:
+        """Resolve event media before pulsing HomeKit doorbell characteristics."""
+        generation = await self._async_set_event_snapshot(new_state)
+        if generation is None or generation == self._event_snapshot_generation:
+            self.async_update_doorbell_state(old_state, new_state)
 
     @callback
     def _async_update_motion_state(
@@ -530,6 +601,22 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
     async def start_stream(
         self, session_info: dict[str, Any], stream_config: dict[str, Any]
     ) -> bool:
+        """Own startup so stopping during negotiation cleans up the late source."""
+        task = asyncio.current_task()
+        session_info[WEBRTC_START_TASK] = task
+        started = False
+        try:
+            started = await self._async_start_stream(session_info, stream_config)
+            return started
+        finally:
+            if session_info.get(WEBRTC_START_TASK) is task:
+                session_info.pop(WEBRTC_START_TASK)
+            if not started:
+                await self.stop_stream(session_info)
+
+    async def _async_start_stream(
+        self, session_info: dict[str, Any], stream_config: dict[str, Any]
+    ) -> bool:
         """Start a new stream with the given configuration."""
         _LOGGER.debug(
             "[%s] Starting stream with the following parameters: %s",
@@ -539,9 +626,34 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
         if not self.homekit_camera_active:
             _LOGGER.debug("[%s] Camera is off in the Home app", self.entity_id)
             return False
-        if not (input_source := await self._async_get_stream_source()):
-            _LOGGER.error("Camera has no stream source")
-            return False
+        media = None
+        input_source = await self._async_get_stream_source()
+        if not input_source:
+            try:
+                entity = camera.get_camera_from_entity_id(self.hass, self.entity_id)
+            except HomeAssistantError:
+                entity = None
+            if entity is None or not entity.supports_server_side_webrtc:
+                _LOGGER.error("Camera has no stream source")
+                return False
+            if self.config[CONF_SUPPORT_AUDIO]:
+                _LOGGER.error(
+                    "[%s] Server-side WebRTC audio is not supported", self.entity_id
+                )
+                return False
+            from .webrtc import WebRTCCameraStream  # noqa: PLC0415
+
+            try:
+                media = await self._async_ensure_webrtc_source(
+                    entity, WebRTCCameraStream
+                )
+            except (HomeAssistantError, ImportError, OSError, ValueError, TimeoutError):
+                _LOGGER.exception("[%s] Unable to start WebRTC input", self.entity_id)
+                return False
+            self._cancel_webrtc_idle_close()
+            session_info[WEBRTC_STREAM] = media
+            input_source = media.input_source
+        assert input_source is not None
         input_source = with_input_flag(input_source)
         video_profile = ""
         if self.config[CONF_VIDEO_CODEC] != VIDEO_CODEC_COPY:
@@ -606,14 +718,22 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
             cmd=[],
             input_source=input_source,
             output=output,
-            extra_cmd="-hide_banner -nostats",
+            extra_cmd=(
+                "-hide_banner -nostats -progress pipe:1 -stats_period 1"
+                if media is not None
+                else "-hide_banner -nostats"
+            ),
             stderr_pipe=True,
-            stdout_pipe=False,
+            stdout_pipe=media is not None,
         )
         if not opened:
             _LOGGER.error("Failed to open ffmpeg stream")
             if audio_proxy:
                 await audio_proxy.async_stop()
+            if media is not None:
+                session_info.pop(WEBRTC_STREAM, None)
+                if media is self._webrtc_source and not media.has_viewers:
+                    await self._async_close_webrtc_source()
             return False
 
         _LOGGER.debug(
@@ -625,6 +745,29 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
         session_info["stream"] = stream
         session_info[FFMPEG_PID] = stream.process.pid
         session_info[AUDIO_PROXY] = audio_proxy
+
+        if media is not None:
+            try:
+                writer = stream.process.stdin
+                if writer is None:
+                    raise HomeAssistantError("FFmpeg input pipe is unavailable")
+                reader = await stream.get_reader(source=FFMPEG_STDOUT)
+
+                async def viewer_failed() -> None:
+                    await self.stop_stream(session_info)
+                    self.set_streaming_available(session_info["stream_idx"])
+
+                session_info[WEBRTC_VIEWER_ID] = await media.async_add_viewer(
+                    writer, reader, on_failure=viewer_failed
+                )
+            except Exception as err:  # noqa: BLE001
+                _LOGGER.error(
+                    "[%s] Could not attach WebRTC viewer (%s)",
+                    self.entity_id,
+                    type(err).__name__,
+                )
+                await self.stop_stream(session_info)
+                return False
 
         stderr_reader = await stream.get_reader(source=FFMPEG_STDERR)
 
@@ -645,6 +788,69 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
             await self.stop_stream(session_info)
             return False
         return await self._async_ffmpeg_watch(session_info["id"])
+
+    async def _async_ensure_webrtc_source(self, entity: Any, source_type: Any) -> Any:
+        """Return the accessory's shared, started WebRTC input."""
+        async with self._webrtc_start_lock:
+            if self._webrtc_stopping:
+                raise HomeAssistantError("HomeKit camera is stopping")
+            source = self._webrtc_source
+            if source is None:
+                source = self._webrtc_source = source_type(self.hass, entity)
+            if source.on_failure is None:
+
+                async def source_failed() -> None:
+                    for session in tuple(self.sessions.values()):
+                        if session.get(WEBRTC_STREAM) is source:
+                            await self.stop_stream(session)
+                            self.set_streaming_available(session["stream_idx"])
+                    await self._async_close_webrtc_source(expected_source=source)
+
+                source.on_failure = source_failed
+            if not source.is_started:
+                try:
+                    await source.async_start()
+                except BaseException:
+                    if self._webrtc_source is source:
+                        self._webrtc_source = None
+                    await source.async_close()
+                    raise
+            return source
+
+    @callback
+    def _cancel_webrtc_idle_close(self) -> None:
+        """Cancel a pending close while HomeKit still needs the shared input."""
+        if cancel := self._webrtc_idle_cancel:
+            cancel()
+            self._webrtc_idle_cancel = None
+
+    @callback
+    def _schedule_webrtc_idle_close(self) -> None:
+        """Keep an idle input warm briefly for snapshots and stream starts."""
+        self._cancel_webrtc_idle_close()
+        if self._webrtc_source is not None:
+            self._webrtc_idle_cancel = async_call_later(
+                self.hass, _WEBRTC_IDLE_SECONDS, self._async_close_webrtc_source
+            )
+
+    async def _async_close_webrtc_source(
+        self, _now: Any = None, *, expected_source: Any = None
+    ) -> None:
+        """Close the shared input when no HomeKit stream is using it."""
+        async with self._webrtc_start_lock:
+            source = self._webrtc_source
+            if source is None or (
+                expected_source is not None and source is not expected_source
+            ):
+                return
+            self._cancel_webrtc_idle_close()
+            if any(
+                info.get(WEBRTC_STREAM) is source for info in self.sessions.values()
+            ):
+                return
+            self._webrtc_source = None
+            self._webrtc_snapshot = None
+            await source.async_close()
 
     async def _async_log_stderr_stream(
         self, stderr_reader: asyncio.StreamReader
@@ -681,12 +887,18 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
     @override
     def async_stop(self) -> None:
         """Stop any streams when the accessory is stopped."""
+        self._webrtc_stopping = True
+        self._cancel_webrtc_idle_close()
         if self._cancel_motion_reset:
             self._cancel_motion_reset()
             self._cancel_motion_reset = None
         for session_info in self.sessions.values():
             self.hass.async_create_background_task(
                 self.stop_stream(session_info), "homekit.camera-stop-stream"
+            )
+        if self._webrtc_source is not None and not self.sessions:
+            self.hass.async_create_background_task(
+                self._async_close_webrtc_source(), "homekit.camera-stop-webrtc-source"
             )
         if self.secure_video:
             self._recording_transport_stop = self._async_create_entry_task(
@@ -934,6 +1146,25 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
     async def stop_stream(self, session_info: dict[str, Any]) -> None:
         """Stop the stream for the given ``session_id``."""
         session_id = session_info["id"]
+        if pending := session_info.pop(WEBRTC_START_TASK, None):
+            if pending is not asyncio.current_task():
+                pending.cancel()
+                await asyncio.gather(pending, return_exceptions=True)
+        if (media := session_info.pop(WEBRTC_STREAM, None)) is not None:
+            try:
+                if (viewer_id := session_info.pop(WEBRTC_VIEWER_ID, None)) is not None:
+                    await media.async_remove_viewer(viewer_id)
+            except Exception as err:  # noqa: BLE001
+                _LOGGER.error(
+                    "[%s] Error closing WebRTC viewer (%s)",
+                    self.entity_id,
+                    type(err).__name__,
+                )
+            if media is self._webrtc_source:
+                if self._webrtc_stopping:
+                    await self._async_close_webrtc_source()
+                else:
+                    self._schedule_webrtc_idle_close()
         if proxy := session_info.pop(AUDIO_PROXY, None):
             await proxy.async_stop()
 
@@ -973,6 +1204,70 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
     async def async_get_snapshot(self, image_size: dict[str, int]) -> bytes:
         """Return a jpeg of a snapshot from the camera."""
         self._raise_if_camera_off()
+        generation = self._event_snapshot_generation
+        if self._event_snapshot_active:
+            if time.monotonic() < self._event_snapshot_expires:
+                if self._event_snapshot is None:
+                    raise HomeAssistantError("No event image is available")
+                return self._event_snapshot
+            self._event_snapshot_active = False
+            self._event_snapshot = None
+
+        if (
+            self._webrtc_snapshot is not None
+            and time.monotonic() < self._webrtc_snapshot_expires
+        ):
+            self._schedule_webrtc_idle_close()
+            return self._webrtc_snapshot
+        self._webrtc_snapshot = None
+
+        for session_info in self.sessions.values():
+            if media := session_info.get(WEBRTC_STREAM):
+                try:
+                    snapshot = await media.async_get_snapshot()
+                except (HomeAssistantError, TimeoutError):
+                    _LOGGER.debug(
+                        "[%s] Could not get snapshot from active WebRTC stream",
+                        self.entity_id,
+                    )
+                else:
+                    if generation != self._event_snapshot_generation:
+                        return self._event_snapshot_or_raise()
+                    self._webrtc_snapshot = snapshot
+                    self._webrtc_snapshot_expires = (
+                        time.monotonic() + _WEBRTC_SNAPSHOT_CACHE_SECONDS
+                    )
+                    return snapshot
+
+        try:
+            entity = camera.get_camera_from_entity_id(self.hass, self.entity_id)
+        except HomeAssistantError:
+            entity = None
+        if entity is not None and entity.supports_server_side_webrtc:
+            from .webrtc import WebRTCCameraStream  # noqa: PLC0415
+
+            self._cancel_webrtc_idle_close()
+            try:
+                source = await self._async_ensure_webrtc_source(
+                    entity, WebRTCCameraStream
+                )
+                snapshot = await source.async_get_snapshot()
+            except (HomeAssistantError, TimeoutError, OSError):
+                _LOGGER.debug(
+                    "[%s] Could not get WebRTC preview snapshot", self.entity_id
+                )
+                raise HomeAssistantError("No WebRTC snapshot is available")
+            else:
+                if generation != self._event_snapshot_generation:
+                    return self._event_snapshot_or_raise()
+                self._webrtc_snapshot = snapshot
+                self._webrtc_snapshot_expires = (
+                    time.monotonic() + _WEBRTC_SNAPSHOT_CACHE_SECONDS
+                )
+                return snapshot
+            finally:
+                self._schedule_webrtc_idle_close()
+
         image = await camera.async_get_image(
             self.hass,
             self.entity_id,
@@ -980,4 +1275,17 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
             height=image_size["image-height"],
         )
         self._raise_if_camera_off()
+        if generation != self._event_snapshot_generation:
+            return self._event_snapshot_or_raise()
         return image.content
+
+    def _event_snapshot_or_raise(self) -> bytes:
+        """Return the current event image or omit it while unavailable."""
+        if (
+            self._event_snapshot_active
+            and time.monotonic() < self._event_snapshot_expires
+        ):
+            if self._event_snapshot is not None:
+                return self._event_snapshot
+            raise HomeAssistantError("No event image is available")
+        raise HomeAssistantError("Camera event changed while getting snapshot")

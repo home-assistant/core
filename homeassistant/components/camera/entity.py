@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from functools import partial
 from random import SystemRandom
 import time
-from typing import Any, Final, final, override
+from typing import TYPE_CHECKING, Any, Final, final, override
 
 from aiohttp import web
 from propcache.api import cached_property
@@ -36,11 +36,16 @@ from .const import (
 from .prefs import get_dynamic_camera_stream_settings
 from .webrtc import (
     CameraWebRTCProvider,
+    CameraWebRTCSession,
     WebRTCClientConfiguration,
     WebRTCSendMessage,
     async_call_webrtc_provider,
+    async_create_webrtc_session,
     async_get_supported_provider,
 )
+
+if TYPE_CHECKING:
+    from . import Image
 
 _RND: Final = SystemRandom()
 
@@ -154,6 +159,8 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_should_poll: bool = False  # No need to poll cameras
     _attr_state: None = None  # State is determined by is_on
     _attr_supported_features: CameraEntityFeature = CameraEntityFeature(0)
+    _attr_supports_server_side_webrtc: bool = False
+    _attr_supports_event_image: bool = False
 
     __supports_stream: CameraEntityFeature | None = None
 
@@ -239,6 +246,26 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def webrtc_provider(self) -> CameraWebRTCProvider | None:
         """Return the WebRTC provider."""
         return self._webrtc_provider
+
+    @property
+    def supports_server_side_webrtc(self) -> bool:
+        """Return whether the camera permits server-side WebRTC consumers."""
+        return self._attr_supports_server_side_webrtc
+
+    @property
+    def supports_event_image(self) -> bool:
+        """Return whether event images are supported."""
+        return self._attr_supports_event_image
+
+    async def async_get_event_image(self, event_id: str) -> "Image | None":
+        """Return a still image associated with a camera event, if available."""
+        return None
+
+    async def async_create_webrtc_session(self, offer: str) -> CameraWebRTCSession:
+        """Create an owned server-side WebRTC session for a consumer."""
+        if not self.supports_server_side_webrtc:
+            raise HomeAssistantError("Camera does not support server-side WebRTC")
+        return await async_create_webrtc_session(self, offer)
 
     async def async_create_stream(self) -> Stream | None:
         """Create a Stream for stream_source."""
@@ -507,6 +534,10 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Close a WebRTC session."""
         if self._webrtc_provider:
             self._webrtc_provider.async_close_session(session_id)
+
+    async def async_close_webrtc_session(self, session_id: str) -> None:
+        """Close a WebRTC session and allow integrations to await cleanup."""
+        self.close_webrtc_session(session_id)
 
     @final
     @property
