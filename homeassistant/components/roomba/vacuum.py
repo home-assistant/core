@@ -18,7 +18,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from . import roomba_reported_state
+from . import CannotConnect, roomba_reported_state
+from .connection import RoombaConnection
 from .const import DOMAIN
 from .entity import IRobotEntity
 from .models import RoombaConfigEntry
@@ -109,7 +110,7 @@ async def async_setup_entry(
     else:
         constructor = RoombaVacuum
 
-    roomba_vac = constructor(roomba, blid)
+    roomba_vac = constructor(roomba, blid, domain_data.connection)
     async_add_entities([roomba_vac])
 
 
@@ -120,9 +121,10 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
     _attr_supported_features = SUPPORT_IROBOT
     _attr_available = True  # Always available, otherwise setup will fail
 
-    def __init__(self, roomba, blid) -> None:
+    def __init__(self, roomba, blid, connection: RoombaConnection) -> None:
         """Initialize the iRobot handler."""
         super().__init__(roomba, blid)
+        self._connection = connection
         self._cap_position = self.vacuum_state.get("cap", {}).get("pose") == 1
 
     @property
@@ -217,6 +219,7 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
     @override
     async def async_start(self) -> None:
         """Start or resume the cleaning task."""
+        await self._async_ensure_connected(wait=True)
         if self.state == VacuumActivity.PAUSED:
             await self._async_send_command("resume")
         else:
@@ -235,6 +238,7 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
     @override
     async def async_return_to_base(self, **kwargs: Any) -> None:
         """Set the vacuum cleaner to return to the dock."""
+        await self._async_ensure_connected(wait=True)
         if self.state == VacuumActivity.CLEANING:
             await self.async_pause()
             for _ in range(10):
@@ -259,10 +263,24 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
         _LOGGER.debug("async_send_command %s (%s), %s", command, params, kwargs)
         await self._async_send_command(command, params)
 
+    async def async_update(self) -> None:
+        """Refresh the robot state on request, e.g. from update_entity."""
+        await self._connection.async_refresh(wait=True)
+
+    async def _async_ensure_connected(self, *, wait: bool = False) -> None:
+        """Open a session if the robot is polled rather than held."""
+        try:
+            await self._connection.async_ensure_connected(wait=wait)
+        except CannotConnect as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="not_connected"
+            ) from err
+
     async def _async_send_command(
         self, command: str, params: dict[str, Any] | list[Any] | None = None
     ) -> None:
         """Send a command to the robot."""
+        await self._async_ensure_connected()
         try:
             await self.vacuum.send_command(command, params)
         except RoombaScopeError as err:
@@ -278,6 +296,7 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
 
     async def _async_set_preference(self, preference: str, setting: Any) -> None:
         """Set a preference on the robot."""
+        await self._async_ensure_connected()
         try:
             await self.vacuum.set_preference(preference, setting)
         except RoombaConnectionError as err:
@@ -365,9 +384,9 @@ class BraavaJet(IRobotVacuum):
 
     _attr_supported_features = SUPPORT_BRAAVA
 
-    def __init__(self, roomba, blid) -> None:
+    def __init__(self, roomba, blid, connection: RoombaConnection) -> None:
         """Initialize the Roomba handler."""
-        super().__init__(roomba, blid)
+        super().__init__(roomba, blid, connection)
 
         # Initialize fan speed list
         self._attr_fan_speed_list = [
