@@ -37,7 +37,8 @@ from homeassistant.helpers import issue_registry as ir, storage
 from homeassistant.helpers.json import json_bytes, prepare_save_json
 from homeassistant.util import dt as dt_util
 from homeassistant.util.color import RGBColor
-from homeassistant.util.json import JsonValueType
+from homeassistant.util.file import WriteError
+from homeassistant.util.json import JsonValueType, SerializationError
 
 MOCK_VERSION = 1
 MOCK_VERSION_2 = 2
@@ -219,6 +220,129 @@ async def test_saving_with_delay(
         "key": MOCK_KEY,
         "data": MOCK_DATA,
     }
+
+
+async def test_saving_unserializable_data_raises(
+    store: storage.Store, hass_storage: dict[str, Any]
+) -> None:
+    """Test saving data that cannot be serialized raises."""
+    with pytest.raises(SerializationError):
+        await store.async_save({"bad": object()})
+    assert store.key not in hass_storage
+
+
+async def test_saving_unserializable_data_with_delay_raises(
+    hass: HomeAssistant, store: storage.Store, hass_storage: dict[str, Any]
+) -> None:
+    """Test a delayed save of data that cannot be serialized is not swallowed."""
+    loop = asyncio.get_running_loop()
+    original_handler = loop.get_exception_handler()
+    exceptions: list[BaseException] = []
+    loop.set_exception_handler(
+        lambda _loop, context: exceptions.append(context["exception"])
+    )
+    try:
+        store.async_delay_save(lambda: {"bad": object()}, 1)
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
+        await hass.async_block_till_done()
+    finally:
+        loop.set_exception_handler(original_handler)
+
+    assert len(exceptions) == 1
+    assert isinstance(exceptions[0], SerializationError)
+    assert store.key not in hass_storage
+
+
+async def test_saving_write_error_raises(
+    store: storage.Store, hass_storage: dict[str, Any]
+) -> None:
+    """Test a write error while saving raises."""
+    with (
+        patch.object(store._io, "async_write", side_effect=WriteError("disk full")),
+        pytest.raises(WriteError),
+    ):
+        await store.async_save(MOCK_DATA)
+    assert store.key not in hass_storage
+
+
+async def test_saving_write_error_with_delay_logs(
+    hass: HomeAssistant,
+    store: storage.Store,
+    hass_storage: dict[str, Any],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a write error in a delayed save is logged."""
+    store.async_delay_save(lambda: MOCK_DATA, 1)
+    with patch.object(store._io, "async_write", side_effect=WriteError("disk full")):
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
+        await hass.async_block_till_done()
+
+    assert "Error writing config for storage-test: disk full" in caplog.text
+    assert store.key not in hass_storage
+
+
+async def test_concurrent_saves_get_their_own_write_error(
+    hass: HomeAssistant, store: storage.Store
+) -> None:
+    """Test each concurrent save writes its own data and gets its own error."""
+    release_first_write = asyncio.Event()
+    written: list[str | bytes] = []
+
+    async def async_write(mode: str, json_data: str | bytes) -> None:
+        written.append(json_data)
+        if len(written) == 1:
+            await release_first_write.wait()
+            return
+        raise WriteError("disk full")
+
+    with patch.object(store._io, "async_write", side_effect=async_write):
+        first = hass.async_create_task(store.async_save({"save": 1}))
+        await asyncio.sleep(0)
+        second = hass.async_create_task(store.async_save({"save": 2}))
+        third = hass.async_create_task(store.async_save({"save": 3}))
+        await asyncio.sleep(0)
+        release_first_write.set()
+        results = await asyncio.gather(first, second, third, return_exceptions=True)
+
+    assert [json.loads(data)["data"] for data in written] == [
+        {"save": 1},
+        {"save": 2},
+        {"save": 3},
+    ]
+    assert results[0] is None
+    assert isinstance(results[1], WriteError)
+    assert isinstance(results[2], WriteError)
+
+
+async def test_save_does_not_replace_newer_delayed_data(
+    hass: HomeAssistant, store: storage.Store
+) -> None:
+    """Test a save that waits for the lock does not write over newer data."""
+    release_first_write = asyncio.Event()
+    written: list[str | bytes] = []
+
+    async def async_write(mode: str, json_data: str | bytes) -> None:
+        written.append(json_data)
+        if len(written) == 1:
+            await release_first_write.wait()
+
+    with patch.object(store._io, "async_write", side_effect=async_write):
+        first = hass.async_create_task(store.async_save({"save": "first"}))
+        await asyncio.sleep(0)
+        # The delayed write starts and waits for the lock before the next save.
+        store.async_delay_save(lambda: {"save": "old delayed"}, 0)
+        for _ in range(3):
+            await asyncio.sleep(0)
+        second = hass.async_create_task(store.async_save({"save": "second"}))
+        await asyncio.sleep(0)
+        store.async_delay_save(lambda: {"save": "newest"}, 0)
+        release_first_write.set()
+        await asyncio.gather(first, second)
+
+    assert [json.loads(data)["data"] for data in written] == [
+        {"save": "first"},
+        {"save": "newest"},
+    ]
 
 
 async def test_saving_with_delay_threading(tmp_path: Path) -> None:

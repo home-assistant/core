@@ -515,8 +515,12 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
         return stored
 
     async def async_save(self, data: _T) -> None:
-        """Save data."""
-        self._data = {
+        """Save data.
+
+        Raises SerializationError if the data cannot be serialized and
+        WriteError if the data cannot be written.
+        """
+        self._data = save_data = {
             "version": self.version,
             "minor_version": self.minor_version,
             "key": self.key,
@@ -527,7 +531,7 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
             self._async_ensure_final_write_listener()
             return
 
-        await self._async_handle_write_data()
+        await self._async_handle_write_data(save_data)
 
     @callback
     def async_delay_save(
@@ -614,34 +618,47 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
         if self.hass.state is CoreState.stopping:
             self._async_ensure_final_write_listener()
             return
-        await self._async_handle_write_data()
+        await self._async_handle_write_data_log_errors()
 
     async def _async_callback_final_write(self, _event: Event) -> None:
         """Handle a write because Home Assistant is in final write state."""
         self._unsub_final_write_listener = None
-        await self._async_handle_write_data()
+        await self._async_handle_write_data_log_errors()
 
-    async def _async_handle_write_data(self, *_args):
-        """Handle writing the config."""
+    async def _async_handle_write_data_log_errors(self) -> None:
+        """Write the data and log a write error, because no caller waits for it."""
+        try:
+            await self._async_handle_write_data()
+        except WriteError as err:
+            _LOGGER.error("Error writing config for %s: %s", self.key, err)
+
+    async def _async_handle_write_data(
+        self, save_data: dict[str, Any] | None = None
+    ) -> None:
+        """Handle writing the config.
+
+        A direct save passes its own data and writes it, so the caller gets
+        the result of its own write.
+        """
         async with self._write_lock:
             self._io.async_invalidate_cache()
-            self._async_cleanup_delay_listener()
-            self._async_cleanup_final_write_listener()
 
-            if self._data is None:
-                # Another write already consumed the data
+            if save_data is None or self._data is save_data:
+                self._async_cleanup_delay_listener()
+                self._async_cleanup_final_write_listener()
+                if self._data is None:
+                    # Another write already consumed the data
+                    return
+                save_data = self._data
+                self._data = None
+            elif self._data is None:
+                # Another write already took this data or newer data
                 return
-
-            data = self._data
-            self._data = None
 
             if self._read_only:
                 return
 
-            try:
-                await self._async_write_data(data)
-            except (json_util.SerializationError, WriteError) as err:
-                _LOGGER.error("Error writing config for %s: %s", self.key, err)
+            await self._async_write_data(save_data)
 
     async def _async_write_data(self, data: dict) -> None:
         if self._serialize_in_event_loop:
