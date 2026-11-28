@@ -328,7 +328,7 @@ async def setup_light_with_effects(
     hass: HomeAssistant,
     count: int,
     style: ConfigurationStyle,
-    effect_list_template: str,
+    effect_list_template: str | list[str],
     effect_template: str,
 ) -> None:
     """Do setup of light with effects."""
@@ -1784,6 +1784,7 @@ async def test_all_colors_mode_no_template(
     [
         ("{{ ['Disco', 'Police'] }}", "{{ 'Disco' }}", "Disco", "Disco"),
         ("{{ ['Disco', 'Police'] }}", "{{ 'None' }}", "RGB", None),
+        (["Disco", "Police"], "{{ 'Disco' }}", "Disco", "Disco"),
     ],
 )
 @pytest.mark.usefixtures("setup_light_with_effects")
@@ -1827,6 +1828,8 @@ async def test_effect_action(
             ["Police", "RGB", "Random Loop"],
             "{{ ['Police', 'RGB', 'Random Loop'] }}",
         ),
+        (["Police", "RGB"], ["Police", "RGB"]),
+        (None, []),
         (None, "{{ [] }}"),
         (None, "{{ '[]' }}"),
         (None, "{{ 124 }}"),

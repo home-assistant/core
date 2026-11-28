@@ -180,7 +180,7 @@ async def setup_single_attribute_state_vacuum(
     style: ConfigurationStyle,
     state_template: str | None,
     attribute: str,
-    attribute_template: str,
+    attribute_template: str | list[str],
     extra_config: dict,
 ) -> None:
     """Do setup of vacuum integration testing a single attribute."""
@@ -323,7 +323,14 @@ async def test_invalid_configs(hass: HomeAssistant, count) -> None:
             {
                 "fan_speeds": ["low", "medium", "high"],
             },
-        )
+        ),
+        (
+            1,
+            "{{ states('sensor.test_state') }}",
+            {
+                "fan_speeds": "{{ ['low', 'medium', 'high'] }}",
+            },
+        ),
     ],
 )
 @pytest.mark.parametrize(
@@ -347,6 +354,100 @@ async def test_fan_speed_template(hass: HomeAssistant, expected: str | None) -> 
     """Test templates with values from other entities."""
     await async_trigger(hass, TEST_STATE_ENTITY_ID)
     _verify(hass, STATE_UNKNOWN, expected)
+
+
+@pytest.mark.parametrize(
+    ("count", "state_template", "attribute", "extra_config"),
+    [(1, "{{ states('sensor.test_state') }}", "fan_speeds", {})],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.parametrize(
+    ("attribute_template", "expected"),
+    [
+        (["low", "high"], ["low", "high"]),
+        ("low", ["low"]),
+        ("{{ ['low', 'high'] }}", ["low", "high"]),
+        ("{{ [] }}", []),
+        ("{{ 'low' }}", []),
+        ("{{ x - 1 }}", []),
+    ],
+)
+@pytest.mark.usefixtures("setup_single_attribute_state_vacuum")
+async def test_fan_speeds_template(hass: HomeAssistant, expected: list[str]) -> None:
+    """Test fan_speeds as a static list, a plain string or a template."""
+    await async_trigger(hass, TEST_STATE_ENTITY_ID)
+
+    state = hass.states.get(TEST_VACUUM.entity_id)
+    assert state.attributes["fan_speed_list"] == expected
+
+
+@pytest.mark.parametrize(
+    ("count", "state_template", "attribute", "attribute_template"),
+    [(1, "{{ states('sensor.test_state') }}", "fan_speed", "{{ 2 }}")],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.parametrize(
+    "extra_config", [{"fan_speeds": [1, 2]}, {"fan_speeds": "{{ [1, 2] }}"}]
+)
+@pytest.mark.usefixtures("setup_single_attribute_state_vacuum")
+async def test_numeric_fan_speed(hass: HomeAssistant) -> None:
+    """Test a numeric fan_speed matches the fan_speeds stored as strings."""
+    await async_trigger(hass, TEST_STATE_ENTITY_ID)
+    _verify(hass, STATE_UNKNOWN, "2")
+
+
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+async def test_empty_fan_speeds(hass: HomeAssistant, style: ConfigurationStyle) -> None:
+    """Test an empty fan_speeds option is an empty list."""
+    await setup_entity(
+        hass,
+        TEST_VACUUM,
+        style,
+        1,
+        {"fan_speeds": None, **TEMPLATE_VACUUM_ACTIONS},
+        "{{ states('sensor.test_state') }}",
+    )
+    await async_trigger(hass, TEST_STATE_ENTITY_ID)
+
+    state = hass.states.get(TEST_VACUUM.entity_id)
+    assert state.attributes["fan_speed_list"] == []
+
+
+@pytest.mark.parametrize(
+    ("count", "state_template", "attribute", "attribute_template", "extra_config"),
+    [
+        (
+            1,
+            "{{ states('sensor.test_state') }}",
+            "fan_speed",
+            "{{ 'high' }}",
+            {"fan_speeds": "{{ state_attr('sensor.test_state', 'speeds') }}"},
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_single_attribute_state_vacuum")
+async def test_fan_speed_revalidated_on_list_change(hass: HomeAssistant) -> None:
+    """Test an unchanged fan_speed becomes valid when fan_speeds includes it."""
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "docked", {"speeds": ["low"]})
+    _verify(hass, VacuumActivity.DOCKED, None)
+
+    await async_trigger(
+        hass, TEST_STATE_ENTITY_ID, "docked", {"speeds": ["low", "high"]}
+    )
+    _verify(hass, VacuumActivity.DOCKED, "high")
 
 
 @pytest.mark.parametrize(
@@ -649,7 +750,15 @@ async def test_state_services(
             {
                 "fan_speeds": ["low", "medium", "high"],
             },
-        )
+        ),
+        (
+            1,
+            "{{ states('sensor.test_state') }}",
+            "{{ states('sensor.test_attribute') }}",
+            {
+                "fan_speeds": "{{ ['low', 'medium', 'high'] }}",
+            },
+        ),
     ],
 )
 @pytest.mark.parametrize(
@@ -662,6 +771,7 @@ async def test_state_services(
 @pytest.mark.usefixtures("setup_single_attribute_state_vacuum")
 async def test_set_fan_speed(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test set valid fan speed."""
+    await async_trigger(hass, TEST_STATE_ENTITY_ID)
 
     # Set vacuum's fan speed to high
     await common.async_set_fan_speed(hass, "high", TEST_VACUUM.entity_id)
@@ -683,7 +793,10 @@ async def test_set_fan_speed(hass: HomeAssistant, calls: list[ServiceCall]) -> N
     [
         {
             "fan_speeds": ["low", "medium", "high"],
-        }
+        },
+        {
+            "fan_speeds": "{{ ['low', 'medium', 'high'] }}",
+        },
     ],
 )
 @pytest.mark.parametrize(
@@ -708,6 +821,7 @@ async def test_set_invalid_fan_speed(
     hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
     """Test set invalid fan speed when fan has valid speed."""
+    await async_trigger(hass, TEST_STATE_ENTITY_ID)
 
     # Set vacuum's fan speed to high
     await common.async_set_fan_speed(hass, "high", TEST_VACUUM.entity_id)
@@ -1446,6 +1560,100 @@ async def test_restore_state(
     )
 
 
+SAVED_FAN_SPEEDS_EXTRA_DATA = {
+    "activity": VacuumActivity.DOCKED,
+    "fan_speed": None,
+    "fan_speed_list": ["old"],
+}
+
+
+async def test_restore_state_removed_fan_speeds(hass: HomeAssistant) -> None:
+    """Test saved fan_speeds are not restored once the option is removed."""
+    setup_mock_template_entity_restore_state(
+        hass,
+        TEST_VACUUM,
+        VacuumActivity.DOCKED,
+        saved_extra_data=SAVED_FAN_SPEEDS_EXTRA_DATA,
+    )
+
+    await setup_restore_template_entity(
+        hass,
+        TEST_VACUUM,
+        ConfigurationStyle.TRIGGER,
+        {"state": "{{ 'docked' }}", "start": [], "set_fan_speed": []},
+    )
+
+    assert_state_and_attributes(
+        hass, TEST_VACUUM, VacuumActivity.DOCKED, {"fan_speed_list": []}
+    )
+
+
+async def test_restore_state_keeps_rendered_fan_speeds(hass: HomeAssistant) -> None:
+    """Test a live reload keeps fan_speeds that rendered before the restore."""
+    setup_mock_template_entity_restore_state(
+        hass,
+        TEST_VACUUM,
+        VacuumActivity.DOCKED,
+        saved_extra_data=SAVED_FAN_SPEEDS_EXTRA_DATA,
+    )
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        template.DOMAIN,
+        {
+            "template": {
+                "vacuum": {
+                    "name": TEST_VACUUM.object_id,
+                    "default_entity_id": TEST_VACUUM.entity_id,
+                    "start": [],
+                    "set_fan_speed": [],
+                    "fan_speeds": "{{ ['low', 'high'] }}",
+                }
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert_state_and_attributes(
+        hass, TEST_VACUUM, VacuumActivity.DOCKED, {"fan_speed_list": ["low", "high"]}
+    )
+
+
+async def test_restore_state_static_fan_speeds(hass: HomeAssistant) -> None:
+    """Test static fan_speeds from the config replace the restored list."""
+    setup_mock_template_entity_restore_state(
+        hass,
+        TEST_VACUUM,
+        VacuumActivity.DOCKED,
+        saved_extra_data={
+            "activity": VacuumActivity.DOCKED,
+            "fan_speed": "low",
+            "fan_speed_list": ["old", "low"],
+        },
+    )
+
+    await setup_restore_template_entity(
+        hass,
+        TEST_VACUUM,
+        ConfigurationStyle.TRIGGER,
+        {
+            "state": "{{ 'docked' }}",
+            "start": [],
+            "set_fan_speed": [],
+            "fan_speeds": ["low", "high"],
+        },
+    )
+
+    assert_state_and_attributes(
+        hass,
+        TEST_VACUUM,
+        VacuumActivity.DOCKED,
+        {"fan_speed": "low", "fan_speed_list": ["low", "high"]},
+    )
+
+
 @pytest.mark.parametrize(
     "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
 )
@@ -1496,6 +1704,7 @@ async def test_saving_state(
     assert extra_data == {
         "activity": "docked",
         "fan_speed": "high",
+        "fan_speed_list": ["low", "high"],
     }
 
 

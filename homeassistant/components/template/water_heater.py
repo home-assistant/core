@@ -94,7 +94,7 @@ WATER_HEATER_COMMON_SCHEMA = probatio.Schema(
         probatio.Optional(CONF_CURRENT_TEMPERATURE): cv.template,
         probatio.Optional(CONF_MAX_TEMPERATURE): probatio.Coerce(float),
         probatio.Optional(CONF_MIN_TEMPERATURE): probatio.Coerce(float),
-        probatio.Required(CONF_OPERATION_LIST): cv.template,
+        probatio.Required(CONF_OPERATION_LIST): tcv.list_or_template(),
         probatio.Optional(CONF_OPERATION_MODE): cv.template,
         probatio.Optional(CONF_TARGET_TEMPERATURE): cv.template,
         probatio.Optional(CONF_TARGET_TEMPERATURE_STEP): probatio.All(

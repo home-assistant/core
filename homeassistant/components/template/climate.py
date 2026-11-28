@@ -121,10 +121,12 @@ CLIMATE_COMMON_SCHEMA = probatio.Schema(
         probatio.Optional(CONF_CURRENT_HUMIDITY): cv.template,
         probatio.Optional(CONF_CURRENT_TEMPERATURE): cv.template,
         probatio.Optional(CONF_FAN_MODE): cv.template,
-        probatio.Optional(CONF_FAN_MODES): cv.template,
+        probatio.Optional(CONF_FAN_MODES): tcv.list_or_template(),
         probatio.Optional(CONF_HVAC_ACTION): cv.template,
         probatio.Optional(CONF_HVAC_MODE): cv.template,
-        probatio.Required(CONF_HVAC_MODES): cv.template,
+        probatio.Required(CONF_HVAC_MODES): tcv.list_or_template(
+            probatio.In([mode.value for mode in HVACMode])
+        ),
         probatio.Optional(CONF_MAX_HUMIDITY): probatio.Coerce(int),
         probatio.Optional(CONF_MAX_TEMPERATURE): probatio.Coerce(float),
         probatio.Optional(CONF_MIN_HUMIDITY): probatio.Coerce(int),
@@ -133,11 +135,11 @@ CLIMATE_COMMON_SCHEMA = probatio.Schema(
             PRECISION_HALVES, PRECISION_TENTHS, PRECISION_WHOLE
         ),
         probatio.Optional(CONF_PRESET_MODE): cv.template,
-        probatio.Optional(CONF_PRESET_MODES): cv.template,
+        probatio.Optional(CONF_PRESET_MODES): tcv.list_or_template(),
         probatio.Optional(CONF_SWING_MODE): cv.template,
-        probatio.Optional(CONF_SWING_MODES): cv.template,
+        probatio.Optional(CONF_SWING_MODES): tcv.list_or_template(),
         probatio.Optional(CONF_SWING_HORIZONTAL_MODE): cv.template,
-        probatio.Optional(CONF_SWING_HORIZONTAL_MODES): cv.template,
+        probatio.Optional(CONF_SWING_HORIZONTAL_MODES): tcv.list_or_template(),
         probatio.Optional(CONF_TARGET_HUMIDITY): cv.template,
         probatio.Optional(CONF_TARGET_HUMIDITY_STEP): probatio.All(
             probatio.Coerce(int), probatio.Range(min=1)
@@ -434,6 +436,8 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
         self._attr_swing_horizontal_modes = None
         self._attr_native_target_temperature_low = None
         self._attr_native_target_temperature_high = None
+        # Set before hvac_modes, a static list adds the turn on/off features
+        self._attr_supported_features = ClimateEntityFeature(0)
 
         self.setup_template(
             CONF_HVAC_MODES,
@@ -579,7 +583,6 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
             "_attr_preset_mode", CONF_PRESET_MODE, SET_PRESET_MODE_ACTION
         )
 
-        self._attr_supported_features = ClimateEntityFeature(0)
         for action_id, supported_feature in (
             (SET_FAN_MODE_ACTION, ClimateEntityFeature.FAN_MODE),
             (SET_HUMIDITY_ACTION, ClimateEntityFeature.TARGET_HUMIDITY),

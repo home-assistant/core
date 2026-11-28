@@ -118,7 +118,7 @@ SCRIPT_FIELDS = (
 LIGHT_COMMON_SCHEMA = probatio.Schema(
     {
         probatio.Optional(CONF_EFFECT_ACTION): cv.SCRIPT_SCHEMA,
-        probatio.Optional(CONF_EFFECT_LIST): cv.template,
+        probatio.Optional(CONF_EFFECT_LIST): tcv.list_or_template(),
         probatio.Optional(CONF_EFFECT): cv.template,
         probatio.Optional(CONF_HS_ACTION): cv.SCRIPT_SCHEMA,
         probatio.Optional(CONF_HS): cv.template,

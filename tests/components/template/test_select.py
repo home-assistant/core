@@ -115,6 +115,10 @@ async def test_setup_config_entry(
             "state": "{{ 'a' }}",
             "options": "{{ ['a', 'b'] }}",
         },
+        {
+            "state": "{{ 'a' }}",
+            "options": ["a", "b"],
+        },
     ],
 )
 @pytest.mark.parametrize(
@@ -690,6 +694,25 @@ async def test_restore_state(
             "options": ["something", "anything", "something_new"],
         },
     )
+
+
+async def test_restore_state_static_options(hass: HomeAssistant) -> None:
+    """Test static options from the config replace the restored options."""
+    setup_mock_template_entity_restore_state(
+        hass,
+        TEST_SELECT,
+        "a",
+        saved_extra_data={"current_option": "a", "options": ["old", "a"]},
+    )
+
+    await setup_restore_template_entity(
+        hass,
+        TEST_SELECT,
+        ConfigurationStyle.TRIGGER,
+        {"state": "{{ 'a' }}", "options": ["a", "b"], "select_option": []},
+    )
+
+    assert_state_and_attributes(hass, TEST_SELECT, "a", {"options": ["a", "b"]})
 
 
 @pytest.mark.parametrize(

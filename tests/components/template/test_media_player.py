@@ -1,5 +1,6 @@
 """The tests for the Template media player platform."""
 
+from collections.abc import Callable
 from enum import StrEnum
 from http import HTTPStatus
 from itertools import chain
@@ -229,6 +230,13 @@ async def test_attribute_template_error(
     "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
 )
 @pytest.mark.parametrize(
+    "make_list",
+    [
+        pytest.param(lambda option, values: _attribute_template(option), id="template"),
+        pytest.param(lambda option, values: values, id="static"),
+    ],
+)
+@pytest.mark.parametrize(
     ("option", "action", "values"),
     [
         pytest.param("source_list", "select_source", ["TV", "Radio"], id="source_list"),
@@ -243,17 +251,18 @@ async def test_attribute_template_error(
 async def test_list_templates(
     hass: HomeAssistant,
     style: ConfigurationStyle,
+    make_list: Callable[[str, list[str]], str | list[str]],
     option: str,
     action: str,
     values: list[str],
 ) -> None:
-    """Test list templates are exposed with their select action."""
+    """Test lists, static or templated, are exposed with their select action."""
     await setup_entity(
         hass,
         TEST_MEDIA_PLAYER,
         style,
         1,
-        {option: _attribute_template(option), **make_test_action(action)},
+        {option: make_list(option, values), **make_test_action(action)},
         STATE_TEMPLATE,
     )
     await async_trigger(hass, TEST_STATE_ENTITY_ID, "on", {option: values})

@@ -98,7 +98,7 @@ async def setup_event(
     count: int,
     style: ConfigurationStyle,
     event_type_template: str,
-    event_types_template: str,
+    event_types_template: str | list[str],
     extra_config: dict[str, Any] | None,
 ) -> None:
     """Do setup of event integration."""
@@ -503,6 +503,8 @@ async def test_entity_picture_and_icon_templates(
             "{{ ['Police', 'RGB', 'Random Loop'] }}",
             ["Police", "RGB", "Random Loop"],
         ),
+        (["Police", "RGB"], ["Police", "RGB"]),
+        ([], []),
         ("{{ [] }}", []),
         ("{{ '[]' }}", []),
         ("{{ 124 }}", []),

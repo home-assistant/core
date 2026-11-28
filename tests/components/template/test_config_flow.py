@@ -1,5 +1,6 @@
 """Test the Switch config flow."""
 
+from collections.abc import Callable
 from typing import Any
 from unittest.mock import patch
 
@@ -15,7 +16,7 @@ from homeassistant.components.template.vacuum import (
     DEPRECATED_HELPER_INCOMPLETE_FAN_SPEED_ISSUE_ID,
 )
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import (
@@ -3115,3 +3116,317 @@ async def test_preview_this_variable_options_flow(
 
     msg = await client.receive_json()
     assert msg["event"]["state"] == expected_state
+
+
+def _choice(active_choice: str, value: Any) -> dict[str, Any]:
+    """Return the value the frontend sends for a choose selector."""
+    return {"active_choice": active_choice, active_choice: value}
+
+
+LIST_OR_TEMPLATE_INPUT = [
+    pytest.param(
+        "climate",
+        {"set_hvac_mode": []},
+        "hvac_modes",
+        "hvac_modes",
+        ["off", "heat"],
+        id="climate_hvac_modes",
+    ),
+    pytest.param(
+        "event",
+        {"event_type": "{{ 'a' }}"},
+        "event_types",
+        "event_types",
+        ["a", "b"],
+        id="event_event_types",
+    ),
+    pytest.param(
+        "media_player",
+        {"select_source": []},
+        "source_list",
+        "source_list",
+        ["tv", "radio"],
+        id="media_player_source_list",
+    ),
+    pytest.param(
+        "select",
+        {"state": "{{ 'a' }}"},
+        "options",
+        "options",
+        ["a", "b"],
+        id="select_options",
+    ),
+    pytest.param(
+        "vacuum",
+        {"start": [], "set_fan_speed": []},
+        "fan_speeds",
+        "fan_speed_list",
+        ["low", "high"],
+        id="vacuum_fan_speeds",
+    ),
+    pytest.param(
+        "water_heater",
+        {"set_operation_mode": []},
+        "operation_list",
+        "operation_list",
+        ["eco", "performance"],
+        id="water_heater_operation_list",
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    ("active_choice", "make_value"),
+    [
+        pytest.param("list", lambda items: items, id="list"),
+        pytest.param("template", lambda items: f"{{{{ {items} }}}}", id="template"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("template_type", "user_input", "option", "attribute", "items"),
+    LIST_OR_TEMPLATE_INPUT,
+)
+async def test_config_flow_list_or_template(
+    hass: HomeAssistant,
+    active_choice: str,
+    make_value: Callable[[list[str]], list[str] | str],
+    template_type: str,
+    user_input: dict[str, Any],
+    option: str,
+    attribute: str,
+    items: list[str],
+) -> None:
+    """Test list options store the list or the template of the active choice."""
+    value = make_value(items)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": template_type}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "name": "My template",
+            **user_input,
+            option: _choice(active_choice, value),
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["options"][option] == value
+
+    state = hass.states.get(f"{template_type}.my_template")
+    assert state is not None
+    assert state.attributes[attribute] == items
+
+
+@pytest.mark.parametrize(
+    ("template_type", "user_input", "option", "attribute", "items"),
+    LIST_OR_TEMPLATE_INPUT,
+)
+async def test_config_flow_list_or_template_without_template(
+    hass: HomeAssistant,
+    template_type: str,
+    user_input: dict[str, Any],
+    option: str,
+    attribute: str,
+    items: list[str],
+) -> None:
+    """Test a template choice without a template is rejected."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": template_type}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "name": "My template",
+            **user_input,
+            option: _choice("template", ", ".join(items)),
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "list_template_required"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"name": "My template", **user_input, option: _choice("list", items)},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["options"][option] == items
+
+
+@pytest.mark.parametrize(
+    ("template_type", "user_input", "option"),
+    [
+        pytest.param("media_player", {}, "source_list", id="media_player_source_list"),
+        pytest.param("vacuum", {"start": []}, "fan_speeds", id="vacuum_fan_speeds"),
+    ],
+)
+async def test_config_flow_empty_optional_list(
+    hass: HomeAssistant,
+    template_type: str,
+    user_input: dict[str, Any],
+    option: str,
+) -> None:
+    """Test an empty optional list is not stored."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": template_type}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"name": "My template", **user_input, option: _choice("list", [])},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert option not in result["options"]
+
+
+@pytest.mark.parametrize(
+    ("stored", "new_value"),
+    [
+        pytest.param(["low"], _choice("template", "{{ ['low'] }}"), id="to_template"),
+        pytest.param("{{ ['low'] }}", _choice("list", ["low"]), id="to_list"),
+    ],
+)
+async def test_options_switch_list_or_template(
+    hass: HomeAssistant, stored: list[str] | str, new_value: dict[str, Any]
+) -> None:
+    """Test the options flow switches a list option between a list and a template."""
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "name": "My template",
+            "template_type": "vacuum",
+            "start": [],
+            "set_fan_speed": [],
+            "fan_speeds": stored,
+        },
+        title="My template",
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert get_schema_suggested_value(result["data_schema"].schema, "fan_speeds") == (
+        stored
+    )
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"start": [], "set_fan_speed": [], "fan_speeds": new_value},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.options["fan_speeds"] == new_value[new_value["active_choice"]]
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        pytest.param(_choice("list", ["a", "b"]), ["a", "b"], id="list"),
+        pytest.param(
+            _choice("template", "{{ ['a', 'b'] }}"), ["a", "b"], id="template"
+        ),
+    ],
+)
+async def test_config_flow_preview_list_or_template(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    value: dict[str, Any],
+    expected: list[str],
+) -> None:
+    """Test the preview unwraps the active choice of a list option."""
+    client = await hass_ws_client(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "select"}
+    )
+
+    await client.send_json_auto_id(
+        {
+            "type": "template/start_preview",
+            "flow_id": result["flow_id"],
+            "flow_type": "config_flow",
+            "user_input": {
+                "name": "My template",
+                "state": "{{ 'a' }}",
+                "options": value,
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+
+    msg = await client.receive_json()
+    assert msg["event"]["state"] == "a"
+    assert msg["event"]["attributes"]["options"] == expected
+
+
+async def test_config_flow_preview_without_templates(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test the preview sends a state when no option is a template."""
+    client = await hass_ws_client(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "select"}
+    )
+
+    await client.send_json_auto_id(
+        {
+            "type": "template/start_preview",
+            "flow_id": result["flow_id"],
+            "flow_type": "config_flow",
+            "user_input": {"name": "My template", "options": ["a", "b"]},
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+
+    msg = await client.receive_json()
+    assert msg["event"]["state"] == STATE_UNKNOWN
+    assert msg["event"]["attributes"]["options"] == ["a", "b"]
+
+
+async def test_config_flow_preview_list_without_template(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test the preview rejects a template choice without a template."""
+    client = await hass_ws_client(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "select"}
+    )
+
+    await client.send_json_auto_id(
+        {
+            "type": "template/start_preview",
+            "flow_id": result["flow_id"],
+            "flow_type": "config_flow",
+            "user_input": {
+                "name": "My template",
+                "options": _choice("template", "a, b"),
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert msg["error"] == {
+        "code": "invalid_user_input",
+        "message": {"options": "Expected a list or a template"},
+    }

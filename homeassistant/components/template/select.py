@@ -50,7 +50,7 @@ SCRIPT_FIELDS = (CONF_SELECT_OPTION,)
 
 SELECT_COMMON_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_OPTIONS): cv.template,
+        probatio.Required(CONF_OPTIONS): tcv.list_or_template(),
         probatio.Optional(CONF_SELECT_OPTION): cv.SCRIPT_SCHEMA,
         probatio.Optional(CONF_STATE): cv.template,
     }

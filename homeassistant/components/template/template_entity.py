@@ -636,6 +636,10 @@ class TemplateEntity(AbstractTemplateEntity):
             self._async_template_startup(None, suppress_preview_errors)
         except Exception as err:  # noqa: BLE001
             preview_callback(None, None, None, str(err))
+        else:
+            # Without templates there are no results to trigger the first update
+            if not self._template_attrs:
+                self._async_preview_update()
         return self._call_on_remove_callbacks
 
     @override
