@@ -21,11 +21,11 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
 from .const import CONF_API_SECRET, CONF_TRACKER_INTERFACES, DOMAIN
-from .types import OPNsenseConfigEntry, OPNsenseRuntimeData
+from .coordinator import OPNsenseConfigEntry, OPNsenseCoordinator, OPNsenseRuntimeData
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-PLATFORMS = [Platform.DEVICE_TRACKER]
+PLATFORMS = [Platform.DEVICE_TRACKER, Platform.SENSOR]
 
 
 async def async_setup_entry(
@@ -113,9 +113,16 @@ async def async_setup_entry(
                     },
                 )
 
+    coordinator = OPNsenseCoordinator(
+        hass,
+        config_entry,
+        client,
+        tracker_interfaces,
+    )
+    await coordinator.async_config_entry_first_refresh()
+
     config_entry.runtime_data = OPNsenseRuntimeData(
-        client=client,
-        tracker_interfaces=tracker_interfaces,
+        coordinator=coordinator,
     )
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
@@ -140,11 +147,8 @@ async def async_remove_config_entry_device(
     if config_entry.state is not ConfigEntryState.LOADED:
         return True
     runtime_data = config_entry.runtime_data
-    connected = (
-        coordinator.data
-        if (coordinator := runtime_data.tracker_coordinator) and coordinator.data
-        else {}
-    )
+    coordinator = runtime_data.coordinator
+    connected = coordinator.data or {}
     device_macs = {
         mac
         for connection_type, mac in device_entry.connections
@@ -153,5 +157,6 @@ async def async_remove_config_entry_device(
     if not device_macs.isdisjoint(connected):
         return False
     # Forget the client, so it is added again when it reconnects
-    runtime_data.tracked_devices -= device_macs
+    runtime_data.tracked_devices.difference_update(device_macs)
+    runtime_data.tracked_sensor_devices.difference_update(device_macs)
     return True
