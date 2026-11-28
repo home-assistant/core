@@ -21,12 +21,15 @@ class Debouncer[_R_co]:
         immediate: bool,
         function: Callable[[], _R_co] | None = None,
         background: bool = False,
+        cancel_on_shutdown: bool = False,
     ) -> None:
         """Initialize debounce.
 
         immediate: indicate if the function needs to be called right away and
                    wait <cooldown> until executing next invocation.
         function: optional and can be instantiated later.
+        cancel_on_shutdown: drop a pending call when Home Assistant stops,
+                   so it isn't made after shared resources are closed.
         """
         self.hass = hass
         self.logger = logger
@@ -46,6 +49,8 @@ class Debouncer[_R_co]:
             )
         )
         self._shutdown_requested = False
+        self._timer_job: HassJob[[HassJob[..., None] | None], None] | None = None
+        self.cancel_on_shutdown = cancel_on_shutdown
 
     @asynccontextmanager
     async def async_lock(self) -> AsyncGenerator[None]:
@@ -78,6 +83,24 @@ class Debouncer[_R_co]:
                 f"debouncer cooldown={self.cooldown}, immediate={self.immediate}",
             )
 
+    @property
+    def cancel_on_shutdown(self) -> bool:
+        """Return if a pending call is dropped when Home Assistant stops."""
+        return self._timer_job is not None
+
+    @cancel_on_shutdown.setter
+    def cancel_on_shutdown(self, cancel_on_shutdown: bool) -> None:
+        """Set if a pending call is dropped when Home Assistant stops."""
+        self._timer_job = (
+            HassJob(
+                self._on_debounce,
+                f"debouncer cooldown={self.cooldown}, immediate={self.immediate}",
+                cancel_on_shutdown=True,
+            )
+            if cancel_on_shutdown
+            else None
+        )
+
     @callback
     def async_schedule_call(self) -> None:
         """Schedule a call to the function."""
@@ -95,6 +118,10 @@ class Debouncer[_R_co]:
         if self._shutdown_requested:
             self.logger.debug("Debouncer call ignored as shutdown has been requested.")
             return False
+
+        if self._timer_task is not None and self._timer_task.cancelled():
+            self._timer_task = None
+            self._execute_at_end_of_timer = False
 
         if self._timer_task:
             if not self._execute_at_end_of_timer:
@@ -164,6 +191,7 @@ class Debouncer[_R_co]:
         # https://github.com/home-assistant/core/issues/137237
         self._function = None
         self._job = None
+        self._timer_job = None
 
     @callback
     def async_cancel(self) -> None:
@@ -175,7 +203,7 @@ class Debouncer[_R_co]:
         self._execute_at_end_of_timer = False
 
     @callback
-    def _on_debounce(self) -> None:
+    def _on_debounce(self, _job: HassJob[..., None] | None = None) -> None:
         """Create job task, but only if pending."""
         self._timer_task = None
         if not self._execute_at_end_of_timer:
@@ -201,4 +229,6 @@ class Debouncer[_R_co]:
             return
         if self._timer_task is not None:
             self._timer_task.cancel()
-        self._timer_task = self.hass.loop.call_later(self.cooldown, self._on_debounce)
+        self._timer_task = self.hass.loop.call_later(
+            self.cooldown, self._on_debounce, self._timer_job
+        )

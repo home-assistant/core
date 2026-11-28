@@ -647,3 +647,81 @@ async def test_concurrent_async_call_does_not_orphan_timer(
     assert first_timer.cancelled()
 
     debouncer.async_shutdown()
+
+
+@pytest.mark.parametrize(
+    ("cancel_on_shutdown", "expected_calls"),
+    [
+        pytest.param(False, 1, id="kept"),
+        pytest.param(True, 0, id="dropped"),
+    ],
+)
+async def test_cancel_on_shutdown(
+    hass: HomeAssistant, cancel_on_shutdown: bool, expected_calls: int
+) -> None:
+    """Test a pending call is only dropped on Home Assistant stop if requested."""
+    function = AsyncMock()
+    debouncer = debounce.Debouncer(
+        hass,
+        _LOGGER,
+        cooldown=0.35,
+        immediate=False,
+        function=function,
+        cancel_on_shutdown=cancel_on_shutdown,
+    )
+
+    await debouncer.async_call()
+    assert debouncer._timer_task is not None
+
+    await hass.async_stop()
+
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=1))
+    await hass.async_block_till_done()
+    assert function.call_count == expected_calls
+
+    debouncer.async_shutdown()
+
+
+async def test_call_after_cancelled_on_shutdown(hass: HomeAssistant) -> None:
+    """Test a call after the cooldown timer was cancelled on shutdown is made."""
+    function = AsyncMock()
+    debouncer = debounce.Debouncer(
+        hass,
+        _LOGGER,
+        cooldown=0.35,
+        immediate=False,
+        function=function,
+        cancel_on_shutdown=True,
+    )
+
+    await debouncer.async_call()
+    hass._cancel_cancellable_timers()
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=1))
+    await hass.async_block_till_done()
+    assert function.call_count == 0
+
+    await debouncer.async_call()
+    assert debouncer._timer_task is not None
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=2))
+    await hass.async_block_till_done()
+    assert function.call_count == 1
+
+    debouncer.async_shutdown()
+
+
+async def test_shutdown_releases_timer_job(hass: HomeAssistant) -> None:
+    """Test shutdown releases the job of a timer cancelled on shutdown."""
+    debouncer = debounce.Debouncer(
+        hass,
+        _LOGGER,
+        cooldown=0.35,
+        immediate=False,
+        function=AsyncMock(),
+        cancel_on_shutdown=True,
+    )
+
+    await debouncer.async_call()
+    assert debouncer._timer_job is not None
+
+    debouncer.async_shutdown()
+    assert debouncer._timer_job is None
