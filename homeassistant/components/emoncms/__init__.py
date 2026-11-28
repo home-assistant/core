@@ -4,7 +4,7 @@ from pyemoncms import EmoncmsClient
 
 from homeassistant.const import CONF_API_KEY, CONF_URL, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.issue_registry import (
     IssueSeverity,
@@ -31,6 +31,18 @@ def _migrate_unique_id(
             ent_reg.async_update_entity(
                 entity.entity_id, new_unique_id=f"{emoncms_unique_id}-{feed_id}"
             )
+    dev_reg = dr.async_get(hass)
+    prefix = f"{entry.entry_id}-"
+    for device in dr.async_entries_for_config_entry(dev_reg, entry.entry_id):
+        dev_reg.async_update_device(
+            device.id,
+            new_identifiers={
+                (domain, f"{emoncms_unique_id}-{identifier.removeprefix(prefix)}")
+                if domain == DOMAIN and identifier.startswith(prefix)
+                else (domain, identifier)
+                for domain, identifier in device.identifiers
+            },
+        )
     hass.config_entries.async_update_entry(
         entry,
         unique_id=emoncms_unique_id,
