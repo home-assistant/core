@@ -731,6 +731,79 @@ async def test_sensors_states(
 
 
 @pytest.mark.parametrize(
+    ("appliance", "status_keys", "door_state_entity_id", "expected_disabled_by"),
+    [
+        pytest.param(
+            ApplianceType.REFRIGERATOR,
+            [
+                StatusKey.BSH_COMMON_DOOR_STATE,
+                StatusKey.REFRIGERATION_COMMON_DOOR_REFRIGERATOR,
+            ],
+            "sensor.refrigerator_door",
+            er.RegistryEntryDisabler.INTEGRATION,
+            id="refrigerator_with_compartment_door",
+        ),
+        pytest.param(
+            ApplianceType.FRIDGE_FREEZER,
+            [
+                StatusKey.BSH_COMMON_DOOR_STATE,
+                StatusKey.REFRIGERATION_COMMON_DOOR_FREEZER,
+            ],
+            "sensor.fridgefreezer_door",
+            er.RegistryEntryDisabler.INTEGRATION,
+            id="fridge_freezer_with_compartment_door",
+        ),
+        pytest.param(
+            ApplianceType.REFRIGERATOR,
+            [StatusKey.BSH_COMMON_DOOR_STATE],
+            "sensor.refrigerator_door",
+            None,
+            id="refrigerator_without_compartment_door",
+        ),
+        pytest.param(
+            ApplianceType.DISHWASHER,
+            [
+                StatusKey.BSH_COMMON_DOOR_STATE,
+                StatusKey.REFRIGERATION_COMMON_DOOR_REFRIGERATOR,
+            ],
+            "sensor.dishwasher_door",
+            None,
+            id="not_a_refrigeration_appliance",
+        ),
+    ],
+    indirect=["appliance"],
+)
+async def test_door_state_sensor_with_compartment_doors(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    status_keys: list[StatusKey],
+    entity_registry: er.EntityRegistry,
+    door_state_entity_id: str,
+    expected_disabled_by: er.RegistryEntryDisabler | None,
+) -> None:
+    """Test the generic door sensor is disabled by default next to compartment doors."""
+    client.get_status = AsyncMock(
+        return_value=ArrayOfStatus(
+            [
+                Status(key=key, raw_key=key.value, value=BSH_DOOR_STATE_CLOSED)
+                for key in status_keys
+            ]
+        )
+    )
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    entry = entity_registry.async_get(door_state_entity_id)
+    assert entry
+    assert entry.disabled_by is expected_disabled_by
+    assert (hass.states.get(door_state_entity_id) is None) is (
+        expected_disabled_by is not None
+    )
+
+
+@pytest.mark.parametrize(
     (
         "appliance",
         "entity_id",
