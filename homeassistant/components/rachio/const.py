@@ -95,6 +95,12 @@ SIGNAL_RACHIO_SCHEDULE_UPDATE = f"{SIGNAL_RACHIO_UPDATE}_schedule"
 
 CONF_CLOUDHOOK_URL = "cloudhook_url"
 
+CONF_POLLING = "polling"
+CONF_POLL_ENABLED = "poll_enabled"
+
+# Rachio's documented daily limit, used if the API does not report one
+DEFAULT_API_DAILY_CALL_LIMIT = 3500
+
 # Webhook callbacks
 LISTEN_EVENT_TYPES = [
     "DEVICE_STATUS_EVENT",

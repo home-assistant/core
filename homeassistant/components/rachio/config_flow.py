@@ -9,9 +9,15 @@ import probatio
 from rachiopy import Rachio
 from requests.exceptions import ConnectTimeout
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigEntryState,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import section
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.service_info.zeroconf import (
     ATTR_PROPERTIES_ID,
@@ -20,11 +26,19 @@ from homeassistant.helpers.service_info.zeroconf import (
 
 from .const import (
     CONF_MANUAL_RUN_MINS,
+    CONF_POLL_ENABLED,
+    CONF_POLLING,
+    DEFAULT_API_DAILY_CALL_LIMIT,
     DEFAULT_MANUAL_RUN_MINS,
     DOMAIN,
     KEY_ID,
     KEY_STATUS,
     KEY_USERNAME,
+)
+from .coordinator import (
+    controller_calls_per_day,
+    hose_timer_calls_per_day,
+    min_poll_interval,
 )
 from .device import RachioConfigEntry
 
@@ -164,27 +178,62 @@ class RachioConfigFlow(ConfigFlow, domain=DOMAIN):
         return OptionsFlowHandler()
 
 
-class OptionsFlowHandler(OptionsFlow):
+class OptionsFlowHandler(OptionsFlowWithReload):
     """Handle a option flow for Rachio."""
 
     async def async_step_init(
-        self, user_input: dict[str, int] | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle options flow."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        data_schema = probatio.Schema(
-            {
-                probatio.Optional(
-                    CONF_MANUAL_RUN_MINS,
-                    default=self.config_entry.options.get(
-                        CONF_MANUAL_RUN_MINS, DEFAULT_MANUAL_RUN_MINS
-                    ),
-                ): int
+        if self.config_entry.state is ConfigEntryState.LOADED:
+            person = self.config_entry.runtime_data
+            controller_count = len(person.controllers)
+            base_count = len(person.base_stations)
+            rate_limit = person.rate_limit
+        else:
+            # Setup failed, which must not lock the user out of these options
+            controller_count, base_count = 1, 0
+            rate_limit = DEFAULT_API_DAILY_CALL_LIMIT
+
+        options = self.config_entry.options
+        schema: dict[Any, Any] = {
+            probatio.Optional(
+                CONF_MANUAL_RUN_MINS,
+                default=options.get(CONF_MANUAL_RUN_MINS, DEFAULT_MANUAL_RUN_MINS),
+            ): int
+        }
+        placeholders: dict[str, str] = {}
+        interval = min_poll_interval(controller_count, base_count, rate_limit)
+        if controller_count and interval:
+            schema[probatio.Required(CONF_POLLING)] = section(
+                probatio.Schema(
+                    {
+                        probatio.Optional(
+                            CONF_POLL_ENABLED,
+                            default=options.get(CONF_POLLING, {}).get(
+                                CONF_POLL_ENABLED, False
+                            ),
+                        ): bool
+                    }
+                ),
+                {"collapsed": False},
+            )
+            controller_calls = controller_calls_per_day(controller_count, interval)
+            placeholders = {
+                "interval": f"{interval:g}",
+                "controller_calls": f"{controller_calls:,}",
+                "total_calls": f"{controller_calls + hose_timer_calls_per_day(base_count):,}",
+                "daily_limit": f"{rate_limit:,}",
             }
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=probatio.Schema(schema),
+            description_placeholders=placeholders,
         )
-        return self.async_show_form(step_id="init", data_schema=data_schema)
 
 
 class CannotConnect(HomeAssistantError):
