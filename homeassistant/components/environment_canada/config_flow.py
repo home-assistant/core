@@ -229,6 +229,7 @@ class OptionsFlowHandler(OptionsFlowWithReload):
                     ),
                 }
             ),
+            last_step=False,
         )
 
     async def async_step_radar(
@@ -355,4 +356,6 @@ class OptionsFlowHandler(OptionsFlowWithReload):
             }
         )
 
-        return self.async_show_form(step_id="radar", data_schema=data_schema)
+        return self.async_show_form(
+            step_id="radar", data_schema=data_schema, last_step=True
+        )

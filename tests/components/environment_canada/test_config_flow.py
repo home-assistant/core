@@ -301,6 +301,7 @@ async def test_options_flow_form(hass: HomeAssistant, ec_data: dict[str, Any]) -
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
+    assert result["last_step"] is False
     assert {str(k) for k in result["data_schema"].schema} == {CONF_RADAR_LAYER}
 
 
@@ -352,6 +353,7 @@ async def test_options_flow_radar_step_fields(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "radar"
+    assert result["last_step"] is True
     data_schema = result["data_schema"]
     assert {str(k) for k in data_schema.schema} == {
         SECTION_MAP,
