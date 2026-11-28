@@ -10,7 +10,6 @@ from homeassistant.components.baf.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from . import MOCK_UUID, MockBAFDevice
 
@@ -34,7 +33,7 @@ async def test_config_entry_wrong_uuid(
     )
     already_migrated_config_entry.add_to_hass(hass)
     with _patch_device_init(DeviceUUIDMismatchError):
-        await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+        await hass.config_entries.async_setup(already_migrated_config_entry.entry_id)
         await hass.async_block_till_done()
     assert already_migrated_config_entry.state is ConfigEntryState.SETUP_RETRY
     assert (
