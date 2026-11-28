@@ -8,6 +8,7 @@ import pytest
 from pytest_homeassistant.common import CLIENT_ID, MockUser
 from pytest_homeassistant.typing import WebSocketGenerator
 
+from homeassistant.auth.models import Credentials
 from homeassistant.auth.providers import homeassistant as prov_ha
 from homeassistant.components.config import auth_provider_homeassistant as auth_ha
 from homeassistant.core import HomeAssistant
@@ -114,32 +115,142 @@ async def test_create_auth_user_already_credentials(
         await auth_provider.async_validate_login("test-user3", "test-pass")
 
 
+async def test_create_auth_link_fails(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    auth_provider: prov_ha.HassAuthProvider,
+) -> None:
+    """Test a password that can't be linked doesn't stay behind as a login."""
+    client = await hass_ws_client(hass)
+    user = MockUser().add_to_hass(hass)
+
+    with patch.object(
+        hass.auth, "async_link_user", side_effect=RuntimeError("Link failed")
+    ):
+        await client.send_json(
+            {
+                "id": 5,
+                "type": "config/auth_provider/homeassistant/create",
+                "user_id": user.id,
+                "username": "test-user2",
+                "password": "test-pass",
+            }
+        )
+        result = await client.receive_json()
+
+    assert not result["success"], result
+    assert user.credentials == []
+    with pytest.raises(prov_ha.InvalidAuth):
+        await auth_provider.async_validate_login("test-user2", "test-pass")
+
+
+async def test_create_auth_password_unusable_until_linked(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    auth_provider: prov_ha.HassAuthProvider,
+) -> None:
+    """Test the new password can't sign in before its credentials are linked."""
+    client = await hass_ws_client(hass)
+    user = MockUser().add_to_hass(hass)
+    link_user = hass.auth.async_link_user
+
+    async def link_after_trying_to_sign_in(
+        user: MockUser, credentials: Credentials
+    ) -> None:
+        with pytest.raises(prov_ha.InvalidAuth):
+            await auth_provider.async_validate_login("test-user2", "test-pass")
+        await link_user(user, credentials)
+
+    with patch.object(hass.auth, "async_link_user", link_after_trying_to_sign_in):
+        await client.send_json(
+            {
+                "id": 5,
+                "type": "config/auth_provider/homeassistant/create",
+                "user_id": user.id,
+                "username": "test-user2",
+                "password": "test-pass",
+            }
+        )
+        result = await client.receive_json()
+
+    assert result["success"], result
+    await auth_provider.async_validate_login("test-user2", "test-pass")
+
+
+async def test_create_auth_unlinks_when_the_password_isnt_saved(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    auth_provider: prov_ha.HassAuthProvider,
+) -> None:
+    """Test a password that can't be saved leaves nothing behind, so a retry works."""
+    client = await hass_ws_client(hass)
+    user = MockUser().add_to_hass(hass)
+    create = {
+        "type": "config/auth_provider/homeassistant/create",
+        "user_id": user.id,
+        "username": "test-user2",
+        "password": "test-pass",
+    }
+
+    # Every save fails, also the one that would remove the password again.
+    with patch.object(
+        prov_ha.Data, "async_save", side_effect=PermissionError("Storage denied")
+    ):
+        await client.send_json({"id": 5, **create})
+        result = await client.receive_json()
+
+    assert not result["success"], result
+    assert user.credentials == []
+    with pytest.raises(prov_ha.InvalidAuth):
+        await auth_provider.async_validate_login("test-user2", "test-pass")
+
+    await client.send_json({"id": 6, **create})
+    result = await client.receive_json()
+    assert result["success"], result
+    await auth_provider.async_validate_login("test-user2", "test-pass")
+
+
 async def test_create_auth_concurrent(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    auth_provider: prov_ha.HassAuthProvider,
 ) -> None:
     """Test concurrent creates for the same user attach only one credential."""
     client = await hass_ws_client(hass)
     user = MockUser().add_to_hass(hass)
+    stored: list[str] = []
+    add_hashed_auth = auth_provider.async_add_hashed_auth
 
-    for msg_id, username in ((5, "test-user2"), (6, "test-user3")):
-        await client.send_json(
-            {
-                "id": msg_id,
-                "type": "config/auth_provider/homeassistant/create",
-                "user_id": user.id,
-                "username": username,
-                "password": "test-pass",
-            }
-        )
+    async def record_add_hashed_auth(username: str, hashed_password: bytes) -> None:
+        stored.append(username)
+        await add_hashed_auth(username, hashed_password)
 
-    results = {
-        result["id"]: result
-        for result in (await client.receive_json(), await client.receive_json())
-    }
-    assert results[5]["success"], results[5]
-    assert not results[6]["success"], results[6]
-    assert results[6]["error"]["code"] == "credentials_exist"
+    with patch.object(auth_provider, "async_add_hashed_auth", record_add_hashed_auth):
+        for msg_id, username in ((5, "test-user2"), (6, "test-user3")):
+            await client.send_json(
+                {
+                    "id": msg_id,
+                    "type": "config/auth_provider/homeassistant/create",
+                    "user_id": user.id,
+                    "username": username,
+                    "password": "test-pass",
+                }
+            )
+
+        results = {
+            result["id"]: result
+            for result in (await client.receive_json(), await client.receive_json())
+        }
+    # Either request can win, depending on which password is hashed first.
+    assert sorted(result["success"] for result in results.values()) == [False, True]
+    failed = next(result for result in results.values() if not result["success"])
+    assert failed["error"]["code"] == "credentials_exist"
     assert len(user.credentials) == 1
+    (left_out,) = {"test-user2", "test-user3"} - {user.credentials[0].data["username"]}
+    # The password that lost was never stored, so it couldn't log in meanwhile.
+    assert stored == [user.credentials[0].data["username"]]
+    with pytest.raises(prov_ha.InvalidAuth):
+        await auth_provider.async_validate_login(left_out, "test-pass")
 
 
 async def test_create_auth_owner_not_owner(
