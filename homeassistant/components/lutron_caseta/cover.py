@@ -4,12 +4,11 @@ from enum import Enum
 from typing import Any, override
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
-    ATTR_TILT_POSITION,
     DOMAIN as COVER_DOMAIN,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
+    CoverServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -107,7 +106,9 @@ class LutronCasetaShade(LutronCasetaUpdatableEntity, CoverEntity):
     @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the shade to a specific position."""
-        await self._smartbridge.set_value(self.device_id, kwargs[ATTR_POSITION])
+        await self._smartbridge.set_value(
+            self.device_id, kwargs[CoverServiceArgument.POSITION]
+        )
 
 
 class LutronCasetaTiltOnlyBlind(LutronCasetaUpdatableEntity, CoverEntity):
@@ -152,7 +153,9 @@ class LutronCasetaTiltOnlyBlind(LutronCasetaUpdatableEntity, CoverEntity):
     @override
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the blind to a specific tilt."""
-        await self._smartbridge.set_tilt(self.device_id, kwargs[ATTR_TILT_POSITION])
+        await self._smartbridge.set_tilt(
+            self.device_id, kwargs[CoverServiceArgument.TILT_POSITION]
+        )
 
 
 class LutronCasetaOpenCloseStopCover(LutronCasetaUpdatableEntity, CoverEntity):

@@ -10,15 +10,11 @@ from pylutron_caseta.color_value import (
 )
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP_KELVIN,
-    ATTR_HS_COLOR,
-    ATTR_TRANSITION,
-    ATTR_WHITE,
     DOMAIN as LIGHT_DOMAIN,
     ColorMode,
     LightEntity,
     LightEntityFeature,
+    LightServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -165,8 +161,10 @@ class LutronCasetaLight(LutronCasetaUpdatableEntity, LightEntity):
         self, brightness: int | None, color_value: LutronColorMode | None, **kwargs: Any
     ) -> None:
         args: dict[str, Any] = {}
-        if ATTR_TRANSITION in kwargs:
-            args["fade_time"] = timedelta(seconds=kwargs[ATTR_TRANSITION])
+        if LightServiceArgument.TRANSITION in kwargs:
+            args["fade_time"] = timedelta(
+                seconds=kwargs[LightServiceArgument.TRANSITION]
+            )
 
         if brightness is not None:
             brightness = to_lutron_level(brightness)
@@ -178,9 +176,9 @@ class LutronCasetaLight(LutronCasetaUpdatableEntity, LightEntity):
     async def _async_set_warm_dim(self, brightness: int | None, **kwargs: Any) -> None:
         """Set the light to warm dim mode."""
         set_warm_dim_kwargs: dict[str, Any] = {}
-        if ATTR_TRANSITION in kwargs:
+        if LightServiceArgument.TRANSITION in kwargs:
             set_warm_dim_kwargs["fade_time"] = timedelta(
-                seconds=kwargs[ATTR_TRANSITION]
+                seconds=kwargs[LightServiceArgument.TRANSITION]
             )
 
         if brightness is not None:
@@ -194,7 +192,7 @@ class LutronCasetaLight(LutronCasetaUpdatableEntity, LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         # first check for "white mode" (WarmDim)
-        if (white_color := kwargs.get(ATTR_WHITE)) is not None:
+        if (white_color := kwargs.get(LightServiceArgument.WHITE)) is not None:
             # Only remember non-zero levels (see brightness handling below)
             if white_color:
                 self._prev_brightness = white_color
@@ -203,8 +201,12 @@ class LutronCasetaLight(LutronCasetaUpdatableEntity, LightEntity):
 
         # Parse the color first, so a color-only call can leave brightness alone
         color: LutronColorMode | None = None
-        hs_color: tuple[float, float] | None = kwargs.pop(ATTR_HS_COLOR, None)
-        kelvin_color: int | None = kwargs.pop(ATTR_COLOR_TEMP_KELVIN, None)
+        hs_color: tuple[float, float] | None = kwargs.pop(
+            LightServiceArgument.HS_COLOR, None
+        )
+        kelvin_color: int | None = kwargs.pop(
+            LightServiceArgument.COLOR_TEMP_KELVIN, None
+        )
 
         if hs_color is not None:
             color = FullColorValue(hs_color[0], hs_color[1])
@@ -212,8 +214,8 @@ class LutronCasetaLight(LutronCasetaUpdatableEntity, LightEntity):
             color = WarmCoolColorValue(kelvin_color)
 
         brightness: int | None
-        if ATTR_BRIGHTNESS in kwargs:
-            brightness = kwargs.pop(ATTR_BRIGHTNESS)
+        if LightServiceArgument.BRIGHTNESS in kwargs:
+            brightness = kwargs.pop(LightServiceArgument.BRIGHTNESS)
             # Only remember non-zero levels, so a later turn-on without an
             # explicit brightness never restores the light to "off"
             if brightness:
