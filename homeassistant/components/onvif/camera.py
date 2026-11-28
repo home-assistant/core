@@ -3,6 +3,7 @@
 import asyncio
 from typing import override
 
+from aiohttp import web
 from haffmpeg.camera import CameraMjpeg
 from onvif.exceptions import ONVIFError
 from yarl import URL
@@ -25,6 +26,7 @@ from .const import CONF_SNAPSHOT_AUTH, LOGGER
 from .device import ONVIFConfigEntry, ONVIFDevice
 from .entity import ONVIFBaseEntity
 from .models import Profile
+from .util import build_profile_unique_keys
 
 
 async def async_setup_entry(
@@ -34,8 +36,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up the ONVIF camera video stream."""
     device = config_entry.runtime_data
+    unique_keys = build_profile_unique_keys(device.profiles)
     async_add_entities(
-        [ONVIFCameraEntity(device, profile) for profile in device.profiles]
+        [
+            ONVIFCameraEntity(device, profile, unique_keys[profile.token])
+            for profile in device.profiles
+        ]
     )
 
 
@@ -44,7 +50,7 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
 
     _attr_supported_features = CameraEntityFeature.STREAM
 
-    def __init__(self, device: ONVIFDevice, profile: Profile) -> None:
+    def __init__(self, device: ONVIFDevice, profile: Profile, unique_key: str) -> None:
         """Initialize ONVIF camera entity."""
         ONVIFBaseEntity.__init__(self, device)
         Camera.__init__(self)
@@ -64,7 +70,7 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
         self._attr_entity_registry_enabled_default = (
             device.max_resolution == profile.video.resolution.width
         )
-        self._attr_unique_id = f"{self.mac_or_serial}#{profile.token}"
+        self._attr_unique_id = f"{self.mac_or_serial}#{unique_key}"
         self._attr_name = f"{device.name} {profile.name}"
 
     @property
@@ -74,7 +80,7 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
         return bool(self.stream and self.stream.dynamic_stream_settings.preload_stream)
 
     @override
-    async def stream_source(self):
+    async def stream_source(self) -> str | None:
         """Return the stream source."""
         return await self._async_get_stream_uri()
 
@@ -113,7 +119,9 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
         )
 
     @override
-    async def handle_async_mjpeg_stream(self, request):
+    async def handle_async_mjpeg_stream(
+        self, request: web.Request
+    ) -> web.StreamResponse | None:
         """Generate an HTTP MJPEG stream from the camera."""
         LOGGER.debug("Handling mjpeg stream from camera '%s'", self.device.name)
 
