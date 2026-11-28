@@ -141,7 +141,7 @@ class LaCrosseSensor(SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         self.hass = hass
-        self.entity_id = async_generate_entity_id(
+        self.entity_id = async_generate_entity_id(  # pylint: disable=home-assistant-entity-sets-entity-id
             ENTITY_ID_FORMAT, device_id, hass=hass
         )
         self._config = config

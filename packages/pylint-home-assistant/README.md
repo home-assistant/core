@@ -180,6 +180,7 @@ Every check has a code following the
 | `W7455` | [`home-assistant-coordinator-entity-should-poll`](#w7455-home-assistant-coordinator-entity-should-poll) | `_attr_should_poll` has no effect on a `CoordinatorEntity` |
 | `W7457` | [`home-assistant-flow-call-in-try`](#w7457-home-assistant-flow-call-in-try) | Flow creates an entry, shows a form, handles the unique ID or moves on to another step inside a `try` block |
 | `W7460` | [`home-assistant-runtime-data-untyped-config-entry`](#w7460-home-assistant-runtime-data-untyped-config-entry) | Config entry that sets `runtime_data` should use a typed config entry instead of `ConfigEntry` |
+| `W7461` | [`home-assistant-entity-sets-entity-id`](#w7461-home-assistant-entity-sets-entity-id) | Entity should not set its own `entity_id` |
 | `W7463` | [`home-assistant-callback-override-missing-decorator`](#w7463-home-assistant-callback-override-missing-decorator) | Override of a `@callback` method should be decorated with `@callback` |
 
 ## `home_assistant_logger` checker
@@ -1034,6 +1035,32 @@ the same as for `W7425`.
 
 As for `W7425`, the rule targets new unique ids: existing unique ids in
 this format should be kept, with the check disabled on that line.
+
+
+## `home_assistant_entity_sets_entity_id` checker
+
+Checks that entities don't set their own entity ID.
+
+### `W7461`: `home-assistant-entity-sets-entity-id`
+
+Home Assistant generates the entity ID from the entity name when the entity is
+added, and users can change it in the entity registry. An entity should not
+set `entity_id` itself, either in its class body or through
+`self.entity_id`:
+
+```python
+class MySensor(SensorEntity):
+    entity_id = "sensor.my_sensor"  # flagged
+
+    def __init__(self, key: str) -> None:
+        self.entity_id = f"sensor.{key}"  # flagged
+```
+
+Give the entity a name (or a `translation_key`) and let Home Assistant
+generate the entity ID instead.
+
+Internal integrations (`quality_scale: internal` in `manifest.json`) are not
+checked.
 
 
 ## `home_assistant_entity_description_defaults` checker

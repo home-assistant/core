@@ -104,7 +104,7 @@ class TelnetSwitch(SwitchEntity):
         timeout: float,
     ) -> None:
         """Initialize the switch."""
-        self.entity_id = ENTITY_ID_FORMAT.format(object_id)
+        self.entity_id = ENTITY_ID_FORMAT.format(object_id)  # pylint: disable=home-assistant-entity-sets-entity-id
         self._resource = resource
         self._port = port
         self._attr_name = friendly_name

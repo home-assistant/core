@@ -353,7 +353,7 @@ class PS4Device(MediaPlayerEntity):
                 self._entry_id
             ):
                 self._attr_unique_id = entry.unique_id
-                self.entity_id = entry.entity_id
+                self.entity_id = entry.entity_id  # pylint: disable=home-assistant-entity-sets-entity-id
                 break
             for device in dr.async_entries_for_config_entry(d_registry, self._entry_id):
                 # Rebuilt from the existing device entry, which already carries
