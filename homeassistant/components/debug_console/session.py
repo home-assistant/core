@@ -1,8 +1,9 @@
-"""Sessions of the Debug console, one per user and browser tab."""
+"""Python namespaces and lifetimes for browser and agent console sessions."""
 
 import asyncio
 import builtins
-from collections.abc import Iterator
+from collections.abc import AsyncIterator, Iterator
+from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from datetime import datetime
 from functools import partial
@@ -12,6 +13,7 @@ from typing import Any
 
 from homeassistant.components.websocket_api import ActiveConnection
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util.hass_dict import HassKey
 
@@ -46,6 +48,7 @@ class ConsoleSession:
     connections: set[ActiveConnection] = field(default_factory=set)
     executions: set[asyncio.Task[Any]] = field(default_factory=set)
     cancel_expiry: CALLBACK_TYPE | None = None
+    active_requests: int = 0
 
     def track(self, value: Any) -> str:
         """Keep a reference to an object, so the frontend can inspect it later."""
@@ -102,10 +105,20 @@ class ConsoleSession:
             execution.cancel()
 
 
-type ConsoleSessions = dict[tuple[str, str], ConsoleSession]
+class SessionNotFoundError(HomeAssistantError):
+    """An MCP session does not exist for this user and credential."""
+
+
+type ConsoleSessions[_Key: tuple[str, ...]] = dict[_Key, ConsoleSession]
 
 # Only there while the console is enabled.
-DATA_SESSIONS: HassKey[ConsoleSessions] = HassKey(DOMAIN)
+DATA_SESSIONS: HassKey[ConsoleSessions[tuple[str, str]]] = HassKey(DOMAIN)
+DATA_MCP_SESSIONS: HassKey[ConsoleSessions[tuple[str, str, str]]] = HassKey(
+    f"{DOMAIN}_mcp_sessions"
+)
+DATA_LLM_SESSIONS: HassKey[ConsoleSessions[tuple[str, str, str, str]]] = HassKey(
+    f"{DOMAIN}_llm_sessions"
+)
 
 
 @callback
@@ -118,7 +131,97 @@ def async_get_session(
     """
     sessions = hass.data[DATA_SESSIONS]
     key = (connection.user.id, session_id)
+    session = _async_get_session(hass, sessions, key, session_id)
 
+    if connection not in session.connections:
+        session.connections.add(connection)
+        connection.subscriptions[session.subscription_key] = partial(
+            _async_release_session, hass, sessions, key, session, connection
+        )
+
+    return session
+
+
+@asynccontextmanager
+async def async_mcp_session(
+    hass: HomeAssistant,
+    user_id: str,
+    credential_id: str,
+    session_id: str | None = None,
+) -> AsyncIterator[ConsoleSession]:
+    """Create an MCP session or resume a handle owned by this credential."""
+    sessions = hass.data[DATA_MCP_SESSIONS]
+    if session_id is None:
+        session_id = secrets.token_urlsafe(24)
+        key = (user_id, credential_id, session_id)
+    else:
+        key = (user_id, credential_id, session_id)
+        if key not in sessions:
+            raise SessionNotFoundError
+
+    session = _async_get_session(hass, sessions, key, session_id)
+    async with _async_use_session(hass, sessions, key, session):
+        yield session
+
+
+@asynccontextmanager
+async def async_llm_session(
+    hass: HomeAssistant,
+    user_id: str,
+    platform: str,
+    agent_id: str | None,
+    conversation_id: str,
+) -> AsyncIterator[ConsoleSession]:
+    """Keep a local agent's Python namespace isolated to its conversation."""
+    sessions = hass.data[DATA_LLM_SESSIONS]
+    key = (user_id, platform, agent_id or "", conversation_id)
+    session = _async_get_session(hass, sessions, key, conversation_id)
+    async with _async_use_session(hass, sessions, key, session):
+        yield session
+
+
+@asynccontextmanager
+async def _async_use_session[_Key: tuple[str, ...]](
+    hass: HomeAssistant,
+    sessions: ConsoleSessions[_Key],
+    key: _Key,
+    session: ConsoleSession,
+) -> AsyncIterator[None]:
+    """Keep an agent session alive until its last active request completes."""
+    session.active_requests += 1
+    try:
+        yield
+    finally:
+        session.active_requests -= 1
+        if not session.active_requests and sessions.get(key) is session:
+            _async_schedule_expiry(hass, sessions, key, session)
+
+
+@callback
+def async_close_agent_sessions(hass: HomeAssistant, user_id: str) -> None:
+    """Close all agent sessions belonging to a user."""
+    _async_close_user_sessions(hass.data[DATA_MCP_SESSIONS], user_id)
+    _async_close_user_sessions(hass.data[DATA_LLM_SESSIONS], user_id)
+
+
+@callback
+def _async_close_user_sessions[_Key: tuple[str, ...]](
+    sessions: ConsoleSessions[_Key], user_id: str
+) -> None:
+    """Remove a user's sessions before cancelling their running code."""
+    for key in list(sessions):
+        if key[0] == user_id:
+            sessions.pop(key).async_close()
+
+
+@callback
+def _async_get_session[_Key: tuple[str, ...]](
+    hass: HomeAssistant,
+    sessions: ConsoleSessions[_Key],
+    key: _Key,
+    session_id: str,
+) -> ConsoleSession:
+    """Return a session with a live namespace and no pending expiry."""
     if (session := sessions.get(key)) is None:
         session = sessions[key] = ConsoleSession(
             session_id=session_id,
@@ -134,12 +237,6 @@ def async_get_session(
         session.cancel_expiry()
         session.cancel_expiry = None
 
-    if connection not in session.connections:
-        session.connections.add(connection)
-        connection.subscriptions[session.subscription_key] = partial(
-            _async_release_session, hass, sessions, key, session, connection
-        )
-
     return session
 
 
@@ -153,7 +250,9 @@ def async_stop_executions(
             execution.cancel()
 
 
-async def async_close_sessions(sessions: ConsoleSessions) -> None:
+async def async_close_sessions[_Key: tuple[str, ...]](
+    sessions: ConsoleSessions[_Key],
+) -> None:
     """Close all sessions, and give code they still run a moment to clean up."""
     executions = [
         execution for session in sessions.values() for execution in session.executions
@@ -171,7 +270,7 @@ async def async_close_sessions(sessions: ConsoleSessions) -> None:
 @callback
 def _async_release_session(
     hass: HomeAssistant,
-    sessions: ConsoleSessions,
+    sessions: ConsoleSessions[tuple[str, str]],
     key: tuple[str, str],
     session: ConsoleSession,
     connection: ActiveConnection,
@@ -184,6 +283,18 @@ def _async_release_session(
     session.connections.discard(connection)
     if session.connections:
         return
+
+    _async_schedule_expiry(hass, sessions, key, session)
+
+
+@callback
+def _async_schedule_expiry[_Key: tuple[str, ...]](
+    hass: HomeAssistant,
+    sessions: ConsoleSessions[_Key],
+    key: _Key,
+    session: ConsoleSession,
+) -> None:
+    """Expire an idle session after the reconnect timeout."""
 
     @callback
     def _async_expire(_now: datetime) -> None:

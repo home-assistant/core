@@ -9,14 +9,16 @@ import logging
 from typing import Any
 
 from homeassistant.auth import EVENT_USER_REMOVED
+from homeassistant.auth.models import User
 from homeassistant.components.websocket_api import ActiveConnection
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Context, Event, HomeAssistant, callback
 from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
 from homeassistant.util.hass_dict import HassKey
 
 from .const import CONF_WARNING_ACCEPTED, DOMAIN, WARNING_VERSION
 from .inspection import class_name
+from .session import async_close_agent_sessions
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,6 +62,7 @@ async def async_setup_safeguards(hass: HomeAssistant) -> None:
         await acceptances.async_save()
 
     async def _async_forget_removed_user(event: Event) -> None:
+        async_close_agent_sessions(hass, event.data["user_id"])
         if acceptances.accepted.pop(event.data["user_id"], None) is not None:
             await acceptances.async_save()
 
@@ -81,6 +84,21 @@ async def async_accept_warning(hass: HomeAssistant, user_id: str) -> None:
         "accepted_at": dt_util.utcnow().isoformat(),
     }
     await acceptances.async_save()
+
+
+@callback
+def async_log_llm_execution(
+    user: User, context: Context, platform: str, code: str
+) -> None:
+    """Log Python executed by an agent with the authenticated user and request."""
+    _LOGGER.warning(
+        "%s (user %s, context %s) ran code in the debug console via %s:\n%s",
+        user.name,
+        user.id,
+        context.id,
+        platform,
+        code,
+    )
 
 
 @callback
