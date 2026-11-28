@@ -1,5 +1,6 @@
 """Tests for the Electra Smart climate entity."""
 
+from collections.abc import Callable
 from unittest.mock import AsyncMock, Mock, patch
 
 from electrasmart.api import ElectraApiError
@@ -21,6 +22,7 @@ from homeassistant.components.climate import (
     ClimateServiceArgument,
     HVACMode,
 )
+from homeassistant.components.electrasmart.climate import ATTR_LAST_MODE
 from homeassistant.components.electrasmart.const import (
     PRESET_NONE,
     PRESET_SHABAT,
@@ -599,3 +601,127 @@ async def test_failed_updates_are_counted_until_the_next_success(
     await async_advance_to_next_poll(hass, freezer)
 
     assert "try #1 since last success" in caplog.text
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_last_mode_is_exposed_while_the_unit_is_off(hass: HomeAssistant) -> None:
+    """The mode the unit will turn back on to is visible next to hvac_mode."""
+    state = hass.states.get(ENTITY_ID)
+
+    assert state.state == HVACMode.OFF
+    assert state.attributes[ATTR_LAST_MODE] == HVACMode.COOL
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_last_mode_is_omitted_when_no_mode_was_seen(
+    hass: HomeAssistant, mock_device: Mock, freezer: FrozenDateTimeFactory
+) -> None:
+    """A unit that has never reported a mode shows no last_mode attribute."""
+    mock_device.get_last_mode = Mock(return_value=None)
+
+    await async_advance_to_next_poll(hass, freezer)
+
+    assert ATTR_LAST_MODE not in hass.states.get(ENTITY_ID).attributes
+
+
+def _follow_current_mode(device: Mock) -> None:
+    """Make the mocked getter follow the mode the library keeps on the device."""
+    device.get_last_mode = Mock(side_effect=lambda: device.current_mode)
+
+
+def _fresh_device(factory: Callable[[str, str], Mock], mode: str | None = None) -> Mock:
+    """Return a device object that has not been restored into yet."""
+    device = factory("a8032ab12345", "Living Room")
+    device.current_mode = mode
+    _follow_current_mode(device)
+    return device
+
+
+async def _async_reload(
+    hass: HomeAssistant, entry: MockConfigEntry, mock_api: Mock
+) -> None:
+    """Reload the entry with the API patched, the way setup does it."""
+    with patch(
+        "homeassistant.components.electrasmart.ElectraAPI", return_value=mock_api
+    ):
+        await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_last_mode_is_restored_across_a_reload(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_api: Mock,
+    mock_device: Mock,
+    device_factory: Callable[[str, str], Mock],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """The mode the entity last saw is restored when it comes back up."""
+    mock_device.current_mode = OperationMode.MODE_HEAT
+    _follow_current_mode(mock_device)
+
+    await async_advance_to_next_poll(hass, freezer)
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_LAST_MODE] == HVACMode.HEAT
+
+    # The unit is re-added with a device object that knows nothing yet.
+    fresh_device = _fresh_device(device_factory)
+    mock_api.devices = [fresh_device]
+
+    await _async_reload(hass, config_entry, mock_api)
+
+    assert fresh_device.current_mode == OperationMode.MODE_HEAT
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_LAST_MODE] == HVACMode.HEAT
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_a_reported_mode_is_not_overwritten_by_the_stored_one(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_api: Mock,
+    mock_device: Mock,
+    device_factory: Callable[[str, str], Mock],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A mode the unit reports is fresher than the one that was stored."""
+    mock_device.current_mode = OperationMode.MODE_HEAT
+    _follow_current_mode(mock_device)
+
+    await async_advance_to_next_poll(hass, freezer)
+
+    # The unit comes back reporting COOL, which is fresher than the stored HEAT.
+    fresh_device = _fresh_device(device_factory, OperationMode.MODE_COOL)
+    mock_api.devices = [fresh_device]
+
+    await _async_reload(hass, config_entry, mock_api)
+
+    assert fresh_device.current_mode == OperationMode.MODE_COOL
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_LAST_MODE] == HVACMode.COOL
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_last_mode_survives_a_restart_while_the_entity_is_unavailable(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_api: Mock,
+    mock_device: Mock,
+    device_factory: Callable[[str, str], Mock],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """An unavailable entity publishes no attributes, so the mode is stored aside."""
+    mock_device.current_mode = OperationMode.MODE_HEAT
+    _follow_current_mode(mock_device)
+
+    await async_advance_to_next_poll(hass, freezer)
+
+    # The unit stops reporting: HA drops its state attributes while unavailable.
+    mock_device.is_disconnected = Mock(return_value=True)
+    await async_advance_to_next_poll(hass, freezer)
+    assert ATTR_LAST_MODE not in hass.states.get(ENTITY_ID).attributes
+
+    fresh_device = _fresh_device(device_factory)
+    mock_api.devices = [fresh_device]
+
+    await _async_reload(hass, config_entry, mock_api)
+
+    assert fresh_device.current_mode == OperationMode.MODE_HEAT

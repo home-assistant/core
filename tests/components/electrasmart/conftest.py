@@ -1,5 +1,6 @@
 """Common fixtures for the Electra Smart tests."""
 
+from collections.abc import Callable
 from functools import partial
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -43,6 +44,7 @@ def _mock_device(mac: str, name: str) -> Mock:
         is_vertical_swing=Mock(return_value=False),
         get_fan_speed=Mock(return_value=OperationMode.FAN_SPEED_AUTO),
         get_mode=Mock(return_value=OperationMode.MODE_COOL),
+        get_last_mode=Mock(return_value=OperationMode.MODE_COOL),
         get_sensor_temperature=Mock(return_value=24),
         get_temperature=Mock(return_value=22),
         get_shabat_mode=Mock(return_value=False),
@@ -57,6 +59,9 @@ def _mock_device(mac: str, name: str) -> Mock:
     )
     # `name` is a reserved Mock kwarg, so it must be set after construction.
     device.name = name
+    # The mode a legacy unit was last running in, kept by the library on the
+    # device object; the entity restores it into here on setup.
+    device.current_mode = OperationMode.MODE_COOL
     # Bind the library's own accessor over the mocked telemetry, so a test that
     # changes or drops a measurement sees the getter follow it.
     device.get_measurement_temperature = Mock(
@@ -69,6 +74,12 @@ def _mock_device(mac: str, name: str) -> Mock:
 def mock_device_fixture() -> Mock:
     """Return a mocked Electra AC device."""
     return _mock_device("a8032ab12345", "Living Room")
+
+
+@pytest.fixture(name="device_factory")
+def device_factory_fixture() -> Callable[[str, str], Mock]:
+    """Return a factory for mocked Electra AC devices."""
+    return _mock_device
 
 
 @pytest.fixture(name="second_device")
