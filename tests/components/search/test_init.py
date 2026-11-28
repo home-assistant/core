@@ -6,6 +6,7 @@ from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.typing import WebSocketGenerator
 from pytest_unordered import unordered
 
+from homeassistant.components import automation, script
 from homeassistant.components.search import DOMAIN, ItemType, Searcher
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
@@ -1559,3 +1560,135 @@ async def test_search_related_include_disabled_entities_websocket(
 
     assert response["success"]
     assert response["result"][ItemType.ENTITY] == unordered(list(expected))
+
+
+@pytest.mark.parametrize(
+    ("item_type", "extractor_name"),
+    [
+        (ItemType.AUTOMATION, "entities_in_automation"),
+        (ItemType.SCRIPT, "entities_in_script"),
+    ],
+)
+async def test_search_related_resolves_entity_registry_ids(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+    monkeypatch: pytest.MonkeyPatch,
+    item_type: ItemType,
+    extractor_name: str,
+) -> None:
+    """Related search resolves registry IDs from automations and scripts."""
+    entity = entity_registry.async_get_or_create(
+        "light", "test", "search-reference", suggested_object_id="reference"
+    )
+    module = automation if item_type == ItemType.AUTOMATION else script
+    monkeypatch.setattr(
+        module,
+        extractor_name,
+        lambda *_: [entity.id, "light.missing", "0" * 32],
+    )
+
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    result = Searcher(hass, {}).async_search(item_type, f"{item_type}.test")
+    assert result[ItemType.ENTITY] == {entity.entity_id, "light.missing"}
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "search/related",
+            "item_type": item_type,
+            "item_id": f"{item_type}.test",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"][ItemType.ENTITY] == unordered(
+        [entity.entity_id, "light.missing"]
+    )
+
+
+@pytest.mark.parametrize("item_type", [ItemType.AUTOMATION, ItemType.SCRIPT])
+async def test_search_related_real_device_action_registry_ids(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+    item_type: ItemType,
+) -> None:
+    """Find entities from real automation and script device-action configs."""
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "search-registry-device-action")},
+    )
+    entity = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "search-registry-device-action",
+        suggested_object_id="registry_device_action",
+        config_entry=config_entry,
+        device_id=device.id,
+    )
+
+    # UI-created device actions store registry UUIDs rather than entity IDs.
+    device_action = {
+        "domain": "light",
+        "device_id": device.id,
+        "entity_id": entity.id,
+        "type": "turn_on",
+    }
+    assert entity.id != entity.entity_id
+
+    if item_type == ItemType.AUTOMATION:
+        component = "automation"
+        config = {
+            component: [
+                {
+                    "alias": "registry_device_action",
+                    "trigger": {
+                        "platform": "template",
+                        "value_template": "true",
+                    },
+                    "action": [device_action],
+                }
+            ]
+        }
+    else:
+        component = "script"
+        config = {
+            component: {
+                "registry_device_action": {"sequence": [device_action]},
+            }
+        }
+
+    assert await async_setup_component(hass, component, config)
+    await hass.async_block_till_done()
+    item_id = f"{component}.registry_device_action"
+    assert hass.states.get(item_id) is not None
+
+    # Read references from actual loaded configurations, not mocked extractors.
+    references = (
+        automation.entities_in_automation(hass, item_id)
+        if item_type == ItemType.AUTOMATION
+        else script.entities_in_script(hass, item_id)
+    )
+    assert entity.id in references or entity.entity_id in references
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    assert Searcher(hass, {}).async_search(item_type, item_id)[ItemType.ENTITY] == {
+        entity.entity_id
+    }
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "search/related",
+            "item_type": item_type,
+            "item_id": item_id,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"], response
+    assert response["result"][ItemType.ENTITY] == unordered([entity.entity_id])
