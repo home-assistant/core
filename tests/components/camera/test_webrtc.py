@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockUser
 from pytest_homeassistant.typing import WebSocketGenerator
 from webrtc_models import RTCIceCandidate, RTCIceCandidateInit, RTCIceServer
 
@@ -268,6 +269,35 @@ async def test_websocket_webrtc_offer(
     )
     msg = await client.receive_json()
     assert msg["success"]
+
+
+@pytest.mark.usefixtures("mock_test_webrtc_cameras")
+@pytest.mark.parametrize(
+    "message",
+    [
+        {"type": "camera/webrtc/offer", "offer": WEBRTC_OFFER},
+        {"type": "camera/webrtc/get_client_config"},
+        {
+            "type": "camera/webrtc/candidate",
+            "session_id": "session_id",
+            "candidate": {"candidate": "candidate"},
+        },
+    ],
+)
+async def test_websocket_webrtc_entity_permission(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_admin_user: MockUser,
+    message: dict[str, Any],
+) -> None:
+    """Test WebRTC websocket commands enforce per-entity read permission."""
+    hass_admin_user.groups = []
+    hass_admin_user.mock_policy({})
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({**message, "entity_id": "camera.async"})
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "unauthorized"
 
 
 @pytest.mark.filterwarnings(
