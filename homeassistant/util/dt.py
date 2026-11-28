@@ -4,12 +4,28 @@ import bisect
 from contextlib import suppress
 import datetime as dt
 from functools import lru_cache, partial
+from importlib import resources
 import re
 from typing import Any, Literal, overload
 import zoneinfo
 
 from aiozoneinfo import async_get_time_zone as _async_get_time_zone
 import ciso8601
+import tzdata.zoneinfo
+
+# Prepend the bundled Python tzdata package to zoneinfo.TZPATH and clear any
+# already-cached ZoneInfo instances so Home Assistant always resolves the
+# pinned tzdata definitions ahead of potentially stale OS /usr/share/zoneinfo
+# files (https://github.com/home-assistant/core/issues/180953,
+# https://github.com/home-assistant/core/issues/190078).
+TZDATA_ZONEINFO_DIR = str(resources.files(tzdata.zoneinfo))
+zoneinfo.reset_tzpath(
+    (
+        TZDATA_ZONEINFO_DIR,
+        *(path for path in zoneinfo.TZPATH if path != TZDATA_ZONEINFO_DIR),
+    )
+)
+zoneinfo.ZoneInfo.clear_cache()
 
 DATE_STR_FORMAT = "%Y-%m-%d"
 UTC = dt.UTC

@@ -2,6 +2,8 @@
 # pylint: disable=home-assistant-enforce-utcnow
 
 from datetime import UTC, datetime, time, timedelta, timezone
+from pathlib import Path
+import zoneinfo
 
 import pytest
 
@@ -9,6 +11,31 @@ from homeassistant.util import dt as dt_util
 
 DEFAULT_TIME_ZONE = dt_util.get_default_time_zone()
 TEST_TIME_ZONE = "America/Los_Angeles"
+TZDATA_ZI_FILENAME = "tzdata.zi"
+CANADIAN_DST_TRANSITION_BEFORE = (2026, 11, 1, 1, 30)
+CANADIAN_DST_TRANSITION_AFTER = (2026, 11, 1, 2, 30)
+CANADIAN_DST_WINTER_DATE = (2026, 12, 15, 12, 0)
+ZERO_TIMEDELTA = timedelta(0)
+UTC_MINUS_5 = timedelta(hours=-5)
+UTC_MINUS_6 = timedelta(hours=-6)
+UTC_MINUS_7 = timedelta(hours=-7)
+CANADIAN_PERMANENT_DST_TIME_ZONES = [
+    pytest.param(
+        "America/Vancouver", UTC_MINUS_7, "PDT", "MST", id="america_vancouver"
+    ),
+    pytest.param("Canada/Pacific", UTC_MINUS_7, "PDT", "MST", id="canada_pacific"),
+    pytest.param("America/Edmonton", UTC_MINUS_6, "MDT", "CST", id="america_edmonton"),
+    pytest.param("Canada/Mountain", UTC_MINUS_6, "MDT", "CST", id="canada_mountain"),
+    pytest.param(
+        "America/Yellowknife", UTC_MINUS_6, "MDT", "CST", id="america_yellowknife"
+    ),
+    pytest.param("America/Inuvik", UTC_MINUS_6, "MDT", "CST", id="america_inuvik"),
+    pytest.param("America/Winnipeg", UTC_MINUS_5, "CDT", "EST", id="america_winnipeg"),
+    pytest.param("Canada/Central", UTC_MINUS_5, "CDT", "EST", id="canada_central"),
+    pytest.param(
+        "America/Rainy_River", UTC_MINUS_5, "CDT", "EST", id="america_rainy_river"
+    ),
+]
 
 
 @pytest.fixture(autouse=True)
@@ -27,6 +54,46 @@ def test_get_time_zone_retrieves_valid_time_zone() -> None:
 async def test_async_get_time_zone_retrieves_valid_time_zone() -> None:
     """Test getting a time zone."""
     assert await dt_util.async_get_time_zone(TEST_TIME_ZONE) is not None
+
+
+def test_tzpath_prioritizes_tzdata() -> None:
+    """Test zoneinfo.TZPATH prioritizes the bundled Python tzdata package."""
+    assert zoneinfo.TZPATH[0] == dt_util.TZDATA_ZONEINFO_DIR
+    assert dt_util.TZDATA_ZONEINFO_DIR not in zoneinfo.TZPATH[1:]
+    assert Path(dt_util.TZDATA_ZONEINFO_DIR, TZDATA_ZI_FILENAME).is_file()
+
+
+@pytest.mark.parametrize(
+    ("time_zone_str", "expected_offset", "before_tzname", "after_tzname"),
+    CANADIAN_PERMANENT_DST_TIME_ZONES,
+)
+async def test_canadian_permanent_dst_time_zones(
+    time_zone_str: str,
+    expected_offset: timedelta,
+    before_tzname: str,
+    after_tzname: str,
+) -> None:
+    """Test 2026 Canadian permanent DST rules via sync and async helpers."""
+    sync_tz = dt_util.get_time_zone(time_zone_str)
+    async_tz = await dt_util.async_get_time_zone(time_zone_str)
+    assert sync_tz is not None
+    assert async_tz is not None
+    assert sync_tz is async_tz
+
+    before_transition = datetime(*CANADIAN_DST_TRANSITION_BEFORE, tzinfo=sync_tz)
+    assert before_transition.utcoffset() == expected_offset
+    assert before_transition.tzname() == before_tzname
+    assert before_transition.dst() > ZERO_TIMEDELTA
+
+    after_transition = datetime(*CANADIAN_DST_TRANSITION_AFTER, tzinfo=sync_tz)
+    assert after_transition.utcoffset() == expected_offset
+    assert after_transition.tzname() == after_tzname
+    assert after_transition.dst() == ZERO_TIMEDELTA
+
+    winter_dt = datetime(*CANADIAN_DST_WINTER_DATE, tzinfo=async_tz)
+    assert winter_dt.utcoffset() == expected_offset
+    assert winter_dt.tzname() == after_tzname
+    assert winter_dt.dst() == ZERO_TIMEDELTA
 
 
 GARBAGE_TIME_ZONES = [
