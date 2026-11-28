@@ -14,7 +14,15 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_PROTOCOL, DOMAIN, SIGNAL_RECEIVE_MESSAGE, SIGNAL_SEND_MESSAGE
+from .const import (
+    CONF_PROTOCOL,
+    DOMAIN,
+    PLATFORMS,
+    SIGNAL_DEVICE_ADDED,
+    SIGNAL_RECEIVE_MESSAGE,
+    SIGNAL_SEND_MESSAGE,
+    SUBENTRY_TYPE_DEVICE,
+)
 
 type EnOceanConfigEntry = ConfigEntry[Gateway]
 
@@ -66,15 +74,34 @@ async def async_setup_entry(
         raise ConfigEntryNotReady(f"Failed to start EnOcean gateway: {err}") from err
 
     config_entry.runtime_data = gateway
+    # Also stops the gateway if the rest of the setup fails
+    config_entry.async_on_unload(gateway.stop)
 
     config_entry.async_on_unload(
         async_dispatcher_connect(hass, SIGNAL_SEND_MESSAGE, gateway.send_esp3_packet)
     )
+    # Before the platforms are set up: a device added in the meantime is announced
+    config_entry.async_on_unload(
+        config_entry.add_update_listener(_async_update_listener)
+    )
+
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+
+
+async def _async_update_listener(
+    hass: HomeAssistant, config_entry: EnOceanConfigEntry
+) -> None:
+    """Tell the platforms about the devices of the entry.
+
+    A device that was added gets its entities without a reload, which would
+    close and open the serial port. The platforms skip the devices they know.
+    """
+    for subentry in config_entry.get_subentries_of_type(SUBENTRY_TYPE_DEVICE):
+        async_dispatcher_send(hass, SIGNAL_DEVICE_ADDED, subentry)
 
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: EnOceanConfigEntry
 ) -> None:
-    """Unload EnOcean config entry: stop the gateway."""
-
-    await config_entry.runtime_data.stop()
+    """Unload EnOcean config entry; the gateway is stopped when it is unloaded."""
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)
