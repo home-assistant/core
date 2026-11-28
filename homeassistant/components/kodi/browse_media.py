@@ -4,6 +4,8 @@ import asyncio
 import contextlib
 import logging
 
+from pykodi import ProtocolError
+
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
     BrowseError,
@@ -39,6 +41,8 @@ CHILD_TYPE_MEDIA_CLASS = {
 }
 
 _LOGGER = logging.getLogger(__name__)
+
+KODI_INVALID_PARAMS = -32602
 
 
 class UnknownMediaType(BrowseError):
@@ -332,13 +336,38 @@ async def get_media_info(media_library, search_id, search_type):
             title = "TV Shows"
 
     elif search_type == MediaType.SEASON:
-        tv_show_id, season_id = search_id.split("/", 1)
-        media = await media_library.get_episodes(
-            tv_show_id=int(tv_show_id),
-            season_id=int(season_id),
-            properties=["thumbnail", "tvshowid", "seasonid", "art"],
-        )
-        media = media.get("episodes")
+        if "/" in search_id:
+            tv_show_id, season_id = search_id.split("/", 1)
+        elif search_id.isdecimal():
+            try:
+                details = await media_library.get_season_details(
+                    season_id=int(search_id), properties=["tvshowid", "season"]
+                )
+            except ProtocolError as err:
+                if not err.args or err.args[0] != KODI_INVALID_PARAMS:
+                    raise
+                details = {}
+            season_details = details.get("seasondetails") or {}
+            tv_show_id = season_details.get("tvshowid")
+            season_id = season_details.get("season")
+        else:
+            tv_show_id = season_id = None
+
+        if not (str(tv_show_id).isdecimal() and str(season_id).isdecimal()):
+            return thumbnail, title, media
+
+        try:
+            episodes = await media_library.get_episodes(
+                tv_show_id=int(tv_show_id),
+                season_id=int(season_id),
+                properties=["thumbnail", "tvshowid", "seasonid", "art"],
+            )
+        except ProtocolError as err:
+            if not err.args or err.args[0] != KODI_INVALID_PARAMS:
+                raise
+            return thumbnail, title, media
+
+        media = episodes.get("episodes")
         if media:
             season = await media_library.get_season_details(
                 season_id=int(media[0]["seasonid"]), properties=properties
