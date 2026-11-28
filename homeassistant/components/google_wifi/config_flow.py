@@ -78,6 +78,7 @@ class GoogleWifiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = await _validate_host(self, host)
         if errors and errors["base"] != "cannot_connect":
             return self.async_abort(reason=errors["base"])
+        self._async_abort_entries_match({CONF_HOST: host})
 
         return self.async_create_entry(
             title=name,
