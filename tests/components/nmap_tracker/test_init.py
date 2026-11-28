@@ -16,7 +16,6 @@ from homeassistant.components.nmap_tracker.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_EXCLUDE, CONF_HOSTS
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 
 async def test_migrate_entry(hass: HomeAssistant) -> None:
@@ -40,7 +39,7 @@ async def test_migrate_entry(hass: HomeAssistant) -> None:
         "homeassistant.components.nmap_tracker.NmapDeviceScanner._async_start_scanner",
         return_value=None,
     ):
-        assert await async_setup_component(hass, DOMAIN, {})
+        assert await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
     # Check that it has a source_id now
@@ -83,7 +82,7 @@ async def test_migrate_entry_fails_on_downgrade(hass: HomeAssistant) -> None:
         "homeassistant.components.nmap_tracker.NmapDeviceScanner._async_start_scanner",
         return_value=None,
     ):
-        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
     # Check that entry is in migration error state
