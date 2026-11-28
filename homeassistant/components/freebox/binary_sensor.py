@@ -1,7 +1,11 @@
 """Support for Freebox devices (Freebox v6 and Freebox mini 4K)."""
 
+import asyncio
 import logging
 from typing import Any, override
+
+from aiohttp import ClientError
+from freebox_api.exceptions import AuthorizationError, HttpRequestError
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -72,6 +76,8 @@ class FreeboxHomeBinarySensor(FreeboxHomeEntity, BinarySensorEntity):
     """Representation of a Freebox binary sensor."""
 
     _endpoint_name = "trigger"
+    # The router update refreshes the state; homeassistant.update_entity reads it on request
+    _attr_should_poll = False
 
     def __init__(
         self,
@@ -87,14 +93,32 @@ class FreeboxHomeBinarySensor(FreeboxHomeEntity, BinarySensorEntity):
         self._attr_is_on = self._edit_state(
             self.get_value("signal", self._endpoint_name)
         )
+        # One read at a time, so a slow response cannot overwrite a newer state
+        self._read_lock = asyncio.Lock()
 
     @override
     async def async_update_signal(self) -> None:
-        """Update name & state."""
-        self._attr_is_on = self._edit_state(
-            await self.get_home_endpoint_value(self._command_id)
-        )
-        await FreeboxHomeEntity.async_update_signal(self)
+        """Update name & state once any running read is done."""
+        async with self._read_lock:
+            self._attr_is_on = self._edit_state(
+                await self.get_home_endpoint_value(self._command_id)
+            )
+            await FreeboxHomeEntity.async_update_signal(self)
+
+    async def async_update(self) -> None:
+        """Read the sensor on request (homeassistant.update_entity)."""
+        async with self._read_lock:
+            try:
+                value = await self.get_home_endpoint_value(self._command_id)
+            except (
+                AuthorizationError,
+                HttpRequestError,
+                ClientError,
+                TimeoutError,
+                RuntimeError,
+            ):
+                return  # Keep the last known state, the router update still applies
+            self._attr_is_on = self._edit_state(value)
 
     def _edit_state(self, state: bool | None) -> bool | None:
         """Edit state depending on endpoint name."""

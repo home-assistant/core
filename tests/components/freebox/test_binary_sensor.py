@@ -1,8 +1,11 @@
 """Tests for the Freebox binary sensors."""
 
+import asyncio
 from copy import deepcopy
+from typing import Any
 from unittest.mock import Mock
 
+from freebox_api.exceptions import AuthorizationError, HttpRequestError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import async_fire_time_changed
@@ -13,9 +16,10 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.components.freebox import SCAN_INTERVAL
 from homeassistant.components.freebox.const import DOMAIN
-from homeassistant.const import ATTR_DEVICE_CLASS
+from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.setup import async_setup_component
 
 from .common import setup_platform
 from .const import (
@@ -77,7 +81,8 @@ async def test_home(
     # Initial state
     assert hass.states.get("binary_sensor.detecteur").state == "on"
     assert hass.states.get("binary_sensor.detecteur_cover").state == "off"
-    assert hass.states.get("binary_sensor.ouverture_porte").state == "unknown"
+    # Each sensor is read once when added
+    assert hass.states.get("binary_sensor.ouverture_porte").state == "on"
     assert hass.states.get("binary_sensor.ouverture_porte_cover").state == "off"
 
     # Now simulate a changed status
@@ -94,6 +99,108 @@ async def test_home(
     assert hass.states.get("binary_sensor.detecteur_cover").state == "on"
     assert hass.states.get("binary_sensor.ouverture_porte").state == "off"
     assert hass.states.get("binary_sensor.ouverture_porte_cover").state == "on"
+
+
+async def _update_entity(hass: HomeAssistant, entity_id: str) -> None:
+    await hass.services.async_call(
+        "homeassistant", "update_entity", {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "initial_state"),
+    [
+        ("binary_sensor.detecteur", "on"),
+        ("binary_sensor.ouverture_porte", "on"),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_update_entity(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    router: Mock,
+    entity_id: str,
+    initial_state: str,
+) -> None:
+    """Test the motion and door sensors are read on request, and only then."""
+    await setup_platform(hass, BINARY_SENSOR_DOMAIN)
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert hass.states.get(entity_id).state == initial_state
+
+    data_home_get_values_changed = deepcopy(DATA_HOME_PIR_GET_VALUE)
+    data_home_get_values_changed["value"] = True
+    read = router().home.get_home_endpoint_value
+    read.return_value = data_home_get_values_changed
+    read.reset_mock()
+
+    read.return_value = DATA_HOME_PIR_GET_VALUE
+    await _update_entity(hass, entity_id)
+    assert read.call_count == 1
+    assert hass.states.get(entity_id).state == "on"
+    read.return_value = data_home_get_values_changed
+    await _update_entity(hass, entity_id)
+    assert hass.states.get(entity_id).state == "off"
+    endpoint = read.call_args.args
+
+    # No polling on top of the router update: this sensor is read once every 30 s
+    read.reset_mock()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert [call.args for call in read.call_args_list].count(endpoint) == 1
+
+    # A failed read keeps the last known state
+    for error in (HttpRequestError("failed"), AuthorizationError("failed")):
+        read.side_effect = error
+        await _update_entity(hass, entity_id)
+        assert hass.states.get(entity_id).state == "off"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_reads_do_not_overlap(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, router: Mock
+) -> None:
+    """Test a slow read on request blocks the router update of the same sensor."""
+    await setup_platform(hass, BINARY_SENSOR_DOMAIN)
+    assert await async_setup_component(hass, "homeassistant", {})
+
+    data_home_get_values_changed = deepcopy(DATA_HOME_PIR_GET_VALUE)
+    data_home_get_values_changed["value"] = True
+    release = asyncio.Event()
+    running = set()
+    overlapped = False
+
+    async def slow_read(*endpoint: int) -> dict[str, Any]:
+        nonlocal overlapped
+        overlapped |= endpoint in running
+        running.add(endpoint)
+        await release.wait()
+        running.discard(endpoint)
+        return data_home_get_values_changed
+
+    read = router().home.get_home_endpoint_value
+    read.reset_mock()
+    read.side_effect = slow_read
+
+    request = hass.async_create_task(_update_entity(hass, "binary_sensor.detecteur"))
+    for _ in range(10):
+        await asyncio.sleep(0)
+    assert read.call_count == 1
+    motion_endpoint = read.call_args.args
+
+    # The router update waits for the running read
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    for _ in range(10):
+        await asyncio.sleep(0)
+
+    release.set()
+    await request
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert not overlapped
+    assert [call.args for call in read.call_args_list].count(motion_endpoint) == 2
+    assert hass.states.get("binary_sensor.detecteur").state == "off"
 
 
 @pytest.mark.usefixtures("router")
