@@ -49,7 +49,9 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
+from homeassistant.core_config import DATA_CUSTOMIZE
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.entity_values import EntityValues
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -1994,11 +1996,11 @@ async def test_update_before_load(recorder_mock: Recorder, hass: HomeAssistant) 
         (
             # Fires last reported events
             [(10.0, A1, 2), (10.0, A1, 1), (10.0, A1, 1), (10.0, A1, 2), (10.0, A1, 1)],
-            ["unavailable", "10.0", "10.0", "10.0", "10.0", "10.0"],
+            ["unavailable", "10.0"],
         ),
         (  # Fires state change events
             [(10.0, A1, 2), (10.0, A2, 1), (10.0, A1, 1), (10.0, A2, 2), (10.0, A1, 1)],
-            ["unavailable", "10.0", "10.0", "10.0", "10.0", "10.0"],
+            ["unavailable", "10.0"],
         ),
     ],
 )
@@ -2058,6 +2060,88 @@ async def test_average_linear_unevenly_timed(
 
     await hass.async_block_till_done()
     assert [event.data["new_state"].state for event in events] == expected_states
+
+
+@pytest.mark.parametrize(
+    "customize",
+    [
+        pytest.param(None, id="plain"),
+        pytest.param({"icon": "mdi:thermometer"}, id="customized"),
+    ],
+)
+async def test_ratio_only_change_does_not_write_state(
+    hass: HomeAssistant, customize: dict[str, Any] | None
+) -> None:
+    """Test that a change of only the buffer and age ratios writes no new state.
+
+    The ratios move on almost every update, so writing them alone would add a
+    recorder row each time while the state stays the same. This also holds
+    when the sensor has YAML customizations.
+    """
+    if customize is not None:
+        hass.data[DATA_CUSTOMIZE] = EntityValues({"sensor.test": customize})
+    events: list[Event[EventStateChangedData]] = []
+
+    @callback
+    def _capture_event(event: Event) -> None:
+        events.append(event)
+
+    async_track_state_change_event(hass, "sensor.test", _capture_event)
+
+    current_time = dt_util.utcnow()
+    with freeze_time(current_time) as freezer:
+        assert await async_setup_component(
+            hass,
+            "sensor",
+            {
+                "sensor": [
+                    {
+                        "platform": "statistics",
+                        "name": "test",
+                        "entity_id": "sensor.test_monitored",
+                        "state_characteristic": "value_max",
+                        "sampling_size": 20,
+                        "max_age": {"seconds": 60},
+                    },
+                ]
+            },
+        )
+        await hass.async_block_till_done()
+
+        for value in (10.0, 10.0, 10.0, 5.0, 5.0):
+            hass.states.async_set(
+                "sensor.test_monitored",
+                str(value),
+                {ATTR_UNIT_OF_MEASUREMENT: DEGREE},
+                force_update=True,
+            )
+            await hass.async_block_till_done()
+            current_time += timedelta(seconds=5)
+            freezer.move_to(current_time)
+
+    # The buffer and age ratios changed on every sample, the state did not
+    assert [event.data["new_state"].state for event in events] == [
+        "unavailable",
+        "10.0",
+    ]
+    state = hass.states.get("sensor.test")
+    assert state is not None
+    assert state.attributes["buffer_usage_ratio"] == round(1 / 20, 2)
+
+    # A real state change writes the up to date ratios with it
+    with freeze_time(current_time):
+        hass.states.async_set(
+            "sensor.test_monitored",
+            "20.0",
+            {ATTR_UNIT_OF_MEASUREMENT: DEGREE},
+        )
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test")
+    assert state is not None
+    assert state.state == "20.0"
+    assert state.attributes["buffer_usage_ratio"] == round(6 / 20, 2)
+    assert state.attributes["age_coverage_ratio"] == round(25 / 60, 2)
 
 
 @pytest.mark.parametrize(
