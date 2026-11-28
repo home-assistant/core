@@ -1,0 +1,15 @@
+{
+  "entity": {
+    "sensor": {
+      "direct_consumption_rate": {
+        "default": "mdi:percent"
+      },
+      "self_consumption_rate": {
+        "default": "mdi:percent"
+      },
+      "self_sufficiency_rate": {
+        "default": "mdi:home-circle"
+      }
+    }
+  }
+}
