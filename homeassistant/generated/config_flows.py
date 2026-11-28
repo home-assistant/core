@@ -157,6 +157,7 @@ FLOWS = {
         "compit",
         "control4",
         "cookidoo",
+        "coolbot",
         "coolmaster",
         "cpuspeed",
         "croma_infrared",
