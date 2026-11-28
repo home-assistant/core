@@ -1,7 +1,9 @@
 """Tests for the iCloud to-do platform."""
 
+import asyncio
 from datetime import UTC, date, datetime
 import logging
+import threading
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -103,7 +105,20 @@ def mock_reminders(icloud_client: AsyncMock) -> MagicMock:
             _reminder("r2", "Bread", completed=True),
         ]
     )
+    service.create.return_value = _reminder("r3", "Eggs")
     return service
+
+
+async def _summaries(hass: HomeAssistant) -> list[str]:
+    """Return the summaries the to-do entity currently shows."""
+    result = await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.GET_ITEMS,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+        return_response=True,
+    )
+    return [item["summary"] for item in result[ENTITY_ID]["items"]]
 
 
 async def _setup(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
@@ -376,10 +391,187 @@ async def test_partial_delete_still_refreshes(
             {TargetKey.ENTITY_ID: ENTITY_ID, ATTR_ITEM: ["Milk", "Eggs"]},
             blocking=True,
         )
-    await hass.async_block_till_done()
+    # The refresh runs as a background task of the config entry.
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert reminders.delete.call_count == 2
     assert reminders.list_reminders.call_count > before
+
+
+async def test_change_does_not_wait_for_refresh(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reminders: MagicMock,
+) -> None:
+    """Test that a change returns before the list has refreshed.
+
+    Listing every reminder list can take tens of seconds on a large account,
+    and voice assistants hold their reply until the action returns.
+    """
+    await _setup(hass, config_entry)
+    coordinator = config_entry.runtime_data.reminders_coordinator
+    release = asyncio.Event()
+    refresh = AsyncMock(side_effect=release.wait)
+
+    with patch.object(coordinator, "async_request_refresh", refresh):
+        async with asyncio.timeout(1):
+            await hass.services.async_call(
+                TODO_DOMAIN,
+                TodoServices.ADD_ITEM,
+                {ATTR_ENTITY_ID: ENTITY_ID, ATTR_ITEM: "Eggs"},
+                blocking=True,
+            )
+
+        reminders.create.assert_called_once()
+        release.set()
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    refresh.assert_awaited_once()
+
+
+async def test_created_item_shown_before_refresh(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reminders: MagicMock,
+) -> None:
+    """Test that a new reminder is listed without waiting for the refresh."""
+    await _setup(hass, config_entry)
+    coordinator = config_entry.runtime_data.reminders_coordinator
+
+    with patch.object(coordinator, "async_request_refresh", AsyncMock()):
+        await hass.services.async_call(
+            TODO_DOMAIN,
+            TodoServices.ADD_ITEM,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_ITEM: "Eggs"},
+            blocking=True,
+        )
+
+        assert await _summaries(hass) == ["Milk", "Bread", "Eggs"]
+
+
+async def test_sequential_updates_keep_confirmed_values(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reminders: MagicMock,
+) -> None:
+    """Test that a second update before the refresh keeps the first one.
+
+    The to-do services fill fields an update leaves out from the item the
+    entity shows, so a stale item would write the old description back.
+    """
+    existing = _reminder("r1", "Milk")
+    reminders.get.return_value = existing
+    await _setup(hass, config_entry)
+    coordinator = config_entry.runtime_data.reminders_coordinator
+
+    with patch.object(coordinator, "async_request_refresh", AsyncMock()):
+        await hass.services.async_call(
+            TODO_DOMAIN,
+            TodoServices.UPDATE_ITEM,
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                ATTR_ITEM: "Milk",
+                ATTR_DESCRIPTION: "Two litres",
+            },
+            blocking=True,
+        )
+        await hass.services.async_call(
+            TODO_DOMAIN,
+            TodoServices.UPDATE_ITEM,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_ITEM: "r1", ATTR_STATUS: "completed"},
+            blocking=True,
+        )
+
+    assert existing.desc == "Two litres"
+    assert existing.completed is True
+    assert reminders.update.call_count == 2
+
+
+async def test_partial_delete_shown_before_refresh(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reminders: MagicMock,
+) -> None:
+    """Test that reminders deleted before a failure leave the list at once."""
+    reminders.list_reminders.return_value = MagicMock(
+        reminders=[_reminder("r1", "Milk"), _reminder("r2", "Eggs")]
+    )
+    reminders.get.side_effect = lambda uid: _reminder(uid, uid)
+    reminders.delete.side_effect = [None, RemindersApiError("boom")]
+    await _setup(hass, config_entry)
+    coordinator = config_entry.runtime_data.reminders_coordinator
+
+    with patch.object(coordinator, "async_request_refresh", AsyncMock()):
+        with pytest.raises(HomeAssistantError, match="Error updating reminders"):
+            await hass.services.async_call(
+                TODO_DOMAIN,
+                TodoServices.REMOVE_ITEM,
+                {ATTR_ENTITY_ID: ENTITY_ID, ATTR_ITEM: ["Milk", "Eggs"]},
+                blocking=True,
+            )
+
+        assert await _summaries(hass) == ["Eggs"]
+
+
+async def test_refresh_started_before_change_does_not_undo_it(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reminders: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a poll overlapping a write keeps it and fetches again.
+
+    The refresh the write requests is mocked out, as the debouncer drops it
+    when its timer ends while the poll still holds the lock.
+    """
+    await _setup(hass, config_entry)
+    coordinator = config_entry.runtime_data.reminders_coordinator
+
+    started = threading.Event()
+    release = threading.Event()
+    follow_up_started = threading.Event()
+    release_follow_up = threading.Event()
+    stale = MagicMock(reminders=[_reminder("r1", "Milk")])
+    fresh = MagicMock(
+        reminders=[
+            _reminder("r1", "Milk"),
+            _reminder("r3", "Eggs"),
+            _reminder("r4", "Tea"),
+        ]
+    )
+
+    def _slow_list_reminders(**kwargs: object) -> MagicMock:
+        if started.is_set():
+            follow_up_started.set()
+            release_follow_up.wait(5)
+            return fresh
+        started.set()
+        release.wait(5)
+        return stale
+
+    reminders.list_reminders.side_effect = _slow_list_reminders
+    freezer.tick(REMINDERS_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    assert await hass.async_add_executor_job(started.wait, 5)
+
+    with patch.object(coordinator, "async_request_refresh", AsyncMock()):
+        await hass.services.async_call(
+            TODO_DOMAIN,
+            TodoServices.ADD_ITEM,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_ITEM: "Eggs"},
+            blocking=True,
+        )
+        release.set()
+
+        # The follow-up fetch only starts once the overlapping poll is done,
+        # which kept the cache (with "Eggs") rather than its stale snapshot.
+        assert await hass.async_add_executor_job(follow_up_started.wait, 5)
+        assert await _summaries(hass) == ["Milk", "Bread", "Eggs"]
+
+        release_follow_up.set()
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        assert await _summaries(hass) == ["Milk", "Eggs", "Tea"]
 
 
 async def test_api_error_raises(
