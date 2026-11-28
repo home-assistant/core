@@ -1,0 +1,13 @@
+{
+  "domain": "marstek",
+  "name": "Marstek",
+  "categories": ["energy.solar_batteries"],
+  "codeowners": ["@MarstekEnergy"],
+  "config_flow": true,
+  "dependencies": ["network"],
+  "documentation": "https://www.home-assistant.io/integrations/marstek",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "quality_scale": "bronze",
+  "requirements": ["aiomarstek==0.1.9"]
+}
