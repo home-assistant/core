@@ -479,6 +479,8 @@ def _build_channel_suggestion(
         suggested_name=channel["name"] or device["name"],
         group_id=device_address,
         group_name=device["name"],
+        # projects parsed before xknxproject 3.11 have no `space_id`
+        space_id=device.get("space_id"),
         secondary_info=channel["name"],
         platform_options=list(suggestions),
         suggestions=suggestions,

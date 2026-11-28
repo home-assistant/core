@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components.knx.project import STORAGE_KEY as KNX_PROJECT_STORAGE_KEY
 from homeassistant.components.knx.storage.entity_suggestions import SUGGESTION_PROVIDERS
 from homeassistant.components.knx.storage.entity_suggestions.base import (
     SuggestionProvider,
@@ -17,7 +18,7 @@ from homeassistant.components.knx.storage.entity_suggestions.const import (
 )
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import area_registry as ar, entity_registry as er
 
 from . import KnxEntityGenerator, KnxSuggestionGetter
 from .conftest import KNXTestKit
@@ -31,6 +32,7 @@ def _suggestion(
     platform: Platform,
     address: str,
     group_id: str = "1.1.1",
+    space_id: str | None = None,
 ) -> ProviderSuggestion:
     """Build a suggestion as a provider would return it."""
     return ProviderSuggestion(
@@ -38,6 +40,7 @@ def _suggestion(
         suggested_name=f"Entity {suggestion_id}",
         group_id=group_id,
         group_name="Device",
+        space_id=space_id,
         secondary_info="Channel",
         platform_options=[platform.value],
         suggestions={
@@ -65,8 +68,10 @@ class _StubProvider(SuggestionProvider):
         """Return suggestions covering every filterable property."""
         return ProviderResult(
             suggestions=[
-                _suggestion("light", Platform.LIGHT, "1/2/3"),
-                _suggestion("cover", Platform.COVER, "1/2/4", group_id="1.1.2"),
+                _suggestion("light", Platform.LIGHT, "1/2/3", space_id="R-1"),
+                _suggestion(
+                    "cover", Platform.COVER, "1/2/4", group_id="1.1.2", space_id="B-1"
+                ),
                 _suggestion("configured", Platform.LIGHT, CONFIGURED_ADDRESS),
             ],
             hints={"state": "ok"},
@@ -118,6 +123,58 @@ async def test_ws_get_entity_suggestions(
     assert all(s["source"] == "stub" for s in result["suggestions"])
     # no entity uses these addresses yet
     assert all(not s["existing_entity_ids"] for s in result["suggestions"])
+    # without a project there is no building structure to take areas from
+    assert all(s["suggested_area"] is None for s in result["suggestions"])
+
+
+async def test_ws_get_entity_suggestions_areas(
+    knx: KNXTestKit,
+    get_entity_suggestions: KnxSuggestionGetter,
+    hass_storage: dict[str, Any],
+    area_registry: ar.AreaRegistry,
+) -> None:
+    """Test suggestions get the area of the space they are placed in."""
+    hass_storage[KNX_PROJECT_STORAGE_KEY] = {
+        "version": 1,
+        "data": {
+            "info": {
+                "xknxproject_version": "3.11.1",
+                "group_address_style": "ThreeLevel",
+            },
+            "group_addresses": {},
+            "devices": {},
+            "communication_objects": {},
+            "locations": {
+                "B-1": {
+                    "type": "Building",
+                    "identifier": "B-1",
+                    "name": "House",
+                    "spaces": {
+                        "R-1": {
+                            "type": "Room",
+                            "identifier": "R-1",
+                            "name": "Kitchen",
+                            "spaces": {},
+                        }
+                    },
+                }
+            },
+        },
+    }
+    kitchen = area_registry.async_create("Kitchen")
+    await knx.setup_integration()
+    with patch(
+        "homeassistant.components.knx.storage.entity_suggestions.SUGGESTION_PROVIDERS",
+        [_StubProvider()],
+    ):
+        result = await get_entity_suggestions()
+
+    assert {s["id"]: s["suggested_area"] for s in result["suggestions"]} == {
+        "stub_light": {"name": "Kitchen", "floor": None, "area_id": kitchen.id},
+        # a building is no area
+        "stub_cover": None,
+        "stub_configured": None,
+    }
 
 
 async def test_ws_get_entity_suggestions_existing_entities(

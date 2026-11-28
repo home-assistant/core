@@ -10,7 +10,6 @@ from homeassistant.components.knx.storage.entity_suggestions.functions import (
     _build_suggestions,
     _function_roles,
     _role_targets,
-    _space_names,
 )
 from homeassistant.const import Platform
 
@@ -480,57 +479,6 @@ def test_no_suggestion() -> None:
     assert _build_platform_suggestion(TEST_PROJECT, function) is None
 
 
-def test_space_names() -> None:
-    """Test repeated space names are told apart by the spaces containing them."""
-    locations = {
-        "P-1": _space(
-            "P-1",
-            "House",
-            {
-                "P-2": _space(
-                    "P-2",
-                    "Ground floor",
-                    {
-                        "P-3": _space("P-3", "Kitchen", {}),
-                        "P-4": _space("P-4", "Hall", {}),
-                    },
-                ),
-                "P-5": _space(
-                    "P-5",
-                    "First floor",
-                    {
-                        "P-6": _space("P-6", "Kitchen", {}),
-                        "P-7": _space("P-7", "Bath", {}),
-                    },
-                ),
-            },
-        ),
-        "P-8": _space(
-            "P-8",
-            "Annex",
-            {
-                "P-9": _space(
-                    "P-9", "Ground floor", {"P-10": _space("P-10", "Kitchen", {})}
-                ),
-                "P-11": _space("P-11", "Hall", {}),
-            },
-        ),
-    }
-    assert _space_names(locations) == {
-        "P-1": "House",
-        "P-2": "House / Ground floor",
-        "P-3": "House / Ground floor / Kitchen",
-        "P-4": "Ground floor / Hall",
-        "P-5": "First floor",
-        "P-6": "First floor / Kitchen",
-        "P-7": "Bath",
-        "P-8": "Annex",
-        "P-9": "Annex / Ground floor",
-        "P-10": "Annex / Ground floor / Kitchen",
-        "P-11": "Annex / Hall",
-    }
-
-
 def test_repeated_function_names() -> None:
     """Test names used by several functions are prefixed with their room name."""
     socket = ("4/0/1", "SwitchOnOff")
@@ -619,6 +567,12 @@ async def test_ws_get_entity_suggestions(
     # grouped by the room the function is in
     assert ceiling["group_id"] == "P-2"
     assert ceiling["group_name"] == "Kitchen"
+    assert ceiling["space_id"] == "P-2"
+    assert ceiling["suggested_area"] == {
+        "name": "Kitchen",
+        "floor": None,
+        "area_id": None,
+    }
     assert ceiling["secondary_info"] == "FT-6"
     assert ceiling["platform_options"] == ["light"]
     assert ceiling["metadata"] == {

@@ -338,7 +338,10 @@ def _project(
         "devices": devices
         or {
             "1.0.1": _device("Cover actuator", APP_COVER, ["CH-1", "CH-2"]),
-            "1.0.2": _device("Cover actuator 2", APP_COVER, ["CH-1", "CH-2"]),
+            "1.0.2": {
+                **_device("Cover actuator 2", APP_COVER, ["CH-1", "CH-2"]),
+                "space_id": "P-1",
+            },
             "1.0.10": _device("Switch actuator", APP_SWITCH),
             "1.0.11": _device("Switch actuator 2", APP_SWITCH),
             "1.0.12": _device("Switch actuator 3", APP_SWITCH),
@@ -418,6 +421,8 @@ async def test_suggestions_for_other_channels(
         {"address": "1/1/4", "name": "GA 1/1/4"},
     ]
     assert channel_2["source"] == "cfg"
+    # project data parsed before xknxproject 3.11 has no `space_id`
+    assert channel_2["space_id"] is None
     assert channel_2["platform_options"] == ["cover"]
     assert channel_2["suggested_name"] == "Cover actuator Output CH-2"
     assert channel_2["existing_entity_ids"] == []
@@ -430,6 +435,7 @@ async def test_suggestions_for_other_channels(
     }
     assert sibling["group_id"] == "1.0.2"
     assert sibling["group_name"] == "Cover actuator 2"
+    assert sibling["space_id"] == "P-1"
     assert sibling["secondary_info"] == "Output CH-1"
     assert sibling["metadata"] == {"template_entity_id": entity.entity_id}
 

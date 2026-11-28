@@ -157,6 +157,7 @@ TEST_PROJECT: dict[str, Any] = {
         },
         "1.1.2": {
             "name": "Jalousieaktor",
+            "space_id": "P-1",
             "channels": {
                 "CH-1": _channel(
                     "Jalousie 1",
@@ -919,6 +920,9 @@ async def test_ws_get_entity_suggestions(
     assert switch_actuator["source"] == "fb"
     assert switch_actuator["group_id"] == "1.1.1"
     assert switch_actuator["group_name"] == "Schaltaktor"
+    # project data parsed before xknxproject 3.11 has no `space_id`
+    assert switch_actuator["space_id"] is None
+    assert suggestions["fb_1.1.2_CH-1"]["space_id"] == "P-1"
     assert switch_actuator["metadata"] == {"functional_blocks": ["417"]}
     assert switch_actuator["secondary_info"] == "Ausgang 1"
     # light is the default for FB 417

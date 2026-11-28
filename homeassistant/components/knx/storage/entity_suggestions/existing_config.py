@@ -289,6 +289,10 @@ def _build_suggestions(
                         suggested_name=_suggested_name(project, mapping, knx_config),
                         group_id=mapping.target.device,
                         group_name=mapping.device_name,
+                        # projects parsed before xknxproject 3.11 have no `space_id`
+                        space_id=project["devices"][mapping.target.device].get(
+                            "space_id"
+                        ),
                         secondary_info=mapping.channel_name,
                         platform_options=[platform],
                         suggestions={
