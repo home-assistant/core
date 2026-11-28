@@ -1,0 +1,47 @@
+# Services descriptions for myUplink integration
+
+get_datapoints:
+  fields:
+    device_id:
+      selector:
+        device:
+          integration: myuplink
+      required: true
+
+    datapoints:
+      required: true
+      selector:
+        object:
+          translation_key: datapoint
+          multiple: true
+          fields:
+            datapoint_id:
+              required: true
+              selector:
+                number:
+                  min: 1
+                  max: 99999
+                  mode: box
+
+set_datapoint:
+  fields:
+    device_id:
+      selector:
+        device:
+          integration: myuplink
+      required: true
+
+    datapoint_id:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 99999
+          mode: box
+      example: 98765
+
+    value:
+      required: true
+      selector:
+        text:
+      example: "12"

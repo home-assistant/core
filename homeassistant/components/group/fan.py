@@ -18,7 +18,6 @@ from homeassistant.components.fan import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_ENTITIES,
     CONF_NAME,
     CONF_UNIQUE_ID,
@@ -26,6 +25,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     EntityStateAttribute,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
@@ -35,6 +35,7 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .const import GroupEntityStateAttribute
 from .entity import GroupEntity
 from .util import attribute_equal, most_frequent_attribute, reduce_attribute
 
@@ -115,7 +116,9 @@ class FanGroup(GroupEntity, FanEntity):
         self._speed_count = 100
         self._is_on: bool | None = False
         self._attr_name = name
-        self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entities}
+        self._attr_extra_state_attributes = {
+            GroupEntityStateAttribute.ENTITY_ID: entities
+        }
         self._attr_unique_id = unique_id
 
     @property
@@ -227,7 +230,7 @@ class FanGroup(GroupEntity, FanEntity):
         await self.hass.services.async_call(
             FAN_DOMAIN,
             service,
-            {**data, ATTR_ENTITY_ID: self._fans[support_flag]},
+            {**data, TargetKey.ENTITY_ID: self._fans[support_flag]},
             blocking=True,
             context=self._context,
         )
@@ -237,7 +240,7 @@ class FanGroup(GroupEntity, FanEntity):
         await self.hass.services.async_call(
             FAN_DOMAIN,
             service,
-            {ATTR_ENTITY_ID: self._entity_ids},
+            {TargetKey.ENTITY_ID: self._entity_ids},
             blocking=True,
             context=self._context,
         )

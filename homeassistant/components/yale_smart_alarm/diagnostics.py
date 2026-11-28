@@ -26,6 +26,5 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     coordinator = entry.runtime_data
 
-    assert coordinator.yale
     get_all_data = await hass.async_add_executor_job(coordinator.yale.get_all)
     return async_redact_data(asdict(get_all_data), TO_REDACT)

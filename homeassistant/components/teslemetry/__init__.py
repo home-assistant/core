@@ -2,19 +2,13 @@
 
 import asyncio
 from collections.abc import Callable
+from datetime import datetime
 from functools import partial
 from pathlib import Path
 import re
 from typing import Any, Final, cast
 
 from aiohttp import ClientError
-from aiopowerwall import (
-    PowerwallClient,
-    PowerwallConnectionError,
-    PowerwallEnergySite,
-    PowerwallError,
-    PowerwallRateLimitError,
-)
 from bleak.exc import BleakError
 from tesla_fleet_api.const import Scope
 from tesla_fleet_api.exceptions import (
@@ -27,6 +21,13 @@ from tesla_fleet_api.exceptions import (
 )
 from tesla_fleet_api.router import VehicleRouter
 from tesla_fleet_api.tesla import EnergySiteRouter
+from tesla_fleet_api.tesla.powerwall import (
+    PowerwallClient,
+    PowerwallConnectionError,
+    PowerwallEnergySite,
+    PowerwallError,
+    PowerwallRateLimitError,
+)
 from tesla_fleet_api.tesla.vehicle.bluetooth import VehicleBluetooth
 from tesla_fleet_api.tesla.vehicle.stream_glue import BleBroadcastStreamGlue, StreamSink
 from tesla_fleet_api.teslemetry import EnergySite, Teslemetry, Vehicle
@@ -48,7 +49,7 @@ from homeassistant.components.labs import (
     async_is_preview_feature_enabled,
     async_subscribe_preview_feature,
 )
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigSubentry
+from homeassistant.config_entries import ConfigEntryState, ConfigSubentry
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_ADDRESS,
@@ -75,6 +76,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     async_get_config_entry_implementation,
 )
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
@@ -83,21 +85,29 @@ from .const import (
     CHARGE_ON_SOLAR_LOWER_LIMIT_KEY,
     CHARGE_ON_SOLAR_SWITCH_KEY,
     CLIENT_ID,
+    CONF_LEGACY_GATEWAY,
     CONF_VIN,
     DOMAIN,
+    ISSUE_ENERGY_SITE_NOT_PAIRED,
     ISSUE_GATEWAY_NOT_FOUND,
+    ISSUE_LOCAL_CONTROL_FAILED,
+    ISSUE_STREAMING_ALLOWANCE,
     LABS_CHARGE_ON_SOLAR_FEATURE,
     LOGGER,
     POWERWALL_KEY_FILE,
     RSA_PARENT_KEY,
+    STREAM_DISCONNECT_GRACE,
+    STREAMING_ALLOWANCE_EXCEEDED,
     SUBENTRY_TYPE_ENERGY_SITE,
     SUBENTRY_TYPE_VEHICLE,
+    VEHICLE_ISSUE_KEY,
     VEHICLE_ISSUE_LEARN_MORE,
 )
 from .coordinator import (
     TeslemetryEnergyHistoryCoordinator,
     TeslemetryEnergySiteInfoCoordinator,
     TeslemetryEnergySiteLiveCoordinator,
+    TeslemetryLocalComponentsCoordinator,
     TeslemetryLocalStatusCoordinator,
     TeslemetryMetadataCoordinator,
     TeslemetryVehicleDataCoordinator,
@@ -108,9 +118,11 @@ from .helpers import (
     async_update_device_sw_version,
     create_powerwall_client,
     flatten,
+    gateway_issue_id,
 )
 from .models import (
     TeslemetryChargeOnSolarStore,
+    TeslemetryConfigEntry,
     TeslemetryData,
     TeslemetryEnergyData,
     TeslemetryVehicleData,
@@ -135,8 +147,6 @@ PLATFORMS: Final = [
 _VEHICLE_ISSUE_ID_PATTERN = re.compile(
     f"({'|'.join(map(re.escape, VEHICLE_ISSUE_LEARN_MORE))})_"
 )
-
-type TeslemetryConfigEntry = ConfigEntry[TeslemetryData]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -233,8 +243,9 @@ def _setup_dynamic_discovery(
     metadata_coordinator: TeslemetryMetadataCoordinator,
     known_vins: set[str],
     known_site_ids: set[str],
+    polling_vins: set[str],
 ) -> None:
-    """Set up dynamic device discovery via reload when subscriptions change."""
+    """Set up reloads for subscription changes and vehicles able to stream."""
 
     @callback
     def _handle_metadata_update() -> None:
@@ -249,18 +260,34 @@ def _setup_dynamic_discovery(
         removed_vins = known_vins - current_vins
         added_sites = current_site_ids - known_site_ids
         removed_sites = known_site_ids - current_site_ids
+        # A vehicle only registers its streaming fields during setup. None means
+        # the fleet status is unknown, which is not a change worth a reload.
+        streamable_vins = {
+            vin
+            for vin in polling_vins
+            if data["vehicles"].get(vin, {}).get("polling") is False
+        }
 
-        if added_vins or removed_vins or added_sites or removed_sites:
+        if (
+            added_vins
+            or removed_vins
+            or added_sites
+            or removed_sites
+            or streamable_vins
+        ):
             LOGGER.info(
-                "Tesla subscription changes detected "
+                "Tesla subscription or streaming changes detected "
                 "(added vehicles: %s, removed vehicles: %s, "
-                "added energy sites: %s, removed energy sites: %s), "
+                "added energy sites: %s, removed energy sites: %s, "
+                "vehicles now able to stream: %s), "
                 "reloading integration",
                 added_vins or "none",
                 removed_vins or "none",
                 added_sites or "none",
                 removed_sites or "none",
+                streamable_vins or "none",
             )
+            polling_vins.difference_update(streamable_vins)
             hass.config_entries.async_schedule_reload(entry.entry_id)
 
     entry.async_on_unload(
@@ -275,7 +302,7 @@ def _async_update_vehicle_repairs(
     vehicle_metadata: dict[str, Any],
 ) -> None:
     """Create repair issues for vehicle metadata issues and delete all others."""
-    with ir.async_begin_issues_refresh(
+    with ir.async_refresh_issues(
         hass,
         DOMAIN,
         issue_id_pattern=_VEHICLE_ISSUE_ID_PATTERN,
@@ -289,7 +316,7 @@ def _async_update_vehicle_repairs(
             ir.async_create_issue(
                 hass,
                 DOMAIN,
-                f"{issue_type}_{vin}",
+                f"{issue_type}_{entry.entry_id}_{vin}",
                 config_entry_id=entry.entry_id,
                 is_fixable=True,
                 severity=ir.IssueSeverity.WARNING,
@@ -324,6 +351,55 @@ def _setup_vehicle_repairs(
             return
         _async_update_vehicle_repairs(hass, entry, vins, data["vehicles"])
 
+    entry.async_on_unload(
+        metadata_coordinator.async_add_listener(_handle_metadata_update)
+    )
+
+
+def _setup_energy_site_repairs(
+    hass: HomeAssistant,
+    entry: TeslemetryConfigEntry,
+    metadata_coordinator: TeslemetryMetadataCoordinator,
+    energysites: list[TeslemetryEnergyData],
+) -> None:
+    """Keep a repair issue for each battery site signed commands cannot reach."""
+
+    @callback
+    def _handle_metadata_update() -> None:
+        """Re-evaluate energy site repair issues when metadata changes."""
+        with ir.async_refresh_issues(
+            hass,
+            DOMAIN,
+            issue_id_pattern=f"{ISSUE_ENERGY_SITE_NOT_PAIRED}_",
+            config_entry_id=entry.entry_id,
+        ):
+            for energysite in energysites:
+                if (
+                    not energysite.can_local_control
+                    or energysite.signed_commands_available(metadata_coordinator.data)
+                ):
+                    continue
+                placeholders = {
+                    "site": energysite.device["name"],
+                    "link": f"{energysite.device['configuration_url']}/setup",
+                }
+                ir.async_create_issue(
+                    hass,
+                    DOMAIN,
+                    f"{ISSUE_ENERGY_SITE_NOT_PAIRED}_{entry.entry_id}_{energysite.id}",
+                    config_entry_id=entry.entry_id,
+                    is_fixable=True,
+                    severity=ir.IssueSeverity.WARNING,
+                    translation_key=ISSUE_ENERGY_SITE_NOT_PAIRED,
+                    translation_placeholders=placeholders,
+                    data={
+                        "entry_id": entry.entry_id,
+                        "site_id": energysite.id,
+                        **placeholders,
+                    },
+                )
+
+    _handle_metadata_update()
     entry.async_on_unload(
         metadata_coordinator.async_add_listener(_handle_metadata_update)
     )
@@ -479,8 +555,9 @@ async def _async_resolve_local_control(
     if not battery:
         return False, None, cloud_energy_site
     subentry_id = _find_energy_subentry_id(entry, site_id)
+    failed_issue_id = f"{ISSUE_LOCAL_CONTROL_FAILED}_{entry.entry_id}_{site_id}"
     if subentry_id is None:
-        ir.async_delete_issue(hass, DOMAIN, _gateway_issue_id(site_id))
+        ir.async_delete_issue(hass, DOMAIN, failed_issue_id)
         return True, None, cloud_energy_site
     # A local-gateway failure for one site must not tear down the integration.
     try:
@@ -494,15 +571,25 @@ async def _async_resolve_local_control(
             site_id,
             exc_info=True,
         )
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            failed_issue_id,
+            is_fixable=False,
+            config_entry_id=entry.entry_id,
+            config_subentry_id=subentry_id,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=ISSUE_LOCAL_CONTROL_FAILED,
+            translation_placeholders={
+                "site": entry.subentries[subentry_id].title,
+                "key_file": POWERWALL_KEY_FILE,
+            },
+        )
         # Whether the gateway is found is unknown
-        ir.async_keep_issue(hass, DOMAIN, _gateway_issue_id(site_id))
+        ir.async_keep_issue(hass, DOMAIN, gateway_issue_id(entry.entry_id, site_id))
         return True, subentry_id, cloud_energy_site
+    ir.async_delete_issue(hass, DOMAIN, failed_issue_id)
     return True, subentry_id, api
-
-
-def _gateway_issue_id(site_id: int) -> str:
-    """Return the repair issue id for a site whose local gateway was not found."""
-    return f"{ISSUE_GATEWAY_NOT_FOUND}_{site_id}"
 
 
 async def _async_resolve_energy_site_api(
@@ -519,7 +606,13 @@ async def _async_resolve_energy_site_api(
         return cloud_energy_site
 
     key_pem = await _async_get_rsa_key_pem(hass)
-    powerwall_client = create_powerwall_client(hass, host, password, key_pem)
+    powerwall_client = create_powerwall_client(
+        hass,
+        host,
+        password,
+        key_pem,
+        legacy_gateway=subentry.data.get(CONF_LEGACY_GATEWAY, False),
+    )
     try:
         await powerwall_client.connect()
     except PowerwallRateLimitError as err:
@@ -529,7 +622,9 @@ async def _async_resolve_energy_site_api(
             err,
         )
         ir.async_delete_issue(
-            hass, DOMAIN, _gateway_issue_id(cloud_energy_site.energy_site_id)
+            hass,
+            DOMAIN,
+            gateway_issue_id(entry.entry_id, cloud_energy_site.energy_site_id),
         )
     except PowerwallError as err:
         # Another device may have taken the old address, so any refusal is a lead.
@@ -538,7 +633,9 @@ async def _async_resolve_energy_site_api(
         )
     else:
         ir.async_delete_issue(
-            hass, DOMAIN, _gateway_issue_id(cloud_energy_site.energy_site_id)
+            hass,
+            DOMAIN,
+            gateway_issue_id(entry.entry_id, cloud_energy_site.energy_site_id),
         )
     local_energy_site = PowerwallEnergySite(powerwall_client)
     return EnergySiteRouter(local_energy_site, cloud_energy_site)
@@ -555,10 +652,10 @@ async def _async_rediscover_gateway(
 ) -> PowerwallClient:
     """Return a client at the gateway's new address, or the stale client if not found."""
     site_id = cloud_energy_site.energy_site_id
-    issue_id = _gateway_issue_id(site_id)
+    issue_id = gateway_issue_id(entry.entry_id, site_id)
     try:
         host = await cloud_energy_site.find_gateway_address()
-    except (ClientError, TeslaFleetError) as err:
+    except (ClientError, TeslaFleetError, TimeoutError) as err:
         LOGGER.debug(
             "Gateway address lookup failed for energy site %s: %s", site_id, err
         )
@@ -575,7 +672,11 @@ async def _async_rediscover_gateway(
         return stale_client
     if host and host != stale_client.host:
         client = create_powerwall_client(
-            hass, host, subentry.data[CONF_PASSWORD], key_pem
+            hass,
+            host,
+            subentry.data[CONF_PASSWORD],
+            key_pem,
+            legacy_gateway=subentry.data.get(CONF_LEGACY_GATEWAY, False),
         )
         try:
             await client.connect()
@@ -596,14 +697,19 @@ async def _async_rediscover_gateway(
 
     LOGGER.warning(
         "Local gateway for energy site %s could not be found; "
-        "commands will fall back to cloud control",
+        "commands will fall back to cloud control: %s",
         site_id,
+        error,
     )
     ir.async_create_issue(
         hass,
         DOMAIN,
         issue_id,
         config_entry_id=entry.entry_id,
+        # The subentry can be removed while the gateway lookup is awaited
+        config_subentry_id=(
+            subentry.subentry_id if subentry.subentry_id in entry.subentries else None
+        ),
         is_fixable=True,
         severity=ir.IssueSeverity.WARNING,
         translation_key=ISSUE_GATEWAY_NOT_FOUND,
@@ -742,7 +848,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
     known_vins, known_site_ids = _get_subscribed_ids_from_metadata(metadata)
 
     # Energy sites which are gone or no longer set up leave issues to be deleted
-    gateway_refresh = ir.async_begin_issues_refresh(
+    gateway_refresh = ir.async_refresh_issues(
         hass,
         DOMAIN,
         issue_id_pattern=f"{ISSUE_GATEWAY_NOT_FOUND}_",
@@ -781,7 +887,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 sw_version=firmware,
             )
 
-            poll = vehicle_metadata[vin].get("polling", False)
+            # A key issue marks a vehicle that streams once paired, so polling
+            # stays with the vehicles that have no key to pair.
+            poll = (
+                vehicle_metadata[vin].get("polling", False)
+                and vehicle_metadata[vin].get("issue") != VEHICLE_ISSUE_KEY
+            )
 
             entry.async_on_unload(
                 stream.async_add_listener(
@@ -906,6 +1017,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 if isinstance(energy_site_api, EnergySiteRouter)
                 else None
             )
+            local_components_coordinator = (
+                TeslemetryLocalComponentsCoordinator(
+                    hass, entry, energy_site_api.primary.powerwall, site_id
+                )
+                if isinstance(energy_site_api, EnergySiteRouter)
+                else None
+            )
 
             energysites.append(
                 TeslemetryEnergyData(
@@ -919,10 +1037,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                     can_local_control=can_local_control,
                     subentry_id=subentry_id,
                     local_status_coordinator=local_status_coordinator,
+                    local_components_coordinator=local_components_coordinator,
                 )
             )
 
     gateway_refresh.async_finish()
+
+    # A config that is still refused returns its repair when it is sent again below
+    ir.async_refresh_issues(
+        hass,
+        DOMAIN,
+        issue_id_pattern=f"{ISSUE_STREAMING_ALLOWANCE}_",
+        config_entry_id=entry.entry_id,
+    ).async_finish()
 
     # Run all first refreshes
     await asyncio.gather(
@@ -977,6 +1104,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
         metadata_coordinator,
         known_vins,
         known_site_ids,
+        {
+            vehicle.vin
+            for vehicle in vehicles
+            if vehicle_metadata[vehicle.vin].get("polling")
+        },
     )
 
     _setup_vehicle_repairs(
@@ -986,6 +1118,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
         {vehicle.vin for vehicle in vehicles},
         vehicle_metadata,
     )
+
+    _setup_energy_site_repairs(hass, entry, metadata_coordinator, energysites)
 
     entry.async_on_unload(_async_subscribe_charge_on_solar_labs(hass, entry))
 
@@ -997,7 +1131,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
         if energysites:
             entry.async_on_unload(
                 stream.async_add_connection_listener(
-                    create_handle_energy_stream_connection(hass, energysites)
+                    create_handle_energy_stream_connection(hass, entry, energysites)
                 )
             )
 
@@ -1032,19 +1166,30 @@ def _setup_subentry_change_reload(
 
 def create_handle_energy_stream_connection(
     hass: HomeAssistant,
+    entry: TeslemetryConfigEntry,
     energysites: list[TeslemetryEnergyData],
 ) -> Callable[[bool], None]:
     """Create a stream connection listener for the energy coordinators."""
+    cancel_grace: CALLBACK_TYPE | None = None
 
     @callback
-    def handle_connection(connected: bool) -> None:
+    def cancel_grace_timer() -> None:
+        nonlocal cancel_grace
+        if cancel_grace is not None:
+            cancel_grace()
+            cancel_grace = None
+
+    @callback
+    def fail_coordinators(_now: datetime) -> None:
         """Fail stream-driven energy coordinators while the stream is down.
 
         Each subsequent streamed document restores its coordinator via
         async_set_updated_data, so no reload is required on reconnect.
         """
-        # Stopping cancels the listen task, which reports a disconnect.
-        if connected or hass.is_stopping:
+        nonlocal cancel_grace
+        cancel_grace = None
+        # A drop just before shutdown leaves the timer pending while stopping.
+        if hass.is_stopping:
             return
         error = UpdateFailed(
             translation_domain=DOMAIN,
@@ -1061,6 +1206,26 @@ def create_handle_energy_stream_connection(
                     error
                 )
 
+    @callback
+    def handle_connection(connected: bool) -> None:
+        """Fail the energy coordinators if the stream stays down past the grace."""
+        nonlocal cancel_grace
+        if connected:
+            cancel_grace_timer()
+            return
+        # Stopping cancels the listen task, which reports a disconnect.
+        # Failed reconnect attempts must not restart a running grace timer.
+        if hass.is_stopping or cancel_grace is not None:
+            return
+        LOGGER.debug(
+            "Teslemetry stream disconnected, waiting %s seconds for it to reconnect",
+            STREAM_DISCONNECT_GRACE,
+        )
+        cancel_grace = async_call_later(
+            hass, STREAM_DISCONNECT_GRACE, fail_coordinators
+        )
+
+    entry.async_on_unload(cancel_grace_timer)
     return handle_connection
 
 
@@ -1116,7 +1281,9 @@ async def _async_setup_energy_site(
         ) from e
 
     live_coordinator = (
-        TeslemetryEnergySiteLiveCoordinator(hass, entry, energy_site, live_status)
+        TeslemetryEnergySiteLiveCoordinator(
+            hass, entry, energy_site, live_status, stream
+        )
         if isinstance(live_status, dict)
         else None
     )
@@ -1176,6 +1343,8 @@ async def _async_refresh_energy_site(energysite: TeslemetryEnergyData) -> None:
     if energysite.local_status_coordinator is not None:
         # A local gateway failure must not block the cloud entities.
         await energysite.local_status_coordinator.async_refresh()
+    if energysite.local_components_coordinator is not None:
+        await energysite.local_components_coordinator.async_refresh()
     if energysite.history_coordinator is not None:
         await energysite.history_coordinator.async_set_time_zone(time_zone)
     if energysite.wall_connector_totals_coordinator is not None:
@@ -1306,6 +1475,27 @@ async def async_setup_stream(
         vehicle.stream_vehicle.listen_Version(
             create_vehicle_streaming_listener(hass, vehicle.vin, entry.entry_id)
         )
+    )
+
+    @callback
+    def handle_config_refused(error: str, description: str | None) -> None:
+        """Raise a repair when the streaming allowance refuses the config."""
+        if error != STREAMING_ALLOWANCE_EXCEEDED:
+            return
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"{ISSUE_STREAMING_ALLOWANCE}_{vehicle.vin}",
+            config_entry_id=entry.entry_id,
+            is_fixable=False,
+            learn_more_url=f"https://teslemetry.com/console/vehicle/{vehicle.vin}/fields",
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=ISSUE_STREAMING_ALLOWANCE,
+            translation_placeholders={"vehicle": vehicle.device["name"] or vehicle.vin},
+        )
+
+    entry.async_on_unload(
+        vehicle.stream_vehicle.listen_config_refused(handle_config_refused)
     )
 
 

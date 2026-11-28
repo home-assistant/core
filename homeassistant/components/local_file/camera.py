@@ -7,10 +7,10 @@ from homeassistant.components.camera import Camera
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_FILE_PATH
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.os_error import os_read_error
 
-from .const import DOMAIN
 from .util import check_file_path_access
 
 
@@ -54,12 +54,8 @@ class LocalFile(Camera):
         try:
             with open(self._file_path, "rb") as file:
                 return file.read()
-        except FileNotFoundError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="file_not_found",
-                translation_placeholders={"file_path": self._file_path},
-            ) from err
+        except OSError as err:
+            raise os_read_error(err, self._file_path) from err
 
     async def update_file_path(self, file_path: str) -> None:
         """Update the file_path."""

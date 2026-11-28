@@ -1,0 +1,36 @@
+{
+  "applianceId": "912076029_00:20220017-443E071A0CC4",
+  "connectionState": "connected",
+  "status": "enabled",
+  "properties": {
+    "reported": {
+      "sleepMode": "OFF",
+      "cleanAirMode": "OFF",
+      "applianceInfo": {
+        "applianceType": "AC",
+        "capabilityHash": "9038338c4f3f03f8ea02781af7afe30316903ebad4d91a31888ba735457566c2"
+      },
+      "temperatureRepresentation": "CELSIUS",
+      "cpv": "00",
+      "targetTemperatureF": 78.8,
+      "targetTemperatureC": 26.0,
+      "applianceState": "OFF",
+      "mode": "OFF",
+      "alerts": [],
+      "ambientTemperatureF": 71.6,
+      "filterState": "GOOD",
+      "fanSpeedSetting": "LOW",
+      "networkInterface": {
+        "otaState": "IDLE",
+        "swVersion": "v3.0.0_argo",
+        "linkQualityIndicator": "EXCELLENT",
+        "niuSwUpdateCurrentDescription": "A21023902A-S00007029A",
+        "swAncAndRevision": "S00007029A"
+      },
+      "batchSchedulerMode": false,
+      "fanSpeedState": "LOW",
+      "ambientTemperatureC": 22.0,
+      "connectivityState": "connected"
+    }
+  }
+}

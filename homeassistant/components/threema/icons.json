@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "sensor": {
+      "credits": {
+        "default": "mdi:hand-coin"
+      }
+    }
+  }
+}

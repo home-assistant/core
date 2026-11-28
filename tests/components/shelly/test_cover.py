@@ -9,27 +9,23 @@ import pytest
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_CURRENT_TILT_POSITION,
-    ATTR_POSITION,
-    ATTR_TILT_POSITION,
     DOMAIN as COVER_DOMAIN,
-    SERVICE_CLOSE_COVER,
-    SERVICE_CLOSE_COVER_TILT,
-    SERVICE_OPEN_COVER,
-    SERVICE_OPEN_COVER_TILT,
-    SERVICE_SET_COVER_POSITION,
-    SERVICE_SET_COVER_TILT_POSITION,
-    SERVICE_STOP_COVER,
-    SERVICE_STOP_COVER_TILT,
+    CoverService,
+    CoverServiceArgument,
     CoverState,
 )
-from homeassistant.components.shelly.const import DOMAIN, RPC_COVER_UPDATE_TIME_SEC
-from homeassistant.components.shelly.services import SERVICE_SET_COVER_POSITION_AND_TILT
+from homeassistant.components.shelly.const import (
+    DOMAIN,
+    RPC_COVER_UPDATE_TIME_SEC,
+    ShellyService,
+    ShellyServiceArgument,
+)
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
-    ATTR_ENTITY_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceNotSupported
@@ -65,8 +61,8 @@ async def test_block_device_services(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_POSITION: 50},
+        CoverService.SET_POSITION,
+        {TargetKey.ENTITY_ID: entity_id, CoverServiceArgument.POSITION: 50},
         blocking=True,
     )
     assert (state := hass.states.get(entity_id))
@@ -74,8 +70,8 @@ async def test_block_device_services(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert (state := hass.states.get(entity_id))
@@ -83,8 +79,8 @@ async def test_block_device_services(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert (state := hass.states.get(entity_id))
@@ -92,8 +88,8 @@ async def test_block_device_services(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.STOP,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert (state := hass.states.get(entity_id))
@@ -189,8 +185,8 @@ async def test_block_device_roller_without_positioning_stopped(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.STOP,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -220,8 +216,8 @@ async def test_rpc_device_services(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_POSITION: 50},
+        CoverService.SET_POSITION,
+        {TargetKey.ENTITY_ID: entity_id, CoverServiceArgument.POSITION: 50},
         blocking=True,
     )
 
@@ -235,8 +231,8 @@ async def test_rpc_device_services(
     )
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     mock_rpc_device.mock_update()
@@ -250,8 +246,8 @@ async def test_rpc_device_services(
     )
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     mock_rpc_device.mock_update()
@@ -261,10 +257,11 @@ async def test_rpc_device_services(
     assert state.state == CoverState.CLOSING
 
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cover:0", "state", "closed")
+    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cover:0", "current_pos", 0)
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.STOP,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     mock_rpc_device.mock_update()
@@ -293,6 +290,7 @@ async def test_rpc_device_update(
     """Test RPC device update."""
     entity_id = "cover.test_name_test_cover_0"
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cover:0", "state", "closed")
+    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cover:0", "current_pos", 0)
     await init_integration(hass, 2)
 
     state = hass.states.get(entity_id)
@@ -300,10 +298,45 @@ async def test_rpc_device_update(
     assert state.state == CoverState.CLOSED
 
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cover:0", "state", "open")
+    mutate_rpc_device_status(
+        monkeypatch, mock_rpc_device, "cover:0", "current_pos", 100
+    )
     mock_rpc_device.mock_update()
     state = hass.states.get(entity_id)
     assert state
     assert state.state == CoverState.OPEN
+
+
+@pytest.mark.parametrize(
+    ("device_state", "current_pos", "expected_state"),
+    [
+        pytest.param("closed", 0, CoverState.CLOSED, id="closed"),
+        # Some OEM firmwares (e.g. RaexMP46) never report "closed"
+        pytest.param("stopped", 0, CoverState.CLOSED, id="stopped_at_zero"),
+        pytest.param("stopped", 35, CoverState.OPEN, id="stopped_partway"),
+        pytest.param("open", 100, CoverState.OPEN, id="open"),
+    ],
+)
+async def test_rpc_device_position_control_closed(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    device_state: str,
+    current_pos: int,
+    expected_state: str,
+) -> None:
+    """Test RPC cover with position control is closed at position 0."""
+    mutate_rpc_device_status(
+        monkeypatch, mock_rpc_device, "cover:0", "state", device_state
+    )
+    mutate_rpc_device_status(
+        monkeypatch, mock_rpc_device, "cover:0", "current_pos", current_pos
+    )
+    await init_integration(hass, 2)
+
+    assert (state := hass.states.get("cover.test_name_test_cover_0"))
+    assert state.state == expected_state
+    assert state.attributes[ATTR_CURRENT_POSITION] == current_pos
 
 
 @pytest.mark.parametrize(
@@ -313,6 +346,9 @@ async def test_rpc_device_update(
         ("stopped", "open", CoverState.OPEN),
         # Nothing has moved since the device booted
         ("stopped", None, STATE_UNKNOWN),
+        # A limit switch reports the end position
+        ("closed", "close", CoverState.CLOSED),
+        ("open", "open", CoverState.OPEN),
     ],
 )
 async def test_rpc_device_no_position_control(
@@ -370,8 +406,8 @@ async def test_rpc_cover_tilt(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_TILT_POSITION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_TILT_POSITION: 50},
+        CoverService.SET_TILT_POSITION,
+        {TargetKey.ENTITY_ID: entity_id, CoverServiceArgument.TILT_POSITION: 50},
         blocking=True,
     )
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cover:0", "slat_pos", 50)
@@ -384,8 +420,8 @@ async def test_rpc_cover_tilt(
     mock_rpc_device.cover_set_position.reset_mock()
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER_TILT,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.OPEN_TILT,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cover:0", "slat_pos", 100)
@@ -398,14 +434,14 @@ async def test_rpc_cover_tilt(
     mock_rpc_device.cover_set_position.reset_mock()
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER_TILT,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.CLOSE_TILT,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER_TILT,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.STOP_TILT,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cover:0", "slat_pos", 10)
@@ -509,8 +545,12 @@ async def test_rpc_cover_set_position_and_tilt(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_COVER_POSITION_AND_TILT,
-        {ATTR_ENTITY_ID: entity_id, ATTR_POSITION: 100, ATTR_TILT_POSITION: 100},
+        ShellyService.SET_COVER_POSITION_AND_TILT,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            ShellyServiceArgument.POSITION: 100,
+            ShellyServiceArgument.TILT_POSITION: 100,
+        },
         blocking=True,
     )
 
@@ -527,11 +567,11 @@ async def test_rpc_cover_set_position_and_tilt_not_supported(
     with pytest.raises(ServiceNotSupported):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_COVER_POSITION_AND_TILT,
+            ShellyService.SET_COVER_POSITION_AND_TILT,
             {
-                ATTR_ENTITY_ID: "cover.test_name_test_cover_0",
-                ATTR_POSITION: 100,
-                ATTR_TILT_POSITION: 100,
+                TargetKey.ENTITY_ID: "cover.test_name_test_cover_0",
+                ShellyServiceArgument.POSITION: 100,
+                ShellyServiceArgument.TILT_POSITION: 100,
             },
             blocking=True,
         )

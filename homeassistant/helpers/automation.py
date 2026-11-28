@@ -11,7 +11,7 @@ from homeassistant.const import CONF_OPTIONS
 from homeassistant.core import HomeAssistant, split_entity_id
 
 from .entity import get_device_class_or_undefined
-from .typing import UNDEFINED, ConfigType, UndefinedType
+from .typing import ConfigType, Undefined
 
 CONF_UNIT: Final = "unit"
 
@@ -143,7 +143,7 @@ class ThresholdConfig:
     numerical: bool
     entity: str | None
     number: float | None
-    unit: str | UndefinedType | None
+    unit: str | Undefined | None
 
     @classmethod
     def from_config(cls, config: dict[str, Any] | None) -> Self | None:
@@ -153,11 +153,11 @@ class ThresholdConfig:
 
         entity: str | None = None
         number: float | None = None
-        unit: str | UndefinedType | None = UNDEFINED
+        unit: str | Undefined | None = Undefined
         numerical = "number" in config
         if numerical:
             number = config["number"]
-            unit = config.get("unit_of_measurement", UNDEFINED)
+            unit = config.get("unit_of_measurement", Undefined)
         else:
             entity = config["entity"]
 

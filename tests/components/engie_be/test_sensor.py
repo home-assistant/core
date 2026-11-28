@@ -6,10 +6,7 @@ from datetime import UTC, date, datetime, timedelta
 from unittest.mock import MagicMock, patch
 
 from aioengiebelgium import (
-    AccountRelation,
-    BusinessAgreement,
     ConsumptionAddress,
-    CustomerAccount,
     CustomerAccountRelations,
     EanPrices,
     EngieBeCommunicationError,
@@ -32,11 +29,11 @@ from pytest_homeassistant.common import (
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.engie_be.const import (
+    BRUSSELS_TIME_ZONE,
     DOMAIN,
     EPEX_SCAN_INTERVAL,
     PRICES_SCAN_INTERVAL,
 )
-from homeassistant.components.engie_be.coordinator import EngieBePricesData
 from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
@@ -50,15 +47,26 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from .conftest import (
     BAN,
     BAN_2,
-    BRUSSELS_TIME_ZONE,
+    EPEX_CURRENT_HOUR_UNIQUE_ID,
+    EPEX_LOW_TODAY_HOUR_UNIQUE_ID,
+    EPEX_TOMORROW_AVAILABLE_UNIQUE_ID,
+    GAS_CONVERSION_COEFFICIENT,
     OFFTAKE_INJECTION_EAN,
     OFFTAKE_ONLY_EAN,
+    OFFTAKE_TOTAL_HOURS_UNIQUE_ID,
+    advance_time,
     build_epex_payload,
-    build_epex_payload_with_gap,
     build_prices,
     build_relations,
+    build_service_point,
+    get_entity_id,
+    get_state,
     setup_dynamic_entry,
+    setup_entry,
+    without_capacity_tariff,
 )
+
+GAS_PER_M3_UNIQUE_ID = f"{BAN}_{OFFTAKE_ONLY_EAN}_offtake_TOTAL_HOURS_per_m3"
 
 
 def _prices_by_ban(
@@ -75,18 +83,34 @@ def _prices_by_ban(
     return _side_effect
 
 
-@pytest.mark.usefixtures("mock_engie_client", "entity_registry_enabled_by_default")
+def build_epex_payload_with_gap(
+    start: datetime,
+    end: datetime,
+    granularity: EpexGranularity = EpexGranularity.HOURLY,
+) -> EpexPayload:
+    """Build a payload and drop the hourly slot covering the frozen afternoon."""
+    payload = build_epex_payload(start, end, granularity)
+    if granularity is not EpexGranularity.HOURLY:
+        return payload
+    gap_start = datetime(2026, 10, 3, 12, 0, tzinfo=UTC)
+    return EpexPayload(
+        slots=tuple(slot for slot in payload.slots if slot.start != gap_start),
+        slot_duration=payload.slot_duration,
+    )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "frozen_afternoon")
 async def test_sensors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test the energy-price sensors for an offtake-only and a dual-direction EAN."""
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    """Test the sensors and devices of a dynamic-tariff household with an offtake-only and a dual-direction EAN."""
+    with patch("homeassistant.components.engie_be._PLATFORMS", [Platform.SENSOR]):
+        await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
 
     device_entries = dr.async_entries_for_config_entry(
         device_registry, mock_config_entry.entry_id
@@ -98,66 +122,16 @@ async def test_sensors(
 
 
 @pytest.mark.usefixtures("mock_engie_client")
-async def test_slot_aware_naming(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test slot-aware translation keys drive friendly names while unique_ids keep the raw slot code."""
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    total_hours_entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{BAN}_{OFFTAKE_ONLY_EAN}_offtake_TOTAL_HOURS"
-    )
-    assert total_hours_entity_id is not None
-    total_hours_state = hass.states.get(total_hours_entity_id)
-    assert total_hours_state is not None
-    assert "total_hours" not in total_hours_state.name.lower()
-
-    peak_unique_id = f"{BAN}_{OFFTAKE_INJECTION_EAN}_offtake_S_TOU1_OFFTAKE_PEAK"
-    peak_entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, peak_unique_id
-    )
-    assert peak_entity_id is not None
-    peak_entry = entity_registry.async_get(peak_entity_id)
-    assert peak_entry is not None
-    assert peak_entry.unique_id == peak_unique_id
-    peak_state = hass.states.get(peak_entity_id)
-    assert peak_state is not None
-    assert peak_state.name.endswith("Electricity peak offtake price")
-
-    fallback_unique_id = f"{BAN}_{OFFTAKE_INJECTION_EAN}_offtake_S_TOU1_OFFTAKE_WEEKEND"
-    fallback_entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, fallback_unique_id
-    )
-    assert fallback_entity_id is not None
-    fallback_state = hass.states.get(fallback_entity_id)
-    assert fallback_state is not None
-    assert fallback_state.name.endswith("Electricity offtake price (weekend)")
-
-    assert (
-        entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, f"{BAN}_{OFFTAKE_INJECTION_EAN}_offtake_EN"
-        )
-        is None
-    )
-
-
-@pytest.mark.usefixtures("mock_engie_client")
 async def test_excl_vat_disabled_by_default(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test excl-VAT price sensors are disabled by default, incl-VAT ones are not."""
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    """Test excl. VAT price sensors start disabled and incl. VAT ones start enabled."""
+    await setup_entry(hass, mock_config_entry)
 
-    entity_entries = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
+    entity_entries = without_capacity_tariff(
+        er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
     )
     excl_vat_entries = [
         entry for entry in entity_entries if entry.unique_id.endswith("_excl_vat")
@@ -178,7 +152,13 @@ async def test_excl_vat_disabled_by_default(
 SECOND_ELECTRICITY_EAN = "541448820000000003_ID1"
 
 
-def _single_period_prices(ean: str) -> EanPrices:
+def _single_period_prices(
+    ean: str,
+    *,
+    slot_code: str = "TOTAL_HOURS",
+    price_value: float = 0.2,
+    price_value_excl_vat: float = 0.19,
+) -> EanPrices:
     """Build a single-period, offtake-only EanPrices for the given EAN."""
     return EanPrices(
         ean=ean,
@@ -189,9 +169,9 @@ def _single_period_prices(ean: str) -> EanPrices:
                 vat_tariff=6.0,
                 offtake=(
                     PriceSlot(
-                        time_of_use_slot_code="TOTAL_HOURS",
-                        price_value=0.2,
-                        price_value_excl_vat=0.19,
+                        time_of_use_slot_code=slot_code,
+                        price_value=price_value,
+                        price_value_excl_vat=price_value_excl_vat,
                     ),
                 ),
             ),
@@ -213,23 +193,17 @@ async def test_duplicate_type_suffix(
     mock_engie_client.return_value.async_get_service_point.side_effect = lambda ean: (
         ServicePoint(ean_energy_types={bare_ean(ean): "ELECTRICITY"})
     )
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_entry(hass, mock_config_entry)
 
     names: dict[str, str] = {}
     for ean in eans:
-        entity_id = entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, f"{BAN}_{ean}_offtake_TOTAL_HOURS"
+        state = get_state(
+            hass, entity_registry, Platform.SENSOR, f"{BAN}_{ean}_offtake_TOTAL_HOURS"
         )
-        assert entity_id is not None
-        state = hass.states.get(entity_id)
-        assert state is not None
         names[ean] = state.name
 
     for ean in eans:
         assert names[ean].endswith(f"({bare_ean(ean)[-4:]})")
-    assert names[OFFTAKE_INJECTION_EAN] != names[SECOND_ELECTRICITY_EAN]
 
 
 async def test_type_fallback_when_service_point_lookup_fails(
@@ -243,73 +217,46 @@ async def test_type_fallback_when_service_point_lookup_fails(
         EngieBeCommunicationError("boom"),
         ServicePoint(ean_energy_types={bare_ean(OFFTAKE_INJECTION_EAN): "ELECTRICITY"}),
     ]
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_entry(hass, mock_config_entry)
 
-    entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{BAN}_{OFFTAKE_ONLY_EAN}_offtake_TOTAL_HOURS"
+    state = get_state(
+        hass, entity_registry, Platform.SENSOR, OFFTAKE_TOTAL_HOURS_UNIQUE_ID
     )
-    assert entity_id is not None
-    state = hass.states.get(entity_id)
-    assert state is not None
     assert state.name.endswith("Offtake price")
-
-
-def _empty_address_relations() -> CustomerAccountRelations:
-    """Build relations for a single BAN with an all-empty consumption address."""
-    return CustomerAccountRelations(
-        accounts=(
-            AccountRelation(
-                id="account-1",
-                admin=True,
-                customer_account=CustomerAccount(
-                    customer_account_number="can-1",
-                    business_agreements=(
-                        BusinessAgreement(
-                            business_agreement_number=BAN,
-                            active=True,
-                            consumption_address=ConsumptionAddress(
-                                street="",
-                                house_number="",
-                                postal_code="",
-                                city="",
-                            ),
-                        ),
-                    ),
-                ),
-            ),
-        )
-    )
 
 
 @pytest.mark.parametrize(
     "relations",
     [
-        pytest.param(build_relations(with_address=False), id="no-address"),
-        pytest.param(_empty_address_relations(), id="empty-address"),
+        pytest.param(build_relations(address=None), id="no-address"),
+        pytest.param(
+            build_relations(
+                address=ConsumptionAddress(
+                    street="", house_number="", postal_code="", city=""
+                )
+            ),
+            id="empty-address",
+        ),
     ],
 )
-async def test_device_name_falls_back_to_ban(
+async def test_device_name_falls_back_to_masked_ban(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_engie_client: MagicMock,
     device_registry: dr.DeviceRegistry,
     relations: CustomerAccountRelations,
 ) -> None:
-    """Test the device name falls back to the bare BAN without a usable consumption address."""
+    """Test the device name falls back to the masked BAN without a usable consumption address."""
     mock_engie_client.return_value.async_get_customer_account_relations.return_value = (
         relations
     )
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_entry(hass, mock_config_entry)
 
     household_device = device_registry.async_get_device_by_identifier(
         (DOMAIN, BAN), mock_config_entry.entry_id
     )
     assert household_device is not None
-    assert household_device.name == BAN
+    assert household_device.name == "Business agreement …0001"
 
 
 @pytest.mark.parametrize(
@@ -317,11 +264,6 @@ async def test_device_name_falls_back_to_ban(
     [
         pytest.param(date(2026, 8, 1), date(2026, 9, 1), id="inside-window"),
         pytest.param(date(2026, 8, 13), date(2026, 9, 1), id="first-day-inclusive"),
-        pytest.param(
-            date(2026, 8, 1),
-            date(2026, 9, 1),
-            id="date-objects",
-        ),
     ],
 )
 async def test_period_window_creates_sensors(
@@ -338,12 +280,10 @@ async def test_period_window_creates_sensors(
     mock_engie_client.return_value.async_get_prices.return_value = build_prices(
         valid_from=valid_from, valid_to=valid_to
     )
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_entry(hass, mock_config_entry)
 
-    entity_entries = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
+    entity_entries = without_capacity_tariff(
+        er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
     )
     enabled_entries = [
         entity_entry
@@ -369,12 +309,10 @@ async def test_period_window_uses_brussels_date(
     mock_engie_client.return_value.async_get_prices.return_value = build_prices(
         valid_from=date(2026, 8, 13), valid_to=date(2026, 8, 14)
     )
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_entry(hass, mock_config_entry)
 
-    assert er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
+    assert without_capacity_tariff(
+        er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
     )
 
 
@@ -395,19 +333,21 @@ async def test_period_window_skips_sensors(
     valid_from: date | None,
     valid_to: date | None,
 ) -> None:
-    """Test no sensors are created when no period covers today (locks in exclusive valid_to)."""
+    """Test no sensors are created when no period covers today, including the day valid_to names."""
     freezer.move_to("2026-08-13T12:00:00+02:00")
     mock_engie_client.return_value.async_get_prices.return_value = build_prices(
         valid_from=valid_from, valid_to=valid_to
     )
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_entry(hass, mock_config_entry)
 
-    entity_entries = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
+    assert (
+        without_capacity_tariff(
+            er.async_entries_for_config_entry(
+                entity_registry, mock_config_entry.entry_id
+            )
+        )
+        == []
     )
-    assert entity_entries == []
 
 
 async def test_period_window_refresh_makes_existing_sensors_unavailable(
@@ -422,12 +362,10 @@ async def test_period_window_refresh_makes_existing_sensors_unavailable(
     mock_engie_client.return_value.async_get_prices.return_value = build_prices(
         valid_from=date(2026, 8, 1), valid_to=date(2026, 8, 13)
     )
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_entry(hass, mock_config_entry)
 
-    entity_entries = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
+    entity_entries = without_capacity_tariff(
+        er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
     )
     enabled_entity_entries = [
         entity_entry
@@ -436,9 +374,7 @@ async def test_period_window_refresh_makes_existing_sensors_unavailable(
     ]
     assert enabled_entity_entries
 
-    freezer.tick(timedelta(days=1, seconds=30))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await advance_time(hass, freezer, timedelta(days=1, seconds=30))
 
     for entity_entry in enabled_entity_entries:
         assert entity_registry.async_get(entity_entry.entity_id) is not None
@@ -447,73 +383,39 @@ async def test_period_window_refresh_makes_existing_sensors_unavailable(
         assert state.state == STATE_UNAVAILABLE
 
 
-def _degraded_slots_empty() -> EngieBePricesData:
-    """Return prices data with no slots or EANs at all."""
-    return EngieBePricesData(slots={}, eans=())
-
-
-def _degraded_period_expired() -> EngieBePricesData:
-    """Return prices data whose only period for the EAN has expired."""
-    return EngieBePricesData(slots={}, eans=(OFFTAKE_ONLY_EAN,))
-
-
-def _degraded_slot_code_absent() -> EngieBePricesData:
-    """Return prices data whose current period has no matching offtake slot."""
-    return EngieBePricesData(
-        slots={
-            (OFFTAKE_ONLY_EAN, "offtake", "OTHER_CODE"): PriceSlot(
-                time_of_use_slot_code="OTHER_CODE",
-                price_value=0.5,
-                price_value_excl_vat=0.5,
-            )
-        },
-        eans=(OFFTAKE_ONLY_EAN,),
-    )
-
-
-def _degraded_ean_absent() -> EngieBePricesData:
-    """Return prices data whose slots belong to a different EAN entirely."""
-    return EngieBePricesData(
-        slots={
-            (OFFTAKE_INJECTION_EAN, "offtake", "TOTAL_HOURS"): PriceSlot(
-                time_of_use_slot_code="TOTAL_HOURS",
-                price_value=0.5,
-                price_value_excl_vat=0.5,
-            )
-        },
-        eans=(OFFTAKE_INJECTION_EAN,),
-    )
-
-
-@pytest.mark.usefixtures("mock_engie_client")
 @pytest.mark.parametrize(
-    "degraded_data",
+    "degraded_prices",
     [
-        pytest.param(_degraded_slots_empty, id="slots-empty"),
-        pytest.param(_degraded_period_expired, id="period-expired"),
-        pytest.param(_degraded_slot_code_absent, id="slot-code-absent"),
-        pytest.param(_degraded_ean_absent, id="ean-absent"),
+        pytest.param(PricesResponse(items=()), id="slots-empty"),
+        pytest.param(build_prices(valid_to=date(2001, 1, 1)), id="period-expired"),
+        pytest.param(
+            PricesResponse(
+                items=(_single_period_prices(OFFTAKE_ONLY_EAN, slot_code="OTHER_CODE"),)
+            ),
+            id="slot-code-absent",
+        ),
+        pytest.param(
+            PricesResponse(items=(_single_period_prices(OFFTAKE_INJECTION_EAN),)),
+            id="ean-absent",
+        ),
     ],
 )
 async def test_available_degrades_for_missing_slot(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
     entity_registry: er.EntityRegistry,
-    degraded_data: Callable[[], EngieBePricesData],
+    freezer: FrozenDateTimeFactory,
+    degraded_prices: PricesResponse,
 ) -> None:
-    """Test a missing slot key makes the entity unavailable for every degraded-data branch."""
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{BAN}_{OFFTAKE_ONLY_EAN}_offtake_TOTAL_HOURS"
+    """Test a price sensor becomes unavailable when a refresh no longer contains its slot."""
+    await setup_entry(hass, mock_config_entry)
+    entity_id = get_entity_id(
+        entity_registry, Platform.SENSOR, OFFTAKE_TOTAL_HOURS_UNIQUE_ID
     )
-    assert entity_id is not None
 
-    coordinator = mock_config_entry.runtime_data.households[BAN].prices
-    coordinator.async_set_updated_data(degraded_data())
-    await hass.async_block_till_done()
+    mock_engie_client.return_value.async_get_prices.return_value = degraded_prices
+    await advance_time(hass, freezer, PRICES_SCAN_INTERVAL)
 
     state = hass.states.get(entity_id)
     assert state is not None
@@ -536,27 +438,21 @@ async def test_recovering_ban_adds_entities(
         build_prices(),
         EngieBeCommunicationError("boom"),
     ]
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_entry(hass, mock_config_entry)
 
     ban_2_unique_id = f"{BAN_2}_{OFFTAKE_ONLY_EAN}_offtake_TOTAL_HOURS"
     assert (
-        entity_registry.async_get_entity_id("sensor", DOMAIN, ban_2_unique_id) is None
+        entity_registry.async_get_entity_id(Platform.SENSOR, DOMAIN, ban_2_unique_id)
+        is None
     )
 
     mock_engie_client.return_value.async_get_prices.side_effect = [
         build_prices(),
         build_prices(),
     ]
-    freezer.tick(PRICES_SCAN_INTERVAL + timedelta(seconds=30))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await advance_time(hass, freezer, PRICES_SCAN_INTERVAL + timedelta(seconds=30))
 
-    ban_2_entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, ban_2_unique_id
-    )
-    assert ban_2_entity_id is not None
+    ban_2_entity_id = get_entity_id(entity_registry, Platform.SENSOR, ban_2_unique_id)
     entity_entry = entity_registry.async_get(ban_2_entity_id)
     assert entity_entry is not None
     ban_2_device = device_registry.async_get_device_by_identifier(
@@ -578,21 +474,21 @@ async def test_period_gap_heals(
     mock_engie_client.return_value.async_get_prices.return_value = build_prices(
         valid_from=date(2026, 8, 14), valid_to=date(2026, 9, 1)
     )
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_entry(hass, mock_config_entry)
 
     assert (
-        er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
+        without_capacity_tariff(
+            er.async_entries_for_config_entry(
+                entity_registry, mock_config_entry.entry_id
+            )
+        )
         == []
     )
 
-    freezer.tick(timedelta(days=1, seconds=30))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await advance_time(hass, freezer, timedelta(days=1, seconds=30))
 
-    assert er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
+    assert without_capacity_tariff(
+        er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
     )
 
 
@@ -623,10 +519,8 @@ async def test_new_slot_code_appears(
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test a new time-of-use slot code adds exactly its incl/excl VAT sensor pair."""
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    """Test a new time-of-use slot code adds exactly its incl. and excl. VAT sensors."""
+    await setup_entry(hass, mock_config_entry)
 
     count_before = len(
         er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
@@ -640,9 +534,7 @@ async def test_new_slot_code_appears(
     mock_engie_client.return_value.async_get_prices.return_value = _add_offtake_slot(
         build_prices(), OFFTAKE_INJECTION_EAN, extra_slot
     )
-    freezer.tick(PRICES_SCAN_INTERVAL + timedelta(seconds=30))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await advance_time(hass, freezer, PRICES_SCAN_INTERVAL + timedelta(seconds=30))
 
     count_after = len(
         er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
@@ -650,10 +542,12 @@ async def test_new_slot_code_appears(
     assert count_after == count_before + 2
 
     incl_vat_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{BAN}_{OFFTAKE_INJECTION_EAN}_offtake_S_TOU1_OFFTAKE_NIGHT"
+        Platform.SENSOR,
+        DOMAIN,
+        f"{BAN}_{OFFTAKE_INJECTION_EAN}_offtake_S_TOU1_OFFTAKE_NIGHT",
     )
     excl_vat_id = entity_registry.async_get_entity_id(
-        "sensor",
+        Platform.SENSOR,
         DOMAIN,
         f"{BAN}_{OFFTAKE_INJECTION_EAN}_offtake_S_TOU1_OFFTAKE_NIGHT_excl_vat",
     )
@@ -669,17 +563,13 @@ async def test_no_duplicate_entities_on_repeated_refresh(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test refreshing with identical data does not add duplicate entities."""
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_entry(hass, mock_config_entry)
 
     count_before = len(
         er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
     )
 
-    freezer.tick(PRICES_SCAN_INTERVAL + timedelta(seconds=30))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await advance_time(hass, freezer, PRICES_SCAN_INTERVAL + timedelta(seconds=30))
 
     count_after = len(
         er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
@@ -705,9 +595,7 @@ async def test_late_service_point_failure_falls_back(
         build_prices(),
         EngieBeCommunicationError("boom"),
     ]
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_entry(hass, mock_config_entry)
 
     mock_engie_client.return_value.async_get_prices.side_effect = _prices_by_ban(
         {BAN: build_prices(), BAN_2: ban_2_prices}
@@ -715,47 +603,32 @@ async def test_late_service_point_failure_falls_back(
     mock_engie_client.return_value.async_get_service_point.side_effect = (
         EngieBeCommunicationError("boom")
     )
-    freezer.tick(PRICES_SCAN_INTERVAL + timedelta(seconds=30))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await advance_time(hass, freezer, PRICES_SCAN_INTERVAL + timedelta(seconds=30))
 
-    entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{BAN_2}_{SECOND_ELECTRICITY_EAN}_offtake_TOTAL_HOURS"
+    state = get_state(
+        hass,
+        entity_registry,
+        Platform.SENSOR,
+        f"{BAN_2}_{SECOND_ELECTRICITY_EAN}_offtake_TOTAL_HOURS",
     )
-    assert entity_id is not None
-    state = hass.states.get(entity_id)
-    assert state is not None
     assert state.name.endswith("Offtake price")
 
 
 def _prices_entity_id(entity_registry: er.EntityRegistry, ban: str) -> str:
     """Return the entity_id for a BAN's offtake-only price sensor."""
-    unique_id = f"{ban}_{OFFTAKE_ONLY_EAN}_offtake_TOTAL_HOURS"
-    entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
-    assert entity_id is not None
-    return entity_id
+    return get_entity_id(
+        entity_registry,
+        Platform.SENSOR,
+        f"{ban}_{OFFTAKE_ONLY_EAN}_offtake_TOTAL_HOURS",
+    )
 
 
 def _single_ban_prices_response(ean: str, price_value: float) -> PricesResponse:
     """Build a prices response with one offtake slot for the given EAN and price."""
     return PricesResponse(
         items=(
-            EanPrices(
-                ean=ean,
-                periods=(
-                    PricePeriod(
-                        valid_from=date(2000, 1, 1),
-                        valid_to=date(2099, 12, 31),
-                        vat_tariff=6.0,
-                        offtake=(
-                            PriceSlot(
-                                time_of_use_slot_code="TOTAL_HOURS",
-                                price_value=price_value,
-                                price_value_excl_vat=price_value,
-                            ),
-                        ),
-                    ),
-                ),
+            _single_period_prices(
+                ean, price_value=price_value, price_value_excl_vat=price_value
             ),
         )
     )
@@ -776,9 +649,7 @@ async def _setup_two_bans(
             BAN_2: _single_ban_prices_response(OFFTAKE_ONLY_EAN, 0.2),
         }
     )
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_entry(hass, mock_config_entry)
 
 
 async def test_single_ban_transient_failure_goes_unavailable(
@@ -797,9 +668,7 @@ async def test_single_ban_transient_failure_goes_unavailable(
             BAN_2: EngieBeCommunicationError("boom"),
         }
     )
-    freezer.tick(PRICES_SCAN_INTERVAL + timedelta(seconds=30))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await advance_time(hass, freezer, PRICES_SCAN_INTERVAL + timedelta(seconds=30))
 
     state_ban = hass.states.get(_prices_entity_id(entity_registry, BAN))
     state_ban_2 = hass.states.get(_prices_entity_id(entity_registry, BAN_2))
@@ -822,9 +691,7 @@ async def test_all_bans_fail(
     mock_engie_client.return_value.async_get_prices.side_effect = (
         EngieBeCommunicationError("boom")
     )
-    freezer.tick(PRICES_SCAN_INTERVAL + timedelta(seconds=30))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await advance_time(hass, freezer, PRICES_SCAN_INTERVAL + timedelta(seconds=30))
 
     state_ban = hass.states.get(_prices_entity_id(entity_registry, BAN))
     state_ban_2 = hass.states.get(_prices_entity_id(entity_registry, BAN_2))
@@ -846,9 +713,7 @@ async def test_unexpected_exception_is_not_swallowed(
     await _setup_two_bans(hass, mock_config_entry, mock_engie_client)
 
     mock_engie_client.return_value.async_get_prices.side_effect = ValueError("boom")
-    freezer.tick(PRICES_SCAN_INTERVAL + timedelta(seconds=30))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await advance_time(hass, freezer, PRICES_SCAN_INTERVAL + timedelta(seconds=30))
 
     assert "Unexpected error fetching" in caplog.text
 
@@ -872,9 +737,7 @@ async def test_failure_and_recovery_are_logged_once(
         }
     )
     caplog.clear()
-    freezer.tick(PRICES_SCAN_INTERVAL + timedelta(seconds=30))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await advance_time(hass, freezer, PRICES_SCAN_INTERVAL + timedelta(seconds=30))
 
     assert caplog.text.count("Error fetching") == 1
     assert "recovered" not in caplog.text
@@ -886,9 +749,7 @@ async def test_failure_and_recovery_are_logged_once(
             BAN_2: _single_ban_prices_response(OFFTAKE_ONLY_EAN, 0.3),
         }
     )
-    freezer.tick(PRICES_SCAN_INTERVAL + timedelta(seconds=30))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await advance_time(hass, freezer, PRICES_SCAN_INTERVAL + timedelta(seconds=30))
 
     assert "Error fetching" not in caplog.text
     caplog.clear()
@@ -899,9 +760,7 @@ async def test_failure_and_recovery_are_logged_once(
             BAN_2: _single_ban_prices_response(OFFTAKE_ONLY_EAN, 0.5),
         }
     )
-    freezer.tick(PRICES_SCAN_INTERVAL + timedelta(seconds=30))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await advance_time(hass, freezer, PRICES_SCAN_INTERVAL + timedelta(seconds=30))
 
     assert caplog.text.count("recovered") == 1
 
@@ -926,9 +785,7 @@ async def test_recovery_after_all_bans_fail(
     mock_engie_client.return_value.async_get_prices.side_effect = (
         EngieBeCommunicationError("boom")
     )
-    freezer.tick(PRICES_SCAN_INTERVAL + timedelta(seconds=30))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await advance_time(hass, freezer, PRICES_SCAN_INTERVAL + timedelta(seconds=30))
 
     mock_engie_client.return_value.async_get_prices.side_effect = _prices_by_ban(
         {
@@ -936,9 +793,7 @@ async def test_recovery_after_all_bans_fail(
             BAN_2: _single_ban_prices_response(OFFTAKE_ONLY_EAN, 0.5),
         }
     )
-    freezer.tick(PRICES_SCAN_INTERVAL + timedelta(seconds=30))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await advance_time(hass, freezer, PRICES_SCAN_INTERVAL + timedelta(seconds=30))
 
     state_ban = hass.states.get(_prices_entity_id(entity_registry, BAN))
     state_ban_2 = hass.states.get(_prices_entity_id(entity_registry, BAN_2))
@@ -964,16 +819,12 @@ async def test_service_point_transient_failure_is_retried(
         EngieBeCommunicationError("boom"),
         ServicePoint(ean_energy_types={bare_ean(OFFTAKE_ONLY_EAN): "GAS"}),
     ]
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_entry(hass, mock_config_entry)
 
     assert "Fetching service point for …0001 failed" in caplog.text
     assert "…_ID1" not in caplog.text
 
-    freezer.tick(PRICES_SCAN_INTERVAL + timedelta(seconds=30))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await advance_time(hass, freezer, PRICES_SCAN_INTERVAL + timedelta(seconds=30))
 
     assert mock_engie_client.return_value.async_get_service_point.call_count == 2
 
@@ -991,43 +842,203 @@ async def test_service_point_success_without_ean_is_cached_once(
     mock_engie_client.return_value.async_get_service_point.side_effect = lambda ean: (
         ServicePoint(ean_energy_types={})
     )
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_entry(hass, mock_config_entry)
 
-    freezer.tick(PRICES_SCAN_INTERVAL + timedelta(seconds=30))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await advance_time(hass, freezer, PRICES_SCAN_INTERVAL + timedelta(seconds=30))
 
     assert mock_engie_client.return_value.async_get_service_point.call_count == 1
 
 
-@pytest.mark.usefixtures("frozen_afternoon")
-async def test_epex_entities_on_household_device(
+async def test_service_point_fetched_once_per_meter(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_engie_client: MagicMock,
     entity_registry: er.EntityRegistry,
-    device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test the EPEX entities belong to the device of their household."""
-    await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
-
-    household_device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, BAN), mock_config_entry.entry_id
-    )
-    assert household_device is not None
-    epex_entries = [
-        entity_entry
-        for entity_entry in er.async_entries_for_config_entry(
-            entity_registry, mock_config_entry.entry_id
+    """Test two suffixed EANs of one meter share a single service point fetch."""
+    second_suffix_ean = f"{bare_ean(OFFTAKE_ONLY_EAN)}_ID2"
+    mock_engie_client.return_value.async_get_prices.return_value = PricesResponse(
+        items=(
+            _single_period_prices(OFFTAKE_ONLY_EAN),
+            _single_period_prices(second_suffix_ean),
         )
-        if entity_entry.unique_id.startswith(f"{BAN}_epex_")
-    ]
-    assert len(epex_entries) == 9
-    assert {entity_entry.device_id for entity_entry in epex_entries} == {
-        household_device.id
-    }
+    )
+    await setup_entry(hass, mock_config_entry)
+
+    mock_engie_client.return_value.async_get_service_point.assert_called_once_with(
+        OFFTAKE_ONLY_EAN
+    )
+    expected = str(round(0.2 * GAS_CONVERSION_COEFFICIENT, 6))
+    first_state = hass.states.get(
+        get_entity_id(entity_registry, Platform.SENSOR, GAS_PER_M3_UNIQUE_ID)
+    )
+    second_state = hass.states.get(
+        get_entity_id(
+            entity_registry,
+            Platform.SENSOR,
+            f"{BAN}_{second_suffix_ean}_offtake_TOTAL_HOURS_per_m3",
+        )
+    )
+    assert first_state is not None
+    assert first_state.state == expected
+    assert second_state is not None
+    assert second_state.state == expected
+
+
+def _gas_service_point_side_effect(
+    coefficient: float | None,
+) -> Callable[[str], ServicePoint]:
+    """Return an async_get_service_point side_effect with the given gas coefficient."""
+    return lambda ean: build_service_point(ean, gas_conversion_coefficient=coefficient)
+
+
+async def _setup_single_gas_ean(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    coefficient: float | None,
+) -> None:
+    """Set up an entry with one gas EAN and the given conversion coefficient."""
+    client = mock_engie_client.return_value
+    client.async_get_prices.return_value = _single_ban_prices_response(
+        OFFTAKE_ONLY_EAN, 0.123456
+    )
+    client.async_get_service_point.side_effect = _gas_service_point_side_effect(
+        coefficient
+    )
+    await setup_entry(hass, mock_config_entry)
+
+
+def _gas_per_m3_state(hass: HomeAssistant, entity_registry: er.EntityRegistry) -> str:
+    """Return the state of the gas price per m³ sensor."""
+    state = get_state(hass, entity_registry, Platform.SENSOR, GAS_PER_M3_UNIQUE_ID)
+    return state.state
+
+
+@pytest.mark.parametrize(
+    ("coefficient", "expected_state"),
+    [
+        pytest.param(12.0, str(0.123456 * 12.0), id="coefficient-changed"),
+        pytest.param(None, STATE_UNAVAILABLE, id="coefficient-removed"),
+        pytest.param(0.0, STATE_UNAVAILABLE, id="coefficient-zero"),
+    ],
+)
+async def test_gas_conversion_coefficient_refreshes_daily(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    coefficient: float | None,
+    expected_state: str,
+) -> None:
+    """Test the per m³ gas price follows the coefficient fetched once a day."""
+    await _setup_single_gas_ean(
+        hass, mock_config_entry, mock_engie_client, GAS_CONVERSION_COEFFICIENT
+    )
+    client = mock_engie_client.return_value
+    assert _gas_per_m3_state(hass, entity_registry) == str(
+        0.123456 * GAS_CONVERSION_COEFFICIENT
+    )
+
+    client.async_get_service_point.side_effect = _gas_service_point_side_effect(
+        coefficient
+    )
+    await advance_time(hass, freezer, PRICES_SCAN_INTERVAL + timedelta(seconds=30))
+
+    assert client.async_get_service_point.call_count == 1
+
+    await advance_time(hass, freezer, timedelta(days=1))
+
+    assert client.async_get_service_point.call_count == 2
+    assert _gas_per_m3_state(hass, entity_registry) == expected_state
+
+
+async def test_failed_daily_coefficient_refresh_is_retried(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a failed daily refresh keeps the last coefficient and retries on the next poll."""
+    await _setup_single_gas_ean(
+        hass, mock_config_entry, mock_engie_client, GAS_CONVERSION_COEFFICIENT
+    )
+    client = mock_engie_client.return_value
+
+    client.async_get_service_point.side_effect = EngieBeCommunicationError("boom")
+    await advance_time(hass, freezer, timedelta(days=1))
+
+    assert client.async_get_service_point.call_count == 2
+    assert _gas_per_m3_state(hass, entity_registry) == str(
+        0.123456 * GAS_CONVERSION_COEFFICIENT
+    )
+
+    client.async_get_service_point.side_effect = _gas_service_point_side_effect(12.0)
+    await advance_time(hass, freezer, PRICES_SCAN_INTERVAL + timedelta(seconds=30))
+
+    assert client.async_get_service_point.call_count == 3
+    assert _gas_per_m3_state(hass, entity_registry) == str(0.123456 * 12.0)
+
+
+def _service_points_failing_for(failing_ean: str) -> Callable[[str], ServicePoint]:
+    """Return an async_get_service_point side_effect that fails for one EAN."""
+
+    def _side_effect(ean: str) -> ServicePoint:
+        """Raise for the failing EAN and build a service point otherwise."""
+        if ean == failing_ean:
+            raise EngieBeCommunicationError("boom")
+        return build_service_point(ean)
+
+    return _side_effect
+
+
+async def test_failing_service_point_does_not_refetch_healthy_ones(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test only the failing service point is retried on the next poll."""
+    client = mock_engie_client.return_value
+    client.async_get_service_point.side_effect = _service_points_failing_for(
+        OFFTAKE_INJECTION_EAN
+    )
+    await setup_entry(hass, mock_config_entry)
+
+    await advance_time(hass, freezer, PRICES_SCAN_INTERVAL + timedelta(seconds=30))
+
+    fetched = [call.args[0] for call in client.async_get_service_point.call_args_list]
+    assert fetched.count(OFFTAKE_ONLY_EAN) == 1
+    assert fetched.count(OFFTAKE_INJECTION_EAN) == 2
+
+
+async def test_gas_coefficient_appearing_later_adds_per_m3_sensor(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a gas EAN gets its per m³ sensors once ENGIE returns a coefficient."""
+    await _setup_single_gas_ean(hass, mock_config_entry, mock_engie_client, None)
+
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.SENSOR, DOMAIN, GAS_PER_M3_UNIQUE_ID
+        )
+        is None
+    )
+
+    mock_engie_client.return_value.async_get_service_point.side_effect = (
+        _gas_service_point_side_effect(GAS_CONVERSION_COEFFICIENT)
+    )
+    await advance_time(hass, freezer, timedelta(days=1))
+
+    assert _gas_per_m3_state(hass, entity_registry) == str(
+        0.123456 * GAS_CONVERSION_COEFFICIENT
+    )
 
 
 @pytest.mark.usefixtures("frozen_afternoon")
@@ -1043,52 +1054,34 @@ async def test_epex_sensors_unknown_during_slot_gap(
     )
     await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
 
-    hourly_current = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{BAN}_epex_current_hour"
+    hourly_current_state = get_state(
+        hass, entity_registry, Platform.SENSOR, EPEX_CURRENT_HOUR_UNIQUE_ID
     )
-    assert hourly_current is not None
-    hourly_current_state = hass.states.get(hourly_current)
-    assert hourly_current_state is not None
     assert hourly_current_state.state == STATE_UNKNOWN
 
-    quarter_current = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{BAN}_epex_current_quarter_hour"
+    quarter_current_state = get_state(
+        hass, entity_registry, Platform.SENSOR, f"{BAN}_epex_current_quarter_hour"
     )
-    assert quarter_current is not None
-    quarter_current_state = hass.states.get(quarter_current)
-    assert quarter_current_state is not None
     assert float(quarter_current_state.state) == pytest.approx(0.15)
 
-    next_hour = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{BAN}_epex_next_hour"
+    next_hour_state = get_state(
+        hass, entity_registry, Platform.SENSOR, f"{BAN}_epex_next_hour"
     )
-    assert next_hour is not None
-    next_hour_state = hass.states.get(next_hour)
-    assert next_hour_state is not None
     assert float(next_hour_state.state) == pytest.approx(0.16)
 
-    hourly_low = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{BAN}_epex_low_today_hour"
+    hourly_low_state = get_state(
+        hass, entity_registry, Platform.SENSOR, EPEX_LOW_TODAY_HOUR_UNIQUE_ID
     )
-    assert hourly_low is not None
-    hourly_low_state = hass.states.get(hourly_low)
-    assert hourly_low_state is not None
     assert hourly_low_state.state == STATE_UNKNOWN
 
-    hourly_high = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{BAN}_epex_high_today_hour"
+    hourly_high_state = get_state(
+        hass, entity_registry, Platform.SENSOR, f"{BAN}_epex_high_today_hour"
     )
-    assert hourly_high is not None
-    hourly_high_state = hass.states.get(hourly_high)
-    assert hourly_high_state is not None
     assert hourly_high_state.state == STATE_UNKNOWN
 
-    quarter_low = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{BAN}_epex_low_today_quarter_hour"
+    quarter_low_state = get_state(
+        hass, entity_registry, Platform.SENSOR, f"{BAN}_epex_low_today_quarter_hour"
     )
-    assert quarter_low is not None
-    quarter_low_state = hass.states.get(quarter_low)
-    assert quarter_low_state is not None
     assert float(quarter_low_state.state) == pytest.approx(0.01)
 
 
@@ -1103,10 +1096,9 @@ async def test_epex_sensors_update_on_quarter_boundaries(
     freezer.move_to(datetime(2026, 10, 3, 14, 7, tzinfo=BRUSSELS_TIME_ZONE))
     await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
 
-    quarter_entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{BAN}_epex_current_quarter_hour"
+    quarter_entity_id = get_entity_id(
+        entity_registry, Platform.SENSOR, f"{BAN}_epex_current_quarter_hour"
     )
-    assert quarter_entity_id is not None
     before_state = hass.states.get(quarter_entity_id)
     assert before_state is not None
     assert float(before_state.state) == pytest.approx(0.15)
@@ -1122,18 +1114,6 @@ async def test_epex_sensors_update_on_quarter_boundaries(
     assert mock_engie_client.return_value.async_get_epex_prices.call_count == (
         call_count
     )
-
-
-def _epex_state(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, key: str
-) -> str:
-    """Return the state of one EPEX entity of the dynamic household."""
-    platform = "binary_sensor" if key == "epex_tomorrow_available" else "sensor"
-    entity_id = entity_registry.async_get_entity_id(platform, DOMAIN, f"{BAN}_{key}")
-    assert entity_id is not None
-    state = hass.states.get(entity_id)
-    assert state is not None
-    return state.state
 
 
 @pytest.mark.parametrize(
@@ -1171,8 +1151,18 @@ async def test_epex_sensors_on_dst_days(
         "epex_high_today_quarter_hour": 0.2475,
     }
     for key, value in expected.items():
-        assert float(_epex_state(hass, entity_registry, key)) == pytest.approx(value)
-    assert _epex_state(hass, entity_registry, "epex_tomorrow_available") == STATE_ON
+        assert float(
+            get_state(hass, entity_registry, Platform.SENSOR, f"{BAN}_{key}").state
+        ) == pytest.approx(value)
+    assert (
+        get_state(
+            hass,
+            entity_registry,
+            Platform.BINARY_SENSOR,
+            EPEX_TOMORROW_AVAILABLE_UNIQUE_ID,
+        ).state
+        == STATE_ON
+    )
 
 
 @pytest.mark.usefixtures("frozen_afternoon")
@@ -1198,9 +1188,27 @@ async def test_epex_empty_payload_keeps_entities_unknown(
     client.async_get_epex_prices.side_effect = _empty_payload
     await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
 
-    assert _epex_state(hass, entity_registry, "epex_current_hour") == STATE_UNKNOWN
-    assert _epex_state(hass, entity_registry, "epex_low_today_hour") == STATE_UNKNOWN
-    assert _epex_state(hass, entity_registry, "epex_tomorrow_available") == STATE_OFF
+    assert (
+        get_state(
+            hass, entity_registry, Platform.SENSOR, EPEX_CURRENT_HOUR_UNIQUE_ID
+        ).state
+        == STATE_UNKNOWN
+    )
+    assert (
+        get_state(
+            hass, entity_registry, Platform.SENSOR, EPEX_LOW_TODAY_HOUR_UNIQUE_ID
+        ).state
+        == STATE_UNKNOWN
+    )
+    assert (
+        get_state(
+            hass,
+            entity_registry,
+            Platform.BINARY_SENSOR,
+            EPEX_TOMORROW_AVAILABLE_UNIQUE_ID,
+        ).state
+        == STATE_OFF
+    )
 
     call_count = client.async_get_epex_prices.call_count
     freezer.tick(EPEX_SCAN_INTERVAL)
@@ -1222,7 +1230,12 @@ async def test_epex_slot_gap_heals_on_next_refresh(
     client = mock_engie_client.return_value
     client.async_get_epex_prices.side_effect = build_epex_payload_with_gap
     await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
-    assert _epex_state(hass, entity_registry, "epex_low_today_hour") == STATE_UNKNOWN
+    assert (
+        get_state(
+            hass, entity_registry, Platform.SENSOR, EPEX_LOW_TODAY_HOUR_UNIQUE_ID
+        ).state
+        == STATE_UNKNOWN
+    )
 
     call_count = client.async_get_epex_prices.call_count
     client.async_get_epex_prices.side_effect = build_epex_payload
@@ -1232,23 +1245,12 @@ async def test_epex_slot_gap_heals_on_next_refresh(
 
     assert client.async_get_epex_prices.call_count == call_count + 1
     assert float(
-        _epex_state(hass, entity_registry, "epex_current_hour")
+        get_state(
+            hass, entity_registry, Platform.SENSOR, EPEX_CURRENT_HOUR_UNIQUE_ID
+        ).state
     ) == pytest.approx(0.16)
     assert float(
-        _epex_state(hass, entity_registry, "epex_low_today_hour")
+        get_state(
+            hass, entity_registry, Platform.SENSOR, EPEX_LOW_TODAY_HOUR_UNIQUE_ID
+        ).state
     ) == pytest.approx(0.01)
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "frozen_afternoon")
-async def test_epex_sensors_snapshot(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_engie_client: MagicMock,
-    entity_registry: er.EntityRegistry,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test the sensors of a household with a dynamic tariff."""
-    with patch("homeassistant.components.engie_be._PLATFORMS", [Platform.SENSOR]):
-        await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
-
-    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)

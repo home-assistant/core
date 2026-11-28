@@ -4,6 +4,7 @@
   "categories": ["hubs_protocols.building_automation"],
   "codeowners": ["@Qbus-iot", "@thomasddn"],
   "config_flow": true,
+  "connectivity": ["mqtt"],
   "dependencies": ["mqtt"],
   "documentation": "https://www.home-assistant.io/integrations/qbus",
   "integration_type": "hub",
@@ -15,5 +16,5 @@
     "cloudapp/QBUSMQTTGW/+/state"
   ],
   "quality_scale": "bronze",
-  "requirements": ["qbusmqttapi==1.5.1"]
+  "requirements": ["qbusmqttapi==1.6.1"]
 }

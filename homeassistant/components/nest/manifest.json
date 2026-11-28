@@ -9,6 +9,7 @@
   ],
   "codeowners": ["@allenporter"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["ffmpeg", "http", "application_credentials"],
   "dhcp": [
     {
@@ -25,5 +26,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_push",
   "loggers": ["google_nest_sdm"],
-  "requirements": ["google-nest-sdm==9.2.1"]
+  "requirements": ["google-nest-sdm==9.2.3"]
 }

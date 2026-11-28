@@ -1,6 +1,6 @@
 """Base class for iRobot devices."""
 
-from typing import override
+from typing import Any, override
 
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
@@ -22,7 +22,6 @@ class IRobotEntity(Entity):
         """Initialize the iRobot handler."""
         self.vacuum = roomba
         self._blid = blid
-        self.vacuum_state = roomba_reported_state(roomba)
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.robot_unique_id)},
@@ -44,6 +43,11 @@ class IRobotEntity(Entity):
             self._attr_device_info.connections = {
                 (dr.CONNECTION_NETWORK_MAC, mac_address)
             }
+
+    @property
+    def vacuum_state(self) -> dict[str, Any]:
+        """Return the current reported state."""
+        return roomba_reported_state(self.vacuum)
 
     @property
     def robot_unique_id(self):
@@ -72,6 +76,11 @@ class IRobotEntity(Entity):
     def battery_stats(self):
         """Return the battery stats."""
         return self.vacuum_state.get("bbchg3", {})
+
+    @property
+    def battery_info(self):
+        """Return the battery info."""
+        return self.vacuum_state.get("batInfo", {})
 
     @property
     def tank_level(self) -> int | None:

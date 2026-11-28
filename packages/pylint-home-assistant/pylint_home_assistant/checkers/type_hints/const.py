@@ -100,6 +100,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             return_type="bool",
             has_async_counterpart=True,
             mandatory=True,
+            coroutine=False,
         ),
         TypeHintMatch(
             function_name="async_setup_entry",
@@ -109,6 +110,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type=None,
             mandatory=True,
+            coroutine=True,
         ),
         TypeHintMatch(
             function_name="async_remove_entry",
@@ -118,6 +120,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type=None,
             mandatory=True,
+            coroutine=True,
         ),
         TypeHintMatch(
             function_name="async_unload_entry",
@@ -127,6 +130,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type=None,
             mandatory=True,
+            coroutine=True,
         ),
         TypeHintMatch(
             function_name="async_migrate_entry",
@@ -136,6 +140,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type=None,
             mandatory=True,
+            coroutine=True,
         ),
         TypeHintMatch(
             function_name="async_remove_config_entry_device",
@@ -146,6 +151,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type="bool",
             mandatory=True,
+            coroutine=True,
         ),
         TypeHintMatch(
             function_name="async_reset_platform",
@@ -155,6 +161,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type=None,
             mandatory=True,
+            coroutine=True,
         ),
     ],
     ANY_PLATFORM: [
@@ -169,6 +176,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             return_type=None,
             has_async_counterpart=True,
             mandatory=True,
+            coroutine=False,
         ),
         TypeHintMatch(
             function_name="async_setup_entry",
@@ -179,6 +187,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type=None,
             mandatory=True,
+            coroutine=True,
         ),
     ],
     Module.APPLICATION_CREDENTIALS: [
@@ -189,8 +198,12 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 1: "str",
                 2: "ClientCredential",
             },
-            return_type="AbstractOAuth2Implementation",
+            return_type=[
+                "AbstractOAuth2Implementation",
+                "AbstractAuthorizationCodeImplementation",
+            ],
             mandatory=True,
+            coroutine=True,
         ),
         TypeHintMatch(
             function_name="async_get_authorization_server",
@@ -199,6 +212,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type="AuthorizationServer",
             mandatory=True,
+            coroutine=True,
         ),
     ],
     Module.BACKUP: [
@@ -209,6 +223,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type=None,
             mandatory=True,
+            coroutine=True,
         ),
         TypeHintMatch(
             function_name="async_post_backup",
@@ -217,6 +232,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type=None,
             mandatory=True,
+            coroutine=True,
         ),
     ],
     Module.CAST: [
@@ -228,6 +244,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type="list[BrowseMedia]",
             mandatory=True,
+            coroutine=True,
         ),
         TypeHintMatch(
             function_name="async_browse_media",
@@ -239,6 +256,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type=["BrowseMedia", "BrowseMedia | None"],
             mandatory=True,
+            coroutine=True,
         ),
         TypeHintMatch(
             function_name="async_play_media",
@@ -251,6 +269,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type="bool",
             mandatory=True,
+            coroutine=True,
         ),
     ],
     Module.CONFIG_FLOW: [
@@ -272,6 +291,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type="ConfigType",
             mandatory=True,
+            coroutine=True,
         ),
         TypeHintMatch(
             function_name="async_call_action_from_config",
@@ -283,6 +303,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type=None,
             mandatory=True,
+            coroutine=True,
         ),
         TypeHintMatch(
             function_name="async_get_action_capabilities",
@@ -292,6 +313,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type="dict[str, Schema]",
             mandatory=True,
+            coroutine=True,
         ),
         TypeHintMatch(
             function_name="async_get_actions",
@@ -301,6 +323,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type=["list[dict[str, str]]", "list[dict[str, Any]]"],
             mandatory=True,
+            coroutine=True,
         ),
     ],
     Module.DEVICE_CONDITION: [
@@ -312,6 +335,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type="ConfigType",
             mandatory=True,
+            coroutine=True,
         ),
         TypeHintMatch(
             function_name="async_condition_from_config",
@@ -321,6 +345,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type="ConditionCheckerType",
             mandatory=True,
+            coroutine=False,
         ),
         TypeHintMatch(
             function_name="async_get_condition_capabilities",
@@ -330,6 +355,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type="dict[str, Schema]",
             mandatory=True,
+            coroutine=True,
         ),
         TypeHintMatch(
             function_name="async_get_conditions",
@@ -339,6 +365,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type=["list[dict[str, str]]", "list[dict[str, Any]]"],
             mandatory=True,
+            coroutine=True,
         ),
     ],
     Platform.DEVICE_TRACKER: [
@@ -352,6 +379,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type="bool",
             mandatory=True,
+            coroutine=False,
         ),
         TypeHintMatch(
             function_name="async_setup_scanner",
@@ -363,6 +391,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type="bool",
             mandatory=True,
+            coroutine=True,
         ),
         TypeHintMatch(
             function_name="get_scanner",
@@ -373,17 +402,19 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             return_type=["DeviceScanner", None],
             has_async_counterpart=True,
             mandatory=True,
+            coroutine=False,
         ),
     ],
     Module.DEVICE_TRIGGER: [
         TypeHintMatch(
-            function_name="async_validate_condition_config",
+            function_name="async_validate_trigger_config",
             arg_types={
                 0: "HomeAssistant",
                 1: "ConfigType",
             },
             return_type="ConfigType",
             mandatory=True,
+            coroutine=True,
         ),
         TypeHintMatch(
             function_name="async_attach_trigger",
@@ -395,6 +426,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type="CALLBACK_TYPE",
             mandatory=True,
+            coroutine=True,
         ),
         TypeHintMatch(
             function_name="async_get_trigger_capabilities",
@@ -404,6 +436,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type="dict[str, Schema]",
             mandatory=True,
+            coroutine=True,
         ),
         TypeHintMatch(
             function_name="async_get_triggers",
@@ -413,6 +446,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type=["list[dict[str, str]]", "list[dict[str, Any]]"],
             mandatory=True,
+            coroutine=True,
         ),
     ],
     Module.DIAGNOSTICS: [
@@ -424,6 +458,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type="Mapping[str, Any]",
             mandatory=True,
+            coroutine=True,
         ),
         TypeHintMatch(
             function_name="async_get_device_diagnostics",
@@ -434,6 +469,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type="Mapping[str, Any]",
             mandatory=True,
+            coroutine=True,
         ),
     ],
     Platform.NOTIFY: [
@@ -447,6 +483,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             return_type=["BaseNotificationService", None],
             has_async_counterpart=True,
             mandatory=True,
+            coroutine=False,
         ),
     ],
 }
@@ -572,10 +609,18 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             ],
         ),
     ],
-    "repairs": [
+    Module.REPAIRS: [
         ClassTypeHintMatch(
             base_class="RepairsFlow",
             matches=[
+                TypeHintMatch(
+                    function_name="async_step_init",
+                    named_arg_types={
+                        "user_input": ["dict[str, Any] | None", "dict[str, str] | None"]
+                    },
+                    return_type="RepairsFlowResult",
+                    mandatory=True,
+                ),
                 TypeHintMatch(
                     function_name="async_step_*",
                     arg_types={},
@@ -603,7 +648,7 @@ _ENTITY_MATCH: list[TypeHintMatch] = [
     ),
     TypeHintMatch(
         function_name="name",
-        return_type=["str", "UndefinedType", None],
+        return_type=["str", "Undefined", None],
     ),
     TypeHintMatch(
         function_name="state",
@@ -757,7 +802,26 @@ _TOGGLE_ENTITY_MATCH: list[TypeHintMatch] = [
     ),
 ]
 _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
-    # "air_quality": [],  # ignored as deprecated
+    Platform.AIR_QUALITY: [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
+        ),
+    ],
+    Platform.AI_TASK: [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
+        ),
+    ],
     Platform.ALARM_CONTROL_PANEL: [
         ClassTypeHintMatch(
             base_class="Entity",
@@ -852,6 +916,16 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     mandatory=True,
                 ),
             ],
+        ),
+    ],
+    Platform.ASSIST_SATELLITE: [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
         ),
     ],
     Platform.BINARY_SENSOR: [
@@ -1321,6 +1395,16 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             ],
         ),
     ],
+    Platform.CONVERSATION: [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
+        ),
+    ],
     Platform.COVER: [
         ClassTypeHintMatch(
             base_class="Entity",
@@ -1436,6 +1520,26 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             ],
         ),
     ],
+    Platform.DATE: [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
+        ),
+    ],
+    Platform.DATETIME: [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
+        ),
+    ],
     Platform.DEVICE_TRACKER: [
         ClassTypeHintMatch(
             base_class="Entity",
@@ -1527,6 +1631,16 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
         ),
     ],
     Module.ENTITY: [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
+        ),
+    ],
+    Platform.EVENT: [
         ClassTypeHintMatch(
             base_class="Entity",
             matches=_ENTITY_MATCH,
@@ -1669,6 +1783,16 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             ],
         ),
     ],
+    Platform.IMAGE: [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
+        ),
+    ],
     Platform.IMAGE_PROCESSING: [
         ClassTypeHintMatch(
             base_class="Entity",
@@ -1787,6 +1911,26 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     mandatory=True,
                 ),
             ],
+        ),
+    ],
+    Platform.INFRARED: [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
+        ),
+    ],
+    Platform.LAWN_MOWER: [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
         ),
     ],
     Platform.LIGHT: [
@@ -2389,6 +2533,16 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             ],
         ),
     ],
+    Platform.RADIO_FREQUENCY: [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
+        ),
+    ],
     Platform.REMOTE: [
         ClassTypeHintMatch(
             base_class="Entity",
@@ -2653,6 +2807,26 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     mandatory=True,
                 ),
             ],
+        ),
+    ],
+    Platform.TEXT: [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
+        ),
+    ],
+    Platform.TIME: [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
         ),
     ],
     Platform.TODO: [
@@ -2930,6 +3104,26 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     mandatory=True,
                 ),
             ],
+        ),
+    ],
+    Platform.VALVE: [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
+        ),
+    ],
+    Platform.WAKE_WORD: [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
         ),
     ],
     Platform.WATER_HEATER: [

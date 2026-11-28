@@ -12,7 +12,7 @@ from homeassistant.components.media_player import (
     MediaPlayerServiceArgument,
 )
 from homeassistant.components.stream import FORMAT_CONTENT_TYPE, OUTPUT_FORMATS
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
@@ -114,7 +114,7 @@ async def _async_handle_play_stream_service(
         MP_DOMAIN,
         MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: service_call.data[CameraServiceArgument.MEDIA_PLAYER],
+            TargetKey.ENTITY_ID: service_call.data[CameraServiceArgument.MEDIA_PLAYER],
             MediaPlayerServiceArgument.MEDIA_CONTENT_ID: url,
             MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: FORMAT_CONTENT_TYPE[fmt],
         },

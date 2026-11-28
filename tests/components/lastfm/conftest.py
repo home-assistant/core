@@ -1,9 +1,9 @@
 """Configure tests for the LastFM integration."""
 
-from collections.abc import Awaitable, Callable
-from unittest.mock import patch
+from collections.abc import Awaitable, Callable, Generator
+from unittest.mock import MagicMock, patch
 
-from pylast import Track, WSError
+from pylast import WSError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -12,9 +12,38 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from . import API_KEY, USERNAME_1, USERNAME_2, MockNetwork, MockUser
+from . import (
+    API_KEY,
+    AUTH_URL,
+    CONF_DATA_WITH_SESSION_KEY,
+    LOGIN_REQUIRED_ERROR,
+    SESSION_KEY,
+    USERNAME_1,
+    USERNAME_2,
+    MockUser,
+    mock_track,
+)
 
 type ComponentSetup = Callable[[MockConfigEntry, MockUser], Awaitable[None]]
+
+
+@pytest.fixture
+def mock_session_key_generator() -> Generator[MagicMock]:
+    """Mock web authentication with a controllable polling interval."""
+    with (
+        patch(
+            "homeassistant.components.lastfm.config_flow.SessionKeyGenerator",
+            autospec=True,
+        ) as constructor,
+        patch("homeassistant.components.lastfm.config_flow.POLLING_INTERVAL", 60),
+    ):
+        generator = constructor.return_value
+        generator.get_web_auth_url.return_value = AUTH_URL
+        generator.get_web_auth_session_key_username.return_value = (
+            SESSION_KEY,
+            USERNAME_1,
+        )
+        yield generator
 
 
 @pytest.fixture(name="config_entry")
@@ -29,6 +58,12 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_USERS: [USERNAME_1, USERNAME_2],
         },
     )
+
+
+@pytest.fixture(name="authenticated_config_entry")
+def mock_authenticated_config_entry() -> MockConfigEntry:
+    """Create an authenticated LastFM entry in Home Assistant."""
+    return MockConfigEntry(domain=DOMAIN, data={}, options=CONF_DATA_WITH_SESSION_KEY)
 
 
 @pytest.fixture(name="imported_config_entry")
@@ -64,9 +99,9 @@ async def mock_setup_integration(
 def mock_default_user() -> MockUser:
     """Return default mock user."""
     return MockUser(
-        now_playing_result=Track("artist", "title", MockNetwork("lastfm")),
-        top_tracks=[Track("artist", "title", MockNetwork("lastfm"))],
-        recent_tracks=[Track("artist", "title", MockNetwork("lastfm"))],
+        now_playing_result=mock_track(),
+        top_tracks=[mock_track()],
+        recent_tracks=[mock_track()],
         friends=[MockUser()],
     )
 
@@ -75,9 +110,9 @@ def mock_default_user() -> MockUser:
 def mock_default_user_no_friends() -> MockUser:
     """Return default mock user without friends."""
     return MockUser(
-        now_playing_result=Track("artist", "title", MockNetwork("lastfm")),
-        top_tracks=[Track("artist", "title", MockNetwork("lastfm"))],
-        recent_tracks=[Track("artist", "title", MockNetwork("lastfm"))],
+        now_playing_result=mock_track(),
+        top_tracks=[mock_track()],
+        recent_tracks=[mock_track()],
     )
 
 
@@ -97,10 +132,8 @@ def mock_not_found_user() -> MockUser:
 def mock_hidden_user() -> MockUser:
     """Return mock user who hides their recent listening information."""
     return MockUser(
-        recent_tracks=[Track("artist", "title", MockNetwork("lastfm"))],
-        recent_tracks_error=WSError(
-            "network", "17", "Login: User required to be logged in"
-        ),
+        recent_tracks=[mock_track()],
+        recent_tracks_error=LOGIN_REQUIRED_ERROR,
     )
 
 
@@ -108,6 +141,16 @@ def mock_hidden_user() -> MockUser:
 def mock_recent_tracks_error_user() -> MockUser:
     """Return mock user whose recent tracks request fails."""
     return MockUser(
-        recent_tracks=[Track("artist", "title", MockNetwork("lastfm"))],
+        recent_tracks=[mock_track()],
         recent_tracks_error=WSError("network", "status", "Something strange"),
+    )
+
+
+@pytest.fixture(name="hidden_now_playing_user")
+def mock_hidden_now_playing_user() -> MockUser:
+    """Return mock user with now playing available but hidden listening info."""
+    return MockUser(
+        now_playing_result=mock_track(),
+        recent_tracks=[mock_track()],
+        recent_tracks_error=LOGIN_REQUIRED_ERROR,
     )

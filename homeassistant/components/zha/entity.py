@@ -14,19 +14,25 @@ from zha.mixins import LogMixin
 
 from homeassistant.const import EntityCategory
 from homeassistant.core import State, callback
-from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE, DeviceInfo
+from homeassistant.helpers.device_registry import (
+    CONNECTION_ZIGBEE,
+    ChildDeviceInfo,
+    DeviceInfo,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.group import IntegrationSpecificGroup
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
+from homeassistant.helpers.typing import Undefined
 
 from .const import DOMAIN
 from .helpers import (
     SIGNAL_REMOVE_ENTITIES,
     SIGNAL_REMOVE_ENTITY,
     EntityData,
+    async_get_child_device_name,
     convert_zha_error_to_ha_error,
+    get_child_device_identifier,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -82,7 +88,7 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
 
     @cached_property
     @override
-    def name(self) -> str | UndefinedType | None:
+    def name(self) -> str | Undefined | None:
         """Return the name of the entity.
 
         Built-in quirks have translations in HA, so those are used.
@@ -91,6 +97,10 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
         If a device class is set but no translation key,
         the device class name is used.
         """
+        # Group entities take the name of their group device
+        if self.entity_data.is_group_entity:
+            return None
+
         meta = self._zha_state
         if meta.primary:
             self._attr_name = None
@@ -103,7 +113,7 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
         # If we do not have a translation key, only use fallback_name
         # if device class is also missing
         if meta.translation_key is None:
-            if super().name in (UNDEFINED, None):
+            if super().name in (Undefined, None):
                 self._attr_name = meta.fallback_name
             return super().name
 
@@ -124,10 +134,23 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
 
     @property
     @override
-    def device_info(self) -> DeviceInfo:
+    def device_info(self) -> DeviceInfo | ChildDeviceInfo:
         """Return a device description for device registry."""
+        # Group entities have their own device linked via the coordinator
+        if self.entity_data.is_group_entity:
+            group_proxy = self.entity_data.group_proxy
+            assert group_proxy is not None
+            return group_proxy.device_info
+
         zha_device_info = self.entity_data.device_proxy.device_info
         ieee = zha_device_info["ieee"]
+
+        if (child_device := self.entity_data.entity.child_device) is not None:
+            return ChildDeviceInfo(
+                identifiers={get_child_device_identifier(ieee, child_device.id)},
+                parent_device_id=self.entity_data.device_proxy.device_id,
+                **async_get_child_device_name(self.hass, child_device),
+            )
 
         return DeviceInfo(
             connections={(CONNECTION_ZIGBEE, ieee)},

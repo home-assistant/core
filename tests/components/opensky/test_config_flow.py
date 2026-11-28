@@ -15,6 +15,7 @@ from homeassistant.components.opensky.const import (
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_LATITUDE,
+    CONF_LOCATION,
     CONF_LONGITUDE,
     CONF_PASSWORD,
     CONF_RADIUS,
@@ -37,9 +38,11 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
-            CONF_RADIUS: 10,
-            CONF_LATITUDE: 0.0,
-            CONF_LONGITUDE: 0.0,
+            CONF_LOCATION: {
+                CONF_RADIUS: 10,
+                CONF_LATITUDE: 0.0,
+                CONF_LONGITUDE: 0.0,
+            },
             CONF_ALTITUDE: 0,
         },
     )

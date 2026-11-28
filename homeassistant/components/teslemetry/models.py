@@ -22,11 +22,14 @@ from .coordinator import (
     TeslemetryEnergyHistoryCoordinator,
     TeslemetryEnergySiteInfoCoordinator,
     TeslemetryEnergySiteLiveCoordinator,
+    TeslemetryLocalComponentsCoordinator,
     TeslemetryLocalStatusCoordinator,
     TeslemetryMetadataCoordinator,
     TeslemetryVehicleDataCoordinator,
     TeslemetryWallConnectorTotalsCoordinator,
 )
+
+type TeslemetryConfigEntry = ConfigEntry[TeslemetryData]
 
 STORAGE_VERSION = 1
 
@@ -48,7 +51,7 @@ class TeslemetryVehicleData:
     """Data for a vehicle in the Teslemetry integration."""
 
     api: Vehicle | VehicleRouter
-    config_entry: ConfigEntry
+    config_entry: TeslemetryConfigEntry
     coordinator: TeslemetryVehicleDataCoordinator
     poll: bool
     stream: TeslemetryStream
@@ -129,3 +132,14 @@ class TeslemetryEnergyData:
     subentry_id: str | None
     # Only set when the site is paired with its local gateway.
     local_status_coordinator: TeslemetryLocalStatusCoordinator | None = None
+    local_components_coordinator: TeslemetryLocalComponentsCoordinator | None = None
+
+    def signed_commands_available(self, metadata: dict[str, Any]) -> bool:
+        """Return whether commands Teslemetry signs with its own key can reach the site.
+
+        The cloud can only route them once Teslemetry's key is verified on the
+        gateway, which metadata reports as paired; null means not yet known.
+        """
+        return isinstance(self.api, EnergySiteRouter) or bool(
+            metadata["energy_sites"].get(str(self.id), {}).get("paired")
+        )

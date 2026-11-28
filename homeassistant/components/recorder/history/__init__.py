@@ -1,7 +1,8 @@
 """Provide pre-made queries on top of the recorder component."""
 
-from collections.abc import Callable, Iterable, Iterator
+from collections.abc import Callable, Generator, Iterable, Iterator
 from datetime import datetime
+from functools import partial
 from itertools import groupby
 from operator import itemgetter
 from typing import TYPE_CHECKING, Any, cast
@@ -41,7 +42,7 @@ from ..models import (
     extract_metadata_ids,
     row_to_compressed_state,
 )
-from ..util import execute_stmt_lambda_element
+from ..util import execute_stmt_lambda_element, execute_stmt_lambda_element_streamed
 from .const import (
     LAST_CHANGED_KEY,
     NEED_ATTRIBUTE_DOMAINS,
@@ -123,7 +124,7 @@ def _stmt_and_join_attributes_for_start_state(
 
 
 def _select_from_subquery(
-    subquery: Subquery | CompoundSelect,
+    subquery: Subquery,
     no_attributes: bool,
     include_last_changed: bool,
     include_last_reported: bool,
@@ -263,6 +264,88 @@ def get_significant_states_with_session(
     as well as all states from certain domains (for instance
     thermostat so that we get current temperature in our graphs).
     """
+    return _significant_states_with_session(
+        hass,
+        session,
+        start_time,
+        end_time,
+        entity_ids,
+        filters,
+        include_start_time_state,
+        significant_changes_only,
+        minimal_response,
+        no_attributes,
+        compressed_state_format,
+        lambda entity_states: _entity_states_to_dict(entity_states, entity_ids or []),
+    )
+
+
+def get_significant_states_serialized[_T](
+    hass: HomeAssistant,
+    start_time: datetime,
+    end_time: datetime | None,
+    entity_ids: list[str],
+    include_start_time_state: bool,
+    significant_changes_only: bool,
+    minimal_response: bool,
+    no_attributes: bool,
+    serialize: Callable[[str, list[dict[str, Any]]], _T],
+) -> list[_T]:
+    """Return the serialized compressed significant states of each entity.
+
+    Each entity's states are passed to serialize as soon as they are complete,
+    so only the states of one entity are kept at a time. The results are in
+    the order of entity_ids, entities without states are left out.
+    """
+
+    def _collect(
+        entity_states: Iterable[tuple[str, list[State | dict[str, Any]]]],
+    ) -> list[_T]:
+        serialized: dict[str, _T] = {}
+        for entity_id, states in entity_states:
+            serialized[entity_id] = serialize(
+                entity_id, cast(list[dict[str, Any]], states)
+            )
+            # Free the states before the next entity's states are built
+            del states
+        return [
+            serialized[entity_id]
+            for entity_id in dict.fromkeys(entity_ids)
+            if entity_id in serialized
+        ]
+
+    with session_scope(hass=hass, read_only=True) as session:
+        return _significant_states_with_session(
+            hass,
+            session,
+            start_time,
+            end_time,
+            entity_ids,
+            None,
+            include_start_time_state,
+            significant_changes_only,
+            minimal_response,
+            no_attributes,
+            True,
+            _collect,
+        )
+
+
+def _significant_states_with_session[_T](
+    hass: HomeAssistant,
+    session: Session,
+    start_time: datetime,
+    end_time: datetime | None,
+    entity_ids: list[str] | None,
+    filters: Filters | None,
+    include_start_time_state: bool,
+    significant_changes_only: bool,
+    minimal_response: bool,
+    no_attributes: bool,
+    compressed_state_format: bool,
+    collect: Callable[[Iterable[tuple[str, list[State | dict[str, Any]]]]], _T],
+) -> _T:
+    """Collect the significant states of each entity with collect."""
     if filters is not None:
         raise NotImplementedError("Filters are no longer supported")
     if not entity_ids:
@@ -275,7 +358,7 @@ def get_significant_states_with_session(
             entity_ids, session, False
         )
     ) or not (possible_metadata_ids := extract_metadata_ids(entity_id_to_metadata_id)):
-        return {}
+        return collect(())
     metadata_ids = possible_metadata_ids
     if significant_changes_only:
         metadata_ids_in_significant_domains = [
@@ -292,22 +375,26 @@ def get_significant_states_with_session(
     start_time_ts = start_time.timestamp()
     end_time_ts = datetime_to_timestamp_or_none(end_time)
     single_metadata_id = metadata_ids[0] if len(metadata_ids) == 1 else None
-    rows: list[Row] = []
     if TYPE_CHECKING:
         assert instance.database_engine is not None
     slow_dependent_subquery = instance.database_engine.optimizer.slow_dependent_subquery
-    if include_start_time_state and slow_dependent_subquery:
-        # https://github.com/home-assistant/core/issues/137178
-        # If we include the start time state we need to limit the
-        # number of metadata_ids we query for at a time to avoid
-        # hitting limits in the MySQL optimizer that prevent
-        # the start time state query from using an index-only optimization
-        # to find the start time state.
-        iter_metadata_ids = chunked_or_all(metadata_ids, MAX_IDS_FOR_INDEXED_GROUP_BY)
-    else:
-        iter_metadata_ids = (metadata_ids,)
-    for metadata_ids_chunk in iter_metadata_ids:
-        stmt = _generate_significant_states_with_session_stmt(
+    iter_entity_states = partial(
+        _iter_entity_states,
+        start_time_ts=start_time_ts if include_start_time_state else None,
+        entity_id_to_metadata_id=entity_id_to_metadata_id,
+        minimal_response=minimal_response,
+        compressed_state_format=compressed_state_format,
+        no_attributes=no_attributes,
+        field_indices=_row_field_indices(
+            no_attributes, not significant_changes_only, False
+        ),
+    )
+
+    def to_result(rows: Iterable[Row]) -> _T:
+        return collect(iter_entity_states(rows))
+
+    def _stmt(metadata_ids_chunk: list[int]) -> StatementLambdaElement:
+        return _generate_significant_states_with_session_stmt(
             start_time_ts,
             end_time_ts,
             single_metadata_id,
@@ -319,29 +406,28 @@ def get_significant_states_with_session(
             oldest_ts,
             slow_dependent_subquery,
         )
-        row_chunk = cast(
-            list[Row],
-            execute_stmt_lambda_element(session, stmt, None, end_time, orm_rows=False),
+
+    if not (include_start_time_state and slow_dependent_subquery):
+        return execute_stmt_lambda_element_streamed(
+            session, _stmt(metadata_ids), lambda rows, _: to_result(rows)
         )
-        if rows:
-            rows += row_chunk
-        else:
-            # If we have no rows yet, we can just assign the chunk
-            # as this is the common case since its rare that
-            # we exceed the MAX_IDS_FOR_INDEXED_GROUP_BY limit
-            rows = row_chunk
-    return _sorted_states_to_dict(
-        rows,
-        start_time_ts if include_start_time_state else None,
-        entity_ids,
-        entity_id_to_metadata_id,
-        minimal_response,
-        compressed_state_format,
-        no_attributes=no_attributes,
-        field_indices=_row_field_indices(
-            no_attributes, not significant_changes_only, False
-        ),
-    )
+    # https://github.com/home-assistant/core/issues/137178
+    # If we include the start time state we need to limit the
+    # number of metadata_ids we query for at a time to avoid
+    # hitting limits in the MySQL optimizer that prevent
+    # the start time state query from using an index-only optimization
+    # to find the start time state.
+    rows: list[Row] = []
+    for metadata_ids_chunk in chunked_or_all(
+        metadata_ids, MAX_IDS_FOR_INDEXED_GROUP_BY
+    ):
+        rows += cast(
+            list[Row],
+            execute_stmt_lambda_element(
+                session, _stmt(metadata_ids_chunk), orm_rows=False
+            ),
+        )
+    return to_result(rows)
 
 
 def _generate_significant_states_with_session_stmt(
@@ -422,9 +508,11 @@ def _state_changed_during_period_stmt(
     limit: int | None,
     include_start_time_state: bool,
     run_start_ts: float | None,
+    descending: bool,
 ) -> Select | CompoundSelect:
     stmt = (
         _stmt_and_join_attributes(no_attributes, False, True)
+        .add_columns(States.state_id)
         .filter(
             (
                 (States.last_changed_ts == States.last_updated_ts)
@@ -442,37 +530,37 @@ def _state_changed_during_period_stmt(
         )
     if limit:
         stmt = stmt.limit(limit)
-    stmt = stmt.order_by(States.metadata_id, States.last_updated_ts)
+    if descending and limit:
+        # Select the newest samples before restoring the converter's ascending order.
+        subquery = stmt.order_by(
+            States.last_updated_ts.desc(), States.state_id.desc()
+        ).subquery()
+        stmt = select(subquery).order_by(
+            subquery.c.last_updated_ts, subquery.c.state_id
+        )
+    else:
+        stmt = stmt.order_by(
+            States.metadata_id, States.last_updated_ts, States.state_id
+        )
     if not include_start_time_state or not run_start_ts:
         # If we do not need the start time state or the
         # oldest possible timestamp is newer than the start time
         # we can return the statement as is as there will
         # never be a start time state.
         return stmt
-    return _select_from_subquery(
-        union_all(
-            _select_from_subquery(
-                _get_single_entity_start_time_stmt(
-                    start_time_ts,
-                    single_metadata_id,
-                    no_attributes,
-                    False,
-                    True,
-                ).subquery(),
-                no_attributes,
-                False,
-                True,
-            ),
-            _select_from_subquery(
-                stmt.subquery(),
-                no_attributes,
-                False,
-                True,
-            ),
-        ).subquery(),
-        no_attributes,
-        False,
-        True,
+    start_state = (
+        _get_single_entity_start_time_stmt(
+            start_time_ts, single_metadata_id, no_attributes, False, True
+        )
+        .add_columns(States.state_id)
+        .order_by(States.state_id.desc())
+        .subquery()
+    )
+    unioned_subquery = union_all(
+        select(start_state), select(stmt.subquery())
+    ).subquery()
+    return _select_from_subquery(unioned_subquery, no_attributes, False, True).order_by(
+        unioned_subquery.c.last_updated_ts, unioned_subquery.c.state_id
     )
 
 
@@ -519,26 +607,30 @@ def state_changes_during_period(
                 limit,
                 include_start_time_state,
                 oldest_ts,
+                descending,
             ),
             track_on=[
                 bool(end_time_ts),
                 no_attributes,
                 bool(limit),
+                descending,
                 include_start_time_state,
             ],
         )
         return cast(
             dict[str, list[State]],
-            _sorted_states_to_dict(
-                execute_stmt_lambda_element(
-                    session, stmt, None, end_time, orm_rows=False
+            execute_stmt_lambda_element_streamed(
+                session,
+                stmt,
+                lambda rows, _: _sorted_states_to_dict(
+                    rows,
+                    start_time_ts=start_time_ts if include_start_time_state else None,
+                    entity_ids=entity_ids,
+                    entity_id_to_metadata_id=entity_id_to_metadata_id,
+                    descending=descending,
+                    no_attributes=no_attributes,
+                    field_indices=_row_field_indices(no_attributes, False, True),
                 ),
-                start_time_ts if include_start_time_state else None,
-                entity_ids,
-                entity_id_to_metadata_id,
-                descending=descending,
-                no_attributes=no_attributes,
-                field_indices=_row_field_indices(no_attributes, False, True),
             ),
         )
 
@@ -832,6 +924,55 @@ def _sorted_states_to_dict(
     structure {'entity_id': [list of states], 'entity_id2': [list of states]}
 
     States must be sorted by entity_id and last_updated
+    """
+    return _entity_states_to_dict(
+        _iter_entity_states(
+            states,
+            start_time_ts,
+            entity_id_to_metadata_id,
+            minimal_response,
+            compressed_state_format,
+            no_attributes,
+            field_indices=field_indices,
+        ),
+        entity_ids,
+        descending,
+    )
+
+
+def _entity_states_to_dict(
+    entity_states: Iterable[tuple[str, list[State | dict[str, Any]]]],
+    entity_ids: list[str],
+    descending: bool = False,
+) -> dict[str, list[State | dict[str, Any]]]:
+    """Return the states of each entity, in the order of entity_ids."""
+    # Set all entity IDs to empty lists in result set to maintain the order
+    result: dict[str, list[State | dict[str, Any]]] = {
+        entity_id: [] for entity_id in entity_ids
+    }
+    for entity_id, ent_results in entity_states:
+        if descending:
+            ent_results.reverse()
+        result[entity_id] = ent_results
+
+    # Filter out the empty lists if some states had 0 results.
+    return {key: val for key, val in result.items() if val}
+
+
+def _iter_entity_states(
+    states: Iterable[Row],
+    start_time_ts: float | None,
+    entity_id_to_metadata_id: dict[str, int | None],
+    minimal_response: bool = False,
+    compressed_state_format: bool = False,
+    no_attributes: bool = False,
+    *,
+    field_indices: tuple[int | None, int | None, int | None],
+) -> Generator[tuple[str, list[State | dict[str, Any]]]]:
+    """Yield the states of each entity as soon as they are converted.
+
+    States must be sorted by entity_id and last_updated, so the states of an
+    entity are complete when the next entity starts.
 
     We also need to go back and create a synthetic zero data point for
     each list of states, otherwise our graphs won't start on the Y
@@ -862,18 +1003,12 @@ def _sorted_states_to_dict(
         attr_time = LAST_CHANGED_KEY
         attr_state = STATE_KEY
 
-    # Set all entity IDs to empty lists in result set to maintain the order
-    result: dict[str, list[State | dict[str, Any]]] = {
-        entity_id: [] for entity_id in entity_ids
-    }
-    metadata_id_to_entity_id: dict[int, str] = {}
     metadata_id_to_entity_id = {
         v: k for k, v in entity_id_to_metadata_id.items() if v is not None
     }
     # Get the states at the start time
-    if len(entity_ids) == 1:
-        metadata_id = entity_id_to_metadata_id[entity_ids[0]]
-        assert metadata_id is not None  # should not be possible if we got here
+    if len(metadata_id_to_entity_id) == 1:
+        (metadata_id,) = metadata_id_to_entity_id
         states_iter: Iterable[tuple[int, Iterator[Row]]] = (
             (metadata_id, iter(states)),
         )
@@ -888,7 +1023,7 @@ def _sorted_states_to_dict(
     for metadata_id, group in states_iter:
         entity_id = metadata_id_to_entity_id[metadata_id]
         attr_cache: dict[str, dict[str, Any]] = {}
-        ent_results = result[entity_id]
+        ent_results: list[State | dict[str, Any]] = []
         if (
             not minimal_response
             or split_entity_id(entity_id)[0] in NEED_ATTRIBUTE_DOMAINS
@@ -913,6 +1048,9 @@ def _sorted_states_to_dict(
                     for db_state in group
                 ]
             )
+            # The group of a single entity is empty when there are no rows
+            if ent_results:
+                yield entity_id, ent_results
             continue
 
         prev_state: str | None = None
@@ -920,27 +1058,26 @@ def _sorted_states_to_dict(
         # State for the first and last response. All the states
         # in-between only provide the "state" and the
         # "last_changed".
-        if not ent_results:
-            if (first_state := next(group, None)) is None:
-                continue
-            prev_state = first_state[state_idx]
-            ent_results.append(
-                state_class(
-                    attr_cache,
-                    start_time_ts,
-                    entity_id,
-                    prev_state,
-                    first_state[last_updated_ts_idx],
-                    None if attributes_idx is None else first_state[attributes_idx],
-                    None
-                    if last_changed_ts_idx is None
-                    else first_state[last_changed_ts_idx],
-                    None
-                    if last_reported_ts_idx is None
-                    else first_state[last_reported_ts_idx],
-                    no_attributes,
-                )
+        if (first_state := next(group, None)) is None:
+            continue
+        prev_state = first_state[state_idx]
+        ent_results.append(
+            state_class(
+                attr_cache,
+                start_time_ts,
+                entity_id,
+                prev_state,
+                first_state[last_updated_ts_idx],
+                None if attributes_idx is None else first_state[attributes_idx],
+                None
+                if last_changed_ts_idx is None
+                else first_state[last_changed_ts_idx],
+                None
+                if last_reported_ts_idx is None
+                else first_state[last_reported_ts_idx],
+                no_attributes,
             )
+        )
 
         #
         # minimal_response only makes sense with last_updated == last_updated
@@ -961,6 +1098,7 @@ def _sorted_states_to_dict(
                     if (state := row[state_idx]) != prev_state
                 ]
             )
+            yield entity_id, ent_results
             continue
 
         # Non-compressed state format returns an ISO formatted string
@@ -977,10 +1115,4 @@ def _sorted_states_to_dict(
                 if (state := row[state_idx]) != prev_state
             ]
         )
-
-    if descending:
-        for ent_results in result.values():
-            ent_results.reverse()
-
-    # Filter out the empty lists if some states had 0 results.
-    return {key: val for key, val in result.items() if val}
+        yield entity_id, ent_results

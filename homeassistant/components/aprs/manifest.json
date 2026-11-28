@@ -3,6 +3,7 @@
   "name": "APRS",
   "categories": ["presence_location.trackers"],
   "codeowners": ["@PhilRW"],
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/aprs",
   "iot_class": "cloud_push",
   "loggers": ["aprslib", "geographiclib", "geopy"],

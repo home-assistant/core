@@ -6,7 +6,7 @@ from unittest.mock import patch
 import pytest
 from pytest_homeassistant.common import mock_restore_cache
 from zigpy.const import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
-from zigpy.device import Device
+from zigpy.device import ZigbeeDevice
 from zigpy.profiles import zha
 from zigpy.zcl.clusters import general, security
 
@@ -51,7 +51,7 @@ async def test_select(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> None:
     """Test ZHA select platform."""
 
@@ -129,7 +129,7 @@ async def test_select_restore_state(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
     restored_state: str,
     expected_state: str,
 ) -> None:

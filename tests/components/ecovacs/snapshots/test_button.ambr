@@ -7,7 +7,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('ecovacs', '8516fbb1-17f1-4194-0000000')]>,
     'disabled_by': None,
@@ -57,7 +57,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('ecovacs', '8516fbb1-17f1-4194-0000000')]>,
     'disabled_by': None,
@@ -107,7 +107,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('ecovacs', '8516fbb1-17f1-4194-0000002')]>,
     'disabled_by': None,
@@ -157,7 +157,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('ecovacs', '8516fbb1-17f1-4194-0000002')]>,
     'disabled_by': None,
@@ -207,7 +207,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('ecovacs', '8516fbb1-17f1-4194-0000002')]>,
     'disabled_by': None,
@@ -249,6 +249,56 @@
     'state': '2024-01-01T00:00:00+00:00',
   })
 # ---
+# name: test_buttons[9eamof][button.t80_omni_reset_dust_bag_lifespan:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('ecovacs', '8516fbb1-17f1-4194-0000002')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.t80_omni_reset_dust_bag_lifespan',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Reset dust bag lifespan',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Reset dust bag lifespan',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'reset_lifespan_dust_bag',
+    'unique_id': '8516fbb1-17f1-4194-0000002_reset_lifespan_dust_bag',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[9eamof][button.t80_omni_reset_dust_bag_lifespan:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'T80 OMNI Reset dust bag lifespan',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.t80_omni_reset_dust_bag_lifespan',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-01-01T00:00:00+00:00',
+  })
+# ---
 # name: test_buttons[9eamof][button.t80_omni_reset_filter_lifespan:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -257,7 +307,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('ecovacs', '8516fbb1-17f1-4194-0000002')]>,
     'disabled_by': None,
@@ -299,56 +349,6 @@
     'state': '2024-01-01T00:00:00+00:00',
   })
 # ---
-# name: test_buttons[9eamof][button.t80_omni_reset_hand_filter_lifespan:entity-registry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('ecovacs', '8516fbb1-17f1-4194-0000002')]>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.t80_omni_reset_hand_filter_lifespan',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Reset hand filter lifespan',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Reset hand filter lifespan',
-    'platform': 'ecovacs',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'reset_lifespan_hand_filter',
-    'unique_id': '8516fbb1-17f1-4194-0000002_reset_lifespan_hand_filter',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_buttons[9eamof][button.t80_omni_reset_hand_filter_lifespan:state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'T80 OMNI Reset hand filter lifespan',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.t80_omni_reset_hand_filter_lifespan',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2024-01-01T00:00:00+00:00',
-  })
-# ---
 # name: test_buttons[9eamof][button.t80_omni_reset_main_brush_lifespan:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -357,7 +357,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('ecovacs', '8516fbb1-17f1-4194-0000002')]>,
     'disabled_by': None,
@@ -399,6 +399,56 @@
     'state': '2024-01-01T00:00:00+00:00',
   })
 # ---
+# name: test_buttons[9eamof][button.t80_omni_reset_round_mop_lifespan:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('ecovacs', '8516fbb1-17f1-4194-0000002')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.t80_omni_reset_round_mop_lifespan',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Reset round mop lifespan',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Reset round mop lifespan',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'reset_lifespan_round_mop',
+    'unique_id': '8516fbb1-17f1-4194-0000002_reset_lifespan_round_mop',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[9eamof][button.t80_omni_reset_round_mop_lifespan:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'T80 OMNI Reset round mop lifespan',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.t80_omni_reset_round_mop_lifespan',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-01-01T00:00:00+00:00',
+  })
+# ---
 # name: test_buttons[9eamof][button.t80_omni_reset_sewage_box_lifespan:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -407,7 +457,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('ecovacs', '8516fbb1-17f1-4194-0000002')]>,
     'disabled_by': None,
@@ -457,7 +507,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('ecovacs', '8516fbb1-17f1-4194-0000002')]>,
     'disabled_by': None,
@@ -507,7 +557,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('ecovacs', '8516fbb1-17f1-4194-0000002')]>,
     'disabled_by': None,
@@ -549,6 +599,56 @@
     'state': '2024-01-01T00:00:00+00:00',
   })
 # ---
+# name: test_buttons[9eamof][button.t80_omni_reset_water_sink_lifespan:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('ecovacs', '8516fbb1-17f1-4194-0000002')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.t80_omni_reset_water_sink_lifespan',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Reset water sink lifespan',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Reset water sink lifespan',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'reset_lifespan_water_sink',
+    'unique_id': '8516fbb1-17f1-4194-0000002_reset_lifespan_water_sink',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[9eamof][button.t80_omni_reset_water_sink_lifespan:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'T80 OMNI Reset water sink lifespan',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.t80_omni_reset_water_sink_lifespan',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-01-01T00:00:00+00:00',
+  })
+# ---
 # name: test_buttons[qhe2o2][button.dusty_empty_dustbin:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -557,7 +657,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('ecovacs', '8516fbb1-17f1-4194-0000001')]>,
     'disabled_by': None,
@@ -607,7 +707,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('ecovacs', '8516fbb1-17f1-4194-0000001')]>,
     'disabled_by': None,
@@ -657,7 +757,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('ecovacs', '8516fbb1-17f1-4194-0000001')]>,
     'disabled_by': None,
@@ -707,7 +807,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('ecovacs', '8516fbb1-17f1-4194-0000001')]>,
     'disabled_by': None,
@@ -757,7 +857,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('ecovacs', '8516fbb1-17f1-4194-0000001')]>,
     'disabled_by': None,
@@ -807,7 +907,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('ecovacs', '8516fbb1-17f1-4194-0000001')]>,
     'disabled_by': None,
@@ -857,7 +957,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('ecovacs', '8516fbb1-17f1-4194-0000001')]>,
     'disabled_by': None,
@@ -907,7 +1007,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('ecovacs', '8516fbb1-17f1-4194-0000003')]>,
     'disabled_by': None,
@@ -957,7 +1057,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('ecovacs', '8516fbb1-17f1-4194-0000003')]>,
     'disabled_by': None,
@@ -1007,7 +1107,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('ecovacs', '8516fbb1-17f1-4194-0000003')]>,
     'disabled_by': None,
@@ -1057,7 +1157,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('ecovacs', '8516fbb1-17f1-4194-0000003')]>,
     'disabled_by': None,
@@ -1107,7 +1207,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('ecovacs', '8516fbb1-17f1-4194-0000003')]>,
     'disabled_by': None,
@@ -1157,7 +1257,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('ecovacs', '8516fbb1-17f1-4194-0000003')]>,
     'disabled_by': None,
@@ -1207,7 +1307,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('ecovacs', '8516fbb1-17f1-4194-0000003')]>,
     'disabled_by': None,
@@ -1257,7 +1357,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('ecovacs', '8516fbb1-17f1-4194-0000003')]>,
     'disabled_by': None,
@@ -1307,7 +1407,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('ecovacs', '8516fbb1-17f1-4194-0000003')]>,
     'disabled_by': None,
@@ -1357,7 +1457,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('ecovacs', '8516fbb1-17f1-4194-0000003')]>,
     'disabled_by': None,
@@ -1407,7 +1507,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('ecovacs', '8516fbb1-17f1-4194-0000003')]>,
     'disabled_by': None,
@@ -1457,7 +1557,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('ecovacs', '8516fbb1-17f1-4194-0000003')]>,
     'disabled_by': None,
@@ -1507,7 +1607,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('ecovacs', '8516fbb1-17f1-4194-0000003')]>,
     'disabled_by': None,
@@ -1557,7 +1657,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('ecovacs', '8516fbb1-17f1-4194-0000003')]>,
     'disabled_by': None,
@@ -1607,7 +1707,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('ecovacs', '8516fbb1-17f1-4194-0000003')]>,
     'disabled_by': None,
@@ -1649,6 +1749,56 @@
     'state': '2024-01-01T00:00:00+00:00',
   })
 # ---
+# name: test_buttons[twunby][button.t90_pro_omni_wash_mop:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('ecovacs', '8516fbb1-17f1-4194-0000003')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.t90_pro_omni_wash_mop',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wash mop',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Wash mop',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'station_action_wash_mop',
+    'unique_id': '8516fbb1-17f1-4194-0000003_station_action_wash_mop',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[twunby][button.t90_pro_omni_wash_mop:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'T90 PRO OMNI Wash mop',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.t90_pro_omni_wash_mop',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-01-01T00:00:00+00:00',
+  })
+# ---
 # name: test_buttons[yna5x1][button.ozmo_950_relocate:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1657,7 +1807,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('ecovacs', 'E1234567890000000001')]>,
     'disabled_by': None,
@@ -1707,7 +1857,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('ecovacs', 'E1234567890000000001')]>,
     'disabled_by': None,
@@ -1757,7 +1907,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('ecovacs', 'E1234567890000000001')]>,
     'disabled_by': None,
@@ -1807,7 +1957,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('ecovacs', 'E1234567890000000001')]>,
     'disabled_by': None,

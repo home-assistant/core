@@ -2421,7 +2421,6 @@ async def test_zeroconf(
             if flow["flow_id"] == result["flow_id"]
         )
         assert context["title_placeholders"]["name"] == "shelly1pm-12345"
-        assert context["confirm_only"] is True
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -2440,6 +2439,32 @@ async def test_zeroconf(
     assert result["result"].unique_id == "test-mac"
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("mock_rpc_device")
+async def test_zeroconf_xmod_device(hass: HomeAssistant) -> None:
+    """Test zeroconf discovery of an XMOD device shows the XMOD model name."""
+    with patch(
+        "homeassistant.components.shelly.config_flow.get_info",
+        return_value={
+            "mac": "AABBCCDDEEFF",
+            "model": "S3XT-0S",
+            "auth": False,
+            "gen": 3,
+            "jwt": {"n": "Irrigation controller FK-06X"},
+        },
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data=DISCOVERY_INFO,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm_discovery"
+    assert result["description_placeholders"]["model"] == (
+        "Irrigation controller FK-06X"
+    )
 
 
 @pytest.mark.parametrize(
@@ -2484,7 +2509,6 @@ async def test_zeroconf_enhanced_security(
             if flow["flow_id"] == result["flow_id"]
         )
         assert context["title_placeholders"]["name"] == "shelly1pm-12345"
-        assert context["confirm_only"] is True
         assert context["configuration_url"] == "http://1.1.1.1"
         assert result["step_id"] == "confirm_discovery"
 
@@ -2537,7 +2561,6 @@ async def test_zeroconf_enhanced_security_with_https_port(
             if flow["flow_id"] == result["flow_id"]
         )
         assert context["title_placeholders"]["name"] == "shelly1pm-12345"
-        assert context["confirm_only"] is True
         assert context["configuration_url"] == "https://1.1.1.1"
         assert result["step_id"] == "confirm_discovery"
 
@@ -3073,6 +3096,7 @@ async def test_options_flow_ble(hass: HomeAssistant, mock_rpc_device: Mock) -> N
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_BLE_SCANNER_MODE] is BLEScannerMode.DISABLED
+    await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
     assert result["type"] is FlowResultType.FORM
@@ -3088,6 +3112,7 @@ async def test_options_flow_ble(hass: HomeAssistant, mock_rpc_device: Mock) -> N
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_BLE_SCANNER_MODE] is BLEScannerMode.ACTIVE
+    await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
     assert result["type"] is FlowResultType.FORM
@@ -3103,6 +3128,7 @@ async def test_options_flow_ble(hass: HomeAssistant, mock_rpc_device: Mock) -> N
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_BLE_SCANNER_MODE] is BLEScannerMode.PASSIVE
+    await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
     assert result["type"] is FlowResultType.FORM
@@ -3118,6 +3144,7 @@ async def test_options_flow_ble(hass: HomeAssistant, mock_rpc_device: Mock) -> N
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_BLE_SCANNER_MODE] is BLEScannerMode.AUTO
+    await hass.async_block_till_done()
 
     # Initial setup plus one reload per options change
     await hass.async_block_till_done()
@@ -3786,7 +3813,6 @@ async def test_zeroconf_wrong_device_name(
             if flow["flow_id"] == result["flow_id"]
         )
         assert context["title_placeholders"]["name"] == "Shelly Plus 2PM [DDEEFF]"
-        assert context["confirm_only"] is True
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],

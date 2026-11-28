@@ -9,9 +9,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import GoogleConfigEntry
 from .const import CONF_PROJECT_ID, CONF_SERVICE_ACCOUNT, DATA_CONFIG, DOMAIN
-from .http import GoogleConfig
+from .http import GoogleConfig, GoogleConfigEntry
 
 
 async def async_setup_entry(
@@ -45,7 +44,7 @@ class SyncButton(ButtonEntity):
         self._attr_unique_id = f"{project_id}_sync"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, project_id)},
-            name="Google Assistant",
+            name="Google Home",
         )
 
     @override

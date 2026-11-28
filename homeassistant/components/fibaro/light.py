@@ -6,12 +6,9 @@ from typing import Any, override
 from pyfibaro.fibaro_device import DeviceModel
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_RGB_COLOR,
-    ATTR_RGBW_COLOR,
-    ENTITY_ID_FORMAT,
     ColorMode,
     LightEntity,
+    LightServiceArgument,
     brightness_supported,
     color_supported,
 )
@@ -105,27 +102,26 @@ class FibaroLight(FibaroEntity, LightEntity):
             self._attr_supported_color_modes = {ColorMode.ONOFF}
             self._attr_color_mode = ColorMode.ONOFF
 
-        super().__init__(fibaro_device, controller)
-        self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
+        super().__init__(fibaro_device, controller, use_child_device_info=True)
 
     @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
-        if ATTR_BRIGHTNESS in kwargs:
-            self._attr_brightness = kwargs[ATTR_BRIGHTNESS]
+        if LightServiceArgument.BRIGHTNESS in kwargs:
+            self._attr_brightness = kwargs[LightServiceArgument.BRIGHTNESS]
             self.set_level(scaleto99(self._attr_brightness))
             return
 
-        if ATTR_RGB_COLOR in kwargs:
+        if LightServiceArgument.RGB_COLOR in kwargs:
             # Update based on parameters
-            rgb = kwargs[ATTR_RGB_COLOR]
+            rgb = kwargs[LightServiceArgument.RGB_COLOR]
             self._attr_rgb_color = rgb
             self.call_set_color(int(rgb[0]), int(rgb[1]), int(rgb[2]), 0)
             return
 
-        if ATTR_RGBW_COLOR in kwargs:
+        if LightServiceArgument.RGBW_COLOR in kwargs:
             # Update based on parameters
-            rgbw = kwargs[ATTR_RGBW_COLOR]
+            rgbw = kwargs[LightServiceArgument.RGBW_COLOR]
             self._attr_rgbw_color = rgbw
             self.call_set_color(int(rgbw[0]), int(rgbw[1]), int(rgbw[2]), int(rgbw[3]))
             return

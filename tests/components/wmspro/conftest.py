@@ -15,10 +15,17 @@ from . import remove_config_entry
 
 
 @pytest.fixture
+def hass_config_dir(hass_tmp_config_dir: str) -> str:
+    """Use a temporary config directory for the per-entry storage."""
+    return hass_tmp_config_dir
+
+
+@pytest.fixture
 async def mock_config_entry(hass: HomeAssistant) -> AsyncGenerator[MockConfigEntry]:
     """Return a dummy config entry."""
     mock_config_entry = MockConfigEntry(
         title="WebControl",
+        entry_id="01JWMSPRO00000000000000000",
         domain=DOMAIN,
         data={CONF_HOST: "webcontrol"},
     )

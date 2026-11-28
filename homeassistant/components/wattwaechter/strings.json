@@ -2,13 +2,13 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_configured_mqtt": "This device is already set up in Home Assistant through MQTT. To set it up with this integration as well, add it manually.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "wrong_device": "The device does not match the original WattWächter device."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
     "step": {
       "auth": {
@@ -62,6 +62,7 @@
       "absolute_power": { "name": "Absolute power" },
       "active_power": { "name": "Active power" },
       "active_power_export": { "name": "Power feed-in" },
+      "active_power_export_phase": { "name": "Power feed-in {phase}" },
       "active_power_import": { "name": "Power consumption" },
       "active_power_phase": { "name": "Active power {phase}" },
       "apparent_power_export": { "name": "Apparent power feed-in" },
@@ -71,6 +72,9 @@
       "export_tariff_2": { "name": "Feed-in tariff 2" },
       "export_total": { "name": "Total feed-in" },
       "frequency": { "name": "Grid frequency" },
+      "gas_consumption": { "name": "Gas consumption" },
+      "gas_flow_rate": { "name": "Gas flow rate" },
+      "gas_power": { "name": "Gas power" },
       "import_tariff_1": { "name": "Consumption tariff 1" },
       "import_tariff_2": { "name": "Consumption tariff 2" },
       "import_total": { "name": "Total consumption" },
@@ -85,7 +89,9 @@
       "reactive_power_export": { "name": "Reactive power feed-in" },
       "reactive_power_import": { "name": "Reactive power consumption" },
       "ssid": { "name": "SSID" },
-      "voltage_phase": { "name": "Voltage {phase}" }
+      "voltage_phase": { "name": "Voltage {phase}" },
+      "water_consumption": { "name": "Water consumption" },
+      "water_flow_rate": { "name": "Water flow rate" }
     }
   },
   "exceptions": {

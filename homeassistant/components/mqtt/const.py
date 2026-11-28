@@ -1,5 +1,6 @@
 """Constants used by multiple MQTT modules."""
 
+from enum import StrEnum
 import logging
 
 import jinja2
@@ -11,8 +12,6 @@ from homeassistant.exceptions import TemplateError
 ATTR_DISCOVERY_HASH = "discovery_hash"
 ATTR_DISCOVERY_PAYLOAD = "discovery_payload"
 ATTR_DISCOVERY_TOPIC = "discovery_topic"
-ATTR_EVALUATE_PAYLOAD = "evaluate_payload"
-ATTR_MESSAGE_EXPIRY_INTERVAL = "message_expiry_interval"
 ATTR_PAYLOAD = "payload"
 ATTR_QOS = "qos"
 ATTR_RETAIN = "retain"
@@ -257,8 +256,11 @@ CONF_WHITE_SCALE = "white_scale"
 
 # Config flow constants
 CONF_CERTIFICATE = "certificate"
+CONF_CERTIFICATE_FILE = "certificate_file"
 CONF_CLIENT_KEY = "client_key"
+CONF_CLIENT_KEY_FILE = "client_key_file"
 CONF_CLIENT_CERT = "client_cert"
+CONF_CLIENT_CERT_FILE = "client_cert_file"
 CONF_COMPONENTS = "components"
 CONF_TLS_INSECURE = "tls_insecure"
 
@@ -269,6 +271,8 @@ CONF_MANUFACTURER = "manufacturer"
 CONF_HW_VERSION = "hw_version"
 CONF_SW_VERSION = "sw_version"
 CONF_SERIAL_NUMBER = "serial_number"
+CONF_CHILD_DEVICE = "child_device"
+CONF_CHILD_DEVICES = "child_devices"
 CONF_VIA_DEVICE = "via_device"
 CONF_DEPRECATED_VIA_HUB = "via_hub"
 CONF_SUGGESTED_AREA = "suggested_area"
@@ -384,8 +388,28 @@ MQTT_PROCESSED_SUBSCRIPTIONS = "mqtt_processed_subscriptions"
 PAYLOAD_EMPTY_JSON = "{}"
 PAYLOAD_NONE = "None"
 
-SERVICE_DUMP = "dump"
 SERVICE_PUBLISH = "publish"
+
+
+class MqttService(StrEnum):
+    """Store keys for MQTT services."""
+
+    DUMP = "dump"
+    PUBLISH = "publish"
+    RELOAD = "reload"
+
+
+class MqttServiceArgument(StrEnum):
+    """Store keys for MQTT service arguments."""
+
+    DURATION = "duration"
+    EVALUATE_PAYLOAD = "evaluate_payload"
+    MESSAGE_EXPIRY_INTERVAL = "message_expiry_interval"
+    PAYLOAD = "payload"
+    QOS = "qos"
+    RETAIN = "retain"
+    TOPIC = "topic"
+
 
 CONFIG_ENTRY_VERSION = 2
 CONFIG_ENTRY_MINOR_VERSION = 1

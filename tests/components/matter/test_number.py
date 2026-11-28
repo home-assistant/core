@@ -27,6 +27,12 @@ POWER_ON_COLOR_TEMPERATURE_ENTITY_ID = (
 )
 
 
+@pytest.fixture
+def platform() -> Platform:
+    """Return the platform under test."""
+    return Platform.NUMBER
+
+
 @pytest.mark.usefixtures("matter_devices")
 async def test_numbers(
     hass: HomeAssistant,
@@ -280,12 +286,16 @@ async def test_temperature_control_temperature_setpoint(
     state = hass.states.get("number.refrigerator_temperature_setpoint_2")
     assert state
     assert state.state == "-18.0"
+    # Step of 100 (0.01 °C units) -> 1.0 °C
+    assert state.attributes["step"] == 1.0
 
     set_node_attribute(matter_node, 2, 86, 0, -1600)
+    set_node_attribute(matter_node, 2, 86, 3, 50)
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get("number.refrigerator_temperature_setpoint_2")
     assert state
     assert state.state == "-16.0"
+    assert state.attributes["step"] == 0.5
 
     # test set value
     await hass.services.async_call(
@@ -305,6 +315,20 @@ async def test_temperature_control_temperature_setpoint(
             targetTemperature=-1700
         ),
     )
+
+    # only the Step subscription (2/86/3) is notified
+    await set_node_attribute_and_notify(
+        hass,
+        matter_client,
+        matter_node,
+        endpoint=2,
+        cluster_id=86,
+        attribute_id=3,
+        value=10,
+    )
+    state = hass.states.get("number.refrigerator_temperature_setpoint_2")
+    assert state
+    assert state.attributes["step"] == 0.1
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_dimmable_light"])
@@ -868,3 +892,42 @@ async def test_wago_window_covering_numbers_set_value(
         ),
         value=written_value,
     )
+
+
+@pytest.mark.parametrize("node_fixture", ["aqara_led_strip_t2"])
+async def test_aqara_led_strip_t2(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test number entities on Aqara LED Strip T2."""
+    state = hass.states.get("number.aqara_led_strip_t2_music_sync_sensitivity")
+    assert state
+    assert state.state == "59"
+
+    await hass.services.async_call(
+        "number",
+        "set_value",
+        {
+            "entity_id": "number.aqara_led_strip_t2_music_sync_sensitivity",
+            "value": 80,
+        },
+        blocking=True,
+    )
+
+    assert matter_client.write_attribute.call_count == 1
+    assert matter_client.write_attribute.call_args == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=1,
+            attribute=custom_clusters.AqaraLedStripCluster.Attributes.MusicSyncSensitivity,
+        ),
+        value=80,
+    )
+
+    set_node_attribute(matter_node, 1, 291503119, 22, 80)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("number.aqara_led_strip_t2_music_sync_sensitivity")
+    assert state
+    assert state.state == "80"

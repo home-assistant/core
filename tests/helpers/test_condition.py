@@ -32,6 +32,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from homeassistant.components.device_automation import (
     DOMAIN as DEVICE_AUTOMATION_DOMAIN,
+    InvalidDeviceAutomationConfig,
 )
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.recorder import Recorder, get_instance, history
@@ -39,14 +40,9 @@ from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.components.sun import DOMAIN as SUN_DOMAIN
 from homeassistant.components.system_health import DOMAIN as SYSTEM_HEALTH_DOMAIN
 from homeassistant.const import (
-    ATTR_AREA_ID,
-    ATTR_DEVICE_CLASS,
-    ATTR_LABEL_ID,
-    ATTR_UNIT_OF_MEASUREMENT,
     CONF_CONDITION,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
-    CONF_ENTITY_ID,
     CONF_EXCLUDE,
     CONF_FOR,
     CONF_OPTIONS,
@@ -57,6 +53,8 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     EntityCategory,
+    EntityStateAttribute,
+    TargetKey,
     UnitOfTemperature,
 )
 from homeassistant.core import CoreState, HomeAssistant, State
@@ -96,7 +94,7 @@ from homeassistant.helpers.condition import (
     make_entity_state_condition,
 )
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
+from homeassistant.helpers.typing import ConfigType, Undefined
 from homeassistant.loader import Integration, async_get_integration
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -217,6 +215,176 @@ async def test_unknown_condition(hass: HomeAssistant, config: dict, error: str) 
     config = cv.CONDITION_SCHEMA(config)
     with pytest.raises(HomeAssistantError, match=error):
         await condition.async_from_config(hass, config)
+
+
+_VALID_CONDITION = {"condition": "state", "entity_id": "light.kitchen", "state": "on"}
+_INVALID_CONDITION = {
+    "condition": "state",
+    "entity_id": "0123456789abcdef0123456789abcdef",
+    "state": "on",
+}
+_INVALID_CONDITION_ERROR = (
+    "Unknown entity registry entry 0123456789abcdef0123456789abcdef"
+)
+
+
+@pytest.mark.parametrize(
+    ("conditions", "expected_exception", "expected_error", "expected_path"),
+    [
+        pytest.param(
+            [_VALID_CONDITION, _INVALID_CONDITION],
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            [1],
+            id="condition_list",
+        ),
+        pytest.param(
+            [
+                {
+                    "condition": "and",
+                    "conditions": [_VALID_CONDITION, _INVALID_CONDITION],
+                }
+            ],
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            [0, "conditions", 1],
+            id="and",
+        ),
+        pytest.param(
+            [{"condition": "or", "conditions": [_VALID_CONDITION, _INVALID_CONDITION]}],
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            [0, "conditions", 1],
+            id="or",
+        ),
+        pytest.param(
+            [
+                {
+                    "condition": "not",
+                    "conditions": [_VALID_CONDITION, _INVALID_CONDITION],
+                }
+            ],
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            [0, "conditions", 1],
+            id="not",
+        ),
+        pytest.param(
+            [_VALID_CONDITION, {"and": [_VALID_CONDITION, _INVALID_CONDITION]}],
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            [1, "conditions", 1],
+            id="and_shorthand",
+        ),
+        pytest.param(
+            [{"condition": [_VALID_CONDITION, _INVALID_CONDITION]}],
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            [0, "conditions", 1],
+            id="list_shorthand",
+        ),
+        pytest.param(
+            [
+                {
+                    "condition": "or",
+                    "conditions": [
+                        {
+                            "condition": "and",
+                            "conditions": [
+                                _VALID_CONDITION,
+                                {
+                                    "condition": "not",
+                                    "conditions": [_INVALID_CONDITION],
+                                },
+                            ],
+                        }
+                    ],
+                }
+            ],
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            [0, "conditions", 0, "conditions", 1, "conditions", 0],
+            id="nested",
+        ),
+        pytest.param(
+            [_VALID_CONDITION, {"condition": "sun"}],
+            probatio.MultipleInvalid,
+            "at least one of ['before', 'after'] is required",
+            [1, "options"],
+            id="platform_path",
+        ),
+    ],
+)
+async def test_validate_conditions_config_error_path(
+    hass: HomeAssistant,
+    conditions: list[ConfigType],
+    expected_exception: type[probatio.Invalid],
+    expected_error: str,
+    expected_path: list[str | int],
+) -> None:
+    """Test a probatio.Invalid error is located in the validated conditions."""
+    config = cv.CONDITIONS_SCHEMA(conditions)
+
+    with pytest.raises(probatio.Invalid) as exc_info:
+        await condition.async_validate_conditions_config(hass, config)
+
+    assert type(exc_info.value) is expected_exception
+    assert exc_info.value.error_message == expected_error
+    assert exc_info.value.path == expected_path
+
+
+async def test_validate_condition_config_error_path(hass: HomeAssistant) -> None:
+    """Test a probatio.Invalid error is located in a validated condition."""
+    config = cv.CONDITION_SCHEMA(
+        {"condition": "or", "conditions": [_VALID_CONDITION, _INVALID_CONDITION]}
+    )
+
+    with pytest.raises(probatio.Invalid) as exc_info:
+        await condition.async_validate_condition_config(hass, config)
+
+    assert type(exc_info.value) is probatio.Invalid
+    assert exc_info.value.error_message == _INVALID_CONDITION_ERROR
+    assert exc_info.value.path == ["conditions", 1]
+
+
+@pytest.mark.parametrize(
+    ("conditions", "expected_exception", "expected_error"),
+    [
+        pytest.param(
+            [_VALID_CONDITION, {"condition": "non_existing"}],
+            HomeAssistantError,
+            'Invalid condition "non_existing" specified',
+            id="condition_list",
+        ),
+        pytest.param(
+            [
+                {
+                    "condition": "and",
+                    "conditions": [
+                        {"condition": "device", "domain": "light", "device_id": "abc"}
+                    ],
+                }
+            ],
+            InvalidDeviceAutomationConfig,
+            "Unknown device 'abc'",
+            id="nested",
+        ),
+    ],
+)
+async def test_validate_conditions_config_homeassistant_error(
+    hass: HomeAssistant,
+    conditions: list[ConfigType],
+    expected_exception: type[HomeAssistantError],
+    expected_error: str,
+) -> None:
+    """Test a HomeAssistantError keeps its type and message."""
+    config = cv.CONDITIONS_SCHEMA(conditions)
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await condition.async_validate_conditions_config(hass, config)
+
+    assert type(exc_info.value) is expected_exception
+    assert str(exc_info.value) == expected_error
 
 
 async def test_and_condition(hass: HomeAssistant) -> None:
@@ -1279,17 +1447,17 @@ async def test_time_using_sensor(hass: HomeAssistant) -> None:
     hass.states.async_set(
         "sensor.am",
         "2021-06-03 13:00:00.000000+00:00",  # 6 am local time
-        {ATTR_DEVICE_CLASS: SensorDeviceClass.TIMESTAMP},
+        {EntityStateAttribute.DEVICE_CLASS: SensorDeviceClass.TIMESTAMP},
     )
     hass.states.async_set(
         "sensor.pm",
         "2020-06-01 01:00:00.000000+00:00",  # 6 pm local time
-        {ATTR_DEVICE_CLASS: SensorDeviceClass.TIMESTAMP},
+        {EntityStateAttribute.DEVICE_CLASS: SensorDeviceClass.TIMESTAMP},
     )
     hass.states.async_set(
         "sensor.uptime_am",
         "2021-06-03 13:00:00.000000+00:00",  # 6 am local time
-        {ATTR_DEVICE_CLASS: SensorDeviceClass.UPTIME},
+        {EntityStateAttribute.DEVICE_CLASS: SensorDeviceClass.UPTIME},
     )
     hass.states.async_set(
         "sensor.no_device_class",
@@ -1298,7 +1466,7 @@ async def test_time_using_sensor(hass: HomeAssistant) -> None:
     hass.states.async_set(
         "sensor.invalid_timestamp",
         "This is not a timestamp",
-        {ATTR_DEVICE_CLASS: SensorDeviceClass.TIMESTAMP},
+        {EntityStateAttribute.DEVICE_CLASS: SensorDeviceClass.TIMESTAMP},
     )
 
     with patch(
@@ -2251,6 +2419,10 @@ async def test_extract_entities(hass: HomeAssistant) -> None:
                             "entity_id": "sensor.temperature_4",
                             "below": 110,
                         },
+                        {
+                            "condition": "test.modern",
+                            "options": {"entity_id": "sensor.options_not"},
+                        },
                     ],
                 },
                 {
@@ -2306,6 +2478,18 @@ async def test_extract_entities(hass: HomeAssistant) -> None:
                     "condition": "time",
                     "after": "08:00:00",
                 },
+                {
+                    "condition": "test.modern",
+                    "options": {"entity_id": ["sensor.options_1", "sensor.options_2"]},
+                },
+                {
+                    "condition": "test.modern",
+                    "options": {"entity_id": "sensor.options_single"},
+                },
+                {
+                    "condition": "test.modern",
+                    "options": {},
+                },
                 Template("{{ is_state('light.example', 'on') }}", hass),
             ],
         }
@@ -2315,6 +2499,10 @@ async def test_extract_entities(hass: HomeAssistant) -> None:
         "input_datetime.start",
         "person.paulus",
         "sensor.end",
+        "sensor.options_1",
+        "sensor.options_2",
+        "sensor.options_not",
+        "sensor.options_single",
         "sensor.temperature",
         "sensor.temperature_2",
         "sensor.temperature_3",
@@ -2365,6 +2553,10 @@ async def test_extract_devices(hass: HomeAssistant) -> None:
                     "state": "100",
                 },
                 {
+                    "condition": "test.modern",
+                    "options": {"device_id": ["abcd_options", "qwer_options"]},
+                },
+                {
                     "condition": "not",
                     "conditions": [
                         {
@@ -2376,6 +2568,10 @@ async def test_extract_devices(hass: HomeAssistant) -> None:
                             "condition": "device",
                             "device_id": "qwer_not",
                             "domain": "switch",
+                        },
+                        {
+                            "condition": "test.modern",
+                            "options": {"device_id": "abcd_not_options"},
                         },
                     ],
                 },
@@ -2397,7 +2593,17 @@ async def test_extract_devices(hass: HomeAssistant) -> None:
                 Template("{{ is_state('light.example', 'on') }}", hass),
             ],
         }
-    ) == {"abcd", "qwer", "abcd_not", "qwer_not", "abcd_or", "qwer_or"}
+    ) == {
+        "abcd",
+        "qwer",
+        "abcd_not",
+        "qwer_not",
+        "abcd_or",
+        "qwer_or",
+        "abcd_options",
+        "qwer_options",
+        "abcd_not_options",
+    }
 
 
 async def test_condition_template_error(hass: HomeAssistant) -> None:
@@ -3391,7 +3597,7 @@ async def _setup_numerical_condition(
     condition_options: dict[str, Any],
     target_config: dict[str, Any],
     domain_specs: Mapping[str, DomainSpec] | None = None,
-    valid_unit: str | UndefinedType | None = UNDEFINED,
+    valid_unit: str | Undefined | None = Undefined,
     primary_entities_only: bool = True,
 ) -> condition.ConditionChecker:
     """Set up a numerical condition via a mock platform and return the test."""
@@ -3561,7 +3767,7 @@ async def test_numerical_condition_thresholds(
     test = await _setup_numerical_condition(
         hass,
         condition_options=condition_options,
-        target_config={CONF_ENTITY_ID: ["test.entity_1"]},
+        target_config={TargetKey.ENTITY_ID: ["test.entity_1"]},
     )
 
     hass.states.async_set("test.entity_1", state_value)
@@ -3579,7 +3785,7 @@ async def test_numerical_condition_invalid_state(
     test = await _setup_numerical_condition(
         hass,
         condition_options={"threshold": {"type": "above", "value": {"number": 50}}},
-        target_config={CONF_ENTITY_ID: ["test.entity_1"]},
+        target_config={TargetKey.ENTITY_ID: ["test.entity_1"]},
     )
 
     hass.states.async_set("test.entity_1", state_value)
@@ -3594,7 +3800,7 @@ async def test_numerical_condition_attribute_value_source(
         hass,
         domain_specs={"test": DomainSpec(value_source="brightness")},
         condition_options={"threshold": {"type": "above", "value": {"number": 100}}},
-        target_config={CONF_ENTITY_ID: ["test.entity_1"]},
+        target_config={TargetKey.ENTITY_ID: ["test.entity_1"]},
     )
 
     # Attribute above threshold -> True
@@ -3623,7 +3829,7 @@ async def test_numerical_condition_attribute_value_source_skips_unit_check(
         hass,
         domain_specs={"test": DomainSpec(value_source="humidity")},
         condition_options={"threshold": {"type": "above", "value": {"number": 50}}},
-        target_config={CONF_ENTITY_ID: ["test.entity_1"]},
+        target_config={TargetKey.ENTITY_ID: ["test.entity_1"]},
         valid_unit="%",
     )
 
@@ -3646,15 +3852,15 @@ async def test_numerical_condition_attribute_value_source_skips_unit_check(
         # valid_unit=None — only entities without unit pass
         (None, None, True),
         (None, "%", False),
-        # valid_unit=UNDEFINED (default) — any unit passes
-        (UNDEFINED, None, True),
-        (UNDEFINED, "%", True),
-        (UNDEFINED, "°C", True),
+        # valid_unit=Undefined (default) — any unit passes
+        (Undefined, None, True),
+        (Undefined, "%", True),
+        (Undefined, "°C", True),
     ],
 )
 async def test_numerical_condition_valid_unit(
     hass: HomeAssistant,
-    valid_unit: str | UndefinedType | None,
+    valid_unit: str | Undefined | None,
     entity_unit: str | None,
     expected: bool,
 ) -> None:
@@ -3662,11 +3868,13 @@ async def test_numerical_condition_valid_unit(
     test = await _setup_numerical_condition(
         hass,
         condition_options={"threshold": {"type": "above", "value": {"number": 50}}},
-        target_config={CONF_ENTITY_ID: ["test.entity_1"]},
+        target_config={TargetKey.ENTITY_ID: ["test.entity_1"]},
         valid_unit=valid_unit,
     )
 
-    attrs = {ATTR_UNIT_OF_MEASUREMENT: entity_unit} if entity_unit else {}
+    attrs = (
+        {EntityStateAttribute.UNIT_OF_MEASUREMENT: entity_unit} if entity_unit else {}
+    )
     hass.states.async_set("test.entity_1", "75", attrs)
     assert test.async_check() is expected
 
@@ -3690,7 +3898,7 @@ async def test_numerical_condition_behavior(
             "threshold": {"type": "above", "value": {"number": 50}},
             ATTR_BEHAVIOR: behavior,
         },
-        target_config={CONF_ENTITY_ID: ["test.entity_1", "test.entity_2"]},
+        target_config={TargetKey.ENTITY_ID: ["test.entity_1", "test.entity_2"]},
     )
 
     # Both above -> True for any and all
@@ -3725,7 +3933,7 @@ async def test_numerical_condition_schema_requires_above_or_below(
 
     config: dict[str, Any] = {
         CONF_CONDITION: "test",
-        CONF_TARGET: {CONF_ENTITY_ID: "test.entity_1"},
+        CONF_TARGET: {TargetKey.ENTITY_ID: "test.entity_1"},
         CONF_OPTIONS: {},
     }
     with pytest.raises(probatio.Invalid):
@@ -3760,7 +3968,7 @@ async def test_numerical_condition_schema_above_must_be_less_than_below(
 
     config: dict[str, Any] = {
         CONF_CONDITION: "test",
-        CONF_TARGET: {CONF_ENTITY_ID: "test.entity_1"},
+        CONF_TARGET: {TargetKey.ENTITY_ID: "test.entity_1"},
         CONF_OPTIONS: {
             "threshold": {
                 "type": "between",
@@ -3801,7 +4009,7 @@ async def _setup_numerical_condition_with_unit(
 
     config: dict[str, Any] = {
         CONF_CONDITION: "test",
-        CONF_TARGET: {CONF_ENTITY_ID: entity_ids},
+        CONF_TARGET: {TargetKey.ENTITY_ID: entity_ids},
         CONF_OPTIONS: condition_options,
     }
 
@@ -3934,7 +4142,7 @@ async def test_numerical_condition_with_unit_thresholds(
     hass.states.async_set(
         "test.entity_1",
         state_value,
-        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+        {EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
     assert test.async_check() is expected
 
@@ -3956,12 +4164,12 @@ async def test_numerical_condition_with_unit_entity_reference(
     hass.states.async_set(
         "test.entity_1",
         "25",
-        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+        {EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
     hass.states.async_set(
         "sensor.temp_limit",
         "75",
-        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT},
+        {EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT},
     )
     assert test.async_check() is True
 
@@ -3969,7 +4177,7 @@ async def test_numerical_condition_with_unit_entity_reference(
     hass.states.async_set(
         "test.entity_1",
         "20",
-        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+        {EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
     assert test.async_check() is False
 
@@ -3989,13 +4197,13 @@ async def test_numerical_condition_with_unit_entity_reference_incompatible_unit(
     hass.states.async_set(
         "test.entity_1",
         "25",
-        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+        {EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
     # "%" is not a temperature unit → conversion fails → condition false
     hass.states.async_set(
         "sensor.bad_limit",
         "75",
-        {ATTR_UNIT_OF_MEASUREMENT: "%"},
+        {EntityStateAttribute.UNIT_OF_MEASUREMENT: "%"},
     )
     assert test.async_check() is False
 
@@ -4019,7 +4227,7 @@ async def test_numerical_condition_with_unit_tracked_value_conversion(
     hass.states.async_set(
         "test.entity_1",
         "80",
-        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT},
+        {EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT},
     )
     assert test.async_check() is True
 
@@ -4027,7 +4235,7 @@ async def test_numerical_condition_with_unit_tracked_value_conversion(
     hass.states.async_set(
         "test.entity_1",
         "50",
-        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT},
+        {EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT},
     )
     assert test.async_check() is False
 
@@ -4056,7 +4264,7 @@ async def test_numerical_condition_with_unit_attribute_value_source(
         "on",
         {
             "temperature": 25,
-            ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
+            EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
         },
     )
     assert test.async_check() is True
@@ -4067,7 +4275,7 @@ async def test_numerical_condition_with_unit_attribute_value_source(
         "on",
         {
             "temperature": 20,
-            ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
+            EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
         },
     )
     assert test.async_check() is False
@@ -4104,7 +4312,7 @@ async def test_numerical_condition_with_unit_get_entity_unit_override(
 
     config: dict[str, Any] = {
         CONF_CONDITION: "test",
-        CONF_TARGET: {CONF_ENTITY_ID: ["test.entity_1"]},
+        CONF_TARGET: {TargetKey.ENTITY_ID: ["test.entity_1"]},
         CONF_OPTIONS: {
             "threshold": {
                 "type": "above",
@@ -4147,7 +4355,7 @@ async def test_numerical_condition_with_unit_schema_accepts_valid_units(
     # Valid unit
     config: dict[str, Any] = {
         CONF_CONDITION: "test",
-        CONF_TARGET: {CONF_ENTITY_ID: "test.entity_1"},
+        CONF_TARGET: {TargetKey.ENTITY_ID: "test.entity_1"},
         CONF_OPTIONS: {
             "threshold": {
                 "type": "above",
@@ -4180,7 +4388,7 @@ async def test_numerical_condition_with_unit_schema_rejects_invalid_units(
     # Invalid unit
     config: dict[str, Any] = {
         CONF_CONDITION: "test",
-        CONF_TARGET: {CONF_ENTITY_ID: "test.entity_1"},
+        CONF_TARGET: {TargetKey.ENTITY_ID: "test.entity_1"},
         CONF_OPTIONS: {
             "threshold": {
                 "type": "above",
@@ -4214,7 +4422,7 @@ async def test_numerical_condition_with_unit_invalid_state(
     hass.states.async_set(
         "test.entity_1",
         state_value,
-        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+        {EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
     assert test.async_check() is False
 
@@ -4234,7 +4442,7 @@ async def test_numerical_condition_with_unit_missing_entity_reference(
     hass.states.async_set(
         "test.entity_1",
         "25",
-        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+        {EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
     assert test.async_check() is False
 
@@ -4268,12 +4476,12 @@ async def test_numerical_condition_with_unit_behavior(
     hass.states.async_set(
         "test.entity_1",
         "75",
-        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+        {EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
     hass.states.async_set(
         "test.entity_2",
         "80",
-        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+        {EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
     assert test.async_check() is True
 
@@ -4281,7 +4489,7 @@ async def test_numerical_condition_with_unit_behavior(
     hass.states.async_set(
         "test.entity_2",
         "25",
-        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+        {EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
     assert test.async_check() is one_match_expected
 
@@ -4289,7 +4497,7 @@ async def test_numerical_condition_with_unit_behavior(
     hass.states.async_set(
         "test.entity_1",
         "25",
-        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+        {EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
     assert test.async_check() is False
 
@@ -4334,7 +4542,7 @@ async def _setup_state_condition(
 async def test_state_condition_single_entity(hass: HomeAssistant) -> None:
     """Test state condition with a single entity."""
     test = await _setup_state_condition(
-        hass, target_config={CONF_ENTITY_ID: ["test.entity_1"]}, states=STATE_ON
+        hass, target_config={TargetKey.ENTITY_ID: ["test.entity_1"]}, states=STATE_ON
     )
 
     hass.states.async_set("test.entity_1", STATE_ON)
@@ -4347,7 +4555,9 @@ async def test_state_condition_single_entity(hass: HomeAssistant) -> None:
 async def test_state_condition_multiple_target_states(hass: HomeAssistant) -> None:
     """Test state condition matching any of multiple target states."""
     test = await _setup_state_condition(
-        hass, target_config={CONF_ENTITY_ID: ["test.entity_1"]}, states={"on", "heat"}
+        hass,
+        target_config={TargetKey.ENTITY_ID: ["test.entity_1"]},
+        states={"on", "heat"},
     )
 
     hass.states.async_set("test.entity_1", "on")
@@ -4377,7 +4587,7 @@ async def test_state_condition_unavailable_unknown(
     """
     # Single entity: unavailable/unknown → False
     test_single = await _setup_state_condition(
-        hass, target_config={CONF_ENTITY_ID: ["test.entity_1"]}, states=STATE_ON
+        hass, target_config={TargetKey.ENTITY_ID: ["test.entity_1"]}, states=STATE_ON
     )
     hass.states.async_set("test.entity_1", state_value)
     assert test_single.async_check() is False
@@ -4387,7 +4597,7 @@ async def test_state_condition_unavailable_unknown(
     test_any = await _setup_state_condition(
         hass,
         target_config={
-            CONF_ENTITY_ID: ["test.entity_1", "test.entity_2", "test.entity_3"]
+            TargetKey.ENTITY_ID: ["test.entity_1", "test.entity_2", "test.entity_3"]
         },
         states=STATE_ON,
         condition_options={ATTR_BEHAVIOR: BEHAVIOR_ANY},
@@ -4407,7 +4617,7 @@ async def test_state_condition_unavailable_unknown(
     test_all = await _setup_state_condition(
         hass,
         target_config={
-            CONF_ENTITY_ID: ["test.entity_1", "test.entity_2", "test.entity_3"]
+            TargetKey.ENTITY_ID: ["test.entity_1", "test.entity_2", "test.entity_3"]
         },
         states=STATE_ON,
         condition_options={ATTR_BEHAVIOR: BEHAVIOR_ALL},
@@ -4426,7 +4636,7 @@ async def test_state_condition_unavailable_unknown(
 async def test_state_condition_entity_not_found(hass: HomeAssistant) -> None:
     """Test state condition when entity does not exist."""
     test = await _setup_state_condition(
-        hass, target_config={CONF_ENTITY_ID: ["test.nonexistent"]}, states=STATE_ON
+        hass, target_config={TargetKey.ENTITY_ID: ["test.nonexistent"]}, states=STATE_ON
     )
 
     # Entity doesn't exist — condition should be false
@@ -4437,7 +4647,7 @@ async def test_state_condition_attribute_value_source(hass: HomeAssistant) -> No
     """Test state condition reads from attribute when value_source is set."""
     test = await _setup_state_condition(
         hass,
-        target_config={CONF_ENTITY_ID: ["test.entity_1"]},
+        target_config={TargetKey.ENTITY_ID: ["test.entity_1"]},
         states="heat",
         domain_specs={"test": DomainSpec(value_source="hvac_action")},
     )
@@ -4463,7 +4673,7 @@ async def test_state_condition_behavior(
     """Test state condition with behavior any/all."""
     test = await _setup_state_condition(
         hass,
-        target_config={CONF_ENTITY_ID: ["test.entity_1", "test.entity_2"]},
+        target_config={TargetKey.ENTITY_ID: ["test.entity_1", "test.entity_2"]},
         states=STATE_ON,
         condition_options={ATTR_BEHAVIOR: behavior},
     )
@@ -4488,7 +4698,7 @@ async def test_state_condition_duration_not_met(
     """Test state condition with duration: entity hasn't been in state long enough."""
     test = await _setup_state_condition(
         hass,
-        target_config={CONF_ENTITY_ID: ["test.entity_1"]},
+        target_config={TargetKey.ENTITY_ID: ["test.entity_1"]},
         states=STATE_ON,
         condition_options={CONF_FOR: {"seconds": 10}},
     )
@@ -4510,7 +4720,7 @@ async def test_state_condition_duration_met(
     """Test state condition with duration: entity has been in state long enough."""
     test = await _setup_state_condition(
         hass,
-        target_config={CONF_ENTITY_ID: ["test.entity_1"]},
+        target_config={TargetKey.ENTITY_ID: ["test.entity_1"]},
         states=STATE_ON,
         condition_options={CONF_FOR: {"seconds": 10}},
     )
@@ -4534,7 +4744,7 @@ async def test_state_condition_duration_zero_behaves_like_no_duration(
     """
     test = await _setup_state_condition(
         hass,
-        target_config={CONF_ENTITY_ID: ["test.entity_1"]},
+        target_config={TargetKey.ENTITY_ID: ["test.entity_1"]},
         states=STATE_ON,
         condition_options={CONF_FOR: {"seconds": 0}},
     )
@@ -4552,7 +4762,7 @@ async def test_state_condition_duration_wrong_state(
     """Test state condition with duration: entity in wrong state even after duration."""
     test = await _setup_state_condition(
         hass,
-        target_config={CONF_ENTITY_ID: ["test.entity_1"]},
+        target_config={TargetKey.ENTITY_ID: ["test.entity_1"]},
         states=STATE_ON,
         condition_options={CONF_FOR: {"seconds": 10}},
     )
@@ -4570,7 +4780,7 @@ async def test_state_condition_duration_reset_on_state_change(
     """Test state condition with duration: timer resets when state changes."""
     test = await _setup_state_condition(
         hass,
-        target_config={CONF_ENTITY_ID: ["test.entity_1"]},
+        target_config={TargetKey.ENTITY_ID: ["test.entity_1"]},
         states=STATE_ON,
         condition_options={CONF_FOR: {"seconds": 10}},
     )
@@ -4607,7 +4817,7 @@ async def test_state_condition_duration_behavior(
     """Test state condition with duration and behavior any/all."""
     test = await _setup_state_condition(
         hass,
-        target_config={CONF_ENTITY_ID: ["test.entity_1", "test.entity_2"]},
+        target_config={TargetKey.ENTITY_ID: ["test.entity_1", "test.entity_2"]},
         states=STATE_ON,
         condition_options={ATTR_BEHAVIOR: behavior, CONF_FOR: {"seconds": 10}},
     )
@@ -4650,7 +4860,7 @@ async def test_state_condition_duration_unavailable_unknown(
     test_any = await _setup_state_condition(
         hass,
         target_config={
-            CONF_ENTITY_ID: ["test.entity_1", "test.entity_2", "test.entity_3"]
+            TargetKey.ENTITY_ID: ["test.entity_1", "test.entity_2", "test.entity_3"]
         },
         states=STATE_ON,
         condition_options={ATTR_BEHAVIOR: BEHAVIOR_ANY, CONF_FOR: {"seconds": 10}},
@@ -4668,7 +4878,7 @@ async def test_state_condition_duration_unavailable_unknown(
     test_all = await _setup_state_condition(
         hass,
         target_config={
-            CONF_ENTITY_ID: ["test.entity_1", "test.entity_2", "test.entity_3"]
+            TargetKey.ENTITY_ID: ["test.entity_1", "test.entity_2", "test.entity_3"]
         },
         states=STATE_ON,
         condition_options={ATTR_BEHAVIOR: BEHAVIOR_ALL, CONF_FOR: {"seconds": 10}},
@@ -4940,7 +5150,7 @@ async def _setup_attr_state_condition(
 
     config: dict[str, Any] = {
         CONF_CONDITION: "test",
-        CONF_TARGET: {CONF_ENTITY_ID: entity_ids},
+        CONF_TARGET: {TargetKey.ENTITY_ID: entity_ids},
         CONF_OPTIONS: condition_options or {},
     }
 
@@ -5236,7 +5446,7 @@ async def test_state_condition_attr_duration_entity_added_to_target(
     # Create condition targeting the label
     test = await _setup_attr_state_condition_with_target(
         hass,
-        target={ATTR_LABEL_ID: label.label_id},
+        target={TargetKey.LABEL_ID: label.label_id},
         states={True},
         condition_options={CONF_FOR: {"seconds": 5}},
     )
@@ -5283,7 +5493,7 @@ async def test_state_condition_attr_duration_entity_removed_from_target(
 
     test = await _setup_attr_state_condition_with_target(
         hass,
-        target={ATTR_LABEL_ID: label.label_id},
+        target={TargetKey.LABEL_ID: label.label_id},
         states={True},
         condition_options={
             ATTR_BEHAVIOR: BEHAVIOR_ALL,
@@ -5339,7 +5549,7 @@ async def test_state_condition_attr_duration_entity_added_then_state_changes(
     # Create condition targeting the label
     test = await _setup_attr_state_condition_with_target(
         hass,
-        target={ATTR_LABEL_ID: label.label_id},
+        target={TargetKey.LABEL_ID: label.label_id},
         states={True},
         condition_options={CONF_FOR: {"seconds": 5}},
     )
@@ -5700,7 +5910,7 @@ async def test_state_condition_attr_duration_history_loaded_for_added_entity(
         freezer.move_to(start + timedelta(seconds=10))
         test = await _setup_attr_state_condition_with_target(
             hass,
-            target={ATTR_LABEL_ID: label.label_id},
+            target={TargetKey.LABEL_ID: label.label_id},
             states={True},
             condition_options={CONF_FOR: {"seconds": 5}},
         )
@@ -5754,7 +5964,7 @@ async def test_state_condition_attr_duration_not_counted_while_history_loads(
         freezer.move_to(start + timedelta(seconds=10))
         test = await _setup_attr_state_condition_with_target(
             hass,
-            target={ATTR_LABEL_ID: label.label_id},
+            target={TargetKey.LABEL_ID: label.label_id},
             states={True},
             condition_options={CONF_FOR: {"seconds": 5}},
         )
@@ -5806,7 +6016,7 @@ async def test_state_condition_attr_duration_benign_change_during_load_keeps_his
         freezer.move_to(start + timedelta(seconds=10))
         test = await _setup_attr_state_condition_with_target(
             hass,
-            target={ATTR_LABEL_ID: label.label_id},
+            target={TargetKey.LABEL_ID: label.label_id},
             states={True},
             condition_options={CONF_FOR: {"seconds": 5}},
         )
@@ -5866,7 +6076,7 @@ async def test_state_condition_attr_duration_invalidation_during_load_discards_h
         freezer.move_to(start + timedelta(seconds=10))
         test = await _setup_attr_state_condition_with_target(
             hass,
-            target={ATTR_LABEL_ID: label.label_id},
+            target={TargetKey.LABEL_ID: label.label_id},
             states={True},
             condition_options={CONF_FOR: {"seconds": 5}},
         )
@@ -5936,7 +6146,7 @@ async def test_state_condition_attr_duration_overlapping_loads_latest_wins(
         freezer.move_to(start + timedelta(seconds=10))
         test = await _setup_attr_state_condition_with_target(
             hass,
-            target={ATTR_LABEL_ID: label.label_id},
+            target={TargetKey.LABEL_ID: label.label_id},
             states={True},
             condition_options={CONF_FOR: {"seconds": 5}},
         )
@@ -6493,7 +6703,7 @@ async def test_state_condition_multi_state_duration_uses_history(
         test = await _setup_state_condition(
             hass,
             states={STATE_ON, STATE_OFF},
-            target_config={CONF_ENTITY_ID: [entity_id]},
+            target_config={TargetKey.ENTITY_ID: [entity_id]},
             condition_options={CONF_FOR: {"seconds": 5}},
         )
 
@@ -6522,7 +6732,7 @@ async def test_state_condition_single_state_duration_skips_history(
         test = await _setup_state_condition(
             hass,
             states=STATE_ON,
-            target_config={CONF_ENTITY_ID: ["test.entity_1"]},
+            target_config={TargetKey.ENTITY_ID: ["test.entity_1"]},
             condition_options={CONF_FOR: {"seconds": 5}},
         )
 
@@ -6604,7 +6814,7 @@ async def test_state_condition_state_valid_since_anchors_duration(
 
     config: dict[str, Any] = {
         CONF_CONDITION: "test",
-        CONF_TARGET: {CONF_ENTITY_ID: "test.entity_1"},
+        CONF_TARGET: {TargetKey.ENTITY_ID: "test.entity_1"},
         CONF_OPTIONS: {CONF_FOR: {"seconds": 5}},
     }
     config = await async_validate_condition_config(hass, config)
@@ -6634,7 +6844,7 @@ async def test_state_condition_primary_entities_only(
 
     test = await _setup_state_condition(
         hass,
-        target_config={ATTR_AREA_ID: area_id},
+        target_config={TargetKey.AREA_ID: area_id},
         states=STATE_ON,
         condition_options={ATTR_BEHAVIOR: BEHAVIOR_ALL},
         primary_entities_only=primary_entities_only,
@@ -6669,7 +6879,7 @@ async def test_numerical_condition_primary_entities_only(
 
     test = await _setup_numerical_condition(
         hass,
-        target_config={ATTR_AREA_ID: area_id},
+        target_config={TargetKey.AREA_ID: area_id},
         condition_options={
             "threshold": {"type": "above", "value": {"number": 50}},
             ATTR_BEHAVIOR: BEHAVIOR_ALL,
@@ -6713,7 +6923,7 @@ async def test_state_condition_primary_entities_only_with_duration(
 
     test = await _setup_state_condition(
         hass,
-        target_config={ATTR_AREA_ID: area_id},
+        target_config={TargetKey.AREA_ID: area_id},
         states={True},
         domain_specs={"test": DomainSpec(value_source="test_attr")},
         condition_options={
@@ -6742,6 +6952,43 @@ async def test_state_condition_primary_entities_only_with_duration(
     assert test.async_check() is True
 
 
+async def test_condition_target_exclude_only_invalid(hass: HomeAssistant) -> None:
+    """Test a condition target consisting of only an exclude block is rejected."""
+
+    class MockCondition(Condition):
+        """Mock condition."""
+
+        @classmethod
+        async def async_validate_config(
+            cls, hass: HomeAssistant, config: ConfigType
+        ) -> ConfigType:
+            """Validate config."""
+            return config
+
+        def _async_check(self, **kwargs) -> bool:
+            """Check the condition."""
+            return True
+
+    async def async_get_conditions(hass: HomeAssistant) -> dict[str, type[Condition]]:
+        return {"_": MockCondition}
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(
+        hass, "test.condition", Mock(async_get_conditions=async_get_conditions)
+    )
+
+    with pytest.raises(
+        probatio.Invalid, match="an exclude block requires a target to exclude from"
+    ):
+        await async_validate_condition_config(
+            hass,
+            {
+                CONF_CONDITION: "test",
+                CONF_TARGET: {CONF_EXCLUDE: {TargetKey.ENTITY_ID: "test.excluded"}},
+            },
+        )
+
+
 _INCLUDED_ENTITY_ID = "test.included"
 _EXCLUDED_ENTITY_ID = "test.excluded"
 
@@ -6749,8 +6996,8 @@ _EXCLUDED_ENTITY_ID = "test.excluded"
 @pytest.mark.parametrize(
     "exclude",
     [
-        pytest.param({CONF_ENTITY_ID: _EXCLUDED_ENTITY_ID}, id="exclude_entity"),
-        pytest.param({ATTR_LABEL_ID: "excluded"}, id="exclude_label"),
+        pytest.param({TargetKey.ENTITY_ID: _EXCLUDED_ENTITY_ID}, id="exclude_entity"),
+        pytest.param({TargetKey.LABEL_ID: "excluded"}, id="exclude_label"),
     ],
 )
 @pytest.mark.parametrize(
@@ -6784,7 +7031,7 @@ async def test_state_condition_target_exclude(
 
     test = await _setup_state_condition(
         hass,
-        target_config={ATTR_LABEL_ID: label.label_id, CONF_EXCLUDE: exclude},
+        target_config={TargetKey.LABEL_ID: label.label_id, CONF_EXCLUDE: exclude},
         states=STATE_ON,
         condition_options={ATTR_BEHAVIOR: behavior},
     )
@@ -6810,8 +7057,8 @@ async def test_state_condition_target_exclude_registry_update(
     test = await _setup_state_condition(
         hass,
         target_config={
-            CONF_ENTITY_ID: [_INCLUDED_ENTITY_ID, _EXCLUDED_ENTITY_ID],
-            CONF_EXCLUDE: {ATTR_LABEL_ID: excluded_label.label_id},
+            TargetKey.ENTITY_ID: [_INCLUDED_ENTITY_ID, _EXCLUDED_ENTITY_ID],
+            CONF_EXCLUDE: {TargetKey.LABEL_ID: excluded_label.label_id},
         },
         states=STATE_ON,
         condition_options={ATTR_BEHAVIOR: BEHAVIOR_ALL},
@@ -6968,7 +7215,7 @@ def _make_condition(
             return True
 
     config = ConditionConfig(
-        target={CONF_ENTITY_ID: []}, options={ATTR_BEHAVIOR: BEHAVIOR_ANY}
+        target={TargetKey.ENTITY_ID: []}, options={ATTR_BEHAVIOR: BEHAVIOR_ANY}
     )
     return _SimpleCondition(hass, config)
 
@@ -6992,9 +7239,11 @@ async def test_condition_entity_filter_by_device_class(hass: HomeAssistant) -> N
     """Test entity_filter filters by device_class when specified."""
     cond = _make_condition(hass, {"sensor": DomainSpec(device_class="humidity")})
 
-    hass.states.async_set("sensor.humidity_1", "50", {ATTR_DEVICE_CLASS: "humidity"})
     hass.states.async_set(
-        "sensor.temperature_1", "22", {ATTR_DEVICE_CLASS: "temperature"}
+        "sensor.humidity_1", "50", {EntityStateAttribute.DEVICE_CLASS: "humidity"}
+    )
+    hass.states.async_set(
+        "sensor.temperature_1", "22", {EntityStateAttribute.DEVICE_CLASS: "temperature"}
     )
     hass.states.async_set("sensor.no_class", "10", {})
 
@@ -7027,9 +7276,11 @@ async def test_condition_entity_filter_multiple_domains_with_device_class(
         },
     )
 
-    hass.states.async_set("sensor.humidity", "60", {ATTR_DEVICE_CLASS: "humidity"})
     hass.states.async_set(
-        "sensor.temperature", "20", {ATTR_DEVICE_CLASS: "temperature"}
+        "sensor.humidity", "60", {EntityStateAttribute.DEVICE_CLASS: "humidity"}
+    )
+    hass.states.async_set(
+        "sensor.temperature", "20", {EntityStateAttribute.DEVICE_CLASS: "temperature"}
     )
     hass.states.async_set("climate.hvac", "heat", {})
     hass.states.async_set("weather.home", "sunny", {})
@@ -7054,8 +7305,12 @@ async def test_condition_entity_filter_no_device_class_means_match_all_in_domain
     """Test that DomainSpec without device_class matches all entities in the domain."""
     cond = _make_condition(hass, {"cover": DomainSpec()})
 
-    hass.states.async_set("cover.door", "open", {ATTR_DEVICE_CLASS: "door"})
-    hass.states.async_set("cover.garage", "closed", {ATTR_DEVICE_CLASS: "garage"})
+    hass.states.async_set(
+        "cover.door", "open", {EntityStateAttribute.DEVICE_CLASS: "door"}
+    )
+    hass.states.async_set(
+        "cover.garage", "closed", {EntityStateAttribute.DEVICE_CLASS: "garage"}
+    )
     hass.states.async_set("cover.plain", "open", {})
 
     entities = {"cover.door", "cover.garage", "cover.plain"}

@@ -7,7 +7,6 @@ import astral.sun
 import probatio
 
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_EVENT,
     CONF_FOR,
     CONF_OFFSET,
@@ -17,6 +16,7 @@ from homeassistant.const import (
     EVENT_CORE_CONFIG_UPDATE,
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
+    TargetKey,
 )
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
@@ -57,7 +57,7 @@ from .const import (
     ELEVATION_GOLDEN_HOUR_LOW,
     ELEVATION_HORIZON,
     ELEVATION_NAUTICAL,
-    STATE_ATTR_ELEVATION,
+    SunEntityStateAttribute,
 )
 
 # Names of solar events supported by the astral.sun module
@@ -107,7 +107,9 @@ _TWILIGHT_ELEVATIONS = {
 # The sun is a singleton, so the elevation triggers always target sun.sun
 # instead of asking the user to pick an entity.
 _SUN_ENTITY_ID = f"{DOMAIN}.{DOMAIN}"
-_ELEVATION_DOMAIN_SPECS = {DOMAIN: DomainSpec(value_source=STATE_ATTR_ELEVATION)}
+_ELEVATION_DOMAIN_SPECS = {
+    DOMAIN: DomainSpec(value_source=SunEntityStateAttribute.ELEVATION)
+}
 
 _ELEVATION_CHANGED_TRIGGER_SCHEMA = probatio.Schema(
     {
@@ -145,7 +147,7 @@ class SunElevationTrigger(EntityNumericalStateTriggerBase):
             hass,
             TriggerConfig(
                 key=config.key,
-                target={ATTR_ENTITY_ID: [_SUN_ENTITY_ID]},
+                target={TargetKey.ENTITY_ID: [_SUN_ENTITY_ID]},
                 options=config.options,
             ),
         )

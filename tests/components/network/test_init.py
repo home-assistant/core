@@ -4,6 +4,7 @@ from ipaddress import IPv4Address
 from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
+import ifaddr
 import pytest
 from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
@@ -851,3 +852,35 @@ async def test_repair_docker_host_network_without_host_networking(
 
     assert (issue := issue_registry.async_get_issue(DOMAIN, "docker_host_network"))
     assert issue == snapshot
+
+
+@pytest.mark.usefixtures("mock_socket_no_loopback")
+async def test_async_reload_adapters(hass: HomeAssistant) -> None:
+    """Test reloading the adapters."""
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    await hass.async_block_till_done()
+
+    assert len(await network.async_get_adapters(hass)) == 4
+
+    mock_eth1 = Mock(spec=ifaddr.Adapter)
+    mock_eth1.nice_name = "eth1"
+    mock_eth1.ips = [ifaddr.IP(NO_LOOPBACK_IPADDR, 23, "eth1")]
+    mock_eth1.index = 2
+
+    with patch(
+        "homeassistant.components.network.util.ifaddr.get_adapters",
+        return_value=[mock_eth1],
+    ):
+        await network.async_reload_adapters(hass)
+
+    assert await network.async_get_adapters(hass) == [
+        {
+            "index": 2,
+            "auto": True,
+            "default": True,
+            "enabled": True,
+            "ipv4": [{"address": "192.168.1.5", "network_prefix": 23}],
+            "ipv6": [],
+            "name": "eth1",
+        }
+    ]

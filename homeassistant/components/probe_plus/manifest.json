@@ -11,6 +11,7 @@
   "categories": ["appliances_cleaning.cooking"],
   "codeowners": ["@pantherale0"],
   "config_flow": true,
+  "connectivity": ["bluetooth"],
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/probe_plus",
   "integration_type": "device",

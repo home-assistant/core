@@ -34,6 +34,7 @@ from .coordinator import (
     PortainerCoordinatorData,
 )
 from .entity import PortainerContainerEntity, PortainerServerEntity
+from .util import async_add_entities_by_subentry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,7 +43,9 @@ _LOGGER = logging.getLogger(__name__)
 class PortainerContainerUpdateEntityDescription(UpdateEntityDescription):
     """Describes Portainer container update entity."""
 
-    installed_version: Callable[[LocalImageInformation], str | None]
+    installed_version: Callable[
+        [LocalImageInformation, PortainerImageUpdateStatus | None], str | None
+    ]
     latest_version: Callable[[PortainerImageUpdateStatus | None], str | None]
 
 
@@ -63,8 +66,14 @@ CONTAINER_IMAGE: tuple[PortainerContainerUpdateEntityDescription] = (
         key="container_image_update",
         translation_key="container_image_update",
         entity_category=EntityCategory.CONFIG,
-        installed_version=lambda data: (
-            _short_digest(data.repo_digests[0].partition("@")[2])
+        installed_version=lambda data, status: (
+            _short_digest(
+                status.registry_digest
+                if status is not None
+                and status.registry_digest
+                in [digest.partition("@")[2] for digest in data.repo_digests]
+                else data.repo_digests[0].partition("@")[2]
+            )
             if data.repo_digests
             else None
         ),
@@ -122,15 +131,22 @@ async def async_setup_entry(
     ) -> None:
         """Add new container update entities."""
 
-        async_add_entities(
-            PortainerContainerImageUpdateEntity(
-                coordinator,
-                entity_description,
-                container,
-                endpoint,
-            )
-            for (endpoint, container) in containers
-            for entity_description in CONTAINER_IMAGE
+        async_add_entities_by_subentry(
+            async_add_entities,
+            coordinator.subentry_id_for_endpoint,
+            (
+                (
+                    PortainerContainerImageUpdateEntity(
+                        coordinator,
+                        entity_description,
+                        container,
+                        endpoint,
+                    ),
+                    endpoint.id,
+                )
+                for (endpoint, container) in containers
+                for entity_description in CONTAINER_IMAGE
+            ),
         )
 
     coordinator.new_containers_callbacks.append(_async_add_new_containers)
@@ -163,8 +179,6 @@ class PortainerContainerImageUpdateEntity(PortainerContainerEntity, UpdateEntity
         self.entity_description = entity_description
         super().__init__(coordinator, entity_description, device_info, via_device)
 
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.device_name}_{entity_description.key}"
-
     @override
     @property
     def title(self) -> str | None:
@@ -176,7 +190,7 @@ class PortainerContainerImageUpdateEntity(PortainerContainerEntity, UpdateEntity
     def installed_version(self) -> str | None:
         """Return installed version."""
         return self.entity_description.installed_version(
-            self.container_data.local_image
+            self.container_data.local_image, self.container_data.image_status
         )
 
     @override

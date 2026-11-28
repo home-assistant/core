@@ -38,6 +38,7 @@ DESCRIPTIONS_BY_EVENT_CLASS = {
             "long_double_press",
             "long_triple_press",
             "hold_press",
+            "hold_release",
         ],
         device_class=EventDeviceClass.BUTTON,
     ),
@@ -132,7 +133,9 @@ async def async_setup_entry(
     )
 
     @callback
-    def _async_discovered_event_class(event_class: str, event: BTHomeBleEvent) -> None:
+    def _async_discovered_event_class(
+        event_class: str, event: BTHomeBleEvent | None
+    ) -> None:
         """Handle a newly discovered event class with or without a postfix."""
         async_add_entities([BTHomeEventEntity(address, event_class, event)])
 

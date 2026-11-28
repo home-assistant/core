@@ -6,6 +6,7 @@ import pytest
 from pytest_homeassistant.components.common import (
     TargetSupport,
     TriggerStateDescription,
+    arm_trigger,
     assert_trigger_behavior_all,
     assert_trigger_behavior_each,
     assert_trigger_behavior_first,
@@ -25,9 +26,11 @@ from homeassistant.components.water_heater import (
     STATE_HEAT_PUMP,
     STATE_HIGH_DEMAND,
     STATE_PERFORMANCE,
+    WaterHeaterCapabilityAttribute,
+    WaterHeaterStateAttribute,
 )
 from homeassistant.components.water_heater.trigger import TRIGGERS
-from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, STATE_ON, UnitOfTemperature
+from homeassistant.const import STATE_OFF, STATE_ON, TargetKey, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 
 ALL_ON_STATES = [
@@ -49,6 +52,9 @@ async def target_water_heaters(hass: HomeAssistant) -> list[str]:
     return await target_entities(hass, "water_heater")
 
 
+_WATER_HEATER_UNIT_ATTRIBUTES = {
+    WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS
+}
 _CHANGED_THRESHOLD = {"threshold": {"type": "any"}}
 _CROSSED_THRESHOLD = {
     "threshold": {
@@ -184,15 +190,17 @@ async def test_water_heater_state_trigger_behavior_each(
         *parametrize_numerical_attribute_changed_trigger_states(
             "water_heater.target_temperature_changed",
             STATE_ECO,
-            ATTR_TEMPERATURE,
+            WaterHeaterStateAttribute.TARGET_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            unit_attributes=_WATER_HEATER_UNIT_ATTRIBUTES,
             attribute_required=True,
         ),
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "water_heater.target_temperature_crossed_threshold",
             STATE_ECO,
-            ATTR_TEMPERATURE,
+            WaterHeaterStateAttribute.TARGET_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            unit_attributes=_WATER_HEATER_UNIT_ATTRIBUTES,
             attribute_required=True,
         ),
     ],
@@ -290,8 +298,9 @@ async def test_water_heater_state_trigger_behavior_first(
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "water_heater.target_temperature_crossed_threshold",
             STATE_ECO,
-            ATTR_TEMPERATURE,
+            WaterHeaterStateAttribute.TARGET_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            unit_attributes=_WATER_HEATER_UNIT_ATTRIBUTES,
             attribute_required=True,
         ),
     ],
@@ -389,8 +398,9 @@ async def test_water_heater_state_trigger_behavior_all(
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "water_heater.target_temperature_crossed_threshold",
             STATE_ECO,
-            ATTR_TEMPERATURE,
+            WaterHeaterStateAttribute.TARGET_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            unit_attributes=_WATER_HEATER_UNIT_ATTRIBUTES,
             attribute_required=True,
         ),
     ],
@@ -416,3 +426,59 @@ async def test_water_heater_state_attribute_trigger_behavior_all(
         trigger_options=trigger_options,
         states=states,
     )
+
+
+async def test_water_heater_target_temperature_trigger_temperature_unit(
+    hass: HomeAssistant,
+) -> None:
+    """Test the trigger uses the temperature_unit attribute, not the system unit."""
+    calls: list[str] = []
+    entity_id = "water_heater.test"
+
+    # The system unit is °C, the entity reports in °F
+    hass.states.async_set(
+        entity_id,
+        STATE_ECO,
+        {
+            WaterHeaterStateAttribute.TARGET_TEMPERATURE: 70,
+            WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
+        },
+    )
+    await hass.async_block_till_done()
+
+    await arm_trigger(
+        hass,
+        "water_heater.target_temperature_crossed_threshold",
+        {
+            "threshold": {
+                "type": "above",
+                "value": {"number": 25, "unit_of_measurement": "°C"},
+            }
+        },
+        {TargetKey.ENTITY_ID: [entity_id]},
+        calls,
+    )
+
+    # 72°F = 22.2°C, below 25°C - should NOT trigger
+    hass.states.async_set(
+        entity_id,
+        STATE_ECO,
+        {
+            WaterHeaterStateAttribute.TARGET_TEMPERATURE: 72,
+            WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # 80°F = 26.7°C, above 25°C - should trigger
+    hass.states.async_set(
+        entity_id,
+        STATE_ECO,
+        {
+            WaterHeaterStateAttribute.TARGET_TEMPERATURE: 80,
+            WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(calls) == 1

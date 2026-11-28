@@ -31,7 +31,7 @@ class MoonSensorEntity(SensorEntity):
         """Initialize the moon sensor."""
         self._attr_unique_id = entry.entry_id
         self._attr_device_info = DeviceInfo(
-            name="Moon",
+            translation_key="moon",
             identifiers={(DOMAIN, entry.entry_id)},
             entry_type=DeviceEntryType.SERVICE,
         )

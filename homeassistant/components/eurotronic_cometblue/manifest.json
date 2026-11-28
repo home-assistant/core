@@ -10,6 +10,7 @@
   "categories": ["climate.thermostats_heating"],
   "codeowners": ["@rikroe"],
   "config_flow": true,
+  "connectivity": ["bluetooth"],
   "dependencies": ["bluetooth"],
   "documentation": "https://www.home-assistant.io/integrations/eurotronic_cometblue",
   "integration_type": "device",

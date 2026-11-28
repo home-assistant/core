@@ -5,11 +5,9 @@ from typing import Any, cast, override
 from pyfibaro.fibaro_device import DeviceModel
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
-    ATTR_TILT_POSITION,
-    ENTITY_ID_FORMAT,
     CoverEntity,
     CoverEntityFeature,
+    CoverServiceArgument,
 )
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -44,8 +42,12 @@ class PositionableFibaroCover(FibaroEntity, CoverEntity):
         self, fibaro_device: DeviceModel, controller: FibaroController
     ) -> None:
         """Initialize the device."""
-        super().__init__(fibaro_device, controller)
-        self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
+        super().__init__(fibaro_device, controller, use_child_device_info=True)
+        # HC3 reports value2 for every roller shutter module, also without slats.
+        self._has_tilt = fibaro_device.properties.get("deviceRole") in (
+            None,
+            "VenetianBlinds",
+        )
 
     @staticmethod
     def bound(position: int | None) -> int | None:
@@ -64,7 +66,8 @@ class PositionableFibaroCover(FibaroEntity, CoverEntity):
         super().update()
 
         self._attr_current_cover_position = self.bound(self.level)
-        self._attr_current_cover_tilt_position = self.bound(self.level2)
+        if self._has_tilt:
+            self._attr_current_cover_tilt_position = self.bound(self.level2)
 
         # Be aware that opening and closing is only available for some modern
         # devices.
@@ -81,12 +84,12 @@ class PositionableFibaroCover(FibaroEntity, CoverEntity):
     @override
     def set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        self.set_level(cast(int, kwargs.get(ATTR_POSITION)))
+        self.set_level(cast(int, kwargs.get(CoverServiceArgument.POSITION)))
 
     @override
     def set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the slats to a specific position."""
-        self.set_level2(cast(int, kwargs.get(ATTR_TILT_POSITION)))
+        self.set_level2(cast(int, kwargs.get(CoverServiceArgument.TILT_POSITION)))
 
     @override
     def open_cover(self, **kwargs: Any) -> None:
@@ -121,8 +124,7 @@ class FibaroCover(FibaroEntity, CoverEntity):
         self, fibaro_device: DeviceModel, controller: FibaroController
     ) -> None:
         """Initialize the device."""
-        super().__init__(fibaro_device, controller)
-        self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
+        super().__init__(fibaro_device, controller, use_child_device_info=True)
 
         self._attr_supported_features = (
             CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE

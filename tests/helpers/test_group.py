@@ -2,7 +2,12 @@
 
 from pytest_homeassistant.common import MockEntity, MockEntityPlatform
 
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_GROUP_ENTITIES, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_OFF,
+    STATE_ON,
+    EntityCapabilityAttribute,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, group
 from homeassistant.helpers.group import (
@@ -70,6 +75,45 @@ async def test_expand_entity_ids_recursive(hass: HomeAssistant) -> None:
         "light.bowl",
         "light.ceiling",
     ]
+
+
+async def test_expand_entity_ids_include_groups(hass: HomeAssistant) -> None:
+    """Test expand_entity_ids keeps nested old-style group entity ids."""
+    hass.states.async_set("light.Bowl", STATE_ON)
+    hass.states.async_set("light.Ceiling", STATE_OFF)
+    hass.states.async_set(
+        "group.init_group", STATE_ON, {ATTR_ENTITY_ID: ["light.bowl", "light.ceiling"]}
+    )
+    hass.states.async_set(
+        "group.rec_group",
+        STATE_ON,
+        {ATTR_ENTITY_ID: ["group.init_group", "group.rec_group", "light.ceiling"]},
+    )
+
+    assert sorted(
+        group.expand_entity_ids(hass, ["group.rec_group"], include_groups=True)
+    ) == ["group.init_group", "group.rec_group", "light.bowl", "light.ceiling"]
+
+
+async def test_expand_entity_ids_include_groups_generic_group(
+    hass: HomeAssistant,
+) -> None:
+    """Test expand_entity_ids keeps nested group entity ids."""
+    platform = MockEntityPlatform(hass, domain="light", platform_name="test")
+    outer = MockEntity(entity_id="light.outer", unique_id="outer")
+    outer.group = GenericGroup(outer, ["light.inner", "light.a"])
+    inner = MockEntity(entity_id="light.inner", unique_id="inner")
+    inner.group = GenericGroup(inner, ["light.b"])
+    await platform.async_add_entities([outer, inner])
+    await hass.async_block_till_done()
+
+    assert sorted(group.expand_entity_ids(hass, ["light.outer"])) == [
+        "light.a",
+        "light.b",
+    ]
+    assert sorted(
+        group.expand_entity_ids(hass, ["light.outer"], include_groups=True)
+    ) == ["light.a", "light.b", "light.inner", "light.outer"]
 
 
 async def test_expand_entity_ids_ignores_non_strings(hass: HomeAssistant) -> None:
@@ -280,8 +324,11 @@ async def test_generic_group_attribute_in_state(hass: HomeAssistant) -> None:
 
     state = hass.states.get("light.group_with_attrs")
     assert state is not None
-    assert ATTR_GROUP_ENTITIES in state.attributes
-    assert state.attributes[ATTR_GROUP_ENTITIES] == ["light.lamp1", "light.lamp2"]
+    assert EntityCapabilityAttribute.GROUP_ENTITIES in state.attributes
+    assert state.attributes[EntityCapabilityAttribute.GROUP_ENTITIES] == [
+        "light.lamp1",
+        "light.lamp2",
+    ]
 
 
 async def test_integration_specific_group_member_entity_ids(
@@ -458,8 +505,8 @@ async def test_integration_specific_group_attribute_in_state(
 
     state = hass.states.get("light.int_group_attrs")
     assert state is not None
-    assert ATTR_GROUP_ENTITIES in state.attributes
-    assert sorted(state.attributes[ATTR_GROUP_ENTITIES]) == [
+    assert EntityCapabilityAttribute.GROUP_ENTITIES in state.attributes
+    assert sorted(state.attributes[EntityCapabilityAttribute.GROUP_ENTITIES]) == [
         "light.member1",
         "light.member2",
     ]

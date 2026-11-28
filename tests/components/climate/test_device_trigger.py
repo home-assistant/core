@@ -16,6 +16,7 @@ from pytest_unordered import unordered
 from homeassistant.components import automation
 from homeassistant.components.climate import (
     DOMAIN,
+    ClimateEntityStateAttribute,
     HVACAction,
     HVACMode,
     const,
@@ -52,9 +53,9 @@ async def test_get_triggers(
         entity_entry.entity_id,
         HVACMode.COOL,
         {
-            const.ATTR_HVAC_ACTION: HVACAction.IDLE,
-            const.ATTR_CURRENT_HUMIDITY: 23,
-            const.ATTR_CURRENT_TEMPERATURE: 18,
+            ClimateEntityStateAttribute.HVAC_ACTION: HVACAction.IDLE,
+            ClimateEntityStateAttribute.CURRENT_HUMIDITY: 23,
+            ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 18,
         },
     )
     expected_triggers = [
@@ -113,9 +114,9 @@ async def test_get_triggers_hidden_auxiliary(
         entity_entry.entity_id,
         HVACMode.COOL,
         {
-            const.ATTR_HVAC_ACTION: HVACAction.IDLE,
-            const.ATTR_CURRENT_HUMIDITY: 23,
-            const.ATTR_CURRENT_TEMPERATURE: 18,
+            ClimateEntityStateAttribute.HVAC_ACTION: HVACAction.IDLE,
+            ClimateEntityStateAttribute.CURRENT_HUMIDITY: 23,
+            ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 18,
         },
     )
     expected_triggers = [
@@ -160,9 +161,9 @@ async def test_if_fires_on_state_change(
         entry.entity_id,
         HVACMode.COOL,
         {
-            const.ATTR_HVAC_ACTION: HVACAction.IDLE,
-            const.ATTR_CURRENT_HUMIDITY: 23,
-            const.ATTR_CURRENT_TEMPERATURE: 18,
+            ClimateEntityStateAttribute.HVAC_ACTION: HVACAction.IDLE,
+            ClimateEntityStateAttribute.CURRENT_HUMIDITY: 23,
+            ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 18,
         },
     )
 
@@ -222,9 +223,9 @@ async def test_if_fires_on_state_change(
         entry.entity_id,
         HVACMode.AUTO,
         {
-            const.ATTR_HVAC_ACTION: HVACAction.COOLING,
-            const.ATTR_CURRENT_HUMIDITY: 23,
-            const.ATTR_CURRENT_TEMPERATURE: 18,
+            ClimateEntityStateAttribute.HVAC_ACTION: HVACAction.COOLING,
+            ClimateEntityStateAttribute.CURRENT_HUMIDITY: 23,
+            ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 18,
         },
     )
     await hass.async_block_till_done()
@@ -236,9 +237,9 @@ async def test_if_fires_on_state_change(
         entry.entity_id,
         HVACMode.AUTO,
         {
-            const.ATTR_HVAC_ACTION: HVACAction.COOLING,
-            const.ATTR_CURRENT_HUMIDITY: 23,
-            const.ATTR_CURRENT_TEMPERATURE: 23,
+            ClimateEntityStateAttribute.HVAC_ACTION: HVACAction.COOLING,
+            ClimateEntityStateAttribute.CURRENT_HUMIDITY: 23,
+            ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 23,
         },
     )
     await hass.async_block_till_done()
@@ -250,9 +251,9 @@ async def test_if_fires_on_state_change(
         entry.entity_id,
         HVACMode.AUTO,
         {
-            const.ATTR_HVAC_ACTION: HVACAction.COOLING,
-            const.ATTR_CURRENT_HUMIDITY: 7,
-            const.ATTR_CURRENT_TEMPERATURE: 23,
+            ClimateEntityStateAttribute.HVAC_ACTION: HVACAction.COOLING,
+            ClimateEntityStateAttribute.CURRENT_HUMIDITY: 7,
+            ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 23,
         },
     )
     await hass.async_block_till_done()
@@ -265,12 +266,12 @@ async def test_if_fires_on_state_change(
     [
         pytest.param(
             {"type": "hvac_mode_changed", "to": HVACMode.AUTO},
-            {const.ATTR_CURRENT_TEMPERATURE: 18},
+            {ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 18},
             id="hvac_mode_changed",
         ),
         pytest.param(
             {"type": "current_temperature_changed", "above": 20},
-            {const.ATTR_CURRENT_TEMPERATURE: 23},
+            {ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 23},
             id="current_temperature_changed",
         ),
     ],
@@ -296,7 +297,9 @@ async def test_if_fires_on_state_change_with_for(
     )
 
     hass.states.async_set(
-        entry.entity_id, HVACMode.COOL, {const.ATTR_CURRENT_TEMPERATURE: 18}
+        entry.entity_id,
+        HVACMode.COOL,
+        {ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 18},
     )
 
     assert await async_setup_component(
@@ -354,9 +357,9 @@ async def test_if_fires_on_state_change_legacy(
         entry.entity_id,
         HVACMode.COOL,
         {
-            const.ATTR_HVAC_ACTION: HVACAction.IDLE,
-            const.ATTR_CURRENT_HUMIDITY: 23,
-            const.ATTR_CURRENT_TEMPERATURE: 18,
+            ClimateEntityStateAttribute.HVAC_ACTION: HVACAction.IDLE,
+            ClimateEntityStateAttribute.CURRENT_HUMIDITY: 23,
+            ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 18,
         },
     )
 
@@ -388,9 +391,9 @@ async def test_if_fires_on_state_change_legacy(
         entry.entity_id,
         HVACMode.AUTO,
         {
-            const.ATTR_HVAC_ACTION: HVACAction.COOLING,
-            const.ATTR_CURRENT_HUMIDITY: 23,
-            const.ATTR_CURRENT_TEMPERATURE: 18,
+            ClimateEntityStateAttribute.HVAC_ACTION: HVACAction.COOLING,
+            ClimateEntityStateAttribute.CURRENT_HUMIDITY: 23,
+            ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 18,
         },
     )
     await hass.async_block_till_done()
@@ -438,42 +441,18 @@ async def test_get_trigger_capabilities_hvac_mode(hass: HomeAssistant) -> None:
     ]
 
 
-@pytest.mark.parametrize(
-    ("type", "suffix"),
-    [
-        ("current_temperature_changed", UnitOfTemperature.CELSIUS),
-        ("current_humidity_changed", "%"),
-    ],
-)
-async def test_get_trigger_capabilities_temp_humid(
-    hass: HomeAssistant, type, suffix
-) -> None:
-    """Test we get the expected capabilities from a climate trigger."""
-    capabilities = await device_trigger.async_get_trigger_capabilities(
-        hass,
+def _temp_humid_fields(description: dict[str, Any]) -> list[dict[str, Any]]:
+    """Return the expected extra fields of a temperature or humidity trigger."""
+    return [
         {
-            "platform": "device",
-            "domain": "climate",
-            "type": type,
-            "entity_id": "01234567890123456789012345678901",
-            "above": "23",
-        },
-    )
-
-    assert capabilities and "extra_fields" in capabilities
-
-    assert to_field_list(
-        capabilities["extra_fields"], custom_serializer=cv.custom_serializer
-    ) == [
-        {
-            "description": {"suffix": suffix},
+            **description,
             "name": "above",
             "optional": True,
             "required": False,
             "type": "float",
         },
         {
-            "description": {"suffix": suffix},
+            **description,
             "name": "below",
             "optional": True,
             "required": False,
@@ -486,6 +465,109 @@ async def test_get_trigger_capabilities_temp_humid(
             "type": "positive_time_period_dict",
         },
     ]
+
+
+async def _async_get_extra_fields(
+    hass: HomeAssistant, trigger_type: str, entity_id: str
+) -> list[dict[str, Any]]:
+    """Return the serialized extra fields of a climate trigger."""
+    capabilities = await device_trigger.async_get_trigger_capabilities(
+        hass,
+        {
+            "platform": "device",
+            "domain": "climate",
+            "type": trigger_type,
+            "entity_id": entity_id,
+            "above": "23",
+        },
+    )
+    assert capabilities and "extra_fields" in capabilities
+    return to_field_list(
+        capabilities["extra_fields"], custom_serializer=cv.custom_serializer
+    )
+
+
+@pytest.mark.parametrize(
+    ("trigger_type", "suffix"),
+    [
+        pytest.param(
+            "current_temperature_changed",
+            UnitOfTemperature.FAHRENHEIT,
+            id="temperature",
+        ),
+        pytest.param("current_humidity_changed", "%", id="humidity"),
+    ],
+)
+async def test_get_trigger_capabilities_temp_humid(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    trigger_type: str,
+    suffix: str,
+) -> None:
+    """Test the temperature unit comes from the entity state, not the system."""
+    entry = entity_registry.async_get_or_create(
+        DOMAIN,
+        "test",
+        "5678",
+        capabilities={
+            const.ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: (
+                UnitOfTemperature.CELSIUS
+            )
+        },
+    )
+    hass.states.async_set(
+        entry.entity_id,
+        HVACMode.HEAT,
+        {
+            const.ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: (
+                UnitOfTemperature.FAHRENHEIT
+            )
+        },
+    )
+
+    assert await _async_get_extra_fields(
+        hass, trigger_type, entry.id
+    ) == _temp_humid_fields({"description": {"suffix": suffix}})
+
+
+async def test_get_trigger_capabilities_temp_unavailable(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test the temperature unit of an entity without state comes from the registry."""
+    entry = entity_registry.async_get_or_create(
+        DOMAIN,
+        "test",
+        "5678",
+        capabilities={
+            const.ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: (
+                UnitOfTemperature.FAHRENHEIT
+            )
+        },
+    )
+
+    assert await _async_get_extra_fields(
+        hass, "current_temperature_changed", entry.id
+    ) == _temp_humid_fields({"description": {"suffix": UnitOfTemperature.FAHRENHEIT}})
+
+
+async def test_get_trigger_capabilities_temp_no_capability(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test there is no temperature suffix when the entity has no unit capability."""
+    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
+
+    assert await _async_get_extra_fields(
+        hass, "current_temperature_changed", entry.id
+    ) == _temp_humid_fields({})
+
+
+async def test_get_trigger_capabilities_temp_unknown_entity(
+    hass: HomeAssistant,
+) -> None:
+    """Test there is no temperature suffix for an unknown entity."""
+    assert await _async_get_extra_fields(
+        hass, "current_temperature_changed", "01234567890123456789012345678901"
+    ) == _temp_humid_fields({})
 
 
 def test_current_temperature_changed_with_bad_above_is_invalid() -> None:

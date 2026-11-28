@@ -16,19 +16,13 @@ from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
-    Platform,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .coordinator import RingConfigEntry, RingDataCoordinator
-from .entity import (
-    RingDeviceT,
-    RingEntity,
-    RingEntityDescription,
-    async_check_create_deprecated,
-)
+from .entity import RingDeviceT, RingEntity
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -48,12 +42,6 @@ async def async_setup_entry(
         for description in SENSOR_TYPES
         for device in ring_data.devices.all_devices
         if description.exists_fn(device)
-        and async_check_create_deprecated(
-            hass,
-            Platform.SENSOR,
-            f"{device.id}-{description.key}",
-            description,
-        )
     ]
 
     async_add_entities(entities)
@@ -135,7 +123,6 @@ def _get_last_recording(history_data: list[dict[str, Any]]) -> dict[str, Any] | 
 @dataclass(frozen=True, kw_only=True)
 class RingSensorEntityDescription(
     SensorEntityDescription,
-    RingEntityDescription,
     Generic[RingDeviceT],  # noqa: UP046
 ):
     """Describes Ring sensor entity."""

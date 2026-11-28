@@ -1,7 +1,6 @@
 """Provide methods to bootstrap a Home Assistant instance."""
 
 import asyncio
-from collections import defaultdict
 import contextlib
 from functools import partial
 from itertools import chain
@@ -67,7 +66,6 @@ from .const import (
     BASE_PLATFORMS,
     KEY_DATA_LOGGING as DATA_LOGGING,
     KEY_DATA_LOGGING_DISABLED_REASON as DATA_LOGGING_DISABLED_REASON,
-    SIGNAL_BOOTSTRAP_INTEGRATIONS,
 )
 from .core_config import async_process_ha_core_config
 from .exceptions import HomeAssistantError, UnsupportedStorageVersionError
@@ -89,7 +87,7 @@ from .helpers import (
     translation,
     trigger,
 )
-from .helpers.dispatcher import async_dispatcher_send_internal
+from .helpers.bootstrap_progress import BootstrapPhase, WatchPendingSetups
 from .helpers.storage import get_internal_store_manager
 from .helpers.system_info import async_get_system_info
 from .helpers.typing import ConfigType
@@ -142,9 +140,6 @@ LOG_FILE_DISABLED_REASON_SUPERVISOR = "supervisor"
 
 # hass.data key for logging information.
 DATA_REGISTRIES_LOADED: HassKey[None] = HassKey("bootstrap_registries_loaded")
-
-LOG_SLOW_STARTUP_INTERVAL = 60
-SLOW_STARTUP_CHECK_INTERVAL = 1
 
 STAGE_0_SUBSTAGE_TIMEOUT = 60
 STAGE_1_TIMEOUT = 120
@@ -575,7 +570,7 @@ async def async_from_config_dict(
         )
         return None
 
-    await _async_set_up_integrations(hass, config)
+    await _async_set_up_integrations(hass, config, start)
 
     stop = monotonic()
     _LOGGER.info("Home Assistant initialized in %.2fs", stop - start)
@@ -764,14 +759,15 @@ def _get_domains(hass: core.HomeAssistant, config: dict[str, Any]) -> set[str]:
 
 async def _async_resolve_domains_and_preload(
     hass: core.HomeAssistant, config: dict[str, Any]
-) -> tuple[dict[str, Integration], dict[str, Integration]]:
+) -> tuple[dict[str, Integration], dict[str, Integration], set[str]]:
     """Resolve all dependencies and return integrations to set up.
 
-    The return value is a tuple of two dictionaries:
+    The return value is a tuple of two dictionaries and a set:
     - The first dictionary contains integrations
       specified by the configuration (including config entries).
     - The second dictionary contains the same integrations as the first dictionary
       together with all their dependencies.
+    - The set contains the domains that were not found.
     """
     domains_to_setup = _get_domains(hass, config)
 
@@ -890,19 +886,29 @@ async def _async_resolve_domains_and_preload(
         eager_start=True,
     )
 
-    return integrations_to_setup, all_integrations_to_setup
+    return (
+        integrations_to_setup,
+        all_integrations_to_setup,
+        {
+            domain
+            for domain, itg in integrations_or_excs.items()
+            if isinstance(itg, loader.IntegrationNotFound)
+        },
+    )
 
 
 async def _async_set_up_integrations(
-    hass: core.HomeAssistant, config: dict[str, Any]
+    hass: core.HomeAssistant, config: dict[str, Any], start: float
 ) -> None:
     """Set up all the integrations."""
-    watcher = _WatchPendingSetups(hass, _setup_started(hass))
+    watcher = WatchPendingSetups(hass, _setup_started(hass), start)
     watcher.async_start()
 
-    integrations, all_integrations = await _async_resolve_domains_and_preload(
-        hass, config
-    )
+    (
+        integrations,
+        all_integrations,
+        not_found_domains,
+    ) = await _async_resolve_domains_and_preload(hass, config)
     # Detect all cycles
     integrations_after_dependencies = (
         await loader.resolve_integrations_after_dependencies(
@@ -932,6 +938,22 @@ async def _async_set_up_integrations(
         ("1", STAGE_1_INTEGRATIONS, STAGE_1_TIMEOUT),
         ("2", domains, STAGE_2_TIMEOUT),
     ]
+    # Not every resolved domain is set up by a stage, only count those that are.
+    # Domains dropped while resolving dependencies count as failed.
+    watcher.async_set_planned_domains(
+        {
+            dep
+            for _, domain_group, _ in stages
+            for domain in domain_group & all_domains
+            for dep in (domain, *integrations_after_dependencies[domain])
+        }
+        | (
+            (_get_domains(hass, config) | all_integrations.keys())
+            - all_domains
+            # Safe mode does not load custom integrations, so they are not found.
+            - (not_found_domains if hass.config.safe_mode else set())
+        )
+    )
 
     _LOGGER.info("Setting up stage 0")
     for name, domain_group, timeout in stages:
@@ -945,6 +967,7 @@ async def _async_set_up_integrations(
             _LOGGER.info("Already set up stage %s: %s", name, stage_domains_unfiltered)
             continue
 
+        watcher.async_set_phase(BootstrapPhase.SETUP)
         stage_dep_domains_unfiltered = {
             dep
             for domain in stage_domains
@@ -984,6 +1007,7 @@ async def _async_set_up_integrations(
 
     # Wrap up startup
     _LOGGER.debug("Waiting for startup to wrap up")
+    watcher.async_set_phase(BootstrapPhase.WRAP_UP)
     try:
         async with hass.timeout.async_timeout(
             WRAP_UP_TIMEOUT,
@@ -1005,77 +1029,6 @@ async def _async_set_up_integrations(
             "Integration setup times: %s",
             dict(sorted(setup_time.items(), key=itemgetter(1), reverse=True)),
         )
-
-
-class _WatchPendingSetups:
-    """Periodic log and dispatch of setups that are pending."""
-
-    def __init__(
-        self,
-        hass: core.HomeAssistant,
-        setup_started: dict[tuple[str, str | None], float],
-    ) -> None:
-        """Initialize the WatchPendingSetups class."""
-        self._hass = hass
-        self._setup_started = setup_started
-        self._duration_count = 0
-        self._handle: asyncio.TimerHandle | None = None
-        self._previous_was_empty = True
-        self._loop = hass.loop
-
-    def _async_watch(self) -> None:
-        """Periodic log of setups that are pending."""
-        now = monotonic()
-        self._duration_count += SLOW_STARTUP_CHECK_INTERVAL
-
-        remaining_with_setup_started: defaultdict[str, float] = defaultdict(float)
-        for integration_group, start_time in self._setup_started.items():
-            domain, _ = integration_group
-            remaining_with_setup_started[domain] += now - start_time
-
-        if remaining_with_setup_started:
-            _LOGGER.debug("Integration remaining: %s", remaining_with_setup_started)
-        elif waiting_tasks := self._hass._active_tasks:  # noqa: SLF001
-            _LOGGER.debug("Waiting on tasks: %s", waiting_tasks)
-        self._async_dispatch(remaining_with_setup_started)
-        if (
-            self._setup_started
-            and self._duration_count % LOG_SLOW_STARTUP_INTERVAL == 0
-        ):
-            # We log every LOG_SLOW_STARTUP_INTERVAL until all integrations are done
-            # once we take over LOG_SLOW_STARTUP_INTERVAL (60s) to start up
-            _LOGGER.warning(
-                "Waiting for integrations to complete setup: %s",
-                self._setup_started,
-            )
-
-        _LOGGER.debug("Running timeout Zones: %s", self._hass.timeout.zones)
-        self._async_schedule_next()
-
-    def _async_dispatch(self, remaining_with_setup_started: dict[str, float]) -> None:
-        """Dispatch the signal."""
-        if remaining_with_setup_started or not self._previous_was_empty:
-            async_dispatcher_send_internal(
-                self._hass, SIGNAL_BOOTSTRAP_INTEGRATIONS, remaining_with_setup_started
-            )
-        self._previous_was_empty = not remaining_with_setup_started
-
-    def _async_schedule_next(self) -> None:
-        """Schedule the next call."""
-        self._handle = self._loop.call_later(
-            SLOW_STARTUP_CHECK_INTERVAL, self._async_watch
-        )
-
-    def async_start(self) -> None:
-        """Start watching."""
-        self._async_schedule_next()
-
-    def async_stop(self) -> None:
-        """Stop watching."""
-        self._async_dispatch({})
-        if self._handle:
-            self._handle.cancel()
-            self._handle = None
 
 
 async def _async_setup_multi_components(

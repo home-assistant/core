@@ -12,6 +12,7 @@ from homeassistant.components.forecast_solar import async_setup_entry
 from homeassistant.components.forecast_solar.const import (
     CONF_AZIMUTH,
     CONF_AZIMUTH_SENSOR,
+    CONF_COORDINATES,
     CONF_DAMPING_EVENING,
     CONF_DAMPING_MORNING,
     CONF_DECLINATION,
@@ -68,8 +69,7 @@ async def test_user_flow_fixed_location(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
-            CONF_LATITUDE: 52.42,
-            CONF_LONGITUDE: 4.42,
+            CONF_COORDINATES: {CONF_LATITUDE: 52.42, CONF_LONGITUDE: 4.42},
             CONF_AZIMUTH: 142,
             CONF_DECLINATION: 42,
             CONF_MODULES_POWER: 4242,
@@ -227,7 +227,7 @@ async def test_reconfigure_flow_switch_to_fixed_location(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_LATITUDE: 12.34, CONF_LONGITUDE: 56.78},
+        user_input={CONF_COORDINATES: {CONF_LATITUDE: 12.34, CONF_LONGITUDE: 56.78}},
     )
     await hass.async_block_till_done()
 
@@ -257,8 +257,10 @@ async def test_reconfigure_flow_suggests_stored_coordinates(
         result["flow_id"], {"location": "fixed"}
     )
 
-    assert _suggested(result, CONF_LATITUDE) == 52.42
-    assert _suggested(result, CONF_LONGITUDE) == 4.42
+    assert _suggested(result, CONF_COORDINATES) == {
+        CONF_LATITUDE: 52.42,
+        CONF_LONGITUDE: 4.42,
+    }
 
 
 @pytest.mark.usefixtures("mock_forecast_solar")

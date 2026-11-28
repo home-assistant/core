@@ -21,14 +21,13 @@ import probatio
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
-    ConfigEntry,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
 )
 from homeassistant.const import (
     CONF_HOST,
-    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
@@ -61,7 +60,7 @@ from .const import (
     LOGGER,
 )
 from .errors import AuthenticationRequired, CannotConnect, MfaRequired
-from .hub import UnifiHub, get_unifi_api
+from .hub import UnifiHub, get_unifi_api, update_site_unique_id
 
 DEFAULT_HOST = "unifi"
 DEFAULT_PORT = 443
@@ -158,8 +157,8 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
         """Trigger a reauthentication flow."""
         reauth_entry = self._get_reauth_entry()
         self.context["title_placeholders"] = {
-            CONF_HOST: reauth_entry.data[CONF_HOST],
-            CONF_NAME: reauth_entry.title,
+            "host": reauth_entry.data[CONF_HOST],
+            "name": reauth_entry.title,
         }
 
         return await self.async_step_reconfigure()
@@ -183,13 +182,29 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
             with _catch_unifi_api_flow_errors(errors):
                 sites = await self._async_update_sites(config_data)
 
-                if (
-                    (unique_id := config_entry.unique_id) is not None
-                ) and unique_id in sites:
-                    config_data[CONF_SITE_ID] = sites[unique_id].name
-                    return self.async_update_reload_and_abort(
-                        config_entry, data_updates=config_data
-                    )
+                if (unique_id := config_entry.unique_id) is not None:
+                    if unique_id not in sites:
+                        unique_id = update_site_unique_id(
+                            self.hass,
+                            config_entry,
+                            unique_id,
+                            config_entry.data[CONF_SITE_ID],
+                            sites,
+                        )
+                    if unique_id in sites:
+                        config_data[CONF_SITE_ID] = sites[unique_id].name
+                        if config_entry.update_listeners:
+                            # The update listener reloads an entry when its data changes.
+                            if config_data.items() <= config_entry.data.items():
+                                self.hass.config_entries.async_schedule_reload(
+                                    config_entry.entry_id
+                                )
+                            return self.async_update_and_abort(
+                                config_entry, data_updates=config_data
+                            )
+                        return self.async_update_reload_and_abort(
+                            config_entry, data_updates=config_data
+                        )
                 raise AbortFlow("unknown_site_id")
         else:
             data_schema = self._build_form_schema(
@@ -247,13 +262,13 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="already_configured")
 
         self.context["title_placeholders"] = {
-            CONF_NAME: (
+            "name": (
                 discovery_info.get("name")
                 or discovery_info.get("hostname")
                 or discovery_info.get("product_name")
                 or "UniFi Network"
             ),
-            CONF_HOST: source_ip,
+            "host": source_ip,
         }
         self.context["configuration_url"] = f"https://{host}"
 
@@ -313,7 +328,7 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
         return hub.sites
 
     @callback
-    def _get_reauth_or_reconfigure_entry(self) -> ConfigEntry:
+    def _get_reauth_or_reconfigure_entry(self) -> UnifiConfigEntry:
         """Return the config entry the current flow is modifying."""
         if self.source == SOURCE_REAUTH:
             return self._get_reauth_entry()
@@ -333,6 +348,9 @@ class UnifiOptionsFlowHandler(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the UniFi Network options."""
+        if self.config_entry.state is not ConfigEntryState.LOADED:
+            return self.async_abort(reason="integration_not_setup")
+
         self.hub = self.config_entry.runtime_data
         self.options[CONF_BLOCK_CLIENT] = self.hub.config.option_block_clients
 

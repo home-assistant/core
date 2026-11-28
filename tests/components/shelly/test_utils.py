@@ -29,6 +29,7 @@ from homeassistant.components.shelly.utils import (
     get_block_device_sleep_period,
     get_block_input_triggers,
     get_block_number_of_channels,
+    get_device_url,
     get_host,
     get_release_url,
     get_rpc_channel_name,
@@ -38,6 +39,7 @@ from homeassistant.components.shelly.utils import (
     is_block_momentary_input,
     mac_address_from_name,
 )
+from homeassistant.const import CONF_HOST, CONF_PORT
 
 DEVICE_BLOCK_ID = 4
 
@@ -295,6 +297,21 @@ def test_get_host(host: str, expected: str) -> None:
 
 
 @pytest.mark.parametrize(
+    ("data", "expected"),
+    [
+        ({CONF_HOST: "192.168.178.12"}, "http://192.168.178.12"),
+        ({CONF_HOST: "192.168.178.12", CONF_PORT: 80}, "http://192.168.178.12"),
+        ({CONF_HOST: "192.168.178.12", CONF_PORT: 8080}, "http://192.168.178.12:8080"),
+        ({CONF_HOST: "192.168.178.12", CONF_PORT: 443}, "https://192.168.178.12"),
+        ({CONF_HOST: "2001:db8::1"}, "http://[2001:db8::1]"),
+    ],
+)
+def test_get_device_url(data: dict[str, Any], expected: str) -> None:
+    """Test get_device_url function."""
+    assert get_device_url(data) == expected
+
+
+@pytest.mark.parametrize(
     ("name", "result"),
     [
         ("shelly1pm-AABBCCDDEEFF", "AABBCCDDEEFF"),
@@ -324,14 +341,14 @@ async def test_shelly_receiver_get() -> None:
 @pytest.mark.parametrize(
     ("key", "expected"),
     [
-        ("switch:0", "Test name Output 0"),
-        ("switch:1", "Test name Output 1"),
-        ("cover:0", "Test name Cover 0"),
-        ("light:0", "Test name Light 0"),
-        ("rgb:0", "Test name RGB light 0"),
-        ("rgbw:1", "Test name RGBW light 1"),
-        ("cct:0", "Test name CCT light 0"),
-        ("em1:0", "Test name Energy Meter 0"),
+        ("switch:0", "Output 0"),
+        ("switch:1", "Output 1"),
+        ("cover:0", "Cover 0"),
+        ("light:0", "Light 0"),
+        ("rgb:0", "RGB light 0"),
+        ("rgbw:1", "RGBW light 1"),
+        ("cct:0", "CCT light 0"),
+        ("em1:0", "Energy Meter 0"),
     ],
 )
 async def test_get_rpc_sub_device_name(
@@ -367,5 +384,5 @@ async def test_get_rpc_sub_device_name_with_emeter_phase(
     config = {"em:0": {"name": None}}
     monkeypatch.setattr(mock_rpc_device, "config", config)
 
-    assert get_rpc_sub_device_name(mock_rpc_device, "em:0", "A") == "Test name Phase A"
-    assert get_rpc_sub_device_name(mock_rpc_device, "em:0", "B") == "Test name Phase B"
+    assert get_rpc_sub_device_name(mock_rpc_device, "em:0", "A") == "Phase A"
+    assert get_rpc_sub_device_name(mock_rpc_device, "em:0", "B") == "Phase B"

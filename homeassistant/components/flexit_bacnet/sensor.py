@@ -31,7 +31,8 @@ from .entity import FlexitEntity
 class FlexitSensorEntityDescription(SensorEntityDescription):
     """Describes a Flexit sensor entity."""
 
-    value_fn: Callable[[FlexitBACnet], float]
+    value_fn: Callable[[FlexitBACnet], float | None]
+    exists_fn: Callable[[FlexitBACnet], bool] = lambda _: True
 
 
 SENSOR_TYPES: tuple[FlexitSensorEntityDescription, ...] = (
@@ -66,6 +67,18 @@ SENSOR_TYPES: tuple[FlexitSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         translation_key="extract_air_temperature",
         value_fn=lambda data: data.extract_air_temperature,
+    ),
+    FlexitSensorEntityDescription(
+        key="extract_air_humidity",
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        translation_key="extract_air_humidity",
+        value_fn=lambda data: data.extract_air_humidity,
+        # Units without a humidity sensor report None or 0.
+        exists_fn=lambda data: (
+            (humidity := data.extract_air_humidity) is not None and humidity > 0
+        ),
     ),
     FlexitSensorEntityDescription(
         key="room_temperature",
@@ -163,7 +176,9 @@ async def async_setup_entry(
     coordinator = config_entry.runtime_data
 
     async_add_entities(
-        FlexitSensor(coordinator, description) for description in SENSOR_TYPES
+        FlexitSensor(coordinator, description)
+        for description in SENSOR_TYPES
+        if description.exists_fn(coordinator.data)
     )
 
 

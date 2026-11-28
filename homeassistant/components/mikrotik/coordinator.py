@@ -1,5 +1,6 @@
 """The Mikrotik router class."""
 
+from contextlib import suppress
 from datetime import timedelta
 import ssl
 from typing import Any, override
@@ -10,8 +11,9 @@ from librouteros.login import plain as login_plain, token as login_token
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.util import dt as dt_util
 
 from .const import (
     ARP,
@@ -56,12 +58,15 @@ class MikrotikData:
     """Handle all communication with the Mikrotik API."""
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, api: librouteros.Api
+        self,
+        hass: HomeAssistant,
+        config_entry: MikrotikConfigEntry,
+        api: librouteros.Api,
     ) -> None:
         """Initialize the Mikrotik Client."""
         self.hass = hass
         self.config_entry = config_entry
-        self.api = api
+        self.api: librouteros.Api | None = api
         self._host: str = self.config_entry.data[CONF_HOST]
         self.all_devices: dict[str, dict[str, Any]] = {}
         self.devices: dict[str, Device] = {}
@@ -273,29 +278,34 @@ class MikrotikData:
             return
 
         for mac, params in device_list.items():
-            if mac not in self.devices:
-                self.devices[mac] = Device(mac, self.all_devices.get(mac, {}))
+            if mac in wireless_devices:
+                active = True
+            # for wired devices or when forcing dhcp check for active-address
+            elif not params.get("active-address"):
+                active = False
             else:
-                self.devices[mac].update(params=self.all_devices.get(mac, {}))
+                # ping check the rest of active devices if arp ping is enabled
+                active = True
+                if self.arp_enabled and mac in arp_devices:
+                    active = self.do_arp_ping(
+                        str(params.get("active-address")),
+                        str(arp_devices[mac].get("interface")),
+                    )
+
+            if (device := self.devices.get(mac)) is None:
+                # Known clients are restored from the entity registry, so an
+                # inactive lease can't bring back a client the user removed
+                if not active:
+                    continue
+                device = self.devices[mac] = Device(mac, self.all_devices.get(mac, {}))
+            else:
+                device.update(params=self.all_devices.get(mac, {}))
 
             if mac in wireless_devices:
                 # if wireless is supported then wireless_params are params
-                self.devices[mac].update(
-                    wireless_params=wireless_devices[mac], active=True
-                )
-                continue
-            # for wired devices or when forcing dhcp check for active-address
-            if not params.get("active-address"):
-                self.devices[mac].update(active=False)
-                continue
-            # ping check the rest of active devices if arp ping is enabled
-            active = True
-            if self.arp_enabled and mac in arp_devices:
-                active = self.do_arp_ping(
-                    str(params.get("active-address")),
-                    str(arp_devices[mac].get("interface")),
-                )
-            self.devices[mac].update(active=active)
+                device.update(wireless_params=wireless_devices[mac], active=True)
+            else:
+                device.update(active=active)
 
     def do_arp_ping(self, ip_address: str, interface: str) -> bool:
         """Attempt to arp ping MAC address via interface."""
@@ -332,20 +342,35 @@ class MikrotikData:
         with mikrotik_config_entry_errors(
             suppress_errors=suppress_errors, during_setup=during_setup
         ):
+            if self.api is not None:
+                try:
+                    return list(self.api(cmd, **(params or {})))
+                except CONNECTION_ERRORS as err:
+                    LOGGER.debug(
+                        "Mikrotik %s - connection dropped (%s), reconnecting",
+                        self._host,
+                        err,
+                    )
+                    self.disconnect()
+            self.api = get_api(dict(self.config_entry.data))
             try:
-                if params:
-                    return list(self.api(cmd, **params))
-                return list(self.api(cmd))
-            except CONNECTION_ERRORS as err:
-                LOGGER.debug(
-                    "Mikrotik %s - connection dropped (%s), reconnecting",
-                    self._host,
-                    err,
-                )
-                self.api = get_api(dict(self.config_entry.data))
-                if params:
-                    return list(self.api(cmd, **params))
-                return list(self.api(cmd))
+                return list(self.api(cmd, **(params or {})))
+            except CONNECTION_ERRORS:
+                self.disconnect()
+                raise
+
+    def disconnect(self) -> None:
+        """Close the connection to the Mikrotik API.
+
+        A reply cut off by a connection error stays unread on the socket and
+        would be read as the reply to the next command, so the connection is
+        never reused after one.
+        """
+        if self.api is None:
+            return
+        with suppress(*CONNECTION_ERRORS):
+            self.api.close()
+        self.api = None
 
 
 class MikrotikDataUpdateCoordinator(DataUpdateCoordinator[None]):
@@ -361,6 +386,8 @@ class MikrotikDataUpdateCoordinator(DataUpdateCoordinator[None]):
     ) -> None:
         """Initialize the Mikrotik Client."""
         self._mk_data = mk_data
+        # MACs which have a device tracker entity
+        self.tracked_macs: set[str] = set()
         super().__init__(
             hass,
             LOGGER,
@@ -395,6 +422,17 @@ class MikrotikDataUpdateCoordinator(DataUpdateCoordinator[None]):
         return self._mk_data.serial_number
 
     @property
+    def interface_scope(self) -> str:
+        """Return the prefix that scopes interface identifiers to this router.
+
+        CHR and x86 installs have no routerboard serial number, so the config
+        entry ID keeps their interfaces apart instead.
+        """
+        if self.serial_num == "None":
+            return self.config_entry.entry_id
+        return self.serial_num
+
+    @property
     def option_detection_time(self) -> timedelta:
         """Config entry option defining number of seconds from last seen to away."""
         return timedelta(
@@ -407,6 +445,19 @@ class MikrotikDataUpdateCoordinator(DataUpdateCoordinator[None]):
     def api(self) -> MikrotikData:
         """Represent Mikrotik data object."""
         return self._mk_data
+
+    def is_client_connected(self, device: Device) -> bool:
+        """Return true if the client was seen within the detection time."""
+        return bool(
+            device.last_seen
+            and dt_util.utcnow() - device.last_seen < self.option_detection_time
+        )
+
+    @callback
+    def async_forget_client(self, mac: str) -> None:
+        """Forget a removed client so it is re-created when it returns."""
+        self._mk_data.devices.pop(mac, None)
+        self.tracked_macs.discard(mac)
 
     @override
     async def _async_update_data(self) -> None:

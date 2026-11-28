@@ -4,6 +4,7 @@
   "categories": ["productivity_information"],
   "codeowners": ["@shaiu"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/seventeentrack",
   "integration_type": "service",
   "iot_class": "cloud_polling",

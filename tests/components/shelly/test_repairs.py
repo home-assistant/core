@@ -18,6 +18,7 @@ from homeassistant.components.shelly.const import (
     CONF_BLE_SCANNER_MODE,
     DEPRECATED_FIRMWARE_ISSUE_ID,
     DOMAIN,
+    FIRMWARE_UNSUPPORTED_ISSUE_ID,
     IR_RAW_RECEIVE_DISABLED_ISSUE_ID,
     OPEN_WIFI_AP_ISSUE_ID,
     OUTBOUND_WEBSOCKET_INCORRECTLY_ENABLED_ISSUE_ID,
@@ -26,9 +27,9 @@ from homeassistant.components.shelly.const import (
     BLEScannerMode,
     DeprecatedFirmwareInfo,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
-from homeassistant.helpers.network import NoURLAvailableError
 from homeassistant.setup import async_setup_component
 
 from . import MOCK_MAC, init_integration, mock_block_device_push_update_failure
@@ -101,6 +102,111 @@ async def test_unsupported_firmware_issue_update_not_available(
 
     assert issue_registry.async_get_issue(DOMAIN, issue_id)
     assert len(issue_registry.issues) == 1
+
+
+async def test_rpc_device_unsupported_firmware_issue(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test repair issue for RPC device running unsupported firmware."""
+    issue_id = FIRMWARE_UNSUPPORTED_ISSUE_ID.format(unique=MOCK_MAC)
+    monkeypatch.setattr(mock_rpc_device, "firmware_supported", False)
+    assert await async_setup_component(hass, "repairs", {})
+    await hass.async_block_till_done()
+    await init_integration(hass, 2)
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+
+    client = await hass_client()
+    result = await start_repair_fix_flow(client, DOMAIN, issue_id)
+
+    flow_id = result["flow_id"]
+    assert result["step_id"] == "confirm"
+
+    result = await process_repair_fix_flow(client, flow_id)
+    assert result["type"] == "create_entry"
+    assert mock_rpc_device.trigger_ota_update.call_count == 1
+
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
+
+
+async def test_block_device_unsupported_firmware_issue(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_block_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test repair issue for block device running unsupported firmware."""
+    issue_id = FIRMWARE_UNSUPPORTED_ISSUE_ID.format(unique=MOCK_MAC)
+    monkeypatch.delitem(mock_block_device.settings, "coiot")
+    monkeypatch.setattr(mock_block_device, "firmware_supported", False)
+    assert await async_setup_component(hass, "repairs", {})
+    await hass.async_block_till_done()
+    await init_integration(hass, 1)
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+
+    client = await hass_client()
+    result = await start_repair_fix_flow(client, DOMAIN, issue_id)
+
+    flow_id = result["flow_id"]
+    assert result["step_id"] == "confirm"
+    assert result["description_placeholders"] == {
+        "device_name": "Test name",
+        "ip_address": "192.168.1.37",
+    }
+
+    result = await process_repair_fix_flow(client, flow_id)
+    assert result["type"] == "create_entry"
+    assert mock_block_device.trigger_ota_update.call_count == 1
+
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
+
+
+@pytest.mark.parametrize(
+    ("has_update", "exception", "reason", "ota_calls"),
+    [
+        pytest.param(False, None, "update_not_available", 0, id="no_update"),
+        pytest.param(True, DeviceConnectionError, "cannot_connect", 1, id="exc"),
+    ],
+)
+async def test_block_device_unsupported_firmware_issue_abort(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_block_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    issue_registry: ir.IssueRegistry,
+    has_update: bool,
+    exception: type[Exception] | None,
+    reason: str,
+    ota_calls: int,
+) -> None:
+    """Test block device unsupported firmware repair flow aborts."""
+    issue_id = FIRMWARE_UNSUPPORTED_ISSUE_ID.format(unique=MOCK_MAC)
+    monkeypatch.delitem(mock_block_device.settings, "coiot")
+    monkeypatch.setattr(mock_block_device, "firmware_supported", False)
+    assert await async_setup_component(hass, "repairs", {})
+    await hass.async_block_till_done()
+    await init_integration(hass, 1)
+
+    client = await hass_client()
+    result = await start_repair_fix_flow(client, DOMAIN, issue_id)
+
+    flow_id = result["flow_id"]
+    assert result["step_id"] == "confirm"
+
+    monkeypatch.setitem(mock_block_device.status["update"], "has_update", has_update)
+    mock_block_device.trigger_ota_update.side_effect = exception
+    result = await process_repair_fix_flow(client, flow_id)
+    assert result["type"] == "abort"
+    assert result["reason"] == reason
+    assert mock_block_device.trigger_ota_update.call_count == ota_calls
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
 
 
 @pytest.mark.parametrize(
@@ -177,6 +283,35 @@ async def test_outbound_websocket_incorrectly_enabled_issue(
     # Assert the issue is no longer present
     assert not issue_registry.async_get_issue(DOMAIN, issue_id)
     assert len(issue_registry.issues) == 0
+
+
+@pytest.mark.parametrize(
+    ("ws_url", "issue_expected"),
+    [
+        ("wss://homeassistant.example.com/api/shelly/ws", True),
+        ("ws://192.168.1.50:8123/api/shelly/ws", True),
+        ("ws://10.10.10.10:8123/other/ws", False),
+        (None, False),
+    ],
+)
+async def test_outbound_websocket_issue_other_url_form(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    issue_registry: ir.IssueRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+    ws_url: str | None,
+    issue_expected: bool,
+) -> None:
+    """Test the outbound WebSocket issue matches the path, not the full URL."""
+    monkeypatch.setitem(
+        mock_rpc_device.config, "ws", {"enable": True, "server": ws_url}
+    )
+
+    issue_id = OUTBOUND_WEBSOCKET_INCORRECTLY_ENABLED_ISSUE_ID.format(unique=MOCK_MAC)
+    entry = await init_integration(hass, 2)
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert bool(issue_registry.async_get_issue(DOMAIN, issue_id)) is issue_expected
 
 
 async def test_repairs_skipped_when_device_not_initialized(
@@ -684,30 +819,18 @@ async def test_coiot_exception(
     assert len(issue_registry.issues) == 1
 
 
-@pytest.mark.parametrize(
-    "raw_url",
-    [
-        "http://10.10.10.10:8123",
-        "https://homeassistant.local:443",
-    ],
-)
 async def test_coiot_configured_no_issue_created(
     hass: HomeAssistant,
     mock_block_device: Mock,
     issue_registry: ir.IssueRegistry,
     monkeypatch: pytest.MonkeyPatch,
-    raw_url: str,
 ) -> None:
     """Test no repair issues when CoIoT configuration is valid."""
     issue_id = COIOT_UNCONFIGURED_ISSUE_ID.format(unique=MOCK_MAC)
     assert await async_setup_component(hass, "repairs", {})
-    with patch(
-        "homeassistant.components.shelly.utils.get_url",
-        return_value=raw_url,
-    ):
-        await hass.async_block_till_done()
-        await init_integration(hass, 1)
-        await mock_block_device_push_update_failure(hass, mock_block_device)
+    await hass.async_block_till_done()
+    await init_integration(hass, 1)
+    await mock_block_device_push_update_failure(hass, mock_block_device)
 
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
@@ -731,24 +854,20 @@ async def test_coiot_key_missing_no_issue_created(
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 
-async def test_coiot_push_issue_when_missing_hass_url(
+async def test_coiot_push_issue_created(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     mock_block_device: Mock,
     issue_registry: ir.IssueRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test CoIoT push update issue created when HA URL is not available."""
+    """Test CoIoT push update issue created and removed with the entry."""
     issue_id = PUSH_UPDATE_ISSUE_ID.format(unique=MOCK_MAC)
     assert await async_setup_component(hass, "repairs", {})
     await hass.async_block_till_done()
     entry = await init_integration(hass, 1)
 
-    with patch(
-        "homeassistant.components.shelly.utils.get_url",
-        side_effect=NoURLAvailableError(),
-    ):
-        await mock_block_device_push_update_failure(hass, mock_block_device)
+    await mock_block_device_push_update_failure(hass, mock_block_device)
 
     assert (issue := issue_registry.async_get_issue(DOMAIN, issue_id))
     assert issue.config_entry_id == entry.entry_id
@@ -759,49 +878,85 @@ async def test_coiot_push_issue_when_missing_hass_url(
     assert not issue_registry.async_get_issue(DOMAIN, issue_id)
 
 
-async def test_coiot_fix_flow_no_hass_url(
+MULTI_HOMED_SOURCE_IPS = {
+    "10.10.10.11": "192.168.72.11",
+}
+
+
+async def _multi_homed_source_ip(hass: HomeAssistant, target_ip: str) -> str:
+    return MULTI_HOMED_SOURCE_IPS[target_ip]
+
+
+async def test_coiot_peer_on_device_interface_no_issue(
+    hass: HomeAssistant,
+    mock_block_device: Mock,
+    issue_registry: ir.IssueRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test no CoIoT issue when the peer is the address that reaches the device."""
+    monkeypatch.setitem(
+        mock_block_device.settings,
+        "coiot",
+        {"enabled": True, "update_period": 15, "peer": "192.168.72.11:5683"},
+    )
+    issue_id = COIOT_UNCONFIGURED_ISSUE_ID.format(unique=MOCK_MAC)
+    assert await async_setup_component(hass, "repairs", {})
+    with (
+        patch(
+            "homeassistant.components.shelly.utils.async_get_source_ip",
+            side_effect=_multi_homed_source_ip,
+        ),
+    ):
+        await hass.async_block_till_done()
+        await init_integration(hass, 1)
+        await mock_block_device_push_update_failure(hass, mock_block_device)
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+    assert issue_registry.async_get_issue(
+        DOMAIN, PUSH_UPDATE_ISSUE_ID.format(unique=MOCK_MAC)
+    )
+
+
+async def test_coiot_fix_flow_sets_device_interface_peer(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     mock_block_device: Mock,
     issue_registry: ir.IssueRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test CoIoT repair issue when HA URL is not available."""
+    """Test the CoIoT fix flow sets the address that reaches the device."""
     monkeypatch.setitem(
         mock_block_device.settings,
         "coiot",
-        {"enabled": False, "update_period": 15, "peer": "7.7.7.7:5683"},
+        {"enabled": True, "update_period": 15, "peer": "7.7.7.7:5683"},
     )
     issue_id = COIOT_UNCONFIGURED_ISSUE_ID.format(unique=MOCK_MAC)
     assert await async_setup_component(hass, "repairs", {})
-    await hass.async_block_till_done()
-    await init_integration(hass, 1)
-    await mock_block_device_push_update_failure(hass, mock_block_device)
-
-    assert issue_registry.async_get_issue(DOMAIN, issue_id)
-    assert len(issue_registry.issues) == 1
-
-    client = await hass_client()
-    result = await start_repair_fix_flow(client, DOMAIN, issue_id)
-
-    flow_id = result["flow_id"]
-    assert result["step_id"] == "init"
-    assert result["type"] == "menu"
-
-    with patch(
-        "homeassistant.components.shelly.utils.get_url",
-        side_effect=NoURLAvailableError(),
+    with (
+        patch(
+            "homeassistant.components.shelly.utils.async_get_source_ip",
+            side_effect=_multi_homed_source_ip,
+        ),
+        patch(
+            "homeassistant.components.shelly.repairs.async_get_source_ip",
+            side_effect=_multi_homed_source_ip,
+        ),
     ):
+        await hass.async_block_till_done()
+        await init_integration(hass, 1)
+        await mock_block_device_push_update_failure(hass, mock_block_device)
+        assert issue_registry.async_get_issue(DOMAIN, issue_id)
+
+        client = await hass_client()
+        result = await start_repair_fix_flow(client, DOMAIN, issue_id)
         result = await process_repair_fix_flow(
-            client, flow_id, {"next_step_id": "confirm"}
+            client, result["flow_id"], {"next_step_id": "confirm"}
         )
 
-        assert result["type"] == "abort"
-        assert result["reason"] == "cannot_configure"
-        assert mock_block_device.configure_coiot_protocol.call_count == 0
-
-        assert issue_registry.async_get_issue(DOMAIN, issue_id)
-        assert len(issue_registry.issues) == 1
+    assert result["type"] == "create_entry"
+    mock_block_device.configure_coiot_protocol.assert_called_once_with(
+        "192.168.72.11", 5683
+    )
 
 
 async def test_coiot_issue_ignore(
@@ -1035,9 +1190,10 @@ async def test_ir_raw_receive_disabled_issue_fix_flow(
     issue_id = IR_RAW_RECEIVE_DISABLED_ISSUE_ID.format(unique=MOCK_MAC)
     assert await async_setup_component(hass, "repairs", {})
     await hass.async_block_till_done()
-    await init_integration(hass, 2)
+    entry = await init_integration(hass, 2)
 
-    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert (issue := issue_registry.async_get_issue(DOMAIN, issue_id))
+    assert issue.config_entry_id == entry.entry_id
     assert len(issue_registry.issues) == 1
 
     client = await hass_client()
@@ -1057,6 +1213,10 @@ async def test_ir_raw_receive_disabled_issue_fix_flow(
 
     assert bool(issue_registry.async_get_issue(DOMAIN, issue_id)) is issue_exists
     assert len(issue_registry.issues) == int(issue_exists)
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
 
 
 @pytest.mark.parametrize(

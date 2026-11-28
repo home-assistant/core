@@ -33,7 +33,7 @@
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
-          "base_url": "URL"
+          "base_url": "[%key:common::config_flow::data::url%]"
         },
         "data_description": {
           "api_key": "API key for the server (optional).",
@@ -57,17 +57,17 @@
         "init": {
           "data": {
             "chat_model": "[%key:common::generic::model%]",
-            "llm_hass_api": "Control Home Assistant",
+            "llm_hass_api": "[%key:common::config_flow::data::llm_hass_api%]",
             "max_tokens": "Maximum tokens to return in response",
             "name": "[%key:common::config_flow::data::name%]",
-            "prompt": "Instructions",
+            "prompt": "[%key:common::config_flow::data::prompt%]",
             "recommended": "Recommended model settings",
             "temperature": "Temperature",
             "top_p": "Top P"
           },
           "data_description": {
             "chat_model": "Select the model to use.",
-            "llm_hass_api": "Select the level of control over Home Assistant.",
+            "llm_hass_api": "[%key:common::config_flow::data_description::llm_hass_api%]",
             "max_tokens": "Select the maximum number of tokens to return.",
             "prompt": "Instruct how the LLM should respond. This can be a template.",
             "recommended": "Select whether to use recommended model settings.",

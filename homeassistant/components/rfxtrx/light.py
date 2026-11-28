@@ -6,17 +6,23 @@ from typing import Any, override
 import RFXtrx as rfxtrxmod
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
     ColorMode,
     LightEntity,
     LightEntityStateAttribute,
+    LightServiceArgument,
 )
+from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DeviceTuple, RfxtrxConfigEntry, async_setup_platform_entry
+from . import (
+    DeviceTuple,
+    RfxtrxConfigEntry,
+    async_setup_platform_entry,
+    get_device_tuple_from_device,
+)
 from .const import COMMAND_OFF_LIST, COMMAND_ON_LIST
 from .entity import RfxtrxCommandEntity
 
@@ -41,13 +47,14 @@ async def async_setup_entry(
     def _constructor(
         event: rfxtrxmod.RFXtrxEvent,
         auto: rfxtrxmod.RFXtrxEvent | None,
-        device_id: DeviceTuple,
-        entity_info: dict[str, Any],
+        subentry: ConfigSubentry,
     ) -> list[Entity]:
+        device_id = get_device_tuple_from_device(event.device)
         return [
             RfxtrxLight(
                 event.device,
                 device_id,
+                subentry.subentry_id,
                 event=event if auto else None,
             )
         ]
@@ -82,7 +89,7 @@ class RfxtrxLight(RfxtrxCommandEntity, LightEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        brightness = kwargs.get(ATTR_BRIGHTNESS)
+        brightness = kwargs.get(LightServiceArgument.BRIGHTNESS)
         self._attr_is_on = True
         if brightness is None:
             await self._async_send(self._device.send_on)

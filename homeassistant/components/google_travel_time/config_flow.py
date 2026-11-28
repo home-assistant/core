@@ -12,6 +12,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_API_KEY, CONF_LANGUAGE, CONF_MODE
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import section
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
     SelectSelector,
@@ -28,21 +29,25 @@ from .const import (
     CONF_DEPARTURE_TIME,
     CONF_DESTINATION,
     CONF_ORIGIN,
+    CONF_REFERRER,
     CONF_TIME,
     CONF_TIME_TYPE,
     CONF_TRAFFIC_MODEL,
     CONF_TRANSIT_MODE,
     CONF_TRANSIT_ROUTING_PREFERENCE,
+    CONF_TRAVEL_ROUTING_PREFERENCE,
     CONF_UNITS,
     DEFAULT_NAME,
     DEPARTURE_TIME,
     DOMAIN,
+    SECTION_API_KEY_OPTIONS,
     TRAVEL_MODES,
     UNITS_IMPERIAL,
     UNITS_METRIC,
 )
 from .helpers import (
     InvalidApiKeyException,
+    InvalidReferrerException,
     PermissionDeniedException,
     UnknownException,
     validate_config_entry,
@@ -54,14 +59,23 @@ from .schemas import (
     TRAFFIC_MODEL_SELECTOR,
     TRANSIT_MODE_SELECTOR,
     TRANSIT_ROUTING_PREFERENCE_SELECTOR,
+    TRAVEL_ROUTING_PREFERENCE_SELECTOR,
     UNITS_SELECTOR,
 )
+
+DESCRIPTION_PLACEHOLDERS = {
+    "restricting_api_keys_url": "https://developers.google.com/maps/api-security-best-practices#restricting-api-keys",
+}
 
 CONFIG_SCHEMA = probatio.Schema(
     {
         probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string,
         probatio.Required(CONF_DESTINATION): cv.string,
         probatio.Required(CONF_ORIGIN): cv.string,
+        probatio.Optional(SECTION_API_KEY_OPTIONS): section(
+            probatio.Schema({probatio.Optional(CONF_REFERRER): cv.string}),
+            {"collapsed": True},
+        ),
     }
 )
 
@@ -71,6 +85,9 @@ OPTIONS_SCHEMA = probatio.Schema(
         probatio.Optional(CONF_AVOID): AVOID_SELECTOR,
         probatio.Optional(CONF_TRAFFIC_MODEL): TRAFFIC_MODEL_SELECTOR,
         probatio.Optional(CONF_TRANSIT_MODE): TRANSIT_MODE_SELECTOR,
+        probatio.Optional(
+            CONF_TRAVEL_ROUTING_PREFERENCE
+        ): TRAVEL_ROUTING_PREFERENCE_SELECTOR,
         probatio.Optional(
             CONF_TRANSIT_ROUTING_PREFERENCE
         ): TRANSIT_ROUTING_PREFERENCE_SELECTOR,
@@ -104,30 +121,57 @@ class GoogleOptionsFlow(OptionsFlow):
 
     async def async_step_init(self, user_input=None) -> ConfigFlowResult:
         """Handle the initial step."""
-        if user_input is not None:
-            time_type = user_input.pop(CONF_TIME_TYPE)
-            if time := user_input.pop(CONF_TIME, None):
-                if time_type == ARRIVAL_TIME:
-                    user_input[CONF_ARRIVAL_TIME] = time
-                else:
-                    user_input[CONF_DEPARTURE_TIME] = time
-            return self.async_create_entry(
-                title="",
-                data=user_input,
-            )
-
-        options = self.config_entry.options.copy()
-        if CONF_ARRIVAL_TIME in self.config_entry.options:
-            options[CONF_TIME_TYPE] = ARRIVAL_TIME
-            options[CONF_TIME] = self.config_entry.options[CONF_ARRIVAL_TIME]
+        errors = {}
+        if user_input is None:
+            user_input = self.config_entry.options.copy()
+            if CONF_ARRIVAL_TIME in self.config_entry.options:
+                user_input[CONF_TIME_TYPE] = ARRIVAL_TIME
+                user_input[CONF_TIME] = self.config_entry.options[CONF_ARRIVAL_TIME]
+            else:
+                user_input[CONF_TIME_TYPE] = DEPARTURE_TIME
+                user_input[CONF_TIME] = self.config_entry.options.get(
+                    CONF_DEPARTURE_TIME, ""
+                )
         else:
-            options[CONF_TIME_TYPE] = DEPARTURE_TIME
-            options[CONF_TIME] = self.config_entry.options.get(CONF_DEPARTURE_TIME, "")
+            routing_preference = user_input.get(
+                CONF_TRAVEL_ROUTING_PREFERENCE, "traffic_aware_optimal"
+            )
+            if (
+                routing_preference != "traffic_aware_optimal"
+                and user_input.get(CONF_TRAFFIC_MODEL) is not None
+            ):
+                errors["base"] = "traffic_model_not_allowed"
+
+            if not errors:
+                time_type = user_input.pop(CONF_TIME_TYPE)
+                if time := user_input.pop(CONF_TIME, None):
+                    if time_type == ARRIVAL_TIME:
+                        user_input[CONF_ARRIVAL_TIME] = time
+                    else:
+                        user_input[CONF_DEPARTURE_TIME] = time
+
+                return self.async_create_entry(
+                    title="",
+                    data=user_input,
+                )
 
         return self.async_show_form(
             step_id="init",
-            data_schema=self.add_suggested_values_to_schema(OPTIONS_SCHEMA, options),
+            data_schema=self.add_suggested_values_to_schema(OPTIONS_SCHEMA, user_input),
+            errors=errors,
         )
+
+
+def _extract_entry_data(user_input: dict[str, Any]) -> dict[str, Any]:
+    """Flatten the API key options section into the entry data."""
+    data = {
+        key: value
+        for key, value in user_input.items()
+        if key != SECTION_API_KEY_OPTIONS
+    }
+    if referrer := user_input.get(SECTION_API_KEY_OPTIONS, {}).get(CONF_REFERRER):
+        data[CONF_REFERRER] = referrer
+    return data
 
 
 async def validate_input(
@@ -140,11 +184,14 @@ async def validate_input(
             user_input[CONF_API_KEY],
             user_input[CONF_ORIGIN],
             user_input[CONF_DESTINATION],
+            user_input.get(SECTION_API_KEY_OPTIONS, {}).get(CONF_REFERRER),
         )
     except PermissionDeniedException:
         return {"base": "permission_denied"}
     except InvalidApiKeyException:
         return {"base": "invalid_auth"}
+    except InvalidReferrerException:
+        return {"base": "invalid_referrer"}
     except TimeoutError:
         return {"base": "timeout_connect"}
     except UnknownException:
@@ -177,7 +224,7 @@ class GoogleTravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
             if not errors:
                 return self.async_create_entry(
                     title=DEFAULT_NAME,
-                    data=user_input,
+                    data=_extract_entry_data(user_input),
                     options=default_options(self.hass),
                 )
 
@@ -185,6 +232,7 @@ class GoogleTravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(CONFIG_SCHEMA, user_input),
             errors=errors,
+            description_placeholders=DESCRIPTION_PLACEHOLDERS,
         )
 
     async def async_step_reconfigure(
@@ -196,13 +244,25 @@ class GoogleTravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
             errors = await validate_input(self.hass, user_input)
             if not errors:
                 return self.async_update_reload_and_abort(
-                    self._get_reconfigure_entry(), data=user_input
+                    self._get_reconfigure_entry(), data=_extract_entry_data(user_input)
                 )
 
+        suggested_values: dict[str, Any]
+        if user_input is not None:
+            # Keep what the user submitted so it can be corrected
+            suggested_values = user_input
+        else:
+            entry_data = self._get_reconfigure_entry().data
+            suggested_values = {
+                key: value for key, value in entry_data.items() if key != CONF_REFERRER
+            }
+            if referrer := entry_data.get(CONF_REFERRER):
+                suggested_values[SECTION_API_KEY_OPTIONS] = {CONF_REFERRER: referrer}
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                CONFIG_SCHEMA, self._get_reconfigure_entry().data
+                CONFIG_SCHEMA, suggested_values
             ),
             errors=errors,
+            description_placeholders=DESCRIPTION_PLACEHOLDERS,
         )
