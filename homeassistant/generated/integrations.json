@@ -12802,7 +12802,7 @@
     },
     "rest_command": {
       "name": "RESTful Command",
-      "integration_type": "hub",
+      "integration_type": "service",
       "categories": [
         "diy_makers.web_data_connectors"
       ],
@@ -12810,7 +12810,7 @@
         "cloud",
         "network"
       ],
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_push"
     },
     "rexel": {
