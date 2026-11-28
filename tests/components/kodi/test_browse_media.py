@@ -2,6 +2,9 @@
 
 from unittest.mock import AsyncMock, MagicMock
 
+from pykodi import ProtocolError
+import pytest
+
 from homeassistant.components.kodi.browse_media import get_media_info
 from homeassistant.components.media_player import MediaType
 
@@ -101,3 +104,96 @@ async def test_single_channel_asks_for_no_more_than_the_thumbnail() -> None:
     await get_media_info(library, "902", MediaType.CHANNEL)
 
     assert library.get_channels.call_args.kwargs["properties"] == ["thumbnail"]
+
+
+async def test_season_asked_for_by_bare_season_id() -> None:
+    """A bare numeric Kodi seasonid resolves its show and season number."""
+    library = create_media_library()
+    episodes = [{"episodeid": 101, "seasonid": 25, "tvshowid": 4, "label": "Episode 1"}]
+    library.get_season_details = AsyncMock(
+        side_effect=[
+            {"seasondetails": {"tvshowid": 4, "season": 2}},
+            {
+                "seasondetails": {
+                    "label": "Season 2",
+                    "art": {"poster": "image://season_2/"},
+                }
+            },
+        ]
+    )
+    library.get_episodes = AsyncMock(return_value={"episodes": episodes})
+
+    thumbnail, title, media = await get_media_info(library, "25", MediaType.SEASON)
+
+    library.get_episodes.assert_awaited_once_with(
+        tv_show_id=4,
+        season_id=2,
+        properties=["thumbnail", "tvshowid", "seasonid", "art"],
+    )
+    assert thumbnail == "http://1.1.1.1:8080/image/image://season_2/"
+    assert title == "Season 2"
+    assert media == episodes
+
+
+@pytest.mark.parametrize("search_id", ["", "invalid", "²", "4/abc", "4/-1", "4/²"])
+async def test_malformed_season_id_returns_not_found(search_id: str) -> None:
+    """Malformed season IDs return empty media instead of raising ValueError."""
+    library = create_media_library()
+    library.get_episodes = AsyncMock()
+    library.get_season_details = AsyncMock()
+
+    thumbnail, title, media = await get_media_info(library, search_id, MediaType.SEASON)
+
+    assert (thumbnail, title, media) == (None, None, None)
+    library.get_episodes.assert_not_awaited()
+    library.get_season_details.assert_not_awaited()
+
+
+async def test_unknown_bare_season_id_returns_not_found() -> None:
+    """Kodi JSON-RPC -32602 Invalid params on an unknown seasonid maps to not found."""
+    library = create_media_library()
+    library.get_season_details = AsyncMock(
+        side_effect=ProtocolError(-32602, "Invalid params.")
+    )
+    library.get_episodes = AsyncMock()
+
+    thumbnail, title, media = await get_media_info(library, "999", MediaType.SEASON)
+
+    assert (thumbnail, title, media) == (None, None, None)
+    library.get_episodes.assert_not_awaited()
+
+
+async def test_unexpected_protocol_error_on_season_propagates() -> None:
+    """Protocol errors other than -32602 are not swallowed."""
+    library = create_media_library()
+    library.get_season_details = AsyncMock(
+        side_effect=ProtocolError(-32603, "Internal error.")
+    )
+
+    with pytest.raises(ProtocolError):
+        await get_media_info(library, "999", MediaType.SEASON)
+
+
+async def test_unknown_composite_season_id_returns_not_found() -> None:
+    """Kodi JSON-RPC -32602 Invalid params on get_episodes maps to not found."""
+    library = create_media_library()
+    library.get_episodes = AsyncMock(
+        side_effect=ProtocolError(-32602, "Invalid params.")
+    )
+    library.get_season_details = AsyncMock()
+
+    thumbnail, title, media = await get_media_info(library, "4/99", MediaType.SEASON)
+
+    assert (thumbnail, title, media) == (None, None, None)
+    library.get_season_details.assert_not_awaited()
+
+
+async def test_unexpected_protocol_error_on_season_episodes_propagates() -> None:
+    """Protocol errors other than -32602 from get_episodes are not swallowed."""
+    library = create_media_library()
+    library.get_episodes = AsyncMock(
+        side_effect=ProtocolError(-32603, "Internal error.")
+    )
+
+    with pytest.raises(ProtocolError):
+        await get_media_info(library, "4/99", MediaType.SEASON)
