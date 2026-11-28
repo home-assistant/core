@@ -450,6 +450,94 @@ async def test_thermostat_service_calls(
     matter_client.write_attribute.reset_mock()
 
 
+@pytest.mark.parametrize("node_fixture", ["longan_link_thermostat"])
+@pytest.mark.parametrize(
+    ("attributes", "target_low", "target_high", "expected_writes"),
+    [
+        pytest.param(
+            {"1/513/28": 1, "1/513/18": 1800, "1/513/17": 2000},
+            21,
+            24,
+            [("1/513/17", 2400), ("1/513/18", 2100)],
+            id="raise_range",
+        ),
+        pytest.param(
+            {"1/513/28": 1, "1/513/18": 1800, "1/513/17": 2000},
+            19.8,
+            24,
+            [("1/513/17", 2400), ("1/513/18", 1980)],
+            id="raise_low_into_deadband",
+        ),
+        pytest.param(
+            {"1/513/28": 1, "1/513/18": 1800, "1/513/17": 2000, "1/513/25": None},
+            20,
+            24,
+            [("1/513/17", 2400), ("1/513/18", 2000)],
+            id="raise_range_without_deadband",
+        ),
+        pytest.param(
+            {"1/513/28": 1, "1/513/18": 1800, "1/513/17": 2000},
+            19,
+            24,
+            [("1/513/18", 1900), ("1/513/17", 2400)],
+            id="raise_range_below_current_high",
+        ),
+        pytest.param(
+            {"1/513/28": 0, "1/513/18": 1800, "1/513/17": 2000},
+            21,
+            24,
+            [("1/513/17", 2400), ("1/513/18", 2100)],
+            id="raise_range_while_off",
+        ),
+        pytest.param(
+            {"1/513/28": 1, "1/513/18": 2100, "1/513/17": 2400},
+            18,
+            20,
+            [("1/513/18", 1800), ("1/513/17", 2000)],
+            id="lower_range",
+        ),
+        pytest.param(
+            {"1/513/28": 1, "1/513/18": 1800, "1/513/17": 2000},
+            18,
+            22,
+            [("1/513/17", 2200)],
+            id="only_high_changed",
+        ),
+        pytest.param(
+            {"1/513/28": 1, "1/513/18": 1800, "1/513/17": 2000},
+            19,
+            20,
+            [("1/513/18", 1900)],
+            id="only_low_changed",
+        ),
+    ],
+)
+async def test_thermostat_range_write_order(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    target_low: float,
+    target_high: float,
+    expected_writes: list[tuple[str, int]],
+) -> None:
+    """Test the setpoints are written in an order the deadband allows."""
+    await hass.services.async_call(
+        "climate",
+        "set_temperature",
+        {
+            "entity_id": THERMOSTAT_ENTITY_ID,
+            "target_temp_low": target_low,
+            "target_temp_high": target_high,
+        },
+        blocking=True,
+    )
+
+    assert matter_client.write_attribute.call_args_list == [
+        call(node_id=matter_node.node_id, attribute_path=path, value=value)
+        for path, value in expected_writes
+    ]
+
+
 @pytest.mark.parametrize("node_fixture", ["mock_room_airconditioner"])
 async def test_room_airconditioner(
     hass: HomeAssistant,

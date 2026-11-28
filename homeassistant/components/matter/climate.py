@@ -35,6 +35,7 @@ from .models import MatterDiscoverySchema
 
 HUMIDITY_SCALING_FACTOR = 100
 TEMPERATURE_SCALING_FACTOR = 100
+DEADBAND_SCALING_FACTOR = 10
 HVAC_SYSTEM_MODE_MAP = {
     HVACMode.OFF: 0,
     HVACMode.HEAT_COOL: 1,
@@ -312,21 +313,45 @@ class MatterClimate(MatterEntity, ClimateEntity, RestoreEntity):
                 )
             return
 
-        if target_temperature_low is not None:
-            # multi setpoint control - low setpoint (heat)
-            if self.native_target_temperature_low != target_temperature_low:
+        low_write = (
+            clusters.Thermostat.Attributes.OccupiedHeatingSetpoint,
+            target_temperature_low,
+            self.native_target_temperature_low,
+        )
+        high_write = (
+            clusters.Thermostat.Attributes.OccupiedCoolingSetpoint,
+            target_temperature_high,
+            self.native_target_temperature_high,
+        )
+        # The device rejects a heating setpoint above cooling minus the deadband,
+        # so the cooling setpoint has to move out of the way first.
+        if self._low_setpoint_conflicts_with_current_high(target_temperature_low):
+            writes = (high_write, low_write)
+        else:
+            writes = (low_write, high_write)
+
+        for matter_attribute, target, current in writes:
+            if target is not None and target != current:
                 await self.write_attribute(
-                    value=round(target_temperature_low * TEMPERATURE_SCALING_FACTOR),
-                    matter_attribute=clusters.Thermostat.Attributes.OccupiedHeatingSetpoint,
+                    value=round(target * TEMPERATURE_SCALING_FACTOR),
+                    matter_attribute=matter_attribute,
                 )
 
-        if target_temperature_high is not None:
-            # multi setpoint control - high setpoint (cool)
-            if self.native_target_temperature_high != target_temperature_high:
-                await self.write_attribute(
-                    value=round(target_temperature_high * TEMPERATURE_SCALING_FACTOR),
-                    matter_attribute=clusters.Thermostat.Attributes.OccupiedCoolingSetpoint,
-                )
+    def _low_setpoint_conflicts_with_current_high(
+        self, target_temperature_low: float | None
+    ) -> bool:
+        """Return if the new low setpoint is invalid against the current high."""
+        current_high = self._get_temperature_in_degrees(
+            clusters.Thermostat.Attributes.OccupiedCoolingSetpoint
+        )
+        if target_temperature_low is None or current_high is None:
+            return False
+        deadband: int | None = self.get_matter_attribute_value(
+            clusters.Thermostat.Attributes.MinSetpointDeadBand
+        )
+        return target_temperature_low >= current_high - (
+            (deadband or 0) / DEADBAND_SCALING_FACTOR
+        )
 
     @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
