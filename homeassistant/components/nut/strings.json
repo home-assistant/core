@@ -219,6 +219,8 @@
       "input_l3_n_voltage": { "name": "Input L3 voltage" },
       "input_l3_realpower": { "name": "Input L3 real power" },
       "input_load": { "name": "Input load" },
+      "input_number_frequency": { "name": "Input {input_number} frequency" },
+      "input_number_voltage": { "name": "Input {input_number} voltage" },
       "input_phases": {
         "name": "Input phases",
         "unit_of_measurement": "phase"
@@ -226,6 +228,8 @@
       "input_power": { "name": "Input power" },
       "input_realpower": { "name": "Input real power" },
       "input_sensitivity": { "name": "Input power sensitivity" },
+      "input_source": { "name": "Input source" },
+      "input_source_preferred": { "name": "Preferred input source" },
       "input_transfer_high": { "name": "High voltage transfer" },
       "input_transfer_low": { "name": "Low voltage transfer" },
       "input_transfer_reason": { "name": "Voltage transfer reason" },
