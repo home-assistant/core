@@ -27,7 +27,7 @@ jobs:
       - name: Generate app token
         id: token
         # Pinned to a specific version of the action for security reasons
-        uses: actions/create-github-app-token@v3.3.0
+        uses: actions/create-github-app-token@v3.4.0
         with:
           permission-issues: write
           permission-pull-requests: write

@@ -75,7 +75,7 @@ workflows:
     '.github/workflows/restrict-task-creation.yml':
         - 'actions/github-script@v9.0.0'
     '.github/workflows/stale.yml':
-        - 'actions/create-github-app-token@v3.3.0'
+        - 'actions/create-github-app-token@v3.4.0'
         - 'actions/stale@v11.0.0'
     '.github/workflows/translations.yml':
         - 'actions/checkout@v7.0.1'
@@ -130,9 +130,9 @@ dependencies:
         commit: 'sha1-3d3c42e5aac5ba805825da76410c181273ba90b1'
         owner_id: 44036562
         repo_id: 197814629
-    'actions/create-github-app-token@v3.3.0':
-        ref: 'v3.3.0'
-        commit: 'sha1-64ab729a6294000f5aa4a4bc0b73d1f32bc45510'
+    'actions/create-github-app-token@v3.4.0':
+        ref: 'v3.4.0'
+        commit: 'sha1-f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc'
         owner_id: 44036562
         repo_id: 642580244
     'actions/dependency-review-action@v5.0.1':
