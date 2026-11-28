@@ -521,6 +521,11 @@ ZEROCONF = {
             "domain": "elmax",
         },
     ],
+    "_energydongle._tcp.local.": [
+        {
+            "domain": "homey_energy_dongle",
+        },
+    ],
     "_enphase-envoy._tcp.local.": [
         {
             "domain": "enphase_envoy",
