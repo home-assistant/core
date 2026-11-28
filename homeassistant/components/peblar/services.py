@@ -22,10 +22,13 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import (
     async_get_config_entry,
     async_register_admin_service,
 )
+from homeassistant.util import dt as dt_util
+from homeassistant.util.json import JsonValueType
 
 from .const import CONF_EVCC_ID, DOMAIN
 from .coordinator import PeblarConfigEntry
@@ -41,6 +44,7 @@ class PeblarService(StrEnum):
     ADD_VEHICLE_TOKEN = "add_vehicle_token"
     DELETE_VEHICLE_TOKEN = "delete_vehicle_token"
     AUTHORIZE_CHARGE_SESSION = "authorize_charge_session"
+    GET_METER_HISTORY = "get_meter_history"
 
 
 class PeblarServiceArgument(StrEnum):
@@ -50,10 +54,19 @@ class PeblarServiceArgument(StrEnum):
     DESCRIPTION = "description"
     EVCC_ID = "evcc_id"
     ALIAS = "alias"
+    AFTER = "after"
+    BEFORE = "before"
 
 
 CHARGER_SCHEMA = probatio.Schema(
     {probatio.Required(CommonServiceArgument.CONFIG_ENTRY_ID): str}
+)
+
+METER_HISTORY_SCHEMA = CHARGER_SCHEMA.extend(
+    {
+        probatio.Optional(PeblarServiceArgument.AFTER): cv.datetime,
+        probatio.Optional(PeblarServiceArgument.BEFORE): cv.datetime,
+    }
 )
 
 TOKEN_SCHEMA = CHARGER_SCHEMA.extend(
@@ -81,6 +94,12 @@ AUTHORIZE_SCHEMA = probatio.All(
     ),
     probatio.AtLeastOne(PeblarServiceArgument.UID, PeblarServiceArgument.DESCRIPTION),
 )
+
+
+def _get_peblar(hass: HomeAssistant, entry_id: str) -> Peblar:
+    """Return the client for a charger, whatever hardware it carries."""
+    entry: PeblarConfigEntry = async_get_config_entry(hass, DOMAIN, entry_id)
+    return entry.runtime_data.user_configuration_coordinator.peblar
 
 
 def _get_rfid_peblar(hass: HomeAssistant, entry_id: str) -> Peblar:
@@ -237,6 +256,56 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 name=call.data.get(PeblarServiceArgument.DESCRIPTION),
             )
 
+    async def _handle_get_meter_history(call: ServiceCall) -> ServiceResponse:
+        entry_id = call.data[CommonServiceArgument.CONFIG_ENTRY_ID]
+        peblar = _get_peblar(hass, entry_id)
+
+        # A naive moment is read by the charger as its own local time, which
+        # is not necessarily the one Home Assistant runs in. Both bounds are
+        # anchored here instead, the way the datetime platform does it.
+        after = call.data.get(PeblarServiceArgument.AFTER)
+        before = call.data.get(PeblarServiceArgument.BEFORE)
+        async with _handle_peblar_errors(hass, entry_id):
+            history = await peblar.meter_history(
+                start=None if after is None else dt_util.as_utc(after),
+                stop=None if before is None else dt_util.as_utc(before),
+            )
+
+        sessions: list[JsonValueType] = []
+        for index, session in enumerate(history.session):
+            end_energy_kwh = None
+            end_time = None
+            energy_kwh = None
+            if (end_energy := session.session_end_energy_mwh) is not None:
+                end_energy_kwh = end_energy / 1000000
+                energy_kwh = (end_energy - session.session_start_energy_mwh) / 1000000
+            if session.session_end_time is not None:
+                end_time = dt_util.utc_from_timestamp(
+                    session.session_end_time
+                ).isoformat()
+            sessions.append(
+                {
+                    "session_number": session.session_number,
+                    "uid": session.auth_token,
+                    "start_time": dt_util.utc_from_timestamp(
+                        session.session_start_time
+                    ).isoformat(),
+                    "end_time": end_time,
+                    "start_energy_kwh": session.session_start_energy_mwh / 1000000,
+                    "end_energy_kwh": end_energy_kwh,
+                    "energy_kwh": energy_kwh,
+                    "checksum": session.checksum,
+                    # The charger may return fewer outcomes than sessions.
+                    "corrupted": (
+                        history.corrupted_session[index]
+                        if index < len(history.corrupted_session)
+                        else None
+                    ),
+                }
+            )
+
+        return {"corrupted": history.corrupted, "sessions": sessions}
+
     async def _handle_list_vehicle_tokens(call: ServiceCall) -> ServiceResponse:
         entry_id = call.data[CommonServiceArgument.CONFIG_ENTRY_ID]
         peblar = _get_autocharge_peblar(hass, entry_id)
@@ -316,4 +385,12 @@ def async_setup_services(hass: HomeAssistant) -> None:
         PeblarService.AUTHORIZE_CHARGE_SESSION,
         _handle_authorize_charge_session,
         schema=AUTHORIZE_SCHEMA,
+    )
+    async_register_admin_service(
+        hass,
+        DOMAIN,
+        PeblarService.GET_METER_HISTORY,
+        _handle_get_meter_history,
+        schema=METER_HISTORY_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
     )
