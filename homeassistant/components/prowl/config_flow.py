@@ -6,11 +6,15 @@ from typing import Any, override
 import probatio
 import prowlpy
 
-from homeassistant.components.notify import SERVICE_NOTIFY
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY
 
-from .const import CONF_LEGACY_SERVICE_NAME, CONF_NAMES, DOMAIN
+from .const import (
+    CONF_LEGACY_SERVICE_NAME,
+    CONF_NAMES,
+    DEFAULT_LEGACY_SERVICE_NAME,
+    DOMAIN,
+)
 from .helpers import async_verify_key
 
 _LOGGER = logging.getLogger(__name__)
@@ -66,7 +70,7 @@ class ProwlConfigFlow(ConfigFlow, domain=DOMAIN):
                 data={CONF_API_KEY: api_key},
             )
         # YAML without a name provides the notify.notify service
-        service_names = [name or SERVICE_NOTIFY for name in names]
+        service_names = [name or DEFAULT_LEGACY_SERVICE_NAME for name in names]
         return self.async_create_entry(
             title=", ".join(service_names) if len(names) > 1 else "Prowl",
             data={
