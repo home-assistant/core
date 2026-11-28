@@ -12,7 +12,6 @@ from homeassistant.components.lutron.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.setup import async_setup_component
 
 
 async def test_setup_entry(
@@ -24,7 +23,7 @@ async def test_setup_entry(
     """Test setting up the integration."""
     mock_config_entry.add_to_hass(hass)
 
-    assert await async_setup_component(hass, DOMAIN, {})
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert mock_config_entry.runtime_data.client is mock_lutron
@@ -44,7 +43,7 @@ async def test_unload_entry(
     """Test unloading the integration."""
     mock_config_entry.add_to_hass(hass)
 
-    assert await async_setup_component(hass, DOMAIN, {})
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
@@ -134,7 +133,7 @@ async def test_unique_id_migration(
     # Trigger the integration setup.
     # The async_setup_entry logic will detect the legacy IDs in the registry
     # and update them to the new UUIDs provided by the mock_lutron fixture.
-    assert await async_setup_component(hass, DOMAIN, {})
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     # Verify that the entity's unique ID has been updated to the new format.
@@ -281,7 +280,7 @@ async def test_via_device_id(
     """Test that devices are linked to the main repeater via via_device_id."""
     mock_config_entry.add_to_hass(hass)
 
-    assert await async_setup_component(hass, DOMAIN, {})
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     controller_guid = mock_lutron.guid
@@ -318,7 +317,7 @@ async def test_via_device_id_main_repeater_keypad(
     mock_config_entry.add_to_hass(hass)
     mock_lutron.areas[0].keypads[0].type = "MAIN_REPEATER"
 
-    assert await async_setup_component(hass, DOMAIN, {})
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     controller_guid = mock_lutron.guid
