@@ -124,6 +124,15 @@
   "options": {
     "step": {
       "init": {
+        "data": {
+          "radar_layer": "Radar type"
+        },
+        "data_description": {
+          "radar_layer": "Precipitation type shows rain, snow and mixed precipitation together. Rain and Snow show intensity, and offer more options on the next page."
+        },
+        "title": "Radar camera options"
+      },
+      "radar": {
         "sections": {
           "image": {
             "data": {
@@ -148,12 +157,11 @@
           "radar": {
             "data": {
               "radar_colors": "Colour scale",
-              "radar_layer": "Radar type",
               "radar_legend": "Show legend",
               "radar_opacity": "Radar opacity"
             },
             "data_description": {
-              "radar_colors": "Number of colours in the rain/snow radar scale (has no effect on the precipitation type layer)",
+              "radar_colors": "Number of colours in the radar scale",
               "radar_opacity": "Opacity of the radar layer overlay (0-100)"
             },
             "name": "Radar"
@@ -166,7 +174,7 @@
             },
             "data_description": {
               "radar_duration": "How far back the radar animation goes, in minutes (0 for the full available history)",
-              "radar_future_minutes": "Extend the radar loop past now using Environment Canada's short-term forecast (nowcast) layer, in minutes (up to 72, the limit of the available data). Only affects Rain and Snow; no effect on Precipitation type"
+              "radar_future_minutes": "Extend the radar loop past now using Environment Canada's short-term forecast (nowcast) layer, in minutes (up to 72, the limit of the available data)"
             },
             "name": "Time"
           }

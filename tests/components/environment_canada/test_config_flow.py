@@ -294,13 +294,64 @@ def _section_defaults(data_schema: probatio.Schema, section_key: str) -> dict[st
 
 
 async def test_options_flow_form(hass: HomeAssistant, ec_data: dict[str, Any]) -> None:
-    """Test the options form shows all radar fields, grouped into sections."""
+    """Test the first options step asks only for the radar type."""
     config_entry = await init_integration(hass, ec_data)
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
+    assert {str(k) for k in result["data_schema"].schema} == {CONF_RADAR_LAYER}
+
+
+@pytest.mark.parametrize(
+    ("layer", "expected_radar", "expected_time", "expected_image"),
+    [
+        pytest.param(
+            "rain",
+            {CONF_RADAR_COLORS, CONF_RADAR_OPACITY, CONF_RADAR_LEGEND},
+            {CONF_RADAR_DURATION, CONF_RADAR_FUTURE_MINUTES, CONF_RADAR_TIMESTAMP},
+            {CONF_RADAR_INTERPOLATION, CONF_RADAR_FPS},
+            id="rain",
+        ),
+        pytest.param(
+            "snow",
+            {CONF_RADAR_COLORS, CONF_RADAR_OPACITY, CONF_RADAR_LEGEND},
+            {CONF_RADAR_DURATION, CONF_RADAR_FUTURE_MINUTES, CONF_RADAR_TIMESTAMP},
+            {CONF_RADAR_INTERPOLATION, CONF_RADAR_FPS},
+            id="snow",
+        ),
+        pytest.param(
+            "precip_type",
+            {CONF_RADAR_OPACITY, CONF_RADAR_LEGEND},
+            {CONF_RADAR_DURATION, CONF_RADAR_TIMESTAMP},
+            {CONF_RADAR_FPS},
+            id="precip_type",
+        ),
+    ],
+)
+async def test_options_flow_radar_step_fields(
+    hass: HomeAssistant,
+    ec_data: dict[str, Any],
+    layer: str,
+    expected_radar: set[str],
+    expected_time: set[str],
+    expected_image: set[str],
+) -> None:
+    """Test the second step offers only the options that apply to the layer.
+
+    precip_type has no colour scale choice, no nowcast layer for future
+    minutes, and can't be interpolated, so those fields are not offered.
+    """
+    config_entry = await init_integration(hass, ec_data)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {CONF_RADAR_LAYER: layer}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "radar"
     data_schema = result["data_schema"]
     assert {str(k) for k in data_schema.schema} == {
         SECTION_MAP,
@@ -309,57 +360,58 @@ async def test_options_flow_form(hass: HomeAssistant, ec_data: dict[str, Any]) -
         SECTION_IMAGE,
     }
     assert _section_field_names(data_schema, SECTION_MAP) == {CONF_RADAR_RADIUS}
-    assert _section_field_names(data_schema, SECTION_RADAR) == {
-        CONF_RADAR_LAYER,
-        CONF_RADAR_COLORS,
-        CONF_RADAR_OPACITY,
-        CONF_RADAR_LEGEND,
-    }
-    assert _section_field_names(data_schema, SECTION_TIME) == {
-        CONF_RADAR_DURATION,
-        CONF_RADAR_FUTURE_MINUTES,
-        CONF_RADAR_TIMESTAMP,
-    }
-    assert _section_field_names(data_schema, SECTION_IMAGE) == {
-        CONF_RADAR_INTERPOLATION,
-        CONF_RADAR_FPS,
-    }
+    assert _section_field_names(data_schema, SECTION_RADAR) == expected_radar
+    assert _section_field_names(data_schema, SECTION_TIME) == expected_time
+    assert _section_field_names(data_schema, SECTION_IMAGE) == expected_image
 
 
-async def test_options_flow_save(hass: HomeAssistant, ec_data: dict[str, Any]) -> None:
-    """Test submitting the options form stores the flattened values and reloads the entry."""
-    config_entry = await init_integration(hass, ec_data)
-
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
-
-    submitted = {
-        SECTION_MAP: {CONF_RADAR_RADIUS: 100},
-        SECTION_RADAR: {
-            CONF_RADAR_LAYER: "rain",
-            CONF_RADAR_COLORS: "8",
-            CONF_RADAR_OPACITY: 30,
-            CONF_RADAR_LEGEND: True,
-        },
-        SECTION_TIME: {
-            CONF_RADAR_DURATION: 30,
-            CONF_RADAR_FUTURE_MINUTES: 15,
-            CONF_RADAR_TIMESTAMP: False,
-        },
-        SECTION_IMAGE: {
-            CONF_RADAR_INTERPOLATION: True,
-            CONF_RADAR_FPS: 10,
-        },
-    }
+async def _submit_options(
+    hass: HomeAssistant, entry_id: str, layer: str, sections: dict[str, Any]
+) -> None:
+    """Run both options steps with setup patched out, and check they saved."""
+    result = await hass.config_entries.options.async_init(entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {CONF_RADAR_LAYER: layer}
+    )
     with patch(
         "homeassistant.components.environment_canada.async_setup_entry",
         return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.options.async_configure(
-            result["flow_id"], submitted
+            result["flow_id"], sections
         )
         await hass.async_block_till_done()
-
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert mock_setup_entry.called
+
+
+async def test_options_flow_save(hass: HomeAssistant, ec_data: dict[str, Any]) -> None:
+    """Test submitting both steps stores the flattened values and reloads the entry."""
+    config_entry = await init_integration(hass, ec_data)
+
+    await _submit_options(
+        hass,
+        config_entry.entry_id,
+        "rain",
+        {
+            SECTION_MAP: {CONF_RADAR_RADIUS: 100},
+            SECTION_RADAR: {
+                CONF_RADAR_COLORS: "8",
+                CONF_RADAR_OPACITY: 30,
+                CONF_RADAR_LEGEND: True,
+            },
+            SECTION_TIME: {
+                CONF_RADAR_DURATION: 30,
+                CONF_RADAR_FUTURE_MINUTES: 15,
+                CONF_RADAR_TIMESTAMP: False,
+            },
+            SECTION_IMAGE: {
+                CONF_RADAR_INTERPOLATION: True,
+                CONF_RADAR_FPS: 10,
+            },
+        },
+    )
+
     assert config_entry.options == {
         CONF_RADAR_RADIUS: 100,
         CONF_RADAR_LAYER: "rain",
@@ -372,13 +424,50 @@ async def test_options_flow_save(hass: HomeAssistant, ec_data: dict[str, Any]) -
         CONF_RADAR_INTERPOLATION: True,
         CONF_RADAR_FPS: 10,
     }
-    assert mock_setup_entry.called
+
+
+async def test_options_flow_switch_to_precip_type_drops_unsupported_options(
+    hass: HomeAssistant, ec_data: dict[str, Any]
+) -> None:
+    """Test switching to precip_type removes options saved for rain/snow."""
+    config_entry = await init_integration(
+        hass,
+        ec_data,
+        options={
+            CONF_RADAR_LAYER: "rain",
+            CONF_RADAR_COLORS: "8",
+            CONF_RADAR_FUTURE_MINUTES: 30,
+            CONF_RADAR_INTERPOLATION: True,
+        },
+    )
+
+    await _submit_options(
+        hass,
+        config_entry.entry_id,
+        "precip_type",
+        {
+            SECTION_MAP: {CONF_RADAR_RADIUS: 100},
+            SECTION_RADAR: {CONF_RADAR_OPACITY: 30, CONF_RADAR_LEGEND: True},
+            SECTION_TIME: {CONF_RADAR_DURATION: 30, CONF_RADAR_TIMESTAMP: False},
+            SECTION_IMAGE: {CONF_RADAR_FPS: 10},
+        },
+    )
+
+    assert config_entry.options == {
+        CONF_RADAR_RADIUS: 100,
+        CONF_RADAR_LAYER: "precip_type",
+        CONF_RADAR_OPACITY: 30,
+        CONF_RADAR_LEGEND: True,
+        CONF_RADAR_DURATION: 30,
+        CONF_RADAR_TIMESTAMP: False,
+        CONF_RADAR_FPS: 10,
+    }
 
 
 async def test_options_flow_prefills_saved_options(
     hass: HomeAssistant, ec_data: dict[str, Any]
 ) -> None:
-    """Test the options form is pre-filled with previously saved (flat) values."""
+    """Test both options steps are pre-filled with previously saved (flat) values."""
     saved_options = {
         CONF_RADAR_LAYER: "snow",
         CONF_RADAR_LEGEND: True,
@@ -394,7 +483,12 @@ async def test_options_flow_prefills_saved_options(
     config_entry = await init_integration(hass, ec_data, options=saved_options)
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    layer_key = next(iter(result["data_schema"].schema))
+    assert layer_key.default() == "snow"
 
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {CONF_RADAR_LAYER: "snow"}
+    )
     data_schema = result["data_schema"]
     map_defaults = _section_defaults(data_schema, SECTION_MAP)
     radar_defaults = _section_defaults(data_schema, SECTION_RADAR)
@@ -402,7 +496,6 @@ async def test_options_flow_prefills_saved_options(
     image_defaults = _section_defaults(data_schema, SECTION_IMAGE)
 
     assert map_defaults[CONF_RADAR_RADIUS] == 300
-    assert radar_defaults[CONF_RADAR_LAYER] == "snow"
     assert radar_defaults[CONF_RADAR_LEGEND] is True
     assert radar_defaults[CONF_RADAR_OPACITY] == 50
     assert radar_defaults[CONF_RADAR_COLORS] == "8"

@@ -20,6 +20,20 @@ CONF_RADAR_FUTURE_MINUTES = "radar_future_minutes"
 RADAR_LAYERS = ["rain", "snow", "precip_type"]
 RADAR_COLOR_OPTIONS = ["8", "14"]
 
+# Options that only some radar layers support, so the options flow offers
+# them only for those layers. precip_type is categorical (rain, snow, mixed):
+# it has a single colour style, no nowcast layer to extend the loop into the
+# future, and Environment Canada's server refuses to interpolate it.
+RADAR_LAYER_OPTIONS: dict[str, frozenset[str]] = {
+    "rain": frozenset(
+        {CONF_RADAR_COLORS, CONF_RADAR_INTERPOLATION, CONF_RADAR_FUTURE_MINUTES}
+    ),
+    "snow": frozenset(
+        {CONF_RADAR_COLORS, CONF_RADAR_INTERPOLATION, CONF_RADAR_FUTURE_MINUTES}
+    ),
+    "precip_type": frozenset(),
+}
+
 SECTION_MAP = "map"
 SECTION_RADAR = "radar"
 SECTION_TIME = "time"
@@ -35,9 +49,7 @@ DEFAULT_RADAR_RADIUS = 200
 # 0 means use the full range of images Environment Canada reports as available.
 DEFAULT_RADAR_DURATION = 0
 DEFAULT_RADAR_FPS = 5
-# Colour count only affects the rain/snow layers; precip_type always uses the
-# WMS server's single default style.
 DEFAULT_RADAR_COLORS = "14"
 DEFAULT_RADAR_INTERPOLATION = False
-# 0 means no extrapolation frames are added; only affects rain/snow layers.
+# 0 means no extrapolation frames are added.
 DEFAULT_RADAR_FUTURE_MINUTES = 0
