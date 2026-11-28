@@ -13,7 +13,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import MyUplinkConfigEntry, MyUplinkDataCoordinator
-from .entity import MyUplinkEntity
+from .entity import MyUplinkEntity, async_add_device_entities
 from .helpers import find_matching_platform, skip_entity
 
 
@@ -23,25 +23,29 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up myUplink select."""
-    entities: list[SelectEntity] = []
     coordinator: MyUplinkDataCoordinator = config_entry.runtime_data
 
-    # Setup device point select entities
-    for device_id, point_data in coordinator.data.points.items():
-        for point_id, device_point in point_data.items():
-            if skip_entity(device_point.category, device_point):
+    def _entities_for_devices(device_ids: set[str]) -> list[SelectEntity]:
+        entities: list[SelectEntity] = []
+        # Setup device point select entities
+        for device_id, point_data in coordinator.data.points.items():
+            if device_id not in device_ids:
                 continue
-            if find_matching_platform(device_point, None) == Platform.SELECT:
-                entities.append(
-                    MyUplinkSelect(
-                        coordinator=coordinator,
-                        device_id=device_id,
-                        device_point=device_point,
-                        unique_id_suffix=point_id,
+            for point_id, device_point in point_data.items():
+                if skip_entity(device_point.category, device_point):
+                    continue
+                if find_matching_platform(device_point, None) == Platform.SELECT:
+                    entities.append(
+                        MyUplinkSelect(
+                            coordinator=coordinator,
+                            device_id=device_id,
+                            device_point=device_point,
+                            unique_id_suffix=point_id,
+                        )
                     )
-                )
+        return entities
 
-    async_add_entities(entities)
+    async_add_device_entities(config_entry, async_add_entities, _entities_for_devices)
 
 
 class MyUplinkSelect(MyUplinkEntity, SelectEntity):

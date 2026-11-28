@@ -1,10 +1,36 @@
 """Provide a common entity class for myUplink entities."""
 
+from collections.abc import Callable, Iterable
+
+from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import MyUplinkDataCoordinator
+from .coordinator import MyUplinkConfigEntry, MyUplinkDataCoordinator
+
+
+@callback
+def async_add_device_entities(
+    config_entry: MyUplinkConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+    entities_for_devices: Callable[[set[str]], Iterable[Entity]],
+) -> None:
+    """Add entities for the current devices, and for devices that show up later."""
+    coordinator = config_entry.runtime_data
+    known_devices: set[str] = set()
+
+    @callback
+    def _async_add_new_devices() -> None:
+        if not (new_devices := set(coordinator.data.devices) - known_devices):
+            return
+        known_devices.update(new_devices)
+        async_add_entities(entities_for_devices(new_devices))
+
+    _async_add_new_devices()
+    config_entry.async_on_unload(coordinator.async_add_listener(_async_add_new_devices))
 
 
 class MyUplinkEntity(CoordinatorEntity[MyUplinkDataCoordinator]):

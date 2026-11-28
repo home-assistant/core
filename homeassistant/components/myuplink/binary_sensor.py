@@ -15,7 +15,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import F_SERIES
 from .coordinator import MyUplinkConfigEntry, MyUplinkDataCoordinator
-from .entity import MyUplinkEntity, MyUplinkSystemEntity
+from .entity import MyUplinkEntity, MyUplinkSystemEntity, async_add_device_entities
 from .helpers import find_matching_platform, skip_entity, transform_model_series
 
 CATEGORY_BASED_DESCRIPTIONS: dict[str, dict[str, BinarySensorEntityDescription]] = {
@@ -63,53 +63,61 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up myUplink binary_sensor."""
-    entities: list[BinarySensorEntity] = []
     coordinator = config_entry.runtime_data
+    known_systems: set[str] = set()
 
-    # Setup device point bound sensors
-    for device_id, point_data in coordinator.data.points.items():
-        for point_id, device_point in point_data.items():
-            if skip_entity(device_point.category, device_point):
+    def _entities_for_devices(device_ids: set[str]) -> list[BinarySensorEntity]:
+        entities: list[BinarySensorEntity] = []
+        # Setup device point bound sensors
+        for device_id, point_data in coordinator.data.points.items():
+            if device_id not in device_ids:
                 continue
-            if find_matching_platform(device_point) == Platform.BINARY_SENSOR:
-                description = get_description(device_point)
+            for point_id, device_point in point_data.items():
+                if skip_entity(device_point.category, device_point):
+                    continue
+                if find_matching_platform(device_point) == Platform.BINARY_SENSOR:
+                    description = get_description(device_point)
 
-                entities.append(
-                    MyUplinkDevicePointBinarySensor(
-                        coordinator=coordinator,
-                        device_id=device_id,
-                        device_point=device_point,
-                        entity_description=description,
-                        unique_id_suffix=point_id,
+                    entities.append(
+                        MyUplinkDevicePointBinarySensor(
+                            coordinator=coordinator,
+                            device_id=device_id,
+                            device_point=device_point,
+                            entity_description=description,
+                            unique_id_suffix=point_id,
+                        )
                     )
-                )
 
-    # Setup device bound sensors
-    entities.extend(
-        MyUplinkDeviceBinarySensor(
-            coordinator=coordinator,
-            device_id=device.id,
-            entity_description=CONNECTED_BINARY_SENSOR_DESCRIPTION,
-            unique_id_suffix="connection_state",
-        )
-        for system in coordinator.data.systems
-        for device in system.devices
-    )
-
-    # Setup system bound sensors
-    for system in coordinator.data.systems:
-        device_id = system.devices[0].id
-        entities.append(
-            MyUplinkSystemBinarySensor(
+        # Setup device bound sensors
+        entities.extend(
+            MyUplinkDeviceBinarySensor(
                 coordinator=coordinator,
-                device_id=device_id,
-                system_id=system.id,
-                entity_description=ALARM_BINARY_SENSOR_DESCRIPTION,
-                unique_id_suffix="has_alarm",
+                device_id=device.id,
+                entity_description=CONNECTED_BINARY_SENSOR_DESCRIPTION,
+                unique_id_suffix="connection_state",
             )
+            for system in coordinator.data.systems
+            for device in system.devices
+            if device.id in device_ids
         )
 
-    async_add_entities(entities)
+        # Setup system bound sensors
+        for system in coordinator.data.systems:
+            if system.id in known_systems:
+                continue
+            known_systems.add(system.id)
+            entities.append(
+                MyUplinkSystemBinarySensor(
+                    coordinator=coordinator,
+                    device_id=system.devices[0].id,
+                    system_id=system.id,
+                    entity_description=ALARM_BINARY_SENSOR_DESCRIPTION,
+                    unique_id_suffix="has_alarm",
+                )
+            )
+        return entities
+
+    async_add_device_entities(config_entry, async_add_entities, _entities_for_devices)
 
 
 class MyUplinkDevicePointBinarySensor(MyUplinkEntity, BinarySensorEntity):
