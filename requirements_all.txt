@@ -1064,6 +1064,9 @@ fastdotcom==0.0.7
 # homeassistant.components.feedreader
 feedparser==6.0.12
 
+# homeassistant.components.fenecon_modbus
+fenecon-modbus==0.1.0
+
 # homeassistant.components.file
 file-read-backwards==2.0.0
 

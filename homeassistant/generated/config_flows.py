@@ -253,6 +253,7 @@ FLOWS = {
         "faa_delays",
         "fastdotcom",
         "feedreader",
+        "fenecon_modbus",
         "fibaro",
         "file",
         "filesize",

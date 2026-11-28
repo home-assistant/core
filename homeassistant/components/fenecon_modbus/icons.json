@@ -1,0 +1,131 @@
+{
+  "entity": {
+    "sensor": {
+      "consumption_active_energy": {
+        "default": "mdi:home-lightning-bolt-outline"
+      },
+      "consumption_active_power": {
+        "default": "mdi:home-lightning-bolt"
+      },
+      "consumption_active_power_l1": {
+        "default": "mdi:home-lightning-bolt"
+      },
+      "consumption_active_power_l2": {
+        "default": "mdi:home-lightning-bolt"
+      },
+      "consumption_active_power_l3": {
+        "default": "mdi:home-lightning-bolt"
+      },
+      "consumption_max_active_power": {
+        "default": "mdi:home-lightning-bolt"
+      },
+      "ess_active_charge_energy": {
+        "default": "mdi:battery-arrow-up-outline"
+      },
+      "ess_active_discharge_energy": {
+        "default": "mdi:battery-arrow-down-outline"
+      },
+      "ess_active_power": {
+        "default": "mdi:battery-charging"
+      },
+      "ess_active_power_l1": {
+        "default": "mdi:battery-charging"
+      },
+      "ess_active_power_l2": {
+        "default": "mdi:battery-charging"
+      },
+      "ess_active_power_l3": {
+        "default": "mdi:battery-charging"
+      },
+      "ess_capacity": {
+        "default": "mdi:home-battery"
+      },
+      "ess_dc_charge_energy": {
+        "default": "mdi:battery-arrow-up"
+      },
+      "ess_dc_discharge_energy": {
+        "default": "mdi:battery-arrow-down"
+      },
+      "ess_discharge_power": {
+        "default": "mdi:battery-arrow-down"
+      },
+      "ess_reactive_power": {
+        "default": "mdi:sine-wave"
+      },
+      "grid_active_power": {
+        "default": "mdi:transmission-tower"
+      },
+      "grid_active_power_l1": {
+        "default": "mdi:transmission-tower"
+      },
+      "grid_active_power_l2": {
+        "default": "mdi:transmission-tower"
+      },
+      "grid_active_power_l3": {
+        "default": "mdi:transmission-tower"
+      },
+      "grid_buy_active_energy": {
+        "default": "mdi:transmission-tower-import"
+      },
+      "grid_max_active_power": {
+        "default": "mdi:transmission-tower-import"
+      },
+      "grid_min_active_power": {
+        "default": "mdi:transmission-tower-export"
+      },
+      "grid_mode": {
+        "default": "mdi:transmission-tower",
+        "state": {
+          "off_grid": "mdi:transmission-tower-off",
+          "off_grid_genset": "mdi:generator-stationary",
+          "on_grid": "mdi:transmission-tower"
+        }
+      },
+      "grid_mode_off_grid_time": {
+        "default": "mdi:transmission-tower-off"
+      },
+      "grid_sell_active_energy": {
+        "default": "mdi:transmission-tower-export"
+      },
+      "production_ac_active_energy": {
+        "default": "mdi:solar-power-variant"
+      },
+      "production_ac_active_power": {
+        "default": "mdi:solar-power-variant"
+      },
+      "production_ac_active_power_l1": {
+        "default": "mdi:solar-power-variant"
+      },
+      "production_ac_active_power_l2": {
+        "default": "mdi:solar-power-variant"
+      },
+      "production_ac_active_power_l3": {
+        "default": "mdi:solar-power-variant"
+      },
+      "production_active_energy": {
+        "default": "mdi:solar-power"
+      },
+      "production_active_power": {
+        "default": "mdi:solar-power"
+      },
+      "production_dc_active_energy": {
+        "default": "mdi:solar-panel"
+      },
+      "production_dc_actual_power": {
+        "default": "mdi:solar-panel"
+      },
+      "production_max_active_power": {
+        "default": "mdi:solar-power"
+      },
+      "state": {
+        "default": "mdi:information-outline",
+        "state": {
+          "fault": "mdi:alert-circle-outline",
+          "info": "mdi:information-outline",
+          "ok": "mdi:check-circle-outline",
+          "warning": "mdi:alert-outline"
+        }
+      }
+    }
+  }
+}

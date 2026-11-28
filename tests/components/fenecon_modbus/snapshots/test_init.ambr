@@ -1,0 +1,31 @@
+# serializer version: 1
+# name: test_device_info
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'fenecon_modbus',
+        '12345',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'FENECON GmbH',
+    'model': 'FENECON Home 10',
+    'model_id': None,
+    'name': 'FENECON Home 10',
+    'name_by_user': None,
+    'serial_number': '12345',
+    'sw_version': '2026.10.1',
+    'via_device_id': None,
+  })
+# ---
