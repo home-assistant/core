@@ -3,10 +3,10 @@
 from typing import Any
 
 import probatio
-from python_otbr_api.tlv_parser import TLVError
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 
 from . import dataset_store, discovery
 
@@ -41,7 +41,7 @@ async def ws_add_dataset(
 
     try:
         result = await dataset_store.async_add_dataset(hass, source, tlv)
-    except TLVError as exc:
+    except HomeAssistantError as exc:
         connection.send_error(msg["id"], websocket_api.ERR_INVALID_FORMAT, str(exc))
         return
 

@@ -9,11 +9,13 @@ from matter_server.client.models.node import MatterEndpoint, MatterNode
 from matter_server.common.const import SCHEMA_VERSION
 from matter_server.common.models import ServerInfoMessage
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, MockUser
 
+from homeassistant.auth.const import GROUP_ID_USER
 from homeassistant.components.matter import DOMAIN
 from homeassistant.components.matter.discovery import async_discover_entities
 from homeassistant.components.matter.models import MatterEntityInfo
+from homeassistant.components.thread import dataset_store
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
@@ -121,3 +123,24 @@ async def matter_node(
     return await setup_integration_with_node_fixture(
         hass, node_fixture, matter_client, attributes
     )
+
+
+@pytest.fixture
+def short_border_agent_discovery_timeout() -> Generator[None]:
+    """Skip the Thread store's border agent discovery wait, which never elapses under a frozen clock."""
+    with patch.object(dataset_store, "BORDER_AGENT_DISCOVERY_TIMEOUT", 0):
+        yield
+
+
+@pytest.fixture
+def mock_thread_discovery(mock_async_zeroconf: MagicMock) -> MagicMock:
+    """Adding a Thread dataset starts Thread discovery, which would open a real socket."""
+    return mock_async_zeroconf
+
+
+@pytest.fixture
+async def non_admin_user(hass: HomeAssistant) -> MockUser:
+    """Return a user who controls entities but is not an administrator."""
+    group = await hass.auth.async_get_group(GROUP_ID_USER)
+    assert group is not None
+    return MockUser(groups=[group]).add_to_hass(hass)

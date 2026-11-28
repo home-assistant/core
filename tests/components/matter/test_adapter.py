@@ -1,5 +1,7 @@
 """Test the adapter."""
 
+from collections.abc import Callable
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 from matter_server.client.models.node import MatterNode
@@ -29,6 +31,7 @@ from .common import (
     create_node_from_fixture,
     load_and_parse_node_fixture,
     set_node_attribute,
+    trigger_subscription_callback,
 )
 
 
@@ -40,16 +43,33 @@ def identifier_for(
     return (DOMAIN, f"{ID_TYPE_DEVICE_ID}_{device_id}")
 
 
+def fire_event(matter_client: MagicMock, event: EventType, data: Any) -> None:
+    """Fire a client event at the latest subscription of each subscriber.
+
+    The client delivers an event to all of its subscribers, the adapter and
+    the Thread dataset importer alike; the subscriptions of an earlier setup
+    are gone after a reload. The per-entity subscriptions, which filter by
+    node, are left out.
+    """
+    latest: dict[str, Callable[[EventType, Any], None]] = {}
+    for call in matter_client.subscribe_events.call_args_list:
+        if (
+            call.kwargs["event_filter"] == event
+            and call.kwargs.get("node_filter") is None
+        ):
+            callback = call.kwargs["callback"]
+            latest[callback.__qualname__] = callback
+    for callback in latest.values():
+        callback(event, data)
+
+
 def fire_endpoint_event(
     matter_client: MagicMock, event: EventType, node: MatterNode, endpoint_id: int
 ) -> None:
     """Fire an endpoint added/removed event for a node endpoint."""
-    callback = next(
-        call.kwargs["callback"]
-        for call in reversed(matter_client.subscribe_events.call_args_list)
-        if call.kwargs["event_filter"] == event
+    fire_event(
+        matter_client, event, {"node_id": node.node_id, "endpoint_id": endpoint_id}
     )
-    callback(event, {"node_id": node.node_id, "endpoint_id": endpoint_id})
 
 
 def remove_endpoint(
@@ -66,25 +86,12 @@ def remove_endpoint(
 
 def fire_node_removed_event(matter_client: MagicMock, node: MatterNode) -> None:
     """Fire a node removed event for a node."""
-    callback = next(
-        call.kwargs["callback"]
-        for call in reversed(matter_client.subscribe_events.call_args_list)
-        if call.kwargs["event_filter"] == EventType.NODE_REMOVED
-    )
-    callback(EventType.NODE_REMOVED, node.node_id)
+    fire_event(matter_client, EventType.NODE_REMOVED, node.node_id)
 
 
 def fire_node_updated_event(matter_client: MagicMock, node: MatterNode) -> None:
     """Fire a node updated event for a node."""
-    # The adapter's node-updated handler subscribes without a node_filter, unlike
-    # the per-entity subscriptions that also listen for NODE_UPDATED.
-    callback = next(
-        call.kwargs["callback"]
-        for call in reversed(matter_client.subscribe_events.call_args_list)
-        if call.kwargs["event_filter"] == EventType.NODE_UPDATED
-        and call.kwargs.get("node_filter") is None
-    )
-    callback(EventType.NODE_UPDATED, node)
+    fire_event(matter_client, EventType.NODE_UPDATED, node)
 
 
 @pytest.mark.usefixtures("matter_node")
@@ -1530,20 +1537,15 @@ async def test_node_added_subscription(
     matter_client: MagicMock,
 ) -> None:
     """Test subscription to new devices work."""
-    assert matter_client.subscribe_events.call_count == 5
-    assert (
-        matter_client.subscribe_events.call_args.kwargs["event_filter"]
-        == EventType.NODE_UPDATED
-    )
+    # Five by the adapter, five by the Thread dataset importer.
+    assert matter_client.subscribe_events.call_count == 10
 
-    node_added_callback = matter_client.subscribe_events.call_args.kwargs["callback"]
     node = create_node_from_fixture("mock_onoff_light")
 
     entity_state = hass.states.get("light.mock_onoff_light")
     assert not entity_state
 
-    node_added_callback(EventType.NODE_ADDED, node)
-    await hass.async_block_till_done()
+    await trigger_subscription_callback(hass, matter_client, EventType.NODE_ADDED, node)
 
     entity_state = hass.states.get("light.mock_onoff_light")
     assert entity_state
@@ -2120,7 +2122,8 @@ async def test_bad_node_not_crash_integration(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert matter_client.get_nodes.call_count == 1
+    # Once by the adapter, once by the Thread dataset importer.
+    assert matter_client.get_nodes.call_count == 2
     assert hass.states.get("light.mock_onoff_light") is not None
     assert len(hass.states.async_all("light")) == 1
     assert "Error setting up node" in caplog.text
