@@ -112,8 +112,10 @@ async def test_validator_error_recovery(
     entity._handle_coordinator_update()
     assert entity._attr_icon is None
     assert hass.states.get("test.entity").state == "second"
-    assert "Error validating template result 'invalid'" in caplog.text
-    assert "for attribute '_attr_icon' in entity test.entity" in caplog.text
+    assert (
+        "Received invalid test icon: invalid for entity test.entity "
+        "from template '{{ icon }}'"
+    ) in caplog.text
 
     coordinator._execute_update({"icon": "mdi:lightbulb", "value": "third"})
     entity._handle_coordinator_update()
