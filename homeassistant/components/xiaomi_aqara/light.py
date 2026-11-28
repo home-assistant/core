@@ -7,12 +7,7 @@ from typing import Any, override
 
 from xiaomi_gateway import XiaomiGateway
 
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_HS_COLOR,
-    ColorMode,
-    LightEntity,
-)
+from homeassistant.components.light import ColorMode, LightEntity, LightServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import color as color_util
@@ -105,11 +100,11 @@ class XiaomiGatewayLight(XiaomiDevice, LightEntity):
     @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
-        if ATTR_HS_COLOR in kwargs:
-            self._hs = kwargs[ATTR_HS_COLOR]
+        if LightServiceArgument.HS_COLOR in kwargs:
+            self._hs = kwargs[LightServiceArgument.HS_COLOR]
 
-        if ATTR_BRIGHTNESS in kwargs:
-            self._brightness = int(100 * kwargs[ATTR_BRIGHTNESS] / 255)
+        if LightServiceArgument.BRIGHTNESS in kwargs:
+            self._brightness = int(100 * kwargs[LightServiceArgument.BRIGHTNESS] / 255)
 
         rgb = color_util.color_hs_to_RGB(*self._hs)
         rgba = (self._brightness, *rgb)
