@@ -41,12 +41,52 @@ async def test_get_electricity_prices(
     assert response == snapshot
 
 
-async def test_get_electricity_prices_without_electricity(
+async def test_get_gas_prices(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test getting the gas prices."""
+    response = await hass.services.async_call(
+        DOMAIN,
+        ZonneplanService.GET_GAS_PRICES,
+        {ZonneplanServiceArgument.CONFIG_ENTRY: init_integration.entry_id},
+        blocking=True,
+        return_response=True,
+    )
+
+    assert response == snapshot
+
+
+@pytest.mark.parametrize(
+    ("market_segment", "action", "data", "translation_key"),
+    [
+        pytest.param(
+            "electricity",
+            ZonneplanService.GET_ELECTRICITY_PRICES,
+            {ZonneplanServiceArgument.INTERVAL: "hour"},
+            "no_electricity_prices",
+            id="electricity",
+        ),
+        pytest.param(
+            "gas",
+            ZonneplanService.GET_GAS_PRICES,
+            {},
+            "no_gas_prices",
+            id="gas",
+        ),
+    ],
+)
+async def test_get_prices_without_market_segment(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_zonneplan_client: AsyncMock,
+    market_segment: str,
+    action: ZonneplanService,
+    data: dict[str, str],
+    translation_key: str,
 ) -> None:
-    """Test getting the electricity prices of an account without electricity."""
+    """Test getting the prices of a market segment the account doesn't have."""
     mock_zonneplan_client.async_get_account.return_value = dataclasses.replace(
         MOCK_ACCOUNT,
         address_groups=[
@@ -55,7 +95,7 @@ async def test_get_electricity_prices_without_electricity(
                 connections=[
                     connection
                     for connection in address_group.connections
-                    if connection.market_segment != "electricity"
+                    if connection.market_segment != market_segment
                 ],
             )
             for address_group in MOCK_ACCOUNT.address_groups
@@ -68,15 +108,12 @@ async def test_get_electricity_prices_without_electricity(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            ZonneplanService.GET_ELECTRICITY_PRICES,
-            {
-                ZonneplanServiceArgument.CONFIG_ENTRY: mock_config_entry.entry_id,
-                ZonneplanServiceArgument.INTERVAL: "hour",
-            },
+            action,
+            {ZonneplanServiceArgument.CONFIG_ENTRY: mock_config_entry.entry_id, **data},
             blocking=True,
             return_response=True,
         )
-    assert exc_info.value.translation_key == "no_electricity_prices"
+    assert exc_info.value.translation_key == translation_key
 
 
 @pytest.mark.parametrize(

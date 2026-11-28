@@ -263,6 +263,9 @@
     "no_electricity_prices": {
       "message": "The Zonneplan account has no electricity prices"
     },
+    "no_gas_prices": {
+      "message": "The Zonneplan account has no gas prices"
+    },
     "rate_limited": {
       "message": "The Zonneplan API rate limit was reached"
     },
@@ -292,6 +295,16 @@
         }
       },
       "name": "Get electricity prices"
+    },
+    "get_gas_prices": {
+      "description": "Returns the all-in gas prices from Zonneplan.",
+      "fields": {
+        "config_entry": {
+          "description": "[%key:component::zonneplan::services::get_electricity_prices::fields::config_entry::description%]",
+          "name": "[%key:component::zonneplan::services::get_electricity_prices::fields::config_entry::name%]"
+        }
+      },
+      "name": "Get gas prices"
     }
   }
 }
