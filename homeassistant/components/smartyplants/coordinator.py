@@ -14,8 +14,9 @@ from pysmartyplants import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
@@ -27,6 +28,8 @@ type SmartyPlantsConfigEntry = ConfigEntry[SmartyPlantsCoordinator]
 
 class SmartyPlantsCoordinator(DataUpdateCoordinator[dict[str, Sensor]]):
     """Fetches all sensors on one schedule and indexes them by sensor id."""
+
+    config_entry: SmartyPlantsConfigEntry
 
     def __init__(
         self,
@@ -74,7 +77,23 @@ class SmartyPlantsCoordinator(DataUpdateCoordinator[dict[str, Sensor]]):
                     translation_placeholders={"error": str(err)},
                 ) from err
 
-            return {sensor.id: sensor for sensor in sensors}
+            data = {sensor.id: sensor for sensor in sensors}
+            self._async_remove_stale_devices(data)
+            return data
+
+    @callback
+    def _async_remove_stale_devices(self, data: dict[str, Sensor]) -> None:
+        """Drop devices for sensors that have left the account."""
+        registry = dr.async_get(self.hass)
+        current = {(DOMAIN, sensor_id) for sensor_id in data}
+
+        for device in dr.async_entries_for_config_entry(
+            registry, self.config_entry.entry_id
+        ):
+            if not device.identifiers & current:
+                # Removing the device takes its entities with it.
+                _LOGGER.debug("Removing device for deleted sensor: %s", device.name)
+                registry.async_remove_device(device.id)
 
     async def async_apply_update(self, update: SensorUpdate) -> None:
         """Merge a pushed update into the cached sensors."""

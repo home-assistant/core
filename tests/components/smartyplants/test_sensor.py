@@ -1,5 +1,6 @@
 """Tests for the SmartyPlants sensor platform."""
 
+from copy import deepcopy
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
@@ -136,10 +137,11 @@ async def test_temperature_follows_the_backend_unit(
 async def test_sensor_removed_from_account(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
     sensor_payloads: list[dict[str, Any]],
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test a sensor that leaves the account becomes unavailable."""
+    """Test a sensor that leaves the account takes its device with it."""
     await setup_integration(hass, mock_config_entry)
     assert hass.states.get(TEMPERATURE).state == "22.5"
 
@@ -148,7 +150,65 @@ async def test_sensor_removed_from_account(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get(TEMPERATURE).state == STATE_UNAVAILABLE
+    assert hass.states.get(TEMPERATURE) is None
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "sensor-1"), mock_config_entry.entry_id
+        )
+        is None
+    )
+
+
+@pytest.mark.usefixtures("mock_smartyplants_client")
+async def test_sensor_added_to_account(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    sensor_payloads: list[dict[str, Any]],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a sensor paired after setup gets entities without a reload."""
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get("sensor.fern_temperature") is None
+
+    second = deepcopy(sensor_payloads[0])
+    second["id"] = "sensor-2"
+    second["identifier"] = "device-67890"
+    second["plant"]["id"] = "plant-2"
+    second["plant"]["name"] = "Fern"
+    sensor_payloads.append(second)
+
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.fern_temperature").state == "22.5"
+    # The sensor that was already there keeps the entities it had.
+    assert hass.states.get(TEMPERATURE).state == "22.5"
+
+
+@pytest.mark.usefixtures("mock_smartyplants_client")
+async def test_sensor_paired_again_gets_entities_back(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    sensor_payloads: list[dict[str, Any]],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a sensor that leaves and returns is not left without entities."""
+    await setup_integration(hass, mock_config_entry)
+    restored = deepcopy(sensor_payloads[0])
+
+    sensor_payloads.clear()
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(TEMPERATURE) is None
+
+    sensor_payloads.append(restored)
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(TEMPERATURE).state == "22.5"
 
 
 @pytest.mark.parametrize(
