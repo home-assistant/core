@@ -46,6 +46,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    EntityStateAttribute,
     __version__ as hass_version,
 )
 from homeassistant.core import Event, HomeAssistant
@@ -65,6 +66,92 @@ async def test_accessory_cancels_track_state_change_on_stop(
         "homeassistant.components.homekit.accessories.HomeAccessory.async_update_state"
     ):
         acc.run()
+    await acc.stop()
+
+
+async def test_reload_on_attr_change_after_unavailable_at_creation(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test reload when an entity comes back with different attributes."""
+    entity_id = "sensor.accessory"
+    hass.states.async_set(
+        entity_id, STATE_UNAVAILABLE, {EntityStateAttribute.SUPPORTED_FEATURES: 1}
+    )
+    await hass.async_block_till_done()
+    acc = HomeAccessory(
+        hass, hk_driver, "Home Accessory", entity_id, 2, {"platform": "isy994"}
+    )
+    with (
+        patch(
+            "homeassistant.components.homekit.accessories.HomeAccessory.async_update_state"
+        ),
+        patch.object(acc, "async_reload") as mock_reload,
+    ):
+        acc.run()
+        await hass.async_block_till_done()
+        hass.states.async_set(
+            entity_id, STATE_ON, {EntityStateAttribute.SUPPORTED_FEATURES: 3}
+        )
+        await hass.async_block_till_done()
+        mock_reload.assert_called_once()
+    await acc.stop()
+
+
+async def test_reload_on_attr_change_between_creation_and_run(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test reload when attributes change before the accessory starts."""
+    entity_id = "sensor.accessory"
+    hass.states.async_set(
+        entity_id, STATE_ON, {EntityStateAttribute.SUPPORTED_FEATURES: 1}
+    )
+    await hass.async_block_till_done()
+    acc = HomeAccessory(
+        hass, hk_driver, "Home Accessory", entity_id, 2, {"platform": "isy994"}
+    )
+    hass.states.async_set(
+        entity_id, STATE_ON, {EntityStateAttribute.SUPPORTED_FEATURES: 3}
+    )
+    await hass.async_block_till_done()
+    with (
+        patch(
+            "homeassistant.components.homekit.accessories.HomeAccessory.async_update_state"
+        ),
+        patch.object(acc, "async_reload") as mock_reload,
+    ):
+        acc.run()
+        await hass.async_block_till_done()
+        mock_reload.assert_called_once()
+    await acc.stop()
+
+
+async def test_no_reload_on_unavailable_flap_with_unchanged_attrs(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test that an outage alone does not cause a reload."""
+    entity_id = "sensor.accessory"
+    hass.states.async_set(
+        entity_id, STATE_ON, {EntityStateAttribute.SUPPORTED_FEATURES: 1}
+    )
+    await hass.async_block_till_done()
+    acc = HomeAccessory(
+        hass, hk_driver, "Home Accessory", entity_id, 2, {"platform": "isy994"}
+    )
+    with (
+        patch(
+            "homeassistant.components.homekit.accessories.HomeAccessory.async_update_state"
+        ),
+        patch.object(acc, "async_reload") as mock_reload,
+    ):
+        acc.run()
+        await hass.async_block_till_done()
+        hass.states.async_set(entity_id, STATE_UNAVAILABLE)
+        await hass.async_block_till_done()
+        hass.states.async_set(
+            entity_id, STATE_ON, {EntityStateAttribute.SUPPORTED_FEATURES: 1}
+        )
+        await hass.async_block_till_done()
+        mock_reload.assert_not_called()
     await acc.stop()
 
 
