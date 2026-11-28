@@ -765,6 +765,57 @@ async def test_record_service(hass: HomeAssistant) -> None:
         )
 
 
+@pytest.mark.usefixtures("mock_camera_webrtc")
+async def test_record_service_webrtc(
+    hass: HomeAssistant,
+) -> None:
+    """Test record service for WebRTC cameras."""
+    with patch(
+        "homeassistant.components.camera.services.async_record_webrtc",
+        autospec=True,
+    ) as mock_record_webrtc:
+        await hass.services.async_call(
+            DOMAIN,
+            CameraService.RECORD,
+            {
+                TargetKey.ENTITY_ID: "camera.demo_camera",
+                CameraServiceArgument.FILENAME: "/test/{{ 'clip' }}.mp4",
+                CameraServiceArgument.DURATION: 10,
+            },
+            blocking=True,
+        )
+
+        mock_record_webrtc.assert_awaited_once_with(
+            get_camera_from_entity_id(hass, "camera.demo_camera"),
+            "/test/clip.mp4",
+            10,
+        )
+
+
+@pytest.mark.usefixtures("mock_camera_webrtc")
+async def test_record_service_webrtc_lookback(hass: HomeAssistant) -> None:
+    """Test WebRTC recording rejects lookback and does not start a recording."""
+    with patch(
+        "homeassistant.components.camera.services.async_record_webrtc",
+        autospec=True,
+    ) as mock_record_webrtc:
+        with pytest.raises(
+            HomeAssistantError, match="WebRTC recordings do not support lookback"
+        ):
+            await hass.services.async_call(
+                DOMAIN,
+                CameraService.RECORD,
+                {
+                    TargetKey.ENTITY_ID: "camera.demo_camera",
+                    CameraServiceArgument.FILENAME: "/test/clip.mp4",
+                    CameraServiceArgument.LOOKBACK: 1,
+                },
+                blocking=True,
+            )
+
+        mock_record_webrtc.assert_not_called()
+
+
 @pytest.mark.usefixtures("mock_camera")
 async def test_camera_proxy_stream(hass_client: ClientSessionGenerator) -> None:
     """Test record service."""
