@@ -249,3 +249,64 @@ async def test_remove_device_rejects_child_device(
     )
     result = await async_remove_config_entry_device(hass, entry, child_device)
     assert result is False
+
+
+async def test_discovery_stopped(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    lms: MagicMock,
+) -> None:
+    """Test that player discovery returns early when discovery is stopped."""
+
+    discovery_calls = []
+    reschedules = []
+    was_cancelled = []
+
+    async def mock_get_players():
+        """Mock get_players and track when called."""
+        discovery_calls.append(1)
+        return []
+
+    lms.async_get_players = mock_get_players
+    discovery_callbacks = []
+
+    def mock_call_later(hass_arg, delay, callback):
+        """Mock async_call_later to capture reschedule attempts."""
+        reschedules.append(callback)
+        discovery_callbacks.append(callback)
+
+        def cancel_callback():
+            was_cancelled.append(True)
+
+        return cancel_callback
+
+    with (
+        patch("homeassistant.components.squeezebox.Server", return_value=lms),
+        patch(
+            "homeassistant.components.squeezebox.async_call_later",
+            side_effect=mock_call_later,
+        ),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        # Simulate multiple discovery cycles before unload
+        for _ in range(2):
+            if discovery_callbacks:
+                await discovery_callbacks[-1]()
+                await hass.async_block_till_done()
+
+        # Multiple discovery cycles should have been scheduled
+        assert len(reschedules) >= 3  # Initial + 2 reschedules
+        reschedule_count_before_unload = len(reschedules)
+
+        # Unload should cancel only the latest timer
+        assert await hass.config_entries.async_unload(config_entry.entry_id)
+        assert len(was_cancelled) == 1  # Only the latest timer's cancel was called
+
+        # Invoke the latest callback after discovery_stopped is True
+        # It should return early without rescheduling
+        await discovery_callbacks[-1]()
+
+        # Verify no new reschedule was scheduled (guard prevents async_call_later)
+        assert len(reschedules) == reschedule_count_before_unload

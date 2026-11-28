@@ -17,7 +17,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryError,
@@ -191,9 +191,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
     server_coordinator = LMSStatusDataUpdateCoordinator(hass, entry, lms)
 
     entry.runtime_data = SqueezeboxData(coordinator=server_coordinator, server=lms)
+    cancel_discovery: CALLBACK_TYPE | None = None
+    discovery_stopped = False
+
+    @callback
+    def _stop_player_discovery() -> None:
+        nonlocal discovery_stopped
+        discovery_stopped = True
+        if cancel_discovery is not None:
+            cancel_discovery()
+
+    entry.async_on_unload(_stop_player_discovery)
 
     async def _player_discovery(now: datetime | None = None) -> None:
         """Discover squeezebox players by polling server."""
+        nonlocal cancel_discovery
 
         async def _discovered_player(player: Player) -> None:
             """Handle a (re)discovered player."""
@@ -219,13 +231,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
                     hass, SIGNAL_PLAYER_DISCOVERED + entry.entry_id, player_coordinator
                 )
 
-        if players := await lms.async_get_players():
+        players = await lms.async_get_players()
+        if discovery_stopped:
+            return
+
+        if players:
             for player in players:
                 hass.async_create_task(_discovered_player(player))
 
-        entry.async_on_unload(
-            async_call_later(hass, DISCOVERY_INTERVAL, _player_discovery)
-        )
+        cancel_discovery = async_call_later(hass, DISCOVERY_INTERVAL, _player_discovery)
 
     await server_coordinator.async_config_entry_first_refresh()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
