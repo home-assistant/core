@@ -1,0 +1,104 @@
+{
+  "config": {
+    "abort": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_mosque": "No MAWAQIT mosques were found near your Home Assistant location. Please make sure your location is set to somewhere near a mosque. Searching by keyword is not yet supported but is planned for a future release."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "step": {
+      "mosques_coordinates": {
+        "data": {
+          "uuid": "Mosque"
+        },
+        "data_description": {
+          "uuid": "The mosque whose prayer times to show, among the mosques near your Home Assistant location."
+        },
+        "title": "Your mosque"
+      },
+      "user": {
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "email": "The email address of your MAWAQIT account.",
+          "password": "The password of your MAWAQIT account."
+        },
+        "description": "Register on [mawaqit.net]({mawaqit_url}) and log in below.",
+        "title": "Log in to MAWAQIT"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "iqama_asr": {
+        "name": "Asr iqama"
+      },
+      "iqama_dhuhr": {
+        "name": "Dhuhr iqama"
+      },
+      "iqama_fajr": {
+        "name": "Fajr iqama"
+      },
+      "iqama_isha": {
+        "name": "Isha iqama"
+      },
+      "iqama_maghrib": {
+        "name": "Maghrib iqama"
+      },
+      "next_salat_name": {
+        "name": "Next salat",
+        "state": {
+          "asr": "Asr",
+          "dhuhr": "Dhuhr",
+          "fajr": "Fajr",
+          "isha": "Isha",
+          "jumua": "Jumua",
+          "maghrib": "Maghrib"
+        }
+      },
+      "next_salat_time": {
+        "name": "Next salat time"
+      },
+      "prayer_asr": {
+        "name": "Asr prayer"
+      },
+      "prayer_dhuhr": {
+        "name": "Dhuhr prayer"
+      },
+      "prayer_fajr": {
+        "name": "Fajr prayer"
+      },
+      "prayer_isha": {
+        "name": "Isha prayer"
+      },
+      "prayer_jumua": {
+        "name": "Jumua prayer"
+      },
+      "prayer_jumua_2": {
+        "name": "Second Jumua prayer"
+      },
+      "prayer_jumua_3": {
+        "name": "Third Jumua prayer"
+      },
+      "prayer_maghrib": {
+        "name": "Maghrib prayer"
+      },
+      "prayer_shuruq": {
+        "name": "Shuruq"
+      }
+    }
+  },
+  "exceptions": {
+    "invalid_timezone": {
+      "message": "MAWAQIT returned an unknown time zone: {timezone}"
+    },
+    "update_failed": {
+      "message": "Error communicating with MAWAQIT: {error}"
+    }
+  },
+  "title": "MAWAQIT Prayer Times"
+}
