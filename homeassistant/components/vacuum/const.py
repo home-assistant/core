@@ -69,6 +69,7 @@ class VacuumEntityFeature(IntFlag):
     STATE = 4096  # Must be set by vacuum platforms derived from StateVacuumEntity
     START = 8192
     CLEAN_AREA = 16384
+    CLEAN_AREA_PASSES = 32768
 
 
 class VacuumService(StrEnum):
@@ -92,3 +93,4 @@ class VacuumServiceArgument(StrEnum):
     COMMAND = "command"
     FAN_SPEED = "fan_speed"
     PARAMS = "params"
+    PASSES = "passes"
