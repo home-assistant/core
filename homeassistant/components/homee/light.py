@@ -9,6 +9,7 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
+    ATTR_XY_COLOR,
     ColorMode,
     LightEntity,
 )
@@ -18,6 +19,8 @@ from homeassistant.util.color import (
     brightness_to_value,
     color_hs_to_RGB,
     color_RGB_to_hs,
+    color_RGB_to_xy,
+    color_xy_to_RGB,
     value_to_brightness,
 )
 
@@ -32,6 +35,14 @@ LIGHT_ATTRIBUTES = [
     AttributeType.COLOR_TEMPERATURE,
     AttributeType.DIMMING_LEVEL,
 ]
+
+# The COLOR_MODE attribute follows Zigbee color mode semantics:
+# 0 = hue/saturation, 1 = xy, 2 = color temperature.
+HOMEE_COLOR_MODES = {
+    0: ColorMode.HS,
+    1: ColorMode.XY,
+    2: ColorMode.COLOR_TEMP,
+}
 
 PARALLEL_UPDATES = 0
 
@@ -136,8 +147,8 @@ class HomeeLight(HomeeNodeEntity, LightEntity):
         )
         self._mode_attr: HomeeAttribute | None = light.get(AttributeType.COLOR_MODE)
 
-        self._attr_supported_color_modes = self._get_supported_color_modes()
-        self._attr_color_mode = get_color_mode(self._attr_supported_color_modes)
+        self._supported_color_modes = self._get_supported_color_modes()
+        self._default_color_mode = get_color_mode(self._supported_color_modes)
 
         if self._temp_attr is not None:
             self._attr_min_color_temp_kelvin = int(self._temp_attr.minimum)
@@ -175,10 +186,34 @@ class HomeeLight(HomeeNodeEntity, LightEntity):
 
     @property
     @override
+    def xy_color(self) -> tuple[float, float]:
+        """Return the xy color of the light."""
+        assert self._col_attr is not None
+        red, green, blue = decimal_to_rgb_list(self._col_attr.current_value)
+        return color_RGB_to_xy(red, green, blue)
+
+    @property
+    @override
     def color_temp_kelvin(self) -> int:
         """Return the color temperature of the light."""
         assert self._temp_attr is not None
         return int(self._temp_attr.current_value)
+
+    @property
+    @override
+    def supported_color_modes(self) -> set[ColorMode]:
+        """Return the supported color modes."""
+        return self._supported_color_modes
+
+    @property
+    @override
+    def color_mode(self) -> ColorMode:
+        """Return the color mode of the light."""
+        if self._mode_attr is not None:
+            mode = HOMEE_COLOR_MODES.get(int(self._mode_attr.current_value))
+            if mode in self._supported_color_modes:
+                return mode
+        return self._default_color_mode
 
     @property
     @override
@@ -212,6 +247,13 @@ class HomeeLight(HomeeNodeEntity, LightEntity):
                     self._col_attr,
                     rgb_list_to_decimal(color_hs_to_RGB(*color)),
                 )
+        if ATTR_XY_COLOR in kwargs:
+            color = kwargs[ATTR_XY_COLOR]
+            if self._col_attr is not None:
+                await self.async_set_homee_value(
+                    self._col_attr,
+                    rgb_list_to_decimal(color_xy_to_RGB(*color)),
+                )
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -225,7 +267,7 @@ class HomeeLight(HomeeNodeEntity, LightEntity):
         if self._temp_attr is not None and self._temp_attr.editable:
             color_modes.add(ColorMode.COLOR_TEMP)
         if self._col_attr is not None:
-            color_modes.add(ColorMode.HS)
+            color_modes.update({ColorMode.HS, ColorMode.XY})
 
         # If no other color modes are available, set one of those.
         if len(color_modes) == 0:
