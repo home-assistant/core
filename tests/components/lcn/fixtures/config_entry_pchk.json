@@ -206,6 +206,15 @@
     },
     {
       "address": [0, 7, false],
+      "name": "Sensor_Var2",
+      "domain": "sensor",
+      "domain_data": {
+        "source": "VAR2",
+        "unit_of_measurement": "NATIVE"
+      }
+    },
+    {
+      "address": [0, 7, false],
       "name": "Sensor_Setpoint1",
       "domain": "sensor",
       "domain_data": {

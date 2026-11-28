@@ -215,3 +215,53 @@
     'state': 'unknown',
   })
 # ---
+# name: test_setup_lcn_sensor[sensor.testmodule_sensor_var2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('lcn', 'lcn/config_entry_pchk_json-m000007')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.testmodule_sensor_var2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sensor_Var2',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sensor_Var2',
+    'platform': 'lcn',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'lcn/config_entry_pchk_json-m000007-var2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup_lcn_sensor[sensor.testmodule_sensor_var2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TestModule Sensor_Var2',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.testmodule_sensor_var2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
