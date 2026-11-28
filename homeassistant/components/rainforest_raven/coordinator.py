@@ -1,10 +1,13 @@
 """Data update coordination for Rainforest RAVEn devices."""
 
 import asyncio
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from dataclasses import asdict
 from datetime import timedelta
 import logging
 from typing import Any, override
+from xml.etree.ElementTree import ParseError
 
 from aioraven.data import DeviceInfo as RAVEnDeviceInfo
 from aioraven.device import RAVEnConnectionError
@@ -23,6 +26,20 @@ type RAVEnConfigEntry = ConfigEntry[RAVEnDataCoordinator]
 _LOGGER = logging.getLogger(__name__)
 
 
+def _has_matching_meter_mac(info: Any, meter: bytes, data_type: str) -> bool:
+    """Return whether the response belongs to the requested meter."""
+    if info.meter_mac_id == meter:
+        return True
+
+    _LOGGER.warning(
+        "Ignoring %s response for meter MAC %s while requesting %s",
+        data_type,
+        info.meter_mac_id.hex(),
+        meter.hex(),
+    )
+    return False
+
+
 async def _get_meter_data(
     device: RAVEnSerialDevice, meter: bytes
 ) -> dict[str, dict[str, Any]]:
@@ -31,14 +48,26 @@ async def _get_meter_data(
     sum_info = await device.get_current_summation_delivered(meter=meter)
     demand_info = await device.get_instantaneous_demand(meter=meter)
     price_info = await device.get_current_price(meter=meter)
+    _LOGGER.debug(
+        "RAVEn responses for meter %s: current_summation_delivered=%r, "
+        "instantaneous_demand=%r, current_price=%r",
+        meter.hex(),
+        sum_info,
+        demand_info,
+        price_info,
+    )
 
-    if sum_info and sum_info.meter_mac_id == meter:
+    if sum_info and _has_matching_meter_mac(
+        sum_info, meter, "CurrentSummationDelivered"
+    ):
         data["CurrentSummationDelivered"] = asdict(sum_info)
 
-    if demand_info and demand_info.meter_mac_id == meter:
+    if demand_info and _has_matching_meter_mac(
+        demand_info, meter, "InstantaneousDemand"
+    ):
         data["InstantaneousDemand"] = asdict(demand_info)
 
-    if price_info and price_info.meter_mac_id == meter:
+    if price_info and _has_matching_meter_mac(price_info, meter, "PriceCluster"):
         data["PriceCluster"] = asdict(price_info)
 
     return data
@@ -55,6 +84,10 @@ async def _get_all_data(
         )
 
     network_info = await device.get_network_info()
+    _LOGGER.debug("RAVEn network info response: %r", network_info)
+
+    if network_info is None:
+        raise UpdateFailed("RAVEn did not return network information")
 
     if network_info and network_info.link_strength:
         data["NetworkInfo"] = asdict(network_info)
@@ -78,6 +111,7 @@ class RAVEnDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             name=DOMAIN,
             update_interval=timedelta(seconds=30),
         )
+        self._update_lock = asyncio.Lock()
 
     @property
     def device_mac_address(self) -> str | None:
@@ -106,21 +140,38 @@ class RAVEnDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     @override
     async def async_shutdown(self) -> None:
         """Shutdown the coordinator."""
-        await self._cleanup_device()
-        await super().async_shutdown()
+        async with self._update_lock:
+            await self._cleanup_device()
+            await super().async_shutdown()
+
+    @asynccontextmanager
+    async def async_pause_updates(self) -> AsyncIterator[None]:
+        """Close the device and pause polling while it is used elsewhere."""
+        async with self._update_lock:
+            await self._cleanup_device()
+            yield
 
     @override
     async def _async_update_data(self) -> dict[str, Any]:
-        try:
-            device = await self._get_device()
-            async with asyncio.timeout(5):
-                return await _get_all_data(device, self.config_entry.data[CONF_MAC])
-        except RAVEnConnectionError as err:
-            await self._cleanup_device()
-            raise UpdateFailed(f"RAVEnConnectionError: {err}") from err
-        except TimeoutError:
-            await self._cleanup_device()
-            raise
+        async with self._update_lock:
+            try:
+                device = await self._get_device()
+                async with asyncio.timeout(5):
+                    return await _get_all_data(device, self.config_entry.data[CONF_MAC])
+            except RAVEnConnectionError as err:
+                await self._cleanup_device()
+                if isinstance(err.__cause__, ParseError):
+                    _LOGGER.warning("RAVEn returned malformed XML: %s", err.__cause__)
+                raise UpdateFailed(f"RAVEnConnectionError: {err}") from err
+            except TimeoutError:
+                await self._cleanup_device()
+                raise
+            except OSError as err:
+                await self._cleanup_device()
+                raise UpdateFailed(f"RAVEn communication error: {err}") from err
+            except Exception:
+                await self._cleanup_device()
+                raise
 
     async def _cleanup_device(self) -> None:
         device, self._raven_device = self._raven_device, None

@@ -3,16 +3,28 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
-      "no_devices_found": "No compatible devices found"
+      "device_already_configured": "This RAVEn device is already configured. Reconfigure its existing entry to change its connection.",
+      "unique_id_mismatch": "The connected RAVEn device is not the device that was configured."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_network_endpoint": "Enter an endpoint as socket://host:port",
       "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]"
     },
     "step": {
       "meters": {
         "data": {
           "mac": "Meter MAC addresses"
+        }
+      },
+      "network": {
+        "data": {
+          "network_endpoint": "Network endpoint"
+        }
+      },
+      "reconfigure": {
+        "data": {
+          "device": "[%key:common::config_flow::data::device%]"
         }
       },
       "user": {
