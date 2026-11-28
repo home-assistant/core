@@ -321,7 +321,9 @@ async def _async_migrate_other(
     removed by the next migration; its repair points at deleting it. A
     host collision only skips the colliding router; the remaining
     routers are still transferred. The hub setup is never blocked by
-    one un-migratable entry.
+    one un-migratable entry. Expected core failures become repairs and
+    the migration continues; any other exception is a bug and
+    propagates, aborting the component setup without a repair.
 
     With holding_setup_lock the entry is being set up under the core-held
     setup lock and was never loaded, so it is transferred in place and
@@ -409,8 +411,6 @@ async def _async_migrate_other(
                 translation_placeholders={"host": ", ".join(collision_hosts)},
             )
     except HomeAssistantError:
-        # Only expected core failures become repairs; any other
-        # exception is a bug and must surface.
         _LOGGER.exception(
             "Failed to migrate ubus entry %s to the hub %s",
             entry.entry_id,
