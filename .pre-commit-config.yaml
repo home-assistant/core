@@ -6,7 +6,8 @@ repos:
         args:
           - --fix
       - id: ruff-format
-        files: ^((homeassistant|packages|script|tests)/.+)?[^/]+\.(py|pyi)$
+        types_or: [markdown, python, pyi]
+        files: ^((homeassistant|packages|script|tests)/.+)?[^/]+\.(md|py|pyi)$
   - repo: https://github.com/codespell-project/codespell
     rev: v2.4.3
     hooks:
