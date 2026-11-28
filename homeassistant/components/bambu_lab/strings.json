@@ -26,6 +26,11 @@
     }
   },
   "entity": {
+    "camera": {
+      "chamber": {
+        "name": "Camera"
+      }
+    },
     "light": {
       "chamber_light": {
         "name": "Chamber light"
