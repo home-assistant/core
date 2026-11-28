@@ -1,0 +1,15 @@
+{
+  "domain": "esi_r2d7",
+  "name": "ESI R2D7",
+  "categories": ["blinds_curtains"],
+  "codeowners": ["@davidfi01"],
+  "config_flow": true,
+  "connectivity": ["serial"],
+  "dependencies": ["usb"],
+  "documentation": "https://www.home-assistant.io/integrations/esi_r2d7",
+  "integration_type": "hub",
+  "iot_class": "assumed_state",
+  "loggers": ["esi_r2d7"],
+  "quality_scale": "bronze",
+  "requirements": ["esi-r2d7==0.1.0"]
+}

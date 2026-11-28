@@ -8,6 +8,7 @@ SERIAL_PORT_SELECTOR_INTEGRATIONS = [
     "denon_rs232",
     "dsmr",
     "edl21",
+    "esi_r2d7",
     "flexit",
     "intesis_modbus",
     "kaco_rs485",
