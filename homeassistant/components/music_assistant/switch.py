@@ -16,6 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import MusicAssistantConfigEntry, PlatformHandlers
+from .const import PLAYER_SETTINGS_SCHEMA_VERSION
 from .entity import MusicAssistantEntity, MusicAssistantPlayerOptionEntity
 from .helpers import catch_musicassistant_error
 
@@ -27,8 +28,6 @@ class MusicAssistantQueueSwitchDescription(SwitchEntityDescription):
     is_on_fn: Callable[[PlayerQueue], bool]
     set_fn: Callable[[MusicAssistantClient, str, bool], Awaitable[None]]
 
-
-PLAYER_SETTINGS_SCHEMA_VERSION: Final = 101
 
 QUEUE_SWITCHES: Final = (
     MusicAssistantQueueSwitchDescription(

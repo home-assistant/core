@@ -186,6 +186,9 @@
       "music_surround_level": {
         "name": "Surround level (music)"
       },
+      "queue_playback_speed": {
+        "name": "Playback speed"
+      },
       "sub_crossover": {
         "name": "Subwoofer crossover"
       },
