@@ -8,7 +8,6 @@ from zcc.device import ControlPointDevice
 from homeassistant.components.zimi.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 DEVICE_INFO = {
     "id": "test-device-id",
@@ -76,7 +75,7 @@ async def setup_platform(
     mock_config.add_to_hass(hass)
 
     with patch("homeassistant.components.zimi.PLATFORMS", [platform]):
-        assert await async_setup_component(hass, DOMAIN, {})
+        assert await hass.config_entries.async_setup(mock_config.entry_id)
         await hass.async_block_till_done()
 
     return mock_config
