@@ -191,6 +191,20 @@ def get_platforms(config_entry):
     return []
 
 
+async def _async_executor_job[_T](hass: HomeAssistant, target: Callable[[], _T]) -> _T:
+    """Run a blocking device call, turning network errors into UpdateFailed.
+
+    python-miio lets socket errors escape as a plain OSError. TimeoutError is an
+    OSError too, so it is re-raised to keep the coordinator's timeout log.
+    """
+    try:
+        return await hass.async_add_executor_job(target)
+    except TimeoutError:
+        raise
+    except OSError as ex:
+        raise UpdateFailed(ex) from ex
+
+
 def _async_update_data_default(hass, device):
     async def update():
         """Fetch data from the device using async_add_executor_job."""
@@ -198,7 +212,7 @@ def _async_update_data_default(hass, device):
         async def _async_fetch_data():
             """Fetch data from the device."""
             async with asyncio.timeout(POLLING_TIMEOUT_SEC):
-                state = await hass.async_add_executor_job(device.status)
+                state = await _async_executor_job(hass, device.status)
                 _LOGGER.debug("Got new state: %s", state)
                 return state
 
@@ -287,7 +301,7 @@ def _async_update_data_vacuum(
 
         async def execute_update() -> VacuumCoordinatorData:
             async with asyncio.timeout(POLLING_TIMEOUT_SEC):
-                state = await hass.async_add_executor_job(update)
+                state = await _async_executor_job(hass, update)
                 _LOGGER.debug("Got new vacuum state: %s", state)
                 return state
 

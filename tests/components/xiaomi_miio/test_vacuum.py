@@ -2,6 +2,7 @@
 
 from collections.abc import Generator
 from datetime import datetime, time, timedelta
+import errno
 from unittest import mock
 from unittest.mock import MagicMock, patch
 
@@ -331,8 +332,33 @@ async def test_xiaomi_vacuum_battery_sensor_missing(
     assert state.state == STATE_UNKNOWN
 
 
+@pytest.mark.parametrize(
+    ("side_effect", "message"),
+    [
+        pytest.param(
+            DeviceException("dummy exception"),
+            "Error fetching test_vacuum_cleaner_error data: dummy exception",
+            id="device_exception",
+        ),
+        pytest.param(
+            OSError(errno.ENETUNREACH, "Network is unreachable"),
+            "Error fetching test_vacuum_cleaner_error data: "
+            "[Errno 101] Network is unreachable",
+            id="network_unreachable",
+        ),
+        pytest.param(
+            TimeoutError,
+            "Timeout fetching test_vacuum_cleaner_error data",
+            id="timeout",
+        ),
+    ],
+)
 async def test_xiaomi_exceptions(
-    hass: HomeAssistant, mock_mirobo_is_on: MagicMock
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_mirobo_is_on: MagicMock,
+    side_effect: Exception | type[Exception],
+    message: str,
 ) -> None:
     """Test error logging on exceptions."""
     entity_name = "test_vacuum_cleaner_error"
@@ -349,7 +375,7 @@ async def test_xiaomi_exceptions(
     assert_availability(True)
 
     # Second update causes an exception, which should be logged
-    mock_mirobo_is_on.status.side_effect = DeviceException("dummy exception")
+    mock_mirobo_is_on.status.side_effect = side_effect
     future = dt_util.utcnow() + timedelta(seconds=60)
     async_fire_time_changed(hass, future)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -365,6 +391,8 @@ async def test_xiaomi_exceptions(
 
     assert_availability(False)
     assert mock_mirobo_is_on.status.call_count == 1
+    assert caplog.text.count(message) == 1
+    assert "Unexpected error" not in caplog.text
 
 
 async def test_xiaomi_vacuum_services(
