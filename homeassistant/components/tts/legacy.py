@@ -84,6 +84,7 @@ SCHEMA_SERVICE_SAY = probatio.Schema(
     {
         probatio.Required(TextToSpeechServiceArgument.MESSAGE): cv.string,
         probatio.Optional(TextToSpeechServiceArgument.CACHE): cv.boolean,
+        probatio.Optional(TextToSpeechServiceArgument.PREGENERATE): cv.boolean,
         probatio.Required(CommonServiceArgument.ENTITY_ID): cv.comp_entity_ids,
         probatio.Optional(TextToSpeechServiceArgument.LANGUAGE): cv.string,
         probatio.Optional(TextToSpeechServiceArgument.OPTIONS): dict,
@@ -158,6 +159,9 @@ async def async_setup_legacy(
                         language=service.data.get(TextToSpeechServiceArgument.LANGUAGE),
                         options=service.data.get(TextToSpeechServiceArgument.OPTIONS),
                         cache=service.data.get(TextToSpeechServiceArgument.CACHE),
+                        pregenerate=service.data.get(
+                            TextToSpeechServiceArgument.PREGENERATE
+                        ),
                     ),
                     MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.MUSIC,
                     MediaPlayerServiceArgument.ANNOUNCE: True,
