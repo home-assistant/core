@@ -93,7 +93,8 @@ async def test_discovery_climate_power_controller_opt_out(
     climate_feature_attributes = {
         **climate_attributes,
         ClimateEntityCapabilityAttribute.HVAC_MODES: [HVACMode.HEAT],
-        "supported_features": ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF,
+        "supported_features": ClimateEntityFeature.TURN_ON
+        | ClimateEntityFeature.TURN_OFF,
     }
     hass.states.async_set("climate.default", HVACMode.OFF, climate_attributes)
     hass.states.async_set("climate.opt_out", HVACMode.OFF, climate_attributes)
