@@ -34,6 +34,7 @@ from homeassistant.core import (
     async_noop,
     callback,
     split_entity_id,
+    valid_entity_id,
 )
 from homeassistant.exceptions import TemplateError
 from homeassistant.util import dt as dt_util
@@ -63,6 +64,9 @@ _TRACK_STATE_REPORT_DATA: HassKey[_KeyedEventData[EventStateReportedData]] = Has
 )
 _TRACK_STATE_ADDED_DOMAIN_DATA: HassKey[_KeyedEventData[EventStateChangedData]] = (
     HassKey("track_state_added_domain_data")
+)
+_TRACK_STATE_CHANGE_DOMAIN_DATA: HassKey[_KeyedEventData[EventStateChangedData]] = (
+    HassKey("track_state_change_domain_data")
 )
 _TRACK_STATE_REMOVED_DOMAIN_DATA: HassKey[_KeyedEventData[EventStateChangedData]] = (
     HassKey("track_state_removed_domain_data")
@@ -501,6 +505,39 @@ def _async_dispatch_domain_event(
 
 
 @callback
+def _async_domain_filter(
+    hass: HomeAssistant,
+    callbacks: dict[str, list[HassJob[[Event[EventStateChangedData]], Any]]],
+    event_data: EventStateChangedData,
+) -> bool:
+    """Filter state changes by domain."""
+    return (
+        MATCH_ALL in callbacks
+        or split_entity_id(event_data["entity_id"])[0] in callbacks
+    )
+
+
+_KEYED_TRACK_STATE_CHANGE_DOMAIN = _KeyedEventTracker(
+    key=_TRACK_STATE_CHANGE_DOMAIN_DATA,
+    event_type=EVENT_STATE_CHANGED,
+    dispatcher_callable=_async_dispatch_domain_event,
+    filter_callable=_async_domain_filter,
+)
+
+
+def _async_track_state_change_domain(
+    hass: HomeAssistant,
+    domains: str | Iterable[str],
+    action: Callable[[Event[EventStateChangedData]], Any],
+    job_type: HassJobType | None,
+) -> CALLBACK_TYPE:
+    """Track state change events in domains."""
+    return _async_track_event(
+        _KEYED_TRACK_STATE_CHANGE_DOMAIN, hass, domains, action, job_type
+    )
+
+
+@callback
 def _async_domain_added_filter(
     hass: HomeAssistant,
     callbacks: dict[str, list[HassJob[[Event[EventStateChangedData]], Any]]],
@@ -608,6 +645,8 @@ class _TrackStateChangeFiltered:
             action, f"track state change filtered {track_states}"
         )
         self._listeners: dict[str, Callable[[], None]] = {}
+        self._last_event: Event[EventStateChangedData] | None = None
+        self._event_cleanup_scheduled = False
         self._last_track_states: TrackStates = track_states
 
     @callback
@@ -689,40 +728,53 @@ class _TrackStateChangeFiltered:
         self._listeners.pop(listener_name)()
 
     @callback
-    def _setup_entities_listener(self, domains: set[str], entities: set[str]) -> None:
-        if domains:
-            entities = entities.copy()
-            entities.update(self.hass.states.async_entity_ids(domains))
+    def _async_process_event(self, event: Event[EventStateChangedData]) -> None:
+        """Process a state change event once."""
+        if event is self._last_event:
+            return
 
-        # Entities has changed to none
+        self._last_event = event
+        if not self._event_cleanup_scheduled:
+            self._event_cleanup_scheduled = True
+            self.hass.loop.call_soon(self._async_clear_event)
+        self.hass.async_run_hass_job(self._action_as_hassjob, event)
+
+    @callback
+    def _async_clear_event(self) -> None:
+        """Clear the state change event."""
+        self._last_event = None
+        self._event_cleanup_scheduled = False
+
+    @callback
+    def _setup_entities_listener(self, domains: set[str], entities: set[str]) -> None:
+        if domains and entities:
+            entities = {
+                entity_id
+                for entity_id in entities
+                if not valid_entity_id(entity_id)
+                or entity_id.partition(".")[0] not in domains
+            }
+
         if not entities:
             return
 
         self._listeners[_ENTITIES_LISTENER] = _async_track_state_change_event(
-            self.hass, entities, self._action, self._action_as_hassjob.job_type
+            self.hass, entities, self._async_process_event, HassJobType.Callback
         )
-
-    @callback
-    def _state_added(self, event: Event[EventStateChangedData]) -> None:
-        self._cancel_listener(_ENTITIES_LISTENER)
-        self._setup_entities_listener(
-            self._last_track_states.domains, self._last_track_states.entities
-        )
-        self.hass.async_run_hass_job(self._action_as_hassjob, event)
 
     @callback
     def _setup_domains_listener(self, domains: set[str]) -> None:
         if not domains:
             return
 
-        self._listeners[_DOMAINS_LISTENER] = _async_track_state_added_domain(
-            self.hass, domains, self._state_added, HassJobType.Callback
+        self._listeners[_DOMAINS_LISTENER] = _async_track_state_change_domain(
+            self.hass, domains, self._async_process_event, HassJobType.Callback
         )
 
     @callback
     def _setup_all_listener(self) -> None:
         self._listeners[_ALL_LISTENER] = self.hass.bus.async_listen(
-            EVENT_STATE_CHANGED, self._action
+            EVENT_STATE_CHANGED, self._async_process_event
         )
 
 
