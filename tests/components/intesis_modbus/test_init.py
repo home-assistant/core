@@ -13,6 +13,8 @@ from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
+from . import INITIALISING_REGISTERS
+
 
 async def test_setup_and_unload(
     hass: HomeAssistant,
@@ -46,7 +48,13 @@ async def test_setup_and_unload(
     assert init_integration.state is ConfigEntryState.NOT_LOADED
 
 
-@pytest.mark.parametrize("registers", [{11: 65535}])
+@pytest.mark.parametrize(
+    "registers",
+    [
+        pytest.param({11: 65535}, id="unreachable"),
+        pytest.param(INITIALISING_REGISTERS, id="gateway_initialising"),
+    ],
+)
 async def test_setup_with_unreachable_unit(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,

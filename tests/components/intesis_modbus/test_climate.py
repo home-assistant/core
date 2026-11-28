@@ -48,7 +48,7 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from . import INIT_VALUE, INITIALISING_REGISTERS
+from . import INIT_VALUE, INITIALISING_REGISTERS, SINGLE_UNIT_REGISTERS
 
 ENTITY_ID = "climate.inmbsmhi001r000_air_conditioner"
 
@@ -358,26 +358,32 @@ async def test_manual_update_polls_the_gateway(
 
 
 @pytest.mark.parametrize("registers", [INITIALISING_REGISTERS])
-async def test_initialising_gateway_climate_unknown(
-    hass: HomeAssistant, init_integration: MockConfigEntry
+async def test_initialising_gateway_climate_unavailable_until_started(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    init_integration: MockConfigEntry,
+    mock_connection: MockModbusConnection,
 ) -> None:
-    """While the gateway initialises the entity is unknown, not 3276.8 °C."""
-    state = hass.states.get(ENTITY_ID)
-    assert state is not None
-    assert state.state == STATE_UNKNOWN
-    assert state.attributes[ATTR_CURRENT_TEMPERATURE] is None
-    assert state.attributes[ATTR_TEMPERATURE] is None
-    assert state.attributes[ATTR_MIN_TEMP] == 18
-    assert state.attributes[ATTR_MAX_TEMP] == 30
-    assert state.attributes[ATTR_FAN_MODE] is None
-    assert state.attributes[ATTR_SWING_MODE] is None
+    """The placeholders a starting gateway reads are not shown as a state."""
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+    unit = mock_connection.for_unit(1)
+    for address, value in SINGLE_UNIT_REGISTERS.items():
+        unit.holding[address] = value
+    await _poll(hass, freezer)
+    assert hass.states.get(ENTITY_ID).state == HVACMode.HEAT
 
 
-@pytest.mark.parametrize("registers", [{1: INIT_VALUE}])
-async def test_unknown_mode_while_on_is_unknown(
+@pytest.mark.parametrize(
+    "registers",
+    [
+        pytest.param({0: INIT_VALUE}, id="no_power"),
+        pytest.param({1: INIT_VALUE}, id="no_mode_while_on"),
+    ],
+)
+async def test_register_without_a_value_is_unknown(
     hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:
-    """A running unit whose mode register holds no value yet has no state."""
+    """A unit whose power or mode register holds no value yet has no state."""
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.state == STATE_UNKNOWN
@@ -524,16 +530,24 @@ async def test_unreachable_indoor_unit_is_unavailable_then_recovers(
     assert hass.states.get(ENTITY_ID).state == HVACMode.HEAT
 
 
+@pytest.mark.parametrize(
+    "error_code",
+    [
+        pytest.param(65535, id="unreachable"),
+        pytest.param(65532, id="gateway_initialising"),
+    ],
+)
 async def test_unreachable_indoor_unit_is_logged_once(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
     init_integration: MockConfigEntry,
     mock_connection: MockModbusConnection,
+    error_code: int,
 ) -> None:
     """Losing the air conditioner and getting it back are each logged once."""
     unit = mock_connection.for_unit(1)
-    unit.holding[11] = 65535
+    unit.holding[11] = error_code
     await _poll(hass, freezer)
     await _poll(hass, freezer)
     assert caplog.text.count("INMBSMHI001R000 air conditioner is unavailable") == 1

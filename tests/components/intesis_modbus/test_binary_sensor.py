@@ -14,13 +14,7 @@ from pytest_homeassistant.common import (
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.intesis_modbus.coordinator import SCAN_INTERVAL
-from homeassistant.const import (
-    STATE_OFF,
-    STATE_ON,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -112,8 +106,8 @@ async def test_initialising_gateway_reports_no_alarm(
     mock_connection: MockModbusConnection,
 ) -> None:
     """The alarm the gateway reads while it starts up is not shown as a problem."""
-    assert hass.states.get(ALARM).state == STATE_UNKNOWN
-    assert hass.states.get(WINDOW).state == STATE_OFF
+    assert hass.states.get(ALARM).state == STATE_UNAVAILABLE
+    assert hass.states.get(WINDOW).state == STATE_UNAVAILABLE
     unit = mock_connection.for_unit(1)
     for address, value in SINGLE_UNIT_REGISTERS.items():
         unit.holding[address] = value

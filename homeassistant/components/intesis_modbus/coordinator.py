@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import override
+from typing import Final, override
 
 from intesis_gw_modbus import ErrorState, IntesisSingleUnitGateway, WrongGatewayError
 from modbus_connection import ModbusError
@@ -25,6 +25,13 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=15)
+
+# What the gateway reports when it has nothing to say about the air conditioner.
+# While it starts up, it reads placeholders that look like a state of the unit.
+_UNREACHABLE: Final = {
+    ErrorState.COMMUNICATION_ERROR: "unit_unreachable",
+    ErrorState.INITIALISING: "gateway_initialising",
+}
 
 type IntesisConfigEntry = ConfigEntry[IntesisData]
 
@@ -109,7 +116,8 @@ class IntesisUnitCoordinator(DataUpdateCoordinator[UpdateReport]):
     """Follow the air conditioner behind a gateway.
 
     The gateway coordinator does the polling. This one passes its report on to
-    the entities of the air conditioner, unless the gateway cannot reach it.
+    the entities of the air conditioner, unless the gateway cannot reach it or
+    is still starting up.
     """
 
     config_entry: IntesisConfigEntry
@@ -165,8 +173,8 @@ class IntesisUnitCoordinator(DataUpdateCoordinator[UpdateReport]):
                 translation_domain=DOMAIN, translation_key="gateway_unavailable"
             ) from self.gateway.last_exception
         error = self.device.error
-        if error is not None and error.state is ErrorState.COMMUNICATION_ERROR:
+        if error is not None and error.state in _UNREACHABLE:
             raise UpdateFailedUnreachable(
-                translation_domain=DOMAIN, translation_key="unit_unreachable"
+                translation_domain=DOMAIN, translation_key=_UNREACHABLE[error.state]
             )
         return self.gateway.data
