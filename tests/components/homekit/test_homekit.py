@@ -1,6 +1,7 @@
 """Tests for the HomeKit component."""
 
 import asyncio
+from collections.abc import Mapping
 from typing import Any
 from unittest.mock import ANY, AsyncMock, MagicMock, Mock, patch
 from uuid import uuid1
@@ -1150,6 +1151,10 @@ TV_FEATURES_OFF = (
     | MediaPlayerEntityFeature.SELECT_SOURCE
 )
 TV_FEATURES_ON = TV_FEATURES_OFF & ~MediaPlayerEntityFeature.TURN_ON
+type TVAttributes = Mapping[
+    str, MediaPlayerDeviceClass | MediaPlayerEntityFeature | list[str]
+]
+
 TV_ATTRS_OFF = {
     ATTR_DEVICE_CLASS: MediaPlayerDeviceClass.TV,
     EntityStateAttribute.SUPPORTED_FEATURES: TV_FEATURES_OFF,
@@ -1219,10 +1224,10 @@ TV_ATTRS_ON = {
 async def test_homekit_reload_tv_accessory_on_attr_change(
     hass: HomeAssistant,
     initial_state: str,
-    initial_attrs: dict[str, Any],
+    initial_attrs: TVAttributes,
     initial_sources: list[str],
     initial_support_select_source: bool,
-    events: list[tuple[str, dict[str, Any]]],
+    events: list[tuple[str, TVAttributes]],
     expected_sources: list[str],
 ) -> None:
     """Rebuild a TV accessory when newly reported inputs change its structure."""

@@ -496,7 +496,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
             **kwargs,
         )
         self._reload_on_change_attrs: list[str] = list(RELOAD_ON_CHANGE_ATTRS)
-        self._reload_attr_baseline: dict[str, Any] | None = None
+        self._reload_attr_baseline: dict[str, object] | None = None
         self._creation_state: State | None = None
         self._pending_reload: asyncio.Handle | None = None
         self.config = config or {}
