@@ -10,10 +10,9 @@ from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
-from homeassistant.components.ping.const import CONF_IMPORTED_BY, DOMAIN
+from homeassistant.components.ping.const import CONF_IMPORTED_BY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
 
 
 @pytest.mark.usefixtures("setup_integration")
@@ -55,7 +54,7 @@ async def test_disabled_after_import(
         config_entry, data={CONF_IMPORTED_BY: "device_tracker"}
     )
 
-    assert await async_setup_component(hass, DOMAIN, {})
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     # check if entity is disabled after import by device tracker
