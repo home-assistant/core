@@ -40,6 +40,7 @@ from homeassistant.util import dt as dt_util
 from . import setup_integration
 from .const import TEST_MOWER_ID
 
+ADDITIONAL_CALENDAR_ENTITIES = 1
 ADDITIONAL_NUMBER_ENTITIES = 1
 ADDITIONAL_SENSOR_ENTITIES = 2
 ADDITIONAL_SWITCH_ENTITIES = 1
@@ -498,6 +499,7 @@ async def test_add_and_remove_work_area(
     assert (
         current_entites_after_addition
         == current_entites_start
+        + ADDITIONAL_CALENDAR_ENTITIES
         + ADDITIONAL_NUMBER_ENTITIES
         + ADDITIONAL_SENSOR_ENTITIES
         + ADDITIONAL_SWITCH_ENTITIES
@@ -527,6 +529,7 @@ async def test_add_and_remove_work_area(
     assert (
         current_entites_after_deletion
         == current_entites_start
+        - ADDITIONAL_CALENDAR_ENTITIES
         - ADDITIONAL_SWITCH_ENTITIES
         - ADDITIONAL_NUMBER_ENTITIES
         - ADDITIONAL_SENSOR_ENTITIES
