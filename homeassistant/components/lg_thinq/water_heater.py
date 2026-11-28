@@ -7,7 +7,6 @@ from thinqconnect import DeviceType
 from thinqconnect.integration import ExtendedProperty
 
 from homeassistant.components.water_heater import (
-    ATTR_OPERATION_MODE,
     STATE_ECO,
     STATE_HEAT_PUMP,
     STATE_OFF,
@@ -15,8 +14,9 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntity,
     WaterHeaterEntityDescription,
     WaterHeaterEntityFeature,
+    WaterHeaterServiceArgument,
 )
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -142,13 +142,15 @@ class ThinQWaterHeaterEntity(ThinQEntity, WaterHeaterEntity):
             self.property_id,
             kwargs,
         )
-        if (operation_mode := kwargs.get(ATTR_OPERATION_MODE)) is not None:
+        if (
+            operation_mode := kwargs.get(WaterHeaterServiceArgument.OPERATION_MODE)
+        ) is not None:
             await self.async_set_operation_mode(str(operation_mode))
             if operation_mode == STATE_OFF:
                 return
 
         if (
-            temperature := kwargs.get(ATTR_TEMPERATURE)
+            temperature := kwargs.get(WaterHeaterServiceArgument.TEMPERATURE)
         ) is not None and temperature != self.native_target_temperature:
             await self.async_call_api(
                 self.coordinator.api.async_set_target_temperature(
