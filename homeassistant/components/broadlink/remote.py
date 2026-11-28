@@ -21,21 +21,15 @@ import probatio
 
 from homeassistant.components import persistent_notification
 from homeassistant.components.remote import (
-    ATTR_ALTERNATIVE,
-    ATTR_COMMAND_TYPE,
-    ATTR_DELAY_SECS,
-    ATTR_DEVICE,
-    ATTR_NUM_REPEATS,
     DEFAULT_DELAY_SECS,
     DOMAIN as RM_DOMAIN,
-    SERVICE_DELETE_COMMAND,
-    SERVICE_LEARN_COMMAND,
-    SERVICE_SEND_COMMAND,
     RemoteEntity,
     RemoteEntityFeature,
+    RemoteService,
+    RemoteServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_COMMAND, STATE_OFF
+from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
@@ -65,7 +59,7 @@ FLAG_SAVE_DELAY = 15
 
 COMMAND_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_COMMAND): probatio.All(
+        probatio.Required(RemoteServiceArgument.COMMAND): probatio.All(
             probatio.EnsureList(),
             [probatio.All(cv.string, probatio.NonEmpty())],
             probatio.NonEmpty(),
@@ -76,25 +70,33 @@ COMMAND_SCHEMA = probatio.Schema(
 
 SERVICE_SEND_SCHEMA = COMMAND_SCHEMA.extend(
     {
-        probatio.Optional(ATTR_DEVICE): probatio.All(cv.string, probatio.NonEmpty()),
-        probatio.Optional(ATTR_DELAY_SECS, default=DEFAULT_DELAY_SECS): probatio.Coerce(
-            float
+        probatio.Optional(RemoteServiceArgument.DEVICE): probatio.All(
+            cv.string, probatio.NonEmpty()
         ),
+        probatio.Optional(
+            RemoteServiceArgument.DELAY_SECS, default=DEFAULT_DELAY_SECS
+        ): probatio.Coerce(float),
     }
 )
 
 SERVICE_LEARN_SCHEMA = COMMAND_SCHEMA.extend(
     {
-        probatio.Required(ATTR_DEVICE): probatio.All(cv.string, probatio.NonEmpty()),
-        probatio.Optional(ATTR_COMMAND_TYPE, default=COMMAND_TYPE_IR): probatio.In(
-            COMMAND_TYPES
+        probatio.Required(RemoteServiceArgument.DEVICE): probatio.All(
+            cv.string, probatio.NonEmpty()
         ),
-        probatio.Optional(ATTR_ALTERNATIVE, default=False): cv.boolean,
+        probatio.Optional(
+            RemoteServiceArgument.COMMAND_TYPE, default=COMMAND_TYPE_IR
+        ): probatio.In(COMMAND_TYPES),
+        probatio.Optional(RemoteServiceArgument.ALTERNATIVE, default=False): cv.boolean,
     }
 )
 
 SERVICE_DELETE_SCHEMA = COMMAND_SCHEMA.extend(
-    {probatio.Required(ATTR_DEVICE): probatio.All(cv.string, probatio.NonEmpty())}
+    {
+        probatio.Required(RemoteServiceArgument.DEVICE): probatio.All(
+            cv.string, probatio.NonEmpty()
+        )
+    }
 )
 
 
@@ -218,13 +220,13 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
     @override
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a list of commands to a device."""
-        kwargs[ATTR_COMMAND] = command
+        kwargs[RemoteServiceArgument.COMMAND] = command
         kwargs = SERVICE_SEND_SCHEMA(kwargs)
-        commands = kwargs[ATTR_COMMAND]
-        subdevice = kwargs.get(ATTR_DEVICE)
-        repeat = kwargs[ATTR_NUM_REPEATS]
-        delay = kwargs[ATTR_DELAY_SECS]
-        service = f"{RM_DOMAIN}.{SERVICE_SEND_COMMAND}"
+        commands = kwargs[RemoteServiceArgument.COMMAND]
+        subdevice = kwargs.get(RemoteServiceArgument.DEVICE)
+        repeat = kwargs[RemoteServiceArgument.NUM_REPEATS]
+        delay = kwargs[RemoteServiceArgument.DELAY_SECS]
+        service = f"{RM_DOMAIN}.{RemoteService.SEND_COMMAND}"
         device = self._device
 
         if not self._attr_is_on:
@@ -289,11 +291,11 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
     async def async_learn_command(self, **kwargs: Any) -> None:
         """Learn a list of commands from a remote."""
         kwargs = SERVICE_LEARN_SCHEMA(kwargs)
-        commands = kwargs[ATTR_COMMAND]
-        command_type = kwargs[ATTR_COMMAND_TYPE]
-        subdevice = kwargs[ATTR_DEVICE]
-        toggle = kwargs[ATTR_ALTERNATIVE]
-        service = f"{RM_DOMAIN}.{SERVICE_LEARN_COMMAND}"
+        commands = kwargs[RemoteServiceArgument.COMMAND]
+        command_type = kwargs[RemoteServiceArgument.COMMAND_TYPE]
+        subdevice = kwargs[RemoteServiceArgument.DEVICE]
+        toggle = kwargs[RemoteServiceArgument.ALTERNATIVE]
+        service = f"{RM_DOMAIN}.{RemoteService.LEARN_COMMAND}"
         device = self._device
 
         if not self._attr_is_on:
@@ -500,9 +502,9 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
     async def async_delete_command(self, **kwargs: Any) -> None:
         """Delete a list of commands from a remote."""
         kwargs = SERVICE_DELETE_SCHEMA(kwargs)
-        commands = kwargs[ATTR_COMMAND]
-        subdevice = kwargs[ATTR_DEVICE]
-        service = f"{RM_DOMAIN}.{SERVICE_DELETE_COMMAND}"
+        commands = kwargs[RemoteServiceArgument.COMMAND]
+        subdevice = kwargs[RemoteServiceArgument.DEVICE]
+        service = f"{RM_DOMAIN}.{RemoteService.DELETE_COMMAND}"
 
         if not self._attr_is_on:
             _LOGGER.warning(
