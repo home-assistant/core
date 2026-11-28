@@ -17,6 +17,7 @@ from reolink_aio.exceptions import (
     ReolinkError,
 )
 
+from homeassistant.components.dhcp import async_discovered_service_info
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
@@ -62,6 +63,9 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_PROTOCOL = "rtsp"
 DEFAULT_OPTIONS = {CONF_PROTOCOL: DEFAULT_PROTOCOL}
 API_STARTUP_TIME = 5
+# Wait up to 3 minutes for a camera to answer at a new IP reported by DHCP.
+DHCP_NEW_IP_ATTEMPTS = 18
+DHCP_NEW_IP_RETRY_INTERVAL = 10
 
 
 class ReolinkOptionsFlowHandler(OptionsFlowWithReload):
@@ -163,6 +167,7 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle discovery via dhcp."""
         mac_address = format_mac(discovery_info.macaddress)
+        new_ip = discovery_info.ip
         existing_entry = await self.async_set_unique_id(mac_address)
         if existing_entry and CONF_HOST not in existing_entry.data:
             _LOGGER.debug(
@@ -179,56 +184,105 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
             and existing_entry.data[CONF_HOST] != discovery_info.ip
         ):
             if is_connected(self.hass, existing_entry):
-                _LOGGER.debug(
-                    "Reolink DHCP reported new IP '%s', "
-                    "but connection to camera seems to be okay, so sticking to IP '%s'",
-                    discovery_info.ip,
-                    existing_entry.data[CONF_HOST],
-                )
-                raise AbortFlow("already_configured")
+                # The last poll may predate a move to the new IP (e.g. a
+                # reboot onto a new DHCP lease), so check the old IP live.
+                try:
+                    await existing_entry.runtime_data.host.api.get_state("GetLocalLink")
+                except ReolinkError as err:
+                    _LOGGER.debug(
+                        "Reolink DHCP reported new IP '%s' and old IP '%s' "
+                        "does not respond: '%s', checking the new IP",
+                        discovery_info.ip,
+                        existing_entry.data[CONF_HOST],
+                        err,
+                    )
+                else:
+                    _LOGGER.debug(
+                        "Reolink DHCP reported new IP '%s', "
+                        "but connection to camera seems to be okay, "
+                        "so sticking to IP '%s'",
+                        discovery_info.ip,
+                        existing_entry.data[CONF_HOST],
+                    )
+                    raise AbortFlow("already_configured")
 
             # check if the camera is reachable at the new IP
             new_config = dict(existing_entry.data)
-            new_config[CONF_HOST] = discovery_info.ip
+            new_config[CONF_HOST] = new_ip
             host = ReolinkHost(self.hass, new_config, existing_entry.options)
-            try:
-                await host.api.get_state("GetLocalLink")
-                await host.api.logout()
-            except ReolinkError as err:
-                _LOGGER.debug(
-                    "Reolink DHCP reported new IP '%s', "
-                    "but got error '%s' trying to connect, so sticking to IP '%s'",
-                    discovery_info.ip,
-                    err,
-                    existing_entry.data[CONF_HOST],
-                )
-                raise AbortFlow("already_configured") from err
+            # A rebooting camera requests its lease before its API is up, and
+            # DHCP discovery does not report the same address again, so retry.
+            for attempt in range(DHCP_NEW_IP_ATTEMPTS):
+                try:
+                    await host.api.get_state("GetLocalLink")
+                    await host.api.logout()
+                except ReolinkError as err:
+                    if attempt + 1 < DHCP_NEW_IP_ATTEMPTS:
+                        _LOGGER.debug(
+                            "Reolink DHCP reported new IP '%s', "
+                            "but got error '%s' trying to connect, retrying",
+                            new_ip,
+                            err,
+                        )
+                        await asyncio.sleep(DHCP_NEW_IP_RETRY_INTERVAL)
+                        # DHCP discovery of a newer IP for this MAC aborts
+                        # while this flow is in progress, so follow it here.
+                        latest_ip = next(
+                            (
+                                info.ip
+                                for info in async_discovered_service_info(self.hass)
+                                if format_mac(info.macaddress) == mac_address
+                            ),
+                            new_ip,
+                        )
+                        if latest_ip != new_ip:
+                            _LOGGER.debug(
+                                "Reolink DHCP reported newer IP '%s', "
+                                "checking it instead of IP '%s'",
+                                latest_ip,
+                                new_ip,
+                            )
+                            new_ip = new_config[CONF_HOST] = latest_ip
+                            host = ReolinkHost(
+                                self.hass, new_config, existing_entry.options
+                            )
+                        continue
+                    _LOGGER.debug(
+                        "Reolink DHCP reported new IP '%s', "
+                        "but got error '%s' trying to connect, "
+                        "so sticking to IP '%s'",
+                        new_ip,
+                        err,
+                        existing_entry.data[CONF_HOST],
+                    )
+                    raise AbortFlow("already_configured") from err
+                break
             if format_mac(host.api.mac_address) != mac_address:
                 _LOGGER.debug(
                     "Reolink mac address '%s' at new IP '%s' from DHCP, "
                     "does not match mac '%s' of config entry, so sticking to IP '%s'",
                     format_mac(host.api.mac_address),
-                    discovery_info.ip,
+                    new_ip,
                     mac_address,
                     existing_entry.data[CONF_HOST],
                 )
                 raise AbortFlow("already_configured")
 
-        if existing_entry and existing_entry.data[CONF_HOST] != discovery_info.ip:
+        if existing_entry and existing_entry.data[CONF_HOST] != new_ip:
             _LOGGER.debug(
                 "Reolink DHCP reported new IP '%s', updating from old IP '%s'",
-                discovery_info.ip,
+                new_ip,
                 existing_entry.data[CONF_HOST],
             )
 
-        self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
+        self._abort_if_unique_id_configured(updates={CONF_HOST: new_ip})
 
         self.context["title_placeholders"] = {
-            "ip_address": discovery_info.ip,
+            "ip_address": new_ip,
             "hostname": discovery_info.hostname,
         }
 
-        self._host = discovery_info.ip
+        self._host = new_ip
         return await self.async_step_user()
 
     async def async_step_privacy(
