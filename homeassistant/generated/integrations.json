@@ -11939,6 +11939,18 @@
       "iot_class": "local_push",
       "single_config_entry": true
     },
+    "powershades": {
+      "name": "PowerShades Blinds",
+      "integration_type": "device",
+      "categories": [
+        "blinds_curtains"
+      ],
+      "connectivity": [
+        "network"
+      ],
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "prana": {
       "name": "Prana",
       "integration_type": "device",

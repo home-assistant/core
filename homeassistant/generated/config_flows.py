@@ -669,6 +669,7 @@ FLOWS = {
         "powerfox",
         "powerfox_local",
         "powersensor_au",
+        "powershades",
         "powerwall",
         "prana",
         "private_ble_device",
