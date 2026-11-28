@@ -21,6 +21,8 @@ from .types import TraneConfigEntry
 
 PARALLEL_UPDATES = 0
 
+ATTR_DEADBAND = "deadband_fahrenheit"
+
 HA_TO_ZONE_MODE = {
     HVACMode.OFF: ZoneMode.OFF,
     HVACMode.HEAT: ZoneMode.HEAT,
@@ -177,6 +179,15 @@ class TraneClimateEntity(TraneZoneEntity, ClimateEntity):
     def fan_mode(self) -> str:
         """Return the current fan mode."""
         return FAN_MODE_TO_HA.get(self._conn.state.fan_mode, "auto")
+
+    @property
+    @override
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return the dead band reported by the thermostat."""
+        attributes = dict(super().extra_state_attributes or {})
+        if deadband := self._zone.deadband:
+            attributes[ATTR_DEADBAND] = float(deadband)
+        return attributes
 
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:

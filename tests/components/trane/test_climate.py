@@ -14,6 +14,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
+from homeassistant.components.trane.climate import ATTR_DEADBAND
 from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -330,3 +331,37 @@ async def test_turn_off(
 
     mock_connection.set_temperature_setpoint.assert_not_called()
     mock_connection.set_zone_mode.assert_called_once_with("1", ZoneMode.OFF)
+
+
+async def test_deadband_attribute(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_connection: MagicMock,
+) -> None:
+    """Test the dead band reported by the thermostat is exposed as an attribute."""
+    mock_connection.state.zones["1"].deadband = "5"
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("climate.living_room_living_room")
+    assert state is not None
+    assert state.attributes[ATTR_DEADBAND] == 5.0
+
+
+async def test_deadband_attribute_before_first_report(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_connection: MagicMock,
+) -> None:
+    """Test the dead band attribute is absent until the thermostat reports one."""
+    mock_connection.state.zones["1"].deadband = ""
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("climate.living_room_living_room")
+    assert state is not None
+    assert ATTR_DEADBAND not in state.attributes
