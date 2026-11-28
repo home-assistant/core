@@ -10,6 +10,7 @@ from actron_neo_api import (
     ActronAirAuthError,
     ActronAirPeripheral,
     ActronAirStatus,
+    ActronAirZone,
 )
 from actron_neo_api.models.system import ActronAirSystemInfo
 from actron_neo_api.rt import RealtimeConnectionEvent, RealtimeConnectionState
@@ -76,6 +77,24 @@ class ActronAirSystemCoordinator(DataUpdateCoordinator[ActronAirStatus]):
         self.status = self.api.state_manager.get_status(self.serial_number)
         self.peripherals: dict[str, ActronAirPeripheral] = {}
         self._missed_updates = False
+
+    def get_new_zones(
+        self, added_zone_ids: set[int]
+    ) -> tuple[set[int], dict[int, ActronAirZone]]:
+        """Return current zones and the subset not previously added."""
+        zones = {
+            zone.zone_id: zone for zone in self.data.remote_zone_info if zone.exists
+        }
+        return set(zones) - added_zone_ids, zones
+
+    def get_new_peripherals(
+        self, added_peripheral_serials: set[str]
+    ) -> tuple[set[str], dict[str, ActronAirPeripheral]]:
+        """Return current peripherals and the subset not previously added."""
+        peripherals = {
+            peripheral.serial_number: peripheral for peripheral in self.data.peripherals
+        }
+        return set(peripherals) - added_peripheral_serials, peripherals
 
     @override
     async def _async_setup(self) -> None:
