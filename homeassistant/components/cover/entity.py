@@ -192,8 +192,8 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return the tilt position where the slats are open.
 
         open_cover_tilt moves the slats to this position. None means the
-        default: the position where the angle is 0 degrees if the angles
-        are set, 100 otherwise.
+        default: the position where the angle is 0 degrees, rounded and
+        clamped to 0-100, if the angles are set, 100 otherwise.
         """
         return self._attr_open_tilt_position
 
@@ -202,8 +202,8 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return the tilt positions where the slats are closed: 0, 100 or both.
 
         close_cover_tilt moves the slats to one of them. None means the
-        default: the ends where the slats lie flat if the angles are set,
-        0 otherwise.
+        default: the ends where the slats lie the flattest if the angles are
+        set, otherwise 0, or 100 if the open position is 0.
         """
         return self._attr_closed_tilt_positions
 
@@ -258,7 +258,12 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         open_position = self._resolved_open_tilt_position()
         if (closed := self.closed_tilt_positions) is not None:
             positions = list(closed)
-            if positions not in ([0], [100], [0, 100], [100, 0]):
+            if any(type(p) is not int for p in positions) or positions not in (
+                [0],
+                [100],
+                [0, 100],
+                [100, 0],
+            ):
                 raise ValueError(
                     f"Entity {self.entity_id} ({type(self)}) has invalid closed tilt "
                     f"positions {closed}, expected 0, 100 or both"
