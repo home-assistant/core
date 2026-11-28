@@ -1,6 +1,6 @@
 """Support for BLUETTI power stations over Modbus."""
 
-from bluetti_modbus_lib import Balco260
+from bluetti_modbus_lib import AGGREGATE_SLAVE_ID, Balco260
 from modbus_connection import ModbusError, ModbusTcpParams
 
 from homeassistant.components.modbus import async_get_unit
@@ -25,7 +25,7 @@ from .coordinator import (
     BluettiModbusDataUpdateCoordinator,
     BluettiModbusRuntimeData,
 )
-from .device import bms_device, restricted_device
+from .device import bms_device, pack_summary, restricted_device
 from .entity import bluetti_modbus_device_info
 
 PLATFORMS = [Platform.NUMBER, Platform.SELECT, Platform.SENSOR]
@@ -38,6 +38,7 @@ async def async_setup_entry(
     params = ModbusTcpParams(host=entry.data[CONF_HOST], port=entry.data[CONF_PORT])
     try:
         unit = async_get_unit(hass, entry, params, entry.data[CONF_UNIT_ID])
+        summary_unit = async_get_unit(hass, entry, params, AGGREGATE_SLAVE_ID)
     except HomeAssistantError as err:
         # The device is already in use over different link settings, which
         # one shared connection cannot honour.
@@ -49,7 +50,12 @@ async def async_setup_entry(
 
     device = restricted_device(unit)
     coordinator = BluettiModbusDataUpdateCoordinator(
-        hass, entry, device, name="readings", update_interval=SCAN_INTERVAL
+        hass,
+        entry,
+        device,
+        name="readings",
+        update_interval=SCAN_INTERVAL,
+        pack_summary=pack_summary(summary_unit),
     )
     await coordinator.async_config_entry_first_refresh()
     settings_device = Balco260(unit)

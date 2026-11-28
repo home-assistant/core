@@ -33,9 +33,11 @@ class BluettiModbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         *,
         name: str,
         update_interval: timedelta,
+        pack_summary: Balco260 | None = None,
     ) -> None:
         """Initialize the coordinator."""
         self.device = device
+        self._pack_summary = pack_summary
         super().__init__(
             hass,
             _LOGGER,
@@ -51,6 +53,8 @@ class BluettiModbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # busy after its retry, or a failed teardown of the link, through unwrapped.
         try:
             await self.device.async_update_with_retry()
+            if self._pack_summary is not None:
+                await self._pack_summary.async_update_with_retry()
         except ModbusError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -65,7 +69,9 @@ class BluettiModbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_domain=DOMAIN,
                 translation_key="wrong_device",
             )
-        return values
+        if self._pack_summary is None:
+            return values
+        return values | self._pack_summary.values
 
 
 @dataclass(kw_only=True)
