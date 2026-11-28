@@ -387,6 +387,12 @@
     "server_too_old": {
       "message": "This action requires a newer Music Assistant server version."
     },
+    "sleep_timer_duration_not_allowed": {
+      "message": "A duration can only be set for the duration mode."
+    },
+    "sleep_timer_duration_required": {
+      "message": "The duration mode requires a duration."
+    },
     "tts_entity_not_available": {
       "message": "The text-to-speech entity {entity_id} is not available."
     }
@@ -449,9 +455,26 @@
         "year": "Year",
         "year_desc": "Year (desc)"
       }
+    },
+    "sleep_timer_mode": {
+      "options": {
+        "duration": "After a duration",
+        "end_of_chapter": "End of the current chapter",
+        "end_of_item": "End of the current item"
+      }
     }
   },
   "services": {
+    "clear_sleep_timer": {
+      "description": "Clears the sleep timer of a Music Assistant player.",
+      "fields": {
+        "username": {
+          "description": "[%key:component::music_assistant::services::play_queue_item::fields::username::description%]",
+          "name": "[%key:component::music_assistant::services::get_library::fields::username::name%]"
+        }
+      },
+      "name": "Clear sleep timer"
+    },
     "get_library": {
       "description": "Retrieves items from a Music Assistant library.",
       "fields": {
@@ -649,6 +672,24 @@
           "name": "Search options"
         }
       }
+    },
+    "set_sleep_timer": {
+      "description": "Stops playback on a Music Assistant player after a duration, or at the end of the current item or chapter.",
+      "fields": {
+        "duration": {
+          "description": "Time until playback stops. Only for the duration mode.",
+          "name": "Duration"
+        },
+        "mode": {
+          "description": "When playback stops. An item without chapters stops at its end.",
+          "name": "Mode"
+        },
+        "username": {
+          "description": "[%key:component::music_assistant::services::play_queue_item::fields::username::description%]",
+          "name": "[%key:component::music_assistant::services::get_library::fields::username::name%]"
+        }
+      },
+      "name": "Set sleep timer"
     },
     "transfer_queue": {
       "description": "Transfers a player's queue to another player.",
