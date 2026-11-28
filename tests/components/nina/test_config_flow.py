@@ -33,7 +33,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from . import setup_platform
 from .const import DUMMY_USER_INPUT
 
-
 EXPECTED_REGIONS: dict[str, str] = {
     "010560000000": "Raa-Besenbek (Pinneberg - Schleswig-Holstein)",
     "010590000000": (
@@ -47,9 +46,7 @@ EXPECTED_REGIONS: dict[str, str] = {
     "032510000000": "Maasen (Diepholz - Niedersachsen)",
     "055660000000": "Ibbenbüren, Stadt (Steinfurt - Nordrhein-Westfalen)",
     "083370000000": "Ibach (Waldshut - Baden-Württemberg)",
-    "095760000000": (
-        "Allersberg, M (Roth - Bayern) + Büchenbach (Roth - Bayern)"
-    ),
+    "095760000000": ("Allersberg, M (Roth - Bayern) + Büchenbach (Roth - Bayern)"),
     "146260000000": "Ebersbach-Neugersdorf, Stadt (Görlitz - Sachsen)",
     "160650000000": "Ebeleben, Stadt (Kyffhäuserkreis - Thüringen)",
 }

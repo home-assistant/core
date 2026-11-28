@@ -6,6 +6,7 @@ import probatio
 from pynina import ApiError, Nina
 
 from homeassistant.config_entries import (
+    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
