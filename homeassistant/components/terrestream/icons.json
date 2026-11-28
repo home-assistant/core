@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "sensor": {
+      "nox_index": {
+        "default": "mdi:molecule"
+      },
+      "voc_index": {
+        "default": "mdi:molecule"
+      }
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "domain": "terrestream",
+  "name": "Terrestream",
+  "categories": ["sensors.air_quality"],
+  "codeowners": ["@Xynergi"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/terrestream",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "quality_scale": "bronze",
+  "requirements": ["terrestream-local==0.1.1"]
+}
