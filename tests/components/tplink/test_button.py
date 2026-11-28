@@ -1,5 +1,6 @@
 """Tests for tplink button platform."""
 
+import logging
 from unittest.mock import PropertyMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -415,7 +416,7 @@ async def test_ptz_preset_button_press_errors(
             {"Front door": "1", "Garden": "2"},
             PTZ_PRESET_ENTITY_ID,
             STATE_UNKNOWN,
-            "my_device Go to preset Front door",
+            "my_device Go to preset Door",
             id="renamed",
         ),
         pytest.param(
@@ -533,8 +534,10 @@ async def test_ptz_preset_buttons_hub_camera_read_error(
     freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mocked_hub_with_cameras: Device,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test a preset read error on one hub camera does not drop the other buttons."""
+    caplog.set_level(logging.DEBUG)
     hub = mocked_hub_with_cameras
     back_pan_tilt = hub.children[1].modules[Module.PanTilt]
     presets = PropertyMock(side_effect=DeviceError("test error"))
@@ -543,6 +546,7 @@ async def test_ptz_preset_buttons_hub_camera_read_error(
 
     assert hass.states.get(FRONT_CAMERA_DOOR_ENTITY_ID)
     assert not hass.states.get(BACK_CAMERA_DOOR_ENTITY_ID)
+    assert "Unable to read PTZ presets for BACKCAMERAID" in caplog.text
 
     presets.side_effect = None
     presets.return_value = {"Door": "1"}
