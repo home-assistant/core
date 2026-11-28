@@ -889,10 +889,10 @@ async def async_setup_entry(
                     not entity.disabled
                     and entity.domain == SENSOR_DOMAIN
                     and entity.unique_id.startswith(net_prefixes)
-                     and not any(
-                         entity.unique_id.startswith(f"{_type}_veth")
-                         for _type in NETWORK_SENSOR_TYPES
-                     )
+                    and not any(
+                        entity.unique_id.startswith(f"{_type}_veth")
+                        for _type in NETWORK_SENSOR_TYPES
+                    )
                 ):
                     pending_network.add(entity.unique_id)
                     coordinator.has_pending_network = True
