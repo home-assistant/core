@@ -660,19 +660,14 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
             )
         else:
             await self.async_run_script(off_script, context=self._context)
-        if self._attr_assumed_state:
-            self._attr_is_on = False
-            self.async_write_ha_state()
+        self.write_optimistic_state(False)
 
     def set_optimistic_attributes(self, **kwargs) -> bool:
         """Update attributes which should be set optimistically.
 
         Returns True if any attribute was updated.
         """
-        optimistic_set = False
-        if self._attr_assumed_state:
-            self._attr_is_on = True
-            optimistic_set = True
+        optimistic_set = self.update_optimistic_state(True)
 
         if LightServiceArgument.BRIGHTNESS in kwargs and self.update_assumed_attribute(
             CONF_LEVEL, kwargs[LightServiceArgument.BRIGHTNESS]
@@ -714,7 +709,7 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
         ):
             optimistic_set = True
 
-        if optimistic_set and not self._attr_assumed_state:
+        if optimistic_set and not self._is_optimistic_state:
             # If we are optmistically setting color or level but the state template
             # has not rendered, optimisically set the state to 'on'.
             self._attr_is_on = True

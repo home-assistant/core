@@ -312,7 +312,7 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity, RestoreEntity):
                 run_variables={"position": 100, **speed_variables},
                 context=self._context,
             )
-        if self._attr_assumed_state:
+        if self._is_optimistic_state:
             self._attr_current_cover_position = 100
             self.async_write_ha_state()
 
@@ -330,7 +330,7 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity, RestoreEntity):
                 run_variables={"position": 0, **speed_variables},
                 context=self._context,
             )
-        if self._attr_assumed_state:
+        if self._is_optimistic_state:
             self._attr_current_cover_position = 0
             self.async_write_ha_state()
 
@@ -349,7 +349,7 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity, RestoreEntity):
             run_variables={"position": position, **self._speed_variables(kwargs)},
             context=self._context,
         )
-        if self._attr_assumed_state:
+        if self._is_optimistic_state:
             self._attr_current_cover_position = position
             self.async_write_ha_state()
 

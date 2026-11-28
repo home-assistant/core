@@ -15,7 +15,7 @@ from homeassistant.components.template.vacuum import (
     DEPRECATED_HELPER_INCOMPLETE_FAN_SPEED_ISSUE_ID,
 )
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import ATTR_ASSUMED_STATE, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import (
@@ -98,7 +98,7 @@ NUMBER_OPTIONS = {
             {},
             {},
             {"code_arm_required": True, "code_format": "number"},
-            {"assumed_state": True},
+            {},
         ),
         (
             "binary_sensor",
@@ -227,7 +227,7 @@ NUMBER_OPTIONS = {
                     }
                 ],
             },
-            {"assumed_state": True},
+            {},
         ),
         (
             "event",
@@ -257,7 +257,7 @@ NUMBER_OPTIONS = {
             {},
             {"turn_on": [], "turn_off": []},
             {"turn_on": [], "turn_off": []},
-            {"assumed_state": True},
+            {},
         ),
         (
             "image",
@@ -287,7 +287,7 @@ NUMBER_OPTIONS = {
             {},
             {"turn_on": [], "turn_off": []},
             {"turn_on": [], "turn_off": []},
-            {"assumed_state": True},
+            {},
         ),
         (
             "lock",
@@ -307,7 +307,7 @@ NUMBER_OPTIONS = {
             {},
             {"lock": [], "unlock": []},
             {"lock": [], "unlock": []},
-            {"assumed_state": True},
+            {},
         ),
         (
             "number",
@@ -367,7 +367,7 @@ NUMBER_OPTIONS = {
                     "data": {"value": "{{ value }}"},
                 },
             },
-            {"assumed_state": True},
+            {},
         ),
         (
             "select",
@@ -387,7 +387,7 @@ NUMBER_OPTIONS = {
             {},
             {"options": "{{ ['off', 'on', 'auto'] }}", "select_option": []},
             {"options": "{{ ['off', 'on', 'auto'] }}", "select_option": []},
-            {"assumed_state": True},
+            {},
         ),
         (
             "switch",
@@ -407,7 +407,7 @@ NUMBER_OPTIONS = {
             {},
             {},
             {},
-            {"assumed_state": True},
+            {},
         ),
         (
             "update",
@@ -447,7 +447,7 @@ NUMBER_OPTIONS = {
             {},
             {"start": []},
             {"start": []},
-            {"assumed_state": True},
+            {},
         ),
         (
             "water_heater",
@@ -548,6 +548,7 @@ async def test_config_flow(
     assert state.state == template_state
     for key, value in extra_attrs.items():
         assert state.attributes[key] == value
+    assert ATTR_ASSUMED_STATE not in state.attributes
 
 
 async def test_config_flow_sensor_unit_of_measurement_context(

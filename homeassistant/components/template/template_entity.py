@@ -3,7 +3,7 @@
 from collections.abc import Callable, Mapping
 import contextlib
 import logging
-from typing import Any, cast, override
+from typing import TYPE_CHECKING, Any, cast, override
 
 import probatio
 from propcache.api import under_cached_property
@@ -288,20 +288,15 @@ class TemplateEntity(AbstractTemplateEntity):
         )
 
     @override
-    def setup_state_template(
+    def _add_state_template(
         self,
         attribute: str,
-        validator: Callable[[Any], Any] | None = None,
-        on_update: Callable[[Any], None] | None = None,
+        validator: Callable[[Any], Any] | None,
+        on_update: Callable[[Any], None] | None,
     ) -> None:
-        """Set up a template that manages the main state of the entity.
-
-        Requires _state_option to be set on the inheriting
-        class. _state_option represents the configuration
-        option that derives the state. E.g. Template weather
-        entities main state option is 'condition', where
-        switch is 'state'.
-        """
+        """Add the template that manages the main state of the entity."""
+        if TYPE_CHECKING:
+            assert self._state_option is not None
 
         @callback
         def _update_state(result: Any) -> None:
@@ -323,12 +318,6 @@ class TemplateEntity(AbstractTemplateEntity):
                 on_update(state)
             else:
                 setattr(self, attribute, state)
-
-        if self._state_option is None:
-            raise NotImplementedError(
-                f"{self.__class__.__name__} does not implement"
-                " '_state_option' for 'setup_state_template'."
-            )
 
         self.add_template(
             self._state_option,
