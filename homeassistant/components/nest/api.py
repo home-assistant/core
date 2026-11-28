@@ -2,7 +2,7 @@
 
 import datetime as dt
 import logging
-from typing import cast, override
+from typing import TYPE_CHECKING, cast, override
 
 from aiohttp import ClientSession
 from google.oauth2.credentials import Credentials
@@ -23,7 +23,9 @@ from .const import (
     OAUTH2_TOKEN,
     SDM_SCOPES,
 )
-from .types import NestConfigEntry
+
+if TYPE_CHECKING:
+    from .types import NestConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,6 +45,21 @@ class AsyncConfigEntryAuth(AbstractAuth):
         self._oauth_session = oauth_session
         self._client_id = client_id
         self._client_secret = client_secret
+
+    @property
+    def client_id(self) -> str:
+        """Return the OAuth client ID."""
+        return self._client_id
+
+    @property
+    def client_secret(self) -> str:
+        """Return the OAuth client secret."""
+        return self._client_secret
+
+    @property
+    def refresh_token(self) -> str:
+        """Return the current OAuth refresh token."""
+        return cast(str, self._oauth_session.token["refresh_token"])
 
     @override
     async def async_get_access_token(self) -> str:
@@ -106,7 +123,7 @@ class AccessTokenAuthImpl(AbstractAuth):
         )
 
 
-async def new_auth(hass: HomeAssistant, entry: NestConfigEntry) -> AbstractAuth:
+async def new_auth(hass: HomeAssistant, entry: NestConfigEntry) -> AsyncConfigEntryAuth:
     """Create a GoogleNestSubscriber."""
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(

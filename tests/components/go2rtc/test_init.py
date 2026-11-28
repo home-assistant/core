@@ -8,7 +8,7 @@ import logging
 from pathlib import Path
 import re
 from typing import NamedTuple
-from unittest.mock import ANY, AsyncMock, Mock, patch
+from unittest.mock import ANY, AsyncMock, Mock, call, patch
 
 from aiohttp import ClientResponseError, UnixConnector, encode_basic_auth
 from aiohttp.client_exceptions import ClientConnectionError, ServerConnectionError
@@ -1112,6 +1112,30 @@ async def test_stream_with_credentials_not_added_again(
     assert rest_client.streams.add.call_count == 3
 
 
+@pytest.mark.usefixtures("init_integration", "ws_client")
+async def test_provider_uses_webrtc_provider_stream_source(
+    hass: HomeAssistant,
+    rest_client: AsyncMock,
+    init_test_integration: MockCamera,
+) -> None:
+    """Test the provider adds the camera's WebRTC provider stream source."""
+    camera = init_test_integration
+    rest_client.streams.list.return_value = {}
+    with patch.object(
+        camera,
+        "async_webrtc_provider_stream_source",
+        return_value="rtsp://provider.source/stream",
+    ):
+        await camera.webrtc_provider.async_get_image(camera)
+    rest_client.streams.add.assert_called_once_with(
+        get_camera_identifier(camera),
+        [
+            "rtsp://provider.source/stream",
+            f"ffmpeg:{get_camera_identifier(camera)}#audio=opus#query=log_level=debug",
+        ],
+    )
+
+
 @pytest.mark.usefixtures("init_integration")
 async def test_async_get_image_go2rtc_error(
     hass: HomeAssistant,
@@ -1126,7 +1150,9 @@ async def test_async_get_image_go2rtc_error(
     ) as exc_info:
         await async_get_image(hass, init_test_integration.entity_id)
 
-    assert exc_info.value.__cause__ is snapshot_error
+    # Not chained, as the client error can contain the stream source
+    assert exc_info.value.__cause__ is None
+    assert exc_info.value.__suppress_context__ is True
 
     client = await hass_client()
     response = await client.get(f"/api/camera_proxy/{init_test_integration.entity_id}")
@@ -1161,7 +1187,8 @@ async def test_snapshot_service_go2rtc_error(
             blocking=True,
         )
 
-    assert exc_info.value.__cause__ is snapshot_error
+    assert exc_info.value.__cause__ is None
+    assert exc_info.value.__suppress_context__ is True
     assert not snapshot_file.exists()
     assert init_test_integration.stream is None
 
@@ -1398,6 +1425,63 @@ async def test_stream_orientation_with_generic_camera(
             rest_client,
             "ffmpeg:https://test.stream/video.m3u8#video=h264#audio=copy#raw=-vf vflip",
         )
+
+
+@pytest.mark.usefixtures("init_integration", "ws_client")
+async def test_stream_orientation_nest_source_through_source_stream(
+    hass: HomeAssistant,
+    rest_client: AsyncMock,
+    init_test_integration: MockCamera,
+) -> None:
+    """Test orientation of a nest source is applied through a separate stream."""
+    camera = init_test_integration
+    camera.set_stream_source("nest:?device_id=test")
+    await _setup_camera_prefs(
+        hass,
+        camera.entity_id,
+        DynamicStreamSettings(
+            orientation=Orientation.ROTATE_LEFT, preload_stream=False
+        ),
+    )
+    # A camera identifier with a percent-escape, like those of Nest cameras
+    identifier = "nest_enterprises%2Fproject%2Fdevices%2Fdevice-camera"
+    # go2rtc's RTSP server looks a stream up by the decoded path, so the name
+    # ffmpeg reads from has no percent-escapes
+    source_identifier = "nest_enterprises_2Fproject_2Fdevices_2Fdevice-camera_source"
+    rotated_source = f"ffmpeg:{source_identifier}#video=h264#audio=copy#rotate=-90"
+    rest_client.streams.list.return_value = {}
+    rest_client.get_jpeg_snapshot.return_value = b"image_bytes"
+
+    with patch(
+        "homeassistant.components.go2rtc.get_camera_identifier",
+        return_value=identifier,
+    ):
+        assert await camera.webrtc_provider.async_get_image(camera) == b"image_bytes"
+
+    # ffmpeg can't open the nest source, so it reads it from its own stream
+    assert rest_client.streams.add.call_args_list == [
+        call(source_identifier, ["nest:?device_id=test"]),
+        call(
+            identifier,
+            [
+                rotated_source,
+                f"ffmpeg:{identifier}#audio=opus#query=log_level=debug",
+            ],
+        ),
+    ]
+
+    # Neither stream is added again while go2rtc has them
+    rest_client.streams.add.reset_mock()
+    rest_client.streams.list.return_value = {
+        source_identifier: Stream([Producer("nest:?device_id=test")]),
+        identifier: Stream([Producer(rotated_source)]),
+    }
+    with patch(
+        "homeassistant.components.go2rtc.get_camera_identifier",
+        return_value=identifier,
+    ):
+        await camera.webrtc_provider.async_get_image(camera)
+    rest_client.streams.add.assert_not_called()
 
 
 @pytest.mark.usefixtures(
@@ -1692,6 +1776,87 @@ async def test_preload_no_change_when_already_disabled(
     # Verify preload enable/disable were not called
     rest_client.preload.enable.assert_not_called()
     rest_client.preload.disable.assert_not_called()
+
+
+@pytest.mark.usefixtures("init_integration", "ws_client")
+async def test_preload_client_error_hides_stream_source(
+    hass: HomeAssistant,
+    rest_client: AsyncMock,
+    init_test_integration: MockCamera,
+) -> None:
+    """Test a client error while updating preload doesn't chain the source."""
+    camera = init_test_integration
+    await _setup_camera_prefs(
+        hass,
+        camera.entity_id,
+        DynamicStreamSettings(
+            orientation=Orientation.NO_TRANSFORM, preload_stream=True
+        ),
+    )
+    rest_client.streams.add.side_effect = Go2RtcClientError(
+        "PUT /api/streams?src=rtsp://user:secret@stream failed"
+    )
+    provider = camera.webrtc_provider
+    with pytest.raises(
+        HomeAssistantError, match="Unable to update the preload stream in go2rtc"
+    ) as exc_info:
+        await provider.async_register_camera(camera)
+    assert exc_info.value.__cause__ is None
+    assert exc_info.value.__suppress_context__ is True
+    assert "secret" not in str(exc_info.value)
+    rest_client.preload.enable.assert_not_called()
+
+
+@pytest.mark.usefixtures("init_integration", "ws_client")
+async def test_preload_enable_client_error_is_not_wrapped(
+    hass: HomeAssistant,
+    rest_client: AsyncMock,
+    init_test_integration: MockCamera,
+) -> None:
+    """Test a client error from the credential-free preload request is kept."""
+    camera = init_test_integration
+    await _setup_camera_prefs(
+        hass,
+        camera.entity_id,
+        DynamicStreamSettings(
+            orientation=Orientation.NO_TRANSFORM, preload_stream=True
+        ),
+    )
+    error = Go2RtcClientError("preload failed")
+    rest_client.preload.enable.side_effect = error
+    with pytest.raises(Go2RtcClientError) as exc_info:
+        await camera.webrtc_provider.async_register_camera(camera)
+    assert exc_info.value is error
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_preload_pref_update_error_does_not_log_stream_source(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    rest_client: AsyncMock,
+    init_test_integration: MockCamera,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test enabling preload through the camera prefs doesn't log the source."""
+    camera = init_test_integration
+    rest_client.streams.add.side_effect = Go2RtcClientError(
+        "PUT /api/streams?src=rtsp://user:secret@stream failed"
+    )
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "camera/update_prefs",
+            "entity_id": camera.entity_id,
+            "preload_stream": True,
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    assert "Unable to update the preload stream in go2rtc" in caplog.text
+    assert "secret" not in caplog.text
+    rest_client.preload.enable.assert_not_called()
 
 
 @pytest.mark.usefixtures("init_integration")

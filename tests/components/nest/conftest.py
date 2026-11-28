@@ -292,11 +292,18 @@ def token_entry(token_expiration_time: float) -> dict[str, Any]:
 
 
 @pytest.fixture
+def config_entry_options() -> dict[str, Any]:
+    """Fixture for ConfigEntry options."""
+    return {}
+
+
+@pytest.fixture
 def config_entry(
     subscriber_id: str | None,
     nest_test_config: NestTestConfig,
     config_entry_unique_id: str,
     token_entry: dict[str, Any],
+    config_entry_options: dict[str, Any],
 ) -> MockConfigEntry | None:
     """Fixture that sets up the ConfigEntry for the test."""
     if nest_test_config.config_entry_data is None:
@@ -308,7 +315,12 @@ def config_entry(
         else:
             del data[CONF_SUBSCRIBER_ID]
     data["token"] = token_entry
-    return MockConfigEntry(domain=DOMAIN, data=data, unique_id=config_entry_unique_id)
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data=data,
+        unique_id=config_entry_unique_id,
+        options=config_entry_options,
+    )
 
 
 @pytest.fixture(autouse=True)

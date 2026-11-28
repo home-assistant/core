@@ -9,6 +9,8 @@ from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
 
 from homeassistant.config_entries import ConfigEntry
 
+from .api import AsyncConfigEntryAuth
+
 type DevicesAddedListener = Callable[[list[Device]], None]
 
 
@@ -16,6 +18,7 @@ type DevicesAddedListener = Callable[[list[Device]], None]
 class NestData:
     """Data for the Nest integration."""
 
+    auth: AsyncConfigEntryAuth
     subscriber: GoogleNestSubscriber
     device_manager: DeviceManager
     register_devices_listener: Callable[[DevicesAddedListener], None]
