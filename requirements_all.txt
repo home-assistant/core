@@ -1219,7 +1219,7 @@ google-genai==2.25.0
 google-health-api==1.1.0
 
 # homeassistant.components.nest
-google-nest-sdm==9.2.1
+google-nest-sdm==9.2.3
 
 # homeassistant.components.google_photos
 google-photos-library-api==0.12.1
