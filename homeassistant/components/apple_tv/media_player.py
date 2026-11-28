@@ -3,6 +3,7 @@
 from collections.abc import Callable, Coroutine
 from datetime import datetime
 from functools import wraps
+import io
 import logging
 from typing import Any, Concatenate, override
 
@@ -28,7 +29,7 @@ from pyatv.interface import (
 )
 from yarl import URL
 
-from homeassistant.components import media_source
+from homeassistant.components import media_source, tts
 from homeassistant.components.media_player import (
     BrowseMedia,
     MediaPlayerEntity,
@@ -390,7 +391,15 @@ class AppleTvMediaPlayer(
             await self.atv.apps.launch_app(media_id)
             return
 
-        if media_source.is_media_source_id(media_id):
+        tts_audio: io.BytesIO | None = None
+        if self._is_feature_available(FeatureName.StreamFile) and media_id.startswith(
+            "media-source://tts/"
+        ):
+            # pyatv cannot detect the format of TTS audio that is still generating
+            _, audio = await tts.async_get_media_source_audio(self.hass, media_id)
+            tts_audio = io.BytesIO(audio)
+            media_type = MediaType.MUSIC
+        elif media_source.is_media_source_id(media_id):
             play_item = await media_source.async_resolve_media(
                 self.hass, media_id, self.entity_id
             )
@@ -407,7 +416,9 @@ class AppleTvMediaPlayer(
         try:
             if use_stream_file:
                 _LOGGER.debug("Streaming %s via RAOP", media_id)
-                await self.atv.stream.stream_file(media_id)
+                await self.atv.stream.stream_file(
+                    media_id if tts_audio is None else tts_audio
+                )
             elif self._is_feature_available(FeatureName.PlayUrl) and (
                 (parsed_url := URL(media_id)).is_absolute() and parsed_url.host
             ):

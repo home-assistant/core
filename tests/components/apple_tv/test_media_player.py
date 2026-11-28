@@ -1,6 +1,7 @@
 """Tests for the Apple TV media player."""
 
 import asyncio
+import io
 from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
@@ -50,6 +51,10 @@ ENTITY_ID = "media_player.living_room_living_room"
 REMOTE_ENTITY_ID = "remote.living_room_living_room"
 _MUSIC_URL = "http://example.local:8123/api/tts_proxy/abc.mp3"
 _VIDEO_URL = "http://example.local:8123/video.mp4"
+_TTS_MEDIA_ID = "media-source://tts/cloud?message=Hello"
+_RESOLVE_MEDIA = (
+    "homeassistant.components.apple_tv.media_player.media_source.async_resolve_media"
+)
 
 pytestmark = pytest.mark.usefixtures("init_integration")
 
@@ -81,10 +86,7 @@ async def test_play_media_from_media_source(
     expected_stream_arg: str,
 ) -> None:
     """Stream resolved media via its local path when present, otherwise via the URL."""
-    with patch(
-        "homeassistant.components.apple_tv.media_player.media_source.async_resolve_media",
-        return_value=play_item,
-    ):
+    with patch(_RESOLVE_MEDIA, return_value=play_item):
         await hass.services.async_call(
             MP_DOMAIN,
             MediaPlayerService.PLAY_MEDIA,
@@ -97,6 +99,57 @@ async def test_play_media_from_media_source(
         )
 
     mock_atv.stream.stream_file.assert_awaited_once_with(expected_stream_arg)
+
+
+async def test_play_media_streams_tts_audio_from_memory(
+    hass: HomeAssistant,
+    mock_atv: AsyncMock,
+) -> None:
+    """Stream TTS audio from memory once it is fully generated."""
+    with patch(
+        "homeassistant.components.apple_tv.media_player.tts.async_get_media_source_audio",
+        return_value=("mp3", b"audio"),
+    ) as mock_get_audio:
+        await hass.services.async_call(
+            MP_DOMAIN,
+            MediaPlayerService.PLAY_MEDIA,
+            {
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: _TTS_MEDIA_ID,
+            },
+            blocking=True,
+        )
+
+    mock_get_audio.assert_awaited_once_with(hass, _TTS_MEDIA_ID)
+    stream_arg = mock_atv.stream.stream_file.await_args.args[0]
+    assert isinstance(stream_arg, io.BytesIO)
+    assert stream_arg.read() == b"audio"
+
+
+async def test_play_media_plays_tts_by_url_without_stream_file(
+    hass: HomeAssistant,
+    mock_atv: AsyncMock,
+) -> None:
+    """Play TTS by URL via AirPlay when StreamFile is unavailable."""
+    mock_atv.features.set_state(FeatureName.StreamFile, FeatureState.Unsupported)
+
+    with patch(
+        _RESOLVE_MEDIA,
+        return_value=PlayMedia(url=_MUSIC_URL, mime_type="audio/mpeg"),
+    ):
+        await hass.services.async_call(
+            MP_DOMAIN,
+            MediaPlayerService.PLAY_MEDIA,
+            {
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: _TTS_MEDIA_ID,
+            },
+            blocking=True,
+        )
+
+    mock_atv.stream.play_url.assert_awaited_once_with(_MUSIC_URL)
 
 
 @pytest.mark.parametrize("media_type", [MediaType.APP, MediaType.URL])
