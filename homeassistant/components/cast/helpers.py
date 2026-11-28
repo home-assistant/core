@@ -169,9 +169,8 @@ class CastStatusListener(
         self._valid = True
         self._mz_mgr = mz_mgr
 
-        if cast_device._cast_info.is_audio_group:  # noqa: SLF001
-            self._mz_mgr.add_multizone(chromecast)
         if mz_only:
+            chromecast.register_connection_listener(self)
             return
 
         chromecast.register_status_listener(self)
@@ -214,12 +213,32 @@ class CastStatusListener(
     @override
     def added_to_multizone(self, group_uuid):
         """Handle the cast added to a group."""
+        if self._valid:
+            # The group's status is only sent on changes, poll the current one
+            self._cast_device.multizone_membership_changed(
+                group_uuid,
+                self._mz_mgr.get_multizone_mediacontroller(group_uuid).status,
+            )
 
     @override
     def removed_from_multizone(self, group_uuid):
         """Handle the cast removed from a group."""
         if self._valid:
-            self._cast_device.multizone_new_media_status(group_uuid, None)
+            self._cast_device.multizone_membership_changed(group_uuid, None)
+
+    @override
+    def multizone_session_moved(self, group_uuid, endpoint, name):
+        """Schedule handling of the session move on the Home Assistant event loop."""
+        if self._valid:
+            self._cast_device.hass.loop.call_soon_threadsafe(
+                self._cast_device.async_session_moved, endpoint, name
+            )
+
+    @override
+    def multizone_sessions_changed(self):
+        """Handle a change of the devices playing a session."""
+        if self._valid:
+            self._cast_device.schedule_update_ha_state()
 
     @override
     def multizone_new_cast_status(self, group_uuid, cast_status):
@@ -236,9 +255,7 @@ class CastStatusListener(
 
         All following callbacks won't be forwarded.
         """
-        if self._cast_device._cast_info.is_audio_group:  # noqa: SLF001
-            self._mz_mgr.remove_multizone(self._uuid)
-        else:
+        if not self._cast_device._cast_info.is_audio_group:  # noqa: SLF001
             self._mz_mgr.deregister_listener(self._uuid, self)
         self._valid = False
 
