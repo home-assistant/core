@@ -1,7 +1,8 @@
 """Services for the todo integration."""
 
 import asyncio
-from collections.abc import Awaitable, Callable
+from collections.abc import AsyncIterator, Awaitable, Callable
+import contextlib
 import dataclasses
 import functools
 from typing import Any
@@ -93,7 +94,7 @@ TODO_SERVICE_GET_ITEMS_SCHEMA = {
 }
 
 
-_PARENT_LOCKS: WeakKeyDictionary[TodoListEntity, asyncio.Lock] = WeakKeyDictionary()
+_LIST_LOCKS: WeakKeyDictionary[TodoListEntity, asyncio.Lock] = WeakKeyDictionary()
 
 
 def _validate_supported_features(
@@ -176,21 +177,29 @@ def _todo_item_fields(
 type _ItemService = Callable[[TodoListEntity, ServiceCall], Awaitable[None]]
 
 
-def _one_parent_change_at_a_time(func: _ItemService) -> _ItemService:
-    """Run calls that set a parent one by one, so each checks the list after the last."""
+@contextlib.asynccontextmanager
+async def async_list_change(entity: TodoListEntity) -> AsyncIterator[None]:
+    """Run changes on a list with subtasks one at a time."""
+    features = entity.supported_features
+    if not features or not features & TodoListEntityFeature.SET_PARENT_ON_ITEM:
+        yield
+        return
+    async with _LIST_LOCKS.setdefault(entity, asyncio.Lock()):
+        yield
+
+
+def _one_call_at_a_time(func: _ItemService) -> _ItemService:
+    """Wrap a service in async_list_change."""
 
     @functools.wraps(func)
     async def wrapper(entity: TodoListEntity, call: ServiceCall) -> None:
-        if TodoServiceArgument.PARENT not in call.data:
-            await func(entity, call)
-            return
-        async with _PARENT_LOCKS.setdefault(entity, asyncio.Lock()):
+        async with async_list_change(entity):
             await func(entity, call)
 
     return wrapper
 
 
-@_one_parent_change_at_a_time
+@_one_call_at_a_time
 async def _async_add_todo_item(entity: TodoListEntity, call: ServiceCall) -> None:
     """Add an item to the To-do list."""
     _validate_supported_features(entity.supported_features, call.data)
@@ -203,7 +212,7 @@ async def _async_add_todo_item(entity: TodoListEntity, call: ServiceCall) -> Non
     )
 
 
-@_one_parent_change_at_a_time
+@_one_call_at_a_time
 async def _async_update_todo_item(entity: TodoListEntity, call: ServiceCall) -> None:
     """Update an item in the To-do list."""
     item = call.data[TodoServiceArgument.ITEM]

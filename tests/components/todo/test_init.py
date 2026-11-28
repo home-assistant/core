@@ -1221,30 +1221,127 @@ async def test_parent_set_while_another_parent_is_set(
     assert exc.value.translation_key == translation_key
 
 
-@pytest.mark.parametrize(
-    ("entity_id", "service_data"),
-    [
-        (
-            "todo.entity1",
-            {TodoServiceArgument.ITEM: "1", TodoServiceArgument.RENAME: "Renamed"},
-        ),
-        (
-            "todo.entity2",
-            {TodoServiceArgument.ITEM: "3", TodoServiceArgument.PARENT: "1"},
-        ),
-    ],
-    ids=["without_parent", "on_other_list"],
-)
-async def test_update_runs_while_parent_is_set(
+async def test_set_parent_waits_while_update_is_saved(
     hass: HomeAssistant,
     subtask_entity: TodoListEntity,
-    entity_id: str,
-    service_data: dict[str, str],
 ) -> None:
-    """Test a call only waits for one that sets a parent if it sets one on that list."""
+    """Test an update without a parent doesn't write back one changed meanwhile."""
+    subtask_entity._attr_todo_items = [
+        TodoItem(summary="P", uid="p", status=TodoItemStatus.NEEDS_ACTION),
+        TodoItem(
+            summary="A", uid="a", status=TodoItemStatus.NEEDS_ACTION, parent_uid="p"
+        ),
+        TodoItem(summary="B", uid="b", status=TodoItemStatus.NEEDS_ACTION),
+    ]
+    saved = asyncio.Event()
+
+    async def save(item: TodoItem) -> None:
+        if item.summary == "A renamed":
+            await saved.wait()
+        subtask_entity._attr_todo_items = [
+            item if existing.uid == item.uid else existing
+            for existing in subtask_entity._attr_todo_items or []
+        ]
+
+    subtask_entity.async_update_todo_item.side_effect = save
+    await create_mock_platform(hass, [subtask_entity])
+
+    calls = [
+        hass.async_create_task(
+            hass.services.async_call(
+                DOMAIN,
+                TodoServices.UPDATE_ITEM,
+                data,
+                target={TargetKey.ENTITY_ID: "todo.entity1"},
+                blocking=True,
+            ),
+            eager_start=True,
+        )
+        for data in (
+            {TodoServiceArgument.ITEM: "a", TodoServiceArgument.RENAME: "A renamed"},
+            {TodoServiceArgument.ITEM: "a", TodoServiceArgument.PARENT: ""},
+            {TodoServiceArgument.ITEM: "b", TodoServiceArgument.PARENT: "a"},
+        )
+    ]
+    saved.set()
+    async with asyncio.timeout(1):
+        await asyncio.gather(*calls)
+
+    assert {item.uid: item.parent_uid for item in subtask_entity.todo_items or []} == {
+        "p": None,
+        "a": None,
+        "b": "a",
+    }
+
+
+async def test_add_item_below_one_still_being_added(
+    hass: HomeAssistant,
+    subtask_entity: TodoListEntity,
+) -> None:
+    """Test an item can be added below one that is still being added."""
+    subtask_entity._attr_todo_items = []
+    saved = asyncio.Event()
+
+    async def save(item: TodoItem) -> None:
+        if item.summary == "Parent":
+            await saved.wait()
+        subtask_entity._attr_todo_items = [
+            *(subtask_entity._attr_todo_items or []),
+            dataclasses.replace(item, uid=item.summary.lower()),
+        ]
+
+    subtask_entity.async_create_todo_item.side_effect = save
+    await create_mock_platform(hass, [subtask_entity])
+
+    calls = [
+        hass.async_create_task(
+            hass.services.async_call(
+                DOMAIN,
+                TodoServices.ADD_ITEM,
+                data,
+                target={TargetKey.ENTITY_ID: "todo.entity1"},
+                blocking=True,
+            ),
+            eager_start=True,
+        )
+        for data in (
+            {TodoServiceArgument.ITEM: "Parent"},
+            {TodoServiceArgument.ITEM: "Child", TodoServiceArgument.PARENT: "Parent"},
+        )
+    ]
+    saved.set()
+    async with asyncio.timeout(1):
+        await asyncio.gather(*calls)
+
+    assert {item.uid: item.parent_uid for item in subtask_entity.todo_items or []} == {
+        "parent": None,
+        "child": "parent",
+    }
+
+
+@pytest.mark.parametrize(
+    ("features", "entity_id"),
+    [
+        (
+            TodoListEntityFeature.UPDATE_TODO_ITEM
+            | TodoListEntityFeature.SET_PARENT_ON_ITEM,
+            "todo.entity2",
+        ),
+        (TodoListEntityFeature.UPDATE_TODO_ITEM, "todo.entity1"),
+    ],
+    ids=["on_other_list", "list_without_subtasks"],
+)
+async def test_update_runs_while_another_one_is_saved(
+    hass: HomeAssistant,
+    subtask_entity: TodoListEntity,
+    features: TodoListEntityFeature,
+    entity_id: str,
+) -> None:
+    """Test an update only waits for another one on the same list with subtasks."""
+    subtask_entity._attr_supported_features = features
     other_list = MockTodoListEntity(list(subtask_entity.todo_items or []))
     other_list.entity_id = "todo.entity2"
-    other_list._attr_supported_features = subtask_entity.supported_features
+    other_list._attr_supported_features = features
     saved = asyncio.Event()
 
     async def wait_for_other_call(item: TodoItem) -> None:
@@ -1274,9 +1371,12 @@ async def test_update_runs_while_parent_is_set(
         for target, data in (
             (
                 "todo.entity1",
-                {TodoServiceArgument.ITEM: "3", TodoServiceArgument.PARENT: "1"},
+                {TodoServiceArgument.ITEM: "3", TodoServiceArgument.RENAME: "Renamed"},
             ),
-            (entity_id, service_data),
+            (
+                entity_id,
+                {TodoServiceArgument.ITEM: "1", TodoServiceArgument.RENAME: "Renamed"},
+            ),
         )
     ]
 
