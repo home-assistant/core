@@ -57,6 +57,7 @@ CONF_LINKED_FILTER_CHANGE_INDICATION = "linked_filter_change_indication_binary_s
 CONF_LINKED_FILTER_LIFE_LEVEL = "linked_filter_life_level_sensor"
 CONF_LINKED_MOTION_SENSOR = "linked_motion_sensor"
 CONF_LINKED_HUMIDITY_SENSOR = "linked_humidity_sensor"
+CONF_LINKED_LIGHT = "linked_light"
 CONF_LINKED_OBSTRUCTION_SENSOR = "linked_obstruction_sensor"
 CONF_LINKED_PM25_SENSOR = "linked_pm25_sensor"
 CONF_LINKED_TEMPERATURE_SENSOR = "linked_temperature_sensor"
