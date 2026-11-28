@@ -50,6 +50,8 @@ class SHCSelectEntityDescription[_DeviceT: SHCDevice](SelectEntityDescription):
 
     current_option_fn: Callable[[_DeviceT, Sequence[str] | None], str | None]
     select_option_fn: Callable[[_DeviceT, str], None]
+    options_fn: Callable[[_DeviceT], list[str]] | None = None
+    reload_after_select: bool = False
 
 
 def _siren_current_option(
@@ -76,6 +78,38 @@ SIREN_SOUND_LEVEL_DESCRIPTION = SHCSelectEntityDescription[SHCOutdoorSiren](
     options=["low", "medium", "high"],
     current_option_fn=_siren_current_option,
     select_option_fn=_siren_select_option,
+)
+
+
+def _profile_options(device: SHCDevice) -> list[str]:
+    """Return the installation profiles the device advertises."""
+    return [str(profile).lower() for profile in device.supported_profiles]
+
+
+def _profile_current_option(
+    device: SHCDevice, options: Sequence[str] | None
+) -> str | None:
+    """Return the current installation profile, if it is a known option."""
+    if device.profile is None:
+        return None
+    profile = str(device.profile).lower()
+    return profile if profile in (options or []) else None
+
+
+def _profile_select_option(device: SHCDevice, option: str) -> None:
+    """Write the installation profile."""
+    device.set_profile(option.upper())
+
+
+INSTALLATION_PROFILE_DESCRIPTION = SHCSelectEntityDescription[SHCDevice](
+    key="installation_profile",
+    translation_key="installation_profile",
+    entity_category=EntityCategory.CONFIG,
+    options_fn=_profile_options,
+    current_option_fn=_profile_current_option,
+    select_option_fn=_profile_select_option,
+    # A different profile can add or remove entities of the device.
+    reload_after_select=True,
 )
 
 
@@ -436,6 +470,23 @@ async def async_setup_entry(
     entities.extend(
         SHCSelect(
             hass=hass,
+            device=device,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=INSTALLATION_PROFILE_DESCRIPTION,
+        )
+        for device in (
+            *session.device_helper.motion_detectors2,
+            *session.device_helper.micromodule_relays,
+            *session.device_helper.micromodule_impulse_relays,
+            *session.device_helper.smart_plugs,
+            *session.device_helper.smart_plugs_compact,
+        )
+        if device.supported_profiles
+    )
+    entities.extend(
+        SHCSelect(
+            hass=hass,
             device=siren,
             parent_id=shc_info.unique_id,
             entry_id=config_entry.entry_id,
@@ -677,6 +728,8 @@ class SHCSelect[_DeviceT: SHCDevice](SHCEntity, SelectEntity):
             hass=hass, device=device, parent_id=parent_id, entry_id=entry_id
         )
         self._attr_unique_id = f"{device.serial}_{description.key}"
+        if description.options_fn is not None:
+            self._attr_options = description.options_fn(device)
 
     @property
     @override
@@ -688,3 +741,7 @@ class SHCSelect[_DeviceT: SHCDevice](SHCEntity, SelectEntity):
     def select_option(self, option: str) -> None:
         """Select an option, writing it to the device."""
         self.entity_description.select_option_fn(self._device, option)
+        if self.entity_description.reload_after_select:
+            self.hass.add_job(
+                self.hass.config_entries.async_schedule_reload, self._entry_id
+            )
