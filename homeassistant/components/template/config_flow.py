@@ -18,15 +18,6 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_STATE_CLASSES,
     DEVICE_CLASS_UNITS,
 )
-from homeassistant.components.vacuum import (
-    SERVICE_CLEAN_SPOT,
-    SERVICE_LOCATE,
-    SERVICE_PAUSE,
-    SERVICE_RETURN_TO_BASE,
-    SERVICE_SET_FAN_SPEED,
-    SERVICE_START,
-    SERVICE_STOP,
-)
 from homeassistant.const import (
     CONF_CONDITION,
     CONF_DEVICE_CLASS,
@@ -167,7 +158,18 @@ from .update import (
     CONF_UPDATE_PERCENTAGE,
     async_create_preview_update,
 )
-from .vacuum import CONF_FAN_SPEED, CONF_FAN_SPEED_LIST, async_create_preview_vacuum
+from .vacuum import (
+    CONF_CLEAN_SPOT_ACTION,
+    CONF_FAN_SPEED,
+    CONF_FAN_SPEED_LIST,
+    CONF_LOCATE_ACTION,
+    CONF_PAUSE_ACTION,
+    CONF_RETURN_TO_BASE_ACTION,
+    CONF_SET_FAN_SPEED_ACTION,
+    CONF_START_ACTION,
+    CONF_STOP_ACTION,
+    async_create_preview_vacuum,
+)
 from .water_heater import (
     CONF_AWAY_MODE,
     CONF_CURRENT_TEMPERATURE as CONF_WATER_HEATER_CURRENT_TEMPERATURE,
@@ -214,8 +216,8 @@ _REQUIRED_OPTIONS: dict[str, tuple[tuple[str, str, str], ...]] = {
     ),
     Platform.VACUUM: (
         (CONF_FAN_SPEED, CONF_FAN_SPEED_LIST, "fan_speeds_required"),
-        (SERVICE_SET_FAN_SPEED, CONF_FAN_SPEED_LIST, "fan_speeds_required"),
-        (CONF_FAN_SPEED_LIST, SERVICE_SET_FAN_SPEED, "set_fan_speed_required"),
+        (CONF_SET_FAN_SPEED_ACTION, CONF_FAN_SPEED_LIST, "fan_speeds_required"),
+        (CONF_FAN_SPEED_LIST, CONF_SET_FAN_SPEED_ACTION, "set_fan_speed_required"),
     ),
 }
 
@@ -505,7 +507,7 @@ def generate_schema(
     if domain == Platform.VACUUM:
         schema |= {
             probatio.Optional(CONF_STATE): selector.TemplateSelector(),
-            probatio.Required(SERVICE_START): selector.ActionSelector(),
+            probatio.Required(CONF_START_ACTION): selector.ActionSelector(),
             probatio.Optional(CONF_FAN_SPEED): selector.TemplateSelector(),
             probatio.Optional(CONF_FAN_SPEED_LIST): selector.SelectSelector(
                 selector.SelectSelectorConfig(
@@ -515,12 +517,12 @@ def generate_schema(
                     mode=selector.SelectSelectorMode.DROPDOWN,
                 )
             ),
-            probatio.Optional(SERVICE_SET_FAN_SPEED): selector.ActionSelector(),
-            probatio.Optional(SERVICE_STOP): selector.ActionSelector(),
-            probatio.Optional(SERVICE_PAUSE): selector.ActionSelector(),
-            probatio.Optional(SERVICE_RETURN_TO_BASE): selector.ActionSelector(),
-            probatio.Optional(SERVICE_CLEAN_SPOT): selector.ActionSelector(),
-            probatio.Optional(SERVICE_LOCATE): selector.ActionSelector(),
+            probatio.Optional(CONF_SET_FAN_SPEED_ACTION): selector.ActionSelector(),
+            probatio.Optional(CONF_STOP_ACTION): selector.ActionSelector(),
+            probatio.Optional(CONF_PAUSE_ACTION): selector.ActionSelector(),
+            probatio.Optional(CONF_RETURN_TO_BASE_ACTION): selector.ActionSelector(),
+            probatio.Optional(CONF_CLEAN_SPOT_ACTION): selector.ActionSelector(),
+            probatio.Optional(CONF_LOCATE_ACTION): selector.ActionSelector(),
         }
 
     if domain == Platform.WATER_HEATER:
