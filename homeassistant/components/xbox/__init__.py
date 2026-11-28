@@ -65,12 +65,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: XboxConfigEntry) -> None
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    subentries = set(entry.subentries)
+
+    async def _async_update_listener(
+        hass: HomeAssistant, entry: XboxConfigEntry
+    ) -> None:
+        """Reload only when the subentries change, not on a token refresh."""
+        if subentries != set(entry.subentries):
+            hass.config_entries.async_schedule_reload(entry.entry_id)
+
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
-
-
-async def _async_update_listener(hass: HomeAssistant, entry: XboxConfigEntry) -> None:
-    """Handle update."""
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: XboxConfigEntry) -> None:
