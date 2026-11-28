@@ -1,6 +1,7 @@
 """Support for Fibaro sensors."""
 
 from contextlib import suppress
+import logging
 from typing import override
 
 from pyfibaro.fibaro_device import DeviceModel
@@ -13,6 +14,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     LIGHT_LUX,
+    EntityCategory,
     Platform,
     UnitOfEnergy,
     UnitOfPower,
@@ -20,11 +22,14 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import convert
 
 from . import FibaroConfigEntry, FibaroController
 from .entity import FibaroEntity
+
+_LOGGER = logging.getLogger(__name__)
 
 # List of known sensors which represents a fibaro device
 MAIN_SENSOR_TYPES: dict[str, SensorEntityDescription] = {
@@ -89,6 +94,15 @@ ADDITIONAL_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
 )
 
+BATTERY_SENSOR_TYPE = SensorEntityDescription(
+    key="battery",
+    has_entity_name=True,
+    native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+    device_class=SensorDeviceClass.BATTERY,
+    state_class=SensorStateClass.MEASUREMENT,
+    entity_category=EntityCategory.DIAGNOSTIC,
+)
+
 FIBARO_TO_HASS_UNIT: dict[str, str] = {
     "lux": LIGHT_LUX,
     "C": UnitOfTemperature.CELSIUS,
@@ -129,6 +143,18 @@ async def async_setup_entry(
         for entity_description in ADDITIONAL_SENSOR_TYPES
         if entity_description.key in device.properties
     )
+
+    # Battery sensors are reported sometimes on main device and sometimes on child device
+    # Ensure each device gets only one battery sensor
+    battery_added: list[DeviceInfo] = []
+    sorted_devices = sorted(controller.get_all_devices(), key=lambda d: d.fibaro_id)
+    for device in sorted_devices:
+        device_info = controller.get_device_info(device)
+        if device.has_battery_level and device_info not in battery_added:
+            battery_added.append(device_info)
+            entities.append(
+                FibaroBatterySensor(device, BATTERY_SENSOR_TYPE, controller)
+            )
 
     async_add_entities(entities, True)
 
@@ -189,4 +215,38 @@ class FibaroAdditionalSensor(FibaroEntity, SensorEntity):
             self._attr_native_value = convert(
                 self.fibaro_device.properties[self.entity_description.key],
                 float,
+            )
+
+
+class FibaroBatterySensor(FibaroEntity, SensorEntity):
+    """Representation of a Fibaro Battery Sensor."""
+
+    def __init__(
+        self,
+        fibaro_device: DeviceModel,
+        entity_description: SensorEntityDescription,
+        controller: FibaroController,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(fibaro_device, controller)
+        self.entity_description = entity_description
+
+        # To differentiate additional sensors from main sensors they need
+        # to get different unique id
+        self._attr_unique_id = f"{self._attr_unique_id}_{entity_description.key}"
+
+        # clear values set by FibaroEntity, this code can be removed
+        # after FibaroEntity complies as well to the new standard
+        self.entity_id = None  # type: ignore[assignment]
+        del self._attr_name
+
+    @override
+    def update(self) -> None:
+        """Update the state."""
+        super().update()
+        try:
+            self._attr_native_value = self.fibaro_device.battery_level
+        except (TypeError, ValueError) as ex:
+            _LOGGER.error(
+                "Value update for battery sensor %s failed: %s", self.entity_id, ex
             )
