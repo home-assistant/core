@@ -1,0 +1,69 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_unit_id": "The unit did not report its ID, so Home Assistant cannot tell it apart from other units."
+    },
+    "error": {
+      "cannot_connect": "No WAFE unit answered at this address. Check the IP address and that no other Modbus client is connected to the unit, because it serves only one at a time."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "The IP address or hostname of the unit on your network. Give it a fixed address in your router.",
+          "port": "The Modbus TCP port of the unit. The default is 502."
+        },
+        "description": "Connect to a WAFE heat recovery unit over Modbus TCP. The unit must be connected to your network with an Ethernet cable."
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "exhaust_temperature": {
+        "name": "Exhaust temperature"
+      },
+      "extract_temperature": {
+        "name": "Extract temperature"
+      },
+      "fan_1_speed": {
+        "name": "Fan 1 speed"
+      },
+      "fan_2_speed": {
+        "name": "Fan 2 speed"
+      },
+      "outdoor_temperature": {
+        "name": "Outdoor temperature"
+      },
+      "state": {
+        "name": "State",
+        "state": {
+          "holiday": "Holiday",
+          "manual": "Manual",
+          "standby": "Standby",
+          "ventilation": "Ventilation"
+        }
+      },
+      "supply_temperature": {
+        "name": "Supply temperature"
+      },
+      "target_airflow": {
+        "name": "Target airflow"
+      }
+    }
+  },
+  "exceptions": {
+    "modbus_error": {
+      "message": "Error communicating with the unit."
+    },
+    "unit_unreachable": {
+      "message": "The unit cannot be reached."
+    },
+    "wrong_unit": {
+      "message": "A different WAFE unit answers at the configured address. Remove the integration and add it again with the address of the unit you set up."
+    }
+  }
+}
