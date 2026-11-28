@@ -72,9 +72,7 @@ rules:
       The coordinators raise UpdateFailed with untranslated API messages,
       and setup raises ConfigEntryNotReady with a hard-coded message.
   icon-translations: done
-  reconfiguration-flow:
-    status: todo
-    comment: Integration does not implement async_step_reconfigure for updating settings without removal.
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: Integration does not have scenarios requiring user-actionable repair issues.
