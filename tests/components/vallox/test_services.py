@@ -1,7 +1,9 @@
 """Tests for the Vallox services."""
 
+from typing import Any
 from unittest.mock import AsyncMock
 
+import probatio
 import pytest
 from vallox_websocket_api import Profile, ValloxApiException
 
@@ -10,8 +12,11 @@ from homeassistant.components.vallox.services import (
     ValloxService,
     ValloxServiceArgument,
 )
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+
+FAN_ENTITY_ID = "fan.vallox"
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -254,6 +259,212 @@ async def test_set_profile_error(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             DOMAIN, ValloxService.SET_PROFILE, service_data, blocking=True
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == translation_key
+    assert exc_info.value.translation_placeholders == translation_placeholders
+    # Nothing changed, so there is no refresh after the fetch at setup.
+    mock_vallox_client.fetch_metric_data.assert_called_once()
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    ("preset_mode", "profile", "time_limit_data", "expected_duration"),
+    [
+        pytest.param(
+            "boost",
+            Profile.BOOST,
+            {ValloxServiceArgument.DURATION: {"minutes": 30}},
+            30,
+            id="boost",
+        ),
+        pytest.param(
+            "fireplace",
+            Profile.FIREPLACE,
+            {ValloxServiceArgument.DURATION: {"minutes": 30}},
+            30,
+            id="fireplace",
+        ),
+        pytest.param(
+            "extra",
+            Profile.EXTRA,
+            {ValloxServiceArgument.DURATION: {"minutes": 30}},
+            30,
+            id="extra",
+        ),
+        pytest.param(
+            "boost",
+            Profile.BOOST,
+            {ValloxServiceArgument.DURATION: {"hours": 2, "minutes": 15}},
+            135,
+            id="hours_and_minutes",
+        ),
+        pytest.param(
+            "boost",
+            Profile.BOOST,
+            {
+                ValloxServiceArgument.DURATION: {
+                    "minutes": PROFILE_DURATION_INDEFINITE - 1
+                }
+            },
+            PROFILE_DURATION_INDEFINITE - 1,
+            id="maximum",
+        ),
+        pytest.param(
+            "boost",
+            Profile.BOOST,
+            {ValloxServiceArgument.NO_TIME_LIMIT: True},
+            PROFILE_DURATION_INDEFINITE,
+            id="no_time_limit",
+        ),
+        # Without a duration, the unit uses the one it has stored.
+        pytest.param("boost", Profile.BOOST, {}, None, id="stored_duration"),
+        pytest.param(
+            "boost",
+            Profile.BOOST,
+            {ValloxServiceArgument.NO_TIME_LIMIT: False},
+            None,
+            id="time_limit_not_lifted",
+        ),
+    ],
+)
+async def test_set_preset_mode_with_duration(
+    hass: HomeAssistant,
+    mock_vallox_client: AsyncMock,
+    preset_mode: str,
+    profile: Profile,
+    time_limit_data: dict[str, Any],
+    expected_duration: int | None,
+) -> None:
+    """Test the action for activating a preset with a time limit."""
+    await hass.services.async_call(
+        DOMAIN,
+        ValloxService.SET_PRESET_MODE_WITH_DURATION,
+        {ATTR_ENTITY_ID: FAN_ENTITY_ID, ValloxServiceArgument.PRESET_MODE: preset_mode}
+        | time_limit_data,
+        blocking=True,
+    )
+
+    mock_vallox_client.set_profile.assert_called_once_with(profile, expected_duration)
+    # One fetch at setup, and one refresh after the change.
+    assert mock_vallox_client.fetch_metric_data.call_count == 2
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    "service_data",
+    [
+        # Home, Away and Auto have no timer.
+        pytest.param(
+            {
+                ValloxServiceArgument.PRESET_MODE: "home",
+                ValloxServiceArgument.DURATION: {"minutes": 30},
+            },
+            id="preset_without_timer",
+        ),
+        pytest.param(
+            {
+                ValloxServiceArgument.PRESET_MODE: "boost",
+                ValloxServiceArgument.DURATION: {"minutes": 0},
+            },
+            id="zero_duration",
+        ),
+        # The unit would take this duration as no time limit.
+        pytest.param(
+            {
+                ValloxServiceArgument.PRESET_MODE: "boost",
+                ValloxServiceArgument.DURATION: {
+                    "minutes": PROFILE_DURATION_INDEFINITE
+                },
+            },
+            id="duration_too_long",
+        ),
+        # The unit's timers count whole minutes.
+        pytest.param(
+            {
+                ValloxServiceArgument.PRESET_MODE: "boost",
+                ValloxServiceArgument.DURATION: {"minutes": 29, "seconds": 30},
+            },
+            id="seconds",
+        ),
+        # Only hours and minutes are accepted, so that a duration copied from
+        # vallox.set_profile, where 30 means minutes, is not taken as seconds.
+        pytest.param(
+            {
+                ValloxServiceArgument.PRESET_MODE: "boost",
+                ValloxServiceArgument.DURATION: 30,
+            },
+            id="plain_number",
+        ),
+        pytest.param(
+            {
+                ValloxServiceArgument.PRESET_MODE: "boost",
+                ValloxServiceArgument.DURATION: {"minutes": 30},
+                ValloxServiceArgument.NO_TIME_LIMIT: True,
+            },
+            id="duration_and_no_time_limit",
+        ),
+    ],
+)
+async def test_set_preset_mode_with_duration_invalid(
+    hass: HomeAssistant,
+    mock_vallox_client: AsyncMock,
+    service_data: dict[str, Any],
+) -> None:
+    """Test that invalid input is rejected before anything is sent."""
+    with pytest.raises(probatio.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            ValloxService.SET_PRESET_MODE_WITH_DURATION,
+            {ATTR_ENTITY_ID: FAN_ENTITY_ID} | service_data,
+            blocking=True,
+        )
+
+    mock_vallox_client.set_profile.assert_not_called()
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    ("time_limit_data", "translation_key", "translation_placeholders"),
+    [
+        pytest.param(
+            {ValloxServiceArgument.DURATION: {"minutes": 30}},
+            "failed_to_set_preset_mode_for_duration",
+            {"preset_mode": "boost", "duration": "30"},
+            id="duration",
+        ),
+        pytest.param(
+            {ValloxServiceArgument.NO_TIME_LIMIT: True},
+            "failed_to_set_preset_mode_without_time_limit",
+            {"preset_mode": "boost"},
+            id="no_time_limit",
+        ),
+        pytest.param(
+            {},
+            "failed_to_set_preset_mode",
+            {"preset_mode": "boost"},
+            id="stored_duration",
+        ),
+    ],
+)
+async def test_set_preset_mode_with_duration_error(
+    hass: HomeAssistant,
+    mock_vallox_client: AsyncMock,
+    time_limit_data: dict[str, Any],
+    translation_key: str,
+    translation_placeholders: dict[str, str],
+) -> None:
+    """Test error handling when activating a preset with a time limit fails."""
+    mock_vallox_client.set_profile.side_effect = ValloxApiException("API error")
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            ValloxService.SET_PRESET_MODE_WITH_DURATION,
+            {ATTR_ENTITY_ID: FAN_ENTITY_ID, ValloxServiceArgument.PRESET_MODE: "boost"}
+            | time_limit_data,
+            blocking=True,
         )
 
     assert exc_info.value.translation_domain == DOMAIN

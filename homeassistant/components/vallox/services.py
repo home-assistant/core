@@ -1,13 +1,17 @@
 """Services for the Vallox integration."""
 
+from datetime import timedelta
 from enum import StrEnum, auto
 import logging
 
 import probatio
 from vallox_websocket_api import Profile, ValloxApiException
 
+from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv, service
+from homeassistant.helpers.typing import VolDictType
 
 from .const import DOMAIN, PRESET_MODE_TO_VALLOX_PROFILE, PROFILE_DURATION_INDEFINITE
 from .coordinator import ValloxConfigEntry, ValloxDataUpdateCoordinator
@@ -22,6 +26,7 @@ class ValloxService(StrEnum):
     SET_PROFILE_FAN_SPEED_AWAY = auto()
     SET_PROFILE_FAN_SPEED_BOOST = auto()
     SET_PROFILE = auto()
+    SET_PRESET_MODE_WITH_DURATION = auto()
 
 
 class ValloxServiceArgument(StrEnum):
@@ -30,6 +35,8 @@ class ValloxServiceArgument(StrEnum):
     FAN_SPEED = auto()
     PROFILE = auto()
     DURATION = auto()
+    PRESET_MODE = auto()
+    NO_TIME_LIMIT = auto()
 
 
 SERVICE_SCHEMA_SET_PROFILE_FAN_SPEED = probatio.Schema(
@@ -50,6 +57,39 @@ SERVICE_SCHEMA_SET_PROFILE = probatio.Schema(
         ),
     }
 )
+
+
+def _whole_minutes(value: timedelta) -> timedelta:
+    """Reject durations with seconds, as the unit's timers count minutes."""
+    if value % timedelta(minutes=1):
+        raise probatio.Invalid("Duration must be a whole number of minutes")
+    return value
+
+
+_DURATION_OR_NO_TIME_LIMIT = "Set either a duration or no time limit, not both"
+
+SERVICE_SCHEMA_SET_PRESET_MODE_WITH_DURATION: VolDictType = {
+    probatio.Required(ValloxServiceArgument.PRESET_MODE): probatio.In(
+        ["boost", "fireplace", "extra"]
+    ),
+    probatio.Exclusive(
+        ValloxServiceArgument.DURATION, "time_limit", msg=_DURATION_OR_NO_TIME_LIMIT
+    ): probatio.All(
+        cv.positive_time_period_dict,
+        _whole_minutes,
+        # The unit takes a timer of PROFILE_DURATION_INDEFINITE (65535) minutes
+        # as no time limit, so the longest real duration is one minute less.
+        probatio.Range(
+            min=timedelta(minutes=1),
+            max=timedelta(minutes=PROFILE_DURATION_INDEFINITE - 1),
+        ),
+    ),
+    probatio.Exclusive(
+        ValloxServiceArgument.NO_TIME_LIMIT,
+        "time_limit",
+        msg=_DURATION_OR_NO_TIME_LIMIT,
+    ): cv.boolean,
+}
 
 
 def _get_coordinator(
@@ -152,4 +192,12 @@ def async_setup_services(hass: HomeAssistant) -> None:
         ValloxService.SET_PROFILE,
         _async_set_profile,
         schema=SERVICE_SCHEMA_SET_PROFILE,
+    )
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        ValloxService.SET_PRESET_MODE_WITH_DURATION,
+        entity_domain=FAN_DOMAIN,
+        schema=SERVICE_SCHEMA_SET_PRESET_MODE_WITH_DURATION,
+        func="async_set_preset_mode_with_duration",
     )

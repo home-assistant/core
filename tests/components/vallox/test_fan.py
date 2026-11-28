@@ -196,7 +196,7 @@ async def test_turn_on_off_exception(
             {ATTR_PERCENTAGE: 15, ATTR_PRESET_MODE: "away"},
             [
                 call.set_fan_speed(Profile.AWAY, 15),
-                call.set_profile(Profile.AWAY),
+                call.set_profile(Profile.AWAY, None),
                 call.switch_on(),
                 call.fetch_metric_data(),
             ],
@@ -207,7 +207,7 @@ async def test_turn_on_off_exception(
             {ATTR_PERCENTAGE: 15, ATTR_PRESET_MODE: "away"},
             [
                 call.set_fan_speed(Profile.AWAY, 15),
-                call.set_profile(Profile.AWAY),
+                call.set_profile(Profile.AWAY, None),
                 call.switch_on(),
                 call.fetch_metric_data(),
             ],
@@ -217,7 +217,7 @@ async def test_turn_on_off_exception(
             METRICS_UNIT_ON,
             {ATTR_PRESET_MODE: "away"},
             [
-                call.set_profile(Profile.AWAY),
+                call.set_profile(Profile.AWAY, None),
                 call.switch_on(),
                 call.fetch_metric_data(),
             ],
@@ -230,7 +230,7 @@ async def test_turn_on_off_exception(
             METRICS_UNIT_ON,
             {ATTR_PRESET_MODE: "home"},
             [
-                call.set_profile(Profile.HOME),
+                call.set_profile(Profile.HOME, None),
                 call.switch_on(),
                 call.fetch_metric_data(),
             ],
@@ -310,7 +310,7 @@ async def test_turn_on_with_parameters(
             "set_profile",
             [
                 call.set_fan_speed(Profile.AWAY, 15),
-                call.set_profile(Profile.AWAY),
+                call.set_profile(Profile.AWAY, None),
                 call.fetch_metric_data(),
             ],
             id="preset",
@@ -319,7 +319,7 @@ async def test_turn_on_with_parameters(
             "switch_on",
             [
                 call.set_fan_speed(Profile.AWAY, 15),
-                call.set_profile(Profile.AWAY),
+                call.set_profile(Profile.AWAY, None),
                 call.switch_on(),
                 call.fetch_metric_data(),
             ],
@@ -419,7 +419,7 @@ async def test_set_preset_mode(
         blocking=True,
     )
 
-    mock_vallox_client.set_profile.assert_called_once_with(expected_profile)
+    mock_vallox_client.set_profile.assert_called_once_with(expected_profile, None)
     # One fetch at setup, and one refresh after the change.
     assert mock_vallox_client.fetch_metric_data.call_count == 2
 
@@ -447,7 +447,7 @@ async def test_set_preset_mode_exception(
     """Test set preset mode when the unit returns an error."""
     mock_vallox_client.set_profile.side_effect = ValloxApiException("Fake exception")
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             FAN_DOMAIN,
             FanService.SET_PRESET_MODE,
@@ -457,6 +457,9 @@ async def test_set_preset_mode_exception(
             },
             blocking=True,
         )
+
+    assert exc_info.value.translation_key == "failed_to_set_preset_mode"
+    assert exc_info.value.translation_placeholders == {"preset_mode": "away"}
 
 
 @pytest.mark.usefixtures("init_integration")
