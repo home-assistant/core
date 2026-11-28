@@ -229,4 +229,4 @@ class VeSyncSelectEntity(VeSyncBaseEntity, SelectEntity):
             if self.device.last_response:
                 raise HomeAssistantError(self.device.last_response.message)
             raise HomeAssistantError("Unknown error selecting option, no response.")
-        self.async_write_ha_state()
+        self.coordinator.async_mark_command(self.device)

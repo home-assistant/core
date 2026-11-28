@@ -146,4 +146,4 @@ class VeSyncNumberEntity(VeSyncBaseEntity[VeSyncHumidifier], NumberEntity):
             if self.device.last_response:
                 raise HomeAssistantError(self.device.last_response.message)
             raise HomeAssistantError("Failed to set value.")
-        self.async_write_ha_state()
+        self.coordinator.async_mark_command(self.device)

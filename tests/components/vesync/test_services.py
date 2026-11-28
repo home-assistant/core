@@ -1,6 +1,6 @@
 """Tests for VeSync services."""
 
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -180,11 +180,13 @@ async def test_async_new_device_discovery_detail_error(
     )
     fan.update = AsyncMock(side_effect=VeSyncError("API failure"))
 
-    with pytest.raises(HomeAssistantError) as err:
-        await hass.services.async_call(
-            DOMAIN, VeSyncService.UPDATE_DEVICES, {}, blocking=True
-        )
-    await hass.async_block_till_done()
+    # New entities request a coordinator refresh, which would poll the fans again
+    with patch.object(config_entry.runtime_data, "async_request_refresh"):
+        with pytest.raises(HomeAssistantError) as err:
+            await hass.services.async_call(
+                DOMAIN, VeSyncService.UPDATE_DEVICES, {}, blocking=True
+            )
+        await hass.async_block_till_done()
 
     assert err.value.translation_key == "api_response_error"
     healthy_fan.update.assert_awaited_once()

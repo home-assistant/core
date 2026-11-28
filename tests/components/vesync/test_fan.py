@@ -102,7 +102,7 @@ async def test_turn_on_off_success(
         patch(command, new_callable=AsyncMock, return_value=True) as method_mock,
     ):
         with patch(
-            "homeassistant.components.vesync.fan.VeSyncFanHA.async_write_ha_state"
+            "homeassistant.components.vesync.coordinator.VeSyncDataCoordinator.async_mark_command"
         ) as update_mock:
             await hass.services.async_call(
                 FAN_DOMAIN,
@@ -191,7 +191,7 @@ async def test_set_preset_mode(
         ) as method_mock,
     ):
         with patch(
-            "homeassistant.components.vesync.fan.VeSyncFanHA.async_write_ha_state"
+            "homeassistant.components.vesync.coordinator.VeSyncDataCoordinator.async_mark_command"
         ) as update_mock:
             await hass.services.async_call(
                 FAN_DOMAIN,
@@ -205,7 +205,7 @@ async def test_set_preset_mode(
 
         await hass.async_block_till_done()
         method_mock.assert_called_once()
-        update_mock.assert_called_once()
+        update_mock.assert_called()
 
 
 async def test_out_of_range_fan_level(
@@ -253,7 +253,7 @@ async def test_set_preset_mode_eco(
             return_value=True,
         ) as method_mock,
         patch(
-            "homeassistant.components.vesync.fan.VeSyncFanHA.async_write_ha_state"
+            "homeassistant.components.vesync.coordinator.VeSyncDataCoordinator.async_mark_command"
         ) as update_mock,
     ):
         await hass.services.async_call(
@@ -268,7 +268,7 @@ async def test_set_preset_mode_eco(
         await hass.async_block_till_done()
 
     method_mock.assert_awaited_once_with("eco")
-    update_mock.assert_called_once()
+    update_mock.assert_called()
 
 
 @pytest.mark.parametrize(
@@ -309,7 +309,7 @@ async def test_pedestal_fan_oscillation(
         ) as horizontal_mock,
     ):
         with patch(
-            "homeassistant.components.vesync.fan.VeSyncFanHA.async_write_ha_state"
+            "homeassistant.components.vesync.coordinator.VeSyncDataCoordinator.async_mark_command"
         ) as update_mock:
             await hass.services.async_call(
                 FAN_DOMAIN,
@@ -358,7 +358,7 @@ async def test_oscillation_success(
         ) as method_mock,
     ):
         with patch(
-            "homeassistant.components.vesync.fan.VeSyncFanHA.async_write_ha_state"
+            "homeassistant.components.vesync.coordinator.VeSyncDataCoordinator.async_mark_command"
         ) as update_mock:
             await hass.services.async_call(
                 FAN_DOMAIN,
@@ -805,3 +805,104 @@ async def test_set_preset_mode_pet(
         )
 
     method_mock.assert_awaited_once_with()
+
+
+async def test_failed_speed_change_keeps_turn_on_hold(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test a successful turn on is held even when the following speed change fails."""
+    mock_devices_response(
+        aioclient_mock, "Air Purifier 200s", details_override={"enabled": False}
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with (
+        patch(
+            "pyvesync.devices.vesyncpurifier.VeSyncAirBypass.turn_on",
+            return_value=True,
+        ),
+        patch(
+            "pyvesync.devices.vesyncpurifier.VeSyncAirBypass.set_fan_speed",
+            return_value=False,
+        ),
+        patch(
+            "homeassistant.components.vesync.coordinator.VeSyncDataCoordinator.async_mark_command"
+        ) as mark_mock,
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            FanService.TURN_ON,
+            {
+                TargetKey.ENTITY_ID: "fan.air_purifier_200s",
+                FanServiceArgument.PERCENTAGE: 50,
+            },
+            blocking=True,
+        )
+
+    mark_mock.assert_called_once()
+
+
+async def test_pedestal_fan_partial_oscillation_holds_device(
+    hass: HomeAssistant,
+    pedestal_fan_config_entry: MockConfigEntry,
+) -> None:
+    """Test a pedestal fan is held when only one oscillation axis changes."""
+    with (
+        patch(
+            "pyvesync.devices.vesyncfan.VeSyncPedestalFan.toggle_vertical_oscillation",
+            new_callable=AsyncMock,
+            return_value=True,
+        ),
+        patch(
+            "pyvesync.devices.vesyncfan.VeSyncPedestalFan."
+            "toggle_horizontal_oscillation",
+            new_callable=AsyncMock,
+            return_value=False,
+        ),
+        patch(
+            "homeassistant.components.vesync.coordinator.VeSyncDataCoordinator.async_mark_command"
+        ) as mark_mock,
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            FanService.OSCILLATE,
+            {
+                TargetKey.ENTITY_ID: ENTITY_PEDESTAL_FAN,
+                FanServiceArgument.OSCILLATING: True,
+            },
+            blocking=True,
+        )
+
+    mark_mock.assert_called_once()
+
+
+async def test_set_preset_mode_fails_when_turn_on_fails(
+    hass: HomeAssistant,
+    fan_config_entry: MockConfigEntry,
+) -> None:
+    """Test a preset change on an off fan raises if turning it on fails."""
+    with (
+        patch(
+            "pyvesync.devices.vesyncfan.VeSyncTowerFan.turn_on",
+            return_value=False,
+        ),
+        patch("pyvesync.devices.vesyncfan.VeSyncTowerFan.set_auto_mode") as method_mock,
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            FanService.TURN_ON,
+            {
+                TargetKey.ENTITY_ID: ENTITY_FAN,
+                FanServiceArgument.PRESET_MODE: "auto",
+            },
+            blocking=True,
+        )
+
+    method_mock.assert_not_called()

@@ -28,7 +28,7 @@ from .common import mock_devices_response, mock_firmware
 
 ENTITY_RESET_FILTER = "button.air_purifier_200s_reset_filter"
 RESET_FILTER = "pyvesync.devices.vesyncpurifier.VeSyncAirBypass.reset_filter"
-UPDATE_ALL_DEVICES = "pyvesync.vesync.VeSync.update_all_devices"
+PURIFIER_UPDATE = "pyvesync.devices.vesyncpurifier.VeSyncAirBypass.update"
 
 
 async def test_button_state(
@@ -64,7 +64,7 @@ async def test_reset_filter(
 
     with (
         patch(RESET_FILTER, return_value=True) as method_mock,
-        patch(UPDATE_ALL_DEVICES) as update_mock,
+        patch(PURIFIER_UPDATE) as update_mock,
     ):
         await hass.services.async_call(
             BUTTON_DOMAIN,
@@ -105,7 +105,7 @@ async def test_reset_filter_raises_error(
 
     with (
         patch(RESET_FILTER, **reset_filter) as method_mock,
-        patch(UPDATE_ALL_DEVICES) as update_mock,
+        patch(PURIFIER_UPDATE) as update_mock,
     ):
         with pytest.raises(
             HomeAssistantError, match="Invalid response from the VeSync API"
@@ -172,7 +172,7 @@ async def test_fryer_button_press(
 
     with (
         patch(f"{FRYER_CLASS}.{method}", return_value=True) as method_mock,
-        patch(UPDATE_ALL_DEVICES) as update_mock,
+        patch(f"{FRYER_CLASS}.update") as update_mock,
     ):
         await hass.services.async_call(
             BUTTON_DOMAIN,
@@ -313,7 +313,7 @@ async def test_dual_fryer_button_press(
 
     with (
         patch(f"{DUAL_FRYER_CLASS}.{method}", return_value=True) as method_mock,
-        patch(UPDATE_ALL_DEVICES),
+        patch(f"{DUAL_FRYER_CLASS}.update"),
     ):
         await hass.services.async_call(
             BUTTON_DOMAIN,
