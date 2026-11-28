@@ -1,0 +1,7 @@
+{
+  "services": {
+    "set_forecast_location": {
+      "service": "mdi:map-marker-radius"
+    }
+  }
+}
