@@ -12,7 +12,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .director_utils import update_variables_for_config_entry
 
 if TYPE_CHECKING:
-    from . import Control4ConfigEntry
+    from .const import Control4ConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

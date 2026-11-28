@@ -29,6 +29,14 @@ def mock_director_variables(
         get_all_item_variable_value
     )
 
+    def get_item_variables(item_id: int) -> list[dict[str, Any]]:
+        return [
+            {"varName": name, "value": value}
+            for name, value in variables.get(item_id, {}).items()
+        ]
+
+    mock_c4_director.get_item_variables.side_effect = get_item_variables
+
 
 async def setup_integration(
     hass: HomeAssistant,

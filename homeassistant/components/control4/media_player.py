@@ -18,7 +18,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 
-from . import Control4ConfigEntry, Control4RuntimeData
 from .const import (
     CONTROL4_CURRENT_VIDEO_DEVICE,
     CONTROL4_MEDIA_INFO,
@@ -28,9 +27,11 @@ from .const import (
     CONTROL4_POWER_STATE,
     CONTROL4_STOPPED,
     CONTROL4_VOLUME_STATE,
+    Control4ConfigEntry,
+    Control4RuntimeData,
 )
 from .coordinator import Control4DataUpdateCoordinator
-from .entity import Control4Entity
+from .entity import Control4CoordinatorEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -157,7 +158,7 @@ class _RoomExtraStoredData(ExtraStoredData):
         return asdict(self)
 
 
-class Control4Room(Control4Entity, MediaPlayerEntity, RestoreEntity):
+class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity, RestoreEntity):
     """Control4 Room entity."""
 
     _attr_has_entity_name = True
