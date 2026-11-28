@@ -31,6 +31,7 @@ class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]
     ) -> None:
         """Initialize the coordinator."""
         self.api = FlussApiClient(api_key, session=async_get_clientsession(hass))
+        self._status_errors: set[str] = set()
         super().__init__(
             hass,
             LOGGER,
@@ -51,9 +52,20 @@ class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]
             response = await self.api.async_get_device_status(device_id)
         except FlussDeviceOfflineError:
             return {"internetConnected": False}
+        except FlussApiClientAuthenticationError as err:
+            raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
         except FlussApiClientError as err:
-            raise UpdateFailed(f"Error fetching Fluss device status: {err}") from err
-        return response["status"]
+            # Best effort: the trigger buttons work without status, and the API can
+            # refuse reads for account-level reasons (e.g. an exhausted quota).
+            if device_id not in self._status_errors:
+                self._status_errors.add(device_id)
+                LOGGER.info("Error fetching status for %s: %s", device_id, err)
+            return {}
+        if device_id in self._status_errors:
+            self._status_errors.discard(device_id)
+            LOGGER.info("Status for %s is available again", device_id)
+        status: dict[str, Any] = response["status"]
+        return status
 
     @override
     async def _async_update_data(self) -> dict[str, dict[str, Any]]:

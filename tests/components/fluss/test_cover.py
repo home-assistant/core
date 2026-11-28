@@ -25,6 +25,7 @@ from homeassistant.const import (
     STATE_CLOSED,
     STATE_OPEN,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -106,7 +107,7 @@ async def test_cover_unavailable_on_status_error(
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """A failed per-device status fetch fails the refresh and marks the cover unavailable."""
+    """A failed status fetch leaves the cover unavailable but the button usable."""
     mock_api_client.async_get_device_status.return_value = {
         "status": {"internetConnected": True, "openCloseStatus": "Closed"}
     }
@@ -119,6 +120,7 @@ async def test_cover_unavailable_on_status_error(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(ENTITY_ID_1).state == STATE_UNAVAILABLE
+    assert hass.states.get("button.device_1").state == STATE_UNKNOWN
     assert entity_registry.async_get(ENTITY_ID_1) is not None
 
 
