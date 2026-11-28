@@ -633,8 +633,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         baseline_state = self._creation_state or state
         self._creation_state = None
         if self._reload_attr_baseline is None and baseline_state is not None:
-            # Materialized here, not in __init__: subclasses extend
-            # _reload_on_change_attrs after HomeAccessory.__init__.
+            # Subclasses can add attributes to watch after the base constructor runs.
             self._reload_attr_baseline = {
                 attr: baseline_state.attributes.get(attr)
                 for attr in self._reload_on_change_attrs
@@ -644,10 +643,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
             and state is not baseline_state
             and self._async_reload_attrs_diverged(state)
         ):
-            # Catch up on changes between construction and run. The reload
-            # is deferred: dispatcher targets start eagerly, so an inline
-            # reload would stop and replace this accessory before it
-            # finished starting.
+            # A reload now could replace the accessory before it finishes starting.
             self._pending_reload = self.hass.loop.call_soon(self.async_reload)
         self._subscriptions.append(
             async_track_state_change_event(
@@ -698,10 +694,9 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
 
     @ha_callback
     def _async_reload_attrs_diverged(self, new_state: State) -> bool:
-        """Advance the reload baseline once per change in available states.
+        """Return True and update the baseline when a watched attribute changes.
 
-        Start with the attributes the accessory was built from, so a change
-        detected after startup or an outage can still trigger a reload.
+        Keep the baseline while the entity is unavailable.
         """
         if (
             new_state.state == STATE_UNAVAILABLE

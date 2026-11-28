@@ -1230,7 +1230,7 @@ async def test_homekit_reload_tv_accessory_on_attr_change(
     events: list[tuple[str, TVAttributes]],
     expected_sources: list[str],
 ) -> None:
-    """Rebuild a TV accessory when newly reported inputs change its structure."""
+    """Test that new inputs cause HomeKit to rebuild the TV accessory."""
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
     )
@@ -1266,9 +1266,9 @@ async def test_homekit_reload_tv_accessory_on_attr_change(
 async def test_homekit_reload_tv_accessory_attrs_changed_before_run(
     hass: HomeAssistant,
 ) -> None:
-    """Test catch-up reload for changes between accessory creation and run.
+    """Test reload when TV inputs change before the accessory starts.
 
-    The replaced accessory must not keep any state subscriptions behind.
+    Check that the old accessory removes its state subscriptions.
     """
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
