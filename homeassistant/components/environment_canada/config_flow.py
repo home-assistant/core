@@ -62,7 +62,6 @@ from .const import (
     DEFAULT_RADAR_TIMESTAMP,
     DOMAIN,
     RADAR_COLOR_OPTIONS,
-    RADAR_LAYER_OPTIONS,
     RADAR_LAYERS,
     SECTION_IMAGE,
     SECTION_MAP,
@@ -74,6 +73,20 @@ from .coordinator import ECConfigEntry
 _LOGGER = logging.getLogger(__name__)
 
 MAP_LANGUAGES = {"en": "english", "fr": "french"}
+
+# Options that only some radar layers support, so the options flow offers
+# them only for those layers. precip_type is categorical (rain, snow, mixed):
+# it has a single colour style, no nowcast layer to extend the loop into the
+# future, and Environment Canada's server refuses to interpolate it.
+_RADAR_LAYER_OPTIONS: dict[str, frozenset[str]] = {
+    "rain": frozenset(
+        {CONF_RADAR_COLORS, CONF_RADAR_INTERPOLATION, CONF_RADAR_FUTURE_MINUTES}
+    ),
+    "snow": frozenset(
+        {CONF_RADAR_COLORS, CONF_RADAR_INTERPOLATION, CONF_RADAR_FUTURE_MINUTES}
+    ),
+    "precip_type": frozenset(),
+}
 
 
 async def validate_input(data):
@@ -198,7 +211,7 @@ class OptionsFlowHandler(OptionsFlowWithReload):
     """Handle Environment Canada radar camera options.
 
     The radar type is chosen first, because some options apply only to some
-    radar types (see RADAR_LAYER_OPTIONS); the second step offers only those
+    radar types (see _RADAR_LAYER_OPTIONS); the second step offers only those
     that apply, so an unsupported combination can't be saved.
     """
 
@@ -250,7 +263,7 @@ class OptionsFlowHandler(OptionsFlowWithReload):
             )
 
         options = self.config_entry.options
-        layer_options = RADAR_LAYER_OPTIONS[self._layer]
+        layer_options = _RADAR_LAYER_OPTIONS[self._layer]
 
         radar_fields: dict[Any, Any] = {}
         if CONF_RADAR_COLORS in layer_options:
