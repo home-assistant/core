@@ -2171,6 +2171,33 @@ async def test_async_register_event_driven(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures(
     "enable_bluetooth", "register_hci0_scanner", "register_hci1_scanner"
 )
+async def test_event_driven_release_twice_keeps_other_registration(
+    hass: HomeAssistant,
+) -> None:
+    """Releasing a registration twice doesn't release another one of the address."""
+    device = generate_ble_device(EVENT_DRIVEN_ADDRESS, "event")
+    start = MONOTONIC_TIME()
+    inject_advertisement_with_time_and_source(
+        hass, device, _event_advertisement(OPEN, -50), start, HCI0_SOURCE_ADDRESS
+    )
+    inject_advertisement_with_time_and_source(
+        hass, device, _event_advertisement(OPEN, -90), start + 0.1, HCI1_SOURCE_ADDRESS
+    )
+    cancel = async_register_event_driven(hass, EVENT_DRIVEN_ADDRESS)
+    async_register_event_driven(hass, EVENT_DRIVEN_ADDRESS)
+
+    cancel()
+    cancel()
+    inject_advertisement_with_time_and_source(
+        hass, device, _event_advertisement(CLOSED, -90), start + 20, HCI1_SOURCE_ADDRESS
+    )
+
+    assert _event_driven_history() == (HCI1_SOURCE_ADDRESS, CLOSED)
+
+
+@pytest.mark.usefixtures(
+    "enable_bluetooth", "register_hci0_scanner", "register_hci1_scanner"
+)
 async def test_event_driven_history_saved_at_stop(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
@@ -2736,6 +2763,30 @@ async def test_event_driven_history_removed_after_loading(
 ) -> None:
     """The stored accepted advertisements are removed once loaded."""
     assert storage.EVENT_DRIVEN_STORAGE_KEY not in hass_storage
+
+
+@pytest.mark.usefixtures("one_adapter", "disable_new_discovery_flows")
+async def test_corrupt_event_driven_history_restores_nothing(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Bluetooth starts without restoring accepted advertisements it can't read."""
+    hass_storage[storage.EVENT_DRIVEN_STORAGE_KEY] = {
+        "version": storage.EVENT_DRIVEN_STORAGE_VERSION,
+        "minor_version": 1,
+        "key": storage.EVENT_DRIVEN_STORAGE_KEY,
+        "data": {
+            "sources": {
+                EVENT_DRIVEN_ADDRESS: {"source": "weak-proxy", "connectable": False}
+            },
+            "advertisements": {},
+        },
+    }
+    assert await async_setup_component(hass, bluetooth.DOMAIN, {})
+    await hass.async_block_till_done()
+
+    async_register_event_driven(hass, EVENT_DRIVEN_ADDRESS)
+
+    assert bluetooth.async_last_service_info(hass, EVENT_DRIVEN_ADDRESS, False) is None
 
 
 @pytest.mark.usefixtures("enable_bluetooth")
