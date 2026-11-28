@@ -3,6 +3,7 @@
 import logging
 from typing import override
 
+import aiohttp
 from pyezvizapi.exceptions import HTTPError, InvalidHost, PyEzvizError
 
 from homeassistant.components import ffmpeg
@@ -13,6 +14,7 @@ from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_INTEGRATION_DISCO
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery_flow
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
@@ -24,8 +26,14 @@ from .const import (
 )
 from .coordinator import EzvizConfigEntry, EzvizDataUpdateCoordinator
 from .entity import EzvizEntity
+from .vtm import async_register_vtm_camera, vtm_stream_url
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _reports_no_rtsp(camera_data: dict) -> bool:
+    """Return True when the cloud reports that the device has no RTSP port."""
+    return camera_data.get("reported_local_rtsp_port") == 0
 
 
 async def async_setup_entry(
@@ -60,7 +68,7 @@ async def async_setup_entry(
                 ffmpeg_arguments,
             )
 
-        else:
+        elif not _reports_no_rtsp(value):
             discovery_flow.async_create_flow(
                 hass,
                 DOMAIN,
@@ -84,6 +92,20 @@ async def async_setup_entry(
             camera_password = None
             camera_rtsp_stream = ""
 
+        else:
+            # The cloud reports no RTSP port, so don't ask for RTSP credentials.
+            ffmpeg_arguments = DEFAULT_FFMPEG_ARGUMENTS
+            camera_username = DEFAULT_CAMERA_USERNAME
+            camera_password = None
+            camera_rtsp_stream = None
+
+        # Configured RTSP credentials are an explicit choice and win over the
+        # reported port, which is only a hint. Without them, live view comes
+        # from pyezvizapi through the EZVIZ cloud.
+        use_vtm = camera_password is None
+        if use_vtm:
+            async_register_vtm_camera(hass, entry, camera, coordinator.ezviz_client)
+
         camera_entities.append(
             EzvizCamera(
                 hass,
@@ -94,6 +116,7 @@ async def async_setup_entry(
                 camera_rtsp_stream,
                 value["local_rtsp_port"],
                 ffmpeg_arguments,
+                use_vtm,
             )
         )
 
@@ -115,6 +138,7 @@ class EzvizCamera(EzvizEntity, Camera):
         camera_rtsp_stream: str | None,
         local_rtsp_port: int,
         ffmpeg_arguments: str | None,
+        use_vtm: bool,
     ) -> None:
         """Initialize a EZVIZ security camera."""
         super().__init__(coordinator, serial)
@@ -127,7 +151,8 @@ class EzvizCamera(EzvizEntity, Camera):
         self._ffmpeg_arguments = ffmpeg_arguments
         self._ffmpeg = get_ffmpeg_manager(hass)
         self._attr_unique_id = serial
-        if camera_password:
+        self._use_vtm = use_vtm
+        if camera_password or use_vtm:
             self._attr_supported_features = CameraEntityFeature.STREAM
 
     @property
@@ -171,15 +196,49 @@ class EzvizCamera(EzvizEntity, Camera):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return a frame from the camera stream."""
+        if self._use_vtm:
+            return await self._async_vtm_camera_image(width, height)
         if self._rtsp_stream is None:
             return None
         return await ffmpeg.async_get_image(
             self.hass, self._rtsp_stream, width=width, height=height
         )
 
+    async def _async_vtm_camera_image(
+        self, width: int | None, height: int | None
+    ) -> bytes | None:
+        """Return a still image without waking a sleeping device.
+
+        Opening the stream just for a snapshot would wake battery devices on
+        every dashboard refresh, so use the stream only while it has active
+        outputs (async_get_image would restart a stopped one) and the last
+        alarm picture otherwise. Cloud streaming is only used for cameras
+        without a camera config entry, so there is no key for encrypted
+        pictures; the image entity decrypts them for configured cameras.
+        """
+        if (
+            self.stream is not None
+            and self.stream.outputs()
+            and (image := await self.stream.async_get_image(width, height))
+        ):
+            return image
+
+        url = self.data.get("last_alarm_pic")
+        if not isinstance(url, str) or not url or self.data.get("encrypted"):
+            return None
+        try:
+            response = await async_get_clientsession(self.hass).get(url)
+            response.raise_for_status()
+            return await response.read()
+        except aiohttp.ClientError as err:
+            _LOGGER.debug("%s: cannot fetch last alarm picture: %s", self._serial, err)
+            return None
+
     @override
     async def stream_source(self) -> str | None:
         """Return the stream source."""
+        if self._use_vtm:
+            return vtm_stream_url(self.hass, self._serial)
         if self._password is None:
             return None
         local_ip = self.data["local_ip"]
