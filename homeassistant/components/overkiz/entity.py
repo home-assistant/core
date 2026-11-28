@@ -148,7 +148,7 @@ class OverkizDescriptiveEntity(OverkizEntity):
                 self._attr_name = self.device.label
         elif isinstance(description.name, str):
             self._attr_name = description.name
-        else:
+        elif description.translation_key is None:
             # Fall back to the device name, not the device class name.
             self._attr_name = None
 

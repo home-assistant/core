@@ -37,16 +37,13 @@ from homeassistant.helpers.issue_registry import (
 from homeassistant.helpers.start import async_at_started
 
 from . import OverkizDataConfigEntry
-from .const import DOMAIN, LOGGER, OverkizServiceArgument
+from .const import DOMAIN, LOGGER, TILT_STEP_SIZE, OverkizServiceArgument
 from .coordinator import OverkizDataUpdateCoordinator, OverkizDeviceCommand
 from .entity import OverkizDescriptiveEntity
 
 # Special position values reported by some Overkiz devices
 _POSITION_MY = 108  # "My position" preset
 _POSITION_UNKNOWN = 124  # "Unknown position" preset
-
-# Default tilt step size (in degrees) used for RTS tilt commands
-_TILT_STEP_SIZE = 5
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -155,21 +152,16 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         close_tilt_command=OverkizCommand.LOWER_CLOSE,
         stop_tilt_command=OverkizCommand.STOP,
     ),
-    # Needs override to add support for very specific tilt commands
+    # Needs override since this blind only tilts its slats. Open and close
+    # both turn the slats to a closed end, the my position (set on the motor)
+    # opens them, starting from the closed end. Tilt steps are buttons.
     # uiClass is VenetianBlind
     OverkizCoverDescription(
         key=UIWidget.TILT_ONLY_VENETIAN_BLIND,
         device_class=CoverDeviceClass.BLIND,
         is_closed_state=OverkizState.CORE_OPEN_CLOSED,
-        # Position commands fully open/close the tilt
-        open_command=OverkizCommand.OPEN,
-        close_command=OverkizCommand.CLOSE,
-        stop_command=OverkizCommand.STOP,
-        # position (1-127), execution duration (0-15, optional)
-        open_tilt_command=OverkizCommand.TILT_POSITIVE,
-        open_tilt_command_args=(_TILT_STEP_SIZE,),
-        close_tilt_command=OverkizCommand.TILT_NEGATIVE,
-        close_tilt_command_args=(_TILT_STEP_SIZE,),
+        open_tilt_command=OverkizCommand.MY,
+        close_tilt_command=OverkizCommand.CLOSE,
         stop_tilt_command=OverkizCommand.STOP,
     ),
     # Needs override to support very specific tilt commands
@@ -183,9 +175,9 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         stop_command=OverkizCommand.STOP,
         # position (1-127), execution duration (0-15, optional)
         open_tilt_command=OverkizCommand.TILT_POSITIVE,
-        open_tilt_command_args=(_TILT_STEP_SIZE,),
+        open_tilt_command_args=(TILT_STEP_SIZE,),
         close_tilt_command=OverkizCommand.TILT_NEGATIVE,
-        close_tilt_command_args=(_TILT_STEP_SIZE,),
+        close_tilt_command_args=(TILT_STEP_SIZE,),
         stop_tilt_command=OverkizCommand.STOP,
     ),
     # Needs override to support very specific tilt commands
@@ -199,9 +191,9 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         stop_command=OverkizCommand.STOP,
         # position (1-127), execution duration (0-15, optional)
         open_tilt_command=OverkizCommand.TILT_POSITIVE,
-        open_tilt_command_args=(_TILT_STEP_SIZE,),
+        open_tilt_command_args=(TILT_STEP_SIZE,),
         close_tilt_command=OverkizCommand.TILT_NEGATIVE,
-        close_tilt_command_args=(_TILT_STEP_SIZE,),
+        close_tilt_command_args=(TILT_STEP_SIZE,),
         stop_tilt_command=OverkizCommand.STOP,
     ),
     # Needs override to support very specific tilt commands (rts:SheerBlindRTSComponent)
@@ -214,9 +206,9 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         stop_command=OverkizCommand.STOP,
         # position (1-127), execution duration (0-15, optional)
         open_tilt_command=OverkizCommand.TILT_POSITIVE,
-        open_tilt_command_args=(_TILT_STEP_SIZE,),
+        open_tilt_command_args=(TILT_STEP_SIZE,),
         close_tilt_command=OverkizCommand.TILT_NEGATIVE,
-        close_tilt_command_args=(_TILT_STEP_SIZE,),
+        close_tilt_command_args=(TILT_STEP_SIZE,),
         stop_tilt_command=OverkizCommand.STOP,
     ),
     # Needs override since BioclimaticPergola uses core:SlatsOpenClosedState

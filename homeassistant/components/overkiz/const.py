@@ -51,6 +51,9 @@ UPDATE_INTERVAL_SAUTER_SMART_CONTROL: Final = timedelta(seconds=25)
 UPDATE_INTERVAL_EXECUTION: Final = timedelta(seconds=2)
 RATE_LIMIT_RETRY_AFTER: Final = timedelta(minutes=1)
 
+# Default tilt step size (in degrees) used for RTS tilt commands
+TILT_STEP_SIZE: Final = 5
+
 PLATFORMS: list[Platform] = [
     Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,
