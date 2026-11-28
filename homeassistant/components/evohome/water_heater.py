@@ -68,9 +68,6 @@ async def async_setup_platform(
 
     async_add_entities(entities)
 
-    for entity in entities:
-        await entity.update_attrs()
-
 
 class EvoDHW(EvoChild, WaterHeaterEntity):
     """Base for any evohome-compatible DHW controller."""

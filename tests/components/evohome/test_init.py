@@ -9,9 +9,11 @@ import evohomeasync2 as ec2
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.evohome.const import DOMAIN, EVOHOME_DATA, EvoService
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
+from homeassistant.components.water_heater import DOMAIN as WATER_HEATER_DOMAIN
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, EVENT_STATE_CHANGED
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
@@ -321,6 +323,30 @@ async def test_services_registered_if_setup_fails(
         assert await async_setup_component(hass, DOMAIN, {DOMAIN: config}) is False
 
     assert set(hass.services.async_services_for_domain(DOMAIN)) == set(EvoService)
+
+
+@pytest.mark.parametrize("install", ["default"])
+async def test_first_state_has_attributes(
+    hass: HomeAssistant,
+    config: dict[str, str],
+    install: str,
+) -> None:
+    """Test each entity writes one state at startup, with its evohome attributes."""
+
+    events: list[Event[EventStateChangedData]] = []
+    hass.bus.async_listen(EVENT_STATE_CHANGED, events.append)
+
+    async for _ in setup_evohome(hass, config, install=install):
+        pass
+
+    states = hass.states.async_all((CLIMATE_DOMAIN, WATER_HEATER_DOMAIN))
+    assert states
+
+    for state in states:
+        writes = [e for e in events if e.data["entity_id"] == state.entity_id]
+        assert len(writes) == 1, state.entity_id
+        assert writes[0].data["new_state"] == state
+        assert state.attributes["status"], state.entity_id
 
 
 @pytest.mark.parametrize("install", ["default"])
