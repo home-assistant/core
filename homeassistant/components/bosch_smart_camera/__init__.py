@@ -13,6 +13,7 @@ PLATFORMS = [
     Platform.BUTTON,
     Platform.CAMERA,
     Platform.LIGHT,
+    Platform.NUMBER,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.UPDATE,

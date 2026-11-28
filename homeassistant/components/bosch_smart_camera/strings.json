@@ -27,6 +27,11 @@
         "name": "Camera light"
       }
     },
+    "number": {
+      "speaker_level": {
+        "name": "Speaker level"
+      }
+    },
     "sensor": {
       "wifi_signal_strength": {
         "name": "Wi-Fi signal strength"
@@ -50,6 +55,9 @@
     "cannot_connect": {
       "message": "Unable to fetch the cameras from Bosch."
     },
+    "invalid_speaker_level": {
+      "message": "The speaker level must be a number between 0 and 100."
+    },
     "light_failed": {
       "message": "Unable to switch the camera light."
     },
@@ -61,6 +69,9 @@
     },
     "snapshot_failed": {
       "message": "Unable to fetch the camera image from Bosch."
+    },
+    "speaker_level_failed": {
+      "message": "Unable to change the speaker level at Bosch."
     }
   }
 }

@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 from bosch_shc_camera_client.actions import ActionResult
 from bosch_shc_camera_client.cameras import Camera, CameraModel
 from bosch_shc_camera_client.cloud import CloudPutResult
+from bosch_shc_camera_client.settings import AudioSettings, SettingWriteResult
 from bosch_shc_camera_client.states import CameraAccountStates, FirmwareStatus, WifiInfo
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -63,6 +64,28 @@ def mock_account_states() -> Generator[AsyncMock]:
         "bosch_shc_camera_client.client.get_camera_account_states",
         autospec=True,
         return_value={CAMERA_ID: CameraAccountStates(False, "FOLLOW_CAMERA_SCHEDULE")},
+    ) as mock:
+        yield mock
+
+
+@pytest.fixture(autouse=True)
+def mock_get_audio_settings() -> Generator[AsyncMock]:
+    """Mock the audio settings read of the library."""
+    with patch(
+        "bosch_shc_camera_client.client.get_audio_settings",
+        autospec=True,
+        return_value=AudioSettings(True, 40, 60, {}),
+    ) as mock:
+        yield mock
+
+
+@pytest.fixture
+def mock_set_audio_settings() -> Generator[AsyncMock]:
+    """Mock the audio settings write of the library."""
+    with patch(
+        "bosch_shc_camera_client.client.set_audio_settings",
+        autospec=True,
+        return_value=SettingWriteResult(204, None, None),
     ) as mock:
         yield mock
 
