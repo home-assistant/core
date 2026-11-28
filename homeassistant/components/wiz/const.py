@@ -11,6 +11,7 @@ from pywizlight.exceptions import (
 
 DOMAIN = "wiz"
 DEFAULT_NAME = "WiZ"
+CONF_SIGNING_KEY = "signing_key"
 
 DISCOVER_SCAN_TIMEOUT = 10
 DISCOVERY_INTERVAL = timedelta(minutes=15)

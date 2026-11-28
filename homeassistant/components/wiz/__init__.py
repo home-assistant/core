@@ -14,6 +14,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    CONF_SIGNING_KEY,
     DISCOVER_SCAN_TIMEOUT,
     DISCOVERY_INTERVAL,
     DOMAIN,
@@ -62,7 +63,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WizConfigEntry) -> None:
     """Set up the wiz integration from a config entry."""
     ip_address = entry.data[CONF_HOST]
     _LOGGER.debug("Get bulb with IP: %s", ip_address)
-    bulb = wizlight(ip_address)
+    bulb = wizlight(ip_address, signing_key=entry.data.get(CONF_SIGNING_KEY))
     try:
         scenes = await bulb.getSupportedScenes()
         await bulb.getMac()
