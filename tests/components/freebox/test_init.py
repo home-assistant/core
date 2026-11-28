@@ -23,7 +23,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.setup import async_setup_component
 
 from .common import setup_platform
 from .const import DATA_HOME_GET_NODES, MOCK_HOST, MOCK_PORT, MOCK_REGISTRATION_NAME
@@ -40,7 +39,7 @@ async def test_setup(hass: HomeAssistant, router: Mock) -> None:
         version=2,
     )
     entry.add_to_hass(hass)
-    assert await async_setup_component(hass, DOMAIN, {})
+    assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     assert hass.config_entries.async_entries() == unordered([entry, ANY])
 
@@ -115,7 +114,7 @@ async def test_setup_retries_when_the_router_cannot_be_reached(
         version=2,
     )
     entry.add_to_hass(hass)
-    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
@@ -131,9 +130,7 @@ async def test_setup_import(hass: HomeAssistant, router: Mock) -> None:
         version=2,
     )
     entry.add_to_hass(hass)
-    assert await async_setup_component(
-        hass, DOMAIN, {DOMAIN: {CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT}}
-    )
+    assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     assert hass.config_entries.async_entries() == unordered([entry, ANY])
 
@@ -164,7 +161,7 @@ async def test_unload_remove(
     assert len(config_entries) == 1
     assert entry is config_entries[0]
 
-    assert await async_setup_component(hass, DOMAIN, {}) is True
+    assert await hass.config_entries.async_setup(entry.entry_id) is True
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
@@ -246,7 +243,7 @@ async def test_unique_id_migration(
         config_entry=entry,
     )
 
-    assert await async_setup_component(hass, DOMAIN, {})
+    assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     assert entity_registry.async_get_entity_id(platform, DOMAIN, old_unique_id) is None
