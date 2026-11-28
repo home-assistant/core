@@ -12,6 +12,7 @@ from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
+    SensorStateClass,
 )
 from homeassistant.const import (
     CONF_DOMAIN,
@@ -130,6 +131,8 @@ class LcnVariableSensor(LcnEntity, SensorEntity):
             self.unit
         )
         self._attr_device_class = DEVICE_CLASS_MAPPING.get(self.unit)
+        if self._attr_device_class is not None:
+            self._attr_state_class = SensorStateClass.MEASUREMENT
 
     async def async_update(self) -> None:
         """Update the state of the entity."""
