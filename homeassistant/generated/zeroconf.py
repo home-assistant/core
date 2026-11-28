@@ -444,6 +444,14 @@ ZEROCONF = {
             "domain": "blebox",
         },
     ],
+    "_bluetti._tcp.local.": [
+        {
+            "domain": "bluetti_modbus",
+            "properties": {
+                "model": "balco260",
+            },
+        },
+    ],
     "_bond._tcp.local.": [
         {
             "domain": "bond",
