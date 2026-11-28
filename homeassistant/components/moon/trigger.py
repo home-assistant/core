@@ -1,13 +1,14 @@
 """Provides triggers for the moon."""
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import cast, override
 
 import probatio
 
 from homeassistant.const import CONF_OPTIONS
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.helpers.event import async_track_time_change
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.trigger import (
     Trigger,
     TriggerActionRunner,
@@ -17,9 +18,12 @@ from homeassistant.helpers.trigger import (
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_PHASE
-from .helpers import MOON_PHASES, moon_phase
+from .helpers import MOON_PHASES, async_get_moon_data, moon_phase
 
 PHASE_ANY = "any"
+
+# Phase boundaries fall at half-days, so checking intraday catches each change promptly.
+_CHECK_INTERVAL = timedelta(hours=1)
 
 _PHASE_CHANGED_TRIGGER_SCHEMA = probatio.Schema(
     {
@@ -56,12 +60,16 @@ class MoonPhaseChangedTrigger(Trigger):
         did_not_trigger: TriggerNotTriggeredReporter | None = None,
     ) -> CALLBACK_TYPE:
         """Attach the trigger to an action runner."""
-        last_phase = moon_phase()
+        try:
+            moon_data = await async_get_moon_data(self._hass)
+        except OSError as err:
+            raise HomeAssistantError("Unable to load the moon ephemeris") from err
+        last_phase = moon_phase(moon_data)
 
         @callback
         def check_phase(_now: datetime) -> None:
             nonlocal last_phase
-            current_phase = moon_phase()
+            current_phase = moon_phase(moon_data)
             if current_phase == last_phase:
                 return
             previous_phase = last_phase
@@ -72,10 +80,7 @@ class MoonPhaseChangedTrigger(Trigger):
                     "moon phase changed",
                 )
 
-        # The binned phase can only change when the local date rolls over.
-        return async_track_time_change(
-            self._hass, check_phase, hour=0, minute=0, second=0
-        )
+        return async_track_time_interval(self._hass, check_phase, _CHECK_INTERVAL)
 
 
 TRIGGERS: dict[str, type[Trigger]] = {

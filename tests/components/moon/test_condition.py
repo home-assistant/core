@@ -5,8 +5,10 @@ from unittest.mock import patch
 import probatio
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
+from skyfield.units import Angle
 
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import condition
 from homeassistant.helpers.typing import ConfigType
 
@@ -22,9 +24,10 @@ async def setup_moon(hass: HomeAssistant, mock_config_entry: MockConfigEntry) ->
 async def _evaluate(
     hass: HomeAssistant, config: ConfigType, phase_value: float
 ) -> bool | None:
-    """Validate and evaluate a condition for a mocked astral phase value."""
+    """Validate and evaluate a condition for a mocked phase value."""
     with patch(
-        "homeassistant.components.moon.helpers.moon.phase", return_value=phase_value
+        "homeassistant.components.moon.helpers.almanac.moon_phase",
+        return_value=Angle(degrees=phase_value * 360 / 28),
     ):
         config = await condition.async_validate_condition_config(hass, config)
         checker = await condition.async_from_config(hass, config)
@@ -80,3 +83,17 @@ async def test_is_phase_rejects_unknown_phase(hass: HomeAssistant) -> None:
         await condition.async_validate_condition_config(
             hass, {"condition": "moon.is_phase", "options": {"phase": "not_a_phase"}}
         )
+
+
+async def test_condition_setup_fails_when_ephemeris_unavailable(
+    hass: HomeAssistant,
+) -> None:
+    """Test a condition raises a translatable error when the ephemeris is missing."""
+    with (
+        patch(
+            "homeassistant.components.moon.condition.async_get_moon_data",
+            side_effect=OSError,
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
+        await _evaluate(hass, {"condition": "moon.is_waxing"}, 0.0)
