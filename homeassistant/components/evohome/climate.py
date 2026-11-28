@@ -28,12 +28,11 @@ from homeassistant.components.climate import (
 from homeassistant.const import PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, EVOHOME_DATA, NEXT_SP_FROM, EvoService
-from .coordinator import EvoLocationCoordinator
+from .const import DOMAIN, NEXT_SP_FROM, EvoService
+from .coordinator import EvoConfigEntry, EvoLocationCoordinator
 from .entity import EvoChild, EvoEntity, is_valid_zone, unique_zone_id
 from .helpers import as_snake_case
 
@@ -58,20 +57,16 @@ EVO_PRESET_TO_HA = {
 HA_PRESET_TO_EVO = {v: k for k, v in EVO_PRESET_TO_HA.items()}
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    _: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: EvoConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the climate platform for Evohome."""
 
-    if discovery_info is None:
-        return
-
     entities: list[EvoController | EvoZone] = []
 
-    for coordinator in hass.data[EVOHOME_DATA].locations:
+    for coordinator in entry.runtime_data.locations:
         tcs = coordinator.tcs
 
         _LOGGER.debug(

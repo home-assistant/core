@@ -24,12 +24,11 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import EVOHOME_DATA, NEXT_SP_FROM
-from .coordinator import EvoLocationCoordinator
+from .const import NEXT_SP_FROM
+from .coordinator import EvoConfigEntry, EvoLocationCoordinator
 from .entity import EvoChild
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,20 +39,16 @@ HA_STATE_TO_EVO = {STATE_AUTO: "", STATE_ON: EvoDhwState.ON, STATE_OFF: EvoDhwSt
 EVO_STATE_TO_HA = {v: k for k, v in HA_STATE_TO_EVO.items() if k != ""}
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    _: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: EvoConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the water heater platform for Evohome."""
 
-    if discovery_info is None:
-        return
-
     entities: list[EvoDHW] = []
 
-    for coordinator in hass.data[EVOHOME_DATA].locations:
+    for coordinator in entry.runtime_data.locations:
         if (dhw := coordinator.tcs.hotwater) is None:
             continue
 

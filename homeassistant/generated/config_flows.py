@@ -248,6 +248,7 @@ FLOWS = {
         "eufylife_ble",
         "eurotronic_cometblue",
         "evil_genius_labs",
+        "evohome",
         "exicom_spin_ble",
         "ezviz",
         "faa_delays",

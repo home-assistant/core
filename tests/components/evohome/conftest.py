@@ -1,6 +1,7 @@
 """Fixtures and helpers for the evohome tests."""
 
-from collections.abc import AsyncGenerator, Callable
+from collections.abc import AsyncGenerator, Callable, Generator
+from contextlib import contextmanager
 from datetime import timedelta, timezone
 from http import HTTPMethod
 from typing import Any
@@ -11,16 +12,18 @@ from evohomeasync2.auth import AbstractTokenManager, Auth
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import (
+    MockConfigEntry,
     load_json_array_fixture,
     load_json_object_fixture,
 )
 
 from homeassistant.components.evohome.const import DOMAIN
+from homeassistant.components.evohome.coordinator import EvoData
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonArrayType, JsonObjectType
 
@@ -33,6 +36,11 @@ def user_account_config_fixture(install: str) -> JsonObjectType:
         return load_json_object_fixture(f"{install}/user_account.json", DOMAIN)
     except FileNotFoundError:
         return load_json_object_fixture("default/user_account.json", DOMAIN)
+
+
+def user_id_fixture(install: str) -> str:
+    """Return the user id of a user's account (the config entry's unique id)."""
+    return user_account_config_fixture(install)["userId"]  # type: ignore[return-value]
 
 
 def user_locations_config_fixture(install: str) -> JsonArrayType:
@@ -131,11 +139,39 @@ def mock_make_request(install: str) -> Callable:
 
 @pytest.fixture
 def config() -> ConfigType:
-    "Return a default/minimal configuration."
+    "Return a default/minimal configuration (the config entry's data)."
     return {
         CONF_USERNAME: USERNAME,
         CONF_PASSWORD: "password",
     }
+
+
+def mock_config_entry(config: ConfigType, install: str = "default") -> MockConfigEntry:
+    """Return a config entry of the evohome integration, for an installation."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title=config[CONF_USERNAME],
+        data=config,
+        unique_id=user_id_fixture(install),
+    )
+
+
+def get_evo_data(hass: HomeAssistant) -> EvoData:
+    """Return the runtime data of the (single) evohome config entry."""
+    return hass.config_entries.async_entries(DOMAIN)[0].runtime_data
+
+
+@contextmanager
+def mock_evohome_api(install: str) -> Generator[None]:
+    """Mock the vendor's web API for an installation."""
+    with (
+        patch(
+            "evohomeasync2.auth.CredentialsManagerBase._post_request",
+            mock_post_request(install),
+        ),
+        patch("_evohome.auth.AbstractAuth._make_request", mock_make_request(install)),
+    ):
+        yield
 
 
 async def setup_evohome(
@@ -143,33 +179,23 @@ async def setup_evohome(
     config: ConfigType,
     install: str = "default",
 ) -> AsyncGenerator[MagicMock]:
-    """Set up the evohome integration and return its client.
+    """Set up the evohome integration from a config entry, and return its client.
 
     The class is mocked here to check the client was instantiated with the correct args.
     """
 
-    # set the time zone as for the active evohome location
-    loc_idx: int = config.get("location_idx", 0)
-
-    try:
-        locn = user_locations_config_fixture(install)[loc_idx]
-    except IndexError:
-        if loc_idx == 0:
-            raise
-        locn = user_locations_config_fixture(install)[0]
+    # set the time zone as for the (first) evohome location
+    locn = user_locations_config_fixture(install)[0]
 
     utc_offset: int = locn["locationInfo"]["timeZone"]["currentOffsetMinutes"]  # type: ignore[assignment, call-overload, index]
     dt_util.set_default_time_zone(timezone(timedelta(minutes=utc_offset)))
 
+    config_entry = mock_config_entry(config, install)
+    config_entry.add_to_hass(hass)
+
     with (
-        # patch("homeassistant.components.evohome.ec1.EvohomeClient",
-        #       return_value=None),
         patch("homeassistant.components.evohome.ec2.EvohomeClient") as mock_client,
-        patch(
-            "evohomeasync2.auth.CredentialsManagerBase._post_request",
-            mock_post_request(install),
-        ),
-        patch("_evohome.auth.AbstractAuth._make_request", mock_make_request(install)),
+        mock_evohome_api(install),
     ):
         evo: EvohomeClient | None = None
 
@@ -180,9 +206,10 @@ async def setup_evohome(
 
         mock_client.side_effect = evohome_client
 
-        assert await async_setup_component(hass, DOMAIN, {DOMAIN: config})
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
+        assert config_entry.state is ConfigEntryState.LOADED
         mock_client.assert_called_once()
 
         assert isinstance(evo, EvohomeClient)
@@ -211,11 +238,11 @@ async def evohome(
 
 
 @pytest.fixture
-def tcs(evohome: MagicMock, config: ConfigType) -> ControlSystem:
-    """Return the TCS of the configured location."""
+def tcs(evohome: MagicMock) -> ControlSystem:
+    """Return the TCS of the first location that has one."""
 
     evo: EvohomeClient = evohome.return_value
-    tcs = evo.locations[config.get("location_idx", 0)].tcs
+    tcs = next((loc.tcs for loc in evo.locations if loc.tcs), None)
     assert tcs is not None, "Fixture has no TCS"
     return tcs
 
