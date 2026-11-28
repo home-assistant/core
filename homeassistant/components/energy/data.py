@@ -244,6 +244,29 @@ class GasSourceType(TypedDict):
     name: NotRequired[str]
 
 
+class HeatSourceType(TypedDict):
+    """Dictionary holding the source of heat consumption."""
+
+    type: Literal["heat"]
+
+    stat_energy_from: str
+
+    # Instantaneous heat power
+    stat_rate: NotRequired[str]
+
+    # statistic_id of costs ($) incurred from the heat meter
+    # If set to None and entity_energy_price or number_energy_price are configured,
+    # an EnergyCostSensor will be automatically created
+    stat_cost: str | None
+
+    # Used to generate costs if stat_cost is set to None
+    entity_energy_price: str | None  # entity_id of an entity providing price ($/kWh)
+    number_energy_price: float | None  # Price for energy ($/kWh)
+
+    # An optional custom name for display in energy graphs
+    name: NotRequired[str]
+
+
 class WaterSourceType(TypedDict):
     """Dictionary holding the source of water consumption."""
 
@@ -274,6 +297,7 @@ type SourceType = (
     | BatterySourceType
     | GasSourceType
     | WaterSourceType
+    | HeatSourceType
 )
 
 
@@ -705,6 +729,24 @@ WATER_SOURCE_SCHEMA = probatio.All(
     ),
     _reject_price_for_external_stat(stat_key="stat_energy_from"),
 )
+HEAT_SOURCE_SCHEMA = probatio.All(
+    probatio.Schema(
+        {
+            probatio.Required("type"): "heat",
+            probatio.Required("stat_energy_from"): str,
+            probatio.Optional("stat_rate"): str,
+            probatio.Optional("stat_cost", default=None): probatio.Any(str, None),
+            probatio.Optional("entity_energy_price", default=None): probatio.Any(
+                str, None
+            ),
+            probatio.Optional("number_energy_price", default=None): probatio.Any(
+                probatio.Coerce(float), None
+            ),
+            probatio.Optional("name"): str,
+        }
+    ),
+    _reject_price_for_external_stat(stat_key="stat_energy_from"),
+)
 
 
 def check_type_limits(value: list[SourceType]) -> list[SourceType]:
@@ -813,6 +855,7 @@ ENERGY_SOURCE_SCHEMA = probatio.All(
                     "battery": BATTERY_SOURCE_SCHEMA,
                     "gas": GAS_SOURCE_SCHEMA,
                     "water": WATER_SOURCE_SCHEMA,
+                    "heat": HEAT_SOURCE_SCHEMA,
                 },
             )
         ]

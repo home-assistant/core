@@ -96,6 +96,69 @@ async def test_validation_grid_power_wrong_unit(
 
 @pytest.mark.usefixtures("mock_get_metadata")
 @pytest.mark.parametrize(
+    ("unit", "issues"),
+    [
+        pytest.param(
+            "beers",
+            [
+                {
+                    "type": "entity_unexpected_unit_power",
+                    "affected_entities": {("sensor.heat_power", "beers")},
+                    "translation_placeholders": {"power_units": POWER_UNITS_STRING},
+                }
+            ],
+            id="wrong_unit",
+        ),
+        pytest.param("W", [], id="valid"),
+    ],
+)
+async def test_validation_heat_power(
+    hass: HomeAssistant,
+    mock_energy_manager: EnergyManager,
+    unit: str,
+    issues: list[dict[str, Any]],
+) -> None:
+    """Test validating heat power sensor."""
+    await mock_energy_manager.async_update(
+        {
+            "energy_sources": [
+                {
+                    "type": "heat",
+                    "stat_energy_from": "sensor.heat_consumption",
+                    "stat_rate": "sensor.heat_power",
+                }
+            ]
+        }
+    )
+    hass.states.async_set(
+        "sensor.heat_consumption",
+        "10.10",
+        {
+            "device_class": "energy",
+            "unit_of_measurement": "kWh",
+            "state_class": "total_increasing",
+        },
+    )
+    hass.states.async_set(
+        "sensor.heat_power",
+        "1.5",
+        {
+            "device_class": "power",
+            "unit_of_measurement": unit,
+            "state_class": "measurement",
+        },
+    )
+
+    assert (await validate.async_validate(hass)).as_dict() == {
+        "energy_sources": [issues],
+        "device_consumption": [],
+        "device_consumption_water": [],
+        "device_consumption_gas": [],
+    }
+
+
+@pytest.mark.usefixtures("mock_get_metadata")
+@pytest.mark.parametrize(
     ("unit", "state_class", "issues"),
     [
         pytest.param(
