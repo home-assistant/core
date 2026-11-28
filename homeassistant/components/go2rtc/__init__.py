@@ -502,7 +502,14 @@ class WebRTCProvider(CameraWebRTCProvider):
 
         if camera_prefs.preload_stream:
             # We need to first add the stream source otherwise preload enabling will fail
-            await self._update_stream_source(camera)
+            try:
+                await self._update_stream_source(camera)
+            except Go2RtcClientError:
+                # Not chained, as the client error can contain the stream source
+                # with its credentials
+                raise HomeAssistantError(
+                    "Unable to update the preload stream in go2rtc"
+                ) from None
             await self._rest_client.preload.enable(identifier)
         else:
             await self._rest_client.preload.disable(identifier)
