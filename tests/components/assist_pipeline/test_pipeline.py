@@ -1,5 +1,6 @@
 """Websocket tests for Voice Assistant integration."""
 
+import asyncio
 from collections.abc import AsyncGenerator, AsyncIterable, Generator
 from dataclasses import FrozenInstanceError
 from pathlib import Path
@@ -1782,10 +1783,9 @@ async def test_pipeline_language_used_instead_of_conversation_language(
 
 
 @pytest.mark.parametrize(
-    ("to_stream_deltas", "expected_chunks", "chunk_text"),
+    ("to_stream_deltas", "expected_chunks", "chunk_text", "tts_text_at_tool_calls"),
     [
-        # Size below STREAM_RESPONSE_CHUNKS
-        (
+        pytest.param(
             (
                 [
                     "hello,",
@@ -1801,9 +1801,10 @@ async def test_pipeline_language_used_instead_of_conversation_language(
             # We always stream when possible, so 1 chunk via streaming method
             1,
             "hello, how are you?",
+            [],
+            id="below_stream_response_chars",
         ),
-        # Size above STREAM_RESPONSE_CHUNKS
-        (
+        pytest.param(
             (
                 [
                     "hello, ",
@@ -1829,9 +1830,10 @@ async def test_pipeline_language_used_instead_of_conversation_language(
             # and the rest are streamed
             3,
             "hello, how are you? I'm doing well, thank you. What about you?!",
+            [],
+            id="above_stream_response_chars",
         ),
-        # Stream a bit, then a tool call, then stream some more
-        (
+        pytest.param(
             (
                 [
                     "hello, ",
@@ -1862,9 +1864,10 @@ async def test_pipeline_language_used_instead_of_conversation_language(
             # 1 chunk before tool call, then 7 after
             8,
             "hello, how are you? I'm doing well, thank you.",
+            ["hello, how are you? "],
+            id="text_ending_in_whitespace_tool_call_text",
         ),
-        # Text ending without whitespace, a tool call, then more text
-        (
+        pytest.param(
             (
                 [
                     "Let me check the temperature.",
@@ -1883,12 +1886,13 @@ async def test_pipeline_language_used_instead_of_conversation_language(
                     "25 degrees.",
                 ],
             ),
-            # 1 chunk before tool call, the separator, then 2 after
-            4,
-            "Let me check the temperature. It is 25 degrees.",
+            # Text and separator are grouped into 1 chunk, then 2 after
+            3,
+            "Let me check the temperature.\n\nIt is 25 degrees.",
+            ["Let me check the temperature.\n\n"],
+            id="text_tool_call_text",
         ),
-        # Text, then an assistant message with only another tool call
-        (
+        pytest.param(
             (
                 [
                     "Let me check the temperature.",
@@ -1917,9 +1921,45 @@ async def test_pipeline_language_used_instead_of_conversation_language(
                     "25 degrees.",
                 ],
             ),
-            # 1 chunk before the tool calls, one separator, then 2 after
+            # Text and one separator are grouped into 1 chunk, then 2 after
+            3,
+            "Let me check the temperature.\n\nIt is 25 degrees.",
+            [
+                "Let me check the temperature.\n\n",
+                "Let me check the temperature.\n\n",
+            ],
+            id="text_tool_call_tool_call_text",
+        ),
+        pytest.param(
+            (
+                [
+                    "I will check the temperature in the living room ",
+                    "and the kitchen for you.",
+                ],
+                {
+                    "tool_calls": [
+                        llm.ToolInput(
+                            tool_name="test_tool",
+                            tool_args={},
+                            id="test_tool_id",
+                        )
+                    ],
+                },
+                [
+                    "Both are ",
+                    "25 degrees.",
+                ],
+            ),
+            # Streaming starts on the second chunk, so the first 2 chunks are
+            # grouped, then the separator, then 2 after
             4,
-            "Let me check the temperature. It is 25 degrees.",
+            "I will check the temperature in the living room and the kitchen"
+            " for you.\n\nBoth are 25 degrees.",
+            [
+                "I will check the temperature in the living room and the kitchen"
+                " for you.\n\n"
+            ],
+            id="streaming_text_tool_call_text",
         ),
     ],
 )
@@ -1935,6 +1975,7 @@ async def test_chat_log_tts_streaming(
     to_stream_deltas: tuple[dict | list[str]],
     expected_chunks: int,
     chunk_text: str,
+    tts_text_at_tool_calls: list[str],
 ) -> None:
     """Test that chat log events are streamed to the TTS entity."""
     text_deltas = [
@@ -2070,7 +2111,18 @@ async def test_chat_log_tts_streaming(
     mock_tool.name = "test_tool"
     mock_tool.description = "Test function"
     mock_tool.parameters = probatio.Schema({})
-    mock_tool.async_call.return_value = llm.ToolResult(data="Test response")
+
+    received_tts_at_tool_calls: list[str] = []
+
+    async def mock_tool_call(*args: Any) -> llm.ToolResult:
+        """Record the text the TTS engine received before the tool result."""
+        # Let the background task of the TTS engine read the queued text
+        for _ in range(10):
+            await asyncio.sleep(0)
+        received_tts_at_tool_calls.append("".join(received_tts))
+        return llm.ToolResult(data="Test response")
+
+    mock_tool.async_call.side_effect = mock_tool_call
 
     with (
         patch(
@@ -2084,6 +2136,8 @@ async def test_chat_log_tts_streaming(
         ),
     ):
         await pipeline_input.execute()
+
+    assert received_tts_at_tool_calls == tts_text_at_tool_calls
 
     stream = tts.async_get_stream(hass, events[0].data["tts_output"]["token"])
     assert stream is not None
