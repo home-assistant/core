@@ -61,7 +61,6 @@ from homeassistant.helpers.service_info.ssdp import (
     SsdpServiceInfo,
 )
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-from homeassistant.setup import async_setup_component
 
 from .const import (
     ENTRYDATA_ENCRYPTED_WEBSOCKET,
@@ -1573,7 +1572,7 @@ async def test_update_old_entry(hass: HomeAssistant) -> None:
     assert entry is config_entries_domain[0]
     assert not entry.unique_id
 
-    assert await async_setup_component(hass, DOMAIN, {}) is True
+    assert await hass.config_entries.async_setup(entry.entry_id) is True
     await hass.async_block_till_done()
 
     # failed as already configured
