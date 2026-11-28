@@ -1,0 +1,16 @@
+get_free_busy:
+  target:
+    entity:
+      domain: calendar
+      integration: caldav
+  fields:
+    start:
+      required: true
+      example: "2026-01-05 08:00:00"
+      selector:
+        datetime:
+    end:
+      required: true
+      example: "2026-01-05 18:00:00"
+      selector:
+        datetime:

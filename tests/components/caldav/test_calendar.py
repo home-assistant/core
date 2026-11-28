@@ -25,8 +25,9 @@ from homeassistant.components.calendar import (
     DOMAIN as CALENDAR_DOMAIN,
     CalendarEntityFeature,
 )
-from homeassistant.const import STATE_OFF, STATE_ON, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -1689,3 +1690,41 @@ async def test_add_vevent(
     calendars[0].add_event.assert_called_once()
     assert calendars[0].add_event.call_args
     assert calendars[0].add_event.call_args[1] == expected_ics_fields
+
+
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "custom_calendars": [
+                {"name": "Private", "calendar": CALENDAR_NAME, "search": "Private"}
+            ]
+        }
+    ],
+)
+async def test_get_free_busy_fails_for_a_calendar_with_a_search(
+    hass: HomeAssistant,
+    calendars: list[Mock],
+    setup_platform_cb: Callable[[], Awaitable[None]],
+) -> None:
+    """Test a calendar that shows only the events matching a search gets no busy periods."""
+    await setup_platform_cb()
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            "get_free_busy",
+            {
+                ATTR_ENTITY_ID: "calendar.example_private",
+                "start": "2026-11-29 00:00:00",
+                "end": "2026-11-30 00:00:00",
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    assert err.value.translation_key == "free_busy_search_not_supported"
+    assert err.value.translation_placeholders == {
+        "calendar": "calendar.example_private"
+    }
+    calendars[0].freebusy_request.assert_not_called()

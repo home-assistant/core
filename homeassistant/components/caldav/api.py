@@ -1,11 +1,13 @@
 """Library for working with CalDAV api."""
 
+from datetime import datetime
 from typing import NamedTuple, cast
 
-from caldav.calendarobjectresource import CalendarObjectResource
+from caldav.calendarobjectresource import CalendarObjectResource, FreeBusy
 from caldav.collection import Calendar
 from caldav.davclient import DAVClient
 from caldav.elements import ical
+from icalendar import FBTYPE
 
 from homeassistant.core import HomeAssistant
 
@@ -16,6 +18,13 @@ class CalDavCalendar(NamedTuple):
     calendar: Calendar
     name: str | None
     components: list[str]
+
+
+class BusyPeriod(NamedTuple):
+    """A span of time in which a calendar is busy."""
+
+    start: datetime
+    end: datetime
 
 
 def get_calendars(client: DAVClient, components: set[str]) -> list[CalDavCalendar]:
@@ -67,3 +76,43 @@ def get_attr_value(obj: CalendarObjectResource, attribute: str) -> str | None:
     if hasattr(obj, attribute):
         return getattr(obj, attribute).value
     return None
+
+
+def _busy_periods(
+    free_busy: FreeBusy, start: datetime, end: datetime
+) -> list[BusyPeriod]:
+    """Return the busy periods within a time range, sorted and merged."""
+    found: list[BusyPeriod] = []
+    for component in free_busy.icalendar_instance.walk("VFREEBUSY"):
+        periods = component.get("FREEBUSY")
+        if periods is None:
+            # Radicale answers with one VFREEBUSY per span and its type in FBTYPE.
+            if str(component.get("FBTYPE", "")).upper().startswith("BUSY"):
+                found.append(
+                    BusyPeriod(component.decoded("DTSTART"), component.decoded("DTEND"))
+                )
+            continue
+        found.extend(
+            BusyPeriod(period.start, period.end)
+            for period in (periods if isinstance(periods, list) else [periods])
+            if period.FBTYPE != FBTYPE.FREE
+        )
+    merged: list[BusyPeriod] = []
+    for found_start, found_end in sorted(found):
+        period = BusyPeriod(max(found_start, start), min(found_end, end))
+        if period.start >= period.end:
+            continue
+        if merged and period.start <= merged[-1].end:
+            merged[-1] = BusyPeriod(merged[-1].start, max(merged[-1].end, period.end))
+        else:
+            merged.append(period)
+    return merged
+
+
+def get_busy_periods(
+    calendar: Calendar, start: datetime, end: datetime
+) -> list[BusyPeriod]:
+    """Ask the server when a calendar is busy (RFC 4791 section 7.10)."""
+    return _busy_periods(
+        cast(FreeBusy, calendar.freebusy_request(start, end)), start, end
+    )
