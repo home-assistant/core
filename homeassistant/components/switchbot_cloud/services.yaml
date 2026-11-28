@@ -4,8 +4,11 @@ upload_art_frame_image:
       required: true
       selector:
         device:
-          integration: switchbot_cloud
-          model: AI Art Frame
+          filter:
+            - integration: switchbot_cloud
+              model: AI Art Frame
+            - integration: switchbot_cloud
+              model: AI Art Frame 2
           multiple: true
     image_url:
       required: true

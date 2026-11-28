@@ -94,12 +94,18 @@ async def coordinator_for_device(
     device: Device | Remote,
     coordinators_by_id: dict[str, SwitchBotCoordinator],
     manageable_by_webhook: bool = False,
+    poll_with_webhook: bool = False,
 ) -> SwitchBotCoordinator:
     """Instantiate coordinator and adds to list for gathering."""
     coordinator = coordinators_by_id.get(device.device_id)
     if coordinator is None:
         coordinator = SwitchBotCoordinator(
-            hass, entry, api, device, manageable_by_webhook
+            hass,
+            entry,
+            api,
+            device,
+            manageable_by_webhook,
+            poll_with_webhook=poll_with_webhook,
         )
         coordinators_by_id[device.device_id] = coordinator
 
@@ -203,6 +209,7 @@ async def make_new_device_data(
         device,
         coordinators_by_id,
         manageable_by_webhook=default_config.webhook,
+        poll_with_webhook=default_config.poll_with_webhook,
     )
 
     _platform_list_map: dict[Platform, list] = {

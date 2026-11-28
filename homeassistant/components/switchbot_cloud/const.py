@@ -60,6 +60,7 @@ class SwitchbotCloudDeviceConfig:
 
     webhook: bool
     entity_config: tuple[Platform, ...]
+    poll_with_webhook: bool = False
 
 
 DEVICE_SUPPORT_MAP: Final[dict[str, SwitchbotCloudDeviceConfig]] = {
@@ -148,6 +149,11 @@ DEVICE_SUPPORT_MAP: Final[dict[str, SwitchbotCloudDeviceConfig]] = {
     "MeterPro(CO2)": SwitchbotCloudDeviceConfig(True, entity_config=(Platform.SENSOR,)),
     "AI Art Frame": SwitchbotCloudDeviceConfig(
         True, entity_config=(Platform.SENSOR, Platform.BUTTON, Platform.IMAGE)
+    ),
+    "AI Art Frame 2": SwitchbotCloudDeviceConfig(
+        True,
+        entity_config=(Platform.SENSOR, Platform.BUTTON, Platform.IMAGE),
+        poll_with_webhook=True,
     ),
     "Circulator Fan": SwitchbotCloudDeviceConfig(True, entity_config=(Platform.FAN,)),
     "Standing Fan": SwitchbotCloudDeviceConfig(

@@ -148,6 +148,8 @@ async def test_others_mode_bot_no_other_entity(
     [
         ("AI Art Frame", ArtFrameCommands.PREVIOUS),
         ("AI Art Frame", ArtFrameCommands.NEXT),
+        ("AI Art Frame 2", ArtFrameCommands.PREVIOUS),
+        ("AI Art Frame 2", ArtFrameCommands.NEXT),
     ],
 )
 async def test_loaded_buttons(

@@ -42,6 +42,8 @@ class SwitchBotCoordinator(DataUpdateCoordinator[Status]):
         api: SwitchBotAPI,
         device: Device | Remote,
         manageable_by_webhook: bool,
+        *,
+        poll_with_webhook: bool = False,
     ) -> None:
         """Initialize SwitchBot Cloud."""
         super().__init__(
@@ -55,12 +57,13 @@ class SwitchBotCoordinator(DataUpdateCoordinator[Status]):
         self._device_id = device.device_id
         self._should_poll = not isinstance(device, Remote)
         self._manageable_by_webhook = manageable_by_webhook
+        self._poll_with_webhook = poll_with_webhook
 
     def webhook_subscription_listener(self, connected: bool) -> None:
         """Call when webhook status changed."""
         if self._manageable_by_webhook:
             self._webhooks_connected = connected
-            if connected:
+            if connected and not self._poll_with_webhook:
                 self.update_interval = None
             else:
                 self.update_interval = DEFAULT_SCAN_INTERVAL
