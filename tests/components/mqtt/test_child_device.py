@@ -7,9 +7,14 @@ from unittest.mock import AsyncMock, patch
 import probatio
 import pytest
 from pytest_homeassistant.common import async_fire_mqtt_message
-from pytest_homeassistant.typing import MqttMockHAClientGenerator
+from pytest_homeassistant.typing import MqttMockHAClientGenerator, WebSocketGenerator
 
 from homeassistant.components.mqtt.const import DOMAIN
+from homeassistant.components.mqtt.discovery import (
+    _async_diff_device_discovery,
+    _DeviceDiscoveryDiff,
+    _parse_device_payload,
+)
 from homeassistant.components.mqtt.models import DATA_MQTT
 from homeassistant.components.mqtt.schemas import (
     MQTT_DEVICE_INFO_SCHEMA,
@@ -19,6 +24,7 @@ from homeassistant.const import SERVICE_RELOAD, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import DATA_INSTANCES
+from homeassistant.setup import async_setup_component
 
 PARENT_DEVICE = {"identifiers": ["parent"], "name": "Parent", "manufacturer": "Acme"}
 CHILD_DEVICE = {"identifiers": ["sub"], "name": "Sub"}
@@ -67,6 +73,11 @@ def _get_child_device(
     )
 
 
+def _device_id(device: dr.DeviceEntry | dr.ChildDeviceEntry | None) -> str | None:
+    """Return the ID of a device."""
+    return None if device is None else device.id
+
+
 def _switch_config(unique_id: str, device: dict[str, Any], name: str = "Switch") -> str:
     """Return a single component switch discovery payload."""
     return json.dumps(
@@ -89,6 +100,63 @@ async def _discover_switch(
         _switch_config(unique_id, device, name),
     )
     await hass.async_block_till_done()
+
+
+def _device_payload(
+    components: dict[str, Any] | None = None,
+    child_devices: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    """Return a device discovery payload of the parent device."""
+    payload: dict[str, Any] = {
+        "dev": {"ids": ["parent"], "name": "Parent"},
+        "o": {"name": "Foo2Mqtt"},
+    }
+    if components is not None:
+        payload["cmps"] = components
+    if child_devices is not None:
+        payload["cdevs"] = child_devices
+    return payload
+
+
+def _child_device_payload(
+    identifier: str, name: str, components: dict[str, Any]
+) -> dict[str, Any]:
+    """Return the payload of a child device in a device discovery payload."""
+    return {"ids": [identifier], "name": name, "cmps": components}
+
+
+def _discovery_switch(unique_id: str) -> dict[str, Any]:
+    """Return the config of a switch component in a device discovery payload."""
+    return {**DISCOVERY_SWITCH, "uniq_id": unique_id}
+
+
+async def _discover_device(hass: HomeAssistant, payload: dict[str, Any]) -> None:
+    """Send a device discovery message of the parent device."""
+    async_fire_mqtt_message(hass, DEVICE_TOPIC, json.dumps(payload))
+    await hass.async_block_till_done()
+
+
+async def _remove_device(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, device_id: str
+) -> None:
+    """Remove a device from the UI."""
+    assert await async_setup_component(hass, "config", {})
+    ws_client = await hass_ws_client(hass)
+    response = await ws_client.remove_device(device_id)
+    assert response["success"]
+    await hass.async_block_till_done()
+
+
+def _diff_device_payload(
+    hass: HomeAssistant, payload: dict[str, Any]
+) -> _DeviceDiscoveryDiff:
+    """Return the diff of a device discovery payload, before it is processed."""
+    device_payload = _parse_device_payload(
+        hass, json.dumps(payload), DEVICE_TOPIC, "parent", None
+    )
+    return _async_diff_device_discovery(
+        hass, DEVICE_TOPIC, "parent", None, device_payload
+    )
 
 
 def test_child_device_schema() -> None:
@@ -516,16 +584,234 @@ async def test_device_discovery_update_child_devices(
     assert entity_entry.device_id == child_device.id
 
     # Remove the component, the child device and its parent are cleaned up
-    payload = {
-        "dev": device,
-        "o": origin,
-        "cdevs": [{"ids": ["sub"], "cmps": {"sw": {"p": "switch"}}}],
-    }
+    payload = {"dev": device, "o": origin, "cdevs": [{"ids": ["sub"], "cmps": {}}]}
     async_fire_mqtt_message(hass, DEVICE_TOPIC, json.dumps(payload))
     await hass.async_block_till_done()
     assert entity_registry.async_get(entity_id) is None
     assert _get_child_device(hass, device_registry, "sub") is None
     assert _get_device(hass, device_registry, "parent") is None
+
+
+@pytest.mark.parametrize(
+    ("component_id", "removed_components", "entity_id", "removed_entity_ids"),
+    [
+        pytest.param(
+            "sw2",
+            {("switch", "parent sw1")},
+            "switch.parent_sub_2_switch",
+            ["switch.parent_sub_1_switch"],
+            id="replace_component",
+        ),
+        pytest.param(
+            "sw1", set(), "switch.parent_sub_1_switch", [], id="move_component"
+        ),
+    ],
+)
+async def test_device_discovery_replace_child_device(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    component_id: str,
+    removed_components: set[tuple[str, str]],
+    entity_id: str,
+    removed_entity_ids: list[str],
+) -> None:
+    """Test replacing the child device of a parent without components keeps it."""
+    mqtt_mock = await mqtt_mock_entry()
+    await _discover_device(
+        hass,
+        _device_payload(
+            child_devices=[
+                _child_device_payload(
+                    "sub1", "Sub 1", {"sw1": _discovery_switch("sw1")}
+                )
+            ]
+        ),
+    )
+    parent = _get_device(hass, device_registry, "parent")
+    assert parent is not None
+    assert _get_child_device(hass, device_registry, "sub1") is not None
+    mqtt_mock.async_publish.reset_mock()
+
+    payload = _device_payload(
+        child_devices=[
+            _child_device_payload(
+                "sub2", "Sub 2", {component_id: _discovery_switch(component_id)}
+            )
+        ]
+    )
+    diff = _diff_device_payload(hass, payload)
+    assert diff.desired_components == {("switch", f"parent {component_id}")}
+    assert set(diff.removed_components) == removed_components
+
+    await _discover_device(hass, payload)
+    assert _device_id(_get_device(hass, device_registry, "parent")) == parent.id
+    assert _get_child_device(hass, device_registry, "sub1") is None
+    child_2 = _get_child_device(hass, device_registry, "sub2")
+    assert child_2 is not None
+    assert child_2.parent_device_id == parent.id
+    for removed_entity_id in removed_entity_ids:
+        assert not entity_registry.async_is_registered(removed_entity_id)
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry is not None
+    assert entity_entry.device_id == child_2.id
+    # Clearing the device discovery topic would remove all device components
+    mqtt_mock.async_publish.assert_not_called()
+
+
+async def test_device_discovery_ignores_platform_only_component(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a component with only a platform is ignored, as it is deprecated.
+
+    The component and its child device are kept, until they are omitted.
+    """
+    mqtt_mock = await mqtt_mock_entry()
+    components = {"sw": _discovery_switch("sw")}
+    child_device_1 = _child_device_payload(
+        "sub1", "Sub 1", {"sw1": _discovery_switch("sw1")}
+    )
+    await _discover_device(
+        hass,
+        _device_payload(
+            components,
+            [
+                child_device_1,
+                _child_device_payload(
+                    "sub2", "Sub 2", {"sw2": _discovery_switch("sw2")}
+                ),
+            ],
+        ),
+    )
+    parent = _get_device(hass, device_registry, "parent")
+    child_2 = _get_child_device(hass, device_registry, "sub2")
+    assert parent is not None
+    assert child_2 is not None
+    mqtt_mock.async_publish.reset_mock()
+
+    payload = _device_payload(
+        components,
+        [
+            child_device_1,
+            _child_device_payload("sub2", "Sub 2", {"sw2": {"p": "switch"}}),
+        ],
+    )
+    diff = _diff_device_payload(hass, payload)
+    assert not diff.removed_components
+
+    await _discover_device(hass, payload)
+    assert entity_registry.async_is_registered("switch.parent_sub_2_switch")
+    assert _device_id(_get_child_device(hass, device_registry, "sub2")) == child_2.id
+    assert (
+        "Ignoring switch 'parent sw2' with only the platform option in the MQTT "
+        f"device discovery payload on topic {DEVICE_TOPIC} from external application "
+        "Foo2Mqtt; removing a component this way is deprecated, omit it from the "
+        "payload instead" in caplog.text
+    )
+
+    payload = _device_payload(components, [child_device_1])
+    diff = _diff_device_payload(hass, payload)
+    assert set(diff.removed_components) == {("switch", "parent sw2")}
+
+    await _discover_device(hass, payload)
+    assert not entity_registry.async_is_registered("switch.parent_sub_2_switch")
+    assert _get_child_device(hass, device_registry, "sub2") is None
+    assert _device_id(_get_device(hass, device_registry, "parent")) == parent.id
+    assert entity_registry.async_is_registered("switch.parent_sub_1_switch")
+    assert entity_registry.async_is_registered("switch.parent_switch")
+    mqtt_mock.async_publish.assert_not_called()
+
+
+async def test_device_discovery_replace_last_component_with_platform_only(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a payload with only a new component with only a platform has none left.
+
+    The device is removed with its last component.
+    """
+    await mqtt_mock_entry()
+    await _discover_device(hass, _device_payload({"sw1": _discovery_switch("sw1")}))
+    assert _get_device(hass, device_registry, "parent") is not None
+
+    payload = _device_payload({"sw2": {"p": "switch"}})
+    diff = _diff_device_payload(hass, payload)
+    assert not diff.desired_components
+    assert set(diff.removed_components) == {("switch", "parent sw1")}
+
+    await _discover_device(hass, payload)
+    assert entity_registry.async_get_entity_id("switch", DOMAIN, "sw1") is None
+    assert _get_device(hass, device_registry, "parent") is None
+
+
+async def test_device_discovery_omitted_child_device_with_numeric_identifier(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test omitting a child device with a numeric identifier removes it."""
+    await mqtt_mock_entry()
+    components = {"sw": _discovery_switch("sw")}
+    await _discover_device(
+        hass,
+        _device_payload(
+            components,
+            [{"ids": [1], "name": "One", "cmps": {"sw1": _discovery_switch("sw1")}}],
+        ),
+    )
+    assert _get_child_device(hass, device_registry, "1") is not None
+
+    await _discover_device(hass, _device_payload(components))
+    assert _get_child_device(hass, device_registry, "1") is None
+    assert entity_registry.async_get_entity_id("switch", DOMAIN, "sw1") is None
+
+
+async def test_device_discovery_parent_change_removes_old_parent_device(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a payload with another parent device removes the old empty devices."""
+    await mqtt_mock_entry()
+    await _discover_device(
+        hass,
+        _device_payload(
+            child_devices=[
+                _child_device_payload(
+                    "sub1", "Sub 1", {"sw1": _discovery_switch("sw1")}
+                )
+            ]
+        ),
+    )
+    assert _get_device(hass, device_registry, "parent") is not None
+    assert _get_child_device(hass, device_registry, "sub1") is not None
+
+    payload = {
+        **_device_payload(
+            child_devices=[
+                _child_device_payload(
+                    "sub2", "Sub 2", {"sw2": _discovery_switch("sw2")}
+                )
+            ]
+        ),
+        "dev": {"ids": ["new_parent"], "name": "New parent"},
+    }
+    await _discover_device(hass, payload)
+    assert _get_child_device(hass, device_registry, "sub1") is None
+    assert _get_device(hass, device_registry, "parent") is None
+    new_parent = _get_device(hass, device_registry, "new_parent")
+    child_device_2 = _get_child_device(hass, device_registry, "sub2")
+    assert new_parent is not None
+    assert child_device_2 is not None
+    assert child_device_2.parent_device_id == new_parent.id
 
 
 @pytest.mark.parametrize(
@@ -776,7 +1062,7 @@ async def test_discovery_update_child_device(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test a discovery update adds, changes and removes the child device."""
+    """Test a discovery update adds, changes, removes and replaces the devices."""
     await mqtt_mock_entry()
     await _discover_switch(hass, "sw1", PARENT_DEVICE)
     parent = _get_device(hass, device_registry, "parent")
@@ -815,6 +1101,239 @@ async def test_discovery_update_child_device(
     assert entity_entry is not None
     assert entity_entry.device_id == parent.id
 
+    # Replace the device with another parent and child device
+    await _discover_switch(
+        hass,
+        "sw1",
+        {
+            "identifiers": ["parent2"],
+            "name": "Parent 2",
+            "child_device": {"identifiers": ["sub3"]},
+        },
+    )
+    assert _get_device(hass, device_registry, "parent") is None
+    parent_2 = _get_device(hass, device_registry, "parent2")
+    child_device_3 = _get_child_device(hass, device_registry, "sub3")
+    assert parent_2 is not None
+    assert child_device_3 is not None
+    assert child_device_3.parent_device_id == parent_2.id
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry is not None
+    assert entity_entry.device_id == child_device_3.id
+
+    # Replace the parent and child device with a device without child device
+    await _discover_switch(hass, "sw1", {"identifiers": ["plain"], "name": "Plain"})
+    assert _get_child_device(hass, device_registry, "sub3") is None
+    assert _get_device(hass, device_registry, "parent2") is None
+    plain = _get_device(hass, device_registry, "plain")
+    assert plain is not None
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry is not None
+    assert entity_entry.device_id == plain.id
+
+
+@pytest.mark.parametrize(
+    "enabled_by_default",
+    [pytest.param(True, id="enabled"), pytest.param(False, id="disabled")],
+)
+async def test_device_discovery_keeps_single_component_child_device(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    enabled_by_default: bool,
+) -> None:
+    """Test device discovery keeps a child device of single component discovery.
+
+    The child device shares the parent device with the device discovery payload.
+    """
+    await mqtt_mock_entry()
+    single_component_config = {
+        **json.loads(
+            _switch_config(
+                "single",
+                {
+                    **PARENT_DEVICE,
+                    "child_device": {"identifiers": ["single_sub"], "name": "Single"},
+                },
+            )
+        ),
+        "enabled_by_default": enabled_by_default,
+    }
+    async_fire_mqtt_message(
+        hass, "homeassistant/switch/single/config", json.dumps(single_component_config)
+    )
+    await hass.async_block_till_done()
+    components = {"sw": _discovery_switch("sw")}
+    await _discover_device(
+        hass,
+        _device_payload(
+            components,
+            [_child_device_payload("sub1", "Sub 1", {"sw1": _discovery_switch("sw1")})],
+        ),
+    )
+    parent = _get_device(hass, device_registry, "parent")
+    single_child_device = _get_child_device(hass, device_registry, "single_sub")
+    assert parent is not None
+    assert single_child_device is not None
+    assert single_child_device.parent_device_id == parent.id
+
+    payload = _device_payload(components)
+    diff = _diff_device_payload(hass, payload)
+    assert set(diff.removed_components) == {("switch", "parent sw1")}
+
+    await _discover_device(hass, payload)
+    assert _get_child_device(hass, device_registry, "sub1") is None
+    assert _device_id(_get_device(hass, device_registry, "parent")) == parent.id
+    assert (
+        _device_id(_get_child_device(hass, device_registry, "single_sub"))
+        == single_child_device.id
+    )
+    assert entity_registry.async_get_entity_id("switch", DOMAIN, "single") is not None
+
+
+@pytest.mark.parametrize(
+    "remaining_components",
+    [
+        pytest.param({"sw": _discovery_switch("sw")}, id="components_left"),
+        pytest.param({}, id="all_components_omitted"),
+    ],
+)
+async def test_device_discovery_omitted_child_device_with_disabled_entity(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    remaining_components: dict[str, Any],
+) -> None:
+    """Test an omitted disabled component is removed from the entity registry.
+
+    Its omitted child device is removed with it.
+    """
+    await mqtt_mock_entry()
+    await _discover_device(
+        hass,
+        _device_payload(
+            {"sw": _discovery_switch("sw")},
+            [
+                _child_device_payload(
+                    "sub1",
+                    "Sub 1",
+                    {"sw1": {**_discovery_switch("sw1"), "en": False}},
+                )
+            ],
+        ),
+    )
+    assert entity_registry.async_get_entity_id("switch", DOMAIN, "sw1") is not None
+    assert _get_child_device(hass, device_registry, "sub1") is not None
+
+    await _discover_device(hass, _device_payload(remaining_components))
+    assert entity_registry.async_get_entity_id("switch", DOMAIN, "sw1") is None
+    assert _get_child_device(hass, device_registry, "sub1") is None
+
+
+@pytest.mark.parametrize(
+    "remaining_components",
+    [
+        pytest.param({"sw": _discovery_switch("sw")}, id="components_left"),
+        pytest.param({}, id="all_components_omitted"),
+    ],
+)
+async def test_device_discovery_keeps_child_device_shared_with_disabled_entity(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    remaining_components: dict[str, Any],
+) -> None:
+    """Test an omitted child device is kept while a disabled entity still uses it."""
+    await mqtt_mock_entry()
+    single_component_config = {
+        **json.loads(
+            _switch_config(
+                "single",
+                {**PARENT_DEVICE, "child_device": {"identifiers": ["sub1"]}},
+            )
+        ),
+        "enabled_by_default": False,
+    }
+    async_fire_mqtt_message(
+        hass, "homeassistant/switch/single/config", json.dumps(single_component_config)
+    )
+    await hass.async_block_till_done()
+    components = {"sw": _discovery_switch("sw")}
+    await _discover_device(
+        hass,
+        _device_payload(
+            components,
+            [_child_device_payload("sub1", "Sub 1", {"sw1": _discovery_switch("sw1")})],
+        ),
+    )
+    parent = _get_device(hass, device_registry, "parent")
+    child_device = _get_child_device(hass, device_registry, "sub1")
+    assert parent is not None
+    assert child_device is not None
+
+    await _discover_device(hass, _device_payload(remaining_components))
+    assert not entity_registry.async_is_registered("switch.parent_sub_1_switch")
+    assert (
+        _device_id(_get_child_device(hass, device_registry, "sub1")) == child_device.id
+    )
+    assert _device_id(_get_device(hass, device_registry, "parent")) == parent.id
+    assert entity_registry.async_get_entity_id("switch", DOMAIN, "single") is not None
+
+
+async def test_device_discovery_known_state_ignores_rejected_update(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a rejected update does not change the known child device of a component.
+
+    The entity keeps its current child device, which is removed when it is omitted.
+    """
+    await mqtt_mock_entry()
+    await _discover_device(
+        hass,
+        _device_payload(
+            child_devices=[
+                _child_device_payload(
+                    "sub1", "Sub 1", {"sw1": _discovery_switch("sw1")}
+                )
+            ]
+        ),
+    )
+    child_device = _get_child_device(hass, device_registry, "sub1")
+    assert child_device is not None
+
+    # Moving the switch to another child device is rejected without command topic
+    invalid_switch = {"p": "switch", "name": "Switch", "uniq_id": "sw1"}
+    await _discover_device(
+        hass,
+        _device_payload(
+            child_devices=[
+                _child_device_payload("sub2", "Sub 2", {"sw1": invalid_switch})
+            ]
+        ),
+    )
+    entity_entry = entity_registry.async_get("switch.parent_sub_1_switch")
+    assert entity_entry is not None
+    assert entity_entry.device_id == child_device.id
+
+    payload = _device_payload(
+        child_devices=[
+            _child_device_payload("sub2", "Sub 2", {"sw3": _discovery_switch("sw3")})
+        ]
+    )
+    diff = _diff_device_payload(hass, payload)
+    assert set(diff.removed_components) == {("switch", "parent sw1")}
+
+    await _discover_device(hass, payload)
+    assert not entity_registry.async_is_registered("switch.parent_sub_1_switch")
+    assert _get_child_device(hass, device_registry, "sub1") is None
+    assert _get_child_device(hass, device_registry, "sub2") is not None
+
 
 async def test_cleanup_parent_device_with_child_device(
     hass: HomeAssistant,
@@ -846,6 +1365,7 @@ async def test_cleanup_parent_device_with_child_device(
 
 async def test_remove_child_device_keeps_device_discovery_topic(
     hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
@@ -876,16 +1396,17 @@ async def test_remove_child_device_keeps_device_discovery_topic(
     assert child_device_1 is not None
     mqtt_mock.async_publish.reset_mock()
 
-    device_registry.async_remove_device(child_device_1.id)
-    await hass.async_block_till_done()
+    await _remove_device(hass, hass_ws_client, child_device_1.id)
     assert not entity_registry.async_is_registered("switch.parent_sub_1_switch")
     assert entity_registry.async_is_registered("switch.parent_sub_2_switch")
     assert entity_registry.async_is_registered("switch.parent_switch")
     assert _get_device(hass, device_registry, "parent") is not None
     assert (
-        "Although entity switch.parent_sub_1_switch was removed from Home Assistant"
-        in caplog.text
+        "Although child device Sub 1 was removed from Home Assistant, it will be "
+        "added again when a new MQTT discovery config is received from Foo2Mqtt on "
+        f"topic {DEVICE_TOPIC}" in caplog.text
     )
+    assert "Although entity" not in caplog.text
     # Clearing the device discovery topic would remove all device components
     mqtt_mock.async_publish.assert_not_called()
 
@@ -898,8 +1419,7 @@ async def test_remove_child_device_keeps_device_discovery_topic(
     # Removing the parent device also removes its child devices and clears the topic
     parent = _get_device(hass, device_registry, "parent")
     assert parent is not None
-    device_registry.async_remove_device(parent.id)
-    await hass.async_block_till_done()
+    await _remove_device(hass, hass_ws_client, parent.id)
     assert _get_child_device(hass, device_registry, "sub1") is None
     assert _get_child_device(hass, device_registry, "sub2") is None
     assert not entity_registry.async_is_registered("switch.parent_sub_2_switch")
@@ -910,13 +1430,14 @@ async def test_remove_child_device_keeps_device_discovery_topic(
 
 async def test_remove_last_child_device_removes_empty_parent_device(
     hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test removing the last child device removes a parent without components.
 
-    The topic is kept, like when the last entity of a device is removed.
+    The topic is cleared, as the device has no components left.
     """
     mqtt_mock = await mqtt_mock_entry()
     payload = {
@@ -940,12 +1461,11 @@ async def test_remove_last_child_device_removes_empty_parent_device(
     assert len(er.async_entries_for_device(entity_registry, child_device.id)) == 2
     mqtt_mock.async_publish.reset_mock()
 
-    # The entities of the child device are removed together, removing the parent
-    # after the first entity would let the next one clear the topic
-    device_registry.async_remove_device(child_device.id)
-    await hass.async_block_till_done()
+    await _remove_device(hass, hass_ws_client, child_device.id)
     assert _get_device(hass, device_registry, "parent") is None
-    mqtt_mock.async_publish.assert_not_called()
+    mqtt_mock.async_publish.assert_called_once_with(
+        DEVICE_TOPIC, None, 0, True, message_expiry_interval=None
+    )
 
 
 async def test_remove_last_child_device_entities_removes_empty_devices(
@@ -954,9 +1474,10 @@ async def test_remove_last_child_device_entities_removes_empty_devices(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test removing the last entities of a child device together keeps the topic.
+    """Test removing the last entities of a child device together.
 
-    The empty child device and its empty parent device are removed.
+    The empty child device and its empty parent device are removed, and the topic
+    is cleared, as the device has no components left.
     """
     mqtt_mock = await mqtt_mock_entry()
     payload = {
@@ -981,14 +1502,18 @@ async def test_remove_last_child_device_entities_removes_empty_devices(
     assert len(entries) == 2
     mqtt_mock.async_publish.reset_mock()
 
-    # Removing the child device after the first entity would let the next entity
-    # find no parent device and clear the topic
-    for entry in entries:
-        entity_registry.async_remove(entry.entity_id)
+    entity_registry.async_remove(entries[0].entity_id)
+    await hass.async_block_till_done()
+    assert _get_child_device(hass, device_registry, "sub") is not None
+    mqtt_mock.async_publish.assert_not_called()
+
+    entity_registry.async_remove(entries[1].entity_id)
     await hass.async_block_till_done()
     assert _get_child_device(hass, device_registry, "sub") is None
     assert _get_device(hass, device_registry, "parent") is None
-    mqtt_mock.async_publish.assert_not_called()
+    mqtt_mock.async_publish.assert_called_once_with(
+        DEVICE_TOPIC, None, 0, True, message_expiry_interval=None
+    )
 
 
 async def test_remove_last_single_component_child_device_removes_parent(
@@ -1031,6 +1556,7 @@ async def test_remove_last_single_component_child_device_removes_parent(
 
 async def test_remove_parent_device_with_child_device_components_clears_topic(
     hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
@@ -1051,10 +1577,9 @@ async def test_remove_parent_device_with_child_device_components_clears_topic(
     assert parent is not None
     mqtt_mock.async_publish.reset_mock()
 
-    device_registry.async_remove_device(parent.id)
-    await hass.async_block_till_done()
+    await _remove_device(hass, hass_ws_client, parent.id)
     assert not entity_registry.async_is_registered(SWITCH_ENTITY_ID)
-    mqtt_mock.async_publish.assert_any_call(
+    mqtt_mock.async_publish.assert_called_once_with(
         DEVICE_TOPIC, None, 0, True, message_expiry_interval=None
     )
 
@@ -1213,6 +1738,7 @@ async def test_remove_child_device_after_failed_parent_update(
 
 async def test_remove_parent_device_after_failed_move_to_existing_parent(
     hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
@@ -1241,8 +1767,7 @@ async def test_remove_parent_device_after_failed_move_to_existing_parent(
     assert parent is not None
     mqtt_mock.async_publish.reset_mock()
 
-    device_registry.async_remove_device(parent.id)
-    await hass.async_block_till_done()
+    await _remove_device(hass, hass_ws_client, parent.id)
     assert not entity_registry.async_is_registered(SWITCH_ENTITY_ID)
     mqtt_mock.async_publish.assert_any_call(
         DEVICE_TOPIC, None, 0, True, message_expiry_interval=None
