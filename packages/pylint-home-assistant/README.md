@@ -127,6 +127,7 @@ Every check has a code following the
 | `R7404` | [`home-assistant-tests-registry-fixtures`](#r7404-home-assistant-tests-registry-fixtures) | Use the registry fixture instead of calling `<registry>.async_get(hass)` directly in tests |
 | `R7405` | [`home-assistant-tests-user-flow-no-data`](#r7405-home-assistant-tests-user-flow-no-data) | User config flow init in tests must not pass `data` |
 | `R7406` | [`home-assistant-tests-snapshot-enable-entities`](#r7406-home-assistant-tests-snapshot-enable-entities) | Use the `entity_registry_enabled_by_default` fixture instead of enabling entities before `snapshot_platform` |
+| `R7407` | [`home-assistant-redundant-entity-init`](#r7407-home-assistant-redundant-entity-init) | Entity `__init__` only forwards its arguments to `super().__init__` |
 | `W7401` | [`home-assistant-deprecated-import`](#w7401-home-assistant-deprecated-import) | Import uses a deprecated path |
 | `W7402` | [`home-assistant-async-callback-decorator`](#w7402-home-assistant-async-callback-decorator) | Coroutine should not be decorated with `@callback` |
 | `W7403` | [`home-assistant-pytest-fixture-decorator`](#w7403-home-assistant-pytest-fixture-decorator) | Pytest fixture has invalid scope or autouse config |
@@ -1047,6 +1048,62 @@ An EntityDescription field is set equal to a default already declared
 anywhere in the class hierarchy; the assignment can be removed. Only the
 literal defaults `None`, `True`, and `False` are checked; other default
 values are not flagged.
+
+
+## `home_assistant_redundant_entity_init` checker
+
+Detects entity constructors whose whole body is a `super().__init__()` call
+that forwards every parameter through unchanged. Deleting the override leaves
+the inherited constructor in place, with identical runtime behaviour.
+
+Pylint's own `useless-parent-delegation` (`W0246`) already covers overrides
+that repeat the parent's signature verbatim, but it bails out as soon as the
+annotations differ. Narrowing the annotations is precisely what these
+constructors do -- `EntityDescription` becomes a platform-specific
+description, a base coordinator type becomes the integration's own -- so
+`W0246` never fires on them.
+
+### `R7407`: `home-assistant-redundant-entity-init`
+
+The `__init__` of a class inheriting from `Entity` does nothing but pass its
+own parameters to `super().__init__()`. Remove the method:
+
+```python
+class AriaQVmcSensor(AriaQVmcEntity, SensorEntity):
+    # `__init__` is redundant, the base class already takes these three
+    def __init__(
+        self,
+        coordinator: AriaQCoordinator,
+        vmc: FlowItVMCMachine,
+        entity_description: AriaQVmcSensorEntityDescription,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator, vmc, entity_description)
+```
+
+A parameter counts as forwarded when it reaches the parent under its own
+name, either positionally in declaration order or as `name=name`; `*args`
+and `**kwargs` must be forwarded as such. Anything else -- a reordering, a
+renamed keyword, a transformed value, an extra or a missing argument, or any
+further statement in the body -- means the constructor does work of its own
+and is not flagged.
+
+Removing the override must leave existing call sites working. The checker
+finds the `__init__` the class would inherit, which is the one
+`super().__init__` already calls, and compares the signatures. Positional
+parameters must line up by index. A parameter that callers can pass by
+keyword, or that the override forwards by keyword, must keep its name and
+stay keyword-capable in the parent. Keyword-only parameters only need to
+exist in the parent. Extra parameters in the parent are fine.
+
+The checker skips these cases:
+
+- A constructor with **default values**, because the parent's defaults may differ.
+- A **decorated** `__init__`, because the decorator can give the override a purpose.
+- A **decorated inherited** `__init__`, such as an `@abstractmethod` constructor.
+- A constructor in a **decorated class**, such as a `@dataclass`, which makes its own `__init__`.
+- An **overloaded** `__init__`.
+- A class whose `super().__init__` call a **subclass in the same module** sends to another `__init__`.
 
 
 ## `home_assistant_redundant_translation_key` checker
