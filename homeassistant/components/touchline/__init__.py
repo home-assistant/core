@@ -3,6 +3,7 @@
 import logging
 from typing import TYPE_CHECKING
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -47,3 +48,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: TouchlineConfigEntry) ->
 async def async_unload_entry(hass: HomeAssistant, entry: TouchlineConfigEntry) -> None:
     """Unload a touchline config entry."""
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, entry: TouchlineConfigEntry, device_entry: dr.AnyDeviceEntry
+) -> bool:
+    """Allow removing a thermostat that the controller no longer reports."""
+    if entry.state is not ConfigEntryState.LOADED:
+        # Without the latest poll it is unknown which thermostats are still paired.
+        return False
+    return not any(
+        identifier[0] == DOMAIN
+        and (
+            identifier[1] == entry.unique_id or identifier[1] in entry.runtime_data.data
+        )
+        for identifier in device_entry.identifiers
+    )

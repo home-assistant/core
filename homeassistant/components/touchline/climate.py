@@ -13,7 +13,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -60,10 +60,20 @@ async def async_setup_entry(
     controller_device_id = dr.async_get_device_id_by_identifier(
         hass, (DOMAIN, entry.unique_id), config_entry_id=entry.entry_id
     )
-    async_add_entities(
-        Touchline(coordinator, room_id, controller_device_id)
-        for room_id in coordinator.data
-    )
+    known_room_ids: set[str] = set()
+
+    @callback
+    def _async_add_new_thermostats() -> None:
+        """Add entities for thermostats paired since the last update."""
+        if new_room_ids := coordinator.data.keys() - known_room_ids:
+            known_room_ids.update(new_room_ids)
+            async_add_entities(
+                Touchline(coordinator, room_id, controller_device_id)
+                for room_id in new_room_ids
+            )
+
+    _async_add_new_thermostats()
+    entry.async_on_unload(coordinator.async_add_listener(_async_add_new_thermostats))
 
 
 class Touchline(CoordinatorEntity[TouchlineCoordinator], ClimateEntity):
