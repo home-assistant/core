@@ -182,56 +182,69 @@ async def test_handle_communication_errors(
     assert state.state == "0.0"
 
 
-async def test_update_current_snapshot_after_refresh(
+async def test_stale_poll_does_not_overwrite_room_setting(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """Test writes update the current coordinator snapshot after a refresh."""
+    """Test a poll that finishes after a write does not restore stale limits."""
     entry = await setup_number_platform(hass)
-    write_started = asyncio.Event()
-    release_write = asyncio.Event()
-    refresh_finished = asyncio.Event()
+    poll_started = asyncio.Event()
+    release_poll = asyncio.Event()
 
-    async def update_data_and_signal_refresh(base: Alpha2Base) -> None:
+    async def delayed_update_data(base: Alpha2Base) -> None:
+        poll_started.set()
+        await release_poll.wait()
         await mock_update_data(base, hass)
-        refresh_finished.set()
 
     async def update_heat_area(
         heat_area_id: str, attributes: dict[str, float | int]
     ) -> None:
-        write_started.set()
-        await release_write.wait()
+        return None
 
     with (
         patch(
             "homeassistant.components.moehlenhoff_alpha2.coordinator.Alpha2Base.update_data",
-            new=update_data_and_signal_refresh,
+            new=delayed_update_data,
         ),
         patch(
             "homeassistant.components.moehlenhoff_alpha2.coordinator.Alpha2Base.update_heat_area",
             side_effect=update_heat_area,
-        ),
+        ) as mock_update_heat_area,
     ):
-        service_task = hass.async_create_task(
-            hass.services.async_call(
+        freezer.tick(timedelta(seconds=61))
+        async_fire_time_changed(hass)
+        await poll_started.wait()
+        await hass.services.async_call(
+            number.DOMAIN,
+            SERVICE_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: "number.buro_minimum_target_temperature",
+                ATTR_VALUE: 25.0,
+            },
+            blocking=True,
+        )
+        release_poll.set()
+        await hass.async_block_till_done()
+
+        with pytest.raises(
+            HomeAssistantError,
+            match="The minimum target temperature must not exceed the maximum",
+        ):
+            await hass.services.async_call(
                 number.DOMAIN,
                 SERVICE_SET_VALUE,
                 {
-                    ATTR_ENTITY_ID: "number.buro_temperature_offset",
-                    ATTR_VALUE: 1.5,
+                    ATTR_ENTITY_ID: "number.buro_maximum_target_temperature",
+                    ATTR_VALUE: 20.0,
                 },
                 blocking=True,
             )
-        )
-        await write_started.wait()
-        freezer.tick(timedelta(seconds=61))
-        async_fire_time_changed(hass)
-        await refresh_finished.wait()
-        release_write.set()
-        await service_task
 
-    assert entry.runtime_data.data["heat_areas"]["Alpha2Test:1"]["OFFSET"] == 1.5
-    assert (state := hass.states.get("number.buro_temperature_offset"))
-    assert state.state == "1.5"
+    mock_update_heat_area.assert_awaited_once_with(
+        "Alpha2Test:1", {"T_TARGET_MIN": 25.0}
+    )
+    heat_area = entry.runtime_data.data["heat_areas"]["Alpha2Test:1"]
+    assert heat_area["T_TARGET_MIN"] == 25.0
+    assert heat_area["T_TARGET_MAX"] == 30.0
 
 
 async def test_concurrent_target_temperature_limits(

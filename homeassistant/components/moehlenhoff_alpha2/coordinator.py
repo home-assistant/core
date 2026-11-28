@@ -45,14 +45,35 @@ class Alpha2BaseCoordinator(DataUpdateCoordinator[dict[str, dict]]):
     @override
     async def _async_update_data(self) -> dict[str, dict[str, dict]]:
         """Fetch the latest data from the source."""
+        heat_areas_before_update = (
+            {
+                heat_area_id: heat_area.copy()
+                for heat_area_id, heat_area in self.data["heat_areas"].items()
+            }
+            if self.data is not None
+            else {}
+        )
         await self.base.update_data()
-        return {
+        data = {
             "heat_areas": {ha["ID"]: ha for ha in self.base.heat_areas if ha.get("ID")},
             "heat_controls": {
                 hc["ID"]: hc for hc in self.base.heat_controls if hc.get("ID")
             },
             "io_devices": {io["ID"]: io for io in self.base.io_devices if io.get("ID")},
         }
+        if self.data is not None:
+            for heat_area_id, heat_area in self.data["heat_areas"].items():
+                if (updated_heat_area := data["heat_areas"].get(heat_area_id)) is None:
+                    continue
+                previous_heat_area = heat_areas_before_update.get(heat_area_id, {})
+                for attribute, value in heat_area.items():
+                    if (
+                        attribute not in previous_heat_area
+                        or previous_heat_area[attribute] != value
+                    ):
+                        updated_heat_area[attribute] = value
+
+        return data
 
     def get_cooling(self) -> bool:
         """Return if cooling mode is enabled."""
