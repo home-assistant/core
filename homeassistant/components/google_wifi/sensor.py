@@ -51,6 +51,7 @@ class GoogleWifiSensorEntityDescription(SensorEntityDescription):
     """Describes GoogleWifi sensor entity."""
 
     value_fn: Callable[[GoogleWifiStatus], bool | datetime | float | str | None]
+    supported_fn: Callable[[GoogleWifiStatus], bool] = lambda _: True
 
 
 SENSOR_TYPES: dict[str, GoogleWifiSensorEntityDescription] = {
@@ -86,6 +87,7 @@ SENSOR_TYPES: dict[str, GoogleWifiSensorEntityDescription] = {
         value_fn=lambda status: (
             str(status.wan.local_ip_address) if status.wan.online else None
         ),
+        supported_fn=lambda status: status.wan.ip_address,
     ),
     ATTR_STATUS: GoogleWifiSensorEntityDescription(
         key=ATTR_STATUS,
@@ -124,6 +126,7 @@ async def async_setup_entry(
         GoogleWifiSensor(coordinator, description)
         for key, description in SENSOR_TYPES.items()
         if key in entry.data.get(CONF_MONITORED_CONDITIONS, SENSOR_KEYS)
+        and description.supported_fn(coordinator.data)
     )
 
 

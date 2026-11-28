@@ -4,6 +4,7 @@ from typing import Any, override
 
 from googlewifiapi import GoogleWifiAPI
 from googlewifiapi.exception import GoogleWifiClientError, GoogleWifiDataValidationError
+import probatio
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
@@ -11,7 +12,9 @@ from homeassistant.const import CONF_HOST, CONF_MONITORED_CONDITIONS, CONF_NAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
-from .sensor import CONFIG_SCHEMA, SENSOR_KEYS
+from .sensor import SENSOR_KEYS
+
+USER_SCHEMA = probatio.Schema({probatio.Required(CONF_HOST): str})
 
 
 async def _validate_host(flow: GoogleWifiConfigFlow, host: str) -> dict[str, str]:
@@ -45,7 +48,7 @@ class GoogleWifiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(title="Google Wifi", data=user_input)
 
         return self.async_show_form(
-            step_id="user", data_schema=CONFIG_SCHEMA, errors=errors
+            step_id="user", data_schema=USER_SCHEMA, errors=errors
         )
 
     async def async_step_reconfigure(
@@ -63,7 +66,7 @@ class GoogleWifiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
-            step_id="reconfigure", data_schema=CONFIG_SCHEMA, errors=errors
+            step_id="reconfigure", data_schema=USER_SCHEMA, errors=errors
         )
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:

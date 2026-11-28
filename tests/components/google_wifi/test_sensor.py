@@ -200,6 +200,7 @@ async def test_sensor_states_for_limited_device_data(
     local_ip = hass.states.get("sensor.test_wifi_local_ip")
     assert status is not None
     assert status.state == expected_status
+    assert (local_ip is not None) is (expected_local_ip is not None)
     if expected_local_ip:
         assert local_ip is not None
         assert local_ip.state == expected_local_ip
@@ -283,12 +284,12 @@ async def test_sensor_updates_after_failure_and_recovery(
 async def test_yaml_import_already_configured_creates_deprecation_issue(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test an existing config entry does not hide the YAML deprecation issue."""
     mock_config_entry.add_to_hass(hass)
     await setup_sensor_platform(hass, monitored_conditions=[const.ATTR_UPTIME])
 
-    issue_registry = ir.async_get(hass)
     assert (
         issue_registry.async_get_issue(
             HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{const.DOMAIN}"
