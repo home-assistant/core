@@ -32,6 +32,38 @@
     }
   },
   "entity": {
+    "button": {
+      "apps": {
+        "name": "Apps"
+      },
+      "back": {
+        "name": "Back"
+      },
+      "busy": {
+        "name": "BUSY"
+      },
+      "custom": {
+        "name": "Custom"
+      },
+      "down": {
+        "name": "Down"
+      },
+      "off": {
+        "name": "Off"
+      },
+      "ok": {
+        "name": "OK"
+      },
+      "settings": {
+        "name": "Settings"
+      },
+      "start": {
+        "name": "Start/Pause"
+      },
+      "up": {
+        "name": "Up"
+      }
+    },
     "sensor": {
       "wifi_signal": {
         "name": "Wi-Fi signal"
@@ -39,6 +71,9 @@
     }
   },
   "exceptions": {
+    "input_failed": {
+      "message": "Unable to send the key press to the BUSY Bar."
+    },
     "invalid_auth": {
       "message": "BUSY Bar rejected the access token. Remove and add the integration again."
     }

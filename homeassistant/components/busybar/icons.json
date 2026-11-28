@@ -1,0 +1,36 @@
+{
+  "entity": {
+    "button": {
+      "apps": {
+        "default": "mdi:apps"
+      },
+      "back": {
+        "default": "mdi:arrow-left"
+      },
+      "busy": {
+        "default": "mdi:account-cancel"
+      },
+      "custom": {
+        "default": "mdi:star"
+      },
+      "down": {
+        "default": "mdi:chevron-down"
+      },
+      "off": {
+        "default": "mdi:power"
+      },
+      "ok": {
+        "default": "mdi:check"
+      },
+      "settings": {
+        "default": "mdi:cog"
+      },
+      "start": {
+        "default": "mdi:play-pause"
+      },
+      "up": {
+        "default": "mdi:chevron-up"
+      }
+    }
+  }
+}
