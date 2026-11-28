@@ -115,6 +115,7 @@
     }),
     'relations': dict({
       'agreement_count': 1,
+      'any_agreements': True,
       'last_update_success': True,
     }),
   })
@@ -235,6 +236,7 @@
     }),
     'relations': dict({
       'agreement_count': 1,
+      'any_agreements': True,
       'last_update_success': True,
     }),
   })
@@ -315,6 +317,7 @@
     }),
     'relations': dict({
       'agreement_count': 1,
+      'any_agreements': True,
       'last_update_success': True,
     }),
   })
@@ -386,6 +389,7 @@
     }),
     'relations': dict({
       'agreement_count': 1,
+      'any_agreements': True,
       'last_update_success': True,
     }),
   })
@@ -485,6 +489,7 @@
     }),
     'relations': dict({
       'agreement_count': 1,
+      'any_agreements': True,
       'last_update_success': True,
     }),
   })
@@ -581,6 +586,7 @@
     }),
     'relations': dict({
       'agreement_count': 1,
+      'any_agreements': True,
       'last_update_success': True,
     }),
   })

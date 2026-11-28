@@ -67,10 +67,11 @@ MAIN_STREET_ADDRESS = ConsumptionAddress(
 
 
 def build_relations(
-    *bans: str, address: ConsumptionAddress | None = MAIN_STREET_ADDRESS
+    *bans: str,
+    inactive_bans: tuple[str, ...] = (),
+    address: ConsumptionAddress | None = MAIN_STREET_ADDRESS,
 ) -> CustomerAccountRelations:
-    """Build a customer-account-relations response with the given active BANs."""
-    bans = bans or (BAN,)
+    """Build a customer-account-relations response with the given active and inactive BANs."""
     return CustomerAccountRelations(
         accounts=(
             AccountRelation(
@@ -81,10 +82,13 @@ def build_relations(
                     business_agreements=tuple(
                         BusinessAgreement(
                             business_agreement_number=ban,
-                            active=True,
+                            active=active,
                             consumption_address=address,
                         )
-                        for ban in bans
+                        for ban, active in (
+                            *((ban, True) for ban in bans),
+                            *((ban, False) for ban in inactive_bans),
+                        )
                     ),
                 ),
             ),
@@ -281,7 +285,7 @@ def mock_engie_client(mock_auth_flow: MagicMock) -> Generator[MagicMock]:
         ),
     ):
         client = mock_client_class.return_value
-        client.async_get_customer_account_relations.return_value = build_relations()
+        client.async_get_customer_account_relations.return_value = build_relations(BAN)
         client.async_get_prices.return_value = build_prices()
         client.async_get_service_point.side_effect = build_service_point
         client.async_get_energy_contracts.return_value = build_contracts()

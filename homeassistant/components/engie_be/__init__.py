@@ -10,12 +10,16 @@ from aioengiebelgium import EngieBeAuthenticationError, EngieBeClient, EngieBeEr
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import CONF_REFRESH_TOKEN, CONTRACTS_RETRY_INTERVAL, LOGGER
+from .const import CONF_REFRESH_TOKEN, CONTRACTS_RETRY_INTERVAL, DOMAIN, LOGGER
 from .coordinator import (
     EngieBeEpexCoordinator,
     EngieBePeaksCoordinator,
@@ -91,6 +95,19 @@ async def _async_is_dynamic(client: EngieBeClient, ban: str) -> bool | None:
     return contracts.is_dynamic()
 
 
+@callback
+def _async_remove_stale_devices(
+    device_registry: dr.DeviceRegistry, entry: EngieBeConfigEntry, bans: set[str]
+) -> None:
+    """Remove the devices of business agreements the account no longer lists."""
+    identifiers = {(DOMAIN, ban) for ban in bans}
+    for device_entry in dr.async_entries_for_config_entry(
+        device_registry, entry.entry_id
+    ):
+        if device_entry.identifiers.isdisjoint(identifiers):
+            device_registry.async_remove_device(device_entry.id)
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: EngieBeConfigEntry) -> None:
     """Set up ENGIE Belgium from a config entry."""
 
@@ -121,6 +138,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: EngieBeConfigEntry) -> N
     await relations.async_config_entry_first_refresh()
 
     device_registry = dr.async_get(hass)
+    if relations.any_agreements:
+        _async_remove_stale_devices(device_registry, entry, set(relations.data))
 
     @callback
     def _async_create_household(
@@ -234,6 +253,25 @@ def _async_start_tariff_retry(
         hass, _start_retry_classification, CONTRACTS_RETRY_INTERVAL
     )
     entry.async_on_unload(cancel_retry)
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, entry: EngieBeConfigEntry, device_entry: dr.AnyDeviceEntry
+) -> bool:
+    """Allow removing the device of a business agreement that is no longer active."""
+    if entry.state is not ConfigEntryState.LOADED:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN, translation_key="remove_device_not_loaded"
+        )
+    if any(
+        domain == DOMAIN and ban in entry.runtime_data.relations.data
+        for domain, ban in device_entry.identifiers
+    ):
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="remove_device_active_agreement",
+        )
+    return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: EngieBeConfigEntry) -> None:

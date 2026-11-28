@@ -381,6 +381,12 @@
     },
     "invalid_auth": {
       "message": "Authentication with ENGIE Belgium failed. Please reauthenticate."
+    },
+    "remove_device_active_agreement": {
+      "message": "This household still has an active agreement at ENGIE. To remove it, delete the ENGIE Belgium integration."
+    },
+    "remove_device_not_loaded": {
+      "message": "ENGIE Belgium is not loaded. Try again once the integration is running."
     }
   },
   "selector": {
