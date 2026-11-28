@@ -1,5 +1,7 @@
 """Init tests for the Telegram Bot integration."""
 
+from unittest.mock import PropertyMock, patch
+
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -65,12 +67,210 @@ async def test_migrate_entry_from_1_1(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert mock_config_entry.version == 1
-    assert mock_config_entry.minor_version == 3
+    assert mock_config_entry.minor_version == 4
     assert mock_config_entry.data == {
         CONF_PLATFORM: PLATFORM_BROADCAST,
         CONF_API_KEY: "mock api key",
         CONF_API_ENDPOINT: DEFAULT_API_ENDPOINT,
     }
+
+
+async def test_migrate_notify_entity_unique_id(
+    hass: HomeAssistant,
+    mock_external_calls: None,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test migrate notify entity unique ID from chat ID to subentry ID."""
+    subentry = ConfigSubentryData(
+        unique_id="123456",
+        data={CONF_CHAT_ID: 123456},
+        subentry_type=SUBENTRY_TYPE_ALLOWED_CHAT_IDS,
+        title="mock chat",
+    )
+    mock_config_entry = MockConfigEntry(
+        unique_id="mock api key",
+        domain=DOMAIN,
+        data={
+            CONF_PLATFORM: PLATFORM_BROADCAST,
+            CONF_API_ENDPOINT: DEFAULT_API_ENDPOINT,
+            CONF_API_KEY: "mock api key",
+        },
+        options={ATTR_PARSER: TelegramBotParseMode.MARKDOWN},
+        subentries_data=[subentry],
+        minor_version=3,
+    )
+    mock_config_entry.add_to_hass(hass)
+    subentry_id = next(iter(mock_config_entry.subentries))
+    bot_device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "123456")},
+    )
+    entity_registry.async_get_or_create(
+        "notify",
+        DOMAIN,
+        "123456_123456",
+        suggested_object_id="legacy_telegram_notify",
+        config_entry=mock_config_entry,
+        config_subentry_id=subentry_id,
+        device_id=bot_device.id,
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    registry_entry = entity_registry.async_get("notify.legacy_telegram_notify")
+    assert registry_entry is not None
+    assert registry_entry.unique_id == f"123456_{subentry_id}"
+    assert registry_entry.config_subentry_id == subentry_id
+
+
+def _setup_migration_entry(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    bot_ids: tuple[str, ...] = ("123456",),
+) -> tuple[MockConfigEntry, str]:
+    """Return an added minor version 3 config entry and its subentry ID."""
+    mock_config_entry = MockConfigEntry(
+        unique_id="mock api key",
+        domain=DOMAIN,
+        data={
+            CONF_PLATFORM: PLATFORM_BROADCAST,
+            CONF_API_ENDPOINT: DEFAULT_API_ENDPOINT,
+            CONF_API_KEY: "mock api key",
+        },
+        options={ATTR_PARSER: TelegramBotParseMode.MARKDOWN},
+        subentries_data=[
+            ConfigSubentryData(
+                unique_id="123456",
+                data={CONF_CHAT_ID: 123456},
+                subentry_type=SUBENTRY_TYPE_ALLOWED_CHAT_IDS,
+                title="mock chat",
+            )
+        ],
+        minor_version=3,
+    )
+    mock_config_entry.add_to_hass(hass)
+    # The v1.4 migration needs the shared bot device to derive the bot ID
+    for bot_id in bot_ids:
+        device_registry.async_get_or_create(
+            config_entry_id=mock_config_entry.entry_id,
+            identifiers={(DOMAIN, bot_id)},
+        )
+    return mock_config_entry, next(iter(mock_config_entry.subentries))
+
+
+@pytest.mark.parametrize(
+    "bot_ids",
+    [
+        pytest.param(("123456",), id="current bot device"),
+        pytest.param(("999999", "123456"), id="previous bot device first"),
+    ],
+)
+async def test_migrate_entry_to_subentry_device_identifiers(
+    hass: HomeAssistant,
+    mock_external_calls: None,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    bot_ids: tuple[str, ...],
+) -> None:
+    """Test 1.3 to 1.4 migration re-keys the per-chat device in place."""
+    mock_config_entry, subentry_id = _setup_migration_entry(
+        hass, device_registry, bot_ids
+    )
+    bot_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "123456"), mock_config_entry.entry_id
+    )
+    assert bot_device is not None
+    chat_device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        config_subentry_id=subentry_id,
+        identifiers={(DOMAIN, "123456_123456")},
+        via_device_id=bot_device.id,
+    )
+    entity_registry.async_get_or_create(
+        "notify",
+        DOMAIN,
+        "123456_123456",
+        config_entry=mock_config_entry,
+        config_subentry_id=subentry_id,
+        device_id=chat_device.id,
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # The existing device is re-keyed in place, keeping its id and the entity
+    rekeyed_device = device_registry.async_get(chat_device.id)
+    assert rekeyed_device is not None
+    assert rekeyed_device.identifiers == {(DOMAIN, f"123456_{subentry_id}")}
+    assert not device_registry.async_get_device_by_identifier(
+        (DOMAIN, "123456_123456"), mock_config_entry.entry_id
+    )
+    notify_entity_id = entity_registry.async_get_entity_id(
+        "notify", DOMAIN, f"123456_{subentry_id}"
+    )
+    assert notify_entity_id is not None
+    assert entity_registry.async_get(notify_entity_id).device_id == chat_device.id
+
+
+async def test_migrate_notify_entity_unique_id_unknown(
+    hass: HomeAssistant,
+    mock_external_calls: None,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test notify entity with an unmatched unique ID is left alone."""
+    mock_config_entry, _ = _setup_migration_entry(hass, device_registry)
+    entity_registry.async_get_or_create(
+        "notify",
+        DOMAIN,
+        "999999_999999",
+        config_entry=mock_config_entry,
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    registry_entry = entity_registry.async_get_entity_id(
+        "notify", DOMAIN, "999999_999999"
+    )
+    assert registry_entry is not None
+
+
+async def test_migrate_notify_entity_unique_id_already_migrated(
+    hass: HomeAssistant,
+    mock_external_calls: None,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test legacy notify entity is kept when the new unique ID is taken."""
+    mock_config_entry, subentry_id = _setup_migration_entry(hass, device_registry)
+    entity_registry.async_get_or_create(
+        "notify",
+        DOMAIN,
+        "123456_123456",
+        suggested_object_id="legacy_telegram_notify",
+        config_entry=mock_config_entry,
+    )
+    entity_registry.async_get_or_create(
+        "notify",
+        DOMAIN,
+        f"123456_{subentry_id}",
+        suggested_object_id="migrated_telegram_notify",
+        config_entry=mock_config_entry,
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # The legacy entity is not migrated onto the taken unique ID
+    legacy_entry = entity_registry.async_get("notify.legacy_telegram_notify")
+    assert legacy_entry is not None
+    assert legacy_entry.unique_id == "123456_123456"
+    migrated_entry = entity_registry.async_get("notify.migrated_telegram_notify")
+    assert migrated_entry is not None
+    assert migrated_entry.unique_id == f"123456_{subentry_id}"
 
 
 @pytest.mark.parametrize("collapsed_chat_index", [0, 1])
@@ -146,19 +346,18 @@ async def test_migrate_entry_to_per_chat_devices(
         for subentry_id, chat_id in zip(subentry_ids, chat_ids, strict=True)
         if chat_id not in chats_without_notify_entity
     }
-
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
-    assert config_entry.minor_version == 3
+    assert config_entry.minor_version == 4
 
     # Every chat has its own device - owned by that subentry and linked to the bot device -
     # even a chat whose notify entity was deleted before the migration ran. A surviving
     # notify entity is moved onto its chat's device.
     for subentry_id, chat_id in zip(subentry_ids, chat_ids, strict=True):
         chat_device = device_registry.async_get_device_by_identifier(
-            (DOMAIN, f"{bot_id}_{chat_id}"), config_entry.entry_id
+            (DOMAIN, f"{bot_id}_{subentry_id}"), config_entry.entry_id
         )
         assert chat_device is not None
         assert chat_device.config_subentry_id == subentry_id
@@ -195,15 +394,16 @@ async def test_per_chat_devices(
     assert bot_device is not None
     assert bot_device.config_subentry_id is None
 
-    for chat_id in (123456, 654321):
+    for subentry in mock_broadcast_config_entry.subentries.values():
         chat_device = device_registry.async_get_device_by_identifier(
-            (DOMAIN, f"123456_{chat_id}"), mock_broadcast_config_entry.entry_id
+            (DOMAIN, f"123456_{subentry.subentry_id}"),
+            mock_broadcast_config_entry.entry_id,
         )
         assert chat_device is not None
         assert chat_device.config_subentry_id is not None
         assert chat_device.via_device_id == bot_device.id
         notify_entity_id = entity_registry.async_get_entity_id(
-            "notify", DOMAIN, f"123456_{chat_id}"
+            "notify", DOMAIN, f"123456_{subentry.subentry_id}"
         )
         assert notify_entity_id is not None
         assert entity_registry.async_get(notify_entity_id).device_id == chat_device.id
@@ -227,9 +427,11 @@ async def test_remove_chat_subentry_removes_per_chat_device(
         if subentry.data[CONF_CHAT_ID] == 123456
     )
     assert device_registry.async_get_device_by_identifier(
-        (DOMAIN, "123456_123456"), mock_broadcast_config_entry.entry_id
+        (DOMAIN, f"123456_{subentry_id}"), mock_broadcast_config_entry.entry_id
     )
-    assert entity_registry.async_get_entity_id("notify", DOMAIN, "123456_123456")
+    assert entity_registry.async_get_entity_id(
+        "notify", DOMAIN, f"123456_{subentry_id}"
+    )
 
     hass.config_entries.async_remove_subentry(mock_broadcast_config_entry, subentry_id)
     await hass.async_block_till_done()
@@ -237,12 +439,70 @@ async def test_remove_chat_subentry_removes_per_chat_device(
     # The removed chat's device and notify entity are gone; the other chat and the bot
     # device remain
     assert not device_registry.async_get_device_by_identifier(
-        (DOMAIN, "123456_123456"), mock_broadcast_config_entry.entry_id
+        (DOMAIN, f"123456_{subentry_id}"), mock_broadcast_config_entry.entry_id
     )
-    assert not entity_registry.async_get_entity_id("notify", DOMAIN, "123456_123456")
+    assert not entity_registry.async_get_entity_id(
+        "notify", DOMAIN, f"123456_{subentry_id}"
+    )
     assert device_registry.async_get_device_by_identifier(
-        (DOMAIN, "123456_654321"), mock_broadcast_config_entry.entry_id
+        (
+            DOMAIN,
+            f"123456_{next(iter(mock_broadcast_config_entry.subentries))}",
+        ),
+        mock_broadcast_config_entry.entry_id,
     )
     assert device_registry.async_get_device_by_identifier(
         (DOMAIN, "123456"), mock_broadcast_config_entry.entry_id
+    )
+
+
+async def test_setup_removes_devices_of_replaced_bot(
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Devices and entities of a bot replaced by a reauth are removed."""
+    mock_broadcast_config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.telegram_bot.bot.Bot.id",
+        new_callable=PropertyMock,
+        return_value=999999,
+    ):
+        await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+        await hass.async_block_till_done()
+    await hass.config_entries.async_unload(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # The reauth replaced the bot, so the entry is set up as another bot
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Only the devices of the current bot remain
+    devices = dr.async_entries_for_config_entry(
+        device_registry, mock_broadcast_config_entry.entry_id
+    )
+    assert {identifier for device in devices for identifier in device.identifiers} == {
+        (DOMAIN, "123456"),
+        *(
+            (DOMAIN, f"123456_{subentry_id}")
+            for subentry_id in mock_broadcast_config_entry.subentries
+        ),
+    }
+
+    # The notify entities keep their entity IDs
+    subentry_ids = list(mock_broadcast_config_entry.subentries)
+    assert entity_registry.async_get("notify.mock_chat_1").unique_id == (
+        f"123456_{subentry_ids[0]}"
+    )
+    assert entity_registry.async_get("notify.mock_chat_2").unique_id == (
+        f"123456_{subentry_ids[1]}"
+    )
+    assert entity_registry.async_get("notify.mock_chat_1_2") is None
+    assert (
+        entity_registry.async_get_entity_id(
+            "notify", DOMAIN, f"999999_{subentry_ids[0]}"
+        )
+        is None
     )
