@@ -225,8 +225,7 @@ class VeSyncSelectEntity(VeSyncBaseEntity[VeSyncBaseDevice], SelectEntity):
     @override
     async def async_select_option(self, option: str) -> None:
         """Set an option."""
-        if not await self.entity_description.select_option_fn(self.device, option):
-            if self.device.last_response:
-                raise HomeAssistantError(self.device.last_response.message)
-            raise HomeAssistantError("Unknown error selecting option, no response.")
+        await self._async_send_command(
+            self.entity_description.select_option_fn(self.device, option)
+        )
         self.async_write_ha_state()

@@ -8,17 +8,15 @@ from pyvesync.base_devices.fryer_base import VeSyncFryer
 from pyvesync.base_devices.purifier_base import VeSyncPurifier
 from pyvesync.const import AirFryerFeatures, PurifierFeatures
 from pyvesync.device_container import DeviceContainer
-from pyvesync.utils.errors import VeSyncError
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .common import is_air_fryer, is_purifier
-from .const import DOMAIN, VS_DEVICES, VS_DISCOVERY
+from .const import VS_DEVICES, VS_DISCOVERY
 from .coordinator import VesyncConfigEntry, VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
 
@@ -129,7 +127,7 @@ class VeSyncButtonEntity(ButtonEntity, VeSyncBaseEntity[VeSyncPurifier]):
     @override
     async def async_press(self) -> None:
         """Press the button."""
-        await _async_press(self.entity_description.press_fn(self.device))
+        await self._async_send_command(self.entity_description.press_fn(self.device))
         # The filter life sensor reads the new value from the next poll.
         await self.coordinator.async_request_refresh()
 
@@ -160,19 +158,7 @@ class VeSyncFryerButtonEntity(ButtonEntity, VeSyncBaseEntity[VeSyncFryer]):
     @override
     async def async_press(self) -> None:
         """Press the button."""
-        await _async_press(self.entity_description.press_fn(self.device, self._chamber))
-        await self.coordinator.async_request_refresh()
-
-
-async def _async_press(command: Awaitable[bool]) -> None:
-    """Send a button command and raise if the device rejects it."""
-    try:
-        success = await command
-    except VeSyncError as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN, translation_key="api_response_error"
-        ) from err
-    if not success:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN, translation_key="api_response_error"
+        await self._async_send_command(
+            self.entity_description.press_fn(self.device, self._chamber)
         )
+        await self.coordinator.async_request_refresh()

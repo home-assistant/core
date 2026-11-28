@@ -82,12 +82,19 @@ async def test_reset_filter(
 
 
 @pytest.mark.parametrize(
-    "reset_filter",
+    ("reset_filter", "message"),
     [
-        {"return_value": False},
-        {"side_effect": VeSyncAPIResponseError("API error")},
+        pytest.param(
+            {"return_value": False},
+            "Failed to send command to VeSync, no response received",
+            id="returns_false",
+        ),
+        pytest.param(
+            {"side_effect": VeSyncAPIResponseError("API error")},
+            "Invalid response from the VeSync API",
+            id="raises",
+        ),
     ],
-    ids=["returns_false", "raises"],
 )
 async def test_reset_filter_raises_error(
     hass: HomeAssistant,
@@ -95,6 +102,7 @@ async def test_reset_filter_raises_error(
     aioclient_mock: AiohttpClientMocker,
     freezer: FrozenDateTimeFactory,
     reset_filter: dict[str, Any],
+    message: str,
 ) -> None:
     """Test a failed filter reset raises HomeAssistantError and skips the refresh."""
 
@@ -107,9 +115,7 @@ async def test_reset_filter_raises_error(
         patch(RESET_FILTER, **reset_filter) as method_mock,
         patch(UPDATE_ALL_DEVICES) as update_mock,
     ):
-        with pytest.raises(
-            HomeAssistantError, match="Invalid response from the VeSync API"
-        ):
+        with pytest.raises(HomeAssistantError, match=message):
             await hass.services.async_call(
                 BUTTON_DOMAIN,
                 ButtonService.PRESS,
@@ -203,7 +209,10 @@ async def test_fryer_button_press_fails(
 
     with (
         patch(f"{FRYER_CLASS}.end", return_value=False),
-        pytest.raises(HomeAssistantError, match="Invalid response from the VeSync API"),
+        pytest.raises(
+            HomeAssistantError,
+            match="Failed to send command to VeSync, no response received",
+        ),
     ):
         await hass.services.async_call(
             BUTTON_DOMAIN,

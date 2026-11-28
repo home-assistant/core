@@ -69,7 +69,7 @@ async def test_switch_state(
         pytest.param(
             SwitchService.TURN_ON,
             None,
-            "Unknown error turning on device, no response.",
+            "Failed to send command to VeSync, no response received",
             id="on_no_last_response",
         ),
         pytest.param(
@@ -78,7 +78,7 @@ async def test_switch_state(
         pytest.param(
             SwitchService.TURN_OFF,
             None,
-            "Unknown error turning off device, no response.",
+            "Failed to send command to VeSync, no response received",
             id="off_no_last_response",
         ),
     ],

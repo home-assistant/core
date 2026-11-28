@@ -1,10 +1,13 @@
 """Common entity for VeSync Component."""
 
+from collections.abc import Awaitable
 from typing import override
 
 from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
 from pyvesync.const import ConnectionStatus
+from pyvesync.utils.errors import VeSyncError
 
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -47,4 +50,27 @@ class VeSyncBaseEntity[T: VeSyncBaseDevice](CoordinatorEntity[VeSyncDataCoordina
         return (
             super().available
             and self.device.state.connection_status == ConnectionStatus.ONLINE
+        )
+
+    async def _async_send_command(self, command: Awaitable[bool]) -> None:
+        """Await a device command and raise if it fails."""
+        # Drop the previous call's response so a stale message is never shown
+        self.device.last_response = None
+        try:
+            success = await command
+        except VeSyncError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="api_response_error"
+            ) from err
+        if success:
+            return
+        # The VeSync message is untranslated, but often explains the failure
+        if (response := self.device.last_response) is not None:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={"message": response.message},
+            )
+        raise HomeAssistantError(
+            translation_domain=DOMAIN, translation_key="command_failed_no_response"
         )

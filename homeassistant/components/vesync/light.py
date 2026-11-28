@@ -10,12 +10,11 @@ from pyvesync.const import DeviceStatus, NightlightStatus
 
 from homeassistant.components.light import ColorMode, LightEntity, LightServiceArgument
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import color as color_util
 
-from .const import DOMAIN, VS_DEVICES, VS_DISCOVERY
+from .const import VS_DEVICES, VS_DISCOVERY
 from .coordinator import VesyncConfigEntry, VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
 
@@ -127,7 +126,7 @@ class VeSyncBaseLightHA(VeSyncBaseEntity[VeSyncSwitch | VeSyncBulb], LightEntity
             # ensure value between 0-100
             color_temp = max(0, min(color_temp, 100))
             # call pyvesync library api method to set color_temp
-            await self.device.set_color_temp(color_temp)
+            await self._async_send_command(self.device.set_color_temp(color_temp))
             # flag attribute_adjustment_only, so it doesn't
             # turn_on the device redundantly
             attribute_adjustment_only = True
@@ -145,7 +144,7 @@ class VeSyncBaseLightHA(VeSyncBaseEntity[VeSyncSwitch | VeSyncBulb], LightEntity
             # ensure value between 1-100
             brightness = max(1, min(brightness, 100))
             # call pyvesync library api method to set brightness
-            await self.device.set_brightness(brightness)
+            await self._async_send_command(self.device.set_brightness(brightness))
             # flag attribute_adjustment_only, so it doesn't
             # turn_on the device redundantly
             attribute_adjustment_only = True
@@ -153,13 +152,13 @@ class VeSyncBaseLightHA(VeSyncBaseEntity[VeSyncSwitch | VeSyncBulb], LightEntity
         if attribute_adjustment_only:
             return
         # send turn_on command to pyvesync api
-        await self.device.turn_on()
+        await self._async_send_command(self.device.turn_on())
         self.async_write_ha_state()
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        await self.device.turn_off()
+        await self._async_send_command(self.device.turn_off())
         self.async_write_ha_state()
 
 
@@ -267,21 +266,17 @@ class VeSyncHumidifierRGBNightLightHA(VeSyncBaseEntity[VeSyncHumidifier], LightE
         red, green, blue = kwargs.get(
             LightServiceArgument.RGB_COLOR, (None, None, None)
         )
-        if not await self.device.set_rgb_nightlight(
-            power=True, brightness=brightness, red=red, green=green, blue=blue
-        ):
-            raise HomeAssistantError(
-                translation_domain=DOMAIN, translation_key="nightlight_command_failed"
+        await self._async_send_command(
+            self.device.set_rgb_nightlight(
+                power=True, brightness=brightness, red=red, green=green, blue=blue
             )
+        )
         self.async_write_ha_state()
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the night light off."""
-        if not await self.device.set_rgb_nightlight(power=False):
-            raise HomeAssistantError(
-                translation_domain=DOMAIN, translation_key="nightlight_command_failed"
-            )
+        await self._async_send_command(self.device.set_rgb_nightlight(power=False))
         self.async_write_ha_state()
 
     @property

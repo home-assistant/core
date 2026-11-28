@@ -170,10 +170,7 @@ class VeSyncHumidifierHA(VeSyncBaseEntity[VeSyncHumidifier], HumidifierEntity):
     @override
     async def async_set_humidity(self, humidity: int) -> None:
         """Set the target humidity of the device."""
-        if not await self.device.set_humidity(humidity):
-            if self.device.last_response:
-                raise HomeAssistantError(self.device.last_response.message)
-            raise HomeAssistantError("Failed to set humidity.")
+        await self._async_send_command(self.device.set_humidity(humidity))
 
     @override
     async def async_set_mode(self, mode: str) -> None:
@@ -185,10 +182,7 @@ class VeSyncHumidifierHA(VeSyncBaseEntity[VeSyncHumidifier], HumidifierEntity):
         set_mode = self._get_vs_mode(mode)
         if set_mode is None:
             raise HomeAssistantError(f"Could not map mode {mode} to VeSync mode.")
-        if not await self.device.set_mode(self._get_vs_mode(mode)):
-            if self.device.last_response:
-                raise HomeAssistantError(self.device.last_response.message)
-            raise HomeAssistantError("Failed to set mode.")
+        await self._async_send_command(self.device.set_mode(self._get_vs_mode(mode)))
 
         if mode == MODE_SLEEP:
             # We successfully changed the mode. Consider it
@@ -200,22 +194,14 @@ class VeSyncHumidifierHA(VeSyncBaseEntity[VeSyncHumidifier], HumidifierEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        success = await self.device.turn_on()
-        if not success:
-            if self.device.last_response:
-                raise HomeAssistantError(self.device.last_response.message)
-            raise HomeAssistantError("Failed to turn on humidifier.")
+        await self._async_send_command(self.device.turn_on())
 
         self.async_write_ha_state()
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        success = await self.device.turn_off()
-        if not success:
-            if self.device.last_response:
-                raise HomeAssistantError(self.device.last_response.message)
-            raise HomeAssistantError("Failed to turn off humidifier.")
+        await self._async_send_command(self.device.turn_off())
 
         self.async_write_ha_state()
 

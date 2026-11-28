@@ -459,7 +459,7 @@ async def test_set_percentage(
             0,
             "turn_off",
             DEVICE_ERROR,
-            "An error occurred while turning off: Device error",
+            "Failed to send command to VeSync: Device error",
             id="turn_off_last_response",
         ),
         pytest.param(
@@ -467,7 +467,7 @@ async def test_set_percentage(
             0,
             "turn_off",
             None,
-            "Failed to turn off fan, no response found.",
+            "Failed to send command to VeSync, no response received",
             id="turn_off_no_last_response",
         ),
         pytest.param(
@@ -475,7 +475,7 @@ async def test_set_percentage(
             50,
             "turn_on",
             DEVICE_ERROR,
-            "An error occurred while turning on: Device error",
+            "Failed to send command to VeSync: Device error",
             id="turn_on_last_response",
         ),
         pytest.param(
@@ -483,7 +483,7 @@ async def test_set_percentage(
             50,
             "turn_on",
             None,
-            "Failed to turn on fan, no response found.",
+            "Failed to send command to VeSync, no response received",
             id="turn_on_no_last_response",
         ),
         pytest.param(
@@ -491,7 +491,7 @@ async def test_set_percentage(
             50,
             "set_manual_mode",
             DEVICE_ERROR,
-            "An error occurred while setting manual mode.Device error",
+            "Failed to send command to VeSync: Device error",
             id="set_manual_mode_last_response",
         ),
         pytest.param(
@@ -499,7 +499,7 @@ async def test_set_percentage(
             50,
             "set_manual_mode",
             None,
-            "Failed to set manual mode, no response found.",
+            "Failed to send command to VeSync, no response received",
             id="set_manual_mode_no_last_response",
         ),
         pytest.param(
@@ -507,7 +507,7 @@ async def test_set_percentage(
             50,
             "set_fan_speed",
             DEVICE_ERROR,
-            "An error occurred while changing fan speed: Device error",
+            "Failed to send command to VeSync: Device error",
             id="set_fan_speed_last_response",
         ),
         pytest.param(
@@ -515,7 +515,7 @@ async def test_set_percentage(
             50,
             "set_fan_speed",
             None,
-            "Failed to set fan speed, no response found.",
+            "Failed to send command to VeSync, no response received",
             id="set_fan_speed_no_last_response",
         ),
     ],
@@ -615,28 +615,28 @@ async def test_percentage_in_preset_mode(
             FanService.TURN_ON,
             {},
             "turn_on",
-            "Failed to turn on fan, no response found.",
+            "Failed to send command to VeSync, no response received",
             id="turn_on",
         ),
         pytest.param(
             FanService.TURN_OFF,
             {},
             "turn_off",
-            "Failed to turn off fan, no response found.",
+            "Failed to send command to VeSync, no response received",
             id="turn_off",
         ),
         pytest.param(
             FanService.TURN_ON,
             {FanServiceArgument.PRESET_MODE: "auto"},
             "set_auto_mode",
-            "Failed to set preset mode, no response found.",
+            "Failed to send command to VeSync, no response received",
             id="preset_mode",
         ),
         pytest.param(
             FanService.OSCILLATE,
             {FanServiceArgument.OSCILLATING: True},
             "toggle_oscillation",
-            "Failed to set oscillation, no response found.",
+            "Failed to send command to VeSync, no response received",
             id="oscillate",
         ),
     ],
@@ -693,7 +693,8 @@ async def test_pedestal_fan_oscillation_failure_without_response(
             side_effect=_fail_without_response,
         ),
         pytest.raises(
-            HomeAssistantError, match="Failed to set oscillation, no response found."
+            HomeAssistantError,
+            match="Failed to send command to VeSync, no response received",
         ),
     ):
         await hass.services.async_call(

@@ -15,7 +15,6 @@ from homeassistant.components.number import (
     NumberMode,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -142,8 +141,7 @@ class VeSyncNumberEntity(VeSyncBaseEntity[VeSyncHumidifier], NumberEntity):
     @override
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
-        if not await self.entity_description.set_value_fn(self.device, value):
-            if self.device.last_response:
-                raise HomeAssistantError(self.device.last_response.message)
-            raise HomeAssistantError("Failed to set value.")
+        await self._async_send_command(
+            self.entity_description.set_value_fn(self.device, value)
+        )
         self.async_write_ha_state()
