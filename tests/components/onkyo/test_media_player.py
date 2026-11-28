@@ -465,6 +465,71 @@ async def test_net_playback(
     assert state.state == STATE_IDLE
 
 
+async def test_net_blank_text(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    read_queue: asyncio.Queue,
+) -> None:
+    """Test a text field the receiver blanks with spaces is cleared."""
+    await _select_net_source(hass, freezer, read_queue)
+    await receive_messages(read_queue, *NET_TRACK_MESSAGES)
+
+    await receive_messages(
+        read_queue,
+        status.NetTitle(Code.from_kind_zone(Kind.NET_TITLE, Zone.MAIN), None, " "),
+        status.NetArtist(Code.from_kind_zone(Kind.NET_ARTIST, Zone.MAIN), None, " "),
+        status.NetAlbum(Code.from_kind_zone(Kind.NET_ALBUM, Zone.MAIN), None, " "),
+    )
+
+    assert (state := hass.states.get(ENTITY_ID)) is not None
+    assert ATTR_MEDIA_TITLE not in state.attributes
+    assert ATTR_MEDIA_ARTIST not in state.attributes
+    assert ATTR_MEDIA_ALBUM_NAME not in state.attributes
+
+    await receive_messages(
+        read_queue,
+        status.NetTitle(
+            Code.from_kind_zone(Kind.NET_TITLE, Zone.MAIN), None, " Title "
+        ),
+    )
+    assert (state := hass.states.get(ENTITY_ID)) is not None
+    assert state.attributes[ATTR_MEDIA_TITLE] == "Title"
+
+
+async def test_net_not_available(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    read_queue: asyncio.Queue,
+) -> None:
+    """Test N/A clears what the report held."""
+    await _select_net_source(hass, freezer, read_queue)
+    await receive_messages(read_queue, *NET_TRACK_MESSAGES)
+
+    await receive_messages(
+        read_queue,
+        *(
+            status.NotAvailable(Code.from_kind_zone(kind, Zone.MAIN), None, kind)
+            for kind in (
+                Kind.NET_TITLE,
+                Kind.NET_ARTIST,
+                Kind.NET_ALBUM,
+                Kind.NET_TRACK,
+                Kind.NET_TIME,
+            )
+        ),
+    )
+
+    assert (state := hass.states.get(ENTITY_ID)) is not None
+    assert state.state == STATE_PLAYING
+    assert ATTR_MEDIA_TITLE not in state.attributes
+    assert ATTR_MEDIA_ARTIST not in state.attributes
+    assert ATTR_MEDIA_ALBUM_NAME not in state.attributes
+    assert ATTR_MEDIA_TRACK not in state.attributes
+    assert ATTR_MEDIA_DURATION not in state.attributes
+    assert ATTR_MEDIA_POSITION not in state.attributes
+    assert ATTR_MEDIA_POSITION_UPDATED_AT not in state.attributes
+
+
 async def test_net_position(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,

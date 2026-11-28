@@ -102,6 +102,12 @@ QUERY_NET_DELAY = 1
 # this large (in seconds) from the expected position is written to the state.
 NET_POSITION_TOLERANCE = 2
 
+
+def _net_text(text: str) -> str | None:
+    """Return a NET/USB text field, which receivers blank with spaces."""
+    return text.strip() or None
+
+
 AUDIO_INFORMATION_MAPPING = [
     "audio_input_port",
     "input_signal_format",
@@ -578,16 +584,6 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
             case status.FLDisplay():
                 self._query_av_info_delayed()
 
-            case (
-                status.NetPlayStatus()
-                | status.NetTitle()
-                | status.NetArtist()
-                | status.NetAlbum()
-                | status.NetTrack()
-                | status.NetTime()
-            ) if self._net_input is not None:
-                self._process_net_update(message)
-
             case status.NotAvailable(kind=Kind.AUDIO_INFORMATION):
                 # Not available right now, but still supported
                 self._supports_audio_info = True
@@ -595,6 +591,17 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
             case status.NotAvailable(kind=Kind.VIDEO_INFORMATION):
                 # Not available right now, but still supported
                 self._supports_video_info = True
+
+            case (
+                status.NetPlayStatus()
+                | status.NetTitle()
+                | status.NetArtist()
+                | status.NetAlbum()
+                | status.NetTrack()
+                | status.NetTime()
+                | status.NotAvailable()
+            ) if self._net_input is not None:
+                self._process_net_update(message)
 
         self.async_write_ha_state()
 
@@ -642,18 +649,19 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         | status.NetArtist
         | status.NetAlbum
         | status.NetTrack
-        | status.NetTime,
+        | status.NetTime
+        | status.NotAvailable,
     ) -> None:
         match message:
             case status.NetPlayStatus(playback=playback) if playback is not None:
                 self._set_net_state(NET_PLAYBACK_STATES[playback])
             case status.NetTitle(text=text):
-                self._attr_media_title = text or None
+                self._attr_media_title = _net_text(text)
                 self._attr_media_content_type = MediaType.MUSIC
             case status.NetArtist(text=text):
-                self._attr_media_artist = text or None
+                self._attr_media_artist = _net_text(text)
             case status.NetAlbum(text=text):
-                self._attr_media_album_name = text or None
+                self._attr_media_album_name = _net_text(text)
             case status.NetTrack(current=current):
                 self._attr_media_track = current
             case status.NetTime(position=position, duration=duration):
@@ -663,6 +671,19 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
                     self._attr_media_position_updated_at = (
                         dt_util.utcnow() if position is not None else None
                     )
+            # The receiver sends N/A for a report it has nothing to put in
+            case status.NotAvailable(kind=Kind.NET_TITLE):
+                self._attr_media_title = None
+            case status.NotAvailable(kind=Kind.NET_ARTIST):
+                self._attr_media_artist = None
+            case status.NotAvailable(kind=Kind.NET_ALBUM):
+                self._attr_media_album_name = None
+            case status.NotAvailable(kind=Kind.NET_TRACK):
+                self._attr_media_track = None
+            case status.NotAvailable(kind=Kind.NET_TIME):
+                self._attr_media_duration = None
+                self._attr_media_position = None
+                self._attr_media_position_updated_at = None
 
     def _query_net_delayed(self) -> None:
         if self._query_net_unsub is not None:
