@@ -5,6 +5,7 @@ import json
 from typing import Any
 from unittest.mock import ANY, AsyncMock
 
+from aiogithubapi import GitHubReleaseModel
 from hatasmota.const import (
     CONF_DEEP_SLEEP,
     CONF_MAC,
@@ -33,6 +34,24 @@ from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
+DEFAULT_VERSION = "9.4.0.4"
+OLDER_VERSION = "0.0.0"
+NEWER_VERSION = "14.6.0"
+
+
+def mock_github_release(version: str, body: str = "") -> GitHubReleaseModel:
+    """Create a GitHub release response for a Tasmota version."""
+    tag = f"v{version}"
+    return GitHubReleaseModel(
+        {
+            "tag_name": tag,
+            "name": f"Tasmota {version}",
+            "html_url": f"https://github.com/arendst/Tasmota/releases/tag/{tag}",
+            "body": body,
+        }
+    )
+
+
 DEFAULT_CONFIG = {
     "ip": "192.168.15.10",
     "dn": "Tasmota",
@@ -46,7 +65,7 @@ DEFAULT_CONFIG = {
     "ofln": "Offline",
     "onln": "Online",
     "state": ["OFF", "ON", "TOGGLE", "HOLD"],
-    "sw": "9.4.0.4",
+    "sw": DEFAULT_VERSION,
     "swn": [None, None, None, None, None],
     "t": "tasmota_49A3BC",
     "ft": "%topic%/%prefix%/",

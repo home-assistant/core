@@ -69,6 +69,7 @@ async def test_get_triggers_btn(
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
     )
+    triggers = [t for t in triggers if t["domain"] == DOMAIN]
     assert triggers == unordered(expected_triggers)
 
 
@@ -104,6 +105,7 @@ async def test_get_triggers_swc(
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
     )
+    triggers = [t for t in triggers if t["domain"] == DOMAIN]
     assert triggers == unordered(expected_triggers)
 
 
@@ -153,6 +155,7 @@ async def test_get_unknown_triggers(
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
     )
+    triggers = [t for t in triggers if t["domain"] == DOMAIN]
     assert triggers == []
 
 
@@ -178,6 +181,7 @@ async def test_get_non_existing_triggers(
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
     )
+    triggers = [t for t in triggers if t["domain"] == DOMAIN]
     assert triggers == []
 
 
@@ -247,6 +251,7 @@ async def test_discover_bad_triggers(
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
     )
+    triggers = [t for t in triggers if t["domain"] == DOMAIN]
     assert triggers == []
 
     # Rediscover without exception
@@ -267,6 +272,7 @@ async def test_discover_bad_triggers(
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
     )
+    triggers = [t for t in triggers if t["domain"] == DOMAIN]
     assert triggers == unordered(expected_triggers)
 
 
@@ -344,6 +350,7 @@ async def test_update_remove_triggers(
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
     )
+    triggers = [t for t in triggers if t["domain"] == DOMAIN]
     assert triggers == []
 
 
