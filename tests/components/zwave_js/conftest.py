@@ -756,6 +756,19 @@ def multisensor_6_fixture(client, multisensor_6_state) -> Node:
     return node
 
 
+@pytest.fixture(name="unmapped_motion_sensor")
+def unmapped_motion_sensor_fixture(client, multisensor_6_state: dict[str, Any]) -> Node:
+    """Mock a multisensor 6 whose motion status reports a value it never declared."""
+    state = copy.deepcopy(multisensor_6_state)
+    for value in state["values"]:
+        if value.get("propertyKey") == "Motion sensor status":
+            value["metadata"]["states"] = {"0": "idle"}
+            value["value"] = 8
+    node = Node(client, state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
 @pytest.fixture(name="ecolink_door_sensor")
 def legacy_binary_sensor_fixture(client, ecolink_door_sensor_state) -> Node:
     """Mock a legacy_binary_sensor node."""
