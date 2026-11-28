@@ -11,22 +11,20 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import PERCENTAGE, REVOLUTIONS_PER_MINUTE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN
+from . import DanfossAirConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: DanfossAirConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the available Danfoss Air sensors etc."""
-    data = hass.data[DOMAIN]
+    data = entry.runtime_data
 
     sensors = [
         [
@@ -101,7 +99,7 @@ def setup_platform(
         ],
     ]
 
-    add_entities(
+    async_add_entities(
         (
             DanfossAir(data, sensor[0], sensor[1], sensor[2], sensor[3], sensor[4])
             for sensor in sensors

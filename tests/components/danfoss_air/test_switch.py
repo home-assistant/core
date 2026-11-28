@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, call
 
 from pydanfossair.commands import UpdateCommand
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
@@ -23,11 +24,12 @@ ENTITY_AUTOMATIC_BYPASS = "switch.danfoss_air_automatic_bypass"
 )
 async def test_switch_state(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     entity_id: str,
 ) -> None:
     """Test the switch states after the first poll."""
-    await setup_integration(hass)
+    await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get(entity_id) == snapshot
 
@@ -81,6 +83,7 @@ async def test_switch_state(
 )
 async def test_switch_commands(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
     mock_danfoss_client: MagicMock,
     entity_id: str,
     service: SwitchService,
@@ -88,7 +91,7 @@ async def test_switch_commands(
     expected_state: str,
 ) -> None:
     """Test that each switch sends its own command and reflects the read-back state."""
-    await setup_integration(hass)
+    await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
         SWITCH_DOMAIN, service, {TargetKey.ENTITY_ID: entity_id}, blocking=True

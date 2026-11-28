@@ -7,22 +7,20 @@ from pydanfossair.commands import ReadCommand, UpdateCommand
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN
+from . import DanfossAirConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: DanfossAirConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Danfoss Air HRV switch platform."""
-    data = hass.data[DOMAIN]
+    data = entry.runtime_data
 
     switches = [
         [
@@ -45,7 +43,7 @@ def setup_platform(
         ],
     ]
 
-    add_entities(
+    async_add_entities(
         DanfossAir(data, switch[0], switch[1], switch[2], switch[3])
         for switch in switches
     )

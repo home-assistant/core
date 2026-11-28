@@ -8,16 +8,21 @@ import probatio
 from pydanfossair.commands import ReadCommand
 from pydanfossair.danfossclient import DanfossClient
 
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, discovery
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
+
+from .const import DOMAIN, INTEGRATION_TITLE
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
-DOMAIN = "danfoss_air"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
@@ -27,16 +32,73 @@ CONFIG_SCHEMA = probatio.Schema(
 )
 
 
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Danfoss Air component."""
-    conf = config[DOMAIN]
+type DanfossAirConfigEntry = ConfigEntry[DanfossAir]
 
-    hass.data[DOMAIN] = DanfossAir(conf[CONF_HOST])
 
-    for platform in PLATFORMS:
-        discovery.load_platform(hass, platform, DOMAIN, {}, config)
-
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Import the Danfoss Air YAML configuration."""
+    if DOMAIN in config:
+        hass.async_create_task(_async_import(hass, config[DOMAIN]))
     return True
+
+
+async def _async_import(hass: HomeAssistant, conf: ConfigType) -> None:
+    """Import the YAML configuration into a config entry and raise an issue."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data={CONF_HOST: conf[CONF_HOST]}
+    )
+    if (
+        result["type"] is FlowResultType.ABORT
+        and result["reason"] != "already_configured"
+    ):
+        async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_{result['reason']}",
+            breaks_in_ha_version="2027.7.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key=f"deprecated_yaml_import_issue_{result['reason']}",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": INTEGRATION_TITLE,
+            },
+        )
+        return
+
+    async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2027.7.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": INTEGRATION_TITLE,
+        },
+    )
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: DanfossAirConfigEntry) -> None:
+    """Set up Danfoss Air from a config entry."""
+    danfoss_air = DanfossAir(entry.data[CONF_HOST])
+    await hass.async_add_executor_job(danfoss_air.update)
+    if not danfoss_air.available:
+        raise ConfigEntryNotReady(
+            f"Cannot connect to the Danfoss Air CCM module at {entry.data[CONF_HOST]}"
+        )
+
+    entry.runtime_data = danfoss_air
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: DanfossAirConfigEntry) -> None:
+    """Unload a config entry."""
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 class DanfossAir:

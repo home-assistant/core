@@ -7,20 +7,18 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN
+from . import DanfossAirConfigEntry
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: DanfossAirConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the available Danfoss Air sensors etc."""
-    data = hass.data[DOMAIN]
+    data = entry.runtime_data
 
     sensors = [
         [
@@ -31,7 +29,7 @@ def setup_platform(
         ["Danfoss Air Away Mode Active", ReadCommand.away_mode, None],
     ]
 
-    add_entities(
+    async_add_entities(
         (
             DanfossAirBinarySensor(data, sensor[0], sensor[1], sensor[2])
             for sensor in sensors

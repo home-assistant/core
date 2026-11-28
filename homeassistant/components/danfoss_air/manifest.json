@@ -3,10 +3,11 @@
   "name": "Danfoss Air",
   "categories": ["climate.fans_ventilation"],
   "codeowners": [],
+  "config_flow": true,
   "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/danfoss_air",
+  "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["pydanfossair"],
-  "quality_scale": "legacy",
   "requirements": ["pydanfossair==1.0.0"]
 }
