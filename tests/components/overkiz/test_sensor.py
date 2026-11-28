@@ -10,7 +10,11 @@ from freezegun.api import FrozenDateTimeFactory
 from pyoverkiz.enums import MeasuredValueType, OverkizAttribute, OverkizState
 from pyoverkiz.models import Setup
 import pytest
-from pytest_homeassistant.common import async_fire_time_changed, snapshot_platform
+from pytest_homeassistant.common import (
+    async_fire_time_changed,
+    mock_restore_cache_with_extra_data,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.overkiz.const import UPDATE_INTERVAL
@@ -21,7 +25,7 @@ from homeassistant.const import (
     Platform,
     UnitOfEnergy,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
@@ -81,6 +85,13 @@ YUTAKI = FixtureDevice(
     "modbus://1234-5678-2284/5416194/1#1",
     "sensor.my_house_yutaki_outdoor_ambient_temperature",
 )
+# Atlantic Adélis 2 Digit, without the towel dryer commands
+TOWEL_DRYER_BOOST_END = FixtureDevice(
+    "setup/cloud_atlantic_adelis_2_digit.json",
+    "io://1234-5678-7259/9876543#1",
+    "sensor.bathroom_towel_dryer_boost_end",
+)
+TOWEL_DRYER_CLIMATE_ENTITY_ID = "climate.bathroom_towel_dryer"
 
 OVEN = FixtureDevice(
     "setup/cloud_sauter_sop6615lb.json",
@@ -94,6 +105,7 @@ SNAPSHOT_FIXTURES = [
     HOMEKIT_STACK,
     COZYTOUCH_DHW,
     YUTAKI,
+    TOWEL_DRYER_BOOST_END,
     OVEN,
 ]
 
@@ -102,6 +114,16 @@ SNAPSHOT_FIXTURES = [
 def fixture_platforms() -> Generator[None]:
     """Limit platforms to sensor only."""
     with patch("homeassistant.components.overkiz.PLATFORMS", [Platform.SENSOR]):
+        yield
+
+
+@pytest.fixture
+def climate_and_sensor_platforms() -> Generator[None]:
+    """Load the climate entity that tracks the towel dryer boost."""
+    with patch(
+        "homeassistant.components.overkiz.PLATFORMS",
+        [Platform.CLIMATE, Platform.SENSOR],
+    ):
         yield
 
 
@@ -378,6 +400,91 @@ async def test_sensor_unavailability(
     )
 
     assert hass.states.get(TEMPERATURE_SENSOR.entity_id).state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("climate_and_sensor_platforms")
+async def test_towel_dryer_boost_end(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test the boost end follows the boost started from the climate entity."""
+    freezer.move_to("2026-11-24T10:00:00+00:00")
+    await setup_overkiz_integration(fixture=TOWEL_DRYER_BOOST_END.fixture)
+    state = hass.states.get(TOWEL_DRYER_BOOST_END.entity_id)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    await hass.services.async_call(
+        "climate",
+        "set_preset_mode",
+        {"entity_id": TOWEL_DRYER_CLIMATE_ENTITY_ID, "preset_mode": "boost"},
+        blocking=True,
+    )
+    state = hass.states.get(TOWEL_DRYER_BOOST_END.entity_id)
+    assert state is not None
+    assert state.state == "2026-11-24T11:00:00+00:00"
+
+    freezer.tick(timedelta(minutes=61))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TOWEL_DRYER_BOOST_END.entity_id)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.usefixtures("climate_and_sensor_platforms", "no_cancel_settle_delay")
+async def test_towel_dryer_boost_end_cancelled(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test the boost end is cleared when another level is set."""
+    await setup_overkiz_integration(fixture=TOWEL_DRYER_BOOST_END.fixture)
+    await hass.services.async_call(
+        "climate",
+        "set_preset_mode",
+        {"entity_id": TOWEL_DRYER_CLIMATE_ENTITY_ID, "preset_mode": "boost"},
+        blocking=True,
+    )
+    await hass.services.async_call(
+        "climate",
+        "set_preset_mode",
+        {"entity_id": TOWEL_DRYER_CLIMATE_ENTITY_ID, "preset_mode": "eco"},
+        blocking=True,
+    )
+
+    state = hass.states.get(TOWEL_DRYER_BOOST_END.entity_id)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.usefixtures("climate_and_sensor_platforms")
+async def test_towel_dryer_boost_end_restored(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test the boost end of a boost running across a restart."""
+    boost_until = dt_util.utcnow().replace(microsecond=0) + timedelta(minutes=30)
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State(TOWEL_DRYER_CLIMATE_ENTITY_ID, "heat"),
+                {
+                    "assumed_level": "eco",
+                    "boost_until": boost_until.isoformat(),
+                    "override_pending": True,
+                    "boost_timer_seen": False,
+                },
+            )
+        ],
+    )
+    await setup_overkiz_integration(fixture=TOWEL_DRYER_BOOST_END.fixture)
+
+    state = hass.states.get(TOWEL_DRYER_BOOST_END.entity_id)
+    assert state is not None
+    assert state.state == boost_until.isoformat()
 
 
 async def test_oven_end_time(

@@ -1,7 +1,8 @@
 """The Overkiz (by Somfy) integration."""
 
 from collections import defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from datetime import datetime
 from typing import cast
 
 from aiohttp import ClientError
@@ -91,6 +92,8 @@ class HomeAssistantOverkizData:
     coordinator: OverkizDataUpdateCoordinator
     platforms: defaultdict[Platform, list[Device]]
     scenarios: list[PersistedActionGroup]
+    # End of the boost of towel dryers driven by heating levels, by device URL
+    boost_ends: dict[str, datetime | None] = field(default_factory=dict)
 
 
 type OverkizDataConfigEntry = ConfigEntry[HomeAssistantOverkizData]
