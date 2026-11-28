@@ -35,9 +35,7 @@ DEFAULT_RADAR_RADIUS = 200
 # 0 means use the full range of images Environment Canada reports as available.
 DEFAULT_RADAR_DURATION = 0
 DEFAULT_RADAR_FPS = 5
-# Colour count only affects the rain/snow layers; precip_type always uses the
-# WMS server's single default style.
 DEFAULT_RADAR_COLORS = "14"
 DEFAULT_RADAR_INTERPOLATION = False
-# 0 means no extrapolation frames are added; only affects rain/snow layers.
+# 0 means no extrapolation frames are added.
 DEFAULT_RADAR_FUTURE_MINUTES = 0

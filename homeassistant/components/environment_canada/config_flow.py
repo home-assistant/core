@@ -74,6 +74,20 @@ _LOGGER = logging.getLogger(__name__)
 
 MAP_LANGUAGES = {"en": "english", "fr": "french"}
 
+# Options that only some radar layers support, so the options flow offers
+# them only for those layers. precip_type is categorical (rain, snow, mixed):
+# it has a single colour style, no nowcast layer to extend the loop into the
+# future, and Environment Canada's server refuses to interpolate it.
+_RADAR_LAYER_OPTIONS: dict[str, frozenset[str]] = {
+    "rain": frozenset(
+        {CONF_RADAR_COLORS, CONF_RADAR_INTERPOLATION, CONF_RADAR_FUTURE_MINUTES}
+    ),
+    "snow": frozenset(
+        {CONF_RADAR_COLORS, CONF_RADAR_INTERPOLATION, CONF_RADAR_FUTURE_MINUTES}
+    ),
+    "precip_type": frozenset(),
+}
+
 
 async def validate_input(data):
     """Validate the user input allows us to connect."""
@@ -194,22 +208,136 @@ class EnvironmentCanadaConfigFlow(ConfigFlow, domain=DOMAIN):
 
 
 class OptionsFlowHandler(OptionsFlowWithReload):
-    """Handle Environment Canada radar camera options."""
+    """Handle Environment Canada radar camera options.
+
+    The radar type is chosen first, because some options apply only to some
+    radar types (see _RADAR_LAYER_OPTIONS); the second step offers only those
+    that apply, so an unsupported combination can't be saved.
+    """
+
+    _layer: str
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Manage the radar camera options."""
+        """Choose the radar type."""
         if user_input is not None:
-            flat_options = {
-                **user_input[SECTION_MAP],
-                **user_input[SECTION_RADAR],
-                **user_input[SECTION_TIME],
-                **user_input[SECTION_IMAGE],
-            }
-            return self.async_create_entry(data=flat_options)
+            self._layer = user_input[CONF_RADAR_LAYER]
+            return await self.async_step_radar()
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(
+                        CONF_RADAR_LAYER,
+                        default=self.config_entry.options.get(
+                            CONF_RADAR_LAYER, DEFAULT_RADAR_LAYER
+                        ),
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=RADAR_LAYERS,
+                            translation_key="radar_layer",
+                        )
+                    ),
+                }
+            ),
+            last_step=False,
+        )
+
+    async def async_step_radar(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options that apply to the chosen radar type."""
+        if user_input is not None:
+            # Built only from submitted fields, so options that don't apply
+            # to this layer are dropped rather than kept from a previous save.
+            return self.async_create_entry(
+                data={
+                    CONF_RADAR_LAYER: self._layer,
+                    **user_input[SECTION_MAP],
+                    **user_input[SECTION_RADAR],
+                    **user_input[SECTION_TIME],
+                    **user_input[SECTION_IMAGE],
+                }
+            )
 
         options = self.config_entry.options
+        layer_options = _RADAR_LAYER_OPTIONS[self._layer]
+
+        radar_fields: dict[Any, Any] = {}
+        if CONF_RADAR_COLORS in layer_options:
+            radar_fields[
+                probatio.Required(
+                    CONF_RADAR_COLORS,
+                    default=options.get(CONF_RADAR_COLORS, DEFAULT_RADAR_COLORS),
+                )
+            ] = SelectSelector(
+                SelectSelectorConfig(
+                    options=RADAR_COLOR_OPTIONS,
+                    translation_key="radar_colors",
+                )
+            )
+        radar_fields[
+            probatio.Required(
+                CONF_RADAR_OPACITY,
+                default=options.get(CONF_RADAR_OPACITY, DEFAULT_RADAR_OPACITY),
+            )
+        ] = NumberSelector(
+            NumberSelectorConfig(min=0, max=100, step=1, mode=NumberSelectorMode.SLIDER)
+        )
+        radar_fields[
+            probatio.Required(
+                CONF_RADAR_LEGEND,
+                default=options.get(CONF_RADAR_LEGEND, DEFAULT_RADAR_LEGEND),
+            )
+        ] = BooleanSelector()
+
+        time_fields: dict[Any, Any] = {
+            probatio.Required(
+                CONF_RADAR_DURATION,
+                default=options.get(CONF_RADAR_DURATION, DEFAULT_RADAR_DURATION),
+            ): NumberSelector(
+                NumberSelectorConfig(min=0, max=180, step=5, unit_of_measurement="min")
+            ),
+        }
+        if CONF_RADAR_FUTURE_MINUTES in layer_options:
+            time_fields[
+                probatio.Required(
+                    CONF_RADAR_FUTURE_MINUTES,
+                    default=options.get(
+                        CONF_RADAR_FUTURE_MINUTES, DEFAULT_RADAR_FUTURE_MINUTES
+                    ),
+                )
+            ] = NumberSelector(
+                NumberSelectorConfig(min=0, max=72, step=1, unit_of_measurement="min")
+            )
+        time_fields[
+            probatio.Required(
+                CONF_RADAR_TIMESTAMP,
+                default=options.get(CONF_RADAR_TIMESTAMP, DEFAULT_RADAR_TIMESTAMP),
+            )
+        ] = BooleanSelector()
+
+        image_fields: dict[Any, Any] = {}
+        if CONF_RADAR_INTERPOLATION in layer_options:
+            image_fields[
+                probatio.Required(
+                    CONF_RADAR_INTERPOLATION,
+                    default=options.get(
+                        CONF_RADAR_INTERPOLATION, DEFAULT_RADAR_INTERPOLATION
+                    ),
+                )
+            ] = BooleanSelector()
+        image_fields[
+            probatio.Required(
+                CONF_RADAR_FPS,
+                default=options.get(CONF_RADAR_FPS, DEFAULT_RADAR_FPS),
+            )
+        ] = NumberSelector(
+            NumberSelectorConfig(min=1, max=30, step=1, unit_of_measurement="fps")
+        )
+
         data_schema = probatio.Schema(
             {
                 probatio.Required(SECTION_MAP): section(
@@ -230,110 +358,17 @@ class OptionsFlowHandler(OptionsFlowWithReload):
                     {"collapsed": False},
                 ),
                 probatio.Required(SECTION_RADAR): section(
-                    probatio.Schema(
-                        {
-                            probatio.Required(
-                                CONF_RADAR_LAYER,
-                                default=options.get(
-                                    CONF_RADAR_LAYER, DEFAULT_RADAR_LAYER
-                                ),
-                            ): SelectSelector(
-                                SelectSelectorConfig(
-                                    options=RADAR_LAYERS,
-                                    translation_key="radar_layer",
-                                )
-                            ),
-                            probatio.Required(
-                                CONF_RADAR_COLORS,
-                                default=options.get(
-                                    CONF_RADAR_COLORS, DEFAULT_RADAR_COLORS
-                                ),
-                            ): SelectSelector(
-                                SelectSelectorConfig(
-                                    options=RADAR_COLOR_OPTIONS,
-                                    translation_key="radar_colors",
-                                )
-                            ),
-                            probatio.Required(
-                                CONF_RADAR_OPACITY,
-                                default=options.get(
-                                    CONF_RADAR_OPACITY, DEFAULT_RADAR_OPACITY
-                                ),
-                            ): NumberSelector(
-                                NumberSelectorConfig(
-                                    min=0,
-                                    max=100,
-                                    step=1,
-                                    mode=NumberSelectorMode.SLIDER,
-                                )
-                            ),
-                            probatio.Required(
-                                CONF_RADAR_LEGEND,
-                                default=options.get(
-                                    CONF_RADAR_LEGEND, DEFAULT_RADAR_LEGEND
-                                ),
-                            ): BooleanSelector(),
-                        }
-                    ),
-                    {"collapsed": False},
+                    probatio.Schema(radar_fields), {"collapsed": False}
                 ),
                 probatio.Required(SECTION_TIME): section(
-                    probatio.Schema(
-                        {
-                            probatio.Required(
-                                CONF_RADAR_DURATION,
-                                default=options.get(
-                                    CONF_RADAR_DURATION, DEFAULT_RADAR_DURATION
-                                ),
-                            ): NumberSelector(
-                                NumberSelectorConfig(
-                                    min=0, max=180, step=5, unit_of_measurement="min"
-                                )
-                            ),
-                            probatio.Required(
-                                CONF_RADAR_FUTURE_MINUTES,
-                                default=options.get(
-                                    CONF_RADAR_FUTURE_MINUTES,
-                                    DEFAULT_RADAR_FUTURE_MINUTES,
-                                ),
-                            ): NumberSelector(
-                                NumberSelectorConfig(
-                                    min=0, max=72, step=1, unit_of_measurement="min"
-                                )
-                            ),
-                            probatio.Required(
-                                CONF_RADAR_TIMESTAMP,
-                                default=options.get(
-                                    CONF_RADAR_TIMESTAMP, DEFAULT_RADAR_TIMESTAMP
-                                ),
-                            ): BooleanSelector(),
-                        }
-                    ),
-                    {"collapsed": False},
+                    probatio.Schema(time_fields), {"collapsed": False}
                 ),
                 probatio.Required(SECTION_IMAGE): section(
-                    probatio.Schema(
-                        {
-                            probatio.Required(
-                                CONF_RADAR_INTERPOLATION,
-                                default=options.get(
-                                    CONF_RADAR_INTERPOLATION,
-                                    DEFAULT_RADAR_INTERPOLATION,
-                                ),
-                            ): BooleanSelector(),
-                            probatio.Required(
-                                CONF_RADAR_FPS,
-                                default=options.get(CONF_RADAR_FPS, DEFAULT_RADAR_FPS),
-                            ): NumberSelector(
-                                NumberSelectorConfig(
-                                    min=1, max=30, step=1, unit_of_measurement="fps"
-                                )
-                            ),
-                        }
-                    ),
-                    {"collapsed": True},
+                    probatio.Schema(image_fields), {"collapsed": True}
                 ),
             }
         )
 
-        return self.async_show_form(step_id="init", data_schema=data_schema)
+        return self.async_show_form(
+            step_id="radar", data_schema=data_schema, last_step=True
+        )
