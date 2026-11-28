@@ -101,7 +101,7 @@ def _setup_entities(
     )
 
 
-class VeSyncBinarySensor(BinarySensorEntity, VeSyncBaseEntity):
+class VeSyncBinarySensor(BinarySensorEntity, VeSyncBaseEntity[VeSyncBaseDevice]):
     """Vesync binary sensor class."""
 
     entity_description: VeSyncBinarySensorEntityDescription

@@ -338,7 +338,7 @@ aioimmich==0.18.0
 aioindiallsky==0.1.8
 
 # homeassistant.components.ipp
-aioipp==0.21.1
+aioipp==0.21.2
 
 # homeassistant.components.apache_kafka
 aiokafka==0.10.0
@@ -663,7 +663,7 @@ autoskope_client==1.4.1
 
 # homeassistant.components.generic
 # homeassistant.components.stream
-av==19.0.0
+av==19.0.2
 
 # homeassistant.components.avea
 avea==1.8.0
@@ -1005,13 +1005,13 @@ energyid-webhooks==0.0.17
 energyzero==5.1.1
 
 # homeassistant.components.enocean
-enocean-async==0.18.1
+enocean-async==0.19.0
 
 # homeassistant.components.entur_public_transport
 enturclient==0.2.4
 
 # homeassistant.components.environment_canada
-env-canada==0.20.7
+env-canada==0.20.8
 
 # homeassistant.components.season
 ephem==4.1.6
@@ -1219,7 +1219,7 @@ google-genai==2.25.0
 google-health-api==1.1.0
 
 # homeassistant.components.nest
-google-nest-sdm==9.2.1
+google-nest-sdm==9.2.3
 
 # homeassistant.components.google_photos
 google-photos-library-api==0.12.1
@@ -1739,7 +1739,7 @@ motionblindsble==0.1.4
 motioneye-client==0.4.2
 
 # homeassistant.components.bang_olufsen
-mozart-api==6.2.0.44.0
+mozart-api==6.5.0.26.0
 
 # homeassistant.components.mullvad
 mullvad-api==1.0.0
@@ -1760,7 +1760,7 @@ mvg==1.6.0
 my-pv==0.0.17
 
 # homeassistant.components.myuplink
-myuplink==0.7.0
+myuplink==0.8.0
 
 # homeassistant.components.nad
 nad-receiver==0.4.0
@@ -1986,7 +1986,7 @@ plexauth==0.0.6
 plexwebsocket==0.1.0
 
 # homeassistant.components.plugwise
-plugwise==1.17.0
+plugwise==1.17.1
 
 # homeassistant.components.serial_pm
 pmsensor==0.4
@@ -2002,7 +2002,7 @@ powerfox==2.1.3
 powersensor-local==2.4.1
 
 # homeassistant.components.prana
-prana-api-client==0.12.0
+prana-api-client==0.15.0
 
 # homeassistant.components.reddit
 praw==7.5.0
@@ -2103,7 +2103,7 @@ pyControl4==2.0.2
 pyDuotecno==2024.10.1
 
 # homeassistant.components.electrasmart
-pyElectra==1.2.14
+pyElectra==1.2.15
 
 # homeassistant.components.emby
 pyEmby==1.10
@@ -2393,7 +2393,7 @@ pyhomeworks==1.1.2
 pyicloud==2026.11.1
 
 # homeassistant.components.imou
-pyimouapi==1.4.4
+pyimouapi==1.4.5
 
 # homeassistant.components.insteon
 pyinsteon==1.8.1
@@ -2836,13 +2836,13 @@ python-hotspring==5.0.1
 python-hpilo==4.4.3
 
 # homeassistant.components.izone
-python-izone==2.1.0
+python-izone==2.1.2
 
 # homeassistant.components.joaoapps_join
 python-join-api==0.1.1
 
 # homeassistant.components.tplink
-python-kasa[speedups]==0.12.0
+python-kasa[speedups]==0.13.0
 
 # homeassistant.components.linkplay
 python-linkplay==0.2.14
@@ -3306,7 +3306,7 @@ switchbot-api==2.14.0
 synology-srm==0.2.0
 
 # homeassistant.components.system_bridge
-systembridgeconnector==5.29.0
+systembridgeconnector==5.31.3
 
 # homeassistant.components.tailscale
 tailscale==1.0.0
@@ -3419,7 +3419,7 @@ ttls==1.11.1
 ttn_client==1.3.2
 
 # homeassistant.components.tuya
-tuya-device-handlers==2026.12.1
+tuya-device-handlers==2026.12.2
 
 # homeassistant.components.tuya
 tuya-device-sharing-sdk==0.2.15
@@ -3592,7 +3592,7 @@ xiaomi-weather==0.1.0
 xknx==4.1.1
 
 # homeassistant.components.knx
-xknxproject==3.11.1
+xknxproject==3.12.0
 
 # homeassistant.components.fritz
 # homeassistant.components.rest

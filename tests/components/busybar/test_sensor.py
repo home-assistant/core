@@ -14,6 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensors(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
@@ -78,6 +79,7 @@ async def test_poll_failure_and_recovery(
     assert mock_client.status.await_count == mock_client.wifi_status.await_count == 3
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     "firmware", [None, types.StatusFirmware(version="1.0"), types.StatusFirmware()]
 )

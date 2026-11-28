@@ -13,6 +13,7 @@ from homeassistant.components.camera import (
     CameraEntityDescription,
     CameraEntityFeature,
 )
+from homeassistant.const import CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
@@ -31,7 +32,8 @@ PARALLEL_UPDATES = 0
 CAMERA_STREAM_RESOLUTION_SD = "SD"
 
 # Defaults for pyimouapi ImouHaDeviceManager APIs (async_get_device_stream / async_get_device_image).
-PYIMOUAPI_LIVE_PROTOCOL = "https"
+# Cloud HTTPS HLS fails ffmpeg peer checks; request the HTTP playlist instead.
+PYIMOUAPI_LIVE_PROTOCOL = "http"
 PYIMOUAPI_SNAPSHOT_WAIT_SECONDS = 3
 
 # An established pull keeps the cloud ticket valid. About 10s after the last
@@ -103,6 +105,8 @@ class ImouCamera(ImouEntity, Camera):
         """Initialize the camera entity."""
         Camera.__init__(self)
         super().__init__(coordinator, description, device)
+        # Segment hosts may still present a certificate ffmpeg rejects.
+        self.stream_options[CONF_VERIFY_SSL] = False
         self._idle_unsub: Callable[[], None] | None = None
         self._idle_output_reschedules = 0
 

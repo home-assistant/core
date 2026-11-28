@@ -8,6 +8,7 @@ from .coordinator import PalazzettiConfigEntry, PalazzettiDataUpdateCoordinator
 PLATFORMS: list[Platform] = [
     Platform.BUTTON,
     Platform.CLIMATE,
+    Platform.LIGHT,
     Platform.NUMBER,
     Platform.SENSOR,
 ]

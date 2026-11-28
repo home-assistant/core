@@ -68,24 +68,27 @@ async def test_stream_stopped_when_shutdown_starts_during_setup(
 
 
 @pytest.mark.parametrize(
-    ("entry_data", "expected_verify_ssl"),
+    ("ssl", "entry_data", "expected_url", "expected_verify_ssl"),
     [
-        ({CONF_VERIFY_SSL: False}, False),
-        ({CONF_VERIFY_SSL: True}, True),
-        # Entries created before the option existed keep verifying
-        (None, True),
+        (True, {CONF_VERIFY_SSL: False}, f"https://{TEST_HOST}", False),
+        (True, {CONF_VERIFY_SSL: True}, f"https://{TEST_HOST}", True),
+        # Entries created before the option existed verified only when using SSL
+        (True, None, f"https://{TEST_HOST}", True),
+        (False, None, f"http://{TEST_HOST}", False),
     ],
-    ids=["unverified", "verified", "legacy_entry"],
+    ids=["unverified", "verified", "legacy_https_entry", "legacy_http_entry"],
 )
 async def test_setup_entry_ssl_verification(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_hikcamera: MagicMock,
+    ssl: bool,
     entry_data: dict[str, bool] | None,
+    expected_url: str,
     expected_verify_ssl: bool,
 ) -> None:
     """Test the certificate verification choice is passed to HikCamera."""
-    data = {**mock_config_entry.data, CONF_SSL: True}
+    data = {**mock_config_entry.data, CONF_SSL: ssl}
     data.pop(CONF_VERIFY_SSL)
     mock_config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
@@ -97,7 +100,7 @@ async def test_setup_entry_ssl_verification(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     mock_hikcamera.assert_called_once_with(
-        f"https://{TEST_HOST}",
+        expected_url,
         TEST_PORT,
         TEST_USERNAME,
         TEST_PASSWORD,

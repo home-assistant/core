@@ -40,7 +40,7 @@ workflows:
         - 'actions/dependency-review-action@v5.0.1'
         - 'actions/download-artifact@v8.0.2'
         - 'actions/upload-artifact@v7.0.2'
-        - 'astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2'
+        - 'astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d'
         - 'awalsh128/cache-apt-pkgs-action@553a35bb8ebd9fcabcb1c9451aa4c98e1b4ca8a9'
         - 'codecov/codecov-action@v7.1.1'
         - 'codspeedhq/action@v5.6.3'
@@ -49,7 +49,7 @@ workflows:
         - 'j178/prek-action@v3.1.1'
     '.github/workflows/codeql.yml':
         - 'actions/checkout@v7.0.1'
-        - 'github/codeql-action@v4.39.3'
+        - 'github/codeql-action@v4.39.4'
     '.github/workflows/detect-duplicate-issues.yml':
         - 'actions/ai-inference@v2.1.1'
         - 'actions/github-script@v9.0.0'
@@ -90,9 +90,9 @@ workflows:
         - 'actions/checkout@v7.0.1'
         - 'actions/download-artifact@v8.0.2'
         - 'actions/upload-artifact@v7.0.2'
-        - 'astral-sh/setup-uv@v10.3.3'
+        - 'astral-sh/setup-uv@v10.4.0'
         - 'dorny/paths-filter@v4.0.3'
-        - 'github/codeql-action@v4.39.3'
+        - 'github/codeql-action@v4.39.4'
         - 'j178/prek-action@v3.1.1'
 dependencies:
     'actions/ai-inference@v2.1.1':
@@ -210,14 +210,14 @@ dependencies:
         commit: 'sha1-cf430e030ddbb5b0abf93d22962f4752f3646cd9'
         owner_id: 44036562
         repo_id: 192625955
-    'astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2':
-        ref: 'v10.3.3'
-        commit: 'sha1-68559e99cc807c1eb7e9238fd43a15bba460eec2'
+    'astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d':
+        ref: 'v10.4.0'
+        commit: 'sha1-1db35dd8eee11c5894872e0b383ae6c406cf738d'
         owner_id: 115962839
         repo_id: 846733598
-    'astral-sh/setup-uv@v10.3.3':
-        ref: 'v10.3.3'
-        commit: 'sha1-68559e99cc807c1eb7e9238fd43a15bba460eec2'
+    'astral-sh/setup-uv@v10.4.0':
+        ref: 'v10.4.0'
+        commit: 'sha1-1db35dd8eee11c5894872e0b383ae6c406cf738d'
         owner_id: 115962839
         repo_id: 846733598
     'awalsh128/cache-apt-pkgs-action@553a35bb8ebd9fcabcb1c9451aa4c98e1b4ca8a9':
@@ -293,9 +293,9 @@ dependencies:
         commit: 'sha1-ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d'
         owner_id: 1588572
         repo_id: 265601040
-    'github/codeql-action@v4.39.3':
-        ref: 'v4.39.3'
-        commit: 'sha1-33d7b85da1a04171e211befe2c739303b9a4c066'
+    'github/codeql-action@v4.39.4':
+        ref: 'v4.39.4'
+        commit: 'sha1-1bd86f2fdb4b86187fa4059f16f31a3202acc9ea'
         owner_id: 9919
         repo_id: 259445878
     'github/gh-aw-actions@b907753c079ddd7d6829a0d8c24e02e818b4b45f':

@@ -759,15 +759,17 @@ def _get_domains(hass: core.HomeAssistant, config: dict[str, Any]) -> set[str]:
 
 async def _async_resolve_domains_and_preload(
     hass: core.HomeAssistant, config: dict[str, Any]
-) -> tuple[dict[str, Integration], dict[str, Integration], set[str]]:
+) -> tuple[set[str], dict[str, set[str]], dict[str, Integration], set[str]]:
     """Resolve all dependencies and return integrations to set up.
 
-    The return value is a tuple of two dictionaries and a set:
-    - The first dictionary contains integrations
-      specified by the configuration (including config entries).
-    - The second dictionary contains the same integrations as the first dictionary
+    The return value is a tuple of four elements:
+    - A set of the domains specified by the configuration (including
+      config entries), also those that could not be resolved.
+    - A dictionary with the dependencies of each of those domains
+      that could be resolved.
+    - A dictionary with the integrations of the resolved domains,
       together with all their dependencies.
-    - The set contains the domains that were not found.
+    - A set of the domains that were not found.
     """
     domains_to_setup = _get_domains(hass, config)
 
@@ -887,7 +889,8 @@ async def _async_resolve_domains_and_preload(
     )
 
     return (
-        integrations_to_setup,
+        domains_to_setup,
+        {domain: integrations_dependencies[domain] for domain in integrations_to_setup},
         all_integrations_to_setup,
         {
             domain
@@ -905,18 +908,26 @@ async def _async_set_up_integrations(
     watcher.async_start()
 
     (
-        integrations,
+        requested_domains,
+        integrations_dependencies,
         all_integrations,
         not_found_domains,
     ) = await _async_resolve_domains_and_preload(hass, config)
+    integrations = [all_integrations[domain] for domain in integrations_dependencies]
     # Detect all cycles
-    integrations_after_dependencies = (
+    domains = set(
         await loader.resolve_integrations_after_dependencies(
-            hass, all_integrations.values(), set(all_integrations)
+            hass, integrations, set(all_integrations)
         )
     )
-    all_domains = set(integrations_after_dependencies)
-    domains = set(integrations) & all_domains
+    all_domains = domains.union(
+        *(integrations_dependencies[domain] for domain in domains)
+    )
+    integrations_after_dependencies = (
+        await loader.resolve_integrations_after_dependencies(
+            hass, (all_integrations[domain] for domain in all_domains), all_domains
+        )
+    )
 
     _LOGGER.info(
         "Domains to be set up: %s\nDependencies: %s",
@@ -925,6 +936,14 @@ async def _async_set_up_integrations(
     )
 
     async_set_domains_to_be_loaded(hass, all_domains)
+
+    # Requested domains that were dropped are never set up. They are tracked
+    # as well, so the progress reports them as failed.
+    tracked_domains = all_domains | requested_domains
+    if hass.config.safe_mode:
+        # Safe mode does not load custom integrations, so not finding them is expected.
+        tracked_domains -= not_found_domains
+    watcher.async_set_planned_domains(tracked_domains)
 
     # Initialize recorder
     if "recorder" in all_domains:
@@ -938,22 +957,6 @@ async def _async_set_up_integrations(
         ("1", STAGE_1_INTEGRATIONS, STAGE_1_TIMEOUT),
         ("2", domains, STAGE_2_TIMEOUT),
     ]
-    # Not every resolved domain is set up by a stage, only count those that are.
-    # Domains dropped while resolving dependencies count as failed.
-    watcher.async_set_planned_domains(
-        {
-            dep
-            for _, domain_group, _ in stages
-            for domain in domain_group & all_domains
-            for dep in (domain, *integrations_after_dependencies[domain])
-        }
-        | (
-            (_get_domains(hass, config) | all_integrations.keys())
-            - all_domains
-            # Safe mode does not load custom integrations, so they are not found.
-            - (not_found_domains if hass.config.safe_mode else set())
-        )
-    )
 
     _LOGGER.info("Setting up stage 0")
     for name, domain_group, timeout in stages:

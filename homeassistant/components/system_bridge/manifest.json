@@ -12,6 +12,6 @@
   "iot_class": "local_push",
   "loggers": ["systembridgeconnector"],
   "quality_scale": "bronze",
-  "requirements": ["systembridgeconnector==5.29.0"],
+  "requirements": ["systembridgeconnector==5.31.3"],
   "zeroconf": ["_system-bridge._tcp.local."]
 }

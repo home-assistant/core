@@ -79,7 +79,7 @@ jobs:
           persist-credentials: false
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@v10.3.3
+        uses: astral-sh/setup-uv@v10.4.0
         with:
           version-file: requirements.txt
 
@@ -141,7 +141,7 @@ jobs:
           path: src
 
       - name: Upload accepted-code SARIF
-        uses: github/codeql-action/upload-sarif@v4.39.3
+        uses: github/codeql-action/upload-sarif@v4.39.4
         with:
           sarif_file: zizmor.sarif
           category: zizmor

@@ -1,0 +1,501 @@
+# serializer version: 1
+# name: test_setup[button.dali_line_0_scan_read_current_devices-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('lunatone', 'be37ca9c47c24498a38bc62c7c711840-line0')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.dali_line_0_scan_read_current_devices',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Scan: Read current devices',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Scan: Read current devices',
+    'platform': 'lunatone',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'scan_start_current',
+    'unique_id': 'be37ca9c47c24498a38bc62c7c711840-line0-scan-current',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[button.dali_line_0_scan_read_current_devices-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DALI line 0 Scan: Read current devices',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.dali_line_0_scan_read_current_devices',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[button.dali_line_0_scan_start_new_installation-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('lunatone', 'be37ca9c47c24498a38bc62c7c711840-line0')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.dali_line_0_scan_start_new_installation',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Scan: Start new installation',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Scan: Start new installation',
+    'platform': 'lunatone',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'scan_start_new',
+    'unique_id': 'be37ca9c47c24498a38bc62c7c711840-line0-scan-new',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[button.dali_line_0_scan_start_new_installation-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DALI line 0 Scan: Start new installation',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.dali_line_0_scan_start_new_installation',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[button.dali_line_0_scan_start_system_extension-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('lunatone', 'be37ca9c47c24498a38bc62c7c711840-line0')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.dali_line_0_scan_start_system_extension',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Scan: Start system extension',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Scan: Start system extension',
+    'platform': 'lunatone',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'scan_start',
+    'unique_id': 'be37ca9c47c24498a38bc62c7c711840-line0-scan',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[button.dali_line_0_scan_start_system_extension-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DALI line 0 Scan: Start system extension',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.dali_line_0_scan_start_system_extension',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[button.dali_line_1_scan_read_current_devices-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('lunatone', 'be37ca9c47c24498a38bc62c7c711840-line1')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.dali_line_1_scan_read_current_devices',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Scan: Read current devices',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Scan: Read current devices',
+    'platform': 'lunatone',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'scan_start_current',
+    'unique_id': 'be37ca9c47c24498a38bc62c7c711840-line1-scan-current',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[button.dali_line_1_scan_read_current_devices-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DALI line 1 Scan: Read current devices',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.dali_line_1_scan_read_current_devices',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[button.dali_line_1_scan_start_new_installation-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('lunatone', 'be37ca9c47c24498a38bc62c7c711840-line1')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.dali_line_1_scan_start_new_installation',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Scan: Start new installation',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Scan: Start new installation',
+    'platform': 'lunatone',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'scan_start_new',
+    'unique_id': 'be37ca9c47c24498a38bc62c7c711840-line1-scan-new',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[button.dali_line_1_scan_start_new_installation-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DALI line 1 Scan: Start new installation',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.dali_line_1_scan_start_new_installation',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[button.dali_line_1_scan_start_system_extension-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('lunatone', 'be37ca9c47c24498a38bc62c7c711840-line1')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.dali_line_1_scan_start_system_extension',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Scan: Start system extension',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Scan: Start system extension',
+    'platform': 'lunatone',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'scan_start',
+    'unique_id': 'be37ca9c47c24498a38bc62c7c711840-line1-scan',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[button.dali_line_1_scan_start_system_extension-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DALI line 1 Scan: Start system extension',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.dali_line_1_scan_start_system_extension',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[button.test_scan_cancel-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('lunatone', 'be37ca9c47c24498a38bc62c7c711840')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.test_scan_cancel',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Scan: Cancel',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Scan: Cancel',
+    'platform': 'lunatone',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'scan_cancel',
+    'unique_id': 'be37ca9c47c24498a38bc62c7c711840-scan-cancel',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[button.test_scan_cancel-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Scan: Cancel',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_scan_cancel',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[button.test_scan_read_current_devices-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('lunatone', 'be37ca9c47c24498a38bc62c7c711840')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.test_scan_read_current_devices',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Scan: Read current devices',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Scan: Read current devices',
+    'platform': 'lunatone',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'scan_start_current',
+    'unique_id': 'be37ca9c47c24498a38bc62c7c711840-scan-current',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[button.test_scan_read_current_devices-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Scan: Read current devices',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_scan_read_current_devices',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[button.test_scan_start_new_installation-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('lunatone', 'be37ca9c47c24498a38bc62c7c711840')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.test_scan_start_new_installation',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Scan: Start new installation',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Scan: Start new installation',
+    'platform': 'lunatone',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'scan_start_new',
+    'unique_id': 'be37ca9c47c24498a38bc62c7c711840-scan-new',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[button.test_scan_start_new_installation-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Scan: Start new installation',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_scan_start_new_installation',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[button.test_scan_start_system_extension-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('lunatone', 'be37ca9c47c24498a38bc62c7c711840')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.test_scan_start_system_extension',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Scan: Start system extension',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Scan: Start system extension',
+    'platform': 'lunatone',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'scan_start',
+    'unique_id': 'be37ca9c47c24498a38bc62c7c711840-scan',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[button.test_scan_start_system_extension-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Scan: Start system extension',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_scan_start_system_extension',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

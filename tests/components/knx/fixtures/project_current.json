@@ -8,7 +8,7 @@
     "created_by": "ETS5",
     "schema_version": "20",
     "tool_version": "5.7.1428.39779",
-    "xknxproject_version": "3.11.1",
+    "xknxproject_version": "3.12.0",
     "language_code": null
   },
   "communication_objects": {

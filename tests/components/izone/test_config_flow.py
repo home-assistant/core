@@ -907,10 +907,22 @@ async def test_homekit_resolves_uid_via_discover_endpoint(
     assert result["result"].unique_id == "000000001"
 
 
+@pytest.mark.parametrize(
+    ("failure", "reason"),
+    [
+        pytest.param(pizone.VerifyFailure.NO_REPLY, "cannot_connect", id="no-reply"),
+        pytest.param(
+            pizone.VerifyFailure.UNREADABLE, "unreadable_reply", id="unreadable"
+        ),
+        pytest.param(
+            pizone.VerifyFailure.OTHER_UID, "other_controller", id="other-uid"
+        ),
+    ],
+)
 async def test_homekit_aborts_when_controller_does_not_verify(
-    hass: HomeAssistant,
+    hass: HomeAssistant, failure: pizone.VerifyFailure, reason: str
 ) -> None:
-    """HomeKit aborts with cannot_connect when the UID's address fails the HTTP check."""
+    """HomeKit aborts with the reason the UID's address failed the HTTP check."""
     with (
         patch(
             "homeassistant.components.izone.discovery.async_discover_all_endpoints",
@@ -920,7 +932,7 @@ async def test_homekit_aborts_when_controller_does_not_verify(
             "homeassistant.components.izone.discovery.async_discover_endpoint",
             new=AsyncMock(
                 side_effect=pizone.EndpointVerifyError(
-                    "192.0.2.1", pizone.VerifyFailure.NO_REPLY, uid="000000001"
+                    "192.0.2.1", failure, uid="000000001"
                 )
             ),
         ),
@@ -932,7 +944,7 @@ async def test_homekit_aborts_when_controller_does_not_verify(
         )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
+    assert result["reason"] == reason
 
 
 async def test_homekit_aborts_when_discovery_bind_fails(hass: HomeAssistant) -> None:
@@ -1537,15 +1549,25 @@ async def test_user_manual_host_empty_rejected_by_schema(hass: HomeAssistant) ->
 
 
 @pytest.mark.usefixtures("mock_entry_setup")
-async def test_user_manual_host_unreachable(hass: HomeAssistant) -> None:
-    """Unreachable host redisplays the form with cannot_connect."""
+@pytest.mark.parametrize(
+    ("failure", "error"),
+    [
+        pytest.param(pizone.VerifyFailure.NO_REPLY, "cannot_connect", id="no-reply"),
+        pytest.param(
+            pizone.VerifyFailure.UNRESOLVED, "host_unresolved", id="unresolved"
+        ),
+        pytest.param(
+            pizone.VerifyFailure.UNREADABLE, "unreadable_reply", id="unreadable"
+        ),
+    ],
+)
+async def test_user_manual_host_unreachable(
+    hass: HomeAssistant, failure: pizone.VerifyFailure, error: str
+) -> None:
+    """A host that fails the HTTP check redisplays the form with the reason."""
     with patch(
         "homeassistant.components.izone.discovery.async_discover_by_host",
-        new=AsyncMock(
-            side_effect=pizone.EndpointVerifyError(
-                "192.0.2.99", pizone.VerifyFailure.NO_REPLY
-            )
-        ),
+        new=AsyncMock(side_effect=pizone.EndpointVerifyError("192.0.2.99", failure)),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -1557,7 +1579,7 @@ async def test_user_manual_host_unreachable(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual_host"
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": error}
 
     await _async_submit_reachable_host(
         hass, result, create_mock_controller("000000001", "192.0.2.99")
@@ -1616,30 +1638,6 @@ async def test_user_manual_host_unpaired_stays_on_form(hass: HomeAssistant) -> N
 
     await _async_submit_reachable_host(
         hass, result, create_mock_controller("000000001", "192.0.2.111")
-    )
-
-
-@pytest.mark.usefixtures("mock_entry_setup")
-async def test_user_manual_host_claimed_stays_on_form(hass: HomeAssistant) -> None:
-    """Claimed controller on the discovery service redisplays Enter host."""
-    with patch(
-        "homeassistant.components.izone.discovery.async_discover_by_host",
-        new=AsyncMock(side_effect=pizone.ControllerAlreadyClaimedError("claimed")),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-        result = await async_choose_manual_host(hass, result)
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_HOST: "192.0.2.1"}
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "manual_host"
-    assert result["errors"] == {"base": "already_configured"}
-
-    await _async_submit_reachable_host(
-        hass, result, create_mock_controller("000000001", "192.0.2.1")
     )
 
 
