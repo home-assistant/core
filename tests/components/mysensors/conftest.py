@@ -23,7 +23,6 @@ from homeassistant.components.mysensors.const import (
 )
 from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 
 @pytest.fixture(name="mqtt")
@@ -142,7 +141,6 @@ async def integration_fixture(
     hass: HomeAssistant, transport: MagicMock, config_entry: MockConfigEntry
 ) -> AsyncGenerator[MockConfigEntry]:
     """Set up the mysensors integration with a config entry."""
-    config: dict[str, Any] = {}
     config_entry.add_to_hass(hass)
     with patch(
         "homeassistant.components.mysensors.entity.Debouncer", autospec=True
@@ -164,7 +162,7 @@ async def integration_fixture(
 
         debouncer_class.side_effect = debouncer
 
-        await async_setup_component(hass, DOMAIN, config)
+        await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         yield config_entry
 
