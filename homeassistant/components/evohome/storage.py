@@ -36,13 +36,18 @@ class TokenManager(AbstractTokenManager, AbstractSessionManager):
         self,
         hass: HomeAssistant,
         *args: Any,
+        use_cache: bool = True,
         **kwargs: Any,
     ) -> None:
-        """Initialise the token manager."""
+        """Initialise the token manager.
+
+        Without the cache, the credentials are always used to log in (as a config flow
+        must check them), and the new tokens are still saved to the cache.
+        """
         super().__init__(*args, **kwargs)
 
         self._store: Store[_TokenStoreT] = Store(hass, STORAGE_VER, STORAGE_KEY)
-        self._store_initialized = False  # True once cache loaded first time
+        self._store_initialized = not use_cache  # True once cache loaded first time
 
     @override
     def _is_bad_credentials(self, data: Mapping[str, str], code: str | None) -> bool:

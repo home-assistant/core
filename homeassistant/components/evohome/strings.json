@@ -1,4 +1,50 @@
 {
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "wrong_account": "The credentials are for a different account; use those of the account that was set up"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "no_systems": "The account has no location with a heating system",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "The password of your Total Connect Comfort account."
+        },
+        "description": "The vendor's API refused the password of {username}. Enter the current one.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "reconfigure": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::email%]"
+        },
+        "data_description": {
+          "password": "The password of your Total Connect Comfort account.",
+          "username": "The email address of your Total Connect Comfort account."
+        },
+        "description": "Update the credentials of your Total Connect Comfort account."
+      },
+      "user": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::email%]"
+        },
+        "data_description": {
+          "password": "The password of your Total Connect Comfort account.",
+          "username": "The email address of your Total Connect Comfort account."
+        },
+        "description": "Enter the credentials of your Total Connect Comfort account. Every location with a heating system will be set up."
+      }
+    }
+  },
   "exceptions": {
     "api_connection_failed": {
       "message": "Unable to connect to the vendor's API"
@@ -22,7 +68,7 @@
       "message": "The vendor's API returned a server error; try again later"
     },
     "config_stale": {
-      "message": "The configuration of the location has changed (has it been deleted, or unshared?); restart Home Assistant"
+      "message": "The configuration of the location has changed (has it been deleted, or unshared?); reload the integration"
     },
     "controller_only_service": {
       "message": "Only Evohome controllers support the `{service}` action"
@@ -51,6 +97,9 @@
     "mode_unknown": {
       "message": "The mode `{mode}` is not a valid system mode"
     },
+    "no_systems": {
+      "message": "The account has no location with a heating system"
+    },
     "override_not_in_future": {
       "message": "The override must end in the future (if the duration is 0, the next scheduled setpoint may have already passed)"
     },
@@ -62,6 +111,28 @@
     },
     "zone_only_service": {
       "message": "Only zones support the `{service}` action"
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "description": "The YAML configuration of Honeywell Total Connect Comfort (Europe) could not be imported, as Home Assistant could not connect to the vendor's API. Set up the integration in the UI, then remove the `evohome:` key from your `configuration.yaml` file and restart Home Assistant.",
+      "title": "The evohome YAML configuration import failed"
+    },
+    "deprecated_yaml_import_issue_invalid_auth": {
+      "description": "The YAML configuration of Honeywell Total Connect Comfort (Europe) could not be imported, as the vendor's API refused the username or password. Set up the integration in the UI with the correct credentials, then remove the `evohome:` key from your `configuration.yaml` file and restart Home Assistant.",
+      "title": "The evohome YAML configuration import failed"
+    },
+    "deprecated_yaml_import_issue_no_systems": {
+      "description": "The YAML configuration of Honeywell Total Connect Comfort (Europe) could not be imported, as the account has no location with a heating system. Check the account in the vendor's app, then remove the `evohome:` key from your `configuration.yaml` file and restart Home Assistant.",
+      "title": "The evohome YAML configuration import failed"
+    },
+    "deprecated_yaml_import_issue_unknown": {
+      "description": "The YAML configuration of Honeywell Total Connect Comfort (Europe) could not be imported, as of an unexpected error. Set up the integration in the UI, then remove the `evohome:` key from your `configuration.yaml` file and restart Home Assistant.",
+      "title": "The evohome YAML configuration import failed"
+    },
+    "deprecated_yaml_options": {
+      "description": "Your YAML configuration of evohome sets `location_idx` or `scan_interval`. These options are ignored: every location of the account is now set up, and polled every 5 minutes. To poll more often, disable polling for the integration and call the `homeassistant.update_entity` action from an automation.",
+      "title": "Some evohome YAML options are no longer used"
     }
   },
   "services": {

@@ -18,7 +18,6 @@ from homeassistant.components.climate import (
 )
 from homeassistant.components.evohome.const import (
     DOMAIN,
-    EVOHOME_DATA,
     SCAN_INTERVAL_DEFAULT,
     SCHEDULE_MAX_AGE,
 )
@@ -27,7 +26,8 @@ from homeassistant.components.water_heater import (
     DOMAIN as WATER_HEATER_DOMAIN,
     WaterHeaterService,
 )
-from homeassistant.const import CONF_SCAN_INTERVAL, STATE_UNAVAILABLE, TargetKey
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.typing import ConfigType
@@ -35,9 +35,8 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
     UpdateFailedUnreachable,
 )
-from homeassistant.setup import async_setup_component
 
-from .conftest import setup_evohome
+from .conftest import get_evo_data, mock_config_entry, setup_evohome
 from .const import TEST_INSTALLS
 
 
@@ -153,30 +152,23 @@ async def test_high_precision_temps(
     assert state.attributes["current_temperature"] == expected
 
 
-async def test_update_intervals(
+@pytest.mark.parametrize("install", ["default"])
+@pytest.mark.usefixtures("evohome")
+async def test_update_interval(
     hass: HomeAssistant,
-    config: ConfigType,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test scan_interval applies to the location, but not to high-precision temps."""
+    """Test the location and the high-precision temps are both polled every 300 s."""
 
-    config[CONF_SCAN_INTERVAL] = 600
+    with (
+        patch("evohomeasync2.location.Location.get_status") as mock_v2,
+        patch("evohomeasync.EvohomeClient.get_status") as mock_v1,
+        _v1_location_by_id(),
+    ):
+        await _poll(hass, freezer)  # 300 seconds
 
-    async for _ in setup_evohome(hass, config, install="default"):
-        with (
-            patch("evohomeasync2.location.Location.get_status") as mock_v2,
-            patch("evohomeasync.EvohomeClient.get_status") as mock_v1,
-            _v1_location_by_id(),
-        ):
-            await _poll(hass, freezer)  # 300 seconds
-
-            mock_v2.assert_not_awaited()
-            mock_v1.assert_awaited_once_with()
-
-            await _poll(hass, freezer)  # 600 seconds
-
-            mock_v2.assert_awaited_once_with()
-            assert mock_v1.await_count == 2
+        mock_v2.assert_awaited_once_with()
+        mock_v1.assert_awaited_once_with()
 
 
 @pytest.mark.parametrize("install", ["default"])
@@ -283,8 +275,8 @@ async def test_high_precision_temps_bad_credentials(
     ):
         await _poll(hass, freezer)
 
-    assert "The feature will be disabled until next restart" in caplog.text
-    assert hass.data[EVOHOME_DATA].account.client_v1 is None
+    assert "The feature will be disabled until the next reload" in caplog.text
+    assert get_evo_data(hass).account.client_v1 is None
 
     # there is no grace period, the zone uses its v2 temperature straight away
     state = hass.states.get(zone_id)
@@ -295,7 +287,7 @@ async def test_high_precision_temps_bad_credentials(
     with patch("evohomeasync.EvohomeClient.get_status") as mock_get_status:
         await _poll(hass, freezer)
 
-    mock_get_status.assert_not_awaited()  # until the next restart
+    mock_get_status.assert_not_awaited()  # until the next reload
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS)
@@ -303,13 +295,15 @@ async def test_high_precision_temps_bad_credentials(
 async def test_schedules_fetched_only_when_stale(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
-    tcs: ControlSystem,
 ) -> None:
     """Test schedules are re-fetched only after SCHEDULE_MAX_AGE, not every poll."""
 
     update_interval = SCAN_INTERVAL_DEFAULT
 
-    num_children = len(tcs.zones) + (tcs.hotwater is not None)
+    num_children = sum(
+        len(loc.tcs.zones) + (loc.tcs.hotwater is not None)
+        for loc in get_evo_data(hass).locations
+    )
 
     async def poll() -> None:
         freezer.tick(update_interval)
@@ -521,7 +515,7 @@ async def test_setup_failed(
     translation_key: str,
     retry_after: float | None,
 ) -> None:
-    """Test a failed setup of the account raises a translated UpdateFailed."""
+    """Test a failed setup of the account is retried, after a translated UpdateFailed."""
 
     coordinators: list[EvoAccountCoordinator] = []
 
@@ -536,7 +530,11 @@ async def test_setup_failed(
         ),
         patch("evohomeasync2.EvohomeClient.setup", side_effect=exception),
     ):
-        assert not await async_setup_component(hass, DOMAIN, {DOMAIN: config})
+        entry = mock_config_entry(config)
+        entry.add_to_hass(hass)
+        assert not await hass.config_entries.async_setup(entry.entry_id)
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
     assert isinstance(coordinators[0].last_exception, error_type)
     assert type(coordinators[0].last_exception) is error_type
@@ -576,7 +574,7 @@ async def test_poll_failed(
 ) -> None:
     """Test a failed poll of a location raises a translated UpdateFailed."""
 
-    coordinator = hass.data[EVOHOME_DATA].locations[0]
+    coordinator = get_evo_data(hass).locations[0]
 
     with patch("evohomeasync2.location.Location.get_status", side_effect=exception):
         freezer.tick(SCAN_INTERVAL_DEFAULT)
@@ -628,7 +626,7 @@ async def test_failed_schedule_poll_keeps_entities_available(
 ) -> None:
     """Test a failed background schedule GET is logged (and retried), not a failure."""
 
-    coordinator = hass.data[EVOHOME_DATA].locations[0]
+    coordinator = get_evo_data(hass).locations[0]
     update_interval = SCAN_INTERVAL_DEFAULT
 
     with patch.object(Zone, "get_schedule", side_effect=exception) as mock_fcn:
@@ -799,3 +797,69 @@ async def test_invalid_schedule_poll_keeps_entities_available(
         await hass.async_block_till_done()
 
     mock_fcn.assert_not_awaited()
+
+
+async def test_setup_credentials_invalid(
+    hass: HomeAssistant,
+    config: ConfigType,
+) -> None:
+    """Test a setup that the vendor refuses the credentials for starts a reauth."""
+
+    entry = mock_config_entry(config)
+    entry.add_to_hass(hass)
+
+    with patch(
+        "evohomeasync2.EvohomeClient.setup",
+        side_effect=evo_exc.BadUserCredentialsError("Bad credentials"),
+    ):
+        assert not await hass.config_entries.async_setup(entry.entry_id)
+
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert [flow["context"]["source"] for flow in flows] == [SOURCE_REAUTH]
+
+
+@pytest.mark.parametrize("install", ["default"])
+@pytest.mark.usefixtures("evohome")
+async def test_poll_credentials_invalid(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a poll that the vendor refuses the credentials for starts a reauth."""
+
+    with patch(
+        "evohomeasync2.location.Location.get_status",
+        side_effect=evo_exc.BadUserCredentialsError("Bad credentials"),
+    ):
+        await _poll(hass, freezer)
+
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert [flow["context"]["source"] for flow in flows] == [SOURCE_REAUTH]
+
+
+@pytest.mark.parametrize("install", ["default"])
+@pytest.mark.usefixtures("evohome")
+async def test_action_credentials_invalid(
+    hass: HomeAssistant,
+    ctl_id: str,
+) -> None:
+    """Test an action that the vendor refuses the credentials for starts a reauth."""
+
+    with (
+        patch(
+            "evohomeasync2.control_system.ControlSystem.set_mode",
+            side_effect=evo_exc.BadUserCredentialsError("Bad credentials"),
+        ),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            ClimateService.SET_HVAC_MODE,
+            {TargetKey.ENTITY_ID: ctl_id, ClimateServiceArgument.HVAC_MODE: "off"},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "api_credentials_invalid"
+    await hass.async_block_till_done()
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert [flow["context"]["source"] for flow in flows] == [SOURCE_REAUTH]

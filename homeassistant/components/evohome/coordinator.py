@@ -27,8 +27,13 @@ from evohomeasync2.typedefs import (
     EvoZonScheduleDayOfWeekT,
 )
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    HomeAssistantError,
+    ServiceValidationError,
+)
 from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     UpdateFailed,
@@ -139,25 +144,18 @@ _ERR_SCHEDULE_UPDATE: Final = (
 )
 
 
-class _EvoCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
-    """Base for the evohome coordinators (the integration has no config entry)."""
-
-    # our version of async_config_entry_first_refresh()...
-    async def async_first_refresh(self) -> None:
-        """Refresh data for the first time when integration is setup.
-
-        This integration does not have config flow, so it is inappropriate to
-        invoke `async_config_entry_first_refresh()`.
-        """
-
-        # can't replicate `if not await self.__wrap_async_setup():` (is mangled), so...
-        if not await self._DataUpdateCoordinator__wrap_async_setup():  # type: ignore[attr-defined]
-            return
-
-        await self._async_refresh(log_failures=False)
+type EvoConfigEntry = ConfigEntry[EvoData]
 
 
-class EvoAccountCoordinator(_EvoCoordinator[_HighPrecisionTemps]):
+def _credentials_invalid_error() -> ConfigEntryAuthFailed:
+    """Return the error that starts a reauth, as the vendor refused the credentials."""
+    return ConfigEntryAuthFailed(
+        translation_domain=DOMAIN,
+        translation_key="api_credentials_invalid",
+    )
+
+
+class EvoAccountCoordinator(DataUpdateCoordinator[_HighPrecisionTemps]):
     """Coordinator for an evohome account (the user's config, high-precision temps).
 
     Its data is the latest high-precision temperatures, by DHW/zone id. They are
@@ -165,10 +163,13 @@ class EvoAccountCoordinator(_EvoCoordinator[_HighPrecisionTemps]):
     last temperatures are kept for a grace period, before the zones use their v2 ones.
     """
 
+    config_entry: EvoConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
         logger: logging.Logger,
+        config_entry: EvoConfigEntry,
         client_v2: ec2.EvohomeClient,
         *,
         name: str,
@@ -180,7 +181,7 @@ class EvoAccountCoordinator(_EvoCoordinator[_HighPrecisionTemps]):
         super().__init__(
             hass,
             logger,
-            config_entry=None,
+            config_entry=config_entry,
             name=name,
             update_interval=update_interval,
         )
@@ -201,6 +202,10 @@ class EvoAccountCoordinator(_EvoCoordinator[_HighPrecisionTemps]):
 
         try:
             await self.client.setup()  # only config for now
+
+        except ec2.BadUserCredentialsError as err:
+            _log_api_call_failure(self.logger, err)
+            raise _credentials_invalid_error() from err
 
         except ec2.ApiConnectionFailedError as err:
             _log_api_call_failure(self.logger, err)
@@ -241,7 +246,7 @@ class EvoAccountCoordinator(_EvoCoordinator[_HighPrecisionTemps]):
             self.logger.warning(
                 (
                     "Unable to obtain high-precision temperatures. "
-                    "The feature will be disabled until next restart: %r"
+                    "The feature will be disabled until the next reload: %r"
                 ),
                 err,
             )
@@ -282,13 +287,16 @@ class EvoAccountCoordinator(_EvoCoordinator[_HighPrecisionTemps]):
         return temps
 
 
-class EvoLocationCoordinator(_EvoCoordinator[EvoLocStatusT]):
+class EvoLocationCoordinator(DataUpdateCoordinator[EvoLocStatusT]):
     """Coordinator for an evohome location (its status and schedules)."""
+
+    config_entry: EvoConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
         logger: logging.Logger,
+        config_entry: EvoConfigEntry,
         account: EvoAccountCoordinator,
         location: ec2.Location,
         *,
@@ -300,7 +308,7 @@ class EvoLocationCoordinator(_EvoCoordinator[EvoLocStatusT]):
         super().__init__(
             hass,
             logger,
-            config_entry=None,
+            config_entry=config_entry,
             name=name,
             update_interval=update_interval,
         )
@@ -363,6 +371,14 @@ class EvoLocationCoordinator(_EvoCoordinator[EvoLocStatusT]):
         try:
             result = await client_api
 
+        except ec2.BadUserCredentialsError as err:
+            _log_api_call_failure(self.logger, err)
+            self.config_entry.async_start_reauth(self.hass)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="api_credentials_invalid",
+            ) from err
+
         except ec2.ApiCallFailedError as err:  # incl. AuthenticationFailedError
             _log_api_call_failure(self.logger, err)
             raise HomeAssistantError(
@@ -384,6 +400,10 @@ class EvoLocationCoordinator(_EvoCoordinator[EvoLocStatusT]):
 
         try:
             status = await self.loc.get_status()
+
+        except ec2.BadUserCredentialsError as err:
+            _log_api_call_failure(self.logger, err)
+            raise _credentials_invalid_error() from err
 
         except ec2.ApiConnectionFailedError as err:
             _log_api_call_failure(self.logger, err)
@@ -481,7 +501,7 @@ class EvoLocationCoordinator(_EvoCoordinator[EvoLocStatusT]):
         await self._update_v2_api_state()  # may raise UpdateFailed
 
         # to speed up HA startup, don't update entity schedules during initial
-        # async_first_refresh(), only during subsequent async_refresh()...
+        # async_config_entry_first_refresh(), only during subsequent async_refresh()...
         if self._first_refresh_done:
             await self._update_v2_schedules()
         else:
