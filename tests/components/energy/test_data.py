@@ -8,10 +8,12 @@ import pytest
 from homeassistant.components.energy.data import (
     BATTERY_SOURCE_SCHEMA,
     ENERGY_SOURCE_SCHEMA,
+    FIXED_COSTS_SCHEMA,
     FLOW_FROM_GRID_SOURCE_SCHEMA,
     FLOW_TO_GRID_SOURCE_SCHEMA,
     GAS_SOURCE_SCHEMA,
     POWER_CONFIG_SCHEMA,
+    STORAGE_MINOR_VERSION,
     WATER_SOURCE_SCHEMA,
     EnergyManager,
 )
@@ -184,7 +186,7 @@ async def test_energy_preferences_migration_from_version_1_4(
 
     assert manager.data is not None
     assert manager.data["energy_sources"] == [grid_source, gas_source]
-    assert hass_storage["energy"]["minor_version"] == 5
+    assert hass_storage["energy"]["minor_version"] == STORAGE_MINOR_VERSION
     assert hass_storage["energy"]["data"]["energy_sources"] == [
         grid_source,
         gas_source,
@@ -1618,3 +1620,168 @@ async def test_battery_power_config_directions_sets_stat_rate(
 
     assert manager.data is not None
     assert manager.data["energy_sources"][0]["stat_rate"] == stat_rate
+
+
+async def test_energy_preferences_migration_from_version_1_5(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test that fixed_costs is added when migrating from v1.5 to v1.6."""
+    hass_storage["energy"] = {
+        "version": 1,
+        "minor_version": 5,
+        "key": "energy",
+        "data": {
+            "energy_sources": [],
+            "device_consumption": [],
+            "device_consumption_water": [],
+            "device_consumption_gas": [],
+        },
+    }
+
+    manager = EnergyManager(hass)
+    await manager.async_initialize()
+
+    assert manager.data is not None
+    assert manager.data["fixed_costs"] == []
+    assert hass_storage["energy"]["minor_version"] == STORAGE_MINOR_VERSION
+
+
+async def test_energy_preferences_update_fixed_costs(hass: HomeAssistant) -> None:
+    """Test fixed costs are stored on update."""
+    manager = EnergyManager(hass)
+    await manager.async_initialize()
+    fixed_costs = [
+        {
+            "id": "standing_charge",
+            "type": "grid",
+            "name": "Standing charge",
+            "number_amount": 0.62,
+            "entity_amount": None,
+            "period": "day",
+        }
+    ]
+
+    await manager.async_update({"fixed_costs": fixed_costs})
+
+    assert manager.data is not None
+    assert manager.data["fixed_costs"] == fixed_costs
+    assert manager.data["energy_sources"] == []
+
+
+FIXED_COST = {
+    "id": "standing_charge",
+    "type": "grid",
+    "name": "Standing charge",
+    "number_amount": 0.62,
+    "entity_amount": None,
+    "period": "day",
+}
+
+
+@pytest.mark.parametrize(
+    ("fixed_costs", "expected"),
+    [
+        pytest.param([FIXED_COST], [FIXED_COST], id="number_amount"),
+        pytest.param(
+            [
+                {
+                    "id": "gas_standing_charge",
+                    "type": "gas",
+                    "name": "Gas standing charge",
+                    "entity_amount": "sensor.gas_standing_charge",
+                    "period": "month",
+                }
+            ],
+            [
+                {
+                    "id": "gas_standing_charge",
+                    "type": "gas",
+                    "name": "Gas standing charge",
+                    "number_amount": None,
+                    "entity_amount": "sensor.gas_standing_charge",
+                    "period": "month",
+                }
+            ],
+            id="entity_amount",
+        ),
+        pytest.param(
+            [
+                FIXED_COST,
+                {
+                    **FIXED_COST,
+                    "id": "tax_rebate",
+                    "name": "Energy tax rebate",
+                    "number_amount": "-0.4561",
+                    "period": "year",
+                },
+                {**FIXED_COST, "id": "water", "type": "water"},
+            ],
+            [
+                FIXED_COST,
+                {
+                    **FIXED_COST,
+                    "id": "tax_rebate",
+                    "name": "Energy tax rebate",
+                    "number_amount": -0.4561,
+                    "period": "year",
+                },
+                {**FIXED_COST, "id": "water", "type": "water"},
+            ],
+            id="several_with_negative_amount",
+        ),
+    ],
+)
+async def test_fixed_costs_schema_valid(
+    fixed_costs: list[dict[str, Any]], expected: list[dict[str, Any]]
+) -> None:
+    """Test valid fixed costs pass validation."""
+    assert FIXED_COSTS_SCHEMA(fixed_costs) == expected
+
+
+@pytest.mark.parametrize(
+    ("fixed_costs", "message"),
+    [
+        pytest.param(
+            [{**FIXED_COST, "number_amount": None}],
+            "Define either an entity or a fixed number for the amount",
+            id="no_amount",
+        ),
+        pytest.param(
+            [{**FIXED_COST, "entity_amount": "sensor.standing_charge"}],
+            "Define either an entity or a fixed number for the amount",
+            id="both_amounts",
+        ),
+        pytest.param(
+            [
+                {
+                    **FIXED_COST,
+                    "number_amount": None,
+                    "entity_amount": "external:standing_charge",
+                }
+            ],
+            "entity_amount",
+            id="external_statistic_amount",
+        ),
+        pytest.param(
+            [FIXED_COST, {**FIXED_COST, "name": "Another"}],
+            "Cannot specify standing_charge more than once",
+            id="duplicate_id",
+        ),
+        pytest.param(
+            [{**FIXED_COST, "number_amount": "nan"}], "number_amount", id="nan"
+        ),
+        pytest.param(
+            [{**FIXED_COST, "number_amount": "inf"}], "number_amount", id="infinity"
+        ),
+        pytest.param([{**FIXED_COST, "type": "solar"}], "type", id="solar_type"),
+        pytest.param([{**FIXED_COST, "period": "week"}], "period", id="week_period"),
+        pytest.param([{**FIXED_COST, "name": ""}], "name", id="empty_name"),
+        pytest.param([{**FIXED_COST, "id": ""}], "id", id="empty_id"),
+    ],
+)
+async def test_fixed_costs_schema_invalid(
+    fixed_costs: list[dict[str, Any]], message: str
+) -> None:
+    """Test invalid fixed costs are rejected."""
+    with pytest.raises(probatio.Invalid, match=message):
+        FIXED_COSTS_SCHEMA(fixed_costs)

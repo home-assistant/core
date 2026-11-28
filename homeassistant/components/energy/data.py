@@ -3,6 +3,7 @@
 import asyncio
 from collections import Counter
 from collections.abc import Awaitable, Callable
+import math
 from typing import Any, Literal, NotRequired, TypedDict, override
 
 import probatio
@@ -24,7 +25,7 @@ from .const import (
 )
 
 STORAGE_VERSION = 1
-STORAGE_MINOR_VERSION = 5
+STORAGE_MINOR_VERSION = 6
 STORAGE_KEY = DOMAIN
 
 
@@ -294,6 +295,20 @@ class DeviceConsumption(TypedDict):
     included_in_stat: NotRequired[str]
 
 
+class FixedCostType(TypedDict):
+    """Dictionary holding a fixed cost, like a standing charge."""
+
+    id: str
+    type: Literal["grid", "gas", "water"]
+    name: str
+
+    # Charged at the start of each period, exactly one of these is set
+    number_amount: float | None  # Fixed amount ($)
+    entity_amount: str | None  # entity_id providing the amount ($)
+
+    period: Literal["day", "month", "year"]
+
+
 class EnergyPreferences(TypedDict):
     """Dictionary holding the energy data."""
 
@@ -301,6 +316,7 @@ class EnergyPreferences(TypedDict):
     device_consumption: list[DeviceConsumption]
     device_consumption_water: NotRequired[list[DeviceConsumption]]
     device_consumption_gas: NotRequired[list[DeviceConsumption]]
+    fixed_costs: NotRequired[list[FixedCostType]]
 
 
 class EnergyPreferencesUpdate(EnergyPreferences, total=False):
@@ -832,6 +848,52 @@ DEVICE_CONSUMPTION_SCHEMA = probatio.Schema(
 )
 
 
+def _fixed_cost_entity_id(value: str) -> str:
+    """Validate the amount of a fixed cost comes from an entity."""
+    if not valid_entity_id(value):
+        raise probatio.Invalid("Fixed cost amount must be an entity")
+    return value
+
+
+def _fixed_cost_finite_amount(value: float) -> float:
+    """Validate the fixed amount of a fixed cost is a finite number."""
+    if not math.isfinite(value):
+        raise probatio.Invalid("Fixed cost amount must be a finite number")
+    return value
+
+
+def _fixed_cost_ensure_single_amount(val: dict[str, Any]) -> dict[str, Any]:
+    """Ensure a fixed cost has exactly one amount."""
+    if (val["number_amount"] is None) == (val["entity_amount"] is None):
+        raise probatio.Invalid(
+            "Define either an entity or a fixed number for the amount"
+        )
+    return val
+
+
+FIXED_COST_SCHEMA = probatio.All(
+    probatio.Schema(
+        {
+            probatio.Required("id"): probatio.All(str, probatio.Length(min=1)),
+            probatio.Required("type"): probatio.In(("grid", "gas", "water")),
+            probatio.Required("name"): probatio.All(str, probatio.Length(min=1)),
+            probatio.Optional("number_amount", default=None): probatio.Any(
+                None, probatio.All(probatio.Coerce(float), _fixed_cost_finite_amount)
+            ),
+            probatio.Optional("entity_amount", default=None): probatio.Any(
+                None, probatio.All(str, _fixed_cost_entity_id)
+            ),
+            probatio.Required("period"): probatio.In(("day", "month", "year")),
+        }
+    ),
+    _fixed_cost_ensure_single_amount,
+)
+
+FIXED_COSTS_SCHEMA = probatio.All(
+    [FIXED_COST_SCHEMA], _generate_unique_value_validator("id")
+)
+
+
 def _migrate_legacy_grid_to_unified(
     old_grid: dict[str, Any],
 ) -> list[dict[str, Any]]:
@@ -940,6 +1002,9 @@ class _EnergyPreferencesStore(storage.Store[EnergyPreferences]):
             for source in data.get("energy_sources", []):
                 source.pop("cost_adjustment_day", None)
 
+        if old_major_version == 1 and old_minor_version < 6:
+            data.setdefault("fixed_costs", [])
+
         return data
 
 
@@ -1007,6 +1072,7 @@ class EnergyManager:
             "device_consumption": [],
             "device_consumption_water": [],
             "device_consumption_gas": [],
+            "fixed_costs": [],
         }
 
     async def async_update(self, update: EnergyPreferencesUpdate) -> None:
@@ -1021,6 +1087,7 @@ class EnergyManager:
             "device_consumption",
             "device_consumption_water",
             "device_consumption_gas",
+            "fixed_costs",
         ):
             if key in update:
                 data[key] = update[key]

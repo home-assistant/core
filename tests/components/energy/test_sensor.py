@@ -3883,3 +3883,648 @@ async def test_power_sensor_battery_measurement_switch(
     assert hass.states.get(BATTERY_DIRECTIONS_NET_POWER).state == "unavailable"
     assert hass.states.get(total_net_power).state == "0.0"
     assert manager.data["energy_sources"][0]["stat_rate"] == total_net_power
+
+
+FIXED_COST = {
+    "id": "standing_charge",
+    "type": "grid",
+    "name": "Standing charge",
+    "number_amount": 0.62,
+    "entity_amount": None,
+    "period": "day",
+}
+FIXED_COST_ENTITY_ID = "sensor.standing_charge_fixed_cost"
+FIXED_COST_AMOUNT_ATTRIBUTES = {ATTR_UNIT_OF_MEASUREMENT: "EUR"}
+# The start of the day of the frozen time, in Europe/Amsterdam
+FIXED_COST_TODAY = "2022-04-19T00:00:00+02:00"
+
+
+async def _setup_fixed_costs(
+    hass: HomeAssistant,
+    setup_integration: Callable[[HomeAssistant], Coroutine[Any, Any, None]],
+    hass_storage: dict[str, Any],
+    *fixed_costs: dict[str, Any],
+) -> None:
+    await hass.config.async_set_time_zone("Europe/Amsterdam")
+    energy_data = data.EnergyManager.default_preferences()
+    energy_data["fixed_costs"] = list(fixed_costs)
+    hass_storage[data.STORAGE_KEY] = {"version": 1, "data": energy_data}
+    await setup_integration(hass)
+    # Run the charge that is due once the sensor is added
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+
+async def _move_to(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, time: str
+) -> None:
+    freezer.move_to(time)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+
+def _fixed_cost_total(hass: HomeAssistant) -> float:
+    return float(hass.states.get(FIXED_COST_ENTITY_ID).state)
+
+
+@pytest.mark.parametrize(
+    ("period", "next_period_start"),
+    [
+        ("day", "2022-04-19 22:00:00+00:00"),
+        ("month", "2022-04-30 22:00:00+00:00"),
+        # Midnight in winter time
+        ("year", "2022-12-31 23:00:00+00:00"),
+    ],
+)
+async def test_fixed_cost_sensor_charges_at_period_start(
+    setup_integration: Callable[[HomeAssistant], Coroutine[Any, Any, None]],
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    entity_registry: er.EntityRegistry,
+    frozen_time: FrozenDateTimeFactory,
+    period: str,
+    next_period_start: str,
+) -> None:
+    """Test a fixed cost is charged for the current period and each new one."""
+    await _setup_fixed_costs(
+        hass, setup_integration, hass_storage, {**FIXED_COST, "period": period}
+    )
+
+    state = hass.states.get(FIXED_COST_ENTITY_ID)
+    assert state.state == "0.62"
+    assert state.attributes == {
+        ATTR_FRIENDLY_NAME: "Standing charge",
+        ATTR_DEVICE_CLASS: SensorDeviceClass.MONETARY,
+        ATTR_STATE_CLASS: SensorStateClass.TOTAL,
+        ATTR_UNIT_OF_MEASUREMENT: "EUR",
+        ATTR_LAST_RESET: dt_util.utcnow().isoformat(),
+    }
+    entry = entity_registry.async_get(FIXED_COST_ENTITY_ID)
+    assert entry.unique_id == "fixed_cost_standing_charge"
+    assert entry.hidden_by is er.RegistryEntryHider.INTEGRATION
+    assert hass.data[DOMAIN]["fixed_cost_sensors"] == {
+        "standing_charge": FIXED_COST_ENTITY_ID
+    }
+
+    next_start = dt_util.parse_datetime(next_period_start)
+    await _move_to(hass, frozen_time, next_start - timedelta(seconds=1))
+    assert _fixed_cost_total(hass) == pytest.approx(0.62)
+
+    await _move_to(hass, frozen_time, next_start)
+    assert _fixed_cost_total(hass) == pytest.approx(1.24)
+
+
+async def test_fixed_cost_sensor_first_charge_in_statistics(
+    setup_integration: Callable[[HomeAssistant], Coroutine[Any, Any, None]],
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test the first charge is added after the zero point of the statistics."""
+    now = dt_util.utcnow()
+
+    def _compile_statistics(_):
+        with session_scope(hass=hass) as session:
+            return compile_statistics(
+                hass, session, now, now + timedelta(seconds=1), {}
+            ).platform_stats
+
+    await _setup_fixed_costs(hass, setup_integration, hass_storage, FIXED_COST)
+    await async_wait_recording_done(hass)
+
+    all_statistics = await hass.loop.run_in_executor(None, _compile_statistics, hass)
+    statistics = get_statistics_for_entity(all_statistics, FIXED_COST_ENTITY_ID)
+    assert statistics["stat"]["sum"] == pytest.approx(0.62)
+
+
+async def test_fixed_cost_sensor_daylight_saving_time(
+    setup_integration: Callable[[HomeAssistant], Coroutine[Any, Any, None]],
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    frozen_time: FrozenDateTimeFactory,
+) -> None:
+    """Test a daily charge follows local midnight when the clocks change."""
+    frozen_time.move_to("2022-03-26 12:00:00+00:00")
+    await _setup_fixed_costs(hass, setup_integration, hass_storage, FIXED_COST)
+    assert _fixed_cost_total(hass) == pytest.approx(0.62)
+
+    await _move_to(hass, frozen_time, "2022-03-26 23:00:00+00:00")
+    assert _fixed_cost_total(hass) == pytest.approx(1.24)
+
+    # The clocks go forward, so the next midnight is an hour earlier in UTC
+    await _move_to(hass, frozen_time, "2022-03-27 21:59:59+00:00")
+    assert _fixed_cost_total(hass) == pytest.approx(1.24)
+
+    await _move_to(hass, frozen_time, "2022-03-27 22:00:00+00:00")
+    assert _fixed_cost_total(hass) == pytest.approx(1.86)
+
+
+async def test_fixed_cost_sensor_negative_amount(
+    setup_integration: Callable[[HomeAssistant], Coroutine[Any, Any, None]],
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test a negative fixed cost, like a tax rebate, lowers the total."""
+    await _setup_fixed_costs(
+        hass,
+        setup_integration,
+        hass_storage,
+        {**FIXED_COST, "number_amount": -0.4561},
+    )
+
+    assert _fixed_cost_total(hass) == pytest.approx(-0.4561)
+
+
+@pytest.mark.parametrize(
+    ("last_charged", "expected_total"),
+    [
+        pytest.param(FIXED_COST_TODAY, 10.0, id="charged_today"),
+        pytest.param("2022-04-17T00:00:00+02:00", 11.24, id="missed_two_days"),
+    ],
+)
+async def test_fixed_cost_sensor_restore(
+    setup_integration: Callable[[HomeAssistant], Coroutine[Any, Any, None]],
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    last_charged: str | None,
+    expected_total: float,
+) -> None:
+    """Test the total continues and only periods that are due are charged."""
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State(FIXED_COST_ENTITY_ID, "10.0"),
+                {
+                    "native_value": 10.0,
+                    "native_unit_of_measurement": "EUR",
+                    "last_reset": "2022-01-01T00:00:00+00:00",
+                    "last_charged": last_charged,
+                    "period": "day",
+                },
+            )
+        ],
+    )
+
+    await _setup_fixed_costs(hass, setup_integration, hass_storage, FIXED_COST)
+
+    state = hass.states.get(FIXED_COST_ENTITY_ID)
+    assert float(state.state) == pytest.approx(expected_total)
+    assert state.attributes[ATTR_LAST_RESET] == "2022-01-01T00:00:00+00:00"
+
+
+@pytest.mark.parametrize(
+    "extra_data",
+    [
+        pytest.param(
+            {
+                "native_value": 10.0,
+                "native_unit_of_measurement": "EUR",
+                "last_charged": FIXED_COST_TODAY,
+            },
+            id="no_last_reset",
+        ),
+        pytest.param(
+            {
+                "native_value": "abc",
+                "native_unit_of_measurement": "EUR",
+                "last_reset": "2022-01-01T00:00:00+00:00",
+                "last_charged": FIXED_COST_TODAY,
+            },
+            id="non_numeric_total",
+        ),
+        pytest.param(
+            {
+                "native_value": 10.0,
+                "native_unit_of_measurement": "EUR",
+                "last_reset": "2022-01-01T00:00:00+00:00",
+                "last_charged": "yesterday",
+            },
+            id="invalid_last_charged",
+        ),
+        pytest.param(
+            {
+                "native_value": 10.0,
+                "native_unit_of_measurement": "EUR",
+                "last_reset": "2022-01-01T00:00:00+00:00",
+                "last_charged": None,
+                "period": "day",
+            },
+            id="no_last_charged",
+        ),
+        pytest.param(
+            {
+                "native_value": 10.0,
+                "native_unit_of_measurement": "EUR",
+                "last_reset": "2022-01-01T00:00:00+00:00",
+                "last_charged": FIXED_COST_TODAY,
+            },
+            id="no_period",
+        ),
+    ],
+)
+async def test_fixed_cost_sensor_restore_invalid(
+    setup_integration: Callable[[HomeAssistant], Coroutine[Any, Any, None]],
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    extra_data: dict[str, Any],
+) -> None:
+    """Test incomplete restore data starts a new cycle."""
+    mock_restore_cache_with_extra_data(
+        hass, [(State(FIXED_COST_ENTITY_ID, "10.0"), extra_data)]
+    )
+
+    await _setup_fixed_costs(hass, setup_integration, hass_storage, FIXED_COST)
+
+    state = hass.states.get(FIXED_COST_ENTITY_ID)
+    assert state.state == "0.62"
+    assert state.attributes[ATTR_LAST_RESET] == dt_util.utcnow().isoformat()
+
+
+async def test_fixed_cost_sensor_saves_restore_data(
+    setup_integration: Callable[[HomeAssistant], Coroutine[Any, Any, None]],
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test the total is stored with its cycle and the last charged period."""
+    await _setup_fixed_costs(hass, setup_integration, hass_storage, FIXED_COST)
+
+    [stored_state] = restore_state.async_get(hass).async_get_stored_states()
+
+    assert json_loads(json_bytes(stored_state.extra_data.as_dict())) == {
+        "native_value": 0.62,
+        "native_unit_of_measurement": "EUR",
+        "last_reset": dt_util.utcnow().isoformat(),
+        "last_charged": "2022-04-19T00:00:00+02:00",
+        "period": "day",
+    }
+
+
+async def test_fixed_cost_sensor_entity_amount(
+    setup_integration: Callable[[HomeAssistant], Coroutine[Any, Any, None]],
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    frozen_time: FrozenDateTimeFactory,
+) -> None:
+    """Test an amount entity is charged once it has a valid state."""
+    await _setup_fixed_costs(
+        hass,
+        setup_integration,
+        hass_storage,
+        {**FIXED_COST, "number_amount": None, "entity_amount": "sensor.amount"},
+    )
+    assert _fixed_cost_total(hass) == 0
+
+    hass.states.async_set("sensor.amount", "unavailable", FIXED_COST_AMOUNT_ATTRIBUTES)
+    await hass.async_block_till_done()
+    assert _fixed_cost_total(hass) == 0
+
+    hass.states.async_set("sensor.amount", "0.5", FIXED_COST_AMOUNT_ATTRIBUTES)
+    await hass.async_block_till_done()
+    assert _fixed_cost_total(hass) == pytest.approx(0.5)
+
+    # A new amount is charged from the next period
+    hass.states.async_set("sensor.amount", "0.7", FIXED_COST_AMOUNT_ATTRIBUTES)
+    await hass.async_block_till_done()
+    assert _fixed_cost_total(hass) == pytest.approx(0.5)
+
+    await _move_to(hass, frozen_time, "2022-04-19 22:00:00+00:00")
+    assert _fixed_cost_total(hass) == pytest.approx(1.2)
+
+    # Unknown at the period start, so charged once the amount is known
+    hass.states.async_set("sensor.amount", "nan", FIXED_COST_AMOUNT_ATTRIBUTES)
+    await _move_to(hass, frozen_time, "2022-04-20 22:00:00+00:00")
+    assert _fixed_cost_total(hass) == pytest.approx(1.2)
+
+    hass.states.async_set("sensor.amount", "0.8", FIXED_COST_AMOUNT_ATTRIBUTES)
+    await hass.async_block_till_done()
+    assert _fixed_cost_total(hass) == pytest.approx(2.0)
+
+
+async def test_fixed_cost_sensor_entity_amount_unit(
+    setup_integration: Callable[[HomeAssistant], Coroutine[Any, Any, None]],
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test an amount in another unit is charged once the unit is corrected."""
+    hass.states.async_set(
+        "sensor.amount", "30", {ATTR_UNIT_OF_MEASUREMENT: "EUR/month"}
+    )
+    await _setup_fixed_costs(
+        hass,
+        setup_integration,
+        hass_storage,
+        {**FIXED_COST, "number_amount": None, "entity_amount": "sensor.amount"},
+    )
+    assert _fixed_cost_total(hass) == 0
+
+    hass.states.async_set("sensor.amount", "1", {ATTR_UNIT_OF_MEASUREMENT: "EUR/day"})
+    await hass.async_block_till_done()
+    assert _fixed_cost_total(hass) == pytest.approx(1)
+
+
+async def test_fixed_cost_sensor_entity_amount_unknown_for_days(
+    setup_integration: Callable[[HomeAssistant], Coroutine[Any, Any, None]],
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    frozen_time: FrozenDateTimeFactory,
+) -> None:
+    """Test every period since the fixed cost was added waits for the amount."""
+    await _setup_fixed_costs(
+        hass,
+        setup_integration,
+        hass_storage,
+        {**FIXED_COST, "number_amount": None, "entity_amount": "sensor.amount"},
+    )
+    await _move_to(hass, frozen_time, "2022-04-20 22:00:00+00:00")
+    assert _fixed_cost_total(hass) == 0
+
+    hass.states.async_set("sensor.amount", "0.5", FIXED_COST_AMOUNT_ATTRIBUTES)
+    await hass.async_block_till_done()
+    assert _fixed_cost_total(hass) == pytest.approx(1.5)
+
+
+async def test_fixed_cost_sensor_update_config(
+    setup_integration: Callable[[HomeAssistant], Coroutine[Any, Any, None]],
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    frozen_time: FrozenDateTimeFactory,
+) -> None:
+    """Test a changed fixed cost applies from the next period."""
+    await _setup_fixed_costs(hass, setup_integration, hass_storage, FIXED_COST)
+    manager = await async_get_manager(hass)
+
+    await manager.async_update(
+        {"fixed_costs": [{**FIXED_COST, "name": "Network fee", "number_amount": 0.7}]}
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get(FIXED_COST_ENTITY_ID)
+    assert float(state.state) == pytest.approx(0.62)
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "Network fee"
+
+    await _move_to(hass, frozen_time, "2022-04-19 22:00:00+00:00")
+    assert _fixed_cost_total(hass) == pytest.approx(1.32)
+
+    # The current month counts as charged, the next one starts on May 1
+    await manager.async_update(
+        {"fixed_costs": [{**FIXED_COST, "number_amount": 0.7, "period": "month"}]}
+    )
+    await hass.async_block_till_done()
+    await _move_to(hass, frozen_time, "2022-04-20 22:00:00+00:00")
+    assert _fixed_cost_total(hass) == pytest.approx(1.32)
+
+    await _move_to(hass, frozen_time, "2022-04-30 22:00:00+00:00")
+    assert _fixed_cost_total(hass) == pytest.approx(2.02)
+
+    # The days since the start of the month are not charged again
+    await _move_to(hass, frozen_time, "2022-05-10 12:00:00+00:00")
+    await manager.async_update(
+        {"fixed_costs": [{**FIXED_COST, "number_amount": 0.7, "period": "day"}]}
+    )
+    await hass.async_block_till_done()
+    assert _fixed_cost_total(hass) == pytest.approx(2.02)
+
+    await _move_to(hass, frozen_time, "2022-05-10 22:00:00+00:00")
+    assert _fixed_cost_total(hass) == pytest.approx(2.72)
+
+
+async def test_fixed_cost_sensor_period_change_while_amount_unknown(
+    setup_integration: Callable[[HomeAssistant], Coroutine[Any, Any, None]],
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test a period change keeps the current period due until it is charged."""
+    fixed_cost = {**FIXED_COST, "number_amount": None, "entity_amount": "sensor.amount"}
+    await _setup_fixed_costs(hass, setup_integration, hass_storage, fixed_cost)
+    manager = await async_get_manager(hass)
+
+    await manager.async_update({"fixed_costs": [{**fixed_cost, "period": "month"}]})
+    await hass.async_block_till_done()
+    assert _fixed_cost_total(hass) == 0
+
+    hass.states.async_set("sensor.amount", "5", FIXED_COST_AMOUNT_ATTRIBUTES)
+    await hass.async_block_till_done()
+    assert _fixed_cost_total(hass) == pytest.approx(5)
+
+
+async def test_fixed_cost_sensor_restore_with_other_period(
+    setup_integration: Callable[[HomeAssistant], Coroutine[Any, Any, None]],
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test a period changed while the sensor was not running is not charged again."""
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State(FIXED_COST_ENTITY_ID, "10.0"),
+                {
+                    "native_value": 10.0,
+                    "native_unit_of_measurement": "EUR",
+                    "last_reset": "2022-01-01T00:00:00+00:00",
+                    "last_charged": "2022-04-01T00:00:00+02:00",
+                    "period": "month",
+                },
+            )
+        ],
+    )
+
+    await _setup_fixed_costs(hass, setup_integration, hass_storage, FIXED_COST)
+
+    assert _fixed_cost_total(hass) == pytest.approx(10.0)
+
+
+async def test_fixed_cost_sensor_amount_entity_replaced(
+    setup_integration: Callable[[HomeAssistant], Coroutine[Any, Any, None]],
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test a period that waited for its amount entity is charged with a number."""
+    fixed_cost = {**FIXED_COST, "number_amount": None, "entity_amount": "sensor.amount"}
+    await _setup_fixed_costs(hass, setup_integration, hass_storage, fixed_cost)
+    manager = await async_get_manager(hass)
+    assert _fixed_cost_total(hass) == 0
+
+    await manager.async_update({"fixed_costs": [FIXED_COST]})
+    await hass.async_block_till_done()
+    assert _fixed_cost_total(hass) == pytest.approx(0.62)
+
+    hass.states.async_set("sensor.amount", "0.5", FIXED_COST_AMOUNT_ATTRIBUTES)
+    await hass.async_block_till_done()
+    assert _fixed_cost_total(hass) == pytest.approx(0.62)
+
+
+async def test_fixed_cost_sensor_time_zone_change_east(
+    setup_integration: Callable[[HomeAssistant], Coroutine[Any, Any, None]],
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    frozen_time: FrozenDateTimeFactory,
+) -> None:
+    """Test a time zone where the next day already started charges that day."""
+    await _setup_fixed_costs(hass, setup_integration, hass_storage, FIXED_COST)
+    await hass.config.async_update(time_zone="America/Los_Angeles")
+    await hass.async_block_till_done()
+    assert _fixed_cost_total(hass) == pytest.approx(0.62)
+
+    # 20:00 on April 19 in Los Angeles, 05:00 on April 20 in Amsterdam
+    await _move_to(hass, frozen_time, "2022-04-20 03:00:00+00:00")
+    assert _fixed_cost_total(hass) == pytest.approx(0.62)
+
+    await hass.config.async_update(time_zone="Europe/Amsterdam")
+    await hass.async_block_till_done()
+    assert _fixed_cost_total(hass) == pytest.approx(1.24)
+
+
+async def test_fixed_cost_sensor_restore_in_other_time_zone(
+    setup_integration: Callable[[HomeAssistant], Coroutine[Any, Any, None]],
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test a day charged in another time zone is not charged again."""
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State(FIXED_COST_ENTITY_ID, "10.0"),
+                {
+                    "native_value": 10.0,
+                    "native_unit_of_measurement": "EUR",
+                    "last_reset": "2022-01-01T00:00:00+00:00",
+                    "last_charged": FIXED_COST_TODAY,
+                    "period": "day",
+                },
+            )
+        ],
+    )
+    await hass.config.async_set_time_zone("America/Los_Angeles")
+    energy_data = data.EnergyManager.default_preferences()
+    energy_data["fixed_costs"] = [FIXED_COST]
+    hass_storage[data.STORAGE_KEY] = {"version": 1, "data": energy_data}
+    await setup_integration(hass)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert _fixed_cost_total(hass) == pytest.approx(10.0)
+
+
+async def test_fixed_cost_sensor_time_zone_change(
+    setup_integration: Callable[[HomeAssistant], Coroutine[Any, Any, None]],
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    frozen_time: FrozenDateTimeFactory,
+) -> None:
+    """Test the next charge moves to midnight in a new time zone."""
+    await _setup_fixed_costs(hass, setup_integration, hass_storage, FIXED_COST)
+
+    await hass.config.async_update(currency="USD")
+    await hass.config.async_update(time_zone="America/New_York")
+    await hass.async_block_till_done()
+    assert _fixed_cost_total(hass) == pytest.approx(0.62)
+
+    await _move_to(hass, frozen_time, "2022-04-19 22:00:00+00:00")
+    assert _fixed_cost_total(hass) == pytest.approx(0.62)
+
+    await _move_to(hass, frozen_time, "2022-04-20 04:00:00+00:00")
+    assert _fixed_cost_total(hass) == pytest.approx(1.24)
+
+
+async def test_fixed_cost_sensor_rename(
+    setup_integration: Callable[[HomeAssistant], Coroutine[Any, Any, None]],
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the entity ID for the frontend follows a renamed sensor."""
+    await _setup_fixed_costs(hass, setup_integration, hass_storage, FIXED_COST)
+
+    entity_registry.async_update_entity(
+        FIXED_COST_ENTITY_ID, new_entity_id="sensor.network_fee"
+    )
+    await hass.async_block_till_done()
+
+    assert hass.data[DOMAIN]["fixed_cost_sensors"] == {
+        "standing_charge": "sensor.network_fee"
+    }
+
+
+@pytest.mark.parametrize(
+    "amount",
+    [
+        {"number_amount": 0.62, "entity_amount": None},
+        {"number_amount": None, "entity_amount": "sensor.amount"},
+    ],
+)
+async def test_fixed_cost_sensor_removed(
+    setup_integration: Callable[[HomeAssistant], Coroutine[Any, Any, None]],
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    entity_registry: er.EntityRegistry,
+    amount: dict[str, Any],
+) -> None:
+    """Test deleting a fixed cost removes its sensor and registry entry."""
+    await _setup_fixed_costs(
+        hass, setup_integration, hass_storage, {**FIXED_COST, **amount}
+    )
+    manager = await async_get_manager(hass)
+
+    await manager.async_update({"fixed_costs": []})
+    await hass.async_block_till_done()
+
+    assert hass.states.get(FIXED_COST_ENTITY_ID) is None
+    assert entity_registry.async_get(FIXED_COST_ENTITY_ID) is None
+    assert hass.data[DOMAIN]["fixed_cost_sensors"] == {}
+
+    # The same fixed cost can be added again right away
+    await manager.async_update({"fixed_costs": [{**FIXED_COST, **amount}]})
+    assert hass.data[DOMAIN]["fixed_cost_sensors"] == {
+        "standing_charge": FIXED_COST_ENTITY_ID
+    }
+
+
+async def test_fixed_cost_sensor_disabled_after_added(
+    setup_integration: Callable[[HomeAssistant], Coroutine[Any, Any, None]],
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    entity_registry: er.EntityRegistry,
+    frozen_time: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a fixed cost sensor disabled while running is left alone."""
+    await _setup_fixed_costs(hass, setup_integration, hass_storage, FIXED_COST)
+    manager = await async_get_manager(hass)
+    entity_registry.async_update_entity(
+        FIXED_COST_ENTITY_ID, disabled_by=er.RegistryEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+
+    await manager.async_update({"fixed_costs": [{**FIXED_COST, "name": "Fee"}]})
+    await _move_to(hass, frozen_time, "2022-04-19 22:00:00+00:00")
+
+    assert hass.states.get(FIXED_COST_ENTITY_ID) is None
+    assert "while it is disabled" not in caplog.text
+
+
+async def test_fixed_cost_sensor_disabled(
+    setup_integration: Callable[[HomeAssistant], Coroutine[Any, Any, None]],
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a disabled fixed cost sensor can be updated and deleted."""
+    entity_registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        "fixed_cost_standing_charge",
+        suggested_object_id="standing_charge_fixed_cost",
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+    await _setup_fixed_costs(hass, setup_integration, hass_storage, FIXED_COST)
+    manager = await async_get_manager(hass)
+    assert hass.states.get(FIXED_COST_ENTITY_ID) is None
+
+    await manager.async_update({"fixed_costs": [{**FIXED_COST, "name": "Fee"}]})
+    await hass.async_block_till_done()
+    assert hass.states.get(FIXED_COST_ENTITY_ID) is None
+
+    await manager.async_update({"fixed_costs": []})
+    await hass.async_block_till_done()
+    assert entity_registry.async_get(FIXED_COST_ENTITY_ID) is None

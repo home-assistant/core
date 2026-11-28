@@ -3,6 +3,7 @@
 from collections.abc import Mapping, Sequence
 import dataclasses
 import functools
+import math
 
 from homeassistant.components import recorder, sensor
 from homeassistant.const import (
@@ -37,6 +38,7 @@ ENERGY_PRICE_UNITS = tuple(
     f"/{unit}" for units in ENERGY_USAGE_UNITS.values() for unit in units
 )
 ENERGY_UNIT_ERROR = "entity_unexpected_unit_energy"
+FIXED_COST_UNIT_ERROR = "entity_unexpected_unit_fixed_cost"
 ENERGY_PRICE_UNIT_ERROR = "entity_unexpected_unit_energy_price"
 POWER_UNIT_ERROR = "entity_unexpected_unit_power"
 GAS_USAGE_DEVICE_CLASSES = (
@@ -114,6 +116,8 @@ def _get_placeholders(hass: HomeAssistant, issue_type: str) -> dict[str, str] | 
         return {
             "price_units": ", ".join(f"{currency}{unit}" for unit in WATER_PRICE_UNITS),
         }
+    if issue_type == FIXED_COST_UNIT_ERROR:
+        return {"currency": currency}
     if issue_type == VOLUME_FLOW_RATE_UNIT_ERROR:
         return {
             "flow_rate_units": ", ".join(
@@ -170,6 +174,7 @@ class EnergyPreferencesValidation:
     device_consumption_gas: list[ValidationIssues] = dataclasses.field(
         default_factory=list
     )
+    fixed_costs: list[ValidationIssues] = dataclasses.field(default_factory=list)
 
     def as_dict(self) -> dict:
         """Return dictionary version."""
@@ -189,6 +194,10 @@ class EnergyPreferencesValidation:
             "device_consumption_gas": [
                 [dataclasses.asdict(issue) for issue in issues.issues.values()]
                 for issues in self.device_consumption_gas
+            ],
+            "fixed_costs": [
+                [dataclasses.asdict(issue) for issue in issues.issues.values()]
+                for issues in self.fixed_costs
             ],
         }
 
@@ -432,6 +441,46 @@ def _async_validate_cost_stat(
         and sensor.SensorEntityStateAttribute.LAST_RESET not in state.attributes
     ):
         issues.add_issue(hass, "entity_state_class_measurement_no_last_reset", stat_id)
+
+
+@callback
+def _async_validate_fixed_cost_entity(
+    hass: HomeAssistant, entity_id: str, period: str, issues: ValidationIssues
+) -> None:
+    """Validate the entity holding the amount of a fixed cost."""
+    if (state := hass.states.get(entity_id)) is None:
+        issues.add_issue(hass, "entity_not_defined", entity_id)
+        return
+
+    try:
+        amount = float(state.state)
+    except ValueError:
+        amount = math.nan
+    if not math.isfinite(amount):
+        issues.add_issue(hass, "entity_state_non_numeric", entity_id, state.state)
+        return
+
+    currency = hass.config.currency
+    unit = state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
+    # The amount is added as is, so the unit must be the currency itself
+    if unit not in (currency, f"{currency}/{period}"):
+        issues.add_issue(hass, FIXED_COST_UNIT_ERROR, entity_id, unit)
+
+
+@callback
+def _async_validate_fixed_cost(
+    hass: HomeAssistant, fixed_cost: data.FixedCostType, issues: ValidationIssues
+) -> None:
+    """Validate the amount entity and the sensor of a fixed cost."""
+    if (entity_id := fixed_cost["entity_amount"]) is not None:
+        _async_validate_fixed_cost_entity(hass, entity_id, fixed_cost["period"], issues)
+
+    if (
+        sensor_entity_id := hass.data[DOMAIN]["fixed_cost_sensors"].get(
+            fixed_cost["id"]
+        )
+    ) is not None and not recorder.is_entity_recorded(hass, sensor_entity_id):
+        issues.add_issue(hass, "recorder_untracked", sensor_entity_id)
 
 
 @callback
@@ -969,6 +1018,15 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
                 GAS_USAGE_UNITS,
                 GAS_UNIT_ERROR,
                 device_result,
+            )
+        )
+
+    for fixed_cost in manager.data.get("fixed_costs", []):
+        fixed_cost_result = ValidationIssues()
+        result.fixed_costs.append(fixed_cost_result)
+        validate_calls.append(
+            functools.partial(
+                _async_validate_fixed_cost, hass, fixed_cost, fixed_cost_result
             )
         )
 
