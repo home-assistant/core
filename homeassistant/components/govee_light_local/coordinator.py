@@ -16,6 +16,7 @@ from .const import (
     CLEANUP_TIMEOUT,
     CLEANUP_WAIT_TIMEOUT,
     CONF_DISCOVERY_INTERVAL_DEFAULT,
+    CONF_HOSTS,
     CONF_LISTENING_PORT_DEFAULT,
     CONF_MULTICAST_ADDRESS_DEFAULT,
     CONF_TARGET_PORT_DEFAULT,
@@ -95,6 +96,13 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
 
     async def start(self) -> None:
         """Start the Govee coordinator."""
+
+        # Devices that multicast discovery cannot reach, such as lights on
+        # another VLAN, are probed by unicast. Queue them before start() so the
+        # first discovery round includes them; once found, the library marks
+        # them manual and keeps probing them, even after eviction.
+        for host in self.config_entry.options.get(CONF_HOSTS, []):
+            self._controller.add_device_to_discovery_queue(host)
 
         # Home Assistant enumerates adapters once at startup, so an address can
         # be stale by the time we bind it. Keep the adapters that do bind.
