@@ -4,7 +4,12 @@ from datetime import timedelta
 from typing import Any
 from unittest.mock import ANY, call
 
-from aioesphomeapi import APIClient, VoiceAssistantFeature, VoiceAssistantTimerEventType
+from aioesphomeapi import (
+    APIClient,
+    APIConnectionError,
+    VoiceAssistantFeature,
+    VoiceAssistantTimerEventType,
+)
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import async_fire_time_changed
@@ -29,16 +34,32 @@ CANCELLED = VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_CANCELLED
 FINISHED = VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_FINISHED
 
 
+AUDIO_TRANSPORTS = pytest.mark.parametrize(
+    "timer_flags",
+    [
+        pytest.param(TIMER_FLAGS, id="udp"),
+        pytest.param(TIMER_FLAGS | VoiceAssistantFeature.API_AUDIO, id="api_audio"),
+    ],
+)
+
+
+@pytest.fixture
+def timer_flags() -> VoiceAssistantFeature:
+    """Return the voice assistant features of the satellite."""
+    return TIMER_FLAGS
+
+
 @pytest.fixture
 async def mock_device(
     hass: HomeAssistant,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
+    timer_flags: VoiceAssistantFeature,
 ) -> MockESPHomeDevice:
     """Set up an ESPHome voice satellite that supports timers."""
     device = await mock_esphome_device(
         mock_client=mock_client,
-        device_info={"voice_assistant_feature_flags": TIMER_FLAGS},
+        device_info={"voice_assistant_feature_flags": timer_flags},
     )
     await hass.async_block_till_done()
     return device
@@ -257,9 +278,186 @@ async def test_timers_kept_while_disconnected(
     await _call(hass, entity_id, "pause_timer", timer_id=result["timer_id"])
 
     assert hass.states.get(entity_id).state == "0"
-    mock_client.send_voice_assistant_timer_event.assert_called_once_with(
-        UPDATED, result["timer_id"], None, 90, 90, False
+    assert mock_client.send_voice_assistant_timer_event.mock_calls == [
+        # The change missed while disconnected
+        call(UPDATED, result["timer_id"], None, 90, 90, True),
+        call(UPDATED, result["timer_id"], None, 90, 90, False),
+    ]
+
+
+@AUDIO_TRANSPORTS
+async def test_timers_resent_on_reconnect(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: APIClient,
+    mock_device: MockESPHomeDevice,
+) -> None:
+    """Test the device gets its running timers again when it reconnects."""
+    entity_id = _timer_list_entity_id(hass, mock_device)
+    assert entity_id is not None
+    cancelled = await _call(
+        hass, entity_id, "create_timer", name="cancelled", duration={"seconds": 60}
     )
+    finished = await _call(
+        hass, entity_id, "create_timer", name="finished", duration={"seconds": 60}
+    )
+    ran_out = await _call(
+        hass, entity_id, "create_timer", name="ran out", duration={"seconds": 20}
+    )
+    removed = await _call(
+        hass, entity_id, "create_timer", name="removed", duration={"seconds": 60}
+    )
+    paused = await _call(
+        hass, entity_id, "create_timer", name="paused", duration={"seconds": 120}
+    )
+    kept = await _call(
+        hass, entity_id, "create_timer", name="kept", duration={"seconds": 300}
+    )
+
+    await mock_device.mock_disconnect(expected_disconnect=False)
+    await hass.async_block_till_done()
+    await _call(hass, entity_id, "cancel_timer", timer_id=cancelled["timer_id"])
+    await _call(hass, entity_id, "finish_timer", timer_id=finished["timer_id"])
+    await _call(hass, entity_id, "remove_timer", timer_id=removed["timer_id"])
+    await _call(hass, entity_id, "pause_timer", timer_id=paused["timer_id"])
+    new = await _call(
+        hass, entity_id, "create_timer", name="new", duration={"seconds": 30}
+    )
+    freezer.tick(timedelta(seconds=25))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    mock_client.send_voice_assistant_timer_event.reset_mock()
+
+    await mock_device.mock_connect()
+    await hass.async_block_till_done()
+
+    assert mock_client.send_voice_assistant_timer_event.mock_calls == [
+        # Ended while disconnected: cancelled, so the device does not ring late
+        call(CANCELLED, cancelled["timer_id"], "cancelled", 0, 0, False),
+        call(CANCELLED, finished["timer_id"], "finished", 0, 0, False),
+        call(CANCELLED, ran_out["timer_id"], "ran out", 0, 0, False),
+        call(CANCELLED, removed["timer_id"], "removed", 0, 0, False),
+        call(UPDATED, paused["timer_id"], "paused", 120, 120, False),
+        call(UPDATED, kept["timer_id"], "kept", 300, 275, True),
+        call(UPDATED, new["timer_id"], "new", 30, 5, True),
+    ]
+
+    # Only what changed is sent on the next reconnect
+    await mock_device.mock_disconnect(expected_disconnect=False)
+    await hass.async_block_till_done()
+    mock_client.send_voice_assistant_timer_event.reset_mock()
+    await mock_device.mock_connect()
+    await hass.async_block_till_done()
+
+    assert mock_client.send_voice_assistant_timer_event.mock_calls == [
+        call(UPDATED, paused["timer_id"], "paused", 120, 120, False),
+        call(UPDATED, kept["timer_id"], "kept", 300, 275, True),
+        call(UPDATED, new["timer_id"], "new", 30, 5, True),
+    ]
+
+
+@AUDIO_TRANSPORTS
+@pytest.mark.usefixtures("freezer")
+async def test_cancel_retried_after_failed_send(
+    hass: HomeAssistant, mock_client: APIClient, mock_device: MockESPHomeDevice
+) -> None:
+    """Test a cancellation that could not be sent is sent on the next reconnect."""
+    entity_id = _timer_list_entity_id(hass, mock_device)
+    assert entity_id is not None
+    result = await _call(hass, entity_id, "create_timer", duration={"seconds": 60})
+    timer_id = result["timer_id"]
+    await mock_device.mock_disconnect(expected_disconnect=False)
+    await hass.async_block_till_done()
+    await _call(hass, entity_id, "cancel_timer", timer_id=timer_id)
+
+    # The connection drops again while the cancellation is being sent
+    mock_client.send_voice_assistant_timer_event.reset_mock()
+    mock_client.send_voice_assistant_timer_event.side_effect = APIConnectionError(
+        "Connection lost"
+    )
+    await mock_device.mock_connect()
+    await hass.async_block_till_done()
+    await mock_device.mock_disconnect(expected_disconnect=False)
+    await hass.async_block_till_done()
+
+    mock_client.send_voice_assistant_timer_event.side_effect = None
+    mock_client.send_voice_assistant_timer_event.reset_mock()
+    await mock_device.mock_connect()
+    await hass.async_block_till_done()
+
+    mock_client.send_voice_assistant_timer_event.assert_called_once_with(
+        CANCELLED, timer_id, None, 0, 0, False
+    )
+
+
+@AUDIO_TRANSPORTS
+@pytest.mark.usefixtures("freezer")
+async def test_resent_after_the_satellite_subscribes(
+    hass: HomeAssistant, mock_client: APIClient, mock_device: MockESPHomeDevice
+) -> None:
+    """Test timers are resent only once the satellite is subscribed again.
+
+    The firmware drops timer events from a connection that is not subscribed to
+    its voice assistant, and the satellite subscribes after the device is
+    available again.
+    """
+    entity_id = _timer_list_entity_id(hass, mock_device)
+    assert entity_id is not None
+    result = await _call(hass, entity_id, "create_timer", duration={"seconds": 60})
+    await mock_device.mock_disconnect(expected_disconnect=False)
+    await hass.async_block_till_done()
+    mock_client.send_voice_assistant_timer_event.reset_mock()
+
+    order: list[str] = []
+    subscribe = mock_client.subscribe_voice_assistant
+
+    def _subscribe(**kwargs: Any) -> Any:
+        order.append("subscribe")
+        return subscribe(**kwargs)
+
+    mock_client.subscribe_voice_assistant = _subscribe
+    mock_client.send_voice_assistant_timer_event.side_effect = lambda *args: (
+        order.append("send")
+    )
+
+    await mock_device.mock_connect()
+    await hass.async_block_till_done()
+
+    assert order == ["subscribe", "send"]
+    mock_client.send_voice_assistant_timer_event.assert_called_once_with(
+        UPDATED, result["timer_id"], None, 60, 60, True
+    )
+
+
+@pytest.mark.usefixtures("freezer")
+async def test_nothing_sent_while_not_subscribed(
+    hass: HomeAssistant, mock_client: APIClient, mock_device: MockESPHomeDevice
+) -> None:
+    """Test changes are kept for the next subscription while not subscribed."""
+    entity_id = _timer_list_entity_id(hass, mock_device)
+    assert entity_id is not None
+    entry_data = mock_device.entry.runtime_data
+    entry_data.async_set_voice_assistant_subscribed(False)
+
+    result = await _call(hass, entity_id, "create_timer", duration={"seconds": 60})
+    mock_client.send_voice_assistant_timer_event.assert_not_called()
+
+    entry_data.async_set_voice_assistant_subscribed(True)
+    mock_client.send_voice_assistant_timer_event.assert_called_once_with(
+        UPDATED, result["timer_id"], None, 60, 60, True
+    )
+
+
+async def test_nothing_resent_without_timers(
+    hass: HomeAssistant, mock_client: APIClient, mock_device: MockESPHomeDevice
+) -> None:
+    """Test a reconnect sends nothing when there are no timers."""
+    await mock_device.mock_disconnect(expected_disconnect=False)
+    await hass.async_block_till_done()
+    await mock_device.mock_connect()
+    await hass.async_block_till_done()
+
+    mock_client.send_voice_assistant_timer_event.assert_not_called()
 
 
 async def test_no_timer_list_without_timers(
