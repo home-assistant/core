@@ -415,6 +415,10 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[ClientPresence]):
                     if subentry is None or host.signature != subentry_signature(
                         subentry
                     ):
+                        # The stale result is never awaited again, so
+                        # retrieve its exception; the callback on the
+                        # executor future does not reach this task.
+                        _poll_exception_retrieved(task)
                         self.latest_views.pop(host.subentry_id, None)
                         continue
                     # The observed task is done, so its outcome is

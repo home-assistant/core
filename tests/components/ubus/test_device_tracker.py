@@ -1862,6 +1862,78 @@ async def test_healthy_router_publishes_without_waiting_for_slow_router(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_removed_router_failed_poll_does_not_log_unretrieved(
+    hass: HomeAssistant,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    two_router_hub: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a removed router's failed poll has its exception retrieved.
+
+    A poll which fails after its subentry is removed mid-tick is discarded
+    without being awaited; its exception must still be retrieved, or
+    asyncio logs it as never retrieved once the task is collected.
+    """
+    _mock, ubus = mock_ubus_by_host
+    two_router_hub.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(two_router_hub.entry_id)
+    await hass.async_block_till_done()
+
+    subentry_b = next(
+        subentry
+        for subentry in two_router_hub.subentries.values()
+        if subentry.data[CONF_HOST] == MOCK_HOST_B
+    )
+
+    release = threading.Event()
+    failed = threading.Event()
+
+    def _failing_clients(interface: str) -> dict:
+        failed.set()
+        raise ConnectionError("unreachable")
+
+    def _stalled_failing_clients(interface: str) -> dict:
+        release.wait()
+        raise ConnectionError("unreachable")
+
+    ubus[MOCK_HOST].get_hostapd_clients.side_effect = _failing_clients
+    ubus[MOCK_HOST_B].get_hostapd_clients.side_effect = _stalled_failing_clients
+
+    observed: list[asyncio.Task] = []
+    real_create_task = asyncio.create_task
+
+    def _capture_observed(coro: Any, *args: Any, **kwargs: Any) -> Any:
+        task = real_create_task(coro, *args, **kwargs)
+        if getattr(coro, "cr_code", None) is not None and (
+            coro.cr_code.co_name == "_poll_observed"
+        ):
+            observed.append(task)
+        return task
+
+    try:
+        with patch("asyncio.create_task", side_effect=_capture_observed):
+            freezer.tick(timedelta(seconds=31))
+            async_fire_time_changed(hass)
+            # A has failed and the tick now waits for B, which is stalled.
+            await hass.async_add_executor_job(failed.wait, 10)
+            # Remove B while its poll is in flight, so the failure settles
+            # into the discard branch after the removal.
+            hass.config_entries.async_remove_subentry(
+                two_router_hub, subentry_b.subentry_id
+            )
+            release.set()
+            await hass.async_block_till_done(wait_background_tasks=True)
+    finally:
+        release.set()
+        await hass.async_block_till_done(wait_background_tasks=True)
+    finished = [task for task in observed if task.done() and not task.cancelled()]
+    assert finished
+    # The exceptions of all settled polls were retrieved; an unretrieved
+    # one marks the task for a "never retrieved" log once collected.
+    assert all(not task._log_traceback for task in finished)
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_away_client_reports_not_home_after_restart(
     hass: HomeAssistant,
     mock_ubus: MagicMock,
