@@ -1,11 +1,13 @@
 """Regression tests for SQLite locks during Core backups."""
 
 from contextlib import closing
+import fcntl
 import io
 import json
 import os
 from pathlib import Path
 import sqlite3
+import stat
 import subprocess
 import sys
 import tarfile
@@ -18,7 +20,11 @@ from securetar import AddFileError
 from homeassistant.components.backup import DOMAIN, archive_writer
 from homeassistant.components.backup.models import BackupManagerError
 from homeassistant.components.backup.services import BackupService
-from homeassistant.components.backup.util import read_backup
+from homeassistant.components.backup.util import (
+    cleanup_stale_backup_archives,
+    create_backup_staging_file,
+    read_backup,
+)
 from homeassistant.core import HomeAssistant
 
 from .common import setup_backup_integration
@@ -83,19 +89,101 @@ async def test_core_backup_preserves_sqlite_locks(
             ).fetchone() == (2,)
 
 
+async def test_backup_setup_cleans_stale_stages_but_skips_active(
+    hass: HomeAssistant,
+) -> None:
+    """Recover abandoned archives without deleting an in-progress worker file."""
+    backup_dir = Path(hass.config.path("backups"))
+    temp_dir = Path(hass.config.path("tmp_backups"))
+    backup_dir.mkdir(exist_ok=True)
+    temp_dir.mkdir(exist_ok=True)
+    old_local = backup_dir / ".ha-backup-oldlocal.partial"
+    old_temporary = temp_dir / ".ha-backup-oldtemporary.partial"
+    active = backup_dir / ".ha-backup-live.partial"
+    old_local.write_bytes(b"old local archive")
+    old_temporary.write_bytes(b"old temporary archive")
+    active.write_bytes(b"active archive")
+
+    with active.open("rb") as active_file:
+        fcntl.flock(active_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        await setup_backup_integration(hass)
+        assert not old_local.exists()
+        assert not old_temporary.exists()
+        assert active.read_bytes() == b"active archive"
+
+    await hass.services.async_call(DOMAIN, BackupService.CREATE, blocking=True)
+    assert not active.exists()
+
+
+def test_staging_lock_survives_parent_exit(tmp_path: Path) -> None:
+    """A cleanup process must not remove output owned by a surviving child."""
+    fd, staging_path = create_backup_staging_file(tmp_path)
+    child_code = (
+        "import os, sys; "
+        "os.fstat(int(sys.argv[1])); "
+        "print('READY', flush=True); "
+        "sys.stdin.buffer.read(1)"
+    )
+    try:
+        with subprocess.Popen(
+            [sys.executable, "-P", "-c", child_code, str(fd)],
+            pass_fds=(fd,),
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+        ) as child:
+            assert child.stdin is not None
+            assert child.stdout is not None
+            assert child.stdout.readline() == b"READY\n"
+            os.close(fd)
+            fd = -1
+            cleanup_stale_backup_archives(tmp_path)
+            assert staging_path.exists()
+            child.stdin.write(b"x")
+            child.stdin.flush()
+            assert child.wait(timeout=5) == 0
+        cleanup_stale_backup_archives(tmp_path)
+        assert not staging_path.exists()
+    finally:
+        if fd != -1:
+            os.close(fd)
+
+
+async def test_core_backup_archive_permissions_follow_umask(
+    hass: HomeAssistant,
+) -> None:
+    """A published backup should have normal umask-derived file permissions."""
+    await setup_backup_integration(hass)
+    backup_dir = Path(hass.config.path("backups"))
+    reference = backup_dir / "permission-reference"
+    reference.touch()
+
+    with patch(
+        "homeassistant.components.backup.manager.subprocess.run",
+        wraps=subprocess.run,
+    ) as runner:
+        await hass.services.async_call(DOMAIN, BackupService.CREATE, blocking=True)
+
+    [archive] = backup_dir.glob("*.tar")
+    assert stat.S_IMODE(archive.stat().st_mode) == stat.S_IMODE(
+        reference.stat().st_mode
+    )
+    assert len(runner.call_args.kwargs["pass_fds"]) == 1
+
+
 async def test_core_backup_uses_one_archive_process(hass: HomeAssistant) -> None:
     """A public Core backup archives all files in one child process."""
     await setup_backup_integration(hass)
     Path(hass.config.path("first.txt")).write_text("first", encoding="utf-8")
     Path(hass.config.path("second.txt")).write_text("second", encoding="utf-8")
-    # A staging file left behind by a crash must never become backup content.
-    Path(hass.config.path("backups/.ha-backup-orphan.partial")).write_bytes(
-        b"incomplete archive"
-    )
+    # An active staging file is skipped by cleanup and excluded from archives.
+    active_stage = Path(hass.config.path("backups/.ha-backup-orphan.partial"))
+    active_stage.write_bytes(b"incomplete archive")
 
     # -P runs Python site hooks, which can print to stdout. No stdout bytes
     # from the child should be mistaken for part of the archive.
+    active_file = await hass.async_add_executor_job(active_stage.open, "rb")
     with (
+        active_file,
         tempfile.TemporaryDirectory() as startup_dir,
         patch.dict(
             os.environ,
@@ -105,6 +193,7 @@ async def test_core_backup_uses_one_archive_process(hass: HomeAssistant) -> None
             },
         ),
     ):
+        fcntl.flock(active_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
         Path(startup_dir, "sitecustomize.py").write_text(
             'import sys; sys.stdout.write("CORRUPTION"); sys.stdout.flush()\n',
             encoding="utf-8",
@@ -120,16 +209,14 @@ async def test_core_backup_uses_one_archive_process(hass: HomeAssistant) -> None
         ) as runner:
             await hass.services.async_call(DOMAIN, BackupService.CREATE, blocking=True)
             await hass.async_block_till_done()
+        assert active_stage.read_bytes() == b"incomplete archive"
 
     assert runner.call_count == 1
     assert runner.call_args.args[0][1] == "-P"
     assert runner.call_args.kwargs["stdout"] == subprocess.DEVNULL
     request = json.loads(runner.call_args.kwargs["input"].split(b"\n", 1)[0])
     assert request["archive_path"].endswith(".partial")
-    assert sorted(
-        path.name
-        for path in Path(hass.config.path("backups")).glob(".ha-backup-*.partial")
-    ) == [".ha-backup-orphan.partial"]
+    assert active_stage.exists()
     [archive_path] = Path(hass.config.path("backups")).glob("*.tar")
     with tarfile.open(archive_path) as outer:
         stream = outer.extractfile("homeassistant.tar.gz")

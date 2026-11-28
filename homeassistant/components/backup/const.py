@@ -13,6 +13,9 @@ DOMAIN = "backup"
 DATA_MANAGER: HassKey[BackupManager] = HassKey(DOMAIN)
 LOGGER = getLogger(__package__)
 
+BACKUP_STAGING_PREFIX = ".ha-backup-"
+BACKUP_STAGING_SUFFIX = ".partial"
+
 EXCLUDE_FROM_BACKUP = [
     "**/__pycache__/*",
     "**/.DS_Store",
@@ -22,7 +25,7 @@ EXCLUDE_FROM_BACKUP = [
     "*.log",
     "backups/*.tar",
     "tmp_backups/*.tar",
-    "**/.ha-backup-*.partial",
+    f"**/{BACKUP_STAGING_PREFIX}*{BACKUP_STAGING_SUFFIX}",
     "OZW_Log.txt",
     "tts/*",
     ".cache/*",

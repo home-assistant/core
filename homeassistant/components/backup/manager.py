@@ -15,7 +15,6 @@ import shutil
 import subprocess
 import sys
 import tarfile
-import tempfile
 from typing import IO, TYPE_CHECKING, Any, Protocol, TypedDict, cast, override
 
 import aiohttp
@@ -67,6 +66,8 @@ from .store import BackupStore
 from .util import (
     DecryptedBackupStreamer,
     EncryptedBackupStreamer,
+    cleanup_stale_backup_archives,
+    create_backup_staging_file,
     iter_upload_chunks,
     make_backup_dir,
     read_backup,
@@ -1977,11 +1978,8 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         # A terminated worker may leave an archive containing only backup.json.
         # Stage the archive beside its destination so it becomes discoverable
         # only after the full archive has been created successfully.
-        fd, temp_path = tempfile.mkstemp(
-            prefix=".ha-backup-", suffix=".partial", dir=tar_file_path.parent
-        )
-        os.close(fd)
-        partial_path = Path(temp_path)
+        cleanup_stale_backup_archives(tar_file_path.parent)
+        staging_fd, partial_path = create_backup_staging_file(tar_file_path.parent)
         published = False
         try:
             request = {
@@ -2002,6 +2000,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
                 input=payload,
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.PIPE,
+                pass_fds=(staging_fd,),
                 check=False,
             )
             if result.returncode:
@@ -2021,8 +2020,18 @@ class CoreBackupReaderWriter(BackupReaderWriter):
             published = True
             return (tar_file_path, stat_result.st_size)
         finally:
-            if not published:
-                partial_path.unlink(missing_ok=True)
+            try:
+                if not published:
+                    try:
+                        partial_path.unlink(missing_ok=True)
+                    except OSError as err:
+                        LOGGER.warning(
+                            "Unable to remove failed backup archive %s: %s",
+                            partial_path,
+                            err,
+                        )
+            finally:
+                os.close(staging_fd)
 
     async def _receive_and_move_backup(
         self,

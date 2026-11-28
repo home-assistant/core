@@ -1,5 +1,7 @@
 """The Backup integration."""
 
+from pathlib import Path
+
 from homeassistant.config_entries import SOURCE_SYSTEM
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
@@ -52,7 +54,11 @@ from .models import (
     Folder,
 )
 from .services import async_setup_services
-from .util import suggested_filename, suggested_filename_from_name_date
+from .util import (
+    cleanup_stale_backup_archives,
+    suggested_filename,
+    suggested_filename_from_name_date,
+)
 from .websocket import async_register_websocket_handlers
 
 __all__ = [
@@ -103,6 +109,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     reader_writer: BackupReaderWriter
     if not with_hassio:
         reader_writer = CoreBackupReaderWriter(hass)
+        await hass.async_add_executor_job(
+            cleanup_stale_backup_archives,
+            Path(hass.config.path("backups")),
+            reader_writer.temp_backup_dir,
+        )
     else:
         # pylint: disable-next=home-assistant-component-root-import
         from homeassistant.components.hassio.backup import SupervisorBackupReaderWriter  # noqa: PLC0415

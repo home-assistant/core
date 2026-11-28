@@ -4,10 +4,13 @@ import asyncio
 from collections.abc import AsyncIterator, Callable, Coroutine
 import copy
 from dataclasses import dataclass, replace
+import fcntl
 from io import BytesIO
 import json
+import os
 from pathlib import Path, PurePath, PureWindowsPath
 from queue import SimpleQueue
+import secrets
 import tarfile
 import threading
 from typing import IO, Any, cast
@@ -33,7 +36,13 @@ from homeassistant.util.async_iterator import (
 )
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
-from .const import BUF_SIZE, LOGGER, SECURETAR_CREATE_VERSION
+from .const import (
+    BACKUP_STAGING_PREFIX,
+    BACKUP_STAGING_SUFFIX,
+    BUF_SIZE,
+    LOGGER,
+    SECURETAR_CREATE_VERSION,
+)
 from .models import AddonInfo, AgentBackup, Folder, InvalidBackupFilename
 
 
@@ -70,6 +79,59 @@ class BackupEmpty(DecryptError):
 def make_backup_dir(path: Path) -> None:
     """Create a backup directory if it does not exist."""
     path.mkdir(exist_ok=True)
+
+
+def create_backup_staging_file(directory: Path) -> tuple[int, Path]:
+    """Create and lock a staging archive, preserving umask-derived permissions."""
+    for _ in range(3):
+        staging_path = directory / (
+            f"{BACKUP_STAGING_PREFIX}{secrets.token_hex(16)}{BACKUP_STAGING_SUFFIX}"
+        )
+        try:
+            fd = os.open(staging_path, os.O_RDWR | os.O_CREAT | os.O_EXCL, 0o666)
+        except FileExistsError:
+            continue
+        try:
+            fcntl.flock(fd, fcntl.LOCK_EX)
+        except OSError:
+            os.close(fd)
+            staging_path.unlink(missing_ok=True)
+            raise
+        return fd, staging_path
+    raise FileExistsError("Unable to create a unique backup staging file")
+
+
+def cleanup_stale_backup_archives(*directories: Path) -> None:
+    """Remove abandoned staging files without deleting active worker output.
+
+    The parent holds a flock on the file descriptor and passes that descriptor
+    to the writer, so it stays locked even if the parent dies mid-backup.
+    """
+    for directory in directories:
+        for staging_path in directory.glob(
+            f"{BACKUP_STAGING_PREFIX}*{BACKUP_STAGING_SUFFIX}"
+        ):
+            try:
+                fd = os.open(staging_path, os.O_RDONLY | os.O_NOFOLLOW)
+            except FileNotFoundError:
+                continue
+            except OSError as err:
+                LOGGER.warning(
+                    "Unable to inspect backup staging file %s: %s", staging_path, err
+                )
+                continue
+            try:
+                try:
+                    fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                except BlockingIOError:
+                    continue
+                staging_path.unlink(missing_ok=True)
+            except OSError as err:
+                LOGGER.warning(
+                    "Unable to clean up backup staging file %s: %s", staging_path, err
+                )
+            finally:
+                os.close(fd)
 
 
 def read_backup(backup_path: Path) -> AgentBackup:
