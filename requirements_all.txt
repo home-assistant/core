@@ -2238,6 +2238,9 @@ pydaikin==2.24.1
 # homeassistant.components.danfoss_air
 pydanfossair==1.0.0
 
+# homeassistant.components.llm
+pydantic-monty==1.6.0
+
 # homeassistant.components.deako
 pydeako-community==0.7.1
 

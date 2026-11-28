@@ -12,6 +12,7 @@ from typing import Any, Literal, TypedDict, cast
 
 import probatio
 
+from homeassistant.components.llm import code_mode as llm_code_mode
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers import chat_session, frame, intent, llm, template
@@ -781,8 +782,16 @@ class ChatLog:
         user_llm_hass_api: str | list[str] | llm.API | None = None,
         user_llm_prompt: str | None = None,
         user_extra_system_prompt: str | None = None,
+        *,
+        code_mode: bool | None = None,
     ) -> None:
-        """Set the LLM system prompt."""
+        """Set the LLM system prompt.
+
+        With code mode, the model gets tools to search the tools of the APIs
+        and to run code that calls them. Without it, the model gets the tools
+        of the APIs directly. When code_mode is None, code mode is used with
+        an API other than the Assist API.
+        """
         llm_api: llm.APIInstance | None = None
         if isinstance(user_llm_hass_api, llm.API):
             api_ids: tuple[str, ...] = (user_llm_hass_api.id,)
@@ -790,11 +799,15 @@ class ChatLog:
             api_ids = (user_llm_hass_api,)
         else:
             api_ids = tuple(user_llm_hass_api or ())
+        if code_mode is None:
+            # Assist alone has few tools, so the model calls them directly.
+            code_mode = api_ids != (llm.LLM_API_ASSIST,)
         llm_api_key = (
             llm_context.agent_id,
             llm_context.context.user_id if llm_context.context else None,
             llm_context.device_id,
             api_ids,
+            code_mode,
         )
 
         if (
@@ -847,6 +860,13 @@ class ChatLog:
                     response=intent_response,
                 ) from err
 
+        # Code mode replaces the tools, so remember the tools of the API.
+        llm_tools: list[llm.Tool] = llm_api.tools if llm_api else []
+        if code_mode and llm_api is not None:
+            llm_api = llm_code_mode.async_create_api_instance(
+                llm_api, self.conversation_id
+            )
+
         user_name: str | None = None
 
         if (
@@ -873,7 +893,6 @@ class ChatLog:
 
         # Append current date and time to the prompt if the
         # corresponding tool is not provided
-        llm_tools: list[llm.Tool] = llm_api.tools if llm_api else []
         if not any(tool.name.endswith("GetDateTime") for tool in llm_tools):
             prompt_parts.append(
                 await self._async_expand_prompt_template(
