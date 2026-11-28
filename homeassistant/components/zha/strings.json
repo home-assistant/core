@@ -480,7 +480,14 @@
     },
     "climate": {
       "thermostat": {
-        "name": "[%key:component::climate::entity_component::_::name%]"
+        "name": "[%key:component::climate::entity_component::_::name%]",
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "holiday": "Holiday"
+            }
+          }
+        }
       }
     },
     "cover": {
@@ -733,6 +740,12 @@
       },
       "deadzone_temperature": {
         "name": "Deadzone temperature"
+      },
+      "decalcification_day": {
+        "name": "Decalcification day"
+      },
+      "decalcification_hour": {
+        "name": "Decalcification hour"
       },
       "default_level_local": {
         "name": "Local default dimming level"
@@ -1321,6 +1334,9 @@
       },
       "water_interval": {
         "name": "Water interval"
+      },
+      "window_open_temperature": {
+        "name": "Window open temperature"
       },
       "winter_backup_heating_demand": {
         "name": "Winter backup heating demand"
@@ -1977,8 +1993,19 @@
       "remaining_watering_time": {
         "name": "Remaining watering time"
       },
+      "remote_temperature_source": {
+        "name": "Remote temperature source"
+      },
       "reported_packages": {
         "name": "Reported packages"
+      },
+      "restart_reason": {
+        "name": "Restart reason",
+        "state": {
+          "cold_start": "Cold start",
+          "firmware_installed": "Firmware installed",
+          "warm_start": "Warm start"
+        }
       },
       "rms_current_ph_b": {
         "name": "Current phase B"
@@ -2308,6 +2335,9 @@
       },
       "led_indicator": {
         "name": "LED indicator"
+      },
+      "light_ring_on_temperature_change": {
+        "name": "Light ring on temperature change"
       },
       "linkage_alarm": {
         "name": "Linkage alarm"
