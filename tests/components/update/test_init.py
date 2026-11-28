@@ -27,6 +27,8 @@ from homeassistant.components.update import (
     UpdateEntity,
     UpdateEntityDescription,
     UpdateEntityStateAttribute,
+    UpdateInstallPhase,
+    UpdateManualAction,
     UpdateReleaseNotesMessage,
     UpdateReleaseNotesMessageSeverity,
     UpdateService,
@@ -55,6 +57,16 @@ from homeassistant.setup import async_setup_component
 from .common import MockUpdateEntity
 
 TEST_DOMAIN = "test"
+PRESS_BUTTON = UpdateManualAction(
+    translation_domain=TEST_DOMAIN,
+    translation_key="press_button",
+    translation_placeholders={"button": "Reset"},
+)
+PRESS_BUTTON_ATTRIBUTE = {
+    "translation_domain": TEST_DOMAIN,
+    "translation_key": "press_button",
+    "translation_placeholders": {"button": "Reset"},
+}
 
 
 async def test_update(hass: HomeAssistant) -> None:
@@ -82,8 +94,10 @@ async def test_update(hass: HomeAssistant) -> None:
         UpdateEntityStateAttribute.AUTO_UPDATE: False,
         UpdateEntityStateAttribute.DISPLAY_PRECISION: 0,
         UpdateEntityStateAttribute.INSTALLED_VERSION: "1.0.0",
+        UpdateEntityStateAttribute.INSTALL_PHASE: None,
         UpdateEntityStateAttribute.IN_PROGRESS: False,
         UpdateEntityStateAttribute.LATEST_VERSION: "1.0.1",
+        UpdateEntityStateAttribute.MANUAL_ACTION: None,
         UpdateEntityStateAttribute.RELEASE_SUMMARY: "Summary",
         UpdateEntityStateAttribute.RELEASE_URL: "https://example.com",
         UpdateEntityStateAttribute.SKIPPED_VERSION: None,
@@ -1672,8 +1686,10 @@ async def test_update_percentage_backwards_compatibility(
         EntityStateAttribute.ENTITY_PICTURE: "/api/brands/integration/test/icon.png",
         EntityStateAttribute.FRIENDLY_NAME: "legacy",
         UpdateEntityStateAttribute.INSTALLED_VERSION: "1.0.0",
+        UpdateEntityStateAttribute.INSTALL_PHASE: None,
         UpdateEntityStateAttribute.IN_PROGRESS: False,
         UpdateEntityStateAttribute.LATEST_VERSION: "1.0.1",
+        UpdateEntityStateAttribute.MANUAL_ACTION: None,
         UpdateEntityStateAttribute.RELEASE_SUMMARY: "Summary",
         UpdateEntityStateAttribute.RELEASE_URL: "https://example.com",
         UpdateEntityStateAttribute.SKIPPED_VERSION: None,
@@ -1697,3 +1713,104 @@ async def test_update_percentage_backwards_compatibility(
         assert (
             state.attributes == expected_attributes | extra_expected_attributes[i + 1]
         )
+
+
+@pytest.mark.parametrize(
+    ("supported_features", "in_progress", "expected_install_phase"),
+    [
+        pytest.param(
+            UpdateEntityFeature.PROGRESS,
+            True,
+            UpdateInstallPhase.DOWNLOADING,
+            id="in_progress",
+        ),
+        pytest.param(UpdateEntityFeature.PROGRESS, False, None, id="not_in_progress"),
+        pytest.param(UpdateEntityFeature(0), True, None, id="no_progress_support"),
+    ],
+)
+async def test_install_phase(
+    hass: HomeAssistant,
+    supported_features: UpdateEntityFeature,
+    in_progress: bool,
+    expected_install_phase: UpdateInstallPhase | None,
+) -> None:
+    """Test the install phase is only reported while an install is in progress."""
+    entity = MockUpdateEntity(
+        name="Update",
+        installed_version="1.0.0",
+        latest_version="1.0.1",
+        supported_features=supported_features,
+        in_progress=in_progress,
+        install_phase=UpdateInstallPhase.DOWNLOADING,
+    )
+    setup_test_component_platform(hass, DOMAIN, [entity])
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("update.update")
+    assert state is not None
+    assert (
+        state.attributes[UpdateEntityStateAttribute.INSTALL_PHASE]
+        == expected_install_phase
+    )
+
+
+@pytest.mark.parametrize(
+    ("installed_version", "latest_version", "in_progress", "expected"),
+    [
+        pytest.param(
+            "1.0.0",
+            "1.0.1",
+            False,
+            PRESS_BUTTON_ATTRIBUTE,
+            id="update_available",
+        ),
+        pytest.param(
+            "1.0.1",
+            "1.0.1",
+            True,
+            PRESS_BUTTON_ATTRIBUTE,
+            id="in_progress",
+        ),
+        pytest.param("1.0.1", "1.0.1", False, None, id="up_to_date"),
+        pytest.param("1.0.0", None, False, None, id="unknown"),
+    ],
+)
+async def test_manual_action_only_with_update(
+    hass: HomeAssistant,
+    installed_version: str,
+    latest_version: str | None,
+    in_progress: bool,
+    expected: dict[str, Any] | None,
+) -> None:
+    """Test the manual action is only reported with an update to install."""
+    entity = MockUpdateEntity(
+        name="Update",
+        installed_version=installed_version,
+        latest_version=latest_version,
+        supported_features=UpdateEntityFeature.PROGRESS,
+        in_progress=in_progress,
+        manual_action=PRESS_BUTTON,
+    )
+    setup_test_component_platform(hass, DOMAIN, [entity])
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("update.update")
+    assert state is not None
+    assert state.attributes[UpdateEntityStateAttribute.MANUAL_ACTION] == expected
+
+
+@pytest.mark.parametrize("install_phase", list(UpdateInstallPhase))
+async def test_install_phase_translations(
+    hass: HomeAssistant, install_phase: UpdateInstallPhase
+) -> None:
+    """Test the install phases are translated."""
+    translations = await async_get_translations(
+        hass, "en", "entity_component", {DOMAIN}
+    )
+
+    assert (
+        "component.update.entity_component._.state_attributes.install_phase.state."
+        f"{install_phase}"
+    ) in translations

@@ -7,6 +7,8 @@ from homeassistant.components.update import (
     UpdateDeviceClass,
     UpdateEntity,
     UpdateEntityFeature,
+    UpdateInstallPhase,
+    UpdateManualAction,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -16,6 +18,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import DOMAIN
 
 FAKE_INSTALL_SLEEP_TIME = 0.5
+# Long enough to see the manual action in the frontend
+FAKE_WAITING_FOR_USER_STEPS = 20
 
 
 async def async_setup_entry(
@@ -89,13 +93,25 @@ async def async_setup_entry(
                 display_precision=2,
                 update_steps=1000,
             ),
+            DemoUpdate(
+                unique_id="update_manual_action",
+                device_name="Demo Update with Manual Action",
+                title="Awesomesoft Inc.",
+                installed_version="1.0.0",
+                latest_version="1.1.0",
+                support_progress=True,
+                update_steps=10,
+                manual_action=UpdateManualAction(
+                    translation_domain=DOMAIN, translation_key="confirm_on_device"
+                ),
+            ),
         ]
     )
 
 
-async def _fake_install() -> None:
+async def _fake_install(steps: int = 1) -> None:
     """Fake install an update."""
-    await asyncio.sleep(FAKE_INSTALL_SLEEP_TIME)
+    await asyncio.sleep(FAKE_INSTALL_SLEEP_TIME * steps)
 
 
 class DemoUpdate(UpdateEntity):
@@ -121,6 +137,7 @@ class DemoUpdate(UpdateEntity):
         device_class: UpdateDeviceClass | None = None,
         display_precision: int = 0,
         update_steps: int = 100,
+        manual_action: UpdateManualAction | None = None,
     ) -> None:
         """Initialize the Demo select entity."""
         self._attr_installed_version = installed_version
@@ -135,6 +152,7 @@ class DemoUpdate(UpdateEntity):
             identifiers={(DOMAIN, unique_id)},
             name=device_name,
         )
+        self._attr_manual_action = manual_action
         self._update_steps = update_steps
         if support_install:
             self._attr_supported_features |= (
@@ -153,7 +171,9 @@ class DemoUpdate(UpdateEntity):
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install an update."""
-        if self.supported_features & UpdateEntityFeature.PROGRESS:
+        if self.manual_action is not None:
+            await self._async_install_in_phases(backup)
+        elif self.supported_features & UpdateEntityFeature.PROGRESS:
             self._attr_in_progress = True
             for progress in range(0, self._update_steps, 1):
                 self._attr_update_percentage = progress / (self._update_steps / 100)
@@ -166,6 +186,32 @@ class DemoUpdate(UpdateEntity):
             version if version is not None else self.latest_version
         )
         self.async_write_ha_state()
+
+    async def _async_install_in_phases(self, backup: bool) -> None:
+        """Fake an install that waits for someone to confirm it on the device."""
+        self._attr_in_progress = True
+        await self._async_fake_phase(UpdateInstallPhase.PREPARING)
+        if backup:
+            await self._async_fake_phase(UpdateInstallPhase.BACKING_UP)
+        await self._async_fake_phase(UpdateInstallPhase.WAITING)
+        for step in range(self._update_steps):
+            self._attr_update_percentage = step * 100 / self._update_steps
+            await self._async_fake_phase(UpdateInstallPhase.DOWNLOADING)
+        self._attr_update_percentage = None
+        await self._async_fake_phase(
+            UpdateInstallPhase.WAITING_FOR_USER, FAKE_WAITING_FOR_USER_STEPS
+        )
+        await self._async_fake_phase(UpdateInstallPhase.INSTALLING)
+        await self._async_fake_phase(UpdateInstallPhase.RESTARTING)
+        await self._async_fake_phase(UpdateInstallPhase.FINISHING)
+
+    async def _async_fake_phase(
+        self, phase: UpdateInstallPhase, steps: int = 1
+    ) -> None:
+        """Report an install phase and fake its work."""
+        self._attr_install_phase = phase
+        self.async_write_ha_state()
+        await _fake_install(steps)
 
     @override
     def release_notes(self) -> str | None:

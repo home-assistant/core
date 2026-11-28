@@ -37,11 +37,17 @@ from .const import (
     UpdateDeviceClass,
     UpdateEntityFeature,
     UpdateEntityStateAttribute,
+    UpdateInstallPhase,
     UpdateReleaseNotesMessageSeverity,
     UpdateService,
     UpdateServiceArgument,
 )
-from .entity import UpdateEntity, UpdateEntityDescription, UpdateReleaseNotesMessage
+from .entity import (
+    UpdateEntity,
+    UpdateEntityDescription,
+    UpdateManualAction,
+    UpdateReleaseNotesMessage,
+)
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -84,6 +90,8 @@ __all__ = [
     "UpdateEntityDescription",
     "UpdateEntityFeature",
     "UpdateEntityStateAttribute",
+    "UpdateInstallPhase",
+    "UpdateManualAction",
     "UpdateReleaseNotesMessage",
     "UpdateReleaseNotesMessageSeverity",
     "UpdateService",

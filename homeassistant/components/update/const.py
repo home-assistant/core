@@ -22,8 +22,10 @@ class UpdateEntityStateAttribute(StrEnum):
     AUTO_UPDATE = "auto_update"
     DISPLAY_PRECISION = "display_precision"
     INSTALLED_VERSION = "installed_version"
+    INSTALL_PHASE = "install_phase"
     IN_PROGRESS = "in_progress"
     LATEST_VERSION = "latest_version"
+    MANUAL_ACTION = "manual_action"
     RELEASE_SUMMARY = "release_summary"
     RELEASE_URL = "release_url"
     SKIPPED_VERSION = "skipped_version"
@@ -62,6 +64,19 @@ class UpdateDeviceClass(StrEnum):
     """Device class for update."""
 
     FIRMWARE = "firmware"
+
+
+class UpdateInstallPhase(StrEnum):
+    """Phase of a running update install."""
+
+    PREPARING = "preparing"
+    BACKING_UP = "backing_up"
+    WAITING = "waiting"
+    WAITING_FOR_USER = "waiting_for_user"
+    DOWNLOADING = "downloading"
+    INSTALLING = "installing"
+    RESTARTING = "restarting"
+    FINISHING = "finishing"
 
 
 class UpdateReleaseNotesMessageSeverity(StrEnum):

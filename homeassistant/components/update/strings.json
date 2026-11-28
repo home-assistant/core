@@ -63,11 +63,27 @@
             "true": "[%key:common::state::yes%]"
           }
         },
+        "install_phase": {
+          "name": "Install phase",
+          "state": {
+            "backing_up": "Backing up",
+            "downloading": "Downloading",
+            "finishing": "Finishing",
+            "installing": "Installing",
+            "preparing": "Preparing",
+            "restarting": "Restarting",
+            "waiting": "Waiting",
+            "waiting_for_user": "Waiting for user"
+          }
+        },
         "installed_version": {
           "name": "Installed version"
         },
         "latest_version": {
           "name": "Latest version"
+        },
+        "manual_action": {
+          "name": "Manual action"
         },
         "release_summary": {
           "name": "Release summary"

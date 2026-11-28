@@ -1,5 +1,6 @@
 """The tests for the demo update platform."""
 
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -14,7 +15,10 @@ from homeassistant.components.update import (
     ATTR_UPDATE_PERCENTAGE,
     DOMAIN as UPDATE_DOMAIN,
     UpdateDeviceClass,
+    UpdateEntityStateAttribute,
+    UpdateInstallPhase,
     UpdateService,
+    UpdateServiceArgument,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -24,9 +28,16 @@ from homeassistant.const import (
     Platform,
     TargetKey,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
+
+ENTITY_MANUAL_ACTION = "update.demo_update_with_manual_action"
+CONFIRM_ON_DEVICE = {
+    "translation_domain": "demo",
+    "translation_key": "confirm_on_device",
+    "translation_placeholders": {},
+}
 
 
 @pytest.fixture
@@ -218,3 +229,69 @@ async def test_update_with_progress_raising(
     assert events[5].data["new_state"].attributes[ATTR_IN_PROGRESS] is False
     assert events[5].data["new_state"].attributes[ATTR_UPDATE_PERCENTAGE] is None
     assert events[5].data["new_state"].state == STATE_ON
+
+
+@pytest.mark.parametrize(
+    ("backup", "backup_phases"),
+    [
+        pytest.param(False, [], id="without_backup"),
+        pytest.param(True, [UpdateInstallPhase.BACKING_UP], id="with_backup"),
+    ],
+)
+async def test_update_with_manual_action(
+    hass: HomeAssistant,
+    backup: bool,
+    backup_phases: list[UpdateInstallPhase],
+) -> None:
+    """Test an update that reports its install phases and a manual action."""
+    state = hass.states.get(ENTITY_MANUAL_ACTION)
+    assert state
+    assert state.state == STATE_ON
+    assert (
+        state.attributes[UpdateEntityStateAttribute.MANUAL_ACTION] == CONFIRM_ON_DEVICE
+    )
+
+    progress: list[tuple[UpdateInstallPhase | None, int | None, Any]] = []
+
+    @callback
+    def _record_progress(event: Event[EventStateChangedData]) -> None:
+        attributes = event.data["new_state"].attributes
+        progress.append(
+            (
+                attributes[UpdateEntityStateAttribute.INSTALL_PHASE],
+                attributes[ATTR_UPDATE_PERCENTAGE],
+                attributes[UpdateEntityStateAttribute.MANUAL_ACTION],
+            )
+        )
+
+    async_track_state_change_event(hass, ENTITY_MANUAL_ACTION, _record_progress)
+
+    with patch("homeassistant.components.demo.update.FAKE_INSTALL_SLEEP_TIME", new=0):
+        await hass.services.async_call(
+            UPDATE_DOMAIN,
+            UpdateService.INSTALL,
+            {
+                TargetKey.ENTITY_ID: ENTITY_MANUAL_ACTION,
+                UpdateServiceArgument.BACKUP: backup,
+            },
+            blocking=True,
+        )
+
+    # The manual action is no longer reported once the update is installed
+    assert progress == [
+        (UpdateInstallPhase.PREPARING, None, CONFIRM_ON_DEVICE),
+        *((phase, None, CONFIRM_ON_DEVICE) for phase in backup_phases),
+        (UpdateInstallPhase.WAITING, None, CONFIRM_ON_DEVICE),
+        *(
+            (UpdateInstallPhase.DOWNLOADING, percentage, CONFIRM_ON_DEVICE)
+            for percentage in range(0, 100, 10)
+        ),
+        (UpdateInstallPhase.WAITING_FOR_USER, None, CONFIRM_ON_DEVICE),
+        (UpdateInstallPhase.INSTALLING, None, CONFIRM_ON_DEVICE),
+        (UpdateInstallPhase.RESTARTING, None, CONFIRM_ON_DEVICE),
+        (UpdateInstallPhase.FINISHING, None, CONFIRM_ON_DEVICE),
+        (None, None, None),
+    ]
+    state = hass.states.get(ENTITY_MANUAL_ACTION)
+    assert state
+    assert state.state == STATE_OFF

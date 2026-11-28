@@ -1,20 +1,102 @@
 """Provides the Fully Kiosk Browser DataUpdateCoordinator."""
 
 import asyncio
+from datetime import timedelta
 from typing import Any, cast, override
 
+import aiohttp
 from fullykiosk import FullyKiosk
 from fullykiosk.exceptions import FullyKioskError
+from fullykiosk.releases import Release, getReleases
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_SSL, CONF_VERIFY_SSL
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    TimestampDataUpdateCoordinator,
+    UpdateFailed,
+    UpdateFailedUnreachable,
+)
+from homeassistant.util import dt as dt_util
+from homeassistant.util.hass_dict import HassKey
 
-from .const import DEFAULT_PORT, LOGGER, UPDATE_INTERVAL
+from .const import DEFAULT_PORT, DOMAIN, LOGGER, UPDATE_INTERVAL
+
+UPDATE_FEED_INTERVAL = timedelta(hours=12)
+UPDATE_FEED_RETRY_INTERVAL = timedelta(minutes=15)
 
 type FullyKioskConfigEntry = ConfigEntry[FullyKioskDataUpdateCoordinator]
+
+RELEASES_KEY: HassKey[FullyKioskReleasesDataUpdateCoordinator] = HassKey(
+    f"{DOMAIN}_releases"
+)
+
+
+class FullyKioskReleasesDataUpdateCoordinator(
+    TimestampDataUpdateCoordinator[list[Release]]
+):
+    """Class to manage fetching Fully Kiosk APK releases from RSS feed."""
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize the releases updater."""
+        self.session = async_get_clientsession(hass)
+        super().__init__(
+            hass,
+            LOGGER,
+            config_entry=None,
+            name=f"{DOMAIN}_releases",
+            update_interval=UPDATE_FEED_INTERVAL,
+        )
+        self._refresh_task: asyncio.Task[None] | None = None
+
+    @callback
+    def async_refresh_if_stale(self) -> None:
+        """Refresh missing or stale releases, sharing an ongoing refresh."""
+        if self._refresh_task and not self._refresh_task.done():
+            return
+        if (
+            self.last_update_success
+            and self.last_update_success_time
+            and dt_util.utcnow() - self.last_update_success_time < UPDATE_FEED_INTERVAL
+        ):
+            return
+        self._refresh_task = self.hass.async_create_background_task(
+            self.async_refresh(), f"{DOMAIN} releases refresh"
+        )
+
+    @override
+    async def _async_update_data(self) -> list[Release]:
+        """Fetch APK releases from the RSS feed."""
+        try:
+            async with asyncio.timeout(15):
+                return cast(list[Release], await getReleases(self.session))
+        except (TimeoutError, aiohttp.ClientError) as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_feed_communication_error",
+                retry_after=UPDATE_FEED_RETRY_INTERVAL.total_seconds(),
+            ) from err
+        except FullyKioskError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_feed_parse_error",
+                retry_after=UPDATE_FEED_RETRY_INTERVAL.total_seconds(),
+            ) from err
+
+
+@callback
+def async_get_releases_coordinator(
+    hass: HomeAssistant,
+) -> FullyKioskReleasesDataUpdateCoordinator:
+    """Get or create the shared Fully Kiosk releases coordinator."""
+    if (coordinator := hass.data.get(RELEASES_KEY)) is None:
+        coordinator = FullyKioskReleasesDataUpdateCoordinator(hass)
+        hass.data[RELEASES_KEY] = coordinator
+    coordinator.async_refresh_if_stale()
+    return coordinator
 
 
 class FullyKioskDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -47,11 +129,26 @@ class FullyKioskDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             async with asyncio.timeout(15):
                 # Get device info and settings in parallel
-                result = await asyncio.gather(
+                data, settings = await asyncio.gather(
                     self.fully.getDeviceInfo(), self.fully.getSettings()
                 )
-                # Store settings under settings key in data
-                result[0]["settings"] = result[1]
-                return cast(dict[str, Any], result[0])
         except FullyKioskError as error:
             raise UpdateFailed(error) from error
+        except (TimeoutError, aiohttp.ClientError) as error:
+            # Also expected while the app restarts after an update
+            raise UpdateFailedUnreachable(
+                translation_domain=DOMAIN,
+                translation_key="device_unreachable",
+            ) from error
+        # Store settings under settings key in data
+        data["settings"] = settings
+
+        # The device registry only reads the version when the entities are added
+        if (version := data.get("appVersionName")) is not None:
+            device_registry = dr.async_get(self.hass)
+            device = device_registry.async_get_device_by_identifier(
+                (DOMAIN, data["deviceID"]), self.config_entry.entry_id
+            )
+            if device is not None and device.sw_version != version:
+                device_registry.async_update_device(device.id, sw_version=version)
+        return cast(dict[str, Any], data)

@@ -28,6 +28,7 @@ from .const import (
     UpdateDeviceClass,
     UpdateEntityFeature,
     UpdateEntityStateAttribute,
+    UpdateInstallPhase,
     UpdateReleaseNotesMessageSeverity,
 )
 
@@ -43,6 +44,15 @@ class UpdateReleaseNotesMessage:
     translation_domain: str
     translation_key: str
     severity: UpdateReleaseNotesMessageSeverity = UpdateReleaseNotesMessageSeverity.INFO
+    translation_placeholders: Mapping[str, str] | None = None
+
+
+@dataclass(frozen=True, kw_only=True)
+class UpdateManualAction:
+    """Something a person has to do to install an update."""
+
+    translation_domain: str
+    translation_key: str
     translation_placeholders: Mapping[str, str] | None = None
 
 
@@ -75,7 +85,9 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
     "device_class",
     "display_precision",
     "in_progress",
+    "install_phase",
     "latest_version",
+    "manual_action",
     "release_summary",
     "release_url",
     "restart_required",
@@ -97,6 +109,8 @@ class UpdateEntity(
             UpdateEntityStateAttribute.DISPLAY_PRECISION,
             EntityStateAttribute.ENTITY_PICTURE,
             UpdateEntityStateAttribute.IN_PROGRESS,
+            UpdateEntityStateAttribute.INSTALL_PHASE,
+            UpdateEntityStateAttribute.MANUAL_ACTION,
             UpdateEntityStateAttribute.RELEASE_SUMMARY,
             UpdateEntityStateAttribute.UPDATE_PERCENTAGE,
         }
@@ -108,7 +122,9 @@ class UpdateEntity(
     _attr_device_class: UpdateDeviceClass | None
     _attr_display_precision: int
     _attr_in_progress: bool = False
+    _attr_install_phase: UpdateInstallPhase | None = None
     _attr_latest_version: str | None = None
+    _attr_manual_action: UpdateManualAction | None = None
     _attr_release_summary: str | None = None
     _attr_release_url: str | None = None
     _attr_restart_required: bool
@@ -190,9 +206,31 @@ class UpdateEntity(
         return self._attr_in_progress
 
     @cached_property
+    def install_phase(self) -> UpdateInstallPhase | None:
+        """Phase of the running install.
+
+        Needs UpdateEntityFeature.PROGRESS flag to be set for it to be used.
+        Only reported while in_progress is True.
+        """
+        return self._attr_install_phase
+
+    @cached_property
     def latest_version(self) -> str | None:
         """Latest version available for install."""
         return self._attr_latest_version
+
+    @cached_property
+    def manual_action(self) -> UpdateManualAction | None:
+        """Something a person has to do to install the update.
+
+        For example, confirm the update on the device. Set it as soon as it is
+        known, ideally before the install starts, and report the
+        waiting_for_user install phase while the install waits for it.
+        Its translation has a description, shown before it is needed, and an
+        instruction, shown while the install waits for it.
+        Only reported while an update is available or an install is in progress.
+        """
+        return self._attr_manual_action
 
     @cached_property
     def release_summary(self) -> str | None:
@@ -366,13 +404,28 @@ class UpdateEntity(
         # Otherwise, we use the internal progress value.
         if UpdateEntityFeature.PROGRESS in self.supported_features:
             in_progress = self.in_progress
+            install_phase = self.install_phase if in_progress else None
             update_percentage = self.update_percentage if in_progress else None
             if type(in_progress) is not bool and isinstance(in_progress, int):
                 update_percentage = in_progress  # type: ignore[unreachable]
                 in_progress = True
         else:
             in_progress = self.__in_progress
+            install_phase = None
             update_percentage = None
+
+        if (manual_action := self.manual_action) is not None and (
+            in_progress or self.state == STATE_ON
+        ):
+            manual_action_attr: dict[str, Any] | None = {
+                "translation_domain": manual_action.translation_domain,
+                "translation_key": manual_action.translation_key,
+                "translation_placeholders": dict(
+                    manual_action.translation_placeholders or {}
+                ),
+            }
+        else:
+            manual_action_attr = None
 
         installed_version = self.installed_version
         latest_version = self.latest_version
@@ -389,8 +442,10 @@ class UpdateEntity(
             UpdateEntityStateAttribute.AUTO_UPDATE: self.auto_update,
             UpdateEntityStateAttribute.DISPLAY_PRECISION: self.display_precision,
             UpdateEntityStateAttribute.INSTALLED_VERSION: installed_version,
+            UpdateEntityStateAttribute.INSTALL_PHASE: install_phase,
             UpdateEntityStateAttribute.IN_PROGRESS: in_progress,
             UpdateEntityStateAttribute.LATEST_VERSION: latest_version,
+            UpdateEntityStateAttribute.MANUAL_ACTION: manual_action_attr,
             UpdateEntityStateAttribute.RELEASE_SUMMARY: release_summary,
             UpdateEntityStateAttribute.RELEASE_URL: self.release_url,
             UpdateEntityStateAttribute.SKIPPED_VERSION: skipped_version,

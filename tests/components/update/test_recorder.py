@@ -34,6 +34,8 @@ async def test_exclude_attributes(
     assert state.attributes[UpdateEntityStateAttribute.DISPLAY_PRECISION] == 0
     assert state.attributes[UpdateEntityStateAttribute.IN_PROGRESS] is True
     assert state.attributes[UpdateEntityStateAttribute.UPDATE_PERCENTAGE] == 50
+    assert state.attributes[UpdateEntityStateAttribute.INSTALL_PHASE] == "downloading"
+    assert state.attributes[UpdateEntityStateAttribute.MANUAL_ACTION] is not None
     assert (
         state.attributes[EntityStateAttribute.ENTITY_PICTURE]
         == "/api/brands/integration/test/icon.png"
@@ -57,3 +59,5 @@ async def test_exclude_attributes(
             assert UpdateEntityStateAttribute.RELEASE_SUMMARY not in state.attributes
             assert UpdateEntityStateAttribute.INSTALLED_VERSION in state.attributes
             assert UpdateEntityStateAttribute.UPDATE_PERCENTAGE not in state.attributes
+            assert UpdateEntityStateAttribute.INSTALL_PHASE not in state.attributes
+            assert UpdateEntityStateAttribute.MANUAL_ACTION not in state.attributes
