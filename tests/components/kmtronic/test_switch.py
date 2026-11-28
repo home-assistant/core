@@ -9,7 +9,6 @@ from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from homeassistant.components.kmtronic.const import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 
@@ -27,10 +26,11 @@ async def test_relay_on_off(
         text="OK",
     )
 
-    MockConfigEntry(
+    entry = MockConfigEntry(
         domain=DOMAIN, data={"host": "1.1.1.1", "username": "foo", "password": "bar"}
-    ).add_to_hass(hass)
-    assert await async_setup_component(hass, DOMAIN, {})
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     # Mocks the response for turning a relay1 on
@@ -98,10 +98,11 @@ async def test_update(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) 
         text="<response><relay0>0</relay0><relay1>0</relay1></response>",
     )
 
-    MockConfigEntry(
+    entry = MockConfigEntry(
         domain=DOMAIN, data={"host": "1.1.1.1", "username": "foo", "password": "bar"}
-    ).add_to_hass(hass)
-    assert await async_setup_component(hass, DOMAIN, {})
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
 
     await hass.async_block_till_done()
     state = hass.states.get("switch.controller_1_1_1_1_relay_1")
@@ -131,10 +132,11 @@ async def test_failed_update(
         text="<response><relay0>0</relay0><relay1>0</relay1></response>",
     )
 
-    MockConfigEntry(
+    entry = MockConfigEntry(
         domain=DOMAIN, data={"host": "1.1.1.1", "username": "foo", "password": "bar"}
-    ).add_to_hass(hass)
-    assert await async_setup_component(hass, DOMAIN, {})
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
 
     await hass.async_block_till_done()
     state = hass.states.get("switch.controller_1_1_1_1_relay_1")
@@ -175,12 +177,13 @@ async def test_relay_on_off_reversed(
         text="<response><relay0>0</relay0><relay1>0</relay1></response>",
     )
 
-    MockConfigEntry(
+    entry = MockConfigEntry(
         domain=DOMAIN,
         data={"host": "1.1.1.1", "username": "foo", "password": "bar"},
         options={"reverse": True},
-    ).add_to_hass(hass)
-    assert await async_setup_component(hass, DOMAIN, {})
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     # Mocks the response for turning a relay1 off
