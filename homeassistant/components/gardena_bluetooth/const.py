@@ -2,3 +2,5 @@
 
 DOMAIN = "gardena_bluetooth"
 CONF_PRODUCT_TYPE = "product_type"
+
+CONF_PERSISTENT_CONNECTION = "persistent_connection"
