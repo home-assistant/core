@@ -640,7 +640,7 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
 
             try:
                 await self._async_write_data(data)
-            except (json_util.SerializationError, WriteError) as err:
+            except WriteError as err:
                 _LOGGER.error("Error writing config for %s: %s", self.key, err)
 
     async def _async_write_data(self, data: dict) -> None:

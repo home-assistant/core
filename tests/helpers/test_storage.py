@@ -37,7 +37,7 @@ from homeassistant.helpers import issue_registry as ir, storage
 from homeassistant.helpers.json import json_bytes, prepare_save_json
 from homeassistant.util import dt as dt_util
 from homeassistant.util.color import RGBColor
-from homeassistant.util.json import JsonValueType
+from homeassistant.util.json import JsonValueType, SerializationError
 
 MOCK_VERSION = 1
 MOCK_VERSION_2 = 2
@@ -219,6 +219,37 @@ async def test_saving_with_delay(
         "key": MOCK_KEY,
         "data": MOCK_DATA,
     }
+
+
+async def test_saving_unserializable_data_raises(
+    store: storage.Store, hass_storage: dict[str, Any]
+) -> None:
+    """Test saving data that cannot be serialized raises."""
+    with pytest.raises(SerializationError):
+        await store.async_save({"bad": object()})
+    assert store.key not in hass_storage
+
+
+async def test_saving_unserializable_data_with_delay_raises(
+    hass: HomeAssistant, store: storage.Store, hass_storage: dict[str, Any]
+) -> None:
+    """Test a delayed save of data that cannot be serialized is not swallowed."""
+    loop = asyncio.get_running_loop()
+    original_handler = loop.get_exception_handler()
+    exceptions: list[BaseException] = []
+    loop.set_exception_handler(
+        lambda _loop, context: exceptions.append(context["exception"])
+    )
+    try:
+        store.async_delay_save(lambda: {"bad": object()}, 1)
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
+        await hass.async_block_till_done()
+    finally:
+        loop.set_exception_handler(original_handler)
+
+    assert len(exceptions) == 1
+    assert isinstance(exceptions[0], SerializationError)
+    assert store.key not in hass_storage
 
 
 async def test_saving_with_delay_threading(tmp_path: Path) -> None:
