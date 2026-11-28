@@ -281,6 +281,70 @@ async def test_saving_write_error_with_delay_logs(
     assert store.key not in hass_storage
 
 
+async def test_concurrent_saves_get_their_own_write_error(
+    hass: HomeAssistant, store: storage.Store
+) -> None:
+    """Test each concurrent save writes its own data and gets its own error."""
+    release_first_write = asyncio.Event()
+    written: list[str | bytes] = []
+
+    async def async_write(mode: str, json_data: str | bytes) -> None:
+        written.append(json_data)
+        if len(written) == 1:
+            await release_first_write.wait()
+            return
+        raise WriteError("disk full")
+
+    with patch.object(store._io, "async_write", side_effect=async_write):
+        first = hass.async_create_task(store.async_save({"save": 1}))
+        await asyncio.sleep(0)
+        second = hass.async_create_task(store.async_save({"save": 2}))
+        third = hass.async_create_task(store.async_save({"save": 3}))
+        await asyncio.sleep(0)
+        release_first_write.set()
+        results = await asyncio.gather(first, second, third, return_exceptions=True)
+
+    assert [json.loads(data)["data"] for data in written] == [
+        {"save": 1},
+        {"save": 2},
+        {"save": 3},
+    ]
+    assert results[0] is None
+    assert isinstance(results[1], WriteError)
+    assert isinstance(results[2], WriteError)
+
+
+async def test_save_does_not_replace_newer_delayed_data(
+    hass: HomeAssistant, store: storage.Store
+) -> None:
+    """Test a save that waits for the lock does not write over newer data."""
+    release_first_write = asyncio.Event()
+    written: list[str | bytes] = []
+
+    async def async_write(mode: str, json_data: str | bytes) -> None:
+        written.append(json_data)
+        if len(written) == 1:
+            await release_first_write.wait()
+
+    with patch.object(store._io, "async_write", side_effect=async_write):
+        first = hass.async_create_task(store.async_save({"save": "first"}))
+        await asyncio.sleep(0)
+        # The delayed write starts and waits for the lock before the next save.
+        store.async_delay_save(lambda: {"save": "old delayed"}, 0)
+        for _ in range(3):
+            await asyncio.sleep(0)
+        second = hass.async_create_task(store.async_save({"save": "second"}))
+        await asyncio.sleep(0)
+        store.async_delay_save(lambda: {"save": "newest"}, 0)
+        release_first_write.set()
+        await asyncio.gather(first, second)
+
+    assert [json.loads(data)["data"] for data in written] == [
+        {"save": "first"},
+        {"save": "newest"},
+    ]
+
+
 async def test_saving_with_delay_threading(tmp_path: Path) -> None:
     """Test thread handling when saving with a delay."""
     calls = []
