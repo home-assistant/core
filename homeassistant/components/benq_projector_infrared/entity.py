@@ -40,6 +40,11 @@ class BenQProjectorIrEntity(InfraredEmitterConsumerEntity):
 
         Raises while the projector warms up or cools down, as it would ignore it.
         """
+        async with self._runtime_data.command_lock:
+            await self._async_send_benq_command_locked(code)
+
+    async def _async_send_benq_command_locked(self, code: BenQProjectorCode) -> None:
+        """Send an IR command while holding the projector's command lock."""
         if (remaining := self._runtime_data.busy_remaining()) is not None:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,

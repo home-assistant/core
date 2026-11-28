@@ -153,12 +153,17 @@ class BenQProjectorIrMediaPlayer(
 
     @override
     async def async_turn_off(self) -> None:
-        """Send discrete power-off command, confirmed by sending it again."""
-        await self._send_benq_command(BenQProjectorCode.POWER_OFF)
-        await asyncio.sleep(POWER_OFF_CONFIRM_DELAY)
-        await self._send_benq_command(BenQProjectorCode.POWER_OFF)
-        self._async_set_power_state(MediaPlayerState.OFF)
-        self.async_write_ha_state()
+        """Send discrete power-off command, confirmed by sending it again.
+
+        Holds the command lock throughout, as any other key in between would
+        dismiss the confirmation.
+        """
+        async with self._runtime_data.command_lock:
+            await self._async_send_benq_command_locked(BenQProjectorCode.POWER_OFF)
+            await asyncio.sleep(POWER_OFF_CONFIRM_DELAY)
+            await self._async_send_benq_command_locked(BenQProjectorCode.POWER_OFF)
+            self._async_set_power_state(MediaPlayerState.OFF)
+            self.async_write_ha_state()
 
     @override
     async def async_volume_up(self) -> None:

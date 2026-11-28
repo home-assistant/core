@@ -1,0 +1,3101 @@
+# serializer version: 1
+# name: test_entities[button.benq_projector_2d_keystone-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.benq_projector_2d_keystone',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': '2D keystone',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': '2D keystone',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'keystone_2d',
+    'unique_id': '01JTEST0000000000000000000_keystone_2d',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_2d_keystone-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector 2D keystone',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_2d_keystone',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_3d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.benq_projector_3d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': '3D',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': '3D',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'three_d',
+    'unique_id': '01JTEST0000000000000000000_three_d',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_3d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector 3D',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_3d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_3d_menu-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.benq_projector_3d_menu',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': '3D menu',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': '3D menu',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'three_d_menu',
+    'unique_id': '01JTEST0000000000000000000_three_d_menu',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_3d_menu-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector 3D menu',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_3d_menu',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_3d_sync_invert-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.benq_projector_3d_sync_invert',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': '3D sync invert',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': '3D sync invert',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'three_d_sync_invert',
+    'unique_id': '01JTEST0000000000000000000_three_d_sync_invert',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_3d_sync_invert-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector 3D sync invert',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_3d_sync_invert',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_4_3_aspect_ratio-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.benq_projector_4_3_aspect_ratio',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': '4:3 aspect ratio',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': '4:3 aspect ratio',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'aspect_ratio_4_3',
+    'unique_id': '01JTEST0000000000000000000_aspect_ratio_4_3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_4_3_aspect_ratio-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector 4:3 aspect ratio',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_4_3_aspect_ratio',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_anamorphic_aspect_ratio-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.benq_projector_anamorphic_aspect_ratio',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Anamorphic aspect ratio',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Anamorphic aspect ratio',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'aspect_ratio_anamorphic',
+    'unique_id': '01JTEST0000000000000000000_aspect_ratio_anamorphic',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_anamorphic_aspect_ratio-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector Anamorphic aspect ratio',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_anamorphic_aspect_ratio',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_aspect_ratio-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.benq_projector_aspect_ratio',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Aspect ratio',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Aspect ratio',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'aspect_ratio',
+    'unique_id': '01JTEST0000000000000000000_aspect_ratio',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_aspect_ratio-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector Aspect ratio',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_aspect_ratio',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_auto_adjust-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.benq_projector_auto_adjust',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Auto adjust',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Auto adjust',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'auto_adjust',
+    'unique_id': '01JTEST0000000000000000000_auto_adjust',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_auto_adjust-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector Auto adjust',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_auto_adjust',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_back-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.benq_projector_back',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Back',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Back',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'back',
+    'unique_id': '01JTEST0000000000000000000_back',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_back-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector Back',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_back',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_brightness-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.benq_projector_brightness',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Brightness',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Brightness',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'brightness',
+    'unique_id': '01JTEST0000000000000000000_brightness',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_brightness-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector Brightness',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_brightness',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_brilliantcolor-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.benq_projector_brilliantcolor',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'BrilliantColor',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'BrilliantColor',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'brilliant_color',
+    'unique_id': '01JTEST0000000000000000000_brilliant_color',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_brilliantcolor-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector BrilliantColor',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_brilliantcolor',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_cinemamaster-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.benq_projector_cinemamaster',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'CinemaMaster',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'CinemaMaster',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cinema_master',
+    'unique_id': '01JTEST0000000000000000000_cinema_master',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_cinemamaster-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector CinemaMaster',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_cinemamaster',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_color-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.benq_projector_color',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Color',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Color',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'color',
+    'unique_id': '01JTEST0000000000000000000_color',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_color-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector Color',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_color',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_color_management-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.benq_projector_color_management',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Color management',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Color management',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'color_management',
+    'unique_id': '01JTEST0000000000000000000_color_management',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_color_management-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector Color management',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_color_management',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_color_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.benq_projector_color_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Color temperature',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Color temperature',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'color_temperature',
+    'unique_id': '01JTEST0000000000000000000_color_temperature',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_color_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector Color temperature',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_color_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_contrast-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.benq_projector_contrast',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Contrast',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Contrast',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'contrast',
+    'unique_id': '01JTEST0000000000000000000_contrast',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_contrast-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector Contrast',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_contrast',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_cursor_down-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.benq_projector_cursor_down',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Cursor down',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cursor down',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cursor_down',
+    'unique_id': '01JTEST0000000000000000000_cursor_down',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_cursor_down-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector Cursor down',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_cursor_down',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_cursor_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.benq_projector_cursor_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Cursor left',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cursor left',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cursor_left',
+    'unique_id': '01JTEST0000000000000000000_cursor_left',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_cursor_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector Cursor left',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_cursor_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_cursor_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.benq_projector_cursor_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Cursor right',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cursor right',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cursor_right',
+    'unique_id': '01JTEST0000000000000000000_cursor_right',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_cursor_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector Cursor right',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_cursor_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_cursor_up-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.benq_projector_cursor_up',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Cursor up',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cursor up',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cursor_up',
+    'unique_id': '01JTEST0000000000000000000_cursor_up',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_cursor_up-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector Cursor up',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_cursor_up',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_detail_enhancement-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.benq_projector_detail_enhancement',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Detail enhancement',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Detail enhancement',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'detail_enhancement',
+    'unique_id': '01JTEST0000000000000000000_detail_enhancement',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_detail_enhancement-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector Detail enhancement',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_detail_enhancement',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_digital_zoom_in-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.benq_projector_digital_zoom_in',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Digital zoom in',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Digital zoom in',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'digital_zoom_in',
+    'unique_id': '01JTEST0000000000000000000_digital_zoom_in',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_digital_zoom_in-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector Digital zoom in',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_digital_zoom_in',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_digital_zoom_out-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.benq_projector_digital_zoom_out',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Digital zoom out',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Digital zoom out',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'digital_zoom_out',
+    'unique_id': '01JTEST0000000000000000000_digital_zoom_out',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_digital_zoom_out-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector Digital zoom out',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_digital_zoom_out',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_dynamic_iris-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.benq_projector_dynamic_iris',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Dynamic iris',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Dynamic iris',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'dynamic_iris',
+    'unique_id': '01JTEST0000000000000000000_dynamic_iris',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_dynamic_iris-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector Dynamic iris',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_dynamic_iris',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_eco_blank-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.benq_projector_eco_blank',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Eco blank',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Eco blank',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'eco_blank',
+    'unique_id': '01JTEST0000000000000000000_eco_blank',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_eco_blank-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector Eco blank',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_eco_blank',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_enter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.benq_projector_enter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Enter',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Enter',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'enter',
+    'unique_id': '01JTEST0000000000000000000_enter',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_enter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector Enter',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_enter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_fast_forward-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.benq_projector_fast_forward',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Fast forward',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Fast forward',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'fast_forward',
+    'unique_id': '01JTEST0000000000000000000_fast_forward',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_fast_forward-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector Fast forward',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_fast_forward',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_fine_tune-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.benq_projector_fine_tune',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Fine tune',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Fine tune',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'fine_tune',
+    'unique_id': '01JTEST0000000000000000000_fine_tune',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_fine_tune-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector Fine tune',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_fine_tune',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_focus-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.benq_projector_focus',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Focus',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Focus',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'focus',
+    'unique_id': '01JTEST0000000000000000000_focus',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_focus-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector Focus',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_focus',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_freeze-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.benq_projector_freeze',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Freeze',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Freeze',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'freeze',
+    'unique_id': '01JTEST0000000000000000000_freeze',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_freeze-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector Freeze',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_freeze',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_gamma-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.benq_projector_gamma',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Gamma',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Gamma',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'gamma',
+    'unique_id': '01JTEST0000000000000000000_gamma',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_gamma-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector Gamma',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_gamma',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_hdr-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.benq_projector_hdr',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'HDR',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'HDR',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'hdr',
+    'unique_id': '01JTEST0000000000000000000_hdr',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_hdr-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector HDR',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_hdr',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_horizontal_keystone-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.benq_projector_horizontal_keystone',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Horizontal keystone',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Horizontal keystone',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'keystone_horizontal',
+    'unique_id': '01JTEST0000000000000000000_keystone_horizontal',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_horizontal_keystone-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector Horizontal keystone',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_horizontal_keystone',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_info-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.benq_projector_info',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Info',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Info',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'info',
+    'unique_id': '01JTEST0000000000000000000_info',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_info-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector Info',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_info',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_keystone_down-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.benq_projector_keystone_down',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Keystone down',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Keystone down',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'keystone_down',
+    'unique_id': '01JTEST0000000000000000000_keystone_down',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_keystone_down-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector Keystone down',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_keystone_down',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_keystone_up-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.benq_projector_keystone_up',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Keystone up',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Keystone up',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'keystone_up',
+    'unique_id': '01JTEST0000000000000000000_keystone_up',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_keystone_up-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector Keystone up',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_keystone_up',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_lens-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.benq_projector_lens',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Lens',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Lens',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'lens',
+    'unique_id': '01JTEST0000000000000000000_lens',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_lens-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector Lens',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_lens',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_letterbox_aspect_ratio-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.benq_projector_letterbox_aspect_ratio',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Letterbox aspect ratio',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Letterbox aspect ratio',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'aspect_ratio_letterbox',
+    'unique_id': '01JTEST0000000000000000000_aspect_ratio_letterbox',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_letterbox_aspect_ratio-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector Letterbox aspect ratio',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_letterbox_aspect_ratio',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_light_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.benq_projector_light_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Light mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Light mode',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'light_mode',
+    'unique_id': '01JTEST0000000000000000000_light_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_light_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector Light mode',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_light_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_lumiexpert-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.benq_projector_lumiexpert',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'LumiExpert',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'LumiExpert',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'lumiexpert',
+    'unique_id': '01JTEST0000000000000000000_lumiexpert',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_lumiexpert-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector LumiExpert',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_lumiexpert',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_menu-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.benq_projector_menu',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Menu',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Menu',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'menu',
+    'unique_id': '01JTEST0000000000000000000_menu',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_menu-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector Menu',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_menu',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_next_track-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.benq_projector_next_track',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Next track',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Next track',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'next_track',
+    'unique_id': '01JTEST0000000000000000000_next_track',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_next_track-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector Next track',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_next_track',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_overscan-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.benq_projector_overscan',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Overscan',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Overscan',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'overscan',
+    'unique_id': '01JTEST0000000000000000000_overscan',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_overscan-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector Overscan',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_overscan',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_pan-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.benq_projector_pan',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Pan',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Pan',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'pan',
+    'unique_id': '01JTEST0000000000000000000_pan',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_pan-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector Pan',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_pan',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_pause-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.benq_projector_pause',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Pause',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Pause',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'pause',
+    'unique_id': '01JTEST0000000000000000000_pause',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_pause-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector Pause',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_pause',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_picture_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.benq_projector_picture_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Picture mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Picture mode',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'picture_mode',
+    'unique_id': '01JTEST0000000000000000000_picture_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_picture_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector Picture mode',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_picture_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_play-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.benq_projector_play',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Play',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Play',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'play',
+    'unique_id': '01JTEST0000000000000000000_play',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_play-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector Play',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_play',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_previous_track-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.benq_projector_previous_track',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Previous track',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Previous track',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'previous_track',
+    'unique_id': '01JTEST0000000000000000000_previous_track',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_previous_track-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector Previous track',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_previous_track',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_real_aspect_ratio-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.benq_projector_real_aspect_ratio',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Real aspect ratio',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Real aspect ratio',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'aspect_ratio_real',
+    'unique_id': '01JTEST0000000000000000000_aspect_ratio_real',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_real_aspect_ratio-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector Real aspect ratio',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_real_aspect_ratio',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_return-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.benq_projector_return',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Return',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Return',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'return',
+    'unique_id': '01JTEST0000000000000000000_return',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_return-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector Return',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_return',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_rewind-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.benq_projector_rewind',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Rewind',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Rewind',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rewind',
+    'unique_id': '01JTEST0000000000000000000_rewind',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_rewind-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector Rewind',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_rewind',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_sharpness-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.benq_projector_sharpness',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sharpness',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sharpness',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sharpness',
+    'unique_id': '01JTEST0000000000000000000_sharpness',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_sharpness-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector Sharpness',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_sharpness',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_sound_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.benq_projector_sound_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sound mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sound mode',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sound_mode',
+    'unique_id': '01JTEST0000000000000000000_sound_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_sound_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector Sound mode',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_sound_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_stop-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.benq_projector_stop',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Stop',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Stop',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'stop',
+    'unique_id': '01JTEST0000000000000000000_stop',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_stop-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector Stop',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_stop',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_test_pattern-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.benq_projector_test_pattern',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Test pattern',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Test pattern',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'test_pattern',
+    'unique_id': '01JTEST0000000000000000000_test_pattern',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_test_pattern-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector Test pattern',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_test_pattern',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_tint-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.benq_projector_tint',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Tint',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Tint',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tint',
+    'unique_id': '01JTEST0000000000000000000_tint',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_tint-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector Tint',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_tint',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_user_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.benq_projector_user_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'User 1',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'User 1',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'user_1',
+    'unique_id': '01JTEST0000000000000000000_user_1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_user_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector User 1',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_user_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_user_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.benq_projector_user_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'User 2',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'User 2',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'user_2',
+    'unique_id': '01JTEST0000000000000000000_user_2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_user_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector User 2',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_user_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_user_3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.benq_projector_user_3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'User 3',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'User 3',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'user_3',
+    'unique_id': '01JTEST0000000000000000000_user_3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_user_3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector User 3',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_user_3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_vertical_keystone-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.benq_projector_vertical_keystone',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Vertical keystone',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Vertical keystone',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'keystone_vertical',
+    'unique_id': '01JTEST0000000000000000000_keystone_vertical',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_vertical_keystone-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector Vertical keystone',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_vertical_keystone',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_wide_aspect_ratio-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.benq_projector_wide_aspect_ratio',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wide aspect ratio',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Wide aspect ratio',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'aspect_ratio_wide',
+    'unique_id': '01JTEST0000000000000000000_aspect_ratio_wide',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_wide_aspect_ratio-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector Wide aspect ratio',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_wide_aspect_ratio',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[button.benq_projector_zoom-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.benq_projector_zoom',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zoom',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zoom',
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'zoom',
+    'unique_id': '01JTEST0000000000000000000_zoom',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button.benq_projector_zoom-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector Zoom',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.benq_projector_zoom',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

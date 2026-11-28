@@ -38,6 +38,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    Platform,
     TargetKey,
 )
 from homeassistant.core import HomeAssistant, State
@@ -47,6 +48,12 @@ from homeassistant.helpers import entity_registry as er
 from .conftest import MOCK_INFRARED_EMITTER_ENTITY_ID, MOCK_INFRARED_RECEIVER_ENTITY_ID
 
 MEDIA_PLAYER_ENTITY_ID = "media_player.benq_projector"
+
+
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Return platforms to set up."""
+    return [Platform.MEDIA_PLAYER]
 
 
 @pytest.mark.parametrize("has_receiver_entity", [False, True])
