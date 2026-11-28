@@ -9,6 +9,7 @@ import wakeonlan
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import DOMAIN
 
@@ -45,6 +46,16 @@ WAKE_ON_LAN_SEND_MAGIC_PACKET_SCHEMA = probatio.Schema(
 async def _send_magic_packet(call: ServiceCall) -> None:
     """Send magic packet to wake up a device."""
     hass = call.hass
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "wol_service_deprecated",
+        breaks_in_ha_version="2027.6.0",
+        is_fixable=False,
+        is_persistent=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="wol_service_deprecated",
+    )
     mac_address: str = call.data[WakeOnLanServiceArgument.MAC]
     secureon_password = call.data.get(WakeOnLanServiceArgument.SECUREON_PASSWORD)
     broadcast_address = call.data.get(WakeOnLanServiceArgument.BROADCAST_ADDRESS)

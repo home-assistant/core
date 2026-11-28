@@ -5,6 +5,7 @@ from homeassistant.const import Platform
 DOMAIN = "wake_on_lan"
 PLATFORMS = [Platform.BUTTON]
 
+CONF_ON_ACTION = "turn_on"
 CONF_OFF_ACTION = "turn_off"
 CONF_SECUREON_PASSWORD = "secureon_password"
 

@@ -10,6 +10,7 @@ from homeassistant.components.wake_on_lan.const import DOMAIN
 from homeassistant.components.wake_on_lan.services import WakeOnLanService
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 
@@ -103,3 +104,23 @@ async def test_send_magic_packet(hass: HomeAssistant) -> None:
         assert len(mocked_wakeonlan.mock_calls) == 1
         assert mocked_wakeonlan.mock_calls[0][1][0] == mac
         assert not mocked_wakeonlan.mock_calls[0][2]
+
+
+async def test_send_magic_packet_raise_repair(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test of send magic packet service call raises a repair."""
+    mac = "aa:bb:cc:dd:ee:ff"
+    with patch("homeassistant.components.wake_on_lan.services.wakeonlan"):
+        await async_setup_component(hass, DOMAIN, {})
+        await hass.services.async_call(
+            DOMAIN,
+            WakeOnLanService.SEND_MAGIC_PACKET,
+            {"mac": mac},
+            blocking=True,
+        )
+
+    issue = issue_registry.async_get_issue(DOMAIN, "wol_service_deprecated")
+    assert issue
+    assert issue.translation_key == "wol_service_deprecated"
+    assert issue.breaks_in_ha_version == "2027.6.0"
