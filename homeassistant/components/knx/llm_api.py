@@ -52,8 +52,8 @@ API_PROMPT = (
     "and live bus "
     'reads and writes. Address formats: group addresses like "1/2/3", individual '
     'device addresses like "1.1.5", DPTs like "9.001". A space_id names a '
-    "building, floor or room: find it with list_spaces, resolve it with "
-    "describe_space.\n"
+    "building, floor or room of the ETS project - not a Home Assistant area: "
+    "find it with list_spaces, resolve it with describe_space.\n"
     "Tools to create KNX entities in Home Assistant: start from "
     "list_entity_suggestions and pass a suggestion id to create_entity, or look "
     "up the options of a platform with get_entity_schema and the group addresses "
@@ -741,7 +741,7 @@ def _tool_specs() -> list[_ToolSpec]:
             "list_devices",
             "List devices",
             "List project devices. Text matches individual address/name/manufacturer; "
-            "space_id restricts to the devices placed in a space.",
+            "space_id restricts to the devices placed in a space of the ETS project.",
             _schema_from_dataclass(xknxproject_mcp.DeviceFilter),
             _project_func(xknxproject_mcp.list_devices),
             _READ_ONLY,
@@ -839,7 +839,8 @@ def _tool_specs() -> list[_ToolSpec]:
             "list_functions",
             "List functions",
             "List project functions/functional blocks. Text matches "
-            "identifier/name/type; space_id restricts to the functions of a space.",
+            "identifier/name/type; space_id restricts to the functions of a space of the ETS "
+            "project.",
             _schema_from_dataclass(xknxproject_mcp.FunctionFilter),
             _project_func(xknxproject_mcp.list_functions),
             _READ_ONLY,
@@ -864,9 +865,10 @@ def _tool_specs() -> list[_ToolSpec]:
         ),
         _ToolSpec(
             "list_spaces",
-            "List spaces",
-            "List the spaces of the building structure (buildings, floors, rooms, "
-            "...), each with its identifier, the names of the spaces enclosing it "
+            "List ETS project spaces",
+            "List the spaces of the building structure in the ETS project "
+            "(buildings, floors, rooms, ...), each with its identifier, the names "
+            "of the spaces enclosing it "
             "and the devices and functions placed directly in it.",
             _schema_from_dataclass(xknxproject_mcp.SpaceFilter),
             _project_func(xknxproject_mcp.list_spaces),
@@ -874,13 +876,14 @@ def _tool_specs() -> list[_ToolSpec]:
         ),
         _ToolSpec(
             "describe_space",
-            "Describe a space",
-            "Resolve one space by identifier, e.g. the space_id of a device or "
-            "function, to its name, the spaces enclosing it and its sub-spaces.",
+            "Describe an ETS project space",
+            "Resolve one space of the ETS project by identifier, e.g. the space_id "
+            "of a device or function, to its name, the spaces enclosing it and its "
+            "sub-spaces. These are not Home Assistant areas.",
             probatio.Schema(
                 {
                     probatio.Required(
-                        "identifier", description="Space identifier to resolve."
+                        "identifier", description="ETS space identifier to resolve."
                     ): str
                 }
             ),
