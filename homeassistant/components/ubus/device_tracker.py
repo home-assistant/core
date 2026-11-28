@@ -327,18 +327,20 @@ async def async_setup_entry(
             and registry_entry.platform == DOMAIN
             and registry_entry.unique_id is not None
         }
+        owned_normalized = {mac.lower() for mac in owned}
         new_macs = [
             mac
             for mac in seen | owned
             if mac not in tracked
-            # A sighting must not create or re-assign the entity another
-            # entry owns while a raw-case id waits for normalization.
             and (
                 mac in owned
-                or entity_registry.async_get_entity_id(
-                    DEVICE_TRACKER_DOMAIN, DOMAIN, mac
+                or (
+                    mac.lower() not in owned_normalized
+                    and entity_registry.async_get_entity_id(
+                        DEVICE_TRACKER_DOMAIN, DOMAIN, mac
+                    )
+                    is None
                 )
-                is None
             )
         ]
         tracked.update(new_macs)

@@ -181,7 +181,8 @@ async def _async_migrate(hass: HomeAssistant) -> None:
     if not hub_candidates:
         return
     hubs = [e for e in hub_candidates if not e.data]
-    hub = min(hubs or hub_candidates, key=lambda e: e.entry_id)
+    populated_hubs = [e for e in hubs if e.subentries]
+    hub = min(populated_hubs or hubs or hub_candidates, key=lambda e: e.entry_id)
     # Polling is one entry-level preference, so the hub keeps polling
     # when any entry polled on its own entry; an entry which did not
     # poll starts polling, warned per subentry.
@@ -314,6 +315,10 @@ async def _async_migrate_other(
     transferred = False
     try:
         if holding_setup_lock:
+            if hub.pref_disable_polling and not entry.pref_disable_polling:
+                hass.config_entries.async_update_entry(hub, pref_disable_polling=False)
+                for subentry in hub.subentries.values():
+                    _async_create_polling_enabled_issue(hass, hub, subentry)
             collision_hosts = _async_transfer_to_hub(hass, hub, entry)
             transferred = True
             # The hub already normalized its own tracker ids, before
@@ -503,7 +508,12 @@ def _merge_device_survivors(
     hub_established = (
         target_device.name_by_user is not None or target_device.area_id is not None
     )
-    if legacy_established != hub_established:
+    derived_disabled = (None, dr.DeviceEntryDisabler.CONFIG_ENTRY)
+    legacy_disabled = device.disabled_by not in derived_disabled
+    hub_disabled = target_device.disabled_by not in derived_disabled
+    if legacy_disabled != hub_disabled:
+        survivor = target_device if legacy_disabled else device
+    elif legacy_established != hub_established:
         survivor = device if legacy_established else target_device
     elif device.created_at <= target_device.created_at:
         survivor = device

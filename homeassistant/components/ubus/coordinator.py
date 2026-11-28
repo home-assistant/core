@@ -476,6 +476,7 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[ClientPresence]):
                     self.latest_views.pop(subentry_id, None)
                     # The health record belongs to the old host.
                     self.host_health.pop(subentry_id, None)
+                    self._async_delete_credentials_issue(subentry_id)
                 self.hosts[subentry_id] = _UbusHost(subentry)
         self._polled_signature = self._subentries_signature()
         return self.hosts
