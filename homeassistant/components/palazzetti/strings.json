@@ -48,6 +48,11 @@
         }
       }
     },
+    "light": {
+      "light": {
+        "name": "[%key:component::light::title%]"
+      }
+    },
     "number": {
       "combustion_power": {
         "name": "Combustion power"
