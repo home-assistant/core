@@ -15,9 +15,10 @@ from homeassistant.components.number import (
     NumberDeviceClass,
     NumberEntity,
     NumberEntityDescription,
+    NumberMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory, Platform, UnitOfTime
+from homeassistant.const import EntityCategory, Platform, UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
@@ -65,6 +66,54 @@ NUMBER_ENTITIES: dict[str, NumberEntityDescription] = {
         translation_key="duration",
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfTime.SECONDS,
+    ),
+    CharacteristicsTypes.VENDOR_ECOBEE_HOME_TARGET_HEAT: NumberEntityDescription(
+        key=CharacteristicsTypes.VENDOR_ECOBEE_HOME_TARGET_HEAT,
+        translation_key="ecobee_home_target_heat",
+        device_class=NumberDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        mode=NumberMode.BOX,
+    ),
+    CharacteristicsTypes.VENDOR_ECOBEE_HOME_TARGET_COOL: NumberEntityDescription(
+        key=CharacteristicsTypes.VENDOR_ECOBEE_HOME_TARGET_COOL,
+        translation_key="ecobee_home_target_cool",
+        device_class=NumberDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        mode=NumberMode.BOX,
+    ),
+    CharacteristicsTypes.VENDOR_ECOBEE_SLEEP_TARGET_HEAT: NumberEntityDescription(
+        key=CharacteristicsTypes.VENDOR_ECOBEE_SLEEP_TARGET_HEAT,
+        translation_key="ecobee_sleep_target_heat",
+        device_class=NumberDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        mode=NumberMode.BOX,
+    ),
+    CharacteristicsTypes.VENDOR_ECOBEE_SLEEP_TARGET_COOL: NumberEntityDescription(
+        key=CharacteristicsTypes.VENDOR_ECOBEE_SLEEP_TARGET_COOL,
+        translation_key="ecobee_sleep_target_cool",
+        device_class=NumberDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        mode=NumberMode.BOX,
+    ),
+    CharacteristicsTypes.VENDOR_ECOBEE_AWAY_TARGET_HEAT: NumberEntityDescription(
+        key=CharacteristicsTypes.VENDOR_ECOBEE_AWAY_TARGET_HEAT,
+        translation_key="ecobee_away_target_heat",
+        device_class=NumberDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        mode=NumberMode.BOX,
+    ),
+    CharacteristicsTypes.VENDOR_ECOBEE_AWAY_TARGET_COOL: NumberEntityDescription(
+        key=CharacteristicsTypes.VENDOR_ECOBEE_AWAY_TARGET_COOL,
+        translation_key="ecobee_away_target_cool",
+        device_class=NumberDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        mode=NumberMode.BOX,
     ),
 }
 
