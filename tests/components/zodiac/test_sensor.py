@@ -23,7 +23,6 @@ from homeassistant.components.zodiac.const import (
 from homeassistant.const import ATTR_DEVICE_CLASS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 DAY1 = datetime(2020, 11, 15, tzinfo=dt_util.UTC)
@@ -49,12 +48,11 @@ async def test_zodiac_day(
 ) -> None:
     """Test the zodiac sensor."""
     await hass.config.async_set_time_zone("UTC")
-    MockConfigEntry(
-        domain=DOMAIN,
-    ).add_to_hass(hass)
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
 
     with patch("homeassistant.components.zodiac.sensor.utcnow", return_value=now):
-        assert await async_setup_component(hass, DOMAIN, {})
+        assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.zodiac")
