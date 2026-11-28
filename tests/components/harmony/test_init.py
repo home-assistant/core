@@ -20,7 +20,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 from homeassistant.helpers.storage import STORAGE_DIR
-from homeassistant.setup import async_setup_component
 
 from .conftest import FakeHarmonyClient
 from .const import (
@@ -87,7 +86,7 @@ async def test_unique_id_migration(
             ),
         },
     )
-    assert await async_setup_component(hass, DOMAIN, {})
+    assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     ent_reg = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
