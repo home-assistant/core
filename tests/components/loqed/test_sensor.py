@@ -1,6 +1,5 @@
 """Tests the LOQED sensors."""
 
-from typing import Any
 from unittest.mock import patch
 
 from loqedAPI import loqed
@@ -13,10 +12,9 @@ from pytest_homeassistant.common import (
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.loqed.const import DOMAIN
-from homeassistant.const import CONF_API_TOKEN, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
 
 BATTERY_ENTITY_ID = "sensor.home_battery"
 BLE_STRENGTH_ENTITY_ID = "sensor.home_bluetooth_signal"
@@ -31,7 +29,6 @@ async def test_sensors(
     lock: loqed.Lock,
 ) -> None:
     """Test the sensor entities and their initial states."""
-    config: dict[str, Any] = {DOMAIN: {CONF_API_TOKEN: ""}}
     config_entry.add_to_hass(hass)
     lock_status = await async_load_json_object_fixture(hass, "status_ok.json", DOMAIN)
 
@@ -42,7 +39,7 @@ async def test_sensors(
             "loqedAPI.loqed.LoqedAPI.async_get_lock_details", return_value=lock_status
         ),
     ):
-        await async_setup_component(hass, DOMAIN, config)
+        await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)

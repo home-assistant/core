@@ -16,7 +16,6 @@ from pytest_homeassistant.common import (
 from homeassistant.components.loqed.const import CONF_CLOUDHOOK_URL, DOMAIN
 from homeassistant.const import CONF_API_TOKEN, CONF_NAME, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 type PatchLockCreationFlow = Callable[[dict[str, Any], loqed.Lock, str], Any]
 
@@ -96,7 +95,6 @@ async def integration_fixture(
     hass: HomeAssistant, config_entry: MockConfigEntry, lock: loqed.Lock
 ) -> AsyncGenerator[MockConfigEntry]:
     """Set up the loqed integration with a config entry."""
-    config: dict[str, Any] = {DOMAIN: {CONF_API_TOKEN: ""}}
     config_entry.add_to_hass(hass)
 
     lock_status = await async_load_json_object_fixture(hass, "status_ok.json", DOMAIN)
@@ -107,7 +105,7 @@ async def integration_fixture(
             "loqedAPI.loqed.LoqedAPI.async_get_lock_details", return_value=lock_status
         ),
     ):
-        await async_setup_component(hass, DOMAIN, config)
+        await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         yield config_entry
 
