@@ -199,7 +199,7 @@ async def test_resume_cleaning(
 
     fake_vacuum.v1_properties.status.refresh.side_effect = refresh_properties
 
-    await async_setup_component(hass, DOMAIN, {})
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
     vacuum = hass.states.get(ENTITY_ID)
     assert vacuum
 

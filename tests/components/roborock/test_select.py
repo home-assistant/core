@@ -28,7 +28,6 @@ from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
 
 from .conftest import FakeDevice
 
@@ -150,7 +149,7 @@ async def test_none_map_select(
     """Test that the select entity correctly handles not having a current map."""
     # Set map status to None so that current map is never set
     fake_vacuum.v1_properties.home.current_map_data = None
-    await async_setup_component(hass, DOMAIN, {})
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
     select_entity = hass.states.get("select.roborock_s7_maxv_selected_map")
     assert select_entity
     assert select_entity.state == STATE_UNKNOWN
@@ -161,7 +160,7 @@ async def test_selected_map_name(
     mock_roborock_entry: MockConfigEntry,
 ) -> None:
     """Test that the selected map is set to the correct map name."""
-    await async_setup_component(hass, DOMAIN, {})
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
     select_entity = hass.states.get("select.roborock_s7_maxv_selected_map")
     assert select_entity.state == "Upstairs"
 
@@ -177,7 +176,7 @@ async def test_selected_map_without_name(
     fake_vacuum.v1_properties.home.home_map_info[0].name = ""
     fake_vacuum.v1_properties.home.refresh = AsyncMock()
 
-    await async_setup_component(hass, DOMAIN, {})
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
 
     select_entity = hass.states.get("select.roborock_s7_maxv_selected_map")
     assert select_entity
@@ -261,7 +260,7 @@ async def test_dust_collection_mode_none(
     assert fake_vacuum.v1_properties.dust_collection_mode
     fake_vacuum.v1_properties.dust_collection_mode.mode = dust_collection_mode
 
-    await async_setup_component(hass, DOMAIN, {})
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
 
     select_entity = hass.states.get("select.roborock_s7_maxv_dock_empty_mode")
     assert select_entity

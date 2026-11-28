@@ -211,7 +211,7 @@ async def test_reauth_started(
         "homeassistant.components.roborock.create_device_manager",
         side_effect=side_effect,
     ):
-        await async_setup_component(hass, DOMAIN, {})
+        await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
         await hass.async_block_till_done()
         assert mock_roborock_entry.state is ConfigEntryState.SETUP_ERROR
     flows = hass.config_entries.flow.async_progress()
