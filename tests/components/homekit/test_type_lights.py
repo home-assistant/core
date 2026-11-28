@@ -4,11 +4,18 @@ from datetime import timedelta
 import sys
 
 from pyhap.const import HAP_REPR_AID, HAP_REPR_CHARS, HAP_REPR_IID, HAP_REPR_VALUE
+from pyhap.util import is_callback
 import pytest
 from pytest_homeassistant.common import async_fire_time_changed, async_mock_service
 
 from homeassistant.components.homekit.const import (
     ATTR_VALUE,
+    CONF_ADAPTIVE_LIGHTING,
+    CONF_FLOOR_RGB_COLOR,
+    CONF_MAX_COLOR_TEMP_KELVIN,
+    CONF_MIN_COLOR_TEMP_KELVIN,
+    CONF_RGB_BELOW_KELVIN,
+    CONF_WARM_RGB_COLOR,
     PROP_MAX_VALUE,
     PROP_MIN_VALUE,
 )
@@ -31,6 +38,9 @@ from homeassistant.components.light import (
     ATTR_WHITE,
     DOMAIN as LIGHT_DOMAIN,
     ColorMode,
+    LightEntityCapabilityAttribute,
+    LightEntityStateAttribute,
+    LightServiceArgument,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -44,6 +54,7 @@ from homeassistant.const import (
 from homeassistant.core import CoreState, Event, HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
+from homeassistant.util.color import color_temperature_to_rgbww
 
 
 async def _wait_for_light_coalesce(hass: HomeAssistant) -> None:
@@ -51,6 +62,15 @@ async def _wait_for_light_coalesce(hass: HomeAssistant) -> None:
         hass, dt_util.utcnow() + timedelta(seconds=CHANGE_COALESCE_TIME_WINDOW)
     )
     await hass.async_block_till_done()
+
+
+def test_light_run_is_a_pyhap_callback() -> None:
+    """Light.run must stay a pyhap callback so the driver runs it on the loop.
+
+    Without the marker AccessoryDriver dispatches run() to an executor thread,
+    and the state listeners it registers are event-loop only.
+    """
+    assert is_callback(Light.run)
 
 
 async def test_light_basic(hass: HomeAssistant, hk_driver, events: list[Event]) -> None:
@@ -336,6 +356,277 @@ async def test_light_color_temperature(
     assert call_turn_on[0].data[ATTR_COLOR_TEMP_KELVIN] == 4000
     assert len(events) == 1
     assert events[-1].data[ATTR_VALUE] == "color temperature at 250"
+
+
+async def test_colour_only_write_does_not_turn_on_an_off_light(
+    hass: HomeAssistant, hk_driver, events: list[Event]
+) -> None:
+    """Test a colour only write is dropped while an adaptive light is off.
+
+    Adaptive lighting keeps sending colour temperature to accessories that are
+    off, and a write without the On characteristic would otherwise reach
+    light.turn_on and switch the light on by itself.
+    """
+    entity_id = "light.demo"
+
+    hass.states.async_set(
+        entity_id,
+        STATE_OFF,
+        {
+            LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: ["color_temp"],
+            LightEntityStateAttribute.COLOR_TEMP_KELVIN: 5263,
+        },
+    )
+    await hass.async_block_till_done()
+    acc = Light(
+        hass,
+        hk_driver,
+        "Light",
+        entity_id,
+        1,
+        {CONF_ADAPTIVE_LIGHTING: True},
+    )
+    hk_driver.add_accessory(acc)
+    acc.run()
+    await hass.async_block_till_done()
+
+    call_turn_on = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+    char_color_temp_iid = acc.char_color_temp.to_HAP()[HAP_REPR_IID]
+    char_on_iid = acc.char_on.to_HAP()[HAP_REPR_IID]
+
+    def set_chars(chars: list[dict]) -> None:
+        hk_driver.set_characteristics({HAP_REPR_CHARS: chars}, "mock_addr")
+
+    colour_write = {
+        HAP_REPR_AID: acc.aid,
+        HAP_REPR_IID: char_color_temp_iid,
+        HAP_REPR_VALUE: 250,
+    }
+
+    # A colour only write while the light is off is dropped.
+    set_chars([colour_write])
+    await _wait_for_light_coalesce(hass)
+    assert not call_turn_on
+    assert not events
+
+    # Asking for On in the same write still turns the light on.
+    set_chars(
+        [
+            {
+                HAP_REPR_AID: acc.aid,
+                HAP_REPR_IID: char_on_iid,
+                HAP_REPR_VALUE: 1,
+            },
+            colour_write,
+        ]
+    )
+    await _wait_for_light_coalesce(hass)
+    assert len(call_turn_on) == 1
+    assert call_turn_on[0].data[LightServiceArgument.COLOR_TEMP_KELVIN] == 4000
+
+    # And once the light is on, colour keeps being applied as before.
+    hass.states.async_set(
+        entity_id,
+        STATE_ON,
+        {
+            LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: ["color_temp"],
+            LightEntityStateAttribute.COLOR_TEMP_KELVIN: 5263,
+        },
+    )
+    await hass.async_block_till_done()
+    set_chars([colour_write])
+    await _wait_for_light_coalesce(hass)
+    assert len(call_turn_on) == 2
+
+
+async def test_max_color_temp_kelvin_override_rounds_inward(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """The configured cool end never advertises a temperature above the ceiling."""
+    entity_id = "light.demo"
+
+    hass.states.async_set(
+        entity_id,
+        STATE_ON,
+        {LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: ["color_temp"]},
+    )
+    await hass.async_block_till_done()
+    acc = Light(
+        hass,
+        hk_driver,
+        "Light",
+        entity_id,
+        1,
+        {CONF_MAX_COLOR_TEMP_KELVIN: 6500},
+    )
+
+    # 1e6 / 6500 = 153.8 mireds: floor would advertise 153 (6535 K, above the
+    # configured ceiling), ceil advertises 154 (6493 K).
+    assert acc.char_color_temp.properties[PROP_MIN_VALUE] == 154
+
+
+async def test_rgbww_mixing_uses_the_range_the_entity_reports(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """Narrowing the advertised range does not move the white channel endpoints."""
+    entity_id = "light.demo"
+    hass.states.async_set(
+        entity_id,
+        STATE_ON,
+        {
+            LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: [ColorMode.RGBWW],
+            LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 2000,
+            LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 6500,
+            LightEntityStateAttribute.BRIGHTNESS: 255,
+        },
+    )
+    await hass.async_block_till_done()
+    acc = Light(
+        hass,
+        hk_driver,
+        "Light",
+        entity_id,
+        1,
+        {CONF_MIN_COLOR_TEMP_KELVIN: 2700},
+    )
+    hk_driver.add_accessory(acc)
+    acc.run()
+    await hass.async_block_till_done()
+    call_turn_on = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+
+    # HomeKit only sees the 2700 K override as the warmest end.
+    assert acc.char_color_temp.properties[PROP_MAX_VALUE] == 370
+
+    char_color_temp_iid = acc.char_color_temp.to_HAP()[HAP_REPR_IID]
+    hk_driver.set_characteristics(
+        {
+            HAP_REPR_CHARS: [
+                {
+                    HAP_REPR_AID: acc.aid,
+                    HAP_REPR_IID: char_color_temp_iid,
+                    HAP_REPR_VALUE: 370,
+                }
+            ]
+        },
+        "mock_addr",
+    )
+    await _wait_for_light_coalesce(hass)
+
+    # The bulb is asked for 2702 K inside its real 2000-6500 K range, not for
+    # the full warm channel of a range that starts at 2700 K.
+    assert call_turn_on[0].data[LightServiceArgument.RGBWW_COLOR] == (
+        color_temperature_to_rgbww(2702, 255, 2000, 6500)
+    )
+
+
+async def test_colour_only_write_turns_on_a_light_without_adaptive(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """Without adaptive lighting a colour write keeps the old turn_on behaviour."""
+    entity_id = "light.demo"
+
+    hass.states.async_set(
+        entity_id,
+        STATE_OFF,
+        {
+            LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: ["color_temp"],
+            LightEntityStateAttribute.COLOR_TEMP_KELVIN: 5263,
+        },
+    )
+    await hass.async_block_till_done()
+    acc = Light(hass, hk_driver, "Light", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+    acc.run()
+    await hass.async_block_till_done()
+
+    call_turn_on = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+    char_color_temp_iid = acc.char_color_temp.to_HAP()[HAP_REPR_IID]
+
+    hk_driver.set_characteristics(
+        {
+            HAP_REPR_CHARS: [
+                {
+                    HAP_REPR_AID: acc.aid,
+                    HAP_REPR_IID: char_color_temp_iid,
+                    HAP_REPR_VALUE: 250,
+                }
+            ]
+        },
+        "mock_addr",
+    )
+    await _wait_for_light_coalesce(hass)
+
+    assert len(call_turn_on) == 1
+    assert call_turn_on[0].data[LightServiceArgument.COLOR_TEMP_KELVIN] == 4000
+
+
+async def test_colour_write_after_turn_on_is_not_dropped(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """A colour write racing a pending turn_on still reaches the light.
+
+    The Home app can send On and the colour in separate writes more than the
+    coalescing window apart; the state still reports off when the colour write
+    is processed, but the light is already turning on.
+    """
+    entity_id = "light.demo"
+
+    hass.states.async_set(
+        entity_id,
+        STATE_OFF,
+        {
+            LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: ["color_temp"],
+            LightEntityStateAttribute.COLOR_TEMP_KELVIN: 5263,
+        },
+    )
+    await hass.async_block_till_done()
+    acc = Light(
+        hass,
+        hk_driver,
+        "Light",
+        entity_id,
+        1,
+        {CONF_ADAPTIVE_LIGHTING: True},
+    )
+    hk_driver.add_accessory(acc)
+    acc.run()
+    await hass.async_block_till_done()
+
+    call_turn_on = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+    char_color_temp_iid = acc.char_color_temp.to_HAP()[HAP_REPR_IID]
+    char_on_iid = acc.char_on.to_HAP()[HAP_REPR_IID]
+
+    def set_chars(chars: list[dict]) -> None:
+        hk_driver.set_characteristics({HAP_REPR_CHARS: chars}, "mock_addr")
+
+    set_chars(
+        [
+            {
+                HAP_REPR_AID: acc.aid,
+                HAP_REPR_IID: char_on_iid,
+                HAP_REPR_VALUE: 1,
+            }
+        ]
+    )
+    await _wait_for_light_coalesce(hass)
+    assert len(call_turn_on) == 1
+    # The state still reports off: the service call has not landed yet.
+    state = hass.states.get(entity_id)
+    assert state is not None and state.state == STATE_OFF
+
+    set_chars(
+        [
+            {
+                HAP_REPR_AID: acc.aid,
+                HAP_REPR_IID: char_color_temp_iid,
+                HAP_REPR_VALUE: 250,
+            }
+        ]
+    )
+    await _wait_for_light_coalesce(hass)
+
+    assert len(call_turn_on) == 2
+    assert call_turn_on[1].data[LightServiceArgument.COLOR_TEMP_KELVIN] == 4000
 
 
 @pytest.mark.parametrize(
@@ -1897,3 +2188,147 @@ async def test_light_set_brightness_and_color_temp(
         events[-1].data[ATTR_VALUE]
         == f"Set state to 1, brightness at 20{PERCENTAGE}, color temperature at 250"
     )
+
+
+async def test_light_below_the_white_floor_uses_the_warm_colour(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """A temperature the white channel cannot show is sent as a colour."""
+    entity_id = "light.demo"
+    hass.states.async_set(
+        entity_id,
+        STATE_ON,
+        {
+            LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: [
+                ColorMode.COLOR_TEMP,
+                ColorMode.HS,
+            ],
+            LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 2000,
+            LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 6500,
+            LightEntityStateAttribute.BRIGHTNESS: 255,
+        },
+    )
+    await hass.async_block_till_done()
+    config = {CONF_RGB_BELOW_KELVIN: 2700, CONF_WARM_RGB_COLOR: (255, 124, 7)}
+    acc = Light(hass, hk_driver, "Light", entity_id, 1, config)
+    hk_driver.add_accessory(acc)
+    acc.run()
+    await hass.async_block_till_done()
+    call_turn_on = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+    char_color_temp_iid = acc.char_color_temp.to_HAP()[HAP_REPR_IID]
+
+    async def set_mireds(mireds: int) -> dict:
+        hk_driver.set_characteristics(
+            {
+                HAP_REPR_CHARS: [
+                    {
+                        HAP_REPR_AID: acc.aid,
+                        HAP_REPR_IID: char_color_temp_iid,
+                        HAP_REPR_VALUE: mireds,
+                    },
+                ]
+            },
+            "mock_addr",
+        )
+        await _wait_for_light_coalesce(hass)
+        return call_turn_on[-1].data
+
+    # The warmest end of the range is the configured colour.
+    assert (await set_mireds(500))[LightServiceArgument.RGB_COLOR] == (255, 124, 7)
+    # In between, the colour is blended from the floor's white.
+    red, green, blue = (await set_mireds(425))[LightServiceArgument.RGB_COLOR]
+    assert red == 255
+    assert 124 < green < 167
+    assert 7 < blue < 87
+    # At or above the floor the white channel is used as before.
+    data = await set_mireds(370)
+    assert data[LightServiceArgument.COLOR_TEMP_KELVIN] == 2702
+    assert LightServiceArgument.RGB_COLOR not in data
+
+
+async def test_light_below_the_white_floor_starts_from_the_floor_colour(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """Just below the floor the colour matches the white it replaces."""
+    entity_id = "light.demo"
+    hass.states.async_set(
+        entity_id,
+        STATE_ON,
+        {
+            LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: [
+                ColorMode.COLOR_TEMP,
+                ColorMode.HS,
+            ],
+            LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 2000,
+            LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 6500,
+        },
+    )
+    await hass.async_block_till_done()
+    config = {
+        CONF_RGB_BELOW_KELVIN: 2700,
+        CONF_WARM_RGB_COLOR: (255, 72, 0),
+        CONF_FLOOR_RGB_COLOR: (255, 130, 30),
+    }
+    acc = Light(hass, hk_driver, "Light", entity_id, 1, config)
+    hk_driver.add_accessory(acc)
+    acc.run()
+    await hass.async_block_till_done()
+    call_turn_on = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+
+    hk_driver.set_characteristics(
+        {
+            HAP_REPR_CHARS: [
+                {
+                    HAP_REPR_AID: acc.aid,
+                    HAP_REPR_IID: acc.char_color_temp.to_HAP()[HAP_REPR_IID],
+                    HAP_REPR_VALUE: 371,
+                },
+            ]
+        },
+        "mock_addr",
+    )
+    await _wait_for_light_coalesce(hass)
+
+    assert call_turn_on[-1].data[LightServiceArgument.RGB_COLOR] == (255, 130, 30)
+
+
+async def test_light_without_colour_ignores_the_warm_colour(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """A white only light keeps clamping to its own colour temperature."""
+    entity_id = "light.demo"
+    hass.states.async_set(
+        entity_id,
+        STATE_ON,
+        {
+            LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: [
+                ColorMode.COLOR_TEMP
+            ],
+            LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 2000,
+            LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 6500,
+        },
+    )
+    await hass.async_block_till_done()
+    config = {CONF_RGB_BELOW_KELVIN: 2700, CONF_WARM_RGB_COLOR: (255, 124, 7)}
+    acc = Light(hass, hk_driver, "Light", entity_id, 1, config)
+    hk_driver.add_accessory(acc)
+    acc.run()
+    await hass.async_block_till_done()
+    call_turn_on = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+
+    hk_driver.set_characteristics(
+        {
+            HAP_REPR_CHARS: [
+                {
+                    HAP_REPR_AID: acc.aid,
+                    HAP_REPR_IID: acc.char_color_temp.to_HAP()[HAP_REPR_IID],
+                    HAP_REPR_VALUE: 500,
+                },
+            ]
+        },
+        "mock_addr",
+    )
+    await _wait_for_light_coalesce(hass)
+
+    assert call_turn_on[0].data[LightServiceArgument.COLOR_TEMP_KELVIN] == 2000
+    assert LightServiceArgument.RGB_COLOR not in call_turn_on[0].data

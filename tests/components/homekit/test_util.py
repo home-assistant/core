@@ -8,11 +8,13 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.homekit.const import (
     BRIDGE_NAME,
+    CONF_ADAPTIVE_LIGHTING,
     CONF_AUDIO_CODEC,
     CONF_AUDIO_MAP,
     CONF_AUDIO_PACKET_SIZE,
     CONF_FEATURE,
     CONF_FEATURE_LIST,
+    CONF_FLOOR_RGB_COLOR,
     CONF_LINKED_BATTERY_SENSOR,
     CONF_LINKED_DOORBELL_SENSOR,
     CONF_LINKED_MOTION_SENSOR,
@@ -22,6 +24,8 @@ from homeassistant.components.homekit.const import (
     CONF_MAX_FPS,
     CONF_MAX_HEIGHT,
     CONF_MAX_WIDTH,
+    CONF_MIN_COLOR_TEMP_KELVIN,
+    CONF_RGB_BELOW_KELVIN,
     CONF_STREAM_COUNT,
     CONF_SUPPORT_AUDIO,
     CONF_THRESHOLD_CO,
@@ -30,6 +34,7 @@ from homeassistant.components.homekit.const import (
     CONF_VIDEO_MAP,
     CONF_VIDEO_PACKET_SIZE,
     CONF_VIDEO_PROFILE_NAMES,
+    CONF_WARM_RGB_COLOR,
     DEFAULT_AUDIO_CODEC,
     DEFAULT_AUDIO_MAP,
     DEFAULT_AUDIO_PACKET_SIZE,
@@ -575,3 +580,72 @@ async def test_lock_state_needs_accessory_mode(hass: HomeAssistant) -> None:
     """Test that locks are setup as accessories."""
     hass.states.async_set("lock.mine", "locked")
     assert state_needs_accessory_mode(hass.states.get("lock.mine")) is True
+
+
+def test_validate_entity_config_warm_rgb_color() -> None:
+    """The warm colour and its floor are accepted together."""
+    assert vec(
+        {
+            "light.demo": {
+                CONF_RGB_BELOW_KELVIN: 2700,
+                CONF_WARM_RGB_COLOR: [255, 124, 7],
+                CONF_FLOOR_RGB_COLOR: [255, 130, 30],
+            }
+        }
+    )["light.demo"][CONF_FLOOR_RGB_COLOR] == (255, 130, 30)
+
+
+@pytest.mark.parametrize(
+    "config",
+    [
+        pytest.param({CONF_RGB_BELOW_KELVIN: 2700}, id="missing_warm_rgb_color"),
+        pytest.param(
+            {CONF_WARM_RGB_COLOR: [255, 124, 7]}, id="missing_rgb_below_kelvin"
+        ),
+        pytest.param(
+            {CONF_RGB_BELOW_KELVIN: 2700, CONF_WARM_RGB_COLOR: [255, 124]},
+            id="warm_rgb_color_too_short",
+        ),
+        pytest.param(
+            {CONF_RGB_BELOW_KELVIN: 2700, CONF_WARM_RGB_COLOR: [256, 124, 7]},
+            id="warm_rgb_color_out_of_range",
+        ),
+        pytest.param(
+            {
+                CONF_RGB_BELOW_KELVIN: 2700,
+                CONF_WARM_RGB_COLOR: [255, 124, 7],
+                CONF_FLOOR_RGB_COLOR: [255, 130],
+            },
+            id="floor_rgb_color_too_short",
+        ),
+        pytest.param(
+            {CONF_FLOOR_RGB_COLOR: [255, 130, 30]},
+            id="floor_rgb_color_without_warm_options",
+        ),
+    ],
+)
+def test_validate_entity_config_rejects_bad_warm_rgb(config: dict) -> None:
+    """Malformed warm colour options are rejected."""
+    with pytest.raises(probatio.Invalid):
+        vec({"light.demo": config})
+
+
+@pytest.mark.parametrize(
+    ("entity", "config"),
+    [
+        pytest.param(
+            "switch.demo", {CONF_ADAPTIVE_LIGHTING: True}, id="adaptive_on_switch"
+        ),
+        pytest.param(
+            "sensor.demo",
+            {CONF_MIN_COLOR_TEMP_KELVIN: 3000},
+            id="kelvin_override_on_sensor",
+        ),
+    ],
+)
+def test_validate_entity_config_light_options_only_on_lights(
+    entity: str, config: dict
+) -> None:
+    """Light-only options are rejected on other domains."""
+    with pytest.raises(probatio.Invalid):
+        vec({entity: config})

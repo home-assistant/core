@@ -5,6 +5,7 @@ import logging
 from typing import Any, override
 
 from pyhap.const import CATEGORY_LIGHTBULB
+from pyhap.util import callback as pyhap_callback
 
 from homeassistant.components.light import (
     DOMAIN as LIGHT_DOMAIN,
@@ -24,16 +25,28 @@ from homeassistant.util.color import (
     color_temperature_kelvin_to_mired,
     color_temperature_mired_to_kelvin,
     color_temperature_to_hs,
+    color_temperature_to_rgb,
     color_temperature_to_rgbww,
 )
 
 from .accessories import TYPES, HomeAccessory
+from .adaptive_lighting import (
+    ADAPTIVE_LIGHTING_CHARS,
+    AdaptiveLightingController,
+    async_delete_stored_schedule,
+)
 from .const import (
     CHAR_BRIGHTNESS,
     CHAR_COLOR_TEMPERATURE,
     CHAR_HUE,
     CHAR_ON,
     CHAR_SATURATION,
+    CONF_ADAPTIVE_LIGHTING,
+    CONF_FLOOR_RGB_COLOR,
+    CONF_MAX_COLOR_TEMP_KELVIN,
+    CONF_MIN_COLOR_TEMP_KELVIN,
+    CONF_RGB_BELOW_KELVIN,
+    CONF_WARM_RGB_COLOR,
     PROP_MAX_VALUE,
     PROP_MIN_VALUE,
     SERV_LIGHTBULB,
@@ -44,6 +57,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 CHANGE_COALESCE_TIME_WINDOW = 0.01
+
+# Characteristics that only describe colour, never on/off intent.
+COLOR_ONLY_CHARS = {CHAR_COLOR_TEMPERATURE, CHAR_HUE, CHAR_SATURATION}
 
 DEFAULT_MIN_COLOR_TEMP = 2000  # 500 mireds
 DEFAULT_MAX_COLOR_TEMP = 6500  # 153 mireds
@@ -71,6 +87,7 @@ class Light(HomeAccessory):
         self.chars = []
         self._event_timer: CALLBACK_TYPE | None = None
         self._pending_events: dict[str, Any] = {}
+        self._pending_turn_on = False
 
         state = self.hass.states.get(self.entity_id)
         assert state
@@ -97,6 +114,18 @@ class Light(HomeAccessory):
         ):
             self.chars.append(CHAR_COLOR_TEMPERATURE)
 
+        # Adaptive lighting transitions both brightness and colour temperature,
+        # so it is only offered when the light can really change its colour
+        # temperature. WHITE and RGBW lights also get the characteristic, but
+        # with a single value, so there is no curve to follow.
+        self._adaptive_lighting_enabled = bool(
+            self.config.get(CONF_ADAPTIVE_LIGHTING)
+            and self.brightness_supported
+            and (self.color_temp_supported or self.rgbww_supported)
+        )
+        if self._adaptive_lighting_enabled:
+            self.chars.extend(ADAPTIVE_LIGHTING_CHARS)
+
         serv_light = self.add_preload_service(SERV_LIGHTBULB, self.chars)
         self.char_on = serv_light.configure_char(CHAR_ON, value=0)
 
@@ -108,20 +137,44 @@ class Light(HomeAccessory):
             self.char_brightness = serv_light.configure_char(CHAR_BRIGHTNESS, value=100)
 
         if CHAR_COLOR_TEMPERATURE in self.chars:
-            min_mireds = color_temperature_kelvin_to_mired(
-                attributes.get(
-                    LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN,
-                    DEFAULT_MAX_COLOR_TEMP,
+            # Some bulbs report a wider range than the hardware accepts and go
+            # dark instead of clamping, so the range can be overridden per entity.
+            if max_kelvin := self.config.get(CONF_MAX_COLOR_TEMP_KELVIN):
+                # The configured maximum is a ceiling: ceil keeps the mired
+                # bound from converting back above it.
+                min_mireds = -(-1_000_000 // max_kelvin)
+            else:
+                min_mireds = color_temperature_kelvin_to_mired(
+                    attributes.get(
+                        LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN,
+                        DEFAULT_MAX_COLOR_TEMP,
+                    )
                 )
-            )
             max_mireds = color_temperature_kelvin_to_mired(
-                attributes.get(
+                self.config.get(CONF_MIN_COLOR_TEMP_KELVIN)
+                or attributes.get(
                     LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN,
                     DEFAULT_MIN_COLOR_TEMP,
                 )
             )
             # Ensure min is less than max
             self.min_mireds, self.max_mireds = get_min_max(min_mireds, max_mireds)
+            # The override only changes what HomeKit advertises. Mixing the
+            # white channels still has to use the range the entity reports.
+            self._entity_min_mireds, self._entity_max_mireds = get_min_max(
+                color_temperature_kelvin_to_mired(
+                    attributes.get(
+                        LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN,
+                        DEFAULT_MAX_COLOR_TEMP,
+                    )
+                ),
+                color_temperature_kelvin_to_mired(
+                    attributes.get(
+                        LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN,
+                        DEFAULT_MIN_COLOR_TEMP,
+                    )
+                ),
+            )
             if not self.color_temp_supported and not self.rgbww_supported:
                 self.max_mireds = self.min_mireds
             self.char_color_temp = serv_light.configure_char(
@@ -137,11 +190,72 @@ class Light(HomeAccessory):
             self.char_hue = serv_light.configure_char(CHAR_HUE, value=0)
             self.char_saturation = serv_light.configure_char(CHAR_SATURATION, value=75)
 
+        self.adaptive_lighting: AdaptiveLightingController | None = None
+        if self._adaptive_lighting_enabled:
+            self.adaptive_lighting = AdaptiveLightingController(
+                self, serv_light, self.entity_id
+            )
+        elif self.driver.entry_id:
+            # A schedule stored for this entity is orphaned once the option is
+            # gone; drop it so it cannot resurrect on a later re-enable.
+            self.hass.async_create_task(
+                async_delete_stored_schedule(
+                    self.hass, self.driver.entry_id, self.entity_id
+                )
+            )
+
         self.async_update_state(state)
         serv_light.setter_callback = self._set_chars
 
+    @override
+    @callback
+    @pyhap_callback  # type: ignore[untyped-decorator]
+    def run(self) -> None:
+        """Start the accessory and resume a saved adaptive lighting schedule."""
+        super().run()
+        if self.adaptive_lighting:
+            self.adaptive_lighting.schedule_restore()
+
+    @override
+    @callback
+    def async_stop(self) -> None:
+        """Cancel subscriptions, the pending coalesced write and adaptive timers."""
+        if self._event_timer:
+            self._event_timer()
+            self._event_timer = None
+        self._pending_events = {}
+        super().async_stop()
+        if self.adaptive_lighting:
+            self.adaptive_lighting.stop()
+
+    @callback
+    def async_set_adaptive_color_temperature(self, mireds: int) -> None:
+        """Apply a colour temperature computed from the transition curve."""
+        # Bulbs on the RGBWW/RGB paths do not report color_temp_kelvin, so the
+        # state update would leave the advertised characteristic stale.
+        self.char_color_temp.set_value(mireds)
+        self.char_color_temp.notify()
+        self._set_chars({CHAR_COLOR_TEMPERATURE: mireds})
+
     def _set_chars(self, char_values: dict[str, Any]) -> None:
         _LOGGER.debug("Light _set_chars: %s", char_values)
+        # The adaptive lighting characteristics share the light service, so a
+        # schedule written by the Home app arrives here too. The controller has
+        # already handled it through its own setter and it says nothing about
+        # brightness or colour; left in, it falls through to the SERVICE_TURN_ON
+        # default below and switches the light on by itself.
+        char_values = {
+            char: value
+            for char, value in char_values.items()
+            if char not in ADAPTIVE_LIGHTING_CHARS
+        }
+        if not char_values:
+            return
+        if self.adaptive_lighting and (
+            char_values.keys() & {CHAR_COLOR_TEMPERATURE, CHAR_HUE, CHAR_SATURATION}
+        ):
+            # HomeKit expects adaptive lighting to stop on a manual colour change.
+            self.adaptive_lighting.notify_manual_change()
         # Newest change always wins
         if CHAR_COLOR_TEMPERATURE in self._pending_events and (
             CHAR_SATURATION in char_values or CHAR_HUE in char_values
@@ -169,7 +283,29 @@ class Light(HomeAccessory):
         params: dict[str, Any] = {TargetKey.ENTITY_ID: self.entity_id}
         has_on = CHAR_ON in char_values
 
+        # Adaptive lighting writes colour to accessories that are off, and a
+        # write without CHAR_ON would fall through to the SERVICE_TURN_ON
+        # default below and switch the light on by itself. A colour only write
+        # is never a request to turn a light on, unless we just asked for On
+        # and the state has not caught up yet.
+        if (
+            self.adaptive_lighting
+            and not has_on
+            and char_values
+            and not char_values.keys() - COLOR_ONLY_CHARS
+        ):
+            state = self.hass.states.get(self.entity_id)
+            if (state is None or state.state != STATE_ON) and not self._pending_turn_on:
+                _LOGGER.debug(
+                    "%s: ignoring colour only write %s, the light is off",
+                    self.entity_id,
+                    char_values,
+                )
+                self.adaptive_lighting.discard_applied()
+                return
+
         if has_on:
+            self._pending_turn_on = bool(char_values[CHAR_ON])
             if not char_values[CHAR_ON]:
                 service = LightService.TURN_OFF
             events.append(f"Set state to {char_values[CHAR_ON]}")
@@ -202,7 +338,9 @@ class Light(HomeAccessory):
             bright_val = round(
                 ((brightness_pct or self.char_brightness.value) * 255) / 100
             )
-            if self.color_temp_supported:
+            if (rgb := self._warm_rgb_color(temp)) is not None:
+                params[LightServiceArgument.RGB_COLOR] = rgb
+            elif self.color_temp_supported:
                 params[LightServiceArgument.COLOR_TEMP_KELVIN] = (
                     color_temperature_mired_to_kelvin(temp)
                 )
@@ -210,8 +348,8 @@ class Light(HomeAccessory):
                 params[LightServiceArgument.RGBWW_COLOR] = color_temperature_to_rgbww(
                     color_temperature_mired_to_kelvin(temp),
                     bright_val,
-                    color_temperature_mired_to_kelvin(self.max_mireds),
-                    color_temperature_mired_to_kelvin(self.min_mireds),
+                    color_temperature_mired_to_kelvin(self._entity_max_mireds),
+                    color_temperature_mired_to_kelvin(self._entity_min_mireds),
                 )
             elif self.rgbw_supported:
                 params[LightServiceArgument.RGBW_COLOR] = (*(0,) * 3, bright_val)
@@ -237,7 +375,46 @@ class Light(HomeAccessory):
         _LOGGER.debug(
             "Calling light service with params: %s -> %s", char_values, params
         )
-        self.async_call_service(LIGHT_DOMAIN, service, params, ", ".join(events))
+        self.hass.async_create_task(
+            self._async_call_light_service(
+                service,
+                params,
+                ", ".join(events),
+                CHAR_COLOR_TEMPERATURE in char_values,
+            ),
+            eager_start=True,
+        )
+
+    async def _async_call_light_service(
+        self, service: str, params: dict[str, Any], value: str, sets_colour: bool
+    ) -> None:
+        """Call the light service and let adaptive lighting know if it failed."""
+        succeeded = await self.async_call_service_and_wait(
+            LIGHT_DOMAIN, service, params, value
+        )
+        if not succeeded and sets_colour and self.adaptive_lighting:
+            self.adaptive_lighting.discard_applied()
+
+    def _warm_rgb_color(self, mireds: int) -> tuple[int, ...] | None:
+        """Return the colour for a temperature below the white channel's floor.
+
+        Some bulbs clamp or go dark below a colour temperature they still
+        advertise, but can show a warmer tone in colour mode. Below the
+        configured floor the temperature is blended towards that colour. The
+        blend starts from a colour that matches the white floor on that bulb,
+        since a bulb's colour LEDs rarely reproduce its white ones.
+        """
+        floor = self.config.get(CONF_RGB_BELOW_KELVIN)
+        kelvin = color_temperature_mired_to_kelvin(mireds)
+        if not floor or not self.color_supported or kelvin >= floor:
+            return None
+        warmest = color_temperature_mired_to_kelvin(self.max_mireds)
+        ratio = min(1, (floor - kelvin) / max(1, floor - warmest))
+        white = self.config.get(CONF_FLOOR_RGB_COLOR) or color_temperature_to_rgb(floor)
+        return tuple(
+            round(start + (end - start) * ratio)
+            for start, end in zip(white, self.config[CONF_WARM_RGB_COLOR], strict=True)
+        )
 
     @callback
     @override
@@ -246,6 +423,8 @@ class Light(HomeAccessory):
         # Handle State
         state = new_state.state
         attributes = new_state.attributes
+        if state == STATE_ON:
+            self._pending_turn_on = False
         color_mode = attributes.get(LightEntityStateAttribute.COLOR_MODE)
         self.char_on.set_value(int(state == STATE_ON))
         color_mode_changed = self._previous_color_mode != color_mode
