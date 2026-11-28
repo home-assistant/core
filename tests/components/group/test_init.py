@@ -1998,6 +1998,7 @@ async def test_plant_group(hass: HomeAssistant) -> None:
     ("group_type", "member_state", "extra_options"),
     [
         ("binary_sensor", "on", {"all": False}),
+        ("climate", "heat", {}),
         ("cover", "open", {}),
         ("fan", "on", {}),
         ("light", "on", {"all": False}),
@@ -2125,6 +2126,7 @@ async def test_groups_with_entity_config_entry(
     ("group_type", "extra_options"),
     [
         ("binary_sensor", {"all": False}),
+        ("climate", {}),
         ("cover", {}),
         ("fan", {}),
         ("light", {"all": False}),
