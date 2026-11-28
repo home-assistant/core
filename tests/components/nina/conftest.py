@@ -17,9 +17,10 @@ from homeassistant.core import HomeAssistant
 
 from .const import (
     DUMMY_CONFIG_ENTRY,
-    DUMMY_CONFIG_ENTRY_AREA_FILTERS,
-    DUMMY_CONFIG_ENTRY_DEFAULT_FILTERS,
+    DUMMY_CONFIG_ENTRY_AREA_FILTERS_OPTIONS,
+    DUMMY_CONFIG_ENTRY_DEFAULT_FILTERS_OPTIONS,
     DUMMY_CONFIG_ENTRY_MULTIPLE_REGIONS,
+    DUMMY_CONFIG_ENTRY_OPTIONS,
 )
 
 
@@ -39,8 +40,9 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
         domain=DOMAIN,
         title="NINA",
         data=deepcopy(DUMMY_CONFIG_ENTRY),
-        version=1,
-        minor_version=3,
+        options=deepcopy(DUMMY_CONFIG_ENTRY_OPTIONS),
+        version=2,
+        minor_version=1,
     )
 
     config_entry.add_to_hass(hass)
@@ -54,9 +56,10 @@ def mock_config_entry_default_filter(hass: HomeAssistant) -> MockConfigEntry:
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         title="NINA",
-        data=deepcopy(DUMMY_CONFIG_ENTRY_DEFAULT_FILTERS),
-        version=1,
-        minor_version=3,
+        data=deepcopy(DUMMY_CONFIG_ENTRY),
+        options=deepcopy(DUMMY_CONFIG_ENTRY_DEFAULT_FILTERS_OPTIONS),
+        version=2,
+        minor_version=1,
     )
 
     config_entry.add_to_hass(hass)
@@ -70,9 +73,10 @@ def mock_config_entry_area_filter(hass: HomeAssistant) -> MockConfigEntry:
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         title="NINA",
-        data=deepcopy(DUMMY_CONFIG_ENTRY_AREA_FILTERS),
-        version=1,
-        minor_version=3,
+        data=deepcopy(DUMMY_CONFIG_ENTRY),
+        options=deepcopy(DUMMY_CONFIG_ENTRY_AREA_FILTERS_OPTIONS),
+        version=2,
+        minor_version=1,
     )
 
     config_entry.add_to_hass(hass)
@@ -82,13 +86,14 @@ def mock_config_entry_area_filter(hass: HomeAssistant) -> MockConfigEntry:
 
 @pytest.fixture
 def mock_config_entry_multiple_regions(hass: HomeAssistant) -> MockConfigEntry:
-    """Provide a common mock config entry with an area filter."""
+    """Provide a common mock config entry with multiple regions."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         title="NINA",
         data=deepcopy(DUMMY_CONFIG_ENTRY_MULTIPLE_REGIONS),
-        version=1,
-        minor_version=3,
+        options=deepcopy(DUMMY_CONFIG_ENTRY_DEFAULT_FILTERS_OPTIONS),
+        version=2,
+        minor_version=1,
     )
 
     config_entry.add_to_hass(hass)

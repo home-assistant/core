@@ -13,6 +13,7 @@ from homeassistant.components.nina.const import (
     CONF_HEADLINE_FILTER,
     CONF_MESSAGE_SLOTS,
     CONF_REGIONS,
+    CONST_REGION_A_TO_D,
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
@@ -21,8 +22,12 @@ from homeassistant.core import HomeAssistant
 from . import setup_platform
 
 ENTRY_DATA: dict[str, Any] = {
-    CONF_MESSAGE_SLOTS: 5,
+    CONST_REGION_A_TO_D: ["095760000000_0", "095760000000_1"],
     CONF_REGIONS: {"083350000000": "Aach, Stadt"},
+}
+
+ENTRY_OPTIONS: dict[str, Any] = {
+    CONF_MESSAGE_SLOTS: 5,
     CONF_FILTERS: {
         CONF_HEADLINE_FILTER: ".*corona.*",
         CONF_AREA_FILTER: ".*",
@@ -39,6 +44,7 @@ async def test_config_migration_from1_1(
     old_entry_data: dict[str, Any] = {
         CONF_MESSAGE_SLOTS: 5,
         CONF_FILTER_CORONA: True,
+        CONST_REGION_A_TO_D: ["095760000000_0", "095760000000_1"],
         CONF_REGIONS: {"083350000000": "Aach, Stadt"},
     }
 
@@ -51,9 +57,10 @@ async def test_config_migration_from1_1(
     await setup_platform(hass, old_conf_entry, mock_nina_class, nina_warnings)
 
     assert dict(old_conf_entry.data) == ENTRY_DATA
+    assert dict(old_conf_entry.options) == ENTRY_OPTIONS
     assert old_conf_entry.state is ConfigEntryState.LOADED
-    assert old_conf_entry.version == 1
-    assert old_conf_entry.minor_version == 3
+    assert old_conf_entry.version == 2
+    assert old_conf_entry.minor_version == 1
 
 
 async def test_config_migration_from1_2(
@@ -66,6 +73,7 @@ async def test_config_migration_from1_2(
         CONF_MESSAGE_SLOTS: 5,
         CONF_HEADLINE_FILTER: ".*corona.*",
         CONF_AREA_FILTER: ".*",
+        CONST_REGION_A_TO_D: ["095760000000_0", "095760000000_1"],
         CONF_REGIONS: {"083350000000": "Aach, Stadt"},
     }
 
@@ -78,9 +86,42 @@ async def test_config_migration_from1_2(
     await setup_platform(hass, old_conf_entry, mock_nina_class, nina_warnings)
 
     assert dict(old_conf_entry.data) == ENTRY_DATA
+    assert dict(old_conf_entry.options) == ENTRY_OPTIONS
     assert old_conf_entry.state is ConfigEntryState.LOADED
-    assert old_conf_entry.version == 1
-    assert old_conf_entry.minor_version == 3
+    assert old_conf_entry.version == 2
+    assert old_conf_entry.minor_version == 1
+
+
+async def test_config_migration_from1_3(
+    hass: HomeAssistant,
+    mock_nina_class: AsyncMock,
+    nina_warnings: list[Warning],
+) -> None:
+    """Test the migration to a new configuration layout with split data and options."""
+
+    old_entry_data: dict[str, Any] = {
+        CONF_MESSAGE_SLOTS: 5,
+        CONF_REGIONS: {"083350000000": "Aach, Stadt"},
+        CONST_REGION_A_TO_D: ["095760000000_0", "095760000000_1"],
+        CONF_FILTERS: {
+            CONF_HEADLINE_FILTER: ".*corona.*",
+            CONF_AREA_FILTER: ".*",
+        },
+    }
+
+    old_conf_entry: MockConfigEntry = MockConfigEntry(
+        domain=DOMAIN, title="NINA", data=old_entry_data, version=1, minor_version=3
+    )
+
+    old_conf_entry.add_to_hass(hass)
+
+    await setup_platform(hass, old_conf_entry, mock_nina_class, nina_warnings)
+
+    assert dict(old_conf_entry.data) == ENTRY_DATA
+    assert dict(old_conf_entry.options) == ENTRY_OPTIONS
+    assert old_conf_entry.state is ConfigEntryState.LOADED
+    assert old_conf_entry.version == 2
+    assert old_conf_entry.minor_version == 1
 
 
 async def test_config_migration_downgrade(
@@ -91,7 +132,7 @@ async def test_config_migration_downgrade(
     """Test the migration to an old version."""
 
     conf_entry: MockConfigEntry = MockConfigEntry(
-        domain=DOMAIN, title="NINA", data=ENTRY_DATA, version=2
+        domain=DOMAIN, title="NINA", data=ENTRY_DATA, version=3
     )
 
     conf_entry.add_to_hass(hass)
