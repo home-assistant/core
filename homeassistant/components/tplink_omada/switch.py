@@ -33,6 +33,7 @@ from homeassistant.components.switch import SwitchEntity, SwitchEntityDescriptio
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import Undefined
@@ -60,12 +61,27 @@ async def async_setup_entry(
 
     async def _create_switch_port_entities(
         device: OmadaListDevice,
-    ) -> None:
+    ) -> bool:
         """Create entities for a switch's ports."""
         omada_client = controller.omada_client
+        generation = controller.device_generation(device.mac)
         switch = await omada_client.get_switch(device)
+        if (
+            device.mac not in (controller.devices_coordinator.data or {})
+            or controller.device_generation(device.mac) != generation
+        ):
+            return False
         coordinator = controller.get_switch_port_coordinator(switch)
         await coordinator.async_refresh()
+        if not coordinator.last_update_success:
+            return False
+        if (
+            device.mac not in (controller.devices_coordinator.data or {})
+            or controller.device_generation(device.mac) != generation
+        ):
+            # The switch was removed while the coordinator was created or
+            # refreshed; do not bind entities to the stale coordinator.
+            return False
 
         entities: list[Entity] = []
         entities.extend(
@@ -84,6 +100,7 @@ async def async_setup_entry(
             if desc.exists_func(switch, port)
         )
         async_add_entities(entities)
+        return True
 
     # Register switch port entities for switches that are
     # connected, so we can determine the port information
@@ -97,29 +114,36 @@ async def async_setup_entry(
     # Set up gateway port switches
     async def _create_gateway_port_entities(
         device: OmadaListDevice,
-    ) -> None:
+    ) -> bool:
         """Create entities for a gateway's ports."""
-        entities: list[Entity] = []
         gateway_coordinator = controller.gateway_coordinator
-        if gateway_coordinator:
-            gateway = gateway_coordinator.data[device.mac]
-            entities.extend(
-                OmadaDevicePortSwitchEntity[
-                    OmadaGatewayCoordinator, OmadaGateway, OmadaGatewayPortStatus
-                ](gateway_coordinator, gateway, p, str(p.port_number), desc)
-                for p in gateway.port_status
-                for desc in GATEWAY_PORT_STATUS_SWITCHES
-                if desc.exists_func(gateway, p)
-            )
-            entities.extend(
-                OmadaDevicePortSwitchEntity[
-                    OmadaGatewayCoordinator, OmadaGateway, OmadaGatewayPortConfig
-                ](gateway_coordinator, gateway, p, str(p.port_number), desc)
-                for p in gateway.port_configs
-                for desc in GATEWAY_PORT_CONFIG_SWITCHES
-                if desc.exists_func(gateway, p)
-            )
+        if gateway_coordinator is None:
+            return False
+
+        gateway = await controller.async_get_gateway(device.mac)
+        if gateway is None:
+            return False
+        if device.mac not in (controller.devices_coordinator.data or {}):
+            return False
+
+        entities: list[Entity] = [
+            OmadaDevicePortSwitchEntity[
+                OmadaGatewayCoordinator, OmadaGateway, OmadaGatewayPortStatus
+            ](gateway_coordinator, gateway, p, str(p.port_number), desc)
+            for p in gateway.port_status
+            for desc in GATEWAY_PORT_STATUS_SWITCHES
+            if desc.exists_func(gateway, p)
+        ]
+        entities.extend(
+            OmadaDevicePortSwitchEntity[
+                OmadaGatewayCoordinator, OmadaGateway, OmadaGatewayPortConfig
+            ](gateway_coordinator, gateway, p, str(p.port_number), desc)
+            for p in gateway.port_configs
+            for desc in GATEWAY_PORT_CONFIG_SWITCHES
+            if desc.exists_func(gateway, p)
+        )
         async_add_entities(entities)
+        return True
 
     await controller.async_register_device_entities(
         device_filter=lambda d: (
@@ -132,10 +156,25 @@ async def async_setup_entry(
     vpn_coordinator = controller.vpn_policies_coordinator
     if gateway_coordinator and vpn_coordinator:
         gateway = next(iter(gateway_coordinator.data.values()))
+        entity_registry = er.async_get(hass)
         known_policy_keys: set[str] = set()
 
         @callback
         def _async_add_vpn_entities() -> None:
+            # Drop keys whose switch was removed with the gateway, so a returning
+            # gateway rebuilds unchanged policies.
+            known_policy_keys.intersection_update(
+                policy_key
+                for policy_key in known_policy_keys
+                if (
+                    entity_registry.async_get_entity_id(
+                        "switch", DOMAIN, f"{gateway.mac}_vpn_{policy_key}"
+                    )
+                    is not None
+                )
+            )
+            if gateway.mac not in (controller.devices_coordinator.data or {}):
+                return
             new_policies = [
                 policy
                 for policy_key, policy in vpn_coordinator.data.items()
@@ -151,6 +190,9 @@ async def async_setup_entry(
 
         config_entry.async_on_unload(
             vpn_coordinator.async_add_listener(_async_add_vpn_entities)
+        )
+        config_entry.async_on_unload(
+            controller.devices_coordinator.async_add_listener(_async_add_vpn_entities)
         )
         _async_add_vpn_entities()
 

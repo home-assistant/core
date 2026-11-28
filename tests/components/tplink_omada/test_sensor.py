@@ -191,14 +191,14 @@ async def test_port_disappearing_from_coordinator_becomes_unavailable(
     assert not any("Omada API Data - Test PoE Switch Ports" in msg for msg in errors)
 
 
-async def test_device_disappearing_from_coordinator_becomes_unavailable(
+async def test_device_disappearing_from_coordinator_removes_sensors(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_omada_site_client: MagicMock,
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test a device removed from the controller makes its sensors unavailable."""
+    """Test a device removed from the controller has its sensors removed."""
     entity_id = "sensor.test_poe_switch_device_status"
     assert hass.states.get(entity_id).state == "connected"
 
@@ -213,12 +213,8 @@ async def test_device_disappearing_from_coordinator_becomes_unavailable(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
-    # The sensor exists and becomes unavailable, without errors from the
-    # device list coordinator (the update coordinator has its own separate
-    # error handling for vanished devices and is out of scope here)
-    entity = hass.states.get(entity_id)
-    assert entity is not None
-    assert entity.state == "unavailable"
+    # The stale device and its sensors are removed without coordinator errors
+    assert hass.states.get(entity_id) is None
     errors = [r.getMessage() for r in caplog.records if r.levelno >= logging.ERROR]
     assert not any("Omada API Data - DeviceList" in msg for msg in errors)
 

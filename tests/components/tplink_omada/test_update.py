@@ -1,6 +1,7 @@
 """Tests for TP-Link Omada update entities."""
 
 from datetime import timedelta
+from typing import cast
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -17,6 +18,10 @@ from tplink_omada_client import OmadaControllerStatus, OmadaControllerUpdateInfo
 from tplink_omada_client.devices import OmadaListDevice
 from tplink_omada_client.exceptions import OmadaClientException, RequestFailed
 
+from homeassistant.components.tplink_omada import (
+    OmadaConfigEntry,
+    async_remove_config_entry_device,
+)
 from homeassistant.components.tplink_omada.const import DOMAIN
 from homeassistant.components.tplink_omada.coordinator import (
     POLL_CONTROLLER,
@@ -42,6 +47,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import REQUEST_REFRESH_DEFAULT_COOLDOWN
+from homeassistant.util import dt as dt_util
 
 POLL_INTERVAL = timedelta(seconds=POLL_DEVICES)
 CONTROLLER_POLL_INTERVAL = timedelta(seconds=POLL_CONTROLLER)
@@ -98,25 +104,66 @@ async def test_firmware_download_in_progress(
     """Test update entity when firmware download is in progress."""
     entity_id = "update.test_poe_switch_firmware"
 
-    freezer.tick(POLL_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
     # Rebuild device list with fwDownload set to True for the switch
     updated_devices = await _rebuild_device_list_with_update(
         hass, "54-AF-97-00-00-01", fwDownload=True
     )
     mock_omada_site_client.get_devices.return_value = updated_devices
 
-    # Trigger coordinator update
-    freezer.tick(POLL_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    # Advance to the next device poll so the firmware coordinator's devices
+    # listener requests a debounced refresh of the download state.
+    freezer.tick(timedelta(seconds=POLL_DEVICES + 1))
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Advance past the debounce cooldown to run the requested refresh.
+    freezer.tick(timedelta(seconds=REQUEST_REFRESH_DEFAULT_COOLDOWN + 1))
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # Verify update entity shows in progress
     entity = hass.states.get(entity_id)
     assert entity is not None
     assert entity.attributes.get(ATTR_IN_PROGRESS) is True
+
+
+async def test_device_update_unavailable_without_firmware_data(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a firmware entity whose device is no longer polled is unavailable."""
+    entity_id = "update.test_poe_switch_firmware"
+    assert hass.states.get(entity_id).state == STATE_ON
+
+    switch_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "54-AF-97-00-00-01"), init_integration.entry_id
+    )
+    assert switch_device is not None
+
+    # Drop the switch from the cached device list while keeping its registry
+    # entry, so its firmware entity outlives the data it reads.
+    assert await async_remove_config_entry_device(
+        hass, cast(OmadaConfigEntry, init_integration), switch_device
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Run the firmware refresh requested by the device list update.
+    freezer.tick(REFRESH_COOLDOWN + timedelta(seconds=1))
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {"id": 1, "type": "update/release_notes", "entity_id": entity_id}
+    )
+    result = await client.receive_json()
+    assert not result["success"]
+    assert result["error"]["code"] == "home_assistant_error"
 
 
 async def test_install_firmware_success(
