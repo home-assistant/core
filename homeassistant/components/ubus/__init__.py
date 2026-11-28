@@ -1,5 +1,7 @@
 """The OpenWrt (ubus) integration."""
 
+# pylint: disable=home-assistant-use-runtime-data  # The merge map is cross-entry state; entry.runtime_data is per-entry and is cleared by the hub reload a merge runs
+import asyncio
 import logging
 from types import MappingProxyType
 
@@ -60,26 +62,44 @@ async def async_setup_entry(hass: HomeAssistant, entry: UbusConfigEntry) -> None
     # become a second poller unless it merges into the hub now. Only a
     # loaded hub holding routers is a target: one being set up or removed
     # may not stay and could merge in turn, and an empty shell left by a
-    # failed migration is meant to be deleted.
-    hub = next(
-        (
-            candidate
-            for candidate in hass.config_entries.async_entries(DOMAIN)
-            if (
-                candidate is not entry
-                and candidate.state is ConfigEntryState.LOADED
-                and candidate.disabled_by is None
-                and candidate.version <= UbusConfigFlow.VERSION
-                and not candidate.data
-                and candidate.subentries
+    # failed migration is meant to be deleted. A merge into the hub reloads
+    # it, so the hub is not loaded while the merge runs; a setup racing it
+    # waits for the merge, or it would start a poller of its own.
+    merging: dict[str, asyncio.Event] = hass.data.setdefault(DOMAIN, {})
+    while True:
+        hub = next(
+            (
+                candidate
+                for candidate in hass.config_entries.async_entries(DOMAIN)
+                if (
+                    candidate is not entry
+                    and (
+                        candidate.state is ConfigEntryState.LOADED
+                        or candidate.entry_id in merging
+                    )
+                    and candidate.disabled_by is None
+                    and candidate.version <= UbusConfigFlow.VERSION
+                    and not candidate.data
+                    and candidate.subentries
+                )
+            ),
+            None,
+        )
+        if hub is None or hub.entry_id not in merging:
+            if hub is not None:
+                merging[hub.entry_id] = asyncio.Event()
+            break
+        await merging[hub.entry_id].wait()
+    if hub is not None:
+        try:
+            merged = await _async_migrate_other(
+                hass, hub, entry, holding_setup_lock=True
             )
-        ),
-        None,
-    )
-    if hub is not None and await _async_migrate_other(
-        hass, hub, entry, holding_setup_lock=True
-    ):
-        return
+        finally:
+            merging[hub.entry_id].set()
+            del merging[hub.entry_id]
+        if merged:
+            return
     coordinator = UbusDataUpdateCoordinator(hass, entry)
     # A coordinator only polls while it has a listener; the entity updates
     # are driven by the presence signal, not by it.

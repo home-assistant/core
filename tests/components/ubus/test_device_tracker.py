@@ -3222,6 +3222,88 @@ async def test_late_hub_merge_reload_failure_creates_repair(
     assert issue.config_entry_id == hub.entry_id
 
 
+async def test_late_hub_merge_waits_for_inflight_reload(
+    hass: HomeAssistant,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+) -> None:
+    """Test a late entry setup racing an in-flight hub merge waits for it.
+
+    A late merge reloads the hub, so during the reload the hub is not
+    loaded; a second entry set up in that window must wait for the
+    merge to finish and merge into the reloaded hub, instead of
+    starting a poller of its own.
+    """
+    _mock, _ubus = mock_ubus_by_host
+    hub = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        title=HUB_TITLE,
+        subentries_data=[router_subentry_data(MOCK_CONFIG)],
+    )
+    hub.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(hub.entry_id)
+    await hass.async_block_till_done()
+
+    legacy_a = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_HOST_CONFIG_B,
+        title=MOCK_HOST_B,
+        entry_id="00000000000000000000000000B",
+    )
+    legacy_a.add_to_hass(hass)
+    legacy_b = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_HOST_CONFIG_C,
+        title=MOCK_HOST_C,
+        entry_id="00000000000000000000000000C",
+    )
+    legacy_b.add_to_hass(hass)
+
+    reload_started = threading.Event()
+    reload_release = threading.Event()
+    real_setup = ConfigEntries.async_setup
+
+    async def gated_setup(entry_id: str, _lock: bool = True) -> bool:
+        # Hold the hub in its unloaded state, so the second setup
+        # races the in-flight hub reload.
+        if entry_id == hub.entry_id:
+            reload_started.set()
+            await hass.async_add_executor_job(reload_release.wait, 10)
+        return await real_setup(hass.config_entries, entry_id, _lock=_lock)
+
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_setup",
+        side_effect=gated_setup,
+    ):
+        setup_a = hass.async_create_task(
+            hass.config_entries.async_setup(legacy_a.entry_id)
+        )
+        assert await hass.async_add_executor_job(reload_started.wait, 10)
+        setup_b = hass.async_create_task(
+            hass.config_entries.async_setup(legacy_b.entry_id)
+        )
+        # Let the second setup reach its merge decision while the hub
+        # is mid-reload.
+        for _ in range(100):
+            if legacy_b.state is ConfigEntryState.SETUP_IN_PROGRESS:
+                break
+            await asyncio.sleep(0)
+        assert legacy_b.state is ConfigEntryState.SETUP_IN_PROGRESS
+        reload_release.set()
+        assert await asyncio.gather(setup_a, setup_b) == [True, True]
+    await hass.async_block_till_done()
+
+    # Both late entries merged into the reloaded hub; no second poller.
+    assert [entry.entry_id for entry in hass.config_entries.async_entries(DOMAIN)] == [
+        hub.entry_id
+    ]
+    assert {subentry.unique_id for subentry in hub.subentries.values()} == {
+        MOCK_HOST,
+        MOCK_HOST_B,
+        MOCK_HOST_C,
+    }
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     ("hub_customizations", "legacy_customizations", "expected"),
