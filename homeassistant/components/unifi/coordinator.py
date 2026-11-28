@@ -1,6 +1,7 @@
 """UniFi Network data update coordinator."""
 
 import asyncio
+from contextlib import AbstractAsyncContextManager, nullcontext
 from datetime import timedelta
 import json
 from typing import TYPE_CHECKING, override
@@ -74,6 +75,14 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
         self._initial_refresh = True
         self._update_generation = 0
         self._resync_task: asyncio.Task[None] | None = None
+        self.update_lock = asyncio.Lock()
+        """Held while a polled handler refetches its objects.
+
+        A write that sends a whole object built from the cached copy holds it
+        too, so a fetch sent before the write can't answer after it and put
+        back the object the write replaced. Websocket handlers don't take it:
+        their resync must not wait behind an older fetch still in flight.
+        """
 
         hub.config.entry.async_on_unload(handler.subscribe(self._async_handle_update))
         hub.config.entry.async_on_unload(
@@ -99,7 +108,7 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
         self._initial_refresh = False
         update_generation = self._update_generation
         try:
-            async with asyncio.timeout(UPDATE_TIMEOUT):
+            async with self._fetch_lock(), asyncio.timeout(UPDATE_TIMEOUT):
                 await self._handler.update()
         except EndpointNotFound as err:
             if (
@@ -132,6 +141,12 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
             self.update_interval = (
                 POLL_INTERVAL if self._handler.items() else IDLE_POLL_INTERVAL
             )
+
+    def _fetch_lock(self) -> AbstractAsyncContextManager[object]:
+        """Return the lock a fetch holds: update_lock for a polled handler."""
+        if self._supports_websocket:
+            return nullcontext()
+        return self.update_lock
 
     @callback
     def _async_reachable_changed(self) -> None:

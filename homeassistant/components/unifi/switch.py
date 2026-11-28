@@ -36,7 +36,7 @@ from aiounifi.models.device import (
 from aiounifi.models.dpi_restriction_app import DPIRestrictionAppEnableRequest
 from aiounifi.models.dpi_restriction_group import DPIRestrictionGroup
 from aiounifi.models.event import Event, EventKey
-from aiounifi.models.firewall_policy import FirewallPolicy, FirewallPolicyUpdateRequest
+from aiounifi.models.firewall_policy import FirewallPolicy
 from aiounifi.models.object_oriented_network_config import (
     ObjectOrientedNetworkConfig,
     ObjectOrientedNetworkInternetMode,
@@ -69,6 +69,7 @@ from .entity import (
     async_client_device_info_fn,
     async_device_available_fn,
     async_device_supported_fn,
+    async_firewall_policy_device_info_fn,
     async_firewall_policy_supported_fn,
     async_outlet_device_info_fn,
     async_port_device_info_fn,
@@ -137,9 +138,7 @@ async def async_firewall_policy_control_fn(
     hub: UnifiHub, obj_id: str, target: bool
 ) -> None:
     """Control firewall policy state."""
-    policy = hub.api.firewall_policies[obj_id].raw
-    policy["enabled"] = target
-    await hub.api.request(FirewallPolicyUpdateRequest.create(policy))
+    await hub.async_save_firewall_policy(obj_id, enabled=target)
 
 
 async def async_object_oriented_network_config_control_fn(
@@ -287,13 +286,13 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
     ),
     UnifiSwitchEntityDescription[FirewallPolicies, FirewallPolicy](
         key="Firewall policy control",
+        name=None,
         device_class=SwitchDeviceClass.SWITCH,
         entity_category=EntityCategory.CONFIG,
         api_handler_fn=lambda api: api.firewall_policies,
         control_fn=async_firewall_policy_control_fn,
-        device_info_fn=async_unifi_network_device_info_fn,
+        device_info_fn=async_firewall_policy_device_info_fn,
         is_on_fn=lambda hub, firewall_policy: firewall_policy.enabled,
-        name_fn=lambda firewall_policy: firewall_policy.name,
         object_fn=lambda api, obj_id: api.firewall_policies[obj_id],
         unique_id_fn=lambda hub, obj_id: f"firewall_policy-{obj_id}",
         supported_fn=async_firewall_policy_supported_fn,

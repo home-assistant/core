@@ -3,6 +3,11 @@
   dict({
     'additionalProperties': False,
     'properties': dict({
+      'include_disabled': dict({
+        'default': False,
+        'description': 'Also return disabled entities and devices.',
+        'type': 'boolean',
+      }),
       'offset': dict({
         'default': 0,
         'description': 'Number of results to skip. Requires type. Use the next_offset of the previous result.',
@@ -179,6 +184,45 @@
         ]),
       ]),
       'total': 3,
+    }),
+  })
+# ---
+# name: test_search[disabled_device]
+  dict({
+    'device': dict({
+      'results': list([
+        list([
+          '<disabled device>',
+          'Kitchen disabled',
+        ]),
+      ]),
+      'total': 1,
+    }),
+  })
+# ---
+# name: test_search[disabled_entity]
+  dict({
+    'entity': dict({
+      'results': list([
+        list([
+          'sensor.kitchen_oven',
+          'Kitchen oven',
+        ]),
+      ]),
+      'total': 1,
+    }),
+  })
+# ---
+# name: test_search[disabled_script]
+  dict({
+    'script': dict({
+      'results': list([
+        list([
+          'script.evening_news',
+          'Evening news',
+        ]),
+      ]),
+      'total': 1,
     }),
   })
 # ---

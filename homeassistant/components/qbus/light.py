@@ -12,13 +12,11 @@ from qbusmqttapi.state import (
 )
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_EFFECT,
-    ATTR_HS_COLOR,
     EFFECT_OFF,
     ColorMode,
     LightEntity,
     LightEntityFeature,
+    LightServiceArgument,
 )
 from homeassistant.components.mqtt import client as mqtt
 from homeassistant.core import HomeAssistant
@@ -82,7 +80,7 @@ class QbusLight(QbusEntity, LightEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        brightness = kwargs.get(ATTR_BRIGHTNESS)
+        brightness = kwargs.get(LightServiceArgument.BRIGHTNESS)
         state = QbusMqttAnalogState(id=self._mqtt_output.id)
 
         if brightness is None:
@@ -155,9 +153,9 @@ class QbusMultiColor(QbusEntity, LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
 
-        brightness = kwargs.get(ATTR_BRIGHTNESS)
-        hs_color = kwargs.get(ATTR_HS_COLOR)
-        effect = kwargs.get(ATTR_EFFECT)
+        brightness = kwargs.get(LightServiceArgument.BRIGHTNESS)
+        hs_color = kwargs.get(LightServiceArgument.HS_COLOR)
+        effect = kwargs.get(LightServiceArgument.EFFECT)
 
         state = QbusMqttMultiColorState(id=self._mqtt_output.id, type=StateType.STATE)
 

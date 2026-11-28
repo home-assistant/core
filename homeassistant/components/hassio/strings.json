@@ -409,6 +409,10 @@
         "addon": {
           "description": "The add-on to write to.",
           "name": "[%key:component::hassio::services::addon_start::fields::addon::name%]"
+        },
+        "input": {
+          "description": "[%key:component::hassio::services::app_stdin::fields::input::description%]",
+          "name": "[%key:component::hassio::services::app_stdin::fields::input::name%]"
         }
       },
       "name": "Write data to add-on stdin"

@@ -3,7 +3,12 @@
 from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
-from boschshcpy import ShutterContactService, SurveillanceAlarmService
+from boschshcpy import (
+    ShutterContactService,
+    SurveillanceAlarmService,
+    VibrationSensorService,
+)
+from boschshcpy.services_impl import OutdoorSirenPowerSupplyService
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
@@ -18,6 +23,8 @@ from .conftest import (
     motion_detector2_device,
     outdoor_siren_device,
     setup_integration,
+    shutter_contact2_device,
+    shutter_contact2_plus_device,
     shutter_contact_device,
     smoke_detection_system_device,
     twinguard_device,
@@ -404,6 +411,49 @@ async def test_smoke_detection_system_state(
     assert state.state == expected
 
 
+@pytest.mark.parametrize(
+    ("attribute", "entity_id"),
+    [
+        ("ac_dc_error", "binary_sensor.outdoor_siren_ac_dc_error"),
+        ("battery_defect", "binary_sensor.outdoor_siren_battery_defect"),
+        (
+            "battery_temperature_abnormal",
+            "binary_sensor.outdoor_siren_battery_temperature_abnormal",
+        ),
+        (
+            "primary_power_supply_outage",
+            "binary_sensor.outdoor_siren_primary_power_supply_outage",
+        ),
+    ],
+)
+@pytest.mark.parametrize(("value", "expected"), [(True, STATE_ON), (False, STATE_OFF)])
+@pytest.mark.usefixtures("mock_session")
+async def test_outdoor_siren_power_supply_binary_sensors(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    attribute: str,
+    entity_id: str,
+    value: bool,
+    expected: str,
+) -> None:
+    """An outdoor siren exposes its power-supply fault flags."""
+    power_supply = MagicMock(spec=OutdoorSirenPowerSupplyService)
+    power_supply.ac_dc_error = False
+    power_supply.battery_defect = False
+    power_supply.battery_temperature_abnormal = False
+    power_supply.primary_power_supply_outage = False
+    setattr(power_supply, attribute, value)
+    mock_session.device_helper.outdoor_sirens = [
+        outdoor_siren_device(power_supply=power_supply)
+    ]
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == expected
+
+
 async def test_smoke_detection_system_push_update(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -422,3 +472,73 @@ async def test_smoke_detection_system_push_update(
     await hass.async_block_till_done()
 
     assert hass.states.get(SMOKE_ALARM_ENTITY_ID).state == STATE_ON
+
+
+@pytest.mark.usefixtures("mock_session")
+async def test_outdoor_siren_without_power_supply(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """An outdoor siren without the power-supply service gets no fault sensors."""
+    mock_session.device_helper.outdoor_sirens = [outdoor_siren_device()]
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("binary_sensor.outdoor_siren_ac_dc_error") is None
+    assert hass.states.get("binary_sensor.outdoor_siren_battery_defect") is None
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "shutter_contacts2": [
+                shutter_contact2_plus_device(
+                    vibrationsensor=VibrationSensorService.State.VIBRATION_DETECTED
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_shutter_contact2_plus_vibration_detected(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A Door/Window Contact II Plus reports detected vibration."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("binary_sensor.shutter_contact_vibration").state == STATE_ON
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"shutter_contacts2": [shutter_contact2_plus_device()]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_shutter_contact2_plus_no_vibration(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """No vibration is reported as off."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("binary_sensor.shutter_contact_vibration").state == STATE_OFF
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"shutter_contacts2": [shutter_contact2_device()]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_shutter_contact2_without_vibration_sensor(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A plain Door/Window Contact II has no vibration sensor."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("binary_sensor.shutter_contact_vibration") is None

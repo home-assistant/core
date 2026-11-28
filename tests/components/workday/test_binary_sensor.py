@@ -379,6 +379,41 @@ async def test_setup_date_range(
     assert state.state == "on"
 
 
+@pytest.mark.parametrize(
+    "check_date",
+    [
+        pytest.param(date(2026, 1, 1), id="this_year"),
+        pytest.param(date(2027, 1, 1), id="next_year"),
+    ],
+)
+async def test_remove_named_holiday_without_language(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    check_date: date,
+) -> None:
+    """Test a holiday removed by name stays removed next year without a language."""
+    freezer.move_to(datetime(2026, 6, 1, 12, tzinfo=UTC))
+    await init_integration(
+        hass,
+        {
+            "country": "DE",
+            "excludes": DEFAULT_EXCLUDES,
+            "days_offset": DEFAULT_OFFSET,
+            "workdays": DEFAULT_WORKDAYS,
+            "custom_holidays": {"add_holidays": [], "remove_holidays": ["Neujahr"]},
+        },
+    )
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        WorkdayService.CHECK_DATE,
+        {"entity_id": "binary_sensor.workday_sensor_de", "check_date": check_date},
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {"binary_sensor.workday_sensor_de": {"workday": True}}
+
+
 async def test_check_date_service(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,

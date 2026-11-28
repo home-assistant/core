@@ -66,21 +66,13 @@ rules:
   dynamic-devices:
     status: exempt
     comment: An entry is one gateway, which controls exactly one indoor unit.
-  entity-category:
-    status: exempt
-    comment: The only entity is the climate entity, which needs no category.
-  entity-device-class:
-    status: exempt
-    comment: The only entity is a climate entity, which has no device class.
-  entity-disabled-by-default:
-    status: exempt
-    comment: The only entity is the climate entity, the integration's main function.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
   entity-translations: done
   exception-translations: done
-  icon-translations:
-    status: exempt
-    comment: The climate entity uses the default mode-based icons.
-  reconfiguration-flow: todo
+  icon-translations: done
+  reconfiguration-flow: done
   repair-issues: todo
   stale-devices:
     status: exempt

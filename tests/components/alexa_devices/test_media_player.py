@@ -8,6 +8,7 @@ from aioamazondevices.exceptions import (
     CannotAuthenticate,
     CannotConnect,
     CannotRetrieveData,
+    InvalidInputError,
 )
 from aioamazondevices.structures import (
     AmazonMediaControls,
@@ -39,6 +40,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import assert_device_removed_and_readded, setup_integration
@@ -602,6 +604,73 @@ async def test_service_play_media(
         "Abbey Road",
         MediaType.MUSIC,
     )
+
+
+@pytest.mark.parametrize(
+    (
+        "side_effect",
+        "expected_error",
+        "translation_key",
+        "translation_placeholders",
+        "volume_calls",
+    ),
+    [
+        pytest.param(
+            InvalidInputError("music is not available as a music provider"),
+            ServiceValidationError,
+            "invalid_music_provider",
+            {"provider": "music"},
+            1,
+            id="invalid_input",
+        ),
+        pytest.param(
+            CannotConnect,
+            HomeAssistantError,
+            "cannot_connect_with_error",
+            {"error": "CannotConnect()"},
+            0,
+            id="cannot_connect",
+        ),
+    ],
+)
+async def test_service_play_media_failure_availability(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    side_effect: Exception | type[Exception],
+    expected_error: type[HomeAssistantError],
+    translation_key: str,
+    translation_placeholders: dict[str, str],
+    volume_calls: int,
+) -> None:
+    """Invalid input is a validation error and does not block later actions."""
+    await _setup_media_player_platform(hass, mock_config_entry)
+
+    mock_amazon_devices_client.call_alexa_music.side_effect = side_effect
+
+    with pytest.raises(expected_error) as exc_info:
+        await hass.services.async_call(
+            MP_DOMAIN,
+            MediaPlayerService.PLAY_MEDIA,
+            {
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                "media_content_id": "Abbey Road",
+                "media_content_type": MediaType.MUSIC,
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == translation_key
+    assert exc_info.value.translation_placeholders == translation_placeholders
+
+    await hass.services.async_call(
+        MP_DOMAIN,
+        MediaPlayerService.VOLUME_SET,
+        {TargetKey.ENTITY_ID: ENTITY_ID, MediaPlayerServiceArgument.VOLUME_LEVEL: 0.75},
+        blocking=True,
+    )
+
+    assert mock_amazon_devices_client.set_device_volume.await_count == volume_calls
 
 
 @pytest.mark.parametrize(

@@ -14,9 +14,10 @@ from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import template
-from homeassistant.components.template.const import CONF_PICTURE, DOMAIN
-from homeassistant.components.template.repairs import (
-    DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID,
+from homeassistant.components.template.const import (
+    CONF_PICTURE,
+    DOMAIN,
+    WEATHER_DEPRECATED_OPTIONS,
 )
 from homeassistant.components.template.weather import DEFAULT_NAME
 from homeassistant.components.weather import (
@@ -1143,6 +1144,8 @@ async def test_deprecated_template_options_issue(
 ) -> None:
     """Test a repair issue is created only for deprecated *_template options."""
     assert (
-        get_issues_with_prefix(issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID)
+        get_issues_with_prefix(
+            issue_registry, WEATHER_DEPRECATED_OPTIONS.translation_key
+        )
         == snapshot
     )

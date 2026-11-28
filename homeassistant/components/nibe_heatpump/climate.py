@@ -62,6 +62,7 @@ class NibeClimateEntity(CoordinatorEntity[CoilCoordinator], ClimateEntity):
     """Climate entity."""
 
     _attr_entity_category = None
+    _attr_has_entity_name = True
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         | ClimateEntityFeature.TARGET_TEMPERATURE

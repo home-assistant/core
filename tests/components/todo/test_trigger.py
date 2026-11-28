@@ -17,20 +17,11 @@ from homeassistant.components.todo import (
     TodoItem,
     TodoItemStatus,
     TodoListEntityFeature,
+    TodoServiceArgument,
 )
-from homeassistant.components.todo.const import ATTR_ITEM, ATTR_STATUS, TodoServices
+from homeassistant.components.todo.const import TodoServices
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_AREA_ID,
-    ATTR_DEVICE_ID,
-    ATTR_FLOOR_ID,
-    ATTR_LABEL_ID,
-    CONF_ENTITY_ID,
-    CONF_PLATFORM,
-    CONF_TARGET,
-    STATE_UNKNOWN,
-    TargetKey,
-)
+from homeassistant.const import CONF_PLATFORM, CONF_TARGET, STATE_UNKNOWN, TargetKey
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import (
     area_registry as ar,
@@ -231,7 +222,7 @@ async def _add_item(hass: HomeAssistant, entity_id: str, item: str) -> None:
     await hass.services.async_call(
         DOMAIN,
         TodoServices.ADD_ITEM,
-        {TargetKey.ENTITY_ID: entity_id, ATTR_ITEM: item},
+        {TargetKey.ENTITY_ID: entity_id, TodoServiceArgument.ITEM: item},
         blocking=True,
     )
 
@@ -240,7 +231,7 @@ async def _remove_item(hass: HomeAssistant, entity_id: str, item: str) -> None:
     await hass.services.async_call(
         DOMAIN,
         TodoServices.REMOVE_ITEM,
-        {TargetKey.ENTITY_ID: entity_id, ATTR_ITEM: [item]},
+        {TargetKey.ENTITY_ID: entity_id, TodoServiceArgument.ITEM: [item]},
         blocking=True,
     )
 
@@ -251,8 +242,8 @@ async def _complete_item(hass: HomeAssistant, entity_id: str, item: str) -> None
         TodoServices.UPDATE_ITEM,
         {
             TargetKey.ENTITY_ID: entity_id,
-            ATTR_ITEM: item,
-            ATTR_STATUS: TodoItemStatus.COMPLETED,
+            TodoServiceArgument.ITEM: item,
+            TodoServiceArgument.STATUS: TodoItemStatus.COMPLETED,
         },
         blocking=True,
     )
@@ -263,7 +254,7 @@ async def test_item_change_triggers(
 ) -> None:
     """Test item change triggers fire."""
 
-    await _setup_automation(hass, {CONF_ENTITY_ID: TODO_ENTITY_ID1})
+    await _setup_automation(hass, {TargetKey.ENTITY_ID: TODO_ENTITY_ID1})
 
     # ensure that there is 1 pre-existing item in the list,
     # so that we test that triggers only fire for new ones
@@ -339,7 +330,7 @@ async def test_item_change_triggers_ignore_initial_unknown(
     assert (state := hass.states.get(TODO_ENTITY_ID1))
     assert state.state == STATE_UNKNOWN
 
-    await _setup_automation(hass, {CONF_ENTITY_ID: TODO_ENTITY_ID1})
+    await _setup_automation(hass, {TargetKey.ENTITY_ID: TODO_ENTITY_ID1})
 
     entity._attr_todo_items = [
         TodoItem(
@@ -363,11 +354,11 @@ async def test_item_change_triggers_ignore_initial_unknown(
 @pytest.mark.parametrize(
     "included_target",
     [
-        {CONF_ENTITY_ID: TODO_ENTITY_ID1},
-        {ATTR_AREA_ID: "area_list_one"},
-        {ATTR_FLOOR_ID: "floor_list_one"},
-        {ATTR_LABEL_ID: "label_list_one"},
-        {ATTR_DEVICE_ID: "device_list_one"},
+        {TargetKey.ENTITY_ID: TODO_ENTITY_ID1},
+        {TargetKey.AREA_ID: "area_list_one"},
+        {TargetKey.FLOOR_ID: "floor_list_one"},
+        {TargetKey.LABEL_ID: "label_list_one"},
+        {TargetKey.DEVICE_ID: "device_list_one"},
     ],
 )
 async def test_item_change_trigger_does_not_fire_for_other_entity(
@@ -440,7 +431,7 @@ async def test_new_entity_added_to_target_fires_triggers(
     todo_entity_id3 = "todo.list_three"
 
     # Set up automation targeting label_list_one (initially only entity1)
-    await _setup_automation(hass, {ATTR_LABEL_ID: "label_list_one"})
+    await _setup_automation(hass, {TargetKey.LABEL_ID: "label_list_one"})
 
     entity3 = _make_entity(
         todo_entity_id3,
@@ -491,7 +482,7 @@ async def test_item_change_triggers_after_config_entry_reload(
     Reload recreates the entity object without changing the registry entry, so
     the trigger must re-subscribe rather than keep the old object.
     """
-    await _setup_automation(hass, {CONF_ENTITY_ID: TODO_ENTITY_ID1})
+    await _setup_automation(hass, {TargetKey.ENTITY_ID: TODO_ENTITY_ID1})
 
     config_entry = hass.config_entries.async_entries(TEST_DOMAIN)[0]
 
@@ -569,7 +560,7 @@ async def test_trigger_skips_missing_entity(
 
     # Target both a valid entity and a non-existent one
     await _setup_automation(
-        hass, {CONF_ENTITY_ID: [TODO_ENTITY_ID1, nonexistent_entity_id]}
+        hass, {TargetKey.ENTITY_ID: [TODO_ENTITY_ID1, nonexistent_entity_id]}
     )
 
     assert f"Skipping entity {nonexistent_entity_id}" in caplog.text
@@ -594,7 +585,7 @@ async def test_entity_rejoining_label_does_not_fire_trigger(
     assert label_both is not None
     label_both_id = label_both.label_id
 
-    await _setup_automation(hass, {ATTR_LABEL_ID: label_both_id})
+    await _setup_automation(hass, {TargetKey.LABEL_ID: label_both_id})
 
     # Verify triggers fire normally for list_one
     await _add_item(hass, TODO_ENTITY_ID1, "tracked_item")
@@ -628,11 +619,11 @@ async def test_entity_rejoining_label_does_not_fire_trigger(
 @pytest.mark.parametrize(
     "trigger_target",
     [
-        {CONF_ENTITY_ID: [TODO_ENTITY_ID1, TODO_ENTITY_ID2]},
-        {ATTR_AREA_ID: ["area_list_one", "area_list_two"]},
-        {ATTR_FLOOR_ID: ["floor_list_one", "floor_list_two"]},
-        {ATTR_LABEL_ID: "label_both_lists"},
-        {ATTR_DEVICE_ID: ["device_list_one", "device_list_two"]},
+        {TargetKey.ENTITY_ID: [TODO_ENTITY_ID1, TODO_ENTITY_ID2]},
+        {TargetKey.AREA_ID: ["area_list_one", "area_list_two"]},
+        {TargetKey.FLOOR_ID: ["floor_list_one", "floor_list_two"]},
+        {TargetKey.LABEL_ID: "label_both_lists"},
+        {TargetKey.DEVICE_ID: ["device_list_one", "device_list_two"]},
     ],
     ids=["entity_id", "area", "floor", "label", "device"],
 )

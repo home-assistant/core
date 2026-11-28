@@ -1216,6 +1216,70 @@ async def test_thermostat_hvac_action_boiler_and_cooler_status(
     assert state.attributes[ATTR_HVAC_ACTION] == expected
 
 
+@pytest.mark.parametrize(
+    ("setpoint_mode", "setpoint_temperature", "hvac_mode", "preset_mode"),
+    [
+        pytest.param("hg", 7, HVACMode.AUTO, PRESET_FROST_GUARD, id="frost_guard"),
+        pytest.param("home", 23, HVACMode.AUTO, PRESET_SCHEDULE, id="schedule"),
+        pytest.param("manual", 23.5, HVACMode.AUTO, "manual", id="manual"),
+        pytest.param("max", None, HVACMode.HEAT, PRESET_BOOST, id="boost"),
+    ],
+)
+async def test_thermostat_update_with_cooling_setpoint(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    setpoint_mode: str,
+    setpoint_temperature: float | None,
+    hvac_mode: HVACMode,
+    preset_mode: str,
+) -> None:
+    """Test thermostat setup for a home in cooling mode.
+
+    A home whose temperature control mode is cooling gets cooling_setpoint_mode
+    and cooling_setpoint_temperature from the backend, and no therm_setpoint_*
+    fields at all.
+    """
+
+    def set_cooling_setpoint(payload: dict[str, Any]) -> None:
+        """Replace the therm setpoint with a cooling one in the response."""
+        home = payload.get("body", {}).get("home")
+        if home is None:
+            return
+
+        for room in home.get("rooms", []):
+            if room["id"] == "2746182631":
+                room.pop("therm_setpoint_mode", None)
+                room.pop("therm_setpoint_temperature", None)
+                room["cooling_setpoint_mode"] = setpoint_mode
+                room["cooling_setpoint_temperature"] = setpoint_temperature
+
+    async def fake_post(*args: Any, **kwargs: Any):
+        """Return backend data for a home in cooling mode."""
+        kwargs["msg_callback"] = set_cooling_setpoint
+        return await fake_post_request(hass, *args, **kwargs)
+
+    with (
+        selected_platforms([Platform.CLIMATE]),
+        patch(
+            "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+        ) as mock_auth,
+    ):
+        mock_auth.return_value.async_post_request.side_effect = fake_post
+        mock_auth.return_value.async_post_api_request.side_effect = fake_post
+        mock_auth.return_value.async_get_image.side_effect = fake_get_image
+        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
+        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
+
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("climate.livingroom_livingroom")
+    assert state is not None
+    assert state.state == hvac_mode
+    assert state.attributes[ATTR_PRESET_MODE] == preset_mode
+    assert state.attributes["temperature"] == setpoint_temperature
+
+
 async def test_webhook_set_point(
     hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
 ) -> None:

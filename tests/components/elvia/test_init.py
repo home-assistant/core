@@ -6,7 +6,6 @@ from unittest.mock import patch
 from elvia import error as ElviaError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
-from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 
 from homeassistant.components.elvia.const import CONF_METERING_POINT_ID, DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
@@ -81,9 +80,8 @@ async def test_scheduled_import_auth_failed(hass: HomeAssistant) -> None:
         side_effect=ElviaError.AuthError("Boom", 401, {}, ""),
     ):
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=61))
-        # The import reads statistics in the recorder executor first.
-        await async_wait_recording_done(hass)
-        await hass.async_block_till_done()
+        # The scheduled import runs as a background task.
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1

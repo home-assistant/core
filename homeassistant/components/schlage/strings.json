@@ -23,6 +23,16 @@
         "description": "The Schlage integration needs to re-authenticate your account",
         "title": "[%key:common::config_flow::title::reauth%]"
       },
+      "reconfigure": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "[%key:component::schlage::common::data_description_password%]",
+          "username": "[%key:component::schlage::common::data_description_username%]"
+        }
+      },
       "user": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
@@ -72,6 +82,9 @@
   "exceptions": {
     "schlage_add_code_failed": {
       "message": "Failed to add PIN code to the lock."
+    },
+    "schlage_auth_failed": {
+      "message": "Failed to sign in to your Schlage account."
     },
     "schlage_code_exists": {
       "message": "A PIN code with this value already exists on the lock."

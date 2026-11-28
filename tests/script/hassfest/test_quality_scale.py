@@ -22,12 +22,20 @@ def validate_quality_scale(
     """Return a function that validates a quality scale file.
 
     By default the integration is Bronze, and every rule is exempt. Pass rules
-    to override, and manifest keys to change the manifest.
+    to override, config_flow_code to add a config_flow.py, and manifest keys to
+    change the manifest.
     """
 
-    def _validate(rules: dict[str, Any] | None = None, **manifest: Any) -> list[str]:
+    def _validate(
+        rules: dict[str, Any] | None = None,
+        *,
+        config_flow_code: str | None = None,
+        **manifest: Any,
+    ) -> list[str]:
         path = tmp_path / DOMAIN
         path.mkdir()
+        if config_flow_code is not None:
+            (path / "config_flow.py").write_text(config_flow_code)
         (path / "quality_scale.yaml").write_text(
             yaml.safe_dump(
                 {
@@ -116,3 +124,111 @@ def test_pull_request_reference_in_comment(
         validate_quality_scale({"brands": {"status": "exempt", "comment": comment}})
         == errors
     )
+
+
+@pytest.mark.parametrize(
+    ("rule", "config_flow_code"),
+    [
+        pytest.param(
+            "unique-config-entry",
+            "def step(self):\n    self._async_abort_entries_match({})\n",
+            id="unique_config_entry_abort_entries_match",
+        ),
+        pytest.param(
+            "unique-config-entry",
+            "async def step(self):\n"
+            "    await self.async_set_unique_id('id')\n"
+            "    self._abort_if_unique_id_configured()\n",
+            id="unique_config_entry_unique_id",
+        ),
+        pytest.param(
+            "unique-config-entry",
+            "class Flow(InfraredConsumerConfigFlow, domain='test'):\n    pass\n",
+            id="unique_config_entry_infrared_consumer_flow",
+        ),
+        pytest.param(
+            "unique-config-entry",
+            "class Flow(infrared.InfraredConsumerConfigFlow, domain='test'):\n"
+            "    pass\n",
+            id="unique_config_entry_infrared_consumer_flow_module",
+        ),
+        pytest.param(
+            "unique-config-entry",
+            "class Flow(InfraredConsumerConfigFlow, domain='test'):\n"
+            "    async def async_step_user(self, user_input=None):\n"
+            "        self._async_abort_infrared_entities_match(user_input)\n",
+            id="unique_config_entry_infrared_consumer_own_user_step",
+        ),
+        pytest.param(
+            "reconfiguration-flow",
+            "class Flow(ConfigFlow, domain='test'):\n"
+            "    async def async_step_reconfigure(self, user_input=None):\n"
+            "        pass\n",
+            id="reconfiguration_flow_async_step_reconfigure",
+        ),
+        pytest.param(
+            "reconfiguration-flow",
+            "class Flow(InfraredConsumerConfigFlow, domain='test'):\n    pass\n",
+            id="reconfiguration_flow_infrared_consumer_flow",
+        ),
+        pytest.param(
+            "reconfiguration-flow",
+            "class Flow(infrared.InfraredConsumerConfigFlow, domain='test'):\n"
+            "    pass\n",
+            id="reconfiguration_flow_infrared_consumer_flow_module",
+        ),
+    ],
+)
+def test_config_flow_rule_done(
+    validate_quality_scale: ValidateQualityScale, rule: str, config_flow_code: str
+) -> None:
+    """Test config flows that follow a done rule pass."""
+    assert (
+        validate_quality_scale({rule: "done"}, config_flow_code=config_flow_code) == []
+    )
+
+
+@pytest.mark.parametrize(
+    ("rule", "config_flow_code", "error"),
+    [
+        pytest.param(
+            "unique-config-entry",
+            "def step(self):\n    self.async_create_entry()\n",
+            "Integration doesn't prevent the same device or service from being"
+            " set up twice in {config_flow_file}",
+            id="unique_config_entry_no_check",
+        ),
+        pytest.param(
+            "unique-config-entry",
+            "class Flow(InfraredConsumerConfigFlow, domain='test'):\n"
+            "    async def async_step_user(self, user_input=None):\n"
+            "        return self.async_create_entry()\n",
+            "Integration doesn't prevent the same device or service from being"
+            " set up twice in {config_flow_file}",
+            id="unique_config_entry_infrared_consumer_own_user_step_no_check",
+        ),
+        pytest.param(
+            "reconfiguration-flow",
+            "class Flow(ConfigFlow, domain='test'):\n    pass\n",
+            "Integration does not support a reconfiguration flow"
+            " (is missing `async_step_reconfigure` in {config_flow_file})",
+            id="reconfiguration_flow_config_flow",
+        ),
+    ],
+)
+def test_config_flow_rule_done_not_met(
+    validate_quality_scale: ValidateQualityScale,
+    tmp_path: Path,
+    rule: str,
+    config_flow_code: str,
+    error: str,
+) -> None:
+    """Test config flows that do not follow a done rule fail."""
+    config_flow_file = tmp_path / DOMAIN / "config_flow.py"
+
+    assert validate_quality_scale(
+        {rule: "done"}, config_flow_code=config_flow_code
+    ) == [
+        f"[{rule}] {error.format(config_flow_file=config_flow_file)}",
+        quality_scale.RULE_URL.format(rule_name=rule),
+    ]

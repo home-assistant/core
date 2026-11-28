@@ -81,6 +81,124 @@
     'state': 'on',
   })
 # ---
+# name: test_lights[aqara_light_switch_h2_eu_4105][light.aqara_smart_wall_switch_light_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
+        <ColorMode.ONOFF: 'onoff'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000050-MatterNodeDevice'), ('matter', 'serial_serial_80')]>,
+    'disabled_by': None,
+    'domain': 'light',
+    'entity_category': None,
+    'entity_id': 'light.aqara_smart_wall_switch_light_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Light (1)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Light (1)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'light',
+    'unique_id': '00000000000004D2-0000000000000050-MatterNodeDevice-1-MatterLight-6-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_lights[aqara_light_switch_h2_eu_4105][light.aqara_smart_wall_switch_light_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.ONOFF: 'onoff'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Light (1)',
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
+        <ColorMode.ONOFF: 'onoff'>,
+      ]),
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.aqara_smart_wall_switch_light_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_lights[aqara_light_switch_h2_eu_4105][light.aqara_smart_wall_switch_light_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
+        <ColorMode.ONOFF: 'onoff'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000050-MatterNodeDevice'), ('matter', 'serial_serial_80')]>,
+    'disabled_by': None,
+    'domain': 'light',
+    'entity_category': None,
+    'entity_id': 'light.aqara_smart_wall_switch_light_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Light (2)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Light (2)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'light',
+    'unique_id': '00000000000004D2-0000000000000050-MatterNodeDevice-2-MatterLight-6-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_lights[aqara_light_switch_h2_eu_4105][light.aqara_smart_wall_switch_light_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Light (2)',
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
+        <ColorMode.ONOFF: 'onoff'>,
+      ]),
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.aqara_smart_wall_switch_light_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_lights[aqara_light_switch_h2_us_4099][light.aqara_smart_wall_switch-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -140,7 +258,7 @@
     'state': 'off',
   })
 # ---
-# name: test_lights[aqara_light_switch_h2_us_4100][light.aqara_smart_wall_switch_light_1-entry]
+# name: test_lights[aqara_light_switch_h2_us_4100][light.aqara_smart_wall_switch_light_1_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -158,7 +276,7 @@
     'disabled_by': None,
     'domain': 'light',
     'entity_category': None,
-    'entity_id': 'light.aqara_smart_wall_switch_light_1',
+    'entity_id': 'light.aqara_smart_wall_switch_light_1_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -181,7 +299,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_lights[aqara_light_switch_h2_us_4100][light.aqara_smart_wall_switch_light_1-state]
+# name: test_lights[aqara_light_switch_h2_us_4100][light.aqara_smart_wall_switch_light_1_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
@@ -192,14 +310,14 @@
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 0>,
     }),
     'context': <ANY>,
-    'entity_id': 'light.aqara_smart_wall_switch_light_1',
+    'entity_id': 'light.aqara_smart_wall_switch_light_1_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_lights[aqara_light_switch_h2_us_4100][light.aqara_smart_wall_switch_light_2-entry]
+# name: test_lights[aqara_light_switch_h2_us_4100][light.aqara_smart_wall_switch_light_2_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -217,7 +335,7 @@
     'disabled_by': None,
     'domain': 'light',
     'entity_category': None,
-    'entity_id': 'light.aqara_smart_wall_switch_light_2',
+    'entity_id': 'light.aqara_smart_wall_switch_light_2_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -240,7 +358,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_lights[aqara_light_switch_h2_us_4100][light.aqara_smart_wall_switch_light_2-state]
+# name: test_lights[aqara_light_switch_h2_us_4100][light.aqara_smart_wall_switch_light_2_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.ONOFF: 'onoff'>,
@@ -251,14 +369,14 @@
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 0>,
     }),
     'context': <ANY>,
-    'entity_id': 'light.aqara_smart_wall_switch_light_2',
+    'entity_id': 'light.aqara_smart_wall_switch_light_2_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_lights[aqara_light_switch_h2_us_4101][light.aqara_smart_wall_switch_light_1_2-entry]
+# name: test_lights[aqara_light_switch_h2_us_4101][light.aqara_smart_wall_switch_light_1_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -276,7 +394,7 @@
     'disabled_by': None,
     'domain': 'light',
     'entity_category': None,
-    'entity_id': 'light.aqara_smart_wall_switch_light_1_2',
+    'entity_id': 'light.aqara_smart_wall_switch_light_1_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -299,7 +417,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_lights[aqara_light_switch_h2_us_4101][light.aqara_smart_wall_switch_light_1_2-state]
+# name: test_lights[aqara_light_switch_h2_us_4101][light.aqara_smart_wall_switch_light_1_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
@@ -310,14 +428,14 @@
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 0>,
     }),
     'context': <ANY>,
-    'entity_id': 'light.aqara_smart_wall_switch_light_1_2',
+    'entity_id': 'light.aqara_smart_wall_switch_light_1_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_lights[aqara_light_switch_h2_us_4101][light.aqara_smart_wall_switch_light_2_2-entry]
+# name: test_lights[aqara_light_switch_h2_us_4101][light.aqara_smart_wall_switch_light_2_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -335,7 +453,7 @@
     'disabled_by': None,
     'domain': 'light',
     'entity_category': None,
-    'entity_id': 'light.aqara_smart_wall_switch_light_2_2',
+    'entity_id': 'light.aqara_smart_wall_switch_light_2_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -358,7 +476,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_lights[aqara_light_switch_h2_us_4101][light.aqara_smart_wall_switch_light_2_2-state]
+# name: test_lights[aqara_light_switch_h2_us_4101][light.aqara_smart_wall_switch_light_2_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.ONOFF: 'onoff'>,
@@ -369,7 +487,7 @@
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 0>,
     }),
     'context': <ANY>,
-    'entity_id': 'light.aqara_smart_wall_switch_light_2_2',
+    'entity_id': 'light.aqara_smart_wall_switch_light_2_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

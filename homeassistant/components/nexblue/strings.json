@@ -74,6 +74,13 @@
       "circuit_fuse": { "name": "Circuit fuse" },
       "current": { "name": "Current {phase}" },
       "current_limit": { "name": "Max charging current" },
+      "household_consumption_month": {
+        "name": "Household consumption this month"
+      },
+      "household_consumption_today": { "name": "Household consumption today" },
+      "household_consumption_year": {
+        "name": "Household consumption this year"
+      },
       "lifetime_energy": { "name": "Lifetime energy" },
       "network_status": {
         "name": "Network status",

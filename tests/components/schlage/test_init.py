@@ -33,6 +33,7 @@ async def test_auth_failed(
 
     assert mock_auth.call_count == 1
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.error_reason_translation_key == "schlage_auth_failed"
 
 
 async def test_update_data_fails(
@@ -65,6 +66,7 @@ async def test_update_data_auth_error(
 
     assert mock_schlage.locks.call_count == 1
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.error_reason_translation_key == "schlage_auth_failed"
 
 
 async def test_update_data_get_logs_auth_error(
@@ -84,6 +86,7 @@ async def test_update_data_get_logs_auth_error(
 
     assert mock_schlage.locks.call_count == 1
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.error_reason_translation_key == "schlage_auth_failed"
 
 
 async def test_load_unload_config_entry(

@@ -2089,6 +2089,29 @@ class DeletedDeviceRegistryItems(DeviceRegistryItems[DeletedDeviceEntry]):
         return orphans[0] if orphans else None
 
 
+def _validate_area_and_labels(
+    hass: HomeAssistant, new_values: dict[str, Any], old_labels: set[str]
+) -> None:
+    """Raise ValueError if a new area or a newly added label does not exist.
+
+    Only new values are checked, so removing a label or an area still works
+    when the device refers to one that no longer exists.
+    """
+    # Circular dep
+    from . import area_registry as ar, label_registry as lr  # noqa: PLC0415
+
+    if (area_id := new_values.get("area_id")) is not None and ar.async_get(
+        hass
+    ).async_get_area(area_id) is None:
+        raise ValueError(f"Area '{area_id}' not found.")
+    if "labels" in new_values and (
+        missing := lr.async_get_missing_label_ids(
+            hass, set(new_values["labels"]) - old_labels
+        )
+    ):
+        raise ValueError(f"Labels not found: {', '.join(sorted(missing))}")
+
+
 class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
     """Class to hold a registry of devices."""
 
@@ -3363,6 +3386,17 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         """
         old = self._devices[device_id]
 
+        # Validate before any change, so a rejected update changes nothing
+        _validate_area_and_labels(
+            self.hass,
+            {
+                key: value
+                for key, value in (("area_id", area_id), ("labels", labels))
+                if value is not Undefined and value != getattr(old, key)
+            },
+            old.labels,
+        )
+
         new_values: dict[str, Any] = {}  # Dict with new key/value pairs
         old_values: dict[str, Any] = {}  # Dict with old key/value pairs
 
@@ -3963,6 +3997,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 new_values[attr_name] = value
                 old_values[attr_name] = getattr(old, attr_name)
 
+        _validate_area_and_labels(self.hass, new_values, old.labels)
+
         if not new_values and not is_new:
             return old
 
@@ -4420,6 +4456,19 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             )
             for name in ignored:
                 del forward[name]
+        # Validate every device before changing any, so a rejected update changes
+        # nothing
+        for underlying_id in underlying_ids:
+            old = self._devices[underlying_id]
+            _validate_area_and_labels(
+                self.hass,
+                {
+                    key: forward[key]
+                    for key in ("area_id", "labels")
+                    if key in forward and forward[key] != getattr(old, key)
+                },
+                old.labels,
+            )
         for underlying_id in underlying_ids:
             self.async_update_device(underlying_id, **forward)
         remaining = [

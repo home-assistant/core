@@ -55,7 +55,14 @@ class UpdateFailed(HomeAssistantError):
         retry_after: float | None = None,
         **kwargs: Any,
     ) -> None:
-        """Initialize exception."""
+        """Initialize exception.
+
+        Args:
+            retry_after: Seconds to wait before retrying the update, overriding
+                the coordinator's normal update interval. On the first refresh,
+                this is forwarded to ConfigEntryNotReady so the config entry
+                setup retry honors it.
+        """
         super().__init__(*args, **kwargs)
         self.retry_after = retry_after
 

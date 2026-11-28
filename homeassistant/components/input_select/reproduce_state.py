@@ -6,7 +6,7 @@ import logging
 from typing import Any
 
 from homeassistant.components.select import SelectEntityCapabilityAttribute
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import TargetKey
 from homeassistant.core import Context, HomeAssistant, State
 
 from .const import DOMAIN, InputSelectService, InputSelectServiceArgument
@@ -34,7 +34,7 @@ async def _async_reproduce_state(
         return
 
     # Set service data
-    service_data = {ATTR_ENTITY_ID: state.entity_id}
+    service_data: dict[str, Any] = {TargetKey.ENTITY_ID: state.entity_id}
 
     # If options are specified, call set_options
     if SelectEntityCapabilityAttribute.OPTIONS in state.attributes:

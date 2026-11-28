@@ -205,9 +205,9 @@ async def async_configure_step[
     Returns a `ToolResult` directly when input arguments are invalid, when the
     flow is not found, when `abort` is true, when input does not match the
     current step type, or when `async_configure` raises `InvalidData` or
-    `UnknownFlow`. Otherwise returns the next `FlowResult` (or the current
-    `SHOW_PROGRESS` step while its progress task is still running) for the
-    caller to format with `format_result`.
+    `UnknownFlow`. Otherwise returns the current `FlowResult` when inspecting
+    a form/menu or waiting for a progress task, or the next `FlowResult` when
+    advancing the flow, for the caller to format with `format_result`.
     """
     if user_input is not None and next_step_id is not None:
         return _error_result("Cannot specify both 'user_input' and 'next_step_id'.")
@@ -255,6 +255,14 @@ async def async_configure_step[
         return _error_result(
             f"Current step has type '{cur_type}' and does not accept input."
         )
+
+    if (
+        cur_type
+        in (data_entry_flow.FlowResultType.FORM, data_entry_flow.FlowResultType.MENU)
+        and user_input is None
+        and next_step_id is None
+    ):
+        return cur_step
 
     if (
         cur_type is data_entry_flow.FlowResultType.SHOW_PROGRESS

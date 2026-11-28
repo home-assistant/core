@@ -16,6 +16,7 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .conftest import (
     AUTH_INPUT,
@@ -384,7 +385,11 @@ async def test_reconfigure_reuses_saved_credentials(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert mock_auth_config_entry.data == {**RECONFIGURE_INPUT, **AUTH_INPUT}
-    mock_lhm_client_class.assert_called_once_with(**RECONFIGURE_INPUT, **AUTH_INPUT)
+    mock_lhm_client_class.assert_called_once_with(
+        **RECONFIGURE_INPUT,
+        **AUTH_INPUT,
+        session=async_get_clientsession(hass),
+    )
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -423,10 +428,11 @@ async def test_reconfigure_with_auth(
     assert result["reason"] == "reconfigure_successful"
     assert mock_auth_config_entry.data == {**RECONFIGURE_INPUT, **REAUTH_INPUT}
     assert mock_auth_config_entry.title == RECONFIGURED_TITLE
+    session = async_get_clientsession(hass)
     assert mock_lhm_client_class.call_args_list == [
-        call(**RECONFIGURE_INPUT, **AUTH_INPUT),  # saved credentials, rejected
-        call(**RECONFIGURE_INPUT, **REAUTH_INPUT),  # invalid_auth
-        call(**RECONFIGURE_INPUT, **REAUTH_INPUT),  # success
+        call(**RECONFIGURE_INPUT, **AUTH_INPUT, session=session),  # saved, now rejected
+        call(**RECONFIGURE_INPUT, **REAUTH_INPUT, session=session),  # invalid_auth
+        call(**RECONFIGURE_INPUT, **REAUTH_INPUT, session=session),  # success
     ]
 
 

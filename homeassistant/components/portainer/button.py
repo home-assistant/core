@@ -48,14 +48,6 @@ PARALLEL_UPDATES = 1
 PULL_IMAGE_TIMEOUT = timedelta(minutes=10)
 
 
-def _image_reference(image: str) -> str:
-    """Return the image with a tag, as Docker pulls every tag of an untagged image."""
-    # A registry port (registry:5000/foo) puts a colon in an earlier path segment
-    if "@" in image or ":" in image.rsplit("/", 1)[-1]:
-        return image
-    return f"{image}:latest"
-
-
 async def _async_pull_image(
     portainer: Portainer, endpoint_id: int, container: PortainerContainerData
 ) -> None:
@@ -64,7 +56,7 @@ async def _async_pull_image(
     if TYPE_CHECKING:
         assert config is not None
         assert config.image is not None
-    image = _image_reference(config.image)
+    image = config.image
     try:
         async with asyncio.timeout(PULL_IMAGE_TIMEOUT.total_seconds()):
             async for _ in portainer.image_pull(endpoint_id, image):

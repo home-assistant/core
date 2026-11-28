@@ -2,6 +2,7 @@
 
 from typing import Any
 
+from fritzconnection.core.exceptions import FritzConnectionException
 from fritzconnection.lib.fritzstatus import DefaultConnectionService
 
 from homeassistant.components.fritz.const import DOMAIN
@@ -271,6 +272,15 @@ MOCK_FB_SERVICES: dict[str, dict[str, Any]] = {
         }
     },
     "X_AVM-DE_UPnP1": {"GetInfo": {"NewEnable": True}},
+}
+
+# The last WLANConfiguration service is the guest Wi-Fi
+MOCK_FB_SERVICES_GUEST_WIFI_NOT_ACCESSIBLE: dict[str, dict[str, Any]] = {
+    **MOCK_FB_SERVICES,
+    "WLANConfiguration2": {
+        **MOCK_FB_SERVICES["WLANConfiguration2"],
+        "GetInfo": FritzConnectionException("UPnPError 504"),
+    },
 }
 
 MOCK_MESH_DATA = {

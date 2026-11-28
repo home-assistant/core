@@ -26,14 +26,20 @@
     }),
     'torrents': dict({
       'states': dict({
+        'checkingUP': 1,
         'downloading': 1,
         'error': 1,
+        'forcedUP': 1,
         'missingFiles': 1,
+        'pausedUP': 1,
+        'queuedUP': 1,
         'stalledDL': 1,
         'stalledUP': 1,
         'stoppedDL': 1,
+        'stoppedUP': 1,
+        'uploading': 1,
       }),
-      'total': 6,
+      'total': 12,
     }),
   })
 # ---

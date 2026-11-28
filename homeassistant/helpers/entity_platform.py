@@ -1216,9 +1216,6 @@ class EntityPlatform:
         self.async_cancel_retry_setup()
         self._entity_limit_warned = False
 
-        if not self.entities:
-            return
-
         # Removals are awaited in series since in most
         # cases calling async_remove will not yield control
         # to the event loop and we want to avoid scheduling

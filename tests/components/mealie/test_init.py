@@ -69,13 +69,14 @@ async def test_setup_failure(
         ("v1.0.0beta-5"),
         ("v1.0.0-RC2"),
         ("v0.1.0"),
+        ("v3.6.0"),
     ],
 )
 async def test_setup_too_old(
     hass: HomeAssistant,
     mock_mealie_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    version,
+    version: str,
 ) -> None:
     """Test setup of Mealie entry with too old version of Mealie."""
     mock_mealie_client.get_about.return_value = About(version=version)

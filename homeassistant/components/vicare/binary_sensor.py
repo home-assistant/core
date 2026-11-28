@@ -109,6 +109,22 @@ GLOBAL_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
         value_getter=lambda api: api.getDomesticHotWaterPumpActive(),
     ),
     ViCareBinarySensorEntityDescription(
+        key="dhw_hygiene_active",
+        translation_key="domestic_hot_water_hygiene",
+        device_class=BinarySensorDeviceClass.RUNNING,
+        # A device with the function switched off only reports "enabled".
+        value_getter=lambda api: (
+            api.getDomesticHotWaterHygieneEnabled()
+            and api.getDomesticHotWaterHygieneActive()
+        ),
+    ),
+    ViCareBinarySensorEntityDescription(
+        key="boiler_internal_pump_active",
+        translation_key="boiler_internal_pump",
+        device_class=BinarySensorDeviceClass.RUNNING,
+        value_getter=lambda api: api.getBoilerInternalPumpActive(),
+    ),
+    ViCareBinarySensorEntityDescription(
         key="one_time_charge",
         translation_key="one_time_charge",
         device_class=BinarySensorDeviceClass.RUNNING,

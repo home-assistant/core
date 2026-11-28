@@ -29,7 +29,11 @@ from homeassistant.components.mikrotik.const import (
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    label_registry as lr,
+)
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -620,6 +624,7 @@ async def test_removed_interface_entities_are_restored_and_migrated(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    label_registry: lr.LabelRegistry,
     mock_config_entry: MockConfigEntryFactory,
 ) -> None:
     """Test entities removed by the old stale-device cleanup keep their settings."""
@@ -639,6 +644,7 @@ async def test_removed_interface_entities_are_restored_and_migrated(
     entity_registry.async_update_entity(
         entity.entity_id, new_entity_id="binary_sensor.vpn", name="VPN"
     )
+    label_registry.async_create("vpn")
     device_registry.async_update_device(
         device.id, name_by_user="Office VPN", labels={"vpn"}
     )

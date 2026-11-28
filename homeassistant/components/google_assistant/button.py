@@ -9,9 +9,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import GoogleConfigEntry
 from .const import CONF_PROJECT_ID, CONF_SERVICE_ACCOUNT, DATA_CONFIG, DOMAIN
-from .http import GoogleConfig
+from .http import GoogleConfig, GoogleConfigEntry
 
 
 async def async_setup_entry(

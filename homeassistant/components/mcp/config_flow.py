@@ -138,7 +138,9 @@ async def validate_input(
                     raise MissingCapabilities(
                         f"MCP Server {url} does not support 'Tools' capability"
                     )
-                return {"title": response.server_info.name}
+                return {
+                    "title": response.server_info.title or response.server_info.name
+                }
     except (httpx2.TimeoutException, TimeoutError) as error:
         _LOGGER.info("Timeout connecting to MCP server: %s", error)
         raise TimeoutConnectError from error

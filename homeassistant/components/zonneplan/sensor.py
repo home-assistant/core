@@ -242,16 +242,7 @@ ZONNEPLAN_SENSORS: tuple[ZonneplanPriceSensorEntityDescription, ...] = (
         value_fn=lambda coordinator: (
             float(point.price_tax_included.euro)
             if coordinator.data.gas_prices is not None
-            and (
-                point := next(
-                    iter(
-                        coordinator.data.gas_prices.prices_for_day(
-                            dt_util.now(ZONNEPLAN_TIMEZONE).date(), ZONNEPLAN_TIMEZONE
-                        )
-                    ),
-                    None,
-                )
-            )
+            and (point := coordinator.data.gas_prices.price_at(dt_util.utcnow()))
             else None
         ),
         supported_fn=lambda coordinator: bool(coordinator.data.gas_prices),

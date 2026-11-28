@@ -6,6 +6,9 @@
     "get_3_hour_forecast": {
       "service": "mdi:weather-partly-cloudy"
     },
+    "get_air_quality_forecast": {
+      "service": "mdi:air-filter"
+    },
     "get_forecasts_extra": {
       "service": "mdi:weather-cloudy-clock"
     },

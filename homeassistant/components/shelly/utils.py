@@ -8,6 +8,7 @@ from aiohttp.web import Request, WebSocketResponse
 from aioshelly.ble import get_device_from_model_id
 from aioshelly.ble.manufacturer_data import parse_shelly_manufacturer_data
 from aioshelly.block_device import COAP, Block, BlockDevice
+from aioshelly.common import use_ssl
 from aioshelly.const import (
     BLOCK_GENERATIONS,
     BLU_TRV_IDENTIFIER,
@@ -34,7 +35,12 @@ from yarl import URL
 from homeassistant.components import network
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.network import async_get_source_ip
-from homeassistant.const import CONF_MODEL, CONF_PORT, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_MODEL,
+    CONF_PORT,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import (
     device_registry as dr,
@@ -673,6 +679,18 @@ def get_host(host: str) -> str:
     return host
 
 
+def get_device_url(data: Mapping[str, Any]) -> str:
+    """Get the base URL of the device from config entry data."""
+    port = get_http_port(data)
+    return str(
+        URL.build(
+            scheme="https" if use_ssl(port) else "http",
+            host=data[CONF_HOST],
+            port=port,
+        )
+    )
+
+
 @callback
 def async_remove_shelly_rpc_entities(
     hass: HomeAssistant, domain: str, mac: str, keys: list[str]
@@ -770,14 +788,6 @@ def _get_homeassistant_url(hass: HomeAssistant) -> URL | None:
         LOGGER.debug("URL not available, skipping setup")
         return None
     return URL(raw_url)
-
-
-async def get_coiot_address(hass: HomeAssistant) -> str | None:
-    """Return the CoIoT ip address."""
-    url = _get_homeassistant_url(hass)
-    if url is None or url.host is None:
-        return None
-    return await async_get_source_ip(hass, url.host)
 
 
 def get_rpc_ws_url(hass: HomeAssistant) -> str | None:
@@ -1112,14 +1122,7 @@ async def check_coiot_config(device: BlockDevice, hass: HomeAssistant) -> bool:
     if not coiot_config.get("enabled"):
         return False
 
-    coiot_address = await get_coiot_address(hass)
-    if coiot_address is None:
-        LOGGER.debug(
-            "Skipping CoIoT peer check for device %s as no local address is available",
-            device.name,
-        )
-        return True
-
+    coiot_address = await async_get_source_ip(hass, device.ip_address)
     coiot_peer = f"{coiot_address}:{get_coiot_port(hass)}"
     # Check if CoIoT address is not correctly set
     if (peer_config := coiot_config.get("peer")) and peer_config != coiot_peer:

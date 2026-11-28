@@ -522,11 +522,11 @@ async def test_stop_during_retry_backoff_with_pending_source_update(
     class HeldWorkerControl(_WorkerControl):
         """Holds the worker just before it takes a pending restart."""
 
-        def consume_restart(self) -> bool:
+        def begin_attempt(self) -> tuple[str | None, bool]:
             if self._restart:
                 restart_seen.set()
                 restart_release.wait(TIMEOUT)
-            return super().consume_restart()
+            return super().begin_attempt()
 
     stream = create_stream(hass, STREAM_SOURCE, {}, dynamic_stream_settings())
     stream.add_provider(HLS_PROVIDER)
@@ -556,3 +556,48 @@ async def test_stop_during_retry_backoff_with_pending_source_update(
 
     assert not thread.is_alive()
     assert opened_sources == [STREAM_SOURCE]
+
+
+async def test_update_source_before_retry_attempt_opens_once(
+    hass: HomeAssistant, h264_video: io.BytesIO, should_retry: Mock
+) -> None:
+    """Test update_source() right as a retry starts does not open the new source twice."""
+    await async_setup_component(hass, DOMAIN, {"stream": {}})
+    should_retry.return_value = True
+    updated_source = f"{STREAM_SOURCE}-updated"
+    opened_sources: list[str] = []
+    real_open = av.open
+
+    def fake_open(stream_source: Any, *args: Any, **kwargs: Any) -> Any:
+        if isinstance(stream_source, str):
+            opened_sources.append(stream_source)
+            if len(opened_sources) == 1:
+                raise av.FFmpegError(1, "Simulated open failure")
+            should_retry.return_value = False
+            return real_open(io.BytesIO(h264_video.getvalue()))
+        return real_open(stream_source, *args, **kwargs)
+
+    stream = create_stream(hass, STREAM_SOURCE, {}, dynamic_stream_settings())
+    stream.add_provider(HLS_PROVIDER)
+    real_set_state = stream._set_state
+
+    def trigger_update_on_retry(available: bool) -> None:
+        if (
+            available
+            and opened_sources == [STREAM_SOURCE]
+            and stream.source != updated_source
+        ):
+            stream.update_source(updated_source)
+        real_set_state(available)
+
+    with (
+        patch("av.open", new=fake_open),
+        patch("homeassistant.components.stream.STREAM_RESTART_INCREMENT", 0.01),
+        patch.object(stream, "_set_state", side_effect=trigger_update_on_retry),
+    ):
+        await stream.start()
+        assert stream._thread is not None
+        await hass.async_add_executor_job(stream._thread.join, TIMEOUT)
+        await stream.stop()
+
+    assert opened_sources == [STREAM_SOURCE, updated_source]

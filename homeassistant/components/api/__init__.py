@@ -36,6 +36,7 @@ from homeassistant.const import (
     URL_API_STATES,
     URL_API_STREAM,
     URL_API_TEMPLATE,
+    TargetKey,
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant
 from homeassistant.exceptions import (
@@ -463,7 +464,21 @@ class APIDomainServicesView(HomeAssistantView):
             # Handled by the view wrapper, which maps it to 401
             raise
         except HomeAssistantError as ex:
-            _LOGGER.error("Error during service call to %s.%s: %s", domain, service, ex)
+            call_data = data if isinstance(data, dict) else {}
+            if target := {
+                key: value for key, value in call_data.items() if key in TargetKey
+            }:
+                _LOGGER.error(
+                    "Error during service call to %s.%s with target %s: %s",
+                    domain,
+                    service,
+                    target,
+                    ex,
+                )
+            else:
+                _LOGGER.error(
+                    "Error during service call to %s.%s: %s", domain, service, ex
+                )
             return self.json_message(str(ex), HTTPStatus.INTERNAL_SERVER_ERROR)
         finally:
             cancel_listen()

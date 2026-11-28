@@ -11,13 +11,11 @@ from propcache.api import cached_property
 from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
 from homeassistant.components.trace import ATTR_ITEM_ID, ATTR_RUN_ID
 from homeassistant.const import (
-    ATTR_AREA_ID,
     ATTR_ENTITY_ID,
-    ATTR_FLOOR_ID,
-    ATTR_LABEL_ID,
     ATTR_NAME,
     CONF_PATH,
     STATE_ON,
+    TargetKey,
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
@@ -87,6 +85,8 @@ class BaseAutomationEntity(ToggleEntity, ABC):
         )
     )
     raw_config: ConfigType | None
+    # The configuration as written, with use_blueprint, when it uses a blueprint
+    raw_blueprint_inputs: ConfigType | None
 
     @property
     @override
@@ -158,7 +158,7 @@ class UnavailableAutomationEntity(BaseAutomationEntity):
         self._attr_name = name
         self._attr_unique_id = automation_id
         self.raw_config = raw_config
-        self._raw_blueprint_inputs = raw_blueprint_inputs
+        self.raw_blueprint_inputs = raw_blueprint_inputs
         self._validation_error = validation_error
         self._validation_status = validation_status
 
@@ -186,7 +186,7 @@ class UnavailableAutomationEntity(BaseAutomationEntity):
         """Return referenced blueprint or None."""
         # The config is invalid, but it can still point at its blueprint. Once
         # the blueprint was applied, only its inputs hold that reference.
-        for config in (self._raw_blueprint_inputs, self.raw_config):
+        for config in (self.raw_blueprint_inputs, self.raw_config):
             if (
                 config is not None
                 and isinstance(blueprint := config.get(CONF_USE_BLUEPRINT), dict)
@@ -298,7 +298,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         self._variables = variables
         self._trigger_variables = trigger_variables
         self.raw_config = raw_config
-        self._blueprint_inputs = blueprint_inputs
+        self.raw_blueprint_inputs = blueprint_inputs
         self._trace_config = trace_config
         self._attr_unique_id = automation_id
 
@@ -332,11 +332,13 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         if self._condition is not None:
             for conf in self._condition.config:
                 referenced |= condition_helper.async_extract_targets(
-                    conf, ATTR_LABEL_ID
+                    conf, TargetKey.LABEL_ID
                 )
 
         for conf in self._trigger_config:
-            referenced |= set(trigger_helper.async_extract_targets(conf, ATTR_LABEL_ID))
+            referenced |= set(
+                trigger_helper.async_extract_targets(conf, TargetKey.LABEL_ID)
+            )
         return referenced
 
     @cached_property
@@ -348,11 +350,13 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         if self._condition is not None:
             for conf in self._condition.config:
                 referenced |= condition_helper.async_extract_targets(
-                    conf, ATTR_FLOOR_ID
+                    conf, TargetKey.FLOOR_ID
                 )
 
         for conf in self._trigger_config:
-            referenced |= set(trigger_helper.async_extract_targets(conf, ATTR_FLOOR_ID))
+            referenced |= set(
+                trigger_helper.async_extract_targets(conf, TargetKey.FLOOR_ID)
+            )
         return referenced
 
     @cached_property
@@ -363,19 +367,23 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
 
         if self._condition is not None:
             for conf in self._condition.config:
-                referenced |= condition_helper.async_extract_targets(conf, ATTR_AREA_ID)
+                referenced |= condition_helper.async_extract_targets(
+                    conf, TargetKey.AREA_ID
+                )
 
         for conf in self._trigger_config:
-            referenced |= set(trigger_helper.async_extract_targets(conf, ATTR_AREA_ID))
+            referenced |= set(
+                trigger_helper.async_extract_targets(conf, TargetKey.AREA_ID)
+            )
         return referenced
 
     @property
     @override
     def referenced_blueprint(self) -> str | None:
         """Return referenced blueprint or None."""
-        if self._blueprint_inputs is None:
+        if self.raw_blueprint_inputs is None:
             return None
-        return cast(str, self._blueprint_inputs[CONF_USE_BLUEPRINT][CONF_PATH])
+        return cast(str, self.raw_blueprint_inputs[CONF_USE_BLUEPRINT][CONF_PATH])
 
     @cached_property
     @override
@@ -490,7 +498,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
             self.hass,
             self.unique_id,
             self.raw_config,
-            self._blueprint_inputs,
+            self.raw_blueprint_inputs,
             trigger_context,
             self._trace_config,
         ) as automation_trace:
@@ -803,7 +811,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
             self.hass,
             self.unique_id,
             self.raw_config,
-            self._blueprint_inputs,
+            self.raw_blueprint_inputs,
             trigger_context,
             self._trace_config,
             not_triggered=True,

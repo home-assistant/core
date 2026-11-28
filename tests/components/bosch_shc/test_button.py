@@ -3,14 +3,17 @@
 from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
+from boschshcpy.services_impl import DetectionTestService, WalkTestService
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from .conftest import (
+    micromodule_dimmer_device,
     motion_detector2_device,
     outdoor_siren_device,
     setup_integration,
@@ -157,3 +160,220 @@ async def test_reset_energy_summation_button_press(
     )
 
     device.reset_energy_summation.assert_called_once_with()
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "micromodule_dimmers": [
+                micromodule_dimmer_device(supports_dimmer_configuration=True)
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session", "entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    ("entity_id", "method"),
+    [
+        ("button.dimmer_preview_max_brightness", "preview_max_brightness"),
+        ("button.dimmer_preview_min_brightness", "preview_min_brightness"),
+    ],
+)
+async def test_dimmer_preview_buttons(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_id: str,
+    method: str,
+) -> None:
+    """Pressing a preview button flashes the dimmer load at that brightness."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.micromodule_dimmers[0]
+
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        ButtonService.PRESS,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    getattr(device.dimmer_configuration, method).assert_called_once_with()
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "micromodule_dimmers": [
+                micromodule_dimmer_device(supports_dimmer_configuration=False)
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_dimmer_without_configuration_has_no_preview_buttons(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """A dimmer without a DimmerConfiguration service gets no preview buttons."""
+    await setup_integration(hass, mock_config_entry)
+
+    # The buttons are disabled by default, so only the registry can show them.
+    assert entity_registry.async_get("button.dimmer_preview_max_brightness") is None
+    assert entity_registry.async_get("button.dimmer_preview_min_brightness") is None
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "micromodule_dimmers": [
+                micromodule_dimmer_device(supports_dimmer_configuration=True)
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_dimmer_preview_buttons_disabled_by_default(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """The preview buttons are only used during setup, so they start disabled."""
+    await setup_integration(hass, mock_config_entry)
+
+    for entity_id in (
+        "button.dimmer_preview_max_brightness",
+        "button.dimmer_preview_min_brightness",
+    ):
+        entry = entity_registry.async_get(entity_id)
+        assert entry is not None
+        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "request_value"),
+    [
+        (
+            "button.motion_detector_start_function_test",
+            WalkTestService.WalkStateRequest.WALK_STATE_START,
+        ),
+        (
+            "button.motion_detector_stop_function_test",
+            WalkTestService.WalkStateRequest.WALK_STATE_STOP,
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"motion_detectors2": [motion_detector2_device(supports_walk_test=True)]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_walk_test_buttons(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_id: str,
+    request_value: WalkTestService.WalkStateRequest,
+) -> None:
+    """The walk test buttons send a start or stop request."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.motion_detectors2[0]
+
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        ButtonService.PRESS,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    device.set_walk_state_request.assert_called_with(request_value)
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "request_value"),
+    [
+        (
+            "button.motion_detector_start_function_test",
+            DetectionTestService.DetectionStateRequest.DETECTION_STATE_START,
+        ),
+        (
+            "button.motion_detector_stop_function_test",
+            DetectionTestService.DetectionStateRequest.DETECTION_STATE_STOP,
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"motion_detectors2": [motion_detector2_device(supports_detection_test=True)]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_detection_test_buttons(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_id: str,
+    request_value: DetectionTestService.DetectionStateRequest,
+) -> None:
+    """Without a walk test service, the detection test buttons are created."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.motion_detectors2[0]
+
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        ButtonService.PRESS,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    device.set_detection_state_request.assert_called_with(request_value)
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"motion_detectors2": [motion_detector2_device()]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_no_function_test_without_service(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A Motion Detector II without a test service gets no function test buttons."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("button.motion_detector_start_function_test") is None
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {"motion_detectors2": [motion_detector2_device(supports_walk_test=True)]},
+        {"motion_detectors2": [motion_detector2_device(supports_detection_test=True)]},
+    ],
+    ids=["walk", "detection"],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_function_test_unique_ids_independent_of_service(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Unique IDs do not depend on which test service the device exposes."""
+    await setup_integration(hass, mock_config_entry)
+
+    for entity_id, suffix in (
+        ("button.motion_detector_start_function_test", "function_test_start"),
+        ("button.motion_detector_stop_function_test", "function_test_stop"),
+    ):
+        entry = entity_registry.async_get(entity_id)
+        assert entry is not None
+        assert entry.unique_id.endswith(suffix)

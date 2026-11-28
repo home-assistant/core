@@ -2,7 +2,7 @@
 
 from typing import Any, override
 
-from aiowebostv import WebOsClient
+from aiowebostv import WebOsClient, WebOsTvCommandError
 
 from homeassistant.components.notify import ATTR_DATA, BaseNotificationService
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID
@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import ATTR_ICON, DOMAIN, WEBOSTV_EXCEPTIONS
+from .const import ATTR_ICON, DOMAIN
 from .coordinator import WebOsTvConfigEntry
 
 PARALLEL_UPDATES = 0
@@ -65,7 +65,7 @@ class LgWebOSNotificationService(BaseNotificationService):
                     "icon_path": str(icon_path),
                 },
             ) from error
-        except WEBOSTV_EXCEPTIONS as error:
+        except WebOsTvCommandError as error:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="notify_communication_error",

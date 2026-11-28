@@ -226,6 +226,9 @@ async def test_sensors_aranet4(
     press_sensor_attrs = press_sensor.attributes
     assert press_sensor.state == "990.5"
     assert press_sensor_attrs[ATTR_FRIENDLY_NAME] == "Aranet4 12345 Pressure"
+    assert (
+        press_sensor_attrs[ATTR_DEVICE_CLASS] == SensorDeviceClass.ATMOSPHERIC_PRESSURE
+    )
     assert press_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "hPa"
     assert press_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
 
@@ -308,6 +311,9 @@ async def test_sensors_aranetrn(
     press_sensor_attrs = press_sensor.attributes
     assert press_sensor.state == "1018.5"
     assert press_sensor_attrs[ATTR_FRIENDLY_NAME] == "AranetRn+ 12345 Pressure"
+    assert (
+        press_sensor_attrs[ATTR_DEVICE_CLASS] == SensorDeviceClass.ATMOSPHERIC_PRESSURE
+    )
     assert press_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "hPa"
     assert press_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
 

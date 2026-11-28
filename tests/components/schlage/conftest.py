@@ -95,6 +95,7 @@ def mock_lock(mock_lock_attrs: dict[str, Any]) -> Mock:
     mock_lock.logs.return_value = []
     mock_lock.last_changed_by.return_value = "thumbturn"
     mock_lock.keypad_disabled.return_value = False
+    mock_lock.auto_lock_times.return_value = (0, 15, 30, 60, 120, 240, 360, 600)
     return mock_lock
 
 
@@ -110,6 +111,7 @@ def mock_lock_attrs() -> dict[str, Any]:
         "battery_level": 20,
         "auto_lock_time": 15,
         "firmware_version": "1.0",
+        "serial_number": "d34db33f",
         "lock_and_leave_enabled": True,
         "beeper_enabled": True,
         "connected": True,

@@ -358,7 +358,7 @@
           'type': 'integer',
         }),
         'query': dict({
-          'description': 'Text to find in the statistic name or ID, case-insensitive.',
+          'description': 'Text to find in the statistic name, entity alias or ID, case-insensitive.',
           'format': 'strip',
           'type': 'string',
         }),

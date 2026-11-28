@@ -1,0 +1,571 @@
+# serializer version: 1
+# name: test_all_appliances[700series_vacuum]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'electrolux',
+        '900402068224000950000000',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'ELECTROLUX',
+    'model': 'HYGENIC600',
+    'model_id': None,
+    'name': '700series vacuum',
+    'name_by_user': None,
+    'serial_number': '22400095',
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_all_appliances[ayran_fridge]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'electrolux',
+        '999011403_00:20220412-443E07022463',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'AEG',
+    'model': 'RCB732E9MX',
+    'model_id': None,
+    'name': 'Ayran',
+    'name_by_user': None,
+    'serial_number': '20220412',
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_all_appliances[cybele_vacuum]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'electrolux',
+        '900402423524000511139298',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'ELECTROLUX',
+    'model': 'ER81UW3SW',
+    'model_id': None,
+    'name': 'Cybele vacuum',
+    'name_by_user': None,
+    'serial_number': '52400051',
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_all_appliances[dish_washer]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'electrolux',
+        '911438421_03:33109002-443E07338CF5',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'AEG',
+    'model': 'SprayZone',
+    'model_id': None,
+    'name': 'Dish Washer',
+    'name_by_user': None,
+    'serial_number': '33109002',
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_all_appliances[electrolux_ac]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'electrolux',
+        '912076029_00:20220017-443E071A0CC4',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'FRIGIDAIRE',
+    'model': 'FHWW103WB1',
+    'model_id': None,
+    'name': 'Air Conditioner',
+    'name_by_user': None,
+    'serial_number': '20220017',
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_all_appliances[electrolux_air_purifier]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'electrolux',
+        '956006956242000015087076',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'ELECTROLUX',
+    'model': 'PURE500',
+    'model_id': None,
+    'name': 'Air Purifier',
+    'name_by_user': None,
+    'serial_number': '24200001',
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_all_appliances[electrolux_dam_ac]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'electrolux',
+        '1:950011600_00:44709990-C8F742FDB3E7',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'ELECTROLUX',
+    'model': 'COMFORT600',
+    'model_id': None,
+    'name': 'Portable Air Conditioner',
+    'name_by_user': None,
+    'serial_number': '44709990',
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_all_appliances[electrolux_dehumidifier]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'electrolux',
+        '950133061_00:98802845-443E07021EF3',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'FRIGIDAIRE',
+    'model': 'FGAC5044W1',
+    'model_id': None,
+    'name': 'Dehumidifier',
+    'name_by_user': None,
+    'serial_number': '98802845',
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_all_appliances[fenix_oven]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'electrolux',
+        '900412569_00:43319382-443E0748CCD4',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'ELECTROLUX',
+    'model': 'OE9XS',
+    'model_id': None,
+    'name': 'Fenix',
+    'name_by_user': None,
+    'serial_number': '43319382',
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_all_appliances[fridge_with_filters]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'electrolux',
+        '925060678_01:12375757-443E071142DA',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'ELECTROLUX',
+    'model': 'DQ90X',
+    'model_id': None,
+    'name': 'Refrigerator with filters',
+    'name_by_user': None,
+    'serial_number': '12375757',
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_all_appliances[gordias_vacuum]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'electrolux',
+        '900402278332000201139298',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'ELECTROLUX',
+    'model': 'ULTIMATE700',
+    'model_id': None,
+    'name': 'Gordias vacuum',
+    'name_by_user': None,
+    'serial_number': '33200020',
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_all_appliances[hood]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'electrolux',
+        '999008105_00:99010299-443E074B7A6E',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'AEG',
+    'model': 'DDC8271W',
+    'model_id': None,
+    'name': 'Ceiling Hood',
+    'name_by_user': None,
+    'serial_number': '99010299',
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_all_appliances[peacock_hob]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'electrolux',
+        '999008120_00:99907833-443E073D986E',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'AEG',
+    'model': 'TU84CF43CB',
+    'model_id': None,
+    'name': 'Peacock hob',
+    'name_by_user': None,
+    'serial_number': '99907833',
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_all_appliances[purei9_vacuum]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'electrolux',
+        '900277470043000491100106',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'ELECTROLUX',
+    'model': 'i92',
+    'model_id': None,
+    'name': 'Pure i9 vacuum',
+    'name_by_user': None,
+    'serial_number': '04300049',
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_all_appliances[pux_oven]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'electrolux',
+        '949288049_00:11112225-443E076A37D6',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'AEG',
+    'model': 'NBX7P631SB',
+    'model_id': None,
+    'name': 'PUX pizza oven',
+    'name_by_user': None,
+    'serial_number': '11112225',
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_all_appliances[supex_structured_oven]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'electrolux',
+        '944035064_00:27032025-443E073D97B2',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'AEG',
+    'model': 'NBP9S831AB',
+    'model_id': None,
+    'name': 'Supex oven',
+    'name_by_user': None,
+    'serial_number': '27032025',
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_all_appliances[tumble_dryer]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'electrolux',
+        '999120000_00:74852244-443E0704101F',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'ELECTROLUX',
+    'model': 'EW9H778P9',
+    'model_id': None,
+    'name': 'Dryer',
+    'name_by_user': None,
+    'serial_number': '74852244',
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_all_appliances[washer_dryer]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'electrolux',
+        '999007132_50:23300001-443E0733A070',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'AEG',
+    'model': '9000 Series',
+    'model_id': None,
+    'name': 'Washer Dryer',
+    'name_by_user': None,
+    'serial_number': '23300001',
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_all_appliances[washing_machine]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'electrolux',
+        '999007091_50:22002306-443E071A93FA',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'AEG',
+    'model': 'LR744P96Q',
+    'model_id': None,
+    'name': 'Washing Machine',
+    'name_by_user': None,
+    'serial_number': '22002306',
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
