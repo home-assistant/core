@@ -33,7 +33,7 @@ from .const import (
     TimerStatus,
 )
 from .entity import TimerItem, TimerListEntity, TimerListEvent
-from .in_memory import InMemoryTimerListEntity
+from .in_memory import InMemoryTimerListEntity, RestoreTimerListEntity
 from .services import async_setup_services
 from .websocket_api import async_setup as async_setup_websocket_api
 
@@ -43,6 +43,7 @@ __all__ = [
     "PLATFORM_SCHEMA",
     "PLATFORM_SCHEMA_BASE",
     "InMemoryTimerListEntity",
+    "RestoreTimerListEntity",
     "TimerItem",
     "TimerListEntity",
     "TimerListEntityFeature",

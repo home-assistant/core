@@ -1359,6 +1359,20 @@ class ESPHomeManager:
                     entry, unique_id=format_mac(device_info.mac_address)
                 )
 
+        # Saved timers keep running while the device is offline, so their list
+        # does not wait for the first connection
+        if (
+            entry.unique_id
+            and (device_info := entry_data.device_info) is not None
+            and device_info.voice_assistant_feature_flags_compat(entry_data.api_version)
+            & VoiceAssistantFeature.TIMERS
+            and Platform.TIMER_LIST not in entry_data.loaded_platforms
+        ):
+            await hass.config_entries.async_forward_entry_setups(
+                entry, [Platform.TIMER_LIST]
+            )
+            entry_data.loaded_platforms.add(Platform.TIMER_LIST)
+
         await reconnect_logic.start()
 
         # After start(), the last call that can raise, so a failed setup

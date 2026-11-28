@@ -1,13 +1,15 @@
 """Timer list that keeps its timers in memory."""
 
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from functools import partial
 import math
-from typing import override
+from typing import Any, override
 
 from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.util import dt as dt_util, ulid as ulid_util
 
 from .const import DOMAIN, TimerListEntityFeature, TimerListEventType, TimerStatus
@@ -195,3 +197,127 @@ class InMemoryTimerListEntity(TimerListEntity):
         )
         for _, timer_id in archived[: max(0, len(archived) - MAX_ARCHIVED_TIMERS)]:
             self._notify(TimerListEventType.REMOVED, self._timers.pop(timer_id))
+
+
+def _timer_as_stored(timer: TimerItem) -> dict[str, Any]:
+    """Return a timer as JSON-serializable data to restore it from."""
+    return {
+        "timer_id": timer.timer_id,
+        "name": timer.name,
+        "status": timer.status.value,
+        "created_duration": timer.created_duration.total_seconds(),
+        "created_at": timer.created_at.isoformat(),
+        "total_duration": timer.total_duration.total_seconds(),
+        "finishes_at": timer.finishes_at.isoformat() if timer.finishes_at else None,
+        "paused_remaining": (
+            timer.paused_remaining.total_seconds()
+            if timer.paused_remaining is not None
+            else None
+        ),
+        "ended_at": timer.ended_at.isoformat() if timer.ended_at else None,
+    }
+
+
+def _timer_from_stored(data: dict[str, Any]) -> TimerItem:
+    """Return a timer from data stored by ``_timer_as_stored``."""
+
+    def _datetime(value: str | None) -> datetime | None:
+        if value is None:
+            return None
+        if (parsed := dt_util.parse_datetime(value)) is None:
+            raise ValueError(f"invalid datetime: {value}")
+        return parsed
+
+    def _seconds(value: float | None) -> timedelta | None:
+        return None if value is None else timedelta(seconds=value)
+
+    created_at = _datetime(data["created_at"])
+    created_duration = _seconds(data["created_duration"])
+    if created_at is None or created_duration is None:
+        raise ValueError("timer without creation time or duration")
+    return TimerItem(
+        timer_id=data["timer_id"],
+        name=data["name"],
+        status=TimerStatus(data["status"]),
+        created_duration=created_duration,
+        created_at=created_at,
+        total_duration=_seconds(data["total_duration"]) or timedelta(0),
+        finishes_at=_datetime(data["finishes_at"]),
+        paused_remaining=_seconds(data["paused_remaining"]),
+        ended_at=_datetime(data["ended_at"]),
+    )
+
+
+@dataclass
+class TimerListExtraStoredData(ExtraStoredData):
+    """Timers of a timer list, stored to restore them."""
+
+    timers: list[dict[str, Any]]
+    extra: dict[str, Any] = field(default_factory=dict)
+    """What a subclass stores beside the timers."""
+
+    @override
+    def as_dict(self) -> dict[str, Any]:
+        """Return the stored timers."""
+        return {**self.extra, "timers": self.timers}
+
+
+RESTORED_LATE_FINISH = timedelta(minutes=1)
+"""How long after its finish time a restored timer still finishes normally."""
+
+
+class RestoreTimerListEntity(InMemoryTimerListEntity, RestoreEntity):
+    """An in-memory timer list that keeps its timers across restarts and reloads.
+
+    An active timer that should have finished while the list was not set up
+    finishes as soon as it is restored when that was a moment ago, as with a
+    reload, and is archived as ``finished`` at the time it should have
+    finished, without an event, when it was longer ago: acting on a timer long
+    after it ran out, for example by ringing, is more surprising than not
+    acting at all.
+    """
+
+    @property
+    @override
+    def extra_restore_state_data(self) -> TimerListExtraStoredData:
+        """Return the timers to restore."""
+        return TimerListExtraStoredData(
+            [_timer_as_stored(timer) for timer in self._timers.values()],
+            self._extra_stored_data(),
+        )
+
+    def _extra_stored_data(self) -> dict[str, Any]:
+        """Return what a subclass stores beside the timers, under its own keys."""
+        return {}
+
+    def _restore_extra_data(self, data: dict[str, Any]) -> None:
+        """Restore what ``_extra_stored_data`` stored, after the timers."""
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Restore the timers of the previous run."""
+        await super().async_added_to_hass()
+        if (extra_data := await self.async_get_last_extra_data()) is None:
+            return
+        stored = extra_data.as_dict()
+        now = dt_util.utcnow()
+        for data in stored.get("timers", []):
+            try:
+                timer = _timer_from_stored(data)
+            except KeyError, TypeError, ValueError:
+                continue
+            if timer.timer_id in self._timers:
+                continue
+            self._timers[timer.timer_id] = timer
+            if timer.status != TimerStatus.ACTIVE or timer.finishes_at is None:
+                continue
+            if timer.finishes_at > now - RESTORED_LATE_FINISH:
+                # Finishes when it should, or right away if that was a moment
+                # ago, with the event it would have had
+                self._schedule(timer, timer.finishes_at)
+                continue
+            timer.status = TimerStatus.FINISHED
+            timer.ended_at = timer.finishes_at
+            timer.finishes_at = None
+        self._evict_archived()
+        self._restore_extra_data(stored)
