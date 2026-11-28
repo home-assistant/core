@@ -8,6 +8,7 @@ from sqlalchemy.sql.lambdas import StatementLambdaElement
 from sqlalchemy.sql.selectable import Select
 
 from .db_schema import (
+    SHARED_DATA_OR_LEGACY_EVENT_DATA,
     EventData,
     Events,
     EventTypes,
@@ -20,6 +21,29 @@ from .db_schema import (
     StatisticsRuns,
     StatisticsShortTerm,
 )
+
+
+def find_event_data_purge_batch(
+    last_event_id: int, max_event_id: int, max_bind_vars: int
+) -> StatementLambdaElement:
+    """Select a bounded primary-key page before applying event-data filters."""
+    return lambda_stmt(
+        lambda: (
+            select(
+                Events.event_id,
+                Events.data_id,
+                EventTypes.event_type,
+                SHARED_DATA_OR_LEGACY_EVENT_DATA,
+                Events.time_fired_ts,
+            )
+            .select_from(Events)
+            .outerjoin(EventTypes)
+            .outerjoin(EventData)
+            .where(Events.event_id > last_event_id, Events.event_id <= max_event_id)
+            .order_by(Events.event_id)
+            .limit(max_bind_vars)
+        )
+    )
 
 
 def select_event_type_ids(event_types: tuple[str, ...]) -> Select:
