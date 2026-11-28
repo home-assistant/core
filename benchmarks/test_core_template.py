@@ -12,7 +12,7 @@ from collections.abc import Callable
 import pytest
 from pytest_codspeed import BenchmarkFixture
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.template import Template
 
 _STATES_TEMPLATE = (
@@ -86,6 +86,55 @@ def test_template_render_to_info(
     info = benchmark(template.async_render_to_info)
 
     assert info.entities or info.all_states
+
+
+def test_template_render_trigger_states(
+    benchmark: BenchmarkFixture, hass: HomeAssistant
+) -> None:
+    """Render a template that compares the states of a state trigger (warm).
+
+    Trigger variables hold plain state objects and datetimes, which do not get
+    the shortcuts the ``states`` object has. Every attribute access on them goes
+    through the full sandbox check.
+    """
+    from_state = State("sensor.power", "1200")
+    to_state = State("sensor.power", "1300")
+    template = Template(
+        "{{ trigger.to_state.state | float > trigger.from_state.state | float"
+        " and (trigger.to_state.last_changed - trigger.from_state.last_changed)"
+        ".total_seconds() < 60 }}",
+        hass,
+    )
+    template.ensure_valid()
+
+    result = benchmark(
+        template.async_render,
+        {"trigger": {"from_state": from_state, "to_state": to_state}},
+    )
+
+    assert result is True
+
+
+@pytest.mark.parametrize("count", [10, 100, 1000])
+def test_template_namespace_loop(
+    benchmark: BenchmarkFixture, hass: HomeAssistant, count: int
+) -> None:
+    """Render a template that sums values in a loop through a namespace.
+
+    A namespace is the only way to carry a value out of a loop, so this is how
+    templates accumulate. Each iteration reads and writes a namespace attribute.
+    """
+    template = Template(
+        "{% set ns = namespace(total=0) %}"
+        "{% for value in values %}{% set ns.total = ns.total + value %}{% endfor %}"
+        "{{ ns.total }}",
+        hass,
+    )
+    template.ensure_valid()
+
+    result = benchmark(template.async_render, {"values": list(range(count))})
+
+    assert result == sum(range(count))
 
 
 @pytest.mark.parametrize("count", [10, 100, 1000])
