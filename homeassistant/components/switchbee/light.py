@@ -5,7 +5,7 @@ from typing import Any, cast, override
 from switchbee.api.central_unit import SwitchBeeDeviceOfflineError, SwitchBeeError
 from switchbee.device import ApiStateCommand, DeviceType, SwitchBeeDimmer
 
-from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
+from homeassistant.components.light import ColorMode, LightEntity, LightServiceArgument
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -89,8 +89,10 @@ class SwitchBeeLightEntity(SwitchBeeDeviceEntity[SwitchBeeDimmer], LightEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Async function to set on to light."""
-        if ATTR_BRIGHTNESS in kwargs:
-            state: int | str = _hass_brightness_to_switchbee(kwargs[ATTR_BRIGHTNESS])
+        if LightServiceArgument.BRIGHTNESS in kwargs:
+            state: int | str = _hass_brightness_to_switchbee(
+                kwargs[LightServiceArgument.BRIGHTNESS]
+            )
         else:
             state = ApiStateCommand.ON
             if self.brightness:

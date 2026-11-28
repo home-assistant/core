@@ -7,10 +7,10 @@ from switchbee.const import SomfyCommand
 from switchbee.device import SwitchBeeShutter, SwitchBeeSomfy
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
+    CoverServiceArgument,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -142,18 +142,20 @@ class SwitchBeeCoverEntity(SwitchBeeDeviceEntity[SwitchBeeShutter], CoverEntity)
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Async function to set position to cover."""
         if (
-            self.current_cover_position == kwargs[ATTR_POSITION]
+            self.current_cover_position == kwargs[CoverServiceArgument.POSITION]
             and "force" not in kwargs
         ):
             return
         try:
-            await self.coordinator.api.set_state(self._device.id, kwargs[ATTR_POSITION])
+            await self.coordinator.api.set_state(
+                self._device.id, kwargs[CoverServiceArgument.POSITION]
+            )
         except (SwitchBeeError, SwitchBeeTokenError) as exp:
             raise HomeAssistantError(
-                f"Failed to set {self.name} position to {kwargs[ATTR_POSITION]}, error:"
+                f"Failed to set {self.name} position to {kwargs[CoverServiceArgument.POSITION]}, error:"
                 f" {exp!s}"
             ) from exp
 
-        self._get_coordinator_device().position = kwargs[ATTR_POSITION]
+        self._get_coordinator_device().position = kwargs[CoverServiceArgument.POSITION]
         self.coordinator.async_set_updated_data(self.coordinator.data)
         self.async_write_ha_state()
