@@ -112,7 +112,10 @@ class HomeConnectOptionEntity(HomeConnectEntity):
     @override
     def available(self) -> bool:
         """Return True if entity is available."""
-        return super().available and self.bsh_key in self.appliance.options
+        return super().available and (
+            self.bsh_key in self.appliance.options
+            or EventKey(self.bsh_key) in self.appliance.events
+        )
 
     @property
     def option_value(self) -> str | int | float | bool | None:
