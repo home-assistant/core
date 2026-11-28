@@ -1,9 +1,16 @@
 """Test for the SmartThings light platform."""
 
+import logging
 from typing import Any
 from unittest.mock import AsyncMock, call
 
-from pysmartthings import Attribute, Capability, Command
+from pysmartthings import (
+    Attribute,
+    Capability,
+    Command,
+    SmartThingsForbiddenError,
+    SmartThingsQuotaExceededError,
+)
 from pysmartthings.models import HealthStatus
 import pytest
 from pytest_homeassistant.common import (
@@ -24,7 +31,8 @@ from homeassistant.components.light import (
     LightService,
     LightServiceArgument,
 )
-from homeassistant.components.smartthings.const import MAIN
+from homeassistant.components.smartthings.const import DOMAIN, MAIN, MANAGE_PLANS_URL
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -37,6 +45,7 @@ from homeassistant.const import (
     TargetKey,
 )
 from homeassistant.core import HomeAssistant, State
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import (
@@ -598,6 +607,144 @@ async def test_lamp_without_switch(
         MAIN,
         argument=argument,
     )
+
+
+def connect_cooktop_hood(devices: AsyncMock) -> None:
+    """Set the hood of the cooktop fixture as connected with an enabled lamp."""
+    set_attribute_value(
+        devices,
+        Capability.SAMSUNG_CE_CONNECTION_STATE,
+        Attribute.CONNECTION_STATE,
+        "connected",
+        component="hood",
+    )
+    set_attribute_value(
+        devices,
+        Capability.CUSTOM_DISABLED_CAPABILITIES,
+        Attribute.DISABLED_CAPABILITIES,
+        [Capability.SAMSUNG_CE_COUNT_DOWN_TIMER],
+        component="hood",
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ks_cooktop_000001"])
+@pytest.mark.parametrize(
+    ("service", "option"),
+    [(SERVICE_TURN_ON, "Lamp_On"), (SERVICE_TURN_OFF, "Lamp_Off")],
+)
+async def test_cooktop_hood_lamp(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    service: str,
+    option: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the lamp of a hood paired with a cooktop uses the execute capability."""
+    connect_cooktop_hood(devices)
+    caplog.set_level(logging.DEBUG, logger="homeassistant.components.smartthings")
+    await setup_integration(hass, mock_config_entry)
+    assert (
+        "Controlling the hood lamp of 5c202ad1-d112-d746-50b8-bd76a554b362 "
+        "through execute on main" in caplog.text
+    )
+
+    state = hass.states.get("light.table_de_cuisson_light")
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.ONOFF]
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: "light.table_de_cuisson_light"},
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "5c202ad1-d112-d746-50b8-bd76a554b362",
+        Capability.EXECUTE,
+        Command.EXECUTE,
+        MAIN,
+        argument=["/mode/vs/1", {"x.com.samsung.da.options": [option]}],
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ks_cooktop_000001"])
+async def test_cooktop_hood_lamp_state(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the lamp state of a hood paired with a cooktop."""
+    connect_cooktop_hood(devices)
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("light.table_de_cuisson_light").state == STATE_OFF
+
+    await trigger_update(
+        hass,
+        devices,
+        "5c202ad1-d112-d746-50b8-bd76a554b362",
+        Capability.SAMSUNG_CE_LAMP,
+        Attribute.BRIGHTNESS_LEVEL,
+        "high",
+        component="hood",
+    )
+
+    assert hass.states.get("light.table_de_cuisson_light").state == STATE_ON
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ks_cooktop_000001"])
+async def test_cooktop_hood_lamp_quota_exceeded(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a quota exceeded error of the cooktop hood lamp is translated."""
+    connect_cooktop_hood(devices)
+    await setup_integration(hass, mock_config_entry)
+    devices.execute_device_command.side_effect = SmartThingsQuotaExceededError
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "light.table_de_cuisson_light"},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "quota_exceeded"
+    assert exc_info.value.translation_placeholders == {
+        "manage_plans_url": MANAGE_PLANS_URL
+    }
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ks_cooktop_000001"])
+async def test_cooktop_hood_lamp_forbidden(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a forbidden cooktop hood lamp command starts reauth."""
+    connect_cooktop_hood(devices)
+    await setup_integration(hass, mock_config_entry)
+    devices.execute_device_command.side_effect = SmartThingsForbiddenError
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "light.table_de_cuisson_light"},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "entitlement_required"
+    await hass.async_block_till_done()
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ks_hood_01001"])
