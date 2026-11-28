@@ -153,6 +153,9 @@
       "rain": {
         "name": "Rain"
       },
+      "state": {
+        "name": "State"
+      },
       "test_in_progress": {
         "name": "Test in progress"
       },
