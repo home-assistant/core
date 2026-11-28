@@ -138,5 +138,10 @@
         }
       }
     }
+  },
+  "services": {
+    "set_segment_color": {
+      "service": "mdi:led-strip-variant"
+    }
   }
 }

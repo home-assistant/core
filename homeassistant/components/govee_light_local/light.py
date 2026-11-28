@@ -16,6 +16,7 @@ from homeassistant.components.light import (
     filter_supported_color_modes,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -211,6 +212,35 @@ class GoveeLight(CoordinatorEntity[GoveeLocalApiCoordinator], LightEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self.coordinator.turn_off(self._device)
+        self.async_write_ha_state()
+
+    async def async_set_segment_color(
+        self, segments: list[int], rgb_color: tuple[int, int, int]
+    ) -> None:
+        """Set the color of some segments of the light, which ends its scene."""
+        count = self._device.capabilities.segments_count
+        if not count:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="segments_not_supported",
+                translation_placeholders={"entity_id": self.entity_id},
+            )
+        if invalid := [segment for segment in segments if segment > count]:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_segments",
+                translation_placeholders={
+                    "entity_id": self.entity_id,
+                    "segments": ", ".join(str(segment) for segment in invalid),
+                    "count": str(count),
+                },
+            )
+        for segment in segments:
+            await self.coordinator.set_segment_rgb_color(
+                self._device, segment, rgb_color
+            )
+        self._attr_effect = None
+        self._last_color_state = None
         self.async_write_ha_state()
 
     @override

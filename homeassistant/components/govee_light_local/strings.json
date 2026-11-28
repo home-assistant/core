@@ -158,6 +158,9 @@
     "bind_failed": {
       "message": "Could not listen for Govee devices: {error}"
     },
+    "invalid_segments": {
+      "message": "{entity_id} has {count} segments, so it has no segment {segments}"
+    },
     "no_devices_found": {
       "message": "[%key:common::config_flow::abort::no_devices_found%]"
     },
@@ -169,6 +172,25 @@
     },
     "port_in_use": {
       "message": "Port {port} is already in use"
+    },
+    "segments_not_supported": {
+      "message": "{entity_id} does not support setting the color of its segments"
+    }
+  },
+  "services": {
+    "set_segment_color": {
+      "description": "Sets the color of some segments of a Govee light, ending its scene.",
+      "fields": {
+        "rgb_color": {
+          "description": "The color to set the segments to.",
+          "name": "[%key:component::light::common::field_rgb_color_name%]"
+        },
+        "segments": {
+          "description": "The numbers of the segments to set, starting at 1.",
+          "name": "Segments"
+        }
+      },
+      "name": "Set segment color"
     }
   }
 }
