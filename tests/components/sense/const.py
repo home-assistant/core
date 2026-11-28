@@ -1,6 +1,6 @@
 """Cosntants for the Sense integration tests."""
 
-MONITOR_ID = "456"
+MONITOR_ID = "12345"
 
 MOCK_CONFIG = {
     "timeout": 6,
@@ -26,4 +26,16 @@ DEVICE_2_ICON = "stove"
 DEVICE_2_POWER = 50.0
 DEVICE_2_DAY_ENERGY = 42
 
-MONITOR_ID = "12345"
+# Energy the mocked monitor reports for every completed hour, per trend variant.
+HOURLY_ENERGY = {
+    "usage": 1.5,
+    "production": 0.75,
+    "from_grid": 1.0,
+    "to_grid": 0.25,
+    "net_production": -0.75,
+    "production_pct": 50,
+    "solar_powered": 50,
+}
+
+# Period-to-date reading the mocked monitor reports for every trend scale.
+PERIOD_TO_DATE = 15

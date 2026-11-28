@@ -1,0 +1,157 @@
+# serializer version: 1
+# name: test_imports_hourly_statistics
+  defaultdict({
+    'sensor.sense_12345_daily_energy': list([
+      dict({
+        'end': 1768453200.0,
+        'start': 1768449600.0,
+        'state': None,
+        'sum': 1.5,
+      }),
+      dict({
+        'end': 1768456800.0,
+        'start': 1768453200.0,
+        'state': None,
+        'sum': 3.0,
+      }),
+      dict({
+        'end': 1768460400.0,
+        'start': 1768456800.0,
+        'state': None,
+        'sum': 4.5,
+      }),
+      dict({
+        'end': 1768464000.0,
+        'start': 1768460400.0,
+        'state': None,
+        'sum': 6.0,
+      }),
+      dict({
+        'end': 1768467600.0,
+        'start': 1768464000.0,
+        'state': None,
+        'sum': 7.5,
+      }),
+      dict({
+        'end': 1768471200.0,
+        'start': 1768467600.0,
+        'state': 15.0,
+        'sum': 9.0,
+      }),
+    ]),
+    'sensor.sense_12345_daily_from_grid': list([
+      dict({
+        'end': 1768453200.0,
+        'start': 1768449600.0,
+        'state': None,
+        'sum': 1.0,
+      }),
+      dict({
+        'end': 1768456800.0,
+        'start': 1768453200.0,
+        'state': None,
+        'sum': 2.0,
+      }),
+      dict({
+        'end': 1768460400.0,
+        'start': 1768456800.0,
+        'state': None,
+        'sum': 3.0,
+      }),
+      dict({
+        'end': 1768464000.0,
+        'start': 1768460400.0,
+        'state': None,
+        'sum': 4.0,
+      }),
+      dict({
+        'end': 1768467600.0,
+        'start': 1768464000.0,
+        'state': None,
+        'sum': 5.0,
+      }),
+      dict({
+        'end': 1768471200.0,
+        'start': 1768467600.0,
+        'state': 15.0,
+        'sum': 6.0,
+      }),
+    ]),
+    'sensor.sense_12345_daily_production': list([
+      dict({
+        'end': 1768453200.0,
+        'start': 1768449600.0,
+        'state': None,
+        'sum': 0.75,
+      }),
+      dict({
+        'end': 1768456800.0,
+        'start': 1768453200.0,
+        'state': None,
+        'sum': 1.5,
+      }),
+      dict({
+        'end': 1768460400.0,
+        'start': 1768456800.0,
+        'state': None,
+        'sum': 2.25,
+      }),
+      dict({
+        'end': 1768464000.0,
+        'start': 1768460400.0,
+        'state': None,
+        'sum': 3.0,
+      }),
+      dict({
+        'end': 1768467600.0,
+        'start': 1768464000.0,
+        'state': None,
+        'sum': 3.75,
+      }),
+      dict({
+        'end': 1768471200.0,
+        'start': 1768467600.0,
+        'state': 15.0,
+        'sum': 4.5,
+      }),
+    ]),
+    'sensor.sense_12345_daily_to_grid': list([
+      dict({
+        'end': 1768453200.0,
+        'start': 1768449600.0,
+        'state': None,
+        'sum': 0.25,
+      }),
+      dict({
+        'end': 1768456800.0,
+        'start': 1768453200.0,
+        'state': None,
+        'sum': 0.5,
+      }),
+      dict({
+        'end': 1768460400.0,
+        'start': 1768456800.0,
+        'state': None,
+        'sum': 0.75,
+      }),
+      dict({
+        'end': 1768464000.0,
+        'start': 1768460400.0,
+        'state': None,
+        'sum': 1.0,
+      }),
+      dict({
+        'end': 1768467600.0,
+        'start': 1768464000.0,
+        'state': None,
+        'sum': 1.25,
+      }),
+      dict({
+        'end': 1768471200.0,
+        'start': 1768467600.0,
+        'state': 15.0,
+        'sum': 1.5,
+      }),
+    ]),
+  })
+# ---
