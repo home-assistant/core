@@ -38,12 +38,6 @@ from .services import SystemBridgeService, async_send_command
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_ACTIONS = "actions"
-ATTR_AUDIO = "audio"
-ATTR_ICON = "icon"
-ATTR_IMAGE = "image"
-ATTR_TIMEOUT = "timeout"
-
 PARALLEL_UPDATES = 0
 
 # Entries with the same hostname share a legacy action, by action name
@@ -238,13 +232,13 @@ class SystemBridgeNotificationService(BaseNotificationService):
         data = kwargs.get(ATTR_DATA, {}) or {}
 
         notification = Notification(
-            actions=data.get(ATTR_ACTIONS),
-            audio=data.get(ATTR_AUDIO),
-            icon=data.get(ATTR_ICON),
-            image=data.get(ATTR_IMAGE),
+            actions=data.get("actions"),
+            audio=data.get("audio"),
+            icon=data.get("icon"),
+            image=data.get("image"),
             message=message,
-            timeout=data.get(ATTR_TIMEOUT),
-            title=kwargs.get(ATTR_TITLE, data.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)),
+            timeout=data.get("timeout"),
+            title=kwargs.get(ATTR_TITLE, data.get("title", ATTR_TITLE_DEFAULT)),
         )
 
         _LOGGER.debug("Sending notification: %s", notification)
