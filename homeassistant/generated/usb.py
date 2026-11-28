@@ -36,6 +36,13 @@ USB = [
         "vid": "0403",
     },
     {
+        "description": "*enocean programmer*",
+        "domain": "enocean",
+        "manufacturer": "*enocean*",
+        "pid": "6010",
+        "vid": "0403",
+    },
+    {
         "description": "*zbt-2*",
         "domain": "homeassistant_connect_zbt2",
         "pid": "4001",

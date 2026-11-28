@@ -18,6 +18,12 @@
       "manufacturer": "*enocean*",
       "pid": "6001",
       "vid": "0403"
+    },
+    {
+      "description": "*enocean programmer*",
+      "manufacturer": "*enocean*",
+      "pid": "6010",
+      "vid": "0403"
     }
   ]
 }

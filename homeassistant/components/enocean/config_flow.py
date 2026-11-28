@@ -68,15 +68,21 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
     @override
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle usb discovery."""
+        discovery_info.device = await self.hass.async_add_executor_job(
+            usb.get_serial_by_id, discovery_info.device
+        )
+
+        # A dongle can show up as several serial ports with the same USB identity: a
+        # FAM-USB has two, of which one is connected to the radio module. Only the
+        # port on which a dongle answers may claim that identity.
+        if await detect_serial_protocol(discovery_info.device) is None:
+            return self.async_abort(reason="invalid_dongle_path")
+
         unique_id = usb_unique_id_from_service_info(discovery_info)
 
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured(
             updates={CONF_DEVICE: discovery_info.device}
-        )
-
-        discovery_info.device = await self.hass.async_add_executor_job(
-            usb.get_serial_by_id, discovery_info.device
         )
 
         self.data[CONF_DEVICE] = discovery_info.device

@@ -296,11 +296,12 @@ async def test_usb_discovery(
     )
     device = "/dev/enocean0"
     # test discovery step
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USB},
-        data=usb_discovery_info,
-    )
+    with patch(DETECT_METHOD, return_value=SerialProtocol.ESP3):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USB},
+            data=usb_discovery_info,
+        )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "usb_confirm"
@@ -357,3 +358,72 @@ async def test_usb_discovery_already_configured_updates_path(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
+
+
+FAM_USB_RADIO_PORT = "/dev/serial/by-id/usb-EnOcean_GmbH_EnOcean_Programmer-if01-port0"
+FAM_USB_OTHER_PORT = "/dev/serial/by-id/usb-EnOcean_GmbH_EnOcean_Programmer-if00-port0"
+
+
+def _fam_usb_discovery_info(device: str) -> UsbServiceInfo:
+    """Return what the USB discovery reports for a port of an Eltako FAM-USB."""
+    return UsbServiceInfo(
+        device=device,
+        pid="6010",
+        vid="0403",
+        serial_number="1234",
+        description="EnOcean Programmer V3.2 - EnOcean Programmer V3.2",
+        manufacturer="EnOcean GmbH",
+    )
+
+
+async def _detect_fam_usb(path: str) -> SerialProtocol | None:
+    """Answer as a FAM-USB does: its dongle speaks ESP2 on one of its two ports."""
+    return SerialProtocol.ESP2 if path == FAM_USB_RADIO_PORT else None
+
+
+async def test_usb_discovery_of_a_dongle_with_two_ports(hass: HomeAssistant) -> None:
+    """Test that the port on which the dongle answers is the one that is set up."""
+    with (
+        patch(DETECT_METHOD, side_effect=_detect_fam_usb),
+        patch(SETUP_ENTRY_METHOD, AsyncMock(return_value=True)),
+    ):
+        other_port = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USB},
+            data=_fam_usb_discovery_info(FAM_USB_OTHER_PORT),
+        )
+        radio_port = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USB},
+            data=_fam_usb_discovery_info(FAM_USB_RADIO_PORT),
+        )
+
+        assert other_port["type"] is FlowResultType.ABORT
+        assert other_port["reason"] == "invalid_dongle_path"
+        assert radio_port["type"] is FlowResultType.FORM
+        assert radio_port["step_id"] == "usb_confirm"
+
+        result = await hass.config_entries.flow.async_configure(
+            radio_port["flow_id"], {}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {"device": FAM_USB_RADIO_PORT, "protocol": "esp2"}
+    assert (
+        result["context"]["unique_id"]
+        == "0403:6010_1234_EnOcean GmbH_EnOcean Programmer V3.2 - EnOcean Programmer V3.2"
+    )
+
+
+async def test_usb_discovery_without_an_answering_dongle(hass: HomeAssistant) -> None:
+    """Test that a port on which no dongle answers is not offered."""
+    with patch(DETECT_METHOD, return_value=None):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USB},
+            data=_fam_usb_discovery_info(FAM_USB_OTHER_PORT),
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "invalid_dongle_path"
+    assert not hass.config_entries.flow.async_progress()
