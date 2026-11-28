@@ -442,7 +442,7 @@ def get_influx_connection(  # noqa: C901
         return InfluxClient(buckets, write_v2, query_v2, close_v2)
 
     # Else it's a V1 client. Imported here because the influxdb package loads
-    # pandas and numpy (~40 MB), which V2 setups would otherwise pay for.
+    # pandas (~40 MB), which V2 setups would otherwise pay for.
     from influxdb import InfluxDBClient, exceptions  # noqa: PLC0415
 
     if (cert := conf.get(CONF_SSL_CA_CERT)) is not None and conf[CONF_VERIFY_SSL]:
