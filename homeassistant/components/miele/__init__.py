@@ -52,7 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MieleConfigEntry) -> Non
     auth = AsyncConfigEntryAuth(async_get_clientsession(hass), session)
     await auth.async_get_access_token()
 
-    # Setup MieleAPI and coordinator for data fetch
+    # Setup MieleAPI and coordinators for data fetch
     _api = MieleAPI(auth)
     _coordinator = MieleDataUpdateCoordinator(hass, entry, _api)
     await _coordinator.async_config_entry_first_refresh()

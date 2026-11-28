@@ -141,7 +141,7 @@ async def test_oven_temperatures_scenario(
 
     freezer.tick(timedelta(seconds=130))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     check_sensor_state(hass, "sensor.oven_temperature", "21.5", 1)
     check_sensor_state(hass, "sensor.oven_target_temperature", "80.0", 1)
@@ -158,7 +158,7 @@ async def test_oven_temperatures_scenario(
 
     freezer.tick(timedelta(seconds=130))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     check_sensor_state(hass, "sensor.oven_temperature", "unknown", 2)
     check_sensor_state(hass, "sensor.oven_target_temperature", "unknown", 2)
@@ -181,7 +181,7 @@ async def test_oven_temperatures_scenario(
 
     freezer.tick(timedelta(seconds=130))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     check_sensor_state(hass, "sensor.oven_temperature", "21.83", 3)
     check_sensor_state(hass, "sensor.oven_target_temperature", "80.0", 3)
@@ -206,7 +206,7 @@ async def test_oven_temperatures_scenario(
 
     freezer.tick(timedelta(seconds=130))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     check_sensor_state(hass, "sensor.oven_temperature", "unknown", 4)
     check_sensor_state(hass, "sensor.oven_target_temperature", "unknown", 4)
@@ -265,7 +265,7 @@ async def test_oven_core_probe_sensors_unknown_when_inactive(
 
     freezer.tick(timedelta(seconds=130))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(core_temp) is not None
     assert hass.states.get(core_temp).state == "22.0"
@@ -283,7 +283,7 @@ async def test_oven_core_probe_sensors_unknown_when_inactive(
 
     freezer.tick(timedelta(seconds=130))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(core_temp).state == STATE_UNKNOWN
     assert hass.states.get(core_target).state == STATE_UNKNOWN
@@ -309,7 +309,7 @@ async def test_oven_core_probe_unknown_when_inactive_raw_scaled(
 
     freezer.tick(timedelta(seconds=130))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(core_temp) is not None
     assert hass.states.get(core_temp).state == "22.0"
@@ -319,7 +319,7 @@ async def test_oven_core_probe_unknown_when_inactive_raw_scaled(
 
     freezer.tick(timedelta(seconds=130))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(core_temp).state == STATE_UNKNOWN
 
@@ -341,7 +341,7 @@ async def test_temperature_sensor_registry_lookup(
     device_fixture["DummyOven"]["state"]["coreTemperature"][0]["value_raw"] = 2200
     device_fixture["DummyOven"]["state"]["coreTemperature"][0]["value_localized"] = 22.0
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     entity_id = "sensor.oven_core_temperature"
 
@@ -483,7 +483,7 @@ async def test_laundry_wash_scenario(
 
     freezer.move_to("2025-05-31T12:30:00+00:00")
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # at this point, appliance is working, but it started reporting a
     # value from last cycle, so it is forced to 0
@@ -508,7 +508,7 @@ async def test_laundry_wash_scenario(
 
     freezer.move_to("2025-05-31T12:32:00+00:00")
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     step += 1
 
@@ -543,7 +543,7 @@ async def test_laundry_wash_scenario(
 
     freezer.move_to("2025-05-31T12:34:00+00:00")
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # at this point, it starts reporting value from API
     check_sensor_state(hass, "sensor.washing_machine_energy_consumption", "0.1", step)
@@ -563,7 +563,7 @@ async def test_laundry_wash_scenario(
 
     freezer.move_to("2025-05-31T14:07:00+00:00")
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     step += 1
 
     check_sensor_state(hass, "sensor.washing_machine", "rinse_hold", step)
@@ -596,7 +596,7 @@ async def test_laundry_wash_scenario(
 
     freezer.move_to("2025-05-31T14:30:00+00:00")
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     step += 1
 
     check_sensor_state(hass, "sensor.washing_machine", "program_ended", step)
@@ -640,7 +640,7 @@ async def test_laundry_wash_scenario(
 
     freezer.move_to("2025-05-31T14:32:00+00:00")
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     step += 1
 
     check_sensor_state(hass, "sensor.washing_machine", "programmed", step)
@@ -704,7 +704,7 @@ async def test_laundry_dry_scenario(
 
     freezer.move_to("2025-05-31T12:30:00+00:00")
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     step += 1
 
     check_sensor_state(hass, "sensor.tumble_dryer", "in_use", step)
@@ -735,7 +735,7 @@ async def test_laundry_dry_scenario(
 
     freezer.move_to("2025-05-31T14:30:00+00:00")
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     step += 1
 
     check_sensor_state(hass, "sensor.tumble_dryer", "program_ended", step)
@@ -800,7 +800,7 @@ async def test_elapsed_time_sensor_restored(
 
     freezer.move_to(datetime(2025, 5, 31, 12, 30, tzinfo=UTC))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(entity_id).state == "12"
     assert hass.states.get(entity_id_abs).state == "2025-05-31T14:15:00+00:00"
@@ -819,7 +819,7 @@ async def test_elapsed_time_sensor_restored(
 
     freezer.move_to(datetime(2025, 5, 31, 14, 20, tzinfo=UTC))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # unload config entry and reload to make sure that the state is restored
 

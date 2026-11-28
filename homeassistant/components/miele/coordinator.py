@@ -18,10 +18,14 @@ from pymiele import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.util.async_ import gather_with_limited_concurrency
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+# Miele does not publish a rate limit, so bound the fan-out per refresh.
+_MAX_CONCURRENT_ACTION_REQUESTS = 5
 
 
 @dataclass
@@ -83,27 +87,35 @@ class MieleDataUpdateCoordinator(DataUpdateCoordinator[MieleCoordinatorData]):
             device_id: MieleDevice(device) for device_id, device in devices_json.items()
         }
         self.devices = devices
-        actions = {}
+        # Device actions are independent of each other, so fetch them
+        # concurrently, bounded so a large installation does not burst against
+        # the undisclosed Miele rate limit.
+        actions = await gather_with_limited_concurrency(
+            _MAX_CONCURRENT_ACTION_REQUESTS,
+            *(self._async_fetch_actions(device_id) for device_id in devices),
+        )
+        return MieleCoordinatorData(
+            devices=devices,
+            actions=dict(zip(devices, actions, strict=True)),
+        )
 
-        for device_id in devices:
-            try:
-                actions_json = await self.api.get_actions(device_id)
-            except ClientResponseError as err:
-                _LOGGER.debug(
-                    "Error fetching actions for device %s: Status: %s, Message: %s",
-                    device_id,
-                    str(err.status),
-                    err.message,
-                )
-                actions_json = {}
-            except TimeoutError:
-                _LOGGER.debug(
-                    "Timeout fetching actions for device %s",
-                    device_id,
-                )
-                actions_json = {}
-            actions[device_id] = MieleAction(actions_json)
-        return MieleCoordinatorData(devices=devices, actions=actions)
+    async def _async_fetch_actions(self, device_id: str) -> MieleAction:
+        """Fetch the actions available for a device."""
+        try:
+            return MieleAction(await self.api.get_actions(device_id))
+        except ClientResponseError as err:
+            _LOGGER.debug(
+                "Error fetching actions for device %s: Status: %s, Message: %s",
+                device_id,
+                str(err.status),
+                err.message,
+            )
+        except TimeoutError:
+            _LOGGER.debug(
+                "Timeout fetching actions for device %s",
+                device_id,
+            )
+        return MieleAction({})
 
     def async_add_devices(self, added_devices: set[str]) -> tuple[set[str], set[str]]:
         """Add devices."""

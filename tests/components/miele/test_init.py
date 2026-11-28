@@ -1,8 +1,10 @@
 """Tests for init module."""
 
+import asyncio
 from datetime import timedelta
 import http
 import time
+from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
 from aiohttp import ClientConnectionError, ClientResponseError
@@ -42,6 +44,34 @@ async def test_load_unload_entry(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.NOT_LOADED
+
+
+@pytest.mark.parametrize("load_device_file", ["4_devices.json"])
+async def test_action_requests_are_concurrent(
+    hass: HomeAssistant,
+    mock_miele_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the actions of all appliances are fetched concurrently."""
+    started: set[str] = set()
+    multiple_started = asyncio.Event()
+
+    async def _get_actions(device_id: str) -> dict[str, Any]:
+        started.add(device_id)
+        if len(started) > 1:
+            multiple_started.set()
+        try:
+            await asyncio.wait_for(multiple_started.wait(), timeout=2)
+        except TimeoutError as err:
+            raise AssertionError("actions requests did not overlap") from err
+        return {}
+
+    mock_miele_client.get_actions.side_effect = _get_actions
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert len(started) == 5
 
 
 @pytest.mark.parametrize(
@@ -196,7 +226,7 @@ async def test_setup_all_platforms(
     prev_devices = len(device_registry.devices)
 
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert len(device_registry.devices) == prev_devices + 1
 
