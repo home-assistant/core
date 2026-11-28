@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_TIMEFRAME, DEFAULT_TIMEFRAME, DOMAIN, SCHEDULE_NOK, SCHEDULE_OK
-from .util import BrData, BuienradarData, async_in_service_quiet_hour
+from .util import BuienradarData, async_fetch_data, async_in_service_quiet_hour
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,19 +41,20 @@ class BuienradarCoordinator(DataUpdateCoordinator[BuienradarData]):
         timeframe = config_entry.options.get(
             CONF_TIMEFRAME, config.get(CONF_TIMEFRAME, DEFAULT_TIMEFRAME)
         )
-        self._fetcher = BrData(hass, self.coordinates, timeframe, [])
+        self._timeframe = timeframe
 
     @override
     async def _async_update_data(self) -> BuienradarData:
         """Fetch the latest data from Buienradar."""
-        if (data := await self._fetcher.async_fetch()) is not None:
-            self.update_interval = timedelta(minutes=SCHEDULE_OK)
-            return BuienradarData(data)
-
-        self.update_interval = timedelta(minutes=SCHEDULE_NOK)
-        if (
-            previous := self.data_or_none
-        ) is not None and await async_in_service_quiet_hour():
-            # Keep the last data while the service updates its forecast
-            return previous
-        raise UpdateFailed("Unable to retrieve data from Buienradar")
+        try:
+            data = await async_fetch_data(self.hass, self.coordinates, self._timeframe)
+        except UpdateFailed:
+            self.update_interval = timedelta(minutes=SCHEDULE_NOK)
+            if (
+                previous := self.data_or_none
+            ) is not None and await async_in_service_quiet_hour():
+                # Keep the last data while the service updates its forecast
+                return previous
+            raise
+        self.update_interval = timedelta(minutes=SCHEDULE_OK)
+        return BuienradarData(data)
