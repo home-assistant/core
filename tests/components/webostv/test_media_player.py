@@ -11,6 +11,7 @@ from aiowebostv import (
     WebOsTvInfo,
     WebOsTvPairError,
     WebOsTvRegistrationError,
+    WebOsTvWakeError,
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -60,6 +61,7 @@ from homeassistant.const import (
     SERVICE_MEDIA_PREVIOUS_TRACK,
     SERVICE_MEDIA_STOP,
     SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
     SERVICE_VOLUME_DOWN,
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
@@ -68,13 +70,15 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     EntityStateAttribute,
 )
-from homeassistant.core import CoreState, HomeAssistant, State
+from homeassistant.core import CoreState, HomeAssistant, ServiceCall, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from . import setup_webostv
-from .const import CHANNEL_2, ENTITY_ID, TV_MODEL, TV_NAME
+from .const import CHANNEL_2, ENTITY_ID, FAKE_UUID, TV_MODEL, TV_NAME
+
+MAC_ADDRESS = "aa:bb:cc:dd:ee:ff"
 
 
 async def mock_scan_interval(
@@ -1442,3 +1446,113 @@ async def test_availability_during_startup(
 
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
     assert f"{TV_NAME} is unavailable" in caplog.text
+
+
+async def test_wake_after_restart(
+    hass: HomeAssistant,
+    client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Use persisted registry addresses while the TV is unreachable at startup."""
+    entry = await setup_webostv(hass)
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, FAKE_UUID), entry.entry_id
+    )
+    assert device is not None
+    device_registry.async_update_device(
+        device.id, new_connections={(dr.CONNECTION_NETWORK_MAC, MAC_ADDRESS)}
+    )
+    client.mac_addresses = {}
+    client.tv_state.is_on = False
+    client.is_connected.return_value = False
+    client.connect.side_effect = WebOsTvConnectionError
+    await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    await mock_scan_interval(hass, freezer)
+
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF
+    assert (
+        hass.states.get(ENTITY_ID).attributes[ATTR_SUPPORTED_FEATURES]
+        & MediaPlayerEntityFeature.TURN_ON
+    )
+    await hass.services.async_call(
+        "media_player", SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+    )
+    client.turn_on.assert_awaited_once_with([MAC_ADDRESS])
+
+
+async def test_discover_mac(
+    hass: HomeAssistant, client: MagicMock, freezer: FrozenDateTimeFactory
+) -> None:
+    """Enable wake-up after a TV without saved MACs connects."""
+    client.mac_addresses = {}
+    client.is_connected.return_value = False
+    await setup_webostv(hass)
+    assert (
+        not hass.states.get(ENTITY_ID).attributes[ATTR_SUPPORTED_FEATURES]
+        & MediaPlayerEntityFeature.TURN_ON
+    )
+    client.mac_addresses = {"wired": MAC_ADDRESS}
+    await mock_scan_interval(hass, freezer)
+    assert (
+        hass.states.get(ENTITY_ID).attributes[ATTR_SUPPORTED_FEATURES]
+        & MediaPlayerEntityFeature.TURN_ON
+    )
+    await hass.services.async_call(
+        "media_player", SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+    )
+    client.turn_on.assert_awaited_once_with([MAC_ADDRESS])
+
+
+@pytest.mark.parametrize(
+    "macs",
+    [
+        pytest.param({}, id="no-mac"),
+        pytest.param({"wired": MAC_ADDRESS}, id="known-mac"),
+    ],
+)
+async def test_automation_priority(
+    hass: HomeAssistant,
+    client: MagicMock,
+    service_calls: list[ServiceCall],
+    macs: dict[str, str],
+) -> None:
+    """Always prefer the user's turn-on automation."""
+    client.mac_addresses = macs
+    await setup_webostv(hass)
+    client.tv_state.is_on = False
+    await client.mock_state_update()
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "triggers": [
+                        {"trigger": "webostv.turn_on", "entity_id": ENTITY_ID}
+                    ],
+                    "actions": [{"action": "test.automation"}],
+                }
+            ]
+        },
+    )
+    await hass.services.async_call(
+        "media_player", SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+    )
+    assert service_calls[-1].service == "automation"
+    client.turn_on.assert_not_awaited()
+
+
+async def test_wake_error(hass: HomeAssistant, client: MagicMock) -> None:
+    """Translate a library wake-up error for the action caller."""
+    client.mac_addresses = {"wired": MAC_ADDRESS}
+    await setup_webostv(hass)
+    client.tv_state.is_on = False
+    client.turn_on.side_effect = WebOsTvWakeError
+    await client.mock_state_update()
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            "media_player", SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        )
+    assert err.value.translation_key == "wake_failed"
