@@ -239,6 +239,9 @@ aiobambulab==0.0.1
 # homeassistant.components.idrive_e2
 aiobotocore==3.10.0
 
+# homeassistant.components.ccl
+aioccl==2026.10
+
 # homeassistant.components.centriconnect
 aiocentriconnect==0.2.3
 
