@@ -234,3 +234,27 @@ async def test_battery_sensor_handles_bridge_response_error(
     )
     assert state is not None
     assert state.state == STATE_UNKNOWN
+
+
+async def test_battery_sensor_is_on_when_the_bridge_reports_bad(
+    hass: HomeAssistant,
+) -> None:
+    """Test the sensor reports a low battery when the bridge says Bad.
+
+    Regression test for https://github.com/home-assistant/core/issues/189525
+    """
+    instance = MockBridge()
+    instance.battery_statuses["802"] = "Bad"
+
+    def factory(*args: Any, **kwargs: Any) -> MockBridge:
+        """Return the mock bridge instance."""
+        return instance
+
+    await async_setup_integration(hass, factory)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(
+        "binary_sensor.basement_bedroom_basement_bedroom_left_shade_battery"
+    )
+    assert state is not None
+    assert state.state == STATE_ON
