@@ -37,13 +37,8 @@ def _water_meter(meter: WaterMeter | None) -> dict[str, Any] | None:
     return {"volume": meter.volume, "duration": meter.duration} if meter else None
 
 
-def _device_state(state: DeviceStateV2 | None) -> dict[str, Any] | None:
-    """Return the device state as a dict.
-
-    A device without device state v2 may report no state at all.
-    """
-    if state is None:
-        return None
+def _device_state(state: DeviceStateV2) -> dict[str, Any]:
+    """Return the device state as a dict."""
     return {
         "valve_state": state.valve_state,
         "water_flow_indicator": state.water_flow_indicator,
@@ -58,8 +53,10 @@ def _device_state(state: DeviceStateV2 | None) -> dict[str, Any] | None:
     }
 
 
-def _telemetry(telemetry: TelemetryData) -> dict[str, Any]:
+def _telemetry(telemetry: TelemetryData | None) -> dict[str, Any] | None:
     """Return the telemetry as a dict."""
+    if telemetry is None:
+        return None
     event = telemetry.ongoing_event
     return {
         "flow": telemetry.flow,
@@ -72,8 +69,10 @@ def _telemetry(telemetry: TelemetryData) -> dict[str, Any]:
     }
 
 
-def _networking(networking: NetworkingData) -> dict[str, Any]:
+def _networking(networking: NetworkingData | None) -> dict[str, Any] | None:
     """Return the networking data as a dict."""
+    if networking is None:
+        return None
     return {
         "mqtt_connected": networking.mqtt_connected,
         "wifi_connected": networking.wifi_connected,
@@ -87,8 +86,10 @@ def _networking(networking: NetworkingData) -> dict[str, Any]:
     }
 
 
-def _auto_shut_off(auto_shut_off: AutoShutOffState) -> dict[str, Any]:
+def _auto_shut_off(auto_shut_off: AutoShutOffState | None) -> dict[str, Any] | None:
     """Return the auto shut-off state as a dict."""
+    if auto_shut_off is None:
+        return None
     return {
         "enabled": auto_shut_off.enabled,
         "volume_threshold": auto_shut_off.volume_threshold,
@@ -112,7 +113,7 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     coordinator = entry.runtime_data
-    data = coordinator.data
+    data = coordinator.data_or_none
 
     return {
         "config_entry": async_redact_data(entry.as_dict(), TO_REDACT),
@@ -130,7 +131,7 @@ async def async_get_config_entry_diagnostics(
             )
             # Without data the first refresh has not succeeded (the entry is retrying
             # setup).
-            if data  # type: ignore[truthy-bool]
+            if data
             else None
         ),
     }

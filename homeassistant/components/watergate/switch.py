@@ -39,9 +39,16 @@ class SonicAutoShutOffSwitch(WatergateEntity, SwitchEntity):
 
     @property
     @override
-    def is_on(self) -> bool:
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return super().available and self.coordinator.data.auto_shut_off is not None
+
+    @property
+    @override
+    def is_on(self) -> bool | None:
         """Return whether auto shut-off is enabled."""
-        return self.coordinator.data.auto_shut_off.enabled
+        auto_shut_off = self.coordinator.data.auto_shut_off
+        return auto_shut_off.enabled if auto_shut_off else None
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
