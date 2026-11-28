@@ -817,7 +817,6 @@ async def test_modern_platform_setup(hass: HomeAssistant) -> None:
     assert state
     assert state.state == STATE_UNKNOWN
     assert state.attributes == {
-        "in_zones": [],
         "source_type": SourceType.ROUTER,
         "tracking_type": TrackingType.POSITION,
     }
@@ -838,7 +837,6 @@ async def test_modern_platform_setup(hass: HomeAssistant) -> None:
     assert state
     assert state.state == STATE_NOT_HOME
     assert state.attributes == {
-        "in_zones": [],
         "source_type": SourceType.ROUTER,
         "tracking_type": TrackingType.POSITION,
     }
