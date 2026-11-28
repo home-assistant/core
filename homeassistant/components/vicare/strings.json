@@ -250,6 +250,48 @@
       "burner_starts": {
         "name": "Burner starts"
       },
+      "burner_stops_flame_loss_during_operation": {
+        "name": "Burner stops by flame loss"
+      },
+      "burner_stops_flue_gas_temperature_sensor": {
+        "name": "Burner stops by flue gas temperature sensor"
+      },
+      "burner_stops_ionization_alignment": {
+        "name": "Burner stops by ionization alignment"
+      },
+      "burner_stops_no_gas_at_start": {
+        "name": "Burner stops without gas at start"
+      },
+      "burner_stops_no_ignition_at_start": {
+        "name": "Burner stops without ignition at start"
+      },
+      "burner_stops_no_ionization_at_start": {
+        "name": "Burner stops without ionization at start"
+      },
+      "burner_stops_normal_stop": {
+        "name": "Normal burner stops"
+      },
+      "burner_stops_safety_shutdown": {
+        "name": "Burner stops by safety shutdown"
+      },
+      "burner_stops_safety_shutdown_error_shutdown": {
+        "name": "Burner stops by error shutdown"
+      },
+      "burner_stops_safety_time": {
+        "name": "Burner stops by safety time"
+      },
+      "burner_stops_stabilisation_process": {
+        "name": "Burner stops by stabilization process"
+      },
+      "burner_stops_temperature_monitor": {
+        "name": "Burner stops by temperature monitor"
+      },
+      "burner_stops_temperature_monitor_ionization_comparison": {
+        "name": "Burner stops by ionization comparison"
+      },
+      "burner_stops_undervoltage": {
+        "name": "Burner stops by undervoltage"
+      },
       "collector_temperature": {
         "name": "Solar collector temperature"
       },
