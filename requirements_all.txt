@@ -1219,7 +1219,7 @@ google-genai==2.25.0
 google-health-api==1.1.0
 
 # homeassistant.components.nest
-google-nest-sdm==9.2.1
+google-nest-sdm==9.2.3
 
 # homeassistant.components.google_photos
 google-photos-library-api==0.12.1
@@ -1301,7 +1301,7 @@ ha-xthings-cloud==1.0.5
 habiticalib==0.4.8
 
 # homeassistant.components.bluetooth
-habluetooth==7.2.0
+habluetooth==7.2.1
 
 # homeassistant.components.hanna
 hanna-cloud==0.0.7
