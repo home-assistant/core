@@ -44,8 +44,7 @@ from .conftest import KNXTestKit
 _BUS_TOOLS = {"read_group_value", "send_group_value_read", "send_group_value_write"}
 # The complete set, asserted exactly: a subset check cannot notice a tool that
 # silently stops being registered. `list_locations` is deliberately absent - it
-# is the one library tool with no adapter-side bound, because nesting depth
-# drives its size, and it needs depth/space_id in xknxproject first.
+# returns the whole nested tree at once; `list_spaces` is its paginated form.
 _EXPECTED_TOOLS = {
     "count_telegrams",
     "create_device",
@@ -57,6 +56,7 @@ _EXPECTED_TOOLS = {
     "describe_channel",
     "describe_function",
     "describe_group_address",
+    "describe_space",
     "encode_value",
     "find_similar_channels",
     "get_connection_status",
@@ -74,6 +74,7 @@ _EXPECTED_TOOLS = {
     "list_entities",
     "list_entity_suggestions",
     "list_functions",
+    "list_spaces",
     "list_group_addresses",
     "query_telegrams",
     "update_entity",
@@ -169,6 +170,8 @@ async def test_llm_api_requires_admin(
         pytest.param("query_telegrams", True, False, True, False, id="store_read"),
         pytest.param("list_dpts", True, False, True, False, id="dpt_lookup"),
         pytest.param("get_topology", True, False, True, False, id="project_read"),
+        pytest.param("list_spaces", True, False, True, False, id="spaces_read"),
+        pytest.param("describe_space", True, False, True, False, id="space_read"),
         pytest.param(
             "find_similar_channels", True, False, True, False, id="channel_read"
         ),
@@ -408,6 +411,8 @@ def test_serialize_normalizes_nested_containers(
         pytest.param(
             "list_channels", {"limit": 1001}, id="channels_limit_above_maximum"
         ),
+        pytest.param("list_spaces", {"limit": 1001}, id="spaces_limit_above_maximum"),
+        pytest.param("list_spaces", {"offset": -1}, id="spaces_negative_offset"),
         pytest.param(
             "find_similar_channels",
             {"device_address": "1.1.1", "channel_identifier": "CH-1", "limit": 1001},
@@ -788,6 +793,210 @@ async def test_describe_channel_unknown_channel(hass: HomeAssistant) -> None:
 
     assert result["found"] is False
     assert result["communication_objects"] == []
+
+
+def _space(
+    identifier: str,
+    space_type: str,
+    name: str,
+    *,
+    devices: list[str] | None = None,
+    functions: list[str] | None = None,
+    spaces: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    return {
+        "type": space_type,
+        "identifier": identifier,
+        "name": name,
+        "usage_id": None,
+        "usage_text": "",
+        "number": "",
+        "description": "",
+        "project_uid": None,
+        "devices": devices or [],
+        "functions": functions or [],
+        "spaces": {space["name"]: space for space in spaces or []},
+    }
+
+
+def _space_project() -> dict[str, Any]:
+    """A building with one floor of two rooms, each with a device and a function."""
+    rooms = [
+        _space("BP-3", "Room", "Kitchen", devices=["1.1.1"], functions=["F-1"]),
+        _space("BP-4", "Room", "Office", devices=["1.1.2"], functions=["F-2"]),
+    ]
+    floor = _space("BP-2", "Floor", "Ground floor", spaces=rooms)
+    building = _space("BP-1", "Building", "House", devices=["1.1.0"], spaces=[floor])
+    return {
+        "locations": {"House": building},
+        "devices": {
+            address: {
+                "individual_address": address,
+                "name": f"Device {address}",
+                "hardware_name": "",
+                "manufacturer_name": "",
+                "order_number": "",
+                "description": "",
+                "communication_object_ids": [],
+                "application": None,
+                "channels": {},
+                "space_id": space_id,
+            }
+            for address, space_id in (
+                ("1.1.0", "BP-1"),
+                ("1.1.1", "BP-3"),
+                ("1.1.2", "BP-4"),
+            )
+        },
+        "functions": {
+            identifier: {
+                "identifier": identifier,
+                "name": f"Light {identifier}",
+                "function_type": "FT-1",
+                "space_id": space_id,
+                "usage_text": "",
+                "group_addresses": {},
+            }
+            for identifier, space_id in (("F-1", "BP-3"), ("F-2", "BP-4"))
+        },
+    }
+
+
+@pytest.mark.parametrize(
+    ("tool_args", "expected", "expected_total", "expected_next_offset"),
+    [
+        pytest.param({}, ["BP-1", "BP-2", "BP-3", "BP-4"], 4, None, id="all"),
+        pytest.param({"limit": 3}, ["BP-1", "BP-2", "BP-3"], 4, 3, id="first_page"),
+        pytest.param({"limit": 3, "offset": 3}, ["BP-4"], 4, None, id="last_page"),
+        pytest.param({"type": "Room"}, ["BP-3", "BP-4"], 2, None, id="type"),
+        pytest.param({"text": "office"}, ["BP-4"], 1, None, id="text"),
+        pytest.param({"recursive": False}, ["BP-1"], 1, None, id="top_level"),
+        pytest.param(
+            {"parent_id": "BP-1", "recursive": False}, ["BP-2"], 1, None, id="children"
+        ),
+        pytest.param(
+            {"parent_id": "BP-1"}, ["BP-2", "BP-3", "BP-4"], 3, None, id="subtree"
+        ),
+        pytest.param({"parent_id": "BP-9"}, [], 0, None, id="unknown_parent"),
+    ],
+)
+async def test_list_spaces_tool_call(
+    hass: HomeAssistant,
+    tool_args: dict[str, Any],
+    expected: list[str],
+    expected_total: int,
+    expected_next_offset: int | None,
+) -> None:
+    """Spaces are listed flat and paginated by the library."""
+    result = await _call(hass, _space_project(), "list_spaces", tool_args)
+
+    assert [space["identifier"] for space in result["spaces"]] == expected
+    assert result["total_count"] == expected_total
+    assert result["next_offset"] == expected_next_offset
+
+
+async def test_list_spaces_entry(hass: HomeAssistant) -> None:
+    """A space names where it is and what is placed in it."""
+    result = await _call(hass, _space_project(), "list_spaces", {"text": "kitchen"})
+
+    assert result["spaces"] == [
+        {
+            "identifier": "BP-3",
+            "type": "Room",
+            "name": "Kitchen",
+            "number": "",
+            "description": "",
+            "usage_text": "",
+            "parent_id": "BP-2",
+            "path": ["House", "Ground floor"],
+            "devices": ["1.1.1"],
+            "functions": ["F-1"],
+            "child_count": 0,
+        }
+    ]
+
+
+async def test_describe_space_tool_call(hass: HomeAssistant) -> None:
+    """A space identifier resolves to its place in the building structure."""
+    result = await _call(
+        hass, _space_project(), "describe_space", {"identifier": "BP-2"}
+    )
+
+    assert result["found"] is True
+    assert result["space"]["name"] == "Ground floor"
+    assert result["ancestors"] == [
+        {"identifier": "BP-1", "type": "Building", "name": "House"}
+    ]
+    assert [child["name"] for child in result["children"]] == ["Kitchen", "Office"]
+
+
+async def test_describe_space_unknown_space(hass: HomeAssistant) -> None:
+    """An unknown space is reported as not found rather than raised."""
+    result = await _call(
+        hass, _space_project(), "describe_space", {"identifier": "BP-9"}
+    )
+
+    assert result == {"found": False, "space": None, "ancestors": [], "children": []}
+
+
+@pytest.mark.parametrize(
+    ("tool_name", "key", "id_key", "tool_args", "expected"),
+    [
+        pytest.param(
+            "list_devices",
+            "devices",
+            "individual_address",
+            {"space_id": "BP-3"},
+            ["1.1.1"],
+            id="devices_of_space",
+        ),
+        pytest.param(
+            "list_devices",
+            "devices",
+            "individual_address",
+            {"space_id": "BP-2"},
+            [],
+            id="devices_of_floor_itself",
+        ),
+        pytest.param(
+            "list_devices",
+            "devices",
+            "individual_address",
+            {"space_id": "BP-2", "include_subspaces": True},
+            ["1.1.1", "1.1.2"],
+            id="devices_below_floor",
+        ),
+        pytest.param(
+            "list_functions",
+            "functions",
+            "identifier",
+            {"space_id": "BP-4"},
+            ["F-2"],
+            id="functions_of_space",
+        ),
+        pytest.param(
+            "list_functions",
+            "functions",
+            "identifier",
+            {"space_id": "BP-1", "include_subspaces": True},
+            ["F-1", "F-2"],
+            id="functions_below_building",
+        ),
+    ],
+)
+async def test_devices_and_functions_filter_by_space(
+    hass: HomeAssistant,
+    tool_name: str,
+    key: str,
+    id_key: str,
+    tool_args: dict[str, Any],
+    expected: list[str],
+) -> None:
+    """Devices and functions are found by the space they are placed in."""
+    result = await _call(hass, _space_project(), tool_name, tool_args)
+
+    assert [item[id_key] for item in result[key]] == expected
+    assert all(item["space_id"] is not None for item in result[key])
 
 
 def test_describe_channel_requires_both_arguments() -> None:
