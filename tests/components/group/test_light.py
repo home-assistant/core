@@ -1,6 +1,7 @@
 """The tests for the Group Light platform."""
 
 import asyncio
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -47,6 +48,7 @@ from homeassistant.const import (
     TargetKey,
 )
 from homeassistant.core import Event, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -914,6 +916,202 @@ async def test_min_max_mireds(hass: HomeAssistant) -> None:
     state = hass.states.get("light.light_group")
     assert state.attributes[ATTR_MIN_COLOR_TEMP_KELVIN] == 1
     assert state.attributes[ATTR_MAX_COLOR_TEMP_KELVIN] == 1234567890
+
+
+@pytest.mark.parametrize(
+    ("requested", "expected"),
+    [
+        pytest.param(2200, (2200, 2700, 2200), id="below_member_minimum"),
+        pytest.param(3000, (3000, 3000, 3000), id="within_all_ranges"),
+        pytest.param(5000, (5000, 5000, 4000), id="above_member_maximum"),
+    ],
+)
+async def test_color_temp_clamped_to_member_range(
+    hass: HomeAssistant, requested: int, expected: tuple[int, int, int]
+) -> None:
+    """Test color temp is clamped to the range of each member."""
+    entities = [
+        MockLight("test1", STATE_OFF),
+        MockLight("test2", STATE_OFF),
+        MockLight("test3", STATE_OFF),
+    ]
+    ranges = [(2000, 6500), (2700, 6500), (2000, 4000)]
+    for entity, (min_kelvin, max_kelvin) in zip(entities, ranges, strict=True):
+        entity.supported_color_modes = {ColorMode.COLOR_TEMP}
+        entity.color_mode = ColorMode.COLOR_TEMP
+        entity._attr_min_color_temp_kelvin = min_kelvin
+        entity._attr_max_color_temp_kelvin = max_kelvin
+    setup_test_component_platform(hass, LIGHT_DOMAIN, entities)
+
+    assert await async_setup_component(
+        hass,
+        LIGHT_DOMAIN,
+        {
+            LIGHT_DOMAIN: [
+                {"platform": "test"},
+                {
+                    "platform": DOMAIN,
+                    "entities": ["light.test1", "light.test2", "light.test3"],
+                    "all": "false",
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.light_group")
+    assert state.attributes[ATTR_MIN_COLOR_TEMP_KELVIN] == 2000
+    assert state.attributes[ATTR_MAX_COLOR_TEMP_KELVIN] == 6500
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: "light.light_group",
+            LightServiceArgument.COLOR_TEMP_KELVIN: requested,
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    assert [
+        hass.states.get(entity.entity_id).attributes[ATTR_COLOR_TEMP_KELVIN]
+        for entity in entities
+    ] == list(expected)
+
+
+@pytest.mark.parametrize(
+    ("groups", "target"),
+    [
+        pytest.param(
+            [{"name": "Light Group", "entities": ["light.test1", "light.test2"]}],
+            "light.light_group",
+            id="flat",
+        ),
+        pytest.param(
+            [
+                {"name": "Inner Group", "entities": ["light.test1", "light.test2"]},
+                {"name": "Outer Group", "entities": ["light.inner_group"]},
+            ],
+            "light.outer_group",
+            id="nested",
+        ),
+    ],
+)
+async def test_color_temp_emulated_by_member_without_range(
+    hass: HomeAssistant, groups: list[dict[str, Any]], target: str
+) -> None:
+    """Test a member without a color temp range keeps the requested value.
+
+    A light that does not support color temp emulates it with its color, so the
+    value must not be limited to the range of the other members, also when the
+    members are reached through a nested group.
+    """
+    color_temp_light = MockLight("test1", STATE_OFF)
+    color_temp_light.supported_color_modes = {ColorMode.COLOR_TEMP}
+    color_temp_light.color_mode = ColorMode.COLOR_TEMP
+    color_temp_light._attr_min_color_temp_kelvin = 2700
+    color_light = MockLight("test2", STATE_OFF)
+    color_light.supported_color_modes = {ColorMode.HS}
+    color_light.color_mode = ColorMode.HS
+    setup_test_component_platform(hass, LIGHT_DOMAIN, [color_temp_light, color_light])
+
+    assert await async_setup_component(
+        hass,
+        LIGHT_DOMAIN,
+        {
+            LIGHT_DOMAIN: [
+                {"platform": "test"},
+                *({"platform": DOMAIN, "all": "false", **group} for group in groups),
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert hass.states.get("light.test1").attributes[ATTR_MIN_COLOR_TEMP_KELVIN] == 2700
+    assert ATTR_MIN_COLOR_TEMP_KELVIN not in hass.states.get("light.test2").attributes
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: target,
+            LightServiceArgument.COLOR_TEMP_KELVIN: 2200,
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    # The color temp light is limited to its own range
+    state = hass.states.get("light.test1")
+    assert state.attributes[ATTR_COLOR_TEMP_KELVIN] == 2700
+    # The color light emulates the requested color temperature (2200 K)
+    state = hass.states.get("light.test2")
+    assert state.attributes[ATTR_HS_COLOR] == (29.797, 84.644)
+
+
+async def test_color_temp_failure_waits_for_other_calls(hass: HomeAssistant) -> None:
+    """Test a failing forwarded call is raised after the other calls finished."""
+
+    class SlowLight(MockLight):
+        """Light that finishes turning on after a short delay."""
+
+        finished = False
+
+        async def async_turn_on(self, **kwargs: Any) -> None:
+            """Turn the light on after a short delay."""
+            await asyncio.sleep(0.01)
+            self.finished = True
+
+    class FailingLight(MockLight):
+        """Light that fails to turn on."""
+
+        def turn_on(self, **kwargs: Any) -> None:
+            """Fail to turn on."""
+            raise HomeAssistantError("Failed to turn on")
+
+    slow_light = SlowLight("test1", STATE_OFF)
+    failing_light = FailingLight("test2", STATE_OFF)
+    for entity, min_kelvin in ((slow_light, 2000), (failing_light, 2700)):
+        entity.supported_color_modes = {ColorMode.COLOR_TEMP}
+        entity.color_mode = ColorMode.COLOR_TEMP
+        entity._attr_min_color_temp_kelvin = min_kelvin
+    setup_test_component_platform(hass, LIGHT_DOMAIN, [slow_light, failing_light])
+
+    assert await async_setup_component(
+        hass,
+        LIGHT_DOMAIN,
+        {
+            LIGHT_DOMAIN: [
+                {"platform": "test"},
+                {
+                    "platform": DOMAIN,
+                    "entities": ["light.test1", "light.test2"],
+                    "all": "false",
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    with pytest.raises(HomeAssistantError, match="Failed to turn on"):
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            LightService.TURN_ON,
+            {
+                TargetKey.ENTITY_ID: "light.light_group",
+                LightServiceArgument.COLOR_TEMP_KELVIN: 2200,
+            },
+            blocking=True,
+        )
+
+    assert slow_light.finished
 
 
 async def test_effect_list(hass: HomeAssistant) -> None:
