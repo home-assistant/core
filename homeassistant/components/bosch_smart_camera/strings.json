@@ -33,6 +33,9 @@
       }
     },
     "switch": {
+      "motion_detection": {
+        "name": "Motion detection"
+      },
       "privacy_mode": {
         "name": "Privacy mode"
       }
@@ -52,6 +55,9 @@
     },
     "light_failed": {
       "message": "Unable to switch the camera light."
+    },
+    "motion_detection_failed": {
+      "message": "Unable to change the motion detection at Bosch."
     },
     "privacy_mode_failed": {
       "message": "Unable to change the privacy mode at Bosch."

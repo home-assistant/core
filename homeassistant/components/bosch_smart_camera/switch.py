@@ -19,7 +19,7 @@ async def async_setup_entry(
     entry: BoschCameraConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the privacy mode switches of the cameras."""
+    """Set up the switches of the cameras."""
     coordinator = entry.runtime_data
     known: set[str] = set()
 
@@ -29,9 +29,13 @@ async def async_setup_entry(
         known.intersection_update(coordinator.data)
         new = set(coordinator.data) - known
         known.update(new)
-        async_add_entities(
-            BoschPrivacyModeSwitch(coordinator, camera_id) for camera_id in new
-        )
+        for camera_id in new:
+            async_add_entities(
+                [
+                    BoschPrivacyModeSwitch(coordinator, camera_id),
+                    BoschMotionDetectionSwitch(coordinator, camera_id),
+                ]
+            )
 
     entry.async_on_unload(coordinator.async_add_listener(_add_new_cameras))
     _add_new_cameras()
@@ -76,3 +80,41 @@ class BoschPrivacyModeSwitch(BoschCameraEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the privacy mode off."""
         await self.coordinator.async_set_privacy_mode(self._camera_id, False)
+
+
+class BoschMotionDetectionSwitch(BoschCameraEntity, SwitchEntity):
+    """Motion detection of a camera."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_translation_key = "motion_detection"
+
+    def __init__(self, coordinator: BoschCameraCoordinator, camera_id: str) -> None:
+        """Initialize the switch."""
+        super().__init__(coordinator, camera_id)
+        self._attr_unique_id = f"{camera_id}_motion_detection"
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return whether the camera reports a motion detection state."""
+        return (
+            super().available
+            and self._camera_id in self.coordinator.data
+            and self._camera_id in self.coordinator.motion_states
+        )
+
+    @property
+    @override
+    def is_on(self) -> bool | None:
+        """Return whether the motion detection is on."""
+        return self.coordinator.motion_states.get(self._camera_id)
+
+    @override
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the motion detection on."""
+        await self.coordinator.async_set_motion_detection(self._camera_id, True)
+
+    @override
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the motion detection off."""
+        await self.coordinator.async_set_motion_detection(self._camera_id, False)
