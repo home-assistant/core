@@ -1,6 +1,8 @@
 """The enphase_envoy component."""
 
+from asyncio import Semaphore
 import contextlib
+from copy import deepcopy
 import datetime as dt
 from datetime import timedelta
 import logging
@@ -76,6 +78,10 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.token_lifetime = 0
         self._acb_sleep_soc_band: str | None = None
         self._client_session: ClientSession = session
+        # Serialize the generator schedule refresh/merge/write operation across every platform with a shared lock.
+        # PARALLEL_UPDATES = 1 creates a separate semaphore per entity platform, so concurrent number, select and
+        # time writes can both refresh the same document and the later full-document POST can undo the earlier change.
+        self.generator_schedule_semaphore = Semaphore(1)
         super().__init__(
             hass,
             _LOGGER,
@@ -475,7 +481,10 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             # remember firmware version for next time
             self.envoy_firmware = envoy.firmware
             _LOGGER.debug("Envoy data: %s", envoy_data)
-            return envoy_data.raw
+            # use changes in raw data to signal data is updated
+            # break link between previous raw data and library raw data to prevent
+            # library action functions modifying raw data and changes not being recognized
+            return deepcopy(envoy_data.raw)
 
         raise RuntimeError("Unreachable code in _async_update_data")  # pragma: no cover
 

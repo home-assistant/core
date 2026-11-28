@@ -167,6 +167,7 @@ async def async_remove_config_entry_device(
             envoy_data.generator is not None
             or envoy_data.generator_config is not None
             or envoy_data.generator_mode is not None
+            or envoy_data.generator_schedule is not None
         ):
             if f"{envoy_serial_num}_generator" in dev_ids:
                 return False

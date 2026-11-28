@@ -130,6 +130,16 @@ class EnvoyGeneratorEntity(EnvoyBaseEntity):
             self._attr_device_info.model = config.model
 
 
+class EnvoyGeneratorScheduleEntity(EnvoyGeneratorEntity):
+    """Defines a generator entity backed by the generator schedule endpoint."""
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if the generator schedule is available."""
+        return super().available and self.data.generator_schedule is not None
+
+
 class EnvoyGeneratorStatusEntity(EnvoyGeneratorEntity):
     """Defines a generator entity backed by the generator status endpoint."""
 
