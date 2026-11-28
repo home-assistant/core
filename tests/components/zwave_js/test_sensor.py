@@ -12,6 +12,7 @@ from pytest_homeassistant.common import (
     async_fire_time_changed,
 )
 from zwave_js_server.const.command_class.meter import MeterType
+from zwave_js_server.const.command_class.multilevel_sensor import MultilevelSensorType
 from zwave_js_server.event import Event
 from zwave_js_server.exceptions import FailedZWaveCommand
 from zwave_js_server.model.node import Node
@@ -50,6 +51,8 @@ from homeassistant.const import (
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfPower,
+    UnitOfPressure,
+    UnitOfRatio,
     UnitOfTemperature,
     UnitOfTime,
 )
@@ -239,8 +242,263 @@ async def test_numeric_sensor(
 
 @pytest.mark.parametrize(
     (
+        "sensor_type",
+        "scale",
+        "metadata_unit",
+        "label",
+        "entity_id",
+        "device_class",
+        "expected_state",
+        "expected_unit",
+    ),
+    [
+        pytest.param(
+            MultilevelSensorType.CARBON_MONOXIDE_LEVEL,
+            1,
+            "ppm",
+            "Carbon monoxide (CO) level",
+            "sensor.multisensor_6_carbon_monoxide_co_level",
+            SensorDeviceClass.CO,
+            "12.5",
+            UnitOfRatio.PARTS_PER_MILLION,
+            id="co_ppm",
+        ),
+        pytest.param(
+            MultilevelSensorType.CARBON_DIOXIDE_LEVEL,
+            0,
+            "ppm",
+            "Carbon dioxide (CO₂) level",
+            "sensor.multisensor_6_carbon_dioxide_co2_level",
+            SensorDeviceClass.CO2,
+            "12.5",
+            UnitOfRatio.PARTS_PER_MILLION,
+            id="co2_ppm",
+        ),
+        pytest.param(
+            MultilevelSensorType.WATER_PRESSURE,
+            0,
+            "kPa",
+            "Water pressure",
+            "sensor.multisensor_6_water_pressure",
+            SensorDeviceClass.PRESSURE,
+            "12.5",
+            UnitOfPressure.KPA,
+            id="water_pressure_kpa",
+        ),
+        pytest.param(
+            MultilevelSensorType.SUCTION_PRESSURE,
+            0,
+            "kPa",
+            "Suction pressure",
+            "sensor.multisensor_6_suction_pressure",
+            SensorDeviceClass.PRESSURE,
+            "12.5",
+            UnitOfPressure.KPA,
+            id="suction_pressure_kpa",
+        ),
+        pytest.param(
+            MultilevelSensorType.DISCHARGE_PRESSURE,
+            0,
+            "kPa",
+            "Discharge pressure",
+            "sensor.multisensor_6_discharge_pressure",
+            SensorDeviceClass.PRESSURE,
+            "12.5",
+            UnitOfPressure.KPA,
+            id="discharge_pressure_kpa",
+        ),
+        pytest.param(
+            MultilevelSensorType.BAROMETRIC_PRESSURE,
+            0,
+            "kPa",
+            "Barometric pressure",
+            "sensor.multisensor_6_barometric_pressure",
+            SensorDeviceClass.PRESSURE,
+            "12.5",
+            UnitOfPressure.KPA,
+            id="barometric_pressure_kpa",
+        ),
+        pytest.param(
+            MultilevelSensorType.ATMOSPHERIC_PRESSURE,
+            0,
+            "kPa",
+            "Atmospheric pressure",
+            "sensor.multisensor_6_atmospheric_pressure",
+            SensorDeviceClass.PRESSURE,
+            "12.5",
+            UnitOfPressure.KPA,
+            id="atmospheric_pressure_kpa",
+        ),
+        pytest.param(
+            MultilevelSensorType.SUCTION_PRESSURE,
+            1,
+            "psi",
+            "Suction pressure",
+            "sensor.multisensor_6_suction_pressure",
+            SensorDeviceClass.PRESSURE,
+            "86.1844625",
+            UnitOfPressure.KPA,
+            id="suction_pressure_psi",
+        ),
+        pytest.param(
+            MultilevelSensorType.DISCHARGE_PRESSURE,
+            1,
+            "psi",
+            "Discharge pressure",
+            "sensor.multisensor_6_discharge_pressure",
+            SensorDeviceClass.PRESSURE,
+            "86.1844625",
+            UnitOfPressure.KPA,
+            id="discharge_pressure_psi",
+        ),
+        pytest.param(
+            MultilevelSensorType.BAROMETRIC_PRESSURE,
+            1,
+            "inHg",
+            "Barometric pressure",
+            "sensor.multisensor_6_barometric_pressure",
+            SensorDeviceClass.PRESSURE,
+            "423.298580042625",
+            UnitOfPressure.HPA,
+            id="barometric_pressure_inhg",
+        ),
+        pytest.param(
+            MultilevelSensorType.ATMOSPHERIC_PRESSURE,
+            1,
+            "inHg",
+            "Atmospheric pressure",
+            "sensor.multisensor_6_atmospheric_pressure",
+            SensorDeviceClass.PRESSURE,
+            "423.298580042625",
+            UnitOfPressure.HPA,
+            id="atmospheric_pressure_inhg",
+        ),
+        pytest.param(
+            MultilevelSensorType.BLOOD_PRESSURE,
+            0,
+            "mmHg",
+            "Blood pressure",
+            "sensor.multisensor_6_blood_pressure",
+            SensorDeviceClass.PRESSURE,
+            "12.5",
+            UnitOfPressure.MMHG,
+            id="blood_pressure_mmhg",
+        ),
+        pytest.param(
+            MultilevelSensorType.CURRENT,
+            0,
+            "A",
+            "Current",
+            "sensor.multisensor_6_current",
+            SensorDeviceClass.CURRENT,
+            "12.5",
+            UnitOfElectricCurrent.AMPERE,
+            id="current_ampere",
+        ),
+        pytest.param(
+            MultilevelSensorType.VOLTAGE,
+            0,
+            "V",
+            "Voltage",
+            "sensor.multisensor_6_voltage",
+            SensorDeviceClass.VOLTAGE,
+            "12.5",
+            UnitOfElectricPotential.VOLT,
+            id="voltage_volt",
+        ),
+        pytest.param(
+            MultilevelSensorType.VOLTAGE,
+            1,
+            "mV",
+            "Voltage",
+            "sensor.multisensor_6_voltage",
+            SensorDeviceClass.VOLTAGE,
+            "12.5",
+            UnitOfElectricPotential.MILLIVOLT,
+            id="voltage_millivolt",
+        ),
+        pytest.param(
+            MultilevelSensorType.WATER_OXIDATION_REDUCTION_POTENTIAL,
+            0,
+            "mV",
+            "Water oxidation reduction potential",
+            "sensor.multisensor_6_water_oxidation_reduction_potential",
+            SensorDeviceClass.VOLTAGE,
+            "12.5",
+            UnitOfElectricPotential.MILLIVOLT,
+            id="water_oxidation_reduction_potential_millivolt",
+        ),
+        pytest.param(
+            MultilevelSensorType.POWER,
+            0,
+            "W",
+            "Power",
+            "sensor.multisensor_6_power",
+            SensorDeviceClass.POWER,
+            "12.5",
+            UnitOfPower.WATT,
+            id="power_watt",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("integration")
+async def test_multilevel_sensor_with_device_class(
+    hass: HomeAssistant,
+    client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    multisensor_6_state: dict[str, Any],
+    sensor_type: MultilevelSensorType,
+    scale: int,
+    metadata_unit: str,
+    label: str,
+    entity_id: str,
+    device_class: SensorDeviceClass,
+    expected_state: str,
+    expected_unit: str,
+) -> None:
+    """Test multilevel sensors with a device class."""
+    node_state = copy.deepcopy(multisensor_6_state)
+    value = next(
+        value
+        for value in node_state["values"]
+        if value["commandClass"] == 49 and value["property"] == "Air temperature"
+    )
+    value["metadata"]["label"] = label
+    value["metadata"]["ccSpecific"] = {"sensorType": sensor_type, "scale": scale}
+    value["metadata"]["unit"] = metadata_unit
+    value["value"] = 12.5
+
+    event = Event(
+        "node added",
+        {
+            "source": "controller",
+            "event": "node added",
+            "node": node_state,
+            "result": {},
+        },
+    )
+    client.driver.controller.receive_event(event)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    # The psi and inHg cases are converted to the metric unit system.
+    assert state.state == expected_state
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == expected_unit
+    assert state.attributes[ATTR_DEVICE_CLASS] == device_class
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
+
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    assert entity_entry.entity_category is None
+    assert entity_entry.disabled_by is None
+
+
+@pytest.mark.parametrize(
+    (
         "property_",
         "entity_id",
+        "sensor_type",
         "old_scale",
         "old_unit",
         "old_state_class",
@@ -252,6 +510,7 @@ async def test_numeric_sensor(
         pytest.param(
             "Humidity",
             HUMIDITY_SENSOR,
+            MultilevelSensorType.HUMIDITY,
             1,
             "g/m³",
             SensorStateClass.MEASUREMENT,
@@ -263,6 +522,7 @@ async def test_numeric_sensor(
         pytest.param(
             "Illuminance",
             "sensor.multisensor_6_illuminance",
+            MultilevelSensorType.ILLUMINANCE,
             0,
             "%",
             SensorStateClass.MEASUREMENT,
@@ -274,6 +534,7 @@ async def test_numeric_sensor(
         pytest.param(
             "Ultraviolet",
             "sensor.multisensor_6_ultraviolet",
+            MultilevelSensorType.ULTRAVIOLET,
             255,
             None,
             None,
@@ -281,6 +542,54 @@ async def test_numeric_sensor(
             None,
             UV_INDEX,
             id="invalid_scale_to_uv_index",
+        ),
+        pytest.param(
+            "Air temperature",
+            AIR_TEMPERATURE_SENSOR,
+            MultilevelSensorType.CARBON_MONOXIDE_LEVEL,
+            0,
+            "mol/m³",
+            SensorStateClass.MEASUREMENT,
+            1,
+            "ppm",
+            UnitOfRatio.PARTS_PER_MILLION,
+            id="co_mol_to_ppm",
+        ),
+        pytest.param(
+            "Air temperature",
+            AIR_TEMPERATURE_SENSOR,
+            MultilevelSensorType.BLOOD_PRESSURE,
+            1,
+            "mmHg",
+            None,
+            0,
+            "mmHg",
+            UnitOfPressure.MMHG,
+            id="blood_pressure_diastolic_to_systolic",
+        ),
+        pytest.param(
+            "Air temperature",
+            AIR_TEMPERATURE_SENSOR,
+            MultilevelSensorType.CURRENT,
+            1,
+            "mA",
+            None,
+            0,
+            "A",
+            UnitOfElectricCurrent.AMPERE,
+            id="current_milliampere_to_ampere",
+        ),
+        pytest.param(
+            "Air temperature",
+            AIR_TEMPERATURE_SENSOR,
+            MultilevelSensorType.POWER,
+            1,
+            "BTU/h",
+            None,
+            0,
+            "W",
+            UnitOfPower.WATT,
+            id="power_btu_per_hour_to_watt",
         ),
     ],
 )
@@ -291,6 +600,7 @@ async def test_legacy_multilevel_sensor_scale_change(
     multisensor_6_state: dict[str, Any],
     property_: str,
     entity_id: str,
+    sensor_type: MultilevelSensorType,
     old_scale: int,
     old_unit: str | None,
     old_state_class: SensorStateClass | None,
@@ -305,9 +615,8 @@ async def test_legacy_multilevel_sensor_scale_change(
         for value in node_state["values"]
         if value["commandClass"] == 49 and value["property"] == property_
     )
-    value["metadata"]["ccSpecific"]["scale"] = old_scale
+    value["metadata"]["ccSpecific"] = {"sensorType": sensor_type, "scale": old_scale}
     value["metadata"]["unit"] = old_unit
-    sensor_type = value["metadata"]["ccSpecific"]["sensorType"]
 
     event = Event(
         "node added",

@@ -4,6 +4,7 @@ All evohome systems have controllers and at least one zone.
 """
 
 from datetime import timedelta
+import logging
 from unittest.mock import patch
 
 from evohomeasync2 import exceptions as evo_exc
@@ -12,12 +13,14 @@ import pytest
 from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN,
     ClimateService,
     ClimateServiceArgument,
     HVACMode,
 )
+from homeassistant.components.evohome.const import DOMAIN
 from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -505,3 +508,25 @@ async def test_ctl_translation_key(
     entry = entity_registry.async_get(ctl_id)
     assert entry is not None
     assert entry.translation_key == "controller"
+
+
+@pytest.mark.parametrize("install", ["botched"])
+@pytest.mark.usefixtures("evohome")
+async def test_invalid_zone_ignored(
+    caplog: pytest.LogCaptureFixture,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a zone of an unsupported type is logged, and has no entities."""
+
+    assert (
+        "homeassistant.components.evohome.climate",
+        logging.WARNING,
+        "Ignoring: zone_valves (sydney), id=3450734, name=Garage, location_id=2738909: "
+        "unknown/invalid zone type, report as an issue if you feel this zone type "
+        "should be supported",
+    ) in [(r.name, r.levelno, r.getMessage()) for r in caplog.get_records("setup")]
+
+    assert not entity_registry.async_get_entity_id(CLIMATE_DOMAIN, DOMAIN, "3450734")
+    assert not entity_registry.async_get_entity_id(
+        BUTTON_DOMAIN, DOMAIN, "3450734_reset"
+    )

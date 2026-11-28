@@ -14,10 +14,12 @@ from zwave_js_server.const.command_class.notification import (
     CoAlarmNotificationEvent,
     GasAlarmNotificationEvent,
     HeatAlarmNotificationEvent,
+    HomeSecurityNotificationEvent,
     NotificationEvent,
     NotificationType,
     PowerManagementNotificationEvent,
     SmokeAlarmNotificationEvent,
+    WaterAlarmNotificationEvent,
 )
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.value import Value as ZwaveValue
@@ -218,11 +220,6 @@ LEGACY_DOOR_STATE_REPAIR_ISSUE_KEYS = frozenset(
 #
 # Mapping rules:
 # The catch all description should not have a device class and be marked as diagnostic.
-#
-# The following notifications have been moved to diagnostic:
-# Water Alarm
-# - Replace water filter
-# - Sump pump failure
 
 
 # This set can be removed once all notification sensors have been migrated
@@ -236,52 +233,11 @@ MIGRATED_NOTIFICATION_TYPES = {
     NotificationType.CO_ALARM,
     NotificationType.CO2_ALARM,
     NotificationType.GAS_ALARM,
+    NotificationType.WATER_ALARM,
+    NotificationType.HOME_SECURITY,
 }
 
 NOTIFICATION_SENSOR_MAPPINGS: tuple[NotificationZWaveJSEntityDescription, ...] = (
-    NotificationZWaveJSEntityDescription(
-        # NotificationType 5: Water - State Id's 1, 2, 3, 4, 6, 7, 8, 9, 0A
-        key=NOTIFICATION_WATER,
-        states={1, 2, 3, 4, 6, 7, 8, 9, 10},
-        device_class=BinarySensorDeviceClass.MOISTURE,
-    ),
-    NotificationZWaveJSEntityDescription(
-        # NotificationType 5: Water - State Id's B
-        key=NOTIFICATION_WATER,
-        states={11},
-        device_class=BinarySensorDeviceClass.PROBLEM,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    NotificationZWaveJSEntityDescription(
-        # NotificationType 5: Water - All other State Id's
-        key=NOTIFICATION_WATER,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    NotificationZWaveJSEntityDescription(
-        # NotificationType 7: Home Security - State Id's 1, 2 (intrusion)
-        key=NOTIFICATION_HOME_SECURITY,
-        states={1, 2},
-        device_class=BinarySensorDeviceClass.SAFETY,
-    ),
-    NotificationZWaveJSEntityDescription(
-        # NotificationType 7: Home Security - State Id's 3, 4, 9 (tampering)
-        key=NOTIFICATION_HOME_SECURITY,
-        states={3, 4, 9},
-        device_class=BinarySensorDeviceClass.TAMPER,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    NotificationZWaveJSEntityDescription(
-        # NotificationType 7: Home Security - State Id's 5, 6 (glass breakage)
-        key=NOTIFICATION_HOME_SECURITY,
-        states={5, 6},
-        device_class=BinarySensorDeviceClass.GLASS_BREAK,
-    ),
-    NotificationZWaveJSEntityDescription(
-        # NotificationType 7: Home Security - State Id's 7, 8 (motion)
-        key=NOTIFICATION_HOME_SECURITY,
-        states={7, 8},
-        device_class=BinarySensorDeviceClass.MOTION,
-    ),
     NotificationZWaveJSEntityDescription(
         # NotificationType 9: System - State Id's 1, 2, 3, 4, 6, 7
         key=NOTIFICATION_SYSTEM,
@@ -1984,6 +1940,231 @@ DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
                 GasAlarmNotificationEvent.TOXIC_GAS_STATUS_TOXIC_GAS_DETECTED_LOCATION_PROVIDED,
                 GasAlarmNotificationEvent.TOXIC_GAS_STATUS_TOXIC_GAS_DETECTED,
                 GasAlarmNotificationEvent.MAINTENANCE_STATUS_REPLACEMENT_REQUIRED,
+            },
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            type={ValueType.NUMBER},
+            any_available_states_keys={
+                WaterAlarmNotificationEvent.SENSOR_STATUS_WATER_LEAK_DETECTED_LOCATION_PROVIDED,
+                WaterAlarmNotificationEvent.SENSOR_STATUS_WATER_LEAK_DETECTED,
+                WaterAlarmNotificationEvent.WATER_LEVEL_DROPPED_LOCATION_PROVIDED,
+                WaterAlarmNotificationEvent.WATER_LEVEL_DROPPED,
+                WaterAlarmNotificationEvent.WATER_FLOW_ALARM,
+                WaterAlarmNotificationEvent.WATER_PRESSURE_ALARM,
+                WaterAlarmNotificationEvent.WATER_TEMPERATURE_ALARM,
+                WaterAlarmNotificationEvent.WATER_LEVEL_ALARM,
+                WaterAlarmNotificationEvent.PUMP_STATUS_SUMP_PUMP_ACTIVE,
+            },
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.WATER_ALARM)
+            },
+        ),
+        allow_multi=True,
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 5: Water - State Id's 1, 2, 3, 4, 6, 7, 8, 9, 0A
+            key=NOTIFICATION_WATER,
+            states={
+                WaterAlarmNotificationEvent.SENSOR_STATUS_WATER_LEAK_DETECTED_LOCATION_PROVIDED,
+                WaterAlarmNotificationEvent.SENSOR_STATUS_WATER_LEAK_DETECTED,
+                WaterAlarmNotificationEvent.WATER_LEVEL_DROPPED_LOCATION_PROVIDED,
+                WaterAlarmNotificationEvent.WATER_LEVEL_DROPPED,
+                WaterAlarmNotificationEvent.WATER_FLOW_ALARM,
+                WaterAlarmNotificationEvent.WATER_PRESSURE_ALARM,
+                WaterAlarmNotificationEvent.WATER_TEMPERATURE_ALARM,
+                WaterAlarmNotificationEvent.WATER_LEVEL_ALARM,
+                WaterAlarmNotificationEvent.PUMP_STATUS_SUMP_PUMP_ACTIVE,
+            },
+            device_class=BinarySensorDeviceClass.MOISTURE,
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            type={ValueType.NUMBER},
+            any_available_states_keys={
+                WaterAlarmNotificationEvent.PUMP_STATUS_SUMP_PUMP_FAILURE,
+            },
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.WATER_ALARM)
+            },
+        ),
+        allow_multi=True,
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 5: Water - State Id's B
+            key=NOTIFICATION_WATER,
+            states={
+                WaterAlarmNotificationEvent.PUMP_STATUS_SUMP_PUMP_FAILURE,
+            },
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            type={ValueType.NUMBER},
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.WATER_ALARM)
+            },
+        ),
+        allow_multi=True,
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 5: Water - All other State Id's
+            key=NOTIFICATION_WATER,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            not_states={
+                WaterAlarmNotificationEvent.IDLE,
+                WaterAlarmNotificationEvent.SENSOR_STATUS_WATER_LEAK_DETECTED_LOCATION_PROVIDED,
+                WaterAlarmNotificationEvent.SENSOR_STATUS_WATER_LEAK_DETECTED,
+                WaterAlarmNotificationEvent.WATER_LEVEL_DROPPED_LOCATION_PROVIDED,
+                WaterAlarmNotificationEvent.WATER_LEVEL_DROPPED,
+                WaterAlarmNotificationEvent.WATER_FLOW_ALARM,
+                WaterAlarmNotificationEvent.WATER_PRESSURE_ALARM,
+                WaterAlarmNotificationEvent.WATER_TEMPERATURE_ALARM,
+                WaterAlarmNotificationEvent.WATER_LEVEL_ALARM,
+                WaterAlarmNotificationEvent.PUMP_STATUS_SUMP_PUMP_ACTIVE,
+                WaterAlarmNotificationEvent.PUMP_STATUS_SUMP_PUMP_FAILURE,
+            },
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            type={ValueType.NUMBER},
+            any_available_states_keys={
+                HomeSecurityNotificationEvent.SENSOR_STATUS_INTRUSION_LOCATION_PROVIDED,
+                HomeSecurityNotificationEvent.SENSOR_STATUS_INTRUSION,
+            },
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.HOME_SECURITY)
+            },
+        ),
+        allow_multi=True,
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 7: Home Security - State Id's 1, 2 (intrusion)
+            key=NOTIFICATION_HOME_SECURITY,
+            states={
+                HomeSecurityNotificationEvent.SENSOR_STATUS_INTRUSION_LOCATION_PROVIDED,
+                HomeSecurityNotificationEvent.SENSOR_STATUS_INTRUSION,
+            },
+            device_class=BinarySensorDeviceClass.SAFETY,
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            type={ValueType.NUMBER},
+            any_available_states_keys={
+                HomeSecurityNotificationEvent.COVER_STATUS_TAMPERING_PRODUCT_COVER_REMOVED,
+                HomeSecurityNotificationEvent.TAMPERING_INVALID_CODE,
+                HomeSecurityNotificationEvent.TAMPERING_PRODUCT_MOVED,
+            },
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.HOME_SECURITY)
+            },
+        ),
+        allow_multi=True,
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 7: Home Security - State Id's 3, 4, 9 (tampering)
+            key=NOTIFICATION_HOME_SECURITY,
+            states={
+                HomeSecurityNotificationEvent.COVER_STATUS_TAMPERING_PRODUCT_COVER_REMOVED,
+                HomeSecurityNotificationEvent.TAMPERING_INVALID_CODE,
+                HomeSecurityNotificationEvent.TAMPERING_PRODUCT_MOVED,
+            },
+            device_class=BinarySensorDeviceClass.TAMPER,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            type={ValueType.NUMBER},
+            any_available_states_keys={
+                HomeSecurityNotificationEvent.GLASS_BREAKAGE_LOCATION_PROVIDED,
+                HomeSecurityNotificationEvent.GLASS_BREAKAGE,
+            },
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.HOME_SECURITY)
+            },
+        ),
+        allow_multi=True,
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 7: Home Security - State Id's 5, 6 (glass breakage)
+            key=NOTIFICATION_HOME_SECURITY,
+            states={
+                HomeSecurityNotificationEvent.GLASS_BREAKAGE_LOCATION_PROVIDED,
+                HomeSecurityNotificationEvent.GLASS_BREAKAGE,
+            },
+            device_class=BinarySensorDeviceClass.GLASS_BREAK,
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            type={ValueType.NUMBER},
+            any_available_states_keys={
+                HomeSecurityNotificationEvent.MOTION_SENSOR_STATUS_MOTION_DETECTION_LOCATION_PROVIDED,
+                HomeSecurityNotificationEvent.MOTION_SENSOR_STATUS_MOTION_DETECTION,
+            },
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.HOME_SECURITY)
+            },
+        ),
+        allow_multi=True,
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 7: Home Security - State Id's 7, 8 (motion)
+            key=NOTIFICATION_HOME_SECURITY,
+            states={
+                HomeSecurityNotificationEvent.MOTION_SENSOR_STATUS_MOTION_DETECTION_LOCATION_PROVIDED,
+                HomeSecurityNotificationEvent.MOTION_SENSOR_STATUS_MOTION_DETECTION,
+            },
+            device_class=BinarySensorDeviceClass.MOTION,
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            type={ValueType.NUMBER},
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.HOME_SECURITY)
+            },
+        ),
+        allow_multi=True,
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 7: Home Security - All other State Id's
+            # Not diagnostic, unlike other catch-alls, to not move existing entities.
+            key=NOTIFICATION_HOME_SECURITY,
+            not_states={
+                HomeSecurityNotificationEvent.IDLE,
+                HomeSecurityNotificationEvent.SENSOR_STATUS_INTRUSION_LOCATION_PROVIDED,
+                HomeSecurityNotificationEvent.SENSOR_STATUS_INTRUSION,
+                HomeSecurityNotificationEvent.COVER_STATUS_TAMPERING_PRODUCT_COVER_REMOVED,
+                HomeSecurityNotificationEvent.TAMPERING_INVALID_CODE,
+                HomeSecurityNotificationEvent.TAMPERING_PRODUCT_MOVED,
+                HomeSecurityNotificationEvent.GLASS_BREAKAGE_LOCATION_PROVIDED,
+                HomeSecurityNotificationEvent.GLASS_BREAKAGE,
+                HomeSecurityNotificationEvent.MOTION_SENSOR_STATUS_MOTION_DETECTION_LOCATION_PROVIDED,
+                HomeSecurityNotificationEvent.MOTION_SENSOR_STATUS_MOTION_DETECTION,
             },
         ),
         entity_class=ZWaveNotificationBinarySensor,

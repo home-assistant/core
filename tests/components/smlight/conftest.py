@@ -138,6 +138,7 @@ def mock_smlight_client(request: pytest.FixtureRequest) -> Generator[MagicMock]:
 
         api.check_auth_needed.return_value = False
         api.authenticate.return_value = True
+        api.fw_update.return_value = True
 
         api.actions = AsyncMock(spec_set=ActionWrapper)
         api.actions.ambilight = AsyncMock(return_value=True)

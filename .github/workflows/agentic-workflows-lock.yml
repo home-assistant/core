@@ -1,0 +1,69 @@
+name: Verify agentic workflow lock files
+
+# yamllint disable-line rule:truthy
+on:
+  push:
+    branches:
+      - dev
+    paths:
+      - ".claude/agents/**"
+      - ".github/agents/**"
+      - ".github/aw/**"
+      - ".github/workflows/*.md"
+      - ".github/workflows/*.lock.yml"
+      - ".github/workflows/agentic-workflows-lock.yml"
+      - ".github/workflows/aw.json"
+  pull_request:
+    branches:
+      - dev
+    paths:
+      - ".claude/agents/**"
+      - ".github/agents/**"
+      - ".github/aw/**"
+      - ".github/workflows/*.md"
+      - ".github/workflows/*.lock.yml"
+      - ".github/workflows/agentic-workflows-lock.yml"
+      - ".github/workflows/aw.json"
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Verify agentic workflow lock files
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # To check out the repository
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install the gh-aw version the lock files were compiled with
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          versions=$(grep -ho '"compiler_version":"v[0-9.]*"' .github/workflows/*.lock.yml | cut -d'"' -f4 | sort -u)
+          if [ "$(echo "${versions}" | wc -l)" -ne 1 ]; then
+            echo "::error::Lock files were compiled with different gh-aw versions: ${versions}"
+            exit 1
+          fi
+          gh extension install github/gh-aw --pin "${versions}"
+
+      - name: Compile agentic workflows
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh aw compile --purge
+
+      - name: Check that the lock files are up to date
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            git status --short
+            git diff
+            echo "::error::Agentic workflow lock files are out of date. Run 'gh aw compile' and commit the result."
+            exit 1
+          fi

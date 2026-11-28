@@ -4,12 +4,7 @@ from typing import Any, override
 
 import pyvera as veraApi
 
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_HS_COLOR,
-    ColorMode,
-    LightEntity,
-)
+from homeassistant.components.light import ColorMode, LightEntity, LightServiceArgument
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -67,11 +62,11 @@ class VeraLight(VeraEntity[veraApi.VeraDimmer], LightEntity):
     @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
-        if ATTR_HS_COLOR in kwargs and self._attr_hs_color:
-            rgb = color_util.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
+        if LightServiceArgument.HS_COLOR in kwargs and self._attr_hs_color:
+            rgb = color_util.color_hs_to_RGB(*kwargs[LightServiceArgument.HS_COLOR])
             self.vera_device.set_color(rgb)
-        elif ATTR_BRIGHTNESS in kwargs and self.vera_device.is_dimmable:
-            self.vera_device.set_brightness(kwargs[ATTR_BRIGHTNESS])
+        elif LightServiceArgument.BRIGHTNESS in kwargs and self.vera_device.is_dimmable:
+            self.vera_device.set_brightness(kwargs[LightServiceArgument.BRIGHTNESS])
         else:
             self.vera_device.switch_on()
 

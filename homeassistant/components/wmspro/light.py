@@ -8,7 +8,7 @@ from wmspro.const import (
     WMS_WebControl_pro_API_responseType,
 )
 
-from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
+from homeassistant.components.light import ColorMode, LightEntity, LightServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.color import brightness_to_value, value_to_brightness
@@ -86,12 +86,14 @@ class WebControlProDimmer(WebControlProLight):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the dimmer on."""
-        if ATTR_BRIGHTNESS not in kwargs:
+        if LightServiceArgument.BRIGHTNESS not in kwargs:
             await super().async_turn_on(**kwargs)
             return
 
         action = self._dest.action(ACTION_DESC.LightDimming)
         await action(
-            percentage=brightness_to_value(BRIGHTNESS_SCALE, kwargs[ATTR_BRIGHTNESS]),
+            percentage=brightness_to_value(
+                BRIGHTNESS_SCALE, kwargs[LightServiceArgument.BRIGHTNESS]
+            ),
             responseType=WMS_WebControl_pro_API_responseType.Detailed,
         )

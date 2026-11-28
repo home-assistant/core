@@ -11,25 +11,20 @@ from infrared_protocols.commands.samsung_ac import (
 )
 
 from homeassistant.components.climate import (
-    ATTR_FAN_MODE,
-    ATTR_HVAC_MODE,
     FAN_AUTO,
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
     ClimateEntityFeature,
+    ClimateEntityStateAttribute,
     ClimateExtraStoredData,
+    ClimateServiceArgument,
     HVACMode,
     RestoreClimate,
 )
 from homeassistant.components.infrared import InfraredEmitterConsumerEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-    UnitOfTemperature,
-)
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -147,7 +142,9 @@ class SamsungIrClimate(SamsungIrEntity, InfraredEmitterConsumerEntity, RestoreCl
 
         if last_state.state in self._attr_hvac_modes:
             self._attr_hvac_mode = HVACMode(last_state.state)
-        if (fan_mode := last_state.attributes.get(ATTR_FAN_MODE)) in HA_TO_LIB_FAN:
+        if (
+            fan_mode := last_state.attributes.get(ClimateEntityStateAttribute.FAN_MODE)
+        ) in HA_TO_LIB_FAN:
             self._attr_fan_mode = fan_mode
         if (
             climate_data := await self.async_get_last_climate_data(validate_range=True)
@@ -222,17 +219,20 @@ class SamsungIrClimate(SamsungIrEntity, InfraredEmitterConsumerEntity, RestoreCl
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set temperature."""
-        if (hvac_mode := kwargs.get(ATTR_HVAC_MODE)) is not None:
+        if (hvac_mode := kwargs.get(ClimateServiceArgument.HVAC_MODE)) is not None:
             self._attr_hvac_mode = hvac_mode
             if hvac_mode != HVACMode.OFF:
                 self._last_on_hvac_mode = hvac_mode
             if hvac_mode == HVACMode.AUTO:
                 self._attr_fan_mode = FAN_AUTO
 
-        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is not None:
+        if (temperature := kwargs.get(ClimateServiceArgument.TEMPERATURE)) is not None:
             self._attr_native_target_temperature = round(temperature)
 
-        if ATTR_HVAC_MODE in kwargs or ATTR_TEMPERATURE in kwargs:
+        if (
+            ClimateServiceArgument.HVAC_MODE in kwargs
+            or ClimateServiceArgument.TEMPERATURE in kwargs
+        ):
             await self._async_send_command()
             self.async_write_ha_state()
 
