@@ -11,7 +11,6 @@ from homeassistant import config_entries
 from homeassistant.components.sharkiq.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.setup import async_setup_component
 
 from .const import (
     CONFIG,
@@ -31,7 +30,7 @@ async def test_setup_success_no_region(hass: HomeAssistant) -> None:
     mock_config.add_to_hass(hass)
 
     with patch("homeassistant.components.sharkiq.async_setup_entry", return_value=None):
-        result = await async_setup_component(hass=hass, domain=DOMAIN, config={})
+        result = await hass.config_entries.async_setup(mock_config.entry_id)
 
     assert result is True
 
