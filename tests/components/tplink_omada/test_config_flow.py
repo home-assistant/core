@@ -13,7 +13,10 @@ from tplink_omada_client.exceptions import (
 )
 
 from homeassistant.components.tplink_omada.config_flow import create_omada_client
-from homeassistant.components.tplink_omada.const import DOMAIN
+from homeassistant.components.tplink_omada.const import (
+    CONF_SHOW_ONLY_ADOPTED_DEVICES,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -55,8 +58,52 @@ async def test_form_single_site(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test Omada Controller (Display Name)"
     assert result["data"] == MOCK_ENTRY_DATA
+    assert result["options"] == {CONF_SHOW_ONLY_ADOPTED_DEVICES: True}
     assert result["result"].unique_id == "12345_SiteId"
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize(
+    ("saved_options", "expected_default"),
+    [
+        pytest.param({}, False, id="existing-site-without-option"),
+        pytest.param({CONF_SHOW_ONLY_ADOPTED_DEVICES: False}, False, id="all-devices"),
+        pytest.param(
+            {CONF_SHOW_ONLY_ADOPTED_DEVICES: True}, True, id="adopted-devices-only"
+        ),
+    ],
+)
+@pytest.mark.parametrize("show_only_adopted_devices", [False, True])
+async def test_adopted_devices_option(
+    hass: HomeAssistant,
+    saved_options: dict[str, bool],
+    expected_default: bool,
+    show_only_adopted_devices: bool,
+) -> None:
+    """Allow existing sites to enable or disable adopted-device-only visibility."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_ENTRY_DATA,
+        options={"unrelated": "preserved", **saved_options},
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["data_schema"]({}) == {
+        CONF_SHOW_ONLY_ADOPTED_DEVICES: expected_default
+    }
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {CONF_SHOW_ONLY_ADOPTED_DEVICES: show_only_adopted_devices},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert entry.options == {
+        "unrelated": "preserved",
+        CONF_SHOW_ONLY_ADOPTED_DEVICES: show_only_adopted_devices,
+    }
 
 
 async def test_form_multiple_sites(
