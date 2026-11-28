@@ -14,7 +14,7 @@ from homeassistant.components.bluetooth.passive_update_coordinator import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.start import async_at_started
@@ -93,6 +93,14 @@ class SwitchbotEntity(
         Only used by the generic entity update service.
         """
         await self._device.update()
+
+
+@callback
+def async_remove_entity(hass: HomeAssistant, domain: str, unique_id: str) -> None:
+    """Remove an entity that is no longer provided from the entity registry."""
+    entity_registry = er.async_get(hass)
+    if entity_id := entity_registry.async_get_entity_id(domain, DOMAIN, unique_id):
+        entity_registry.async_remove(entity_id)
 
 
 class SwitchbotConnectionPolledEntity(SwitchbotEntity):
