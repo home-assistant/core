@@ -291,7 +291,7 @@ class CalendarEventRefetcher:
         self._unsub_events_updated = async_dispatcher_connect(
             hass,
             SIGNAL_CALENDAR_EVENTS_UPDATED.format(entity_id),
-            self.async_schedule_refetch,
+            self._async_events_updated,
         )
 
     @callback
@@ -309,6 +309,11 @@ class CalendarEventRefetcher:
         self._unsub_events_updated()
         self._debouncer.async_shutdown()
         del self._hass.data[DATA_REFETCHERS][self._entity_id]
+
+    @callback
+    def _async_events_updated(self, _passed_on: set[str]) -> None:
+        """Handle a report of the calendar."""
+        self.async_schedule_refetch()
 
     @callback
     def async_schedule_refetch(self) -> None:

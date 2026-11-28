@@ -332,10 +332,15 @@ class CalendarEntity(Entity):
         To be called by integrations when their events have changed. Triggers
         fetch events again, so this should not be called on every poll.
         """
+        self._async_notify_events_updated({self.entity_id})
+
+    @callback
+    def _async_notify_events_updated(self, passed_on: set[str]) -> None:
+        """Notify websocket subscribers and triggers of a report."""
         if self._event_listeners and self._event_listener_debouncer:
             self._event_listener_debouncer.async_schedule_call()
         async_dispatcher_send(
-            self.hass, SIGNAL_CALENDAR_EVENTS_UPDATED.format(self.entity_id)
+            self.hass, SIGNAL_CALENDAR_EVENTS_UPDATED.format(self.entity_id), passed_on
         )
 
     @callback

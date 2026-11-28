@@ -665,16 +665,18 @@ async def test_member_report_passed_on_once(
     async_dispatcher_connect(
         hass,
         SIGNAL_CALENDAR_EVENTS_UPDATED.format(GROUP_ENTITY_ID),
-        lambda: reports.append(None),
+        lambda _passed_on: reports.append(None),
     )
 
     calendar_platform[1].async_update_event_listeners()
     await hass.async_block_till_done()
     assert len(reports) == 1
 
+    # Separate reports are each passed on, also when made right after each other
+    calendar_platform[1].async_update_event_listeners()
     calendar_platform[1].async_update_event_listeners()
     await hass.async_block_till_done()
-    assert len(reports) == 2
+    assert len(reports) == 3
 
 
 @pytest.mark.usefixtures("calendar_platform")
