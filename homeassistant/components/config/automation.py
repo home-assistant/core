@@ -3,10 +3,13 @@
 from typing import Any, override
 import uuid
 
-from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
+from homeassistant.components.automation import (
+    DOMAIN as AUTOMATION_DOMAIN,
+    AutomationService,
+)
 from homeassistant.components.automation.config import async_validate_config_item  # pylint: disable=home-assistant-component-root-import
 from homeassistant.config import AUTOMATION_CONFIG_PATH
-from homeassistant.const import CONF_ID, SERVICE_RELOAD
+from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 
@@ -22,7 +25,7 @@ def async_setup(hass: HomeAssistant) -> bool:
         """post_write_hook for Config View that reloads automations."""
         if action != ACTION_DELETE:
             await hass.services.async_call(
-                AUTOMATION_DOMAIN, SERVICE_RELOAD, {CONF_ID: config_key}
+                AUTOMATION_DOMAIN, AutomationService.RELOAD, {CONF_ID: config_key}
             )
             return
 

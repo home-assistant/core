@@ -6,9 +6,10 @@ import uuid
 from homeassistant.components.scene import (
     DOMAIN as SCENE_DOMAIN,
     PLATFORM_SCHEMA as SCENE_PLATFORM_SCHEMA,
+    SceneService,
 )
 from homeassistant.config import SCENE_CONFIG_PATH
-from homeassistant.const import CONF_ID, SERVICE_RELOAD
+from homeassistant.const import CONF_ID
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 
@@ -25,7 +26,7 @@ def async_setup(hass: HomeAssistant) -> bool:
     async def hook(action: str, config_key: str) -> None:
         """post_write_hook for Config View that reloads scenes."""
         if action != ACTION_DELETE:
-            await hass.services.async_call(SCENE_DOMAIN, SERVICE_RELOAD)
+            await hass.services.async_call(SCENE_DOMAIN, SceneService.RELOAD)
             return
 
         ent_reg = er.async_get(hass)

@@ -2,10 +2,9 @@
 
 from typing import Any, override
 
-from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
+from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN, ScriptService
 from homeassistant.components.script.config import async_validate_config_item  # pylint: disable=home-assistant-component-root-import
 from homeassistant.config import SCRIPT_CONFIG_PATH
-from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 
@@ -20,7 +19,7 @@ def async_setup(hass: HomeAssistant) -> bool:
     async def hook(action: str, config_key: str) -> None:
         """post_write_hook for Config View that reloads scripts."""
         if action != ACTION_DELETE:
-            await hass.services.async_call(SCRIPT_DOMAIN, SERVICE_RELOAD)
+            await hass.services.async_call(SCRIPT_DOMAIN, ScriptService.RELOAD)
             return
 
         ent_reg = er.async_get(hass)
