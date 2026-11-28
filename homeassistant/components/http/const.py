@@ -15,6 +15,7 @@ DOMAIN: Final = "http"
 
 KEY_HASS_USER: Final = "hass_user"
 KEY_HASS_REFRESH_TOKEN_ID: Final = "hass_refresh_token_id"
+SIGN_QUERY_PARAM: Final = "authSig"
 KEY_SUPERVISOR_UNIX_SOCKET: Final = "ha_supervisor_unix_socket"
 
 # System user used to authenticate requests over the Supervisor Unix socket.

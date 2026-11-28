@@ -17,7 +17,9 @@ from pytest_homeassistant.common import async_get_persistent_notifications
 from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components import http
+from homeassistant.components.api import APIConfigView
 from homeassistant.components.http import DOMAIN
+from homeassistant.components.http.auth import async_setup_auth
 from homeassistant.components.http.ban import (
     IP_BANS_FILE,
     KEY_BAN_MANAGER,
@@ -361,19 +363,21 @@ async def test_ip_bans_file_creation(
     m_open = mock_open()
 
     with patch("homeassistant.components.http.ban.open", m_open, create=True):
-        resp = await client.get("/example")
+        # An explicit invalid token should still trigger the login notification.
+        invalid_auth = {"Authorization": "Bearer invalid"}
+        resp = await client.get("/example", headers=invalid_auth)
         assert resp.status == HTTPStatus.UNAUTHORIZED
         assert len(manager.ip_bans_lookup) == len(BANNED_IPS)
         assert m_open.call_count == 0
 
-        resp = await client.get("/example")
+        resp = await client.get("/example", headers=invalid_auth)
         assert resp.status == HTTPStatus.UNAUTHORIZED
         assert len(manager.ip_bans_lookup) == len(BANNED_IPS) + 1
         m_open.assert_called_once_with(
             hass.config.path(IP_BANS_FILE), "a", encoding="utf8"
         )
 
-        resp = await client.get("/example")
+        resp = await client.get("/example", headers=invalid_auth)
         assert resp.status == HTTPStatus.FORBIDDEN
         assert m_open.call_count == 1
 
@@ -391,6 +395,162 @@ async def test_ip_bans_file_creation(
             " from example.com (200.201.202.204)."
             " Requested URL: '/example'." in caplog.text
         )
+
+
+@pytest.mark.parametrize("method", ["GET", "HEAD"])
+async def test_unauthenticated_probe_does_not_notify(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+    method: str,
+) -> None:
+    """Anonymous API probes stay logged and counted without login notifications."""
+    app = web.Application()
+    app[KEY_HASS] = hass
+
+    async def unauth_handler(request):
+        raise HTTPUnauthorized
+
+    app.router.add_get("/api/config", unauth_handler)
+    setup_bans(hass, app, 5)
+    remote_ip = ip_address("192.168.10.179")
+    mock_real_ip(app)(str(remote_ip))
+    client = await aiohttp_client(app)
+
+    response = await client.request(
+        method, "/api/config", headers={"User-Agent": "Dart/3.13 (dart:io)"}
+    )
+    assert response.status == HTTPStatus.UNAUTHORIZED
+    assert app[KEY_FAILED_LOGIN_ATTEMPTS][remote_ip] == 1
+    assert "http-login" not in async_get_persistent_notifications(hass)
+    assert (
+        "Login attempt or request with invalid authentication from example.com"
+        in caplog.text
+    )
+    assert "Requested URL: '/api/config'" in caplog.text
+
+
+@pytest.mark.parametrize("method", ["GET", "HEAD"])
+async def test_unauthenticated_probe_still_triggers_ip_ban(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    method: str,
+) -> None:
+    """Anonymous read probes can be banned without generating login notifications."""
+    app = web.Application()
+    app[KEY_HASS] = hass
+
+    async def unauth_handler(request: web.Request) -> NoReturn:
+        raise HTTPUnauthorized
+
+    app.router.add_get("/api/config", unauth_handler)
+    setup_bans(hass, app, 2)
+    remote_ip = ip_address("200.201.202.204")
+    mock_real_ip(app)(str(remote_ip))
+
+    with patch(
+        "homeassistant.components.http.ban.load_yaml_config_file",
+        return_value={},
+    ):
+        client = await aiohttp_client(app)
+
+    with patch("homeassistant.components.http.ban.open", mock_open(), create=True):
+        for _ in range(2):
+            response = await client.request(method, "/api/config")
+            assert response.status == HTTPStatus.UNAUTHORIZED
+
+        response = await client.request(method, "/api/config")
+        assert response.status == HTTPStatus.FORBIDDEN
+
+    assert app[KEY_FAILED_LOGIN_ATTEMPTS][remote_ip] == 2
+    assert remote_ip in app[KEY_BAN_MANAGER].ip_bans_lookup
+
+    notifications = async_get_persistent_notifications(hass)
+    assert "ip-ban" in notifications
+    assert "http-login" not in notifications
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        pytest.param("/api/config", id="no-query"),
+        pytest.param("/api/config?token=ignored", id="ignored-token-parameter"),
+    ],
+)
+async def test_registered_api_config_view_authentication(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    hass_access_token: str,
+    path: str,
+) -> None:
+    """Test real API config view routing with HTTP authentication and IP bans."""
+    app = web.Application()
+    app[KEY_HASS] = hass
+    APIConfigView().register(hass, app, app.router)
+    setup_bans(hass, app, 5)
+    await async_setup_auth(hass, app)
+    remote_ip = ip_address("192.0.2.55")
+    mock_real_ip(app)(str(remote_ip))
+    client = await aiohttp_client(app)
+
+    response = await client.get(path)
+    assert response.status == HTTPStatus.UNAUTHORIZED
+    assert app[KEY_FAILED_LOGIN_ATTEMPTS][remote_ip] == 1
+    assert "http-login" not in async_get_persistent_notifications(hass)
+
+    # The registered view does not support HEAD, unlike a synthetic add_get route.
+    response = await client.head("/api/config")
+    assert response.status == HTTPStatus.METHOD_NOT_ALLOWED
+    assert app[KEY_FAILED_LOGIN_ATTEMPTS][remote_ip] == 1
+    assert "http-login" not in async_get_persistent_notifications(hass)
+
+    response = await client.get(
+        "/api/config", headers={"Authorization": "Bearer invalid"}
+    )
+    assert response.status == HTTPStatus.UNAUTHORIZED
+    assert app[KEY_FAILED_LOGIN_ATTEMPTS][remote_ip] == 2
+    assert "http-login" in async_get_persistent_notifications(hass)
+
+    response = await client.get(
+        "/api/config", headers={"Authorization": f"Bearer {hass_access_token}"}
+    )
+    assert response.status == HTTPStatus.OK
+
+
+@pytest.mark.parametrize(
+    ("method", "headers", "path"),
+    [
+        pytest.param(
+            "GET",
+            {"Authorization": "Bearer invalid"},
+            "/api/config",
+            id="bearer-token",
+        ),
+        pytest.param("GET", {}, "/api/config?authSig=invalid", id="signed-url"),
+        pytest.param("POST", {}, "/api/config", id="anonymous-write"),
+    ],
+)
+async def test_unauthorized_request_with_credentials_or_write_notifies(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    method: str,
+    headers: dict[str, str],
+    path: str,
+) -> None:
+    """Requests presenting credentials or using write methods still notify."""
+    app = web.Application()
+    app[KEY_HASS] = hass
+
+    async def unauth_handler(request: web.Request) -> NoReturn:
+        raise HTTPUnauthorized
+
+    app.router.add_route(method, "/api/config", unauth_handler)
+    setup_bans(hass, app, 5)
+    client = await aiohttp_client(app)
+
+    response = await client.request(method, path, headers=headers)
+    assert response.status == HTTPStatus.UNAUTHORIZED
+    assert "http-login" in async_get_persistent_notifications(hass)
 
 
 async def test_failed_login_attempts_counter(
@@ -524,7 +684,8 @@ async def test_failed_login_reverse_dns_failure(
             reverse_dns_timeout,
         ),
     ):
-        resp = await client.get("/")
+        # Explicit invalid credentials must still produce a login notification.
+        resp = await client.get("/", headers={"Authorization": "Bearer invalid"})
     release_lookup.set()
 
     assert resp.status == HTTPStatus.UNAUTHORIZED
@@ -631,7 +792,7 @@ async def test_ban_applies_when_the_ban_file_cannot_be_written(
         create=True,
     ):
         client = await aiohttp_client(app)
-        resp = await client.get("/example")
+        resp = await client.get("/example", headers={"Authorization": "Bearer invalid"})
 
     assert resp.status == HTTPStatus.UNAUTHORIZED
     assert remote_ip in app[KEY_BAN_MANAGER].ip_bans_lookup
