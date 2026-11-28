@@ -39,6 +39,13 @@ class GroupAddressEntity(TypedDict):
     disabled: bool  # disabled in the entity registry
 
 
+class ExposeGroupAddress(TypedDict):
+    """A group address of an exposed entity, as reported to the KNX frontend."""
+
+    ga: str
+    ui: bool  # ui or yaml expose
+
+
 # Prefix of device identifiers created via the `knx/create_device` websocket
 # command (see websocket.py). A YAML `device.id` matching this prefix is
 # assumed to reference such a device verbatim and is not slugified.

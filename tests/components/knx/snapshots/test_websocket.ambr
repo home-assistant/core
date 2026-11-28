@@ -31,8 +31,43 @@
     'id': 1,
     'result': dict({
       'cover.test': list([
-        '1/1/1',
-        '2/2/2',
+        dict({
+          'ga': '1/1/1',
+          'ui': True,
+        }),
+        dict({
+          'ga': '2/2/2',
+          'ui': True,
+        }),
+      ]),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_knx_get_expose_groups_yaml
+  dict({
+    'id': 1,
+    'result': dict({
+      'cover.test': list([
+        dict({
+          'ga': '1/1/1',
+          'ui': True,
+        }),
+        dict({
+          'ga': '2/2/2',
+          'ui': True,
+        }),
+        dict({
+          'ga': '3/3/3',
+          'ui': False,
+        }),
+      ]),
+      'sensor.yaml_only': list([
+        dict({
+          'ga': '4/4/4',
+          'ui': False,
+        }),
       ]),
     }),
     'success': True,

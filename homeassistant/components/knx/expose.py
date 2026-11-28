@@ -191,6 +191,11 @@ class KnxExposeEntity:
         expose_names = [opt.attribute or "state" for opt, _ in self._exposures]
         return f"{self.entity_id}__{'__'.join(expose_names)}"
 
+    @property
+    def group_addresses(self) -> list[str]:
+        """Return the group addresses the entity is exposed to."""
+        return [str(option.group_address) for option, _ in self._exposures]
+
     @callback
     def async_register(self) -> None:
         """Register listener and XKNX devices."""
