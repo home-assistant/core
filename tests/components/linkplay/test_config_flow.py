@@ -1,5 +1,6 @@
 """Tests for the LinkPlay config flow."""
 
+from dataclasses import replace
 from ipaddress import ip_address
 from unittest.mock import AsyncMock
 
@@ -157,6 +158,41 @@ async def test_zeroconf_flow_ignored_entry(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     mock_linkplay_factory_bridge.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "discovery_properties",
+    [
+        pytest.param(ZEROCONF_DISCOVERY.properties, id="different_advertised_uuid"),
+        pytest.param({}, id="no_advertised_uuid"),
+    ],
+)
+async def test_zeroconf_flow_ignored_host_does_not_probe(
+    hass: HomeAssistant,
+    mock_linkplay_factory_bridge: AsyncMock,
+    discovery_properties: dict[str, str],
+) -> None:
+    """Do not probe an ignored host when discovery cannot match its saved UUID."""
+    api_uuid = "0123456789ABCDEF01234567"
+    entry = MockConfigEntry(
+        data={CONF_HOST: HOST},
+        domain=DOMAIN,
+        title=NAME,
+        unique_id=api_uuid,
+        source=SOURCE_IGNORE,
+    )
+    entry.add_to_hass(hass)
+    mock_linkplay_factory_bridge.return_value.device.uuid = api_uuid
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=replace(ZEROCONF_DISCOVERY, properties=discovery_properties),
+    )
+
+    mock_linkplay_factory_bridge.assert_not_called()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_zeroconf_flow_same_uuid_does_not_probe(
