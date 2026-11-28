@@ -298,6 +298,7 @@ FLOWS = {
         "generic",
         "geniushub",
         "gentex_homelink",
+        "gentex_place",
         "geo_json_events",
         "geocaching",
         "geofency",
