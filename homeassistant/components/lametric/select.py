@@ -22,9 +22,18 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import LaMetricConfigEntry, LaMetricDataUpdateCoordinator
-from .entity import LaMetricEntity
-from .helpers import lametric_exception_handler
+from .coordinator import (
+    LaMetricAppsUpdateCoordinator,
+    LaMetricConfigEntry,
+    LaMetricDataUpdateCoordinator,
+)
+from .entity import LaMetricAppsEntity, LaMetricEntity
+from .helpers import (
+    current_widget,
+    lametric_exception_handler,
+    widget_labels,
+    widget_options,
+)
 
 PARALLEL_UPDATES = 1
 
@@ -55,19 +64,24 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up LaMetric select based on a config entry."""
-    coordinator = entry.runtime_data
+    runtime_data = entry.runtime_data
     async_add_entities(
-        LaMetricSelectEntity(
-            coordinator=coordinator,
-            description=description,
-        )
-        for description in SELECTS
+        [
+            *(
+                LaMetricSelectEntity(
+                    coordinator=runtime_data.device,
+                    description=description,
+                )
+                for description in SELECTS
+            ),
+            LaMetricAppsSelectEntity(runtime_data.device, runtime_data.apps),
+        ]
     )
 
     # Like its schedule, the SKY is not known to support the screensaver.
-    screensaver = coordinator.data.display.screensaver
-    if coordinator.data.model != "sa5" and screensaver and screensaver.modes:
-        async_add_entities([LaMetricScreensaverModeSelect(coordinator)])
+    screensaver = runtime_data.device.data.display.screensaver
+    if runtime_data.device.data.model != "sa5" and screensaver and screensaver.modes:
+        async_add_entities([LaMetricScreensaverModeSelect(runtime_data.device)])
 
 
 class LaMetricSelectEntity(LaMetricEntity, SelectEntity):
@@ -189,3 +203,53 @@ class LaMetricScreensaverModeSelect(LaMetricEntity, SelectEntity):
         self.coordinator.async_set_updated_data(
             replace(self.coordinator.data, display=display)
         )
+
+
+class LaMetricAppsSelectEntity(LaMetricAppsEntity, SelectEntity):
+    """Representation of a select to show a widget on a LaMetric device."""
+
+    _attr_translation_key = "app"
+
+    def __init__(
+        self,
+        device_coordinator: LaMetricDataUpdateCoordinator,
+        apps_coordinator: LaMetricAppsUpdateCoordinator,
+    ) -> None:
+        """Initialize the LaMetric apps select."""
+        super().__init__(device_coordinator, apps_coordinator)
+        self._attr_unique_id = f"{device_coordinator.data.serial_number}-app"
+
+    @property
+    @override
+    def options(self) -> list[str]:
+        """Return the available widgets of the device."""
+        if not (apps := self.coordinator.data):
+            return []
+        return widget_options(apps)
+
+    @property
+    @override
+    def current_option(self) -> str | None:
+        """Return the selected entity option to represent the entity state."""
+        if not (apps := self.coordinator.data):
+            return None
+        return current_widget(apps)
+
+    @lametric_exception_handler
+    @override
+    async def async_select_option(self, option: str) -> None:
+        """Show the selected widget on the device."""
+        if not (apps := self.coordinator.data):
+            return
+        targets = {
+            label: (package, widget_id)
+            for label, package, widget_id in widget_labels(apps)
+        }
+        if (target := targets.get(option)) is None:
+            # The options changed between rendering and selecting; nothing
+            # to activate for this option any more.
+            return
+        await self.coordinator.lametric.activate_widget(
+            package=target[0], widget_id=target[1]
+        )
+        await self.coordinator.async_request_refresh()

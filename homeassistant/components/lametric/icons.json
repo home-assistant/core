@@ -23,6 +23,9 @@
       }
     },
     "select": {
+      "app": {
+        "default": "mdi:apps"
+      },
       "brightness_mode": {
         "default": "mdi:brightness-auto"
       },

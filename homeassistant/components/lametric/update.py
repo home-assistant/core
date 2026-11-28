@@ -22,7 +22,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up LaMetric update platform."""
 
-    coordinator = config_entry.runtime_data
+    runtime_data = config_entry.runtime_data
+    coordinator = runtime_data.device
 
     if coordinator.data.os_version >= AwesomeVersion("2.3.0"):
         async_add_entities([LaMetricUpdate(coordinator)])

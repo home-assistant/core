@@ -2,10 +2,16 @@
 
 from unittest.mock import MagicMock
 
+from demetriek import App
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.lametric.helpers import async_get_coordinator_by_device_id
+from homeassistant.components.lametric.helpers import (
+    async_get_coordinator_by_device_id,
+    current_widget,
+    widget_labels,
+    widget_options,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -36,3 +42,138 @@ async def test_get_coordinator_by_device_id(
 
     with pytest.raises(ServiceValidationError, match="is not loaded"):
         async_get_coordinator_by_device_id(hass, entry.device_id)
+
+
+def _app(package: str, title: str, widgets: dict) -> App:
+    """Return an app for testing."""
+    return App.from_dict(
+        {
+            "package": package,
+            "title": title,
+            "vendor": "LaMetric",
+            "version": "1.0.0",
+            "version_code": "1",
+            "widgets": widgets,
+        }
+    )
+
+
+def test_widget_labels() -> None:
+    """Test the ordering and naming of widget labels."""
+    apps = {
+        "com.a": _app(
+            "com.a",
+            "App A",
+            {
+                # No settings, so it falls back to the app title.
+                "a1": {"index": 1, "package": "com.a"},
+                "a2": {
+                    "index": 0,
+                    "package": "com.a",
+                    "settings": {"_title": "Custom"},
+                },
+            },
+        ),
+        "com.b": _app("com.b", "App B", {"b1": {"index": 2, "package": "com.b"}}),
+    }
+
+    assert widget_labels(apps) == [
+        ("Custom", "com.a", "a2"),
+        ("App A", "com.a", "a1"),
+        ("App B", "com.b", "b1"),
+    ]
+    assert widget_options(apps) == ["Custom", "App A", "App B"]
+
+
+def test_widget_labels_duplicates() -> None:
+    """Test that duplicate widget names get their position appended."""
+    apps = {
+        "com.a": _app(
+            "com.a",
+            "App A",
+            {
+                "a1": {
+                    "index": 0,
+                    "package": "com.a",
+                    "settings": {"_title": "Weather"},
+                },
+                "a2": {
+                    "index": 3,
+                    "package": "com.a",
+                    "settings": {"_title": "Weather"},
+                },
+            },
+        ),
+    }
+
+    assert widget_labels(apps) == [
+        ("Weather 0", "com.a", "a1"),
+        ("Weather 3", "com.a", "a2"),
+    ]
+
+
+def test_widget_labels_generated_suffix_collision() -> None:
+    """Test that generated labels do not collide with custom titles."""
+    apps = {
+        "com.a": _app(
+            "com.a",
+            "App A",
+            {
+                "a1": {
+                    "index": 0,
+                    "package": "com.a",
+                    "settings": {"_title": "Weather"},
+                },
+                "a2": {
+                    "index": 1,
+                    "package": "com.a",
+                    "settings": {"_title": "Weather"},
+                },
+                # A custom title that a generated label would produce.
+                "a3": {
+                    "index": 2,
+                    "package": "com.a",
+                    "settings": {"_title": "Weather 0"},
+                },
+            },
+        ),
+    }
+
+    labels = widget_labels(apps)
+    assert labels == [
+        ("Weather 1", "com.a", "a1"),
+        ("Weather 2", "com.a", "a2"),
+        ("Weather 0", "com.a", "a3"),
+    ]
+    # Every label stays unique, so each option maps to one widget.
+    assert len({label for label, _, _ in labels}) == len(labels)
+
+
+def test_current_widget() -> None:
+    """Test resolving the widget shown on a device."""
+    apps = {
+        "com.a": _app(
+            "com.a",
+            "App A",
+            {
+                "a1": {"index": 0, "package": "com.a"},
+                "a2": {
+                    "index": 1,
+                    "package": "com.a",
+                    "visible": True,
+                    "settings": {"_title": "Custom"},
+                },
+            },
+        ),
+    }
+
+    assert current_widget(apps) == "Custom"
+
+
+def test_current_widget_not_reported() -> None:
+    """Test that no widget is reported on firmware without the flag."""
+    apps = {
+        "com.a": _app("com.a", "App A", {"a1": {"index": 0, "package": "com.a"}}),
+    }
+
+    assert current_widget(apps) is None

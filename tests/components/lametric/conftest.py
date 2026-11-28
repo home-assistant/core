@@ -4,12 +4,13 @@ from collections.abc import Generator
 from contextlib import nullcontext
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from demetriek import AuthChallenge, CloudDevice, Device
+from demetriek import App, AuthChallenge, CloudDevice, Device
 import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
     load_fixture,
     load_json_array_fixture,
+    load_json_object_fixture,
 )
 
 from homeassistant.components.application_credentials import (
@@ -123,6 +124,10 @@ def mock_lametric(device_fixture: str) -> Generator[MagicMock]:
         )
         # The device answers a display write with its display state.
         lametric.display.return_value = lametric.device.return_value.display
+        lametric.apps.return_value = {
+            package: App.from_dict(app)
+            for package, app in load_json_object_fixture("apps.json", DOMAIN).items()
+        }
         yield lametric
 
 
