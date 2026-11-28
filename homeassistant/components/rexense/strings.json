@@ -1,0 +1,50 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "unsupported_gateway": "The gateway requires device model version 3 or later. Check for a firmware update from Rexense."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "ssl": "Use secure WebSocket (WSS)",
+          "verify_ssl": "Verify TLS certificate"
+        },
+        "data_description": {
+          "api_key": "Leave empty if gateway authentication is disabled.",
+          "host": "Hostname or IP address of the gateway, without a URL scheme or path.",
+          "port": "The gateway's WebSocket port, normally 8090.",
+          "ssl": "Enable if your gateway provides a secure WebSocket endpoint.",
+          "verify_ssl": "Validate the gateway's certificate when using WSS."
+        },
+        "description": "Connect to your Rexense gateway. Pair switches using the gateway before setting up the integration."
+      }
+    }
+  },
+  "entity": {
+    "switch": {
+      "endpoint": {
+        "name": "Switch {endpoint}"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "command_failed": {
+      "message": "Unable to control the Rexense switch. Check the gateway connection and the device's availability."
+    },
+    "unsupported_gateway": {
+      "message": "[%key:component::rexense::config::error::unsupported_gateway%]"
+    }
+  }
+}
