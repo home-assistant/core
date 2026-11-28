@@ -23,7 +23,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
-from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 ENTITY_ID = "binary_sensor.raspberry_pi_power_status"
@@ -38,7 +37,7 @@ async def _async_setup_component(hass: HomeAssistant, detected: bool) -> MagicMo
         "homeassistant.components.rpi_power.new_under_voltage",
         return_value=mocked_under_voltage,
     ):
-        await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+        await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
     return mocked_under_voltage
 
