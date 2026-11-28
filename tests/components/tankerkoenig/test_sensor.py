@@ -6,9 +6,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.tankerkoenig.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from .const import PRICES_MISSING_FUELTYPE, STATION_MISSING_FUELTYPE
 
@@ -49,7 +47,7 @@ async def test_sensor_missing_fueltype(
 
     config_entry.add_to_hass(hass)
 
-    assert await async_setup_component(hass, DOMAIN, {})
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.station_somewhere_street_1_super_e10")

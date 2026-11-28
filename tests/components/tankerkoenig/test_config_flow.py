@@ -24,7 +24,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.setup import async_setup_component
 
 from .const import NEARBY_STATIONS
 
@@ -293,7 +292,7 @@ async def test_options_flow(hass: HomeAssistant, tankerkoenig: AsyncMock) -> Non
         unique_id=f"{DOMAIN}_{MOCK_USER_DATA[CONF_LOCATION][CONF_LATITUDE]}_{MOCK_USER_DATA[CONF_LOCATION][CONF_LONGITUDE]}",
     )
     mock_config.add_to_hass(hass)
-    assert await async_setup_component(hass, DOMAIN, {})
+    assert await hass.config_entries.async_setup(mock_config.entry_id)
     await hass.async_block_till_done()
 
     with (

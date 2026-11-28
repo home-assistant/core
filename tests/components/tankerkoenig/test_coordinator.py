@@ -25,7 +25,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ID, CONF_SHOW_ON_MAP, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .const import CONFIG_DATA, STATION
@@ -121,7 +120,7 @@ async def test_setup_exception_logging(
     config_entry.add_to_hass(hass)
     tankerkoenig.station_details.side_effect = exception
 
-    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert expected_log in caplog.text
@@ -137,7 +136,7 @@ async def test_automatic_registry_cleanup(
     """Test automatic registry cleanup for obsolete entity and devices entries."""
     # setup normal
     config_entry.add_to_hass(hass)
-    assert await async_setup_component(hass, DOMAIN, {})
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert (
@@ -222,7 +221,7 @@ async def test_many_stations_warning(
         unique_id="51.0_13.0",
     )
     mock_config.add_to_hass(hass)
-    assert await async_setup_component(hass, DOMAIN, {})
+    assert await hass.config_entries.async_setup(mock_config.entry_id)
     await hass.async_block_till_done()
 
     assert "Found more than 10 stations to check" in caplog.text
