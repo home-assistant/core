@@ -18,7 +18,6 @@ from homeassistant.components.amberelectric.const import (
 )
 from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from .helpers import GENERAL_CHANNEL, GENERAL_ONLY_SITE_ID, generate_current_interval
 
@@ -28,14 +27,15 @@ MOCK_API_TOKEN = "psk_0000000000000000"
 @pytest.fixture
 async def setup_no_spike(hass: HomeAssistant) -> AsyncGenerator[Mock]:
     """Set up general channel."""
-    MockConfigEntry(
+    entry = MockConfigEntry(
         domain=DOMAIN,
         data={
             CONF_SITE_NAME: "mock_title",
             CONF_API_TOKEN: MOCK_API_TOKEN,
             CONF_SITE_ID: GENERAL_ONLY_SITE_ID,
         },
-    ).add_to_hass(hass)
+    )
+    entry.add_to_hass(hass)
 
     instance = Mock()
     with patch(
@@ -43,7 +43,7 @@ async def setup_no_spike(hass: HomeAssistant) -> AsyncGenerator[Mock]:
         return_value=instance,
     ) as mock_update:
         instance.get_current_prices = Mock(return_value=GENERAL_CHANNEL)
-        assert await async_setup_component(hass, DOMAIN, {})
+        assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         yield mock_update.return_value
 
@@ -51,14 +51,15 @@ async def setup_no_spike(hass: HomeAssistant) -> AsyncGenerator[Mock]:
 @pytest.fixture
 async def setup_potential_spike(hass: HomeAssistant) -> AsyncGenerator[Mock]:
     """Set up general channel."""
-    MockConfigEntry(
+    entry = MockConfigEntry(
         domain=DOMAIN,
         data={
             CONF_SITE_NAME: "mock_title",
             CONF_API_TOKEN: MOCK_API_TOKEN,
             CONF_SITE_ID: GENERAL_ONLY_SITE_ID,
         },
-    ).add_to_hass(hass)
+    )
+    entry.add_to_hass(hass)
 
     instance = Mock()
     with patch(
@@ -72,7 +73,7 @@ async def setup_potential_spike(hass: HomeAssistant) -> AsyncGenerator[Mock]:
         ]
         general_channel[0].actual_instance.spike_status = SpikeStatus.POTENTIAL
         instance.get_current_prices = Mock(return_value=general_channel)
-        assert await async_setup_component(hass, DOMAIN, {})
+        assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         yield mock_update.return_value
 
@@ -80,14 +81,15 @@ async def setup_potential_spike(hass: HomeAssistant) -> AsyncGenerator[Mock]:
 @pytest.fixture
 async def setup_spike(hass: HomeAssistant) -> AsyncGenerator[Mock]:
     """Set up general channel."""
-    MockConfigEntry(
+    entry = MockConfigEntry(
         domain=DOMAIN,
         data={
             CONF_SITE_NAME: "mock_title",
             CONF_API_TOKEN: MOCK_API_TOKEN,
             CONF_SITE_ID: GENERAL_ONLY_SITE_ID,
         },
-    ).add_to_hass(hass)
+    )
+    entry.add_to_hass(hass)
 
     instance = Mock()
     with patch(
@@ -101,7 +103,7 @@ async def setup_spike(hass: HomeAssistant) -> AsyncGenerator[Mock]:
         ]
         general_channel[0].actual_instance.spike_status = SpikeStatus.SPIKE
         instance.get_current_prices = Mock(return_value=general_channel)
-        assert await async_setup_component(hass, DOMAIN, {})
+        assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         yield mock_update.return_value
 
@@ -142,14 +144,15 @@ def test_spike_sensor(hass: HomeAssistant) -> None:
 @pytest.fixture
 async def setup_inactive_demand_window(hass: HomeAssistant) -> AsyncGenerator[Mock]:
     """Set up general channel."""
-    MockConfigEntry(
+    entry = MockConfigEntry(
         domain=DOMAIN,
         data={
             CONF_SITE_NAME: "mock_title",
             CONF_API_TOKEN: MOCK_API_TOKEN,
             CONF_SITE_ID: GENERAL_ONLY_SITE_ID,
         },
-    ).add_to_hass(hass)
+    )
+    entry.add_to_hass(hass)
 
     instance = Mock()
     with patch(
@@ -165,7 +168,7 @@ async def setup_inactive_demand_window(hass: HomeAssistant) -> AsyncGenerator[Mo
             demandWindow=False
         )
         instance.get_current_prices = Mock(return_value=general_channel)
-        assert await async_setup_component(hass, DOMAIN, {})
+        assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         yield mock_update.return_value
 
@@ -173,14 +176,15 @@ async def setup_inactive_demand_window(hass: HomeAssistant) -> AsyncGenerator[Mo
 @pytest.fixture
 async def setup_active_demand_window(hass: HomeAssistant) -> AsyncGenerator[Mock]:
     """Set up general channel."""
-    MockConfigEntry(
+    entry = MockConfigEntry(
         domain=DOMAIN,
         data={
             CONF_SITE_NAME: "mock_title",
             CONF_API_TOKEN: MOCK_API_TOKEN,
             CONF_SITE_ID: GENERAL_ONLY_SITE_ID,
         },
-    ).add_to_hass(hass)
+    )
+    entry.add_to_hass(hass)
 
     instance = Mock()
     with patch(
@@ -196,7 +200,7 @@ async def setup_active_demand_window(hass: HomeAssistant) -> AsyncGenerator[Mock
             demandWindow=True
         )
         instance.get_current_prices = Mock(return_value=general_channel)
-        assert await async_setup_component(hass, DOMAIN, {})
+        assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         yield mock_update.return_value
 
