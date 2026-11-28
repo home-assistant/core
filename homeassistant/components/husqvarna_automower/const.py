@@ -3,6 +3,7 @@
 from aioautomower.model import MowerStates
 
 DOMAIN = "husqvarna_automower"
+MIGRATION_AUTH_ISSUE_ID_PREFIX = "migrate_could_not_auth_"
 EXECUTION_TIME_DELAY = 5
 NAME = "Husqvarna Automower"
 OAUTH2_AUTHORIZE = "https://api.authentication.husqvarnagroup.dev/v1/oauth2/authorize"
