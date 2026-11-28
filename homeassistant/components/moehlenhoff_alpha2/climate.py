@@ -11,10 +11,10 @@ from homeassistant.components.climate import (
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import PRESET_AUTO, PRESET_DAY, PRESET_NIGHT
 from .coordinator import Alpha2BaseCoordinator, Alpha2ConfigEntry
+from .entity import Alpha2RoomEntity
 
 
 async def async_setup_entry(
@@ -32,7 +32,7 @@ async def async_setup_entry(
     )
 
 
-class Alpha2Climate(CoordinatorEntity[Alpha2BaseCoordinator], ClimateEntity):
+class Alpha2Climate(Alpha2RoomEntity, ClimateEntity):
     """Alpha2 ClimateEntity."""
 
     target_temperature_step = 0.2
@@ -46,15 +46,8 @@ class Alpha2Climate(CoordinatorEntity[Alpha2BaseCoordinator], ClimateEntity):
 
     def __init__(self, coordinator: Alpha2BaseCoordinator, heat_area_id: str) -> None:
         """Initialize Alpha2 ClimateEntity."""
-        super().__init__(coordinator)
-        self.heat_area_id = heat_area_id
+        super().__init__(coordinator, heat_area_id)
         self._attr_unique_id = heat_area_id
-        self._attr_name = self.heat_area["HEATAREA_NAME"]
-
-    @property
-    def heat_area(self) -> dict[str, Any]:
-        """Return the heat area."""
-        return self.coordinator.data["heat_areas"][self.heat_area_id]
 
     @property
     @override

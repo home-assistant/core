@@ -18,5 +18,40 @@
       }
     }
   },
+  "entity": {
+    "binary_sensor": {
+      "battery": {
+        "name": "Battery"
+      }
+    },
+    "number": {
+      "cooling_temperature_day": {
+        "name": "Cooling temperature (day)"
+      },
+      "cooling_temperature_night": {
+        "name": "Cooling temperature (night)"
+      },
+      "heating_temperature_day": {
+        "name": "Heating temperature (day)"
+      },
+      "heating_temperature_night": {
+        "name": "Heating temperature (night)"
+      },
+      "maximum_target_temperature": {
+        "name": "Maximum target temperature"
+      },
+      "minimum_target_temperature": {
+        "name": "Minimum target temperature"
+      },
+      "temperature_offset": {
+        "name": "Temperature offset"
+      }
+    },
+    "sensor": {
+      "valve_opening": {
+        "name": "Valve opening"
+      }
+    }
+  },
   "title": "Möhlenhoff Alpha2"
 }

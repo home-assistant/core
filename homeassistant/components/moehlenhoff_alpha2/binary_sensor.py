@@ -5,13 +5,22 @@ from typing import override
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import Alpha2BaseCoordinator, Alpha2ConfigEntry
+from .entity import Alpha2RoomEntity
+
+BATTERY_DESCRIPTION = BinarySensorEntityDescription(
+    key="battery",
+    translation_key="battery",
+    name="Battery",
+    device_class=BinarySensorDeviceClass.BATTERY,
+    entity_category=EntityCategory.DIAGNOSTIC,
+)
 
 
 async def async_setup_entry(
@@ -31,24 +40,16 @@ async def async_setup_entry(
     )
 
 
-class Alpha2IODeviceBatterySensor(
-    CoordinatorEntity[Alpha2BaseCoordinator], BinarySensorEntity
-):
+class Alpha2IODeviceBatterySensor(Alpha2RoomEntity, BinarySensorEntity):
     """Alpha2 IO device battery binary sensor."""
-
-    _attr_device_class = BinarySensorDeviceClass.BATTERY
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(self, coordinator: Alpha2BaseCoordinator, io_device_id: str) -> None:
         """Initialize Alpha2IODeviceBatterySensor."""
-        super().__init__(coordinator)
+        io_device = coordinator.data["io_devices"][io_device_id]
+        super().__init__(coordinator, io_device["_HEATAREA_ID"])
+        self.entity_description = BATTERY_DESCRIPTION
         self.io_device_id = io_device_id
         self._attr_unique_id = f"{io_device_id}:battery"
-        io_device = self.coordinator.data["io_devices"][io_device_id]
-        heat_area = self.coordinator.data["heat_areas"][io_device["_HEATAREA_ID"]]
-        self._attr_name = (
-            f"{heat_area['HEATAREA_NAME']} IO device {io_device['NR']} battery"
-        )
 
     @property
     @override

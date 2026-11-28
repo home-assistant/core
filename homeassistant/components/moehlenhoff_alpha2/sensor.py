@@ -2,13 +2,20 @@
 
 from typing import override
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import Alpha2BaseCoordinator, Alpha2ConfigEntry
+from .entity import Alpha2RoomEntity
+
+VALVE_OPENING_DESCRIPTION = SensorEntityDescription(
+    key="valve_opening",
+    translation_key="valve_opening",
+    name="Valve opening",
+    native_unit_of_measurement=PERCENTAGE,
+)
 
 
 async def async_setup_entry(
@@ -30,26 +37,18 @@ async def async_setup_entry(
     )
 
 
-class Alpha2HeatControlValveOpeningSensor(
-    CoordinatorEntity[Alpha2BaseCoordinator], SensorEntity
-):
+class Alpha2HeatControlValveOpeningSensor(Alpha2RoomEntity, SensorEntity):
     """Alpha2 heat control valve opening sensor."""
-
-    _attr_native_unit_of_measurement = PERCENTAGE
 
     def __init__(
         self, coordinator: Alpha2BaseCoordinator, heat_control_id: str
     ) -> None:
         """Initialize Alpha2HeatControlValveOpeningSensor."""
-        super().__init__(coordinator)
+        heat_control = coordinator.data["heat_controls"][heat_control_id]
+        super().__init__(coordinator, heat_control["_HEATAREA_ID"])
+        self.entity_description = VALVE_OPENING_DESCRIPTION
         self.heat_control_id = heat_control_id
         self._attr_unique_id = f"{heat_control_id}:valve_opening"
-        heat_control = self.coordinator.data["heat_controls"][heat_control_id]
-        heat_area = self.coordinator.data["heat_areas"][heat_control["_HEATAREA_ID"]]
-        self._attr_name = (
-            f"{heat_area['HEATAREA_NAME']} heat control {heat_control['NR']} valve"
-            " opening"
-        )
 
     @property
     @override

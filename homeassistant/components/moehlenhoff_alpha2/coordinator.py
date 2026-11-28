@@ -68,7 +68,7 @@ class Alpha2BaseCoordinator(DataUpdateCoordinator[dict[str, dict]]):
             target_temperature,
         )
 
-        update_data = {"T_TARGET": target_temperature}
+        update_data: dict[str, float | int] = {"T_TARGET": target_temperature}
         is_cooling = self.get_cooling()
         heat_area_mode = self.data["heat_areas"][heat_area_id]["HEATAREA_MODE"]
         if heat_area_mode == 1:
@@ -82,13 +82,28 @@ class Alpha2BaseCoordinator(DataUpdateCoordinator[dict[str, dict]]):
             else:
                 update_data["T_HEAT_NIGHT"] = target_temperature
 
-        try:
-            await self.base.update_heat_area(heat_area_id, update_data)
-        except aiohttp.ClientError as http_err:
+        await self.async_set_heat_area_attributes(heat_area_id, update_data)
+
+    async def async_set_heat_area_attributes(
+        self, heat_area_id: str, attributes: dict[str, float | int]
+    ) -> None:
+        """Set attributes of the given heat area."""
+        heat_area = self.data["heat_areas"][heat_area_id]
+        minimum = attributes.get("T_TARGET_MIN", heat_area.get("T_TARGET_MIN", 0))
+        maximum = attributes.get("T_TARGET_MAX", heat_area.get("T_TARGET_MAX", 50))
+        if minimum > maximum:
             raise HomeAssistantError(
-                "Failed to set target temperature, communication error with alpha2 base"
+                "The minimum target temperature must not exceed the maximum"
+            )
+
+        try:
+            await self.base.update_heat_area(heat_area_id, attributes)
+        except (aiohttp.ClientError, TimeoutError) as http_err:
+            raise HomeAssistantError(
+                "Failed to set heat area settings, communication error with alpha2 base"
             ) from http_err
-        self.data["heat_areas"][heat_area_id].update(update_data)
+
+        heat_area.update(attributes)
         self.async_update_listeners()
 
     async def async_set_heat_area_mode(
