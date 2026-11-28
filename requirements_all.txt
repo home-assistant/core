@@ -2836,7 +2836,7 @@ python-hotspring==5.0.1
 python-hpilo==4.4.3
 
 # homeassistant.components.izone
-python-izone==2.1.0
+python-izone==2.1.2
 
 # homeassistant.components.joaoapps_join
 python-join-api==0.1.1
