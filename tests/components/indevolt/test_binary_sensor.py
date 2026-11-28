@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+from indevolt_api import IndevoltBattery
 import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
@@ -31,6 +32,15 @@ METER_CONNECTED_VALUE = 1000
 METER_DISCONNECTED_VALUE = 1001
 
 ENTITY_ID_GEN2 = "binary_sensor.cms_sf2000_meter_connected"
+
+HEATING_STATE_VALUES = (
+    (IndevoltBattery.MAIN_HEATING_STATE, 1, 0),
+    (IndevoltBattery.PACK_1_HEATING_STATE, 1, 0),
+    (IndevoltBattery.PACK_2_HEATING_STATE, 1, 0),
+    (IndevoltBattery.PACK_3_HEATING_STATE, 1, 0),
+    (IndevoltBattery.PACK_4_HEATING_STATE, 1, 0),
+    (IndevoltBattery.PACK_5_HEATING_STATE, 1001, 1000),
+)
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -85,6 +95,44 @@ async def test_meter_connected_state_changes(
 
     assert (state := hass.states.get(ENTITY_ID_GEN2)) is not None
     assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize("generation", [2], indirect=True)
+@pytest.mark.parametrize(("key", "on_value", "off_value"), HEATING_STATE_VALUES)
+async def test_heating_state_values(
+    hass: HomeAssistant,
+    mock_indevolt: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    key: str,
+    on_value: int,
+    off_value: int,
+) -> None:
+    """Test the device values used for heating state binary sensors."""
+    await setup_integration(hass, mock_config_entry)
+
+    entity_entry = next(
+        entry
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, mock_config_entry.entry_id
+        )
+        if entry.unique_id.endswith(key)
+    )
+
+    mock_indevolt.fetch_data.return_value[key] = on_value
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_entry.entity_id)) is not None
+    assert state.state == STATE_ON
+
+    mock_indevolt.fetch_data.return_value[key] = off_value
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_entry.entity_id)) is not None
+    assert state.state == STATE_OFF
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
