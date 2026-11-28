@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 import logging
 from typing import cast, override
 
-from aiohomeconnect.model import ApplianceType, EventKey, StatusKey
+from aiohomeconnect.model import ApplianceType, Event, EventKey, StatusKey
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -56,9 +56,6 @@ BSH_PROGRAM_SENSORS = (
         key=EventKey.BSH_COMMON_OPTION_REMAINING_PROGRAM_TIME,
         device_class=SensorDeviceClass.TIMESTAMP,
         translation_key="program_finish_time",
-        value_fn=lambda remaining: (
-            dt_util.utcnow() + timedelta(seconds=cast(float, remaining))
-        ),
         appliance_types=(
             ApplianceType.COFFEE_MAKER,
             ApplianceType.COOK_PROCESSOR,
@@ -615,7 +612,11 @@ def _get_entities_for_appliance(
             and appliance_coordinator.data.info.type in description.appliance_types
         ],
         *[
-            HomeConnectProgramSensor(appliance_coordinator, desc)
+            (
+                HomeConnectProgramFinishTimeSensor
+                if desc.key == EventKey.BSH_COMMON_OPTION_REMAINING_PROGRAM_TIME
+                else HomeConnectProgramSensor
+            )(appliance_coordinator, desc)
             for desc in BSH_PROGRAM_SENSORS
             if desc.appliance_types
             and appliance_coordinator.data.info.type in desc.appliance_types
@@ -749,6 +750,67 @@ class HomeConnectProgramSensor(HomeConnectSensor):
         """Update the program sensor's status."""
         event = self.appliance.events.get(cast(EventKey, self.bsh_key))
         self._update_native_value(event.value if event else None)
+
+
+class HomeConnectProgramFinishTimeSensor(HomeConnectProgramSensor):
+    """Sensor class for Home Connect program finish time."""
+
+    # Reported events with the time they point to, calculated when received,
+    # so updating the entity again doesn't shift the finish time
+    _start: tuple[Event, datetime] | None = None
+    _finish: tuple[Event, datetime] | None = None
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Register listener."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self.coordinator.async_add_listener(
+                self._handle_coordinator_update,
+                EventKey.BSH_COMMON_OPTION_START_IN_RELATIVE,
+            )
+        )
+
+    @callback
+    @override
+    def _handle_operation_state_event(self) -> None:
+        """Update the finish time when the operation state changes."""
+        self.update_native_value()
+        super()._handle_operation_state_event()
+
+    @override
+    def update_native_value(self) -> None:
+        """Update the program finish time."""
+        events = self.appliance.events
+        now = dt_util.utcnow()
+        operation_state = self.appliance.status.get(
+            StatusKey.BSH_COMMON_OPERATION_STATE
+        )
+        if (
+            operation_state is not None
+            and operation_state.value == BSH_OPERATION_STATE_DELAYED_START
+            and (start := events.get(EventKey.BSH_COMMON_OPTION_START_IN_RELATIVE))
+            and isinstance(start.value, (int, float))
+        ):
+            if self._start is None or self._start[0] is not start:
+                self._start = (start, now + timedelta(seconds=start.value))
+        else:
+            self._start = None
+        remaining = events.get(EventKey.BSH_COMMON_OPTION_REMAINING_PROGRAM_TIME)
+        if remaining is None or not isinstance(remaining.value, (int, float)):
+            self._finish = None
+            self._attr_native_value = None
+            return
+        if self._start is not None:
+            self._finish = None
+            # The remaining program time is the duration of the whole program
+            self._attr_native_value = self._start[1] + timedelta(
+                seconds=remaining.value
+            )
+            return
+        if self._finish is None or self._finish[0] is not remaining:
+            self._finish = (remaining, now + timedelta(seconds=remaining.value))
+        self._attr_native_value = self._finish[1]
 
 
 class HomeConnectEventSensor(HomeConnectSensor):
