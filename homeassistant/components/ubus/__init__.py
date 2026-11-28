@@ -6,10 +6,16 @@ import logging
 from types import MappingProxyType
 
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigSubentry
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigEntryState,
+    ConfigSubentry,
+    UnknownEntry,
+)
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -399,7 +405,9 @@ async def _async_migrate_other(
                 translation_key="migration_host_collision",
                 translation_placeholders={"host": ", ".join(collision_hosts)},
             )
-    except Exception:
+    except HomeAssistantError:
+        # Only expected core failures become repairs; any other
+        # exception is a bug and must surface.
         _LOGGER.exception(
             "Failed to migrate ubus entry %s to the hub %s",
             entry.entry_id,
@@ -501,18 +509,14 @@ async def _async_deferred_removal(
     """Remove a merged entry once its setup lock is released.
 
     The removal runs in a task because the setup lock is held for the
-    rest of the setup; a failure cannot reach the migration handler,
-    so the task reports its own repair.
+    rest of the setup; an unexpected failure cannot reach the
+    migration handler, so it surfaces as a task error.
     """
     try:
         await hass.config_entries.async_remove(entry.entry_id)
-    except Exception:
-        _LOGGER.exception(
-            "Failed to remove ubus entry %s after migrating it to the hub %s",
-            entry.entry_id,
-            hub.entry_id,
-        )
-        _async_create_removal_failed_issue(hass, entry, host)
+    except UnknownEntry:
+        # The entry was already removed; nothing is left to repair.
+        return
 
 
 def _merge_device_survivors(

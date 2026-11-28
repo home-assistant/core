@@ -3,7 +3,7 @@
 import asyncio
 from datetime import timedelta
 import threading
-from types import MappingProxyType
+from types import CoroutineType, MappingProxyType
 from typing import Any
 from unittest.mock import MagicMock, patch
 
@@ -32,6 +32,7 @@ from homeassistant.config_entries import (
     ConfigEntryError,
     ConfigEntryState,
     ConfigSubentry,
+    OperationNotAllowed,
     UnknownEntry,
 )
 from homeassistant.const import (
@@ -4190,9 +4191,11 @@ async def test_migration_failure_after_transfer_empties_leftover_entry(
     )
     legacy_entry.add_to_hass(hass)
     hub_entry.add_to_hass(hass)
+    # An expected core failure, not a bug: it gets a repair, and the
+    # hub still loads.
     with patch(
         "homeassistant.config_entries.ConfigEntries.async_remove",
-        side_effect=RuntimeError,
+        side_effect=OperationNotAllowed("simulated expected core failure"),
     ):
         assert await hass.config_entries.async_setup(hub_entry.entry_id)
     await hass.async_block_till_done()
@@ -4230,6 +4233,45 @@ async def test_migration_failure_after_transfer_empties_leftover_entry(
     # Deleting the shell finishes the migration and clears its repair.
     assert await hass.config_entries.async_remove(legacy_entry.entry_id)
     await hass.async_block_till_done()
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, f"migration_removal_failed_{legacy_entry.entry_id}"
+        )
+        is None
+    )
+
+
+async def test_migration_unexpected_error_surfaces_instead_of_repair(
+    hass: HomeAssistant,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a bug during migration surfaces instead of creating a repair."""
+    _mock, _ubus = mock_ubus_by_host
+    hub_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG,
+        title=MOCK_HOST,
+        entry_id="00000000000000000000000000A",
+    )
+    legacy_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_HOST_CONFIG_B,
+        title=MOCK_HOST_B,
+        entry_id="00000000000000000000000000B",
+    )
+    legacy_entry.add_to_hass(hass)
+    hub_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_remove",
+        side_effect=KeyError("simulated bug"),
+    ):
+        assert not await hass.config_entries.async_setup(hub_entry.entry_id)
+    await hass.async_block_till_done()
+    # The migration runs during component setup, so the bug fails the
+    # component and the hub is not loaded.
+    assert hub_entry.state is ConfigEntryState.NOT_LOADED
+    # A bug is not an expected failure: no repair is created.
     assert (
         issue_registry.async_get_issue(
             DOMAIN, f"migration_removal_failed_{legacy_entry.entry_id}"
@@ -4290,16 +4332,89 @@ async def test_migration_prefers_populated_hub_over_shell(
     }
 
 
-async def test_late_hub_merge_removal_failure_creates_repair(
+async def test_late_hub_merge_removal_failure_surfaces_instead_of_repair(
     hass: HomeAssistant,
     mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test a failed deferred removal after a late hub merge gets a repair.
+    """Test a bug in the deferred removal surfaces instead of creating a repair.
 
-    The removal of a merged entry runs in a deferred task, so its
-    failure cannot reach the migration handler and must create its own
-    repair, or the empty entry would be left behind silently.
+    The removal of a merged entry runs in a deferred task, so a bug in
+    it cannot reach the migration handler: it surfaces as the task's
+    error, and the emptied shell stays behind for manual removal.
+    """
+    _mock, _ubus = mock_ubus_by_host
+    hub = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        title=HUB_TITLE,
+        subentries_data=[router_subentry_data(MOCK_CONFIG)],
+    )
+    hub.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(hub.entry_id)
+    await hass.async_block_till_done()
+
+    legacy = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_HOST_CONFIG_B,
+        title=MOCK_HOST_B,
+        entry_id="00000000000000000000000000B",
+    )
+    legacy.add_to_hass(hass)
+    deferred: dict[str, asyncio.Task] = {}
+    original_create_task = hass.async_create_task
+
+    def capture_task(coro: CoroutineType, *args: Any, **kwargs: Any) -> asyncio.Task:
+        task = original_create_task(coro, *args, **kwargs)
+        deferred[coro.__name__] = task
+        return task
+
+    with (
+        patch.object(hass, "async_create_task", side_effect=capture_task),
+        patch(
+            "homeassistant.config_entries.ConfigEntries.async_remove",
+            side_effect=RuntimeError("simulated bug"),
+        ),
+    ):
+        assert await hass.config_entries.async_setup(legacy.entry_id)
+        await hass.async_block_till_done()
+
+    # The transfer completed and the entry was emptied before the
+    # failed deferred removal, so it is a shell which cannot poll
+    # again.
+    assert hub.state is ConfigEntryState.LOADED
+    assert MOCK_HOST_B in {sub.unique_id for sub in hub.subentries.values()}
+    assert legacy.state is ConfigEntryState.LOADED
+    assert legacy.version == 2
+    assert legacy.data == {}
+    assert legacy.subentries == {}
+    # The bug is not an expected failure: no repair is created, and the
+    # error is the deferred task's.
+    task = deferred["_async_deferred_removal"]
+    assert isinstance(task.exception(), RuntimeError)
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, f"migration_removal_failed_{legacy.entry_id}"
+        )
+        is None
+    )
+
+    # Deleting the shell finishes the migration.
+    assert await hass.config_entries.async_remove(legacy.entry_id)
+    await hass.async_block_till_done()
+    assert hass.config_entries.async_entries(DOMAIN) == [hub]
+
+
+async def test_late_hub_merge_removal_of_removed_entry_is_silent(
+    hass: HomeAssistant,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a deferred removal of an already-removed entry is a no-op.
+
+    The user may delete the merged entry before the deferred task
+    runs; the removal then fails with an expected UnknownEntry, and
+    there is nothing left to repair.
     """
     _mock, _ubus = mock_ubus_by_host
     hub = MockConfigEntry(
@@ -4321,31 +4436,13 @@ async def test_late_hub_merge_removal_failure_creates_repair(
     legacy.add_to_hass(hass)
     with patch(
         "homeassistant.config_entries.ConfigEntries.async_remove",
-        side_effect=RuntimeError,
+        side_effect=UnknownEntry("simulated concurrent removal"),
     ):
         assert await hass.config_entries.async_setup(legacy.entry_id)
         await hass.async_block_till_done()
 
-    # The transfer completed and the entry was emptied before the
-    # failed deferred removal, so it is a shell which cannot poll
-    # again.
     assert hub.state is ConfigEntryState.LOADED
-    assert MOCK_HOST_B in {sub.unique_id for sub in hub.subentries.values()}
     assert legacy.state is ConfigEntryState.LOADED
-    assert legacy.version == 2
-    assert legacy.data == {}
-    assert legacy.subentries == {}
-    issue = issue_registry.async_get_issue(
-        DOMAIN, f"migration_removal_failed_{legacy.entry_id}"
-    )
-    assert issue is not None
-    assert issue.translation_key == "migration_removal_failed"
-    assert issue.translation_placeholders == {"host": MOCK_HOST_B}
-    assert issue.config_entry_id == legacy.entry_id
-
-    # Deleting the shell finishes the migration and clears its repair.
-    assert await hass.config_entries.async_remove(legacy.entry_id)
-    await hass.async_block_till_done()
     assert (
         issue_registry.async_get_issue(
             DOMAIN, f"migration_removal_failed_{legacy.entry_id}"
