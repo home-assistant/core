@@ -198,6 +198,37 @@ async def test_send_message_with_data(hass: HomeAssistant, tmp_path: Path) -> No
     )
 
 
+async def test_send_message_with_missing_member(
+    hass: HomeAssistant, tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test a missing member is logged and the other members still get the message."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    group_setup = [
+        {
+            "platform": "group",
+            "name": "family",
+            "services": [{"action": "test_service1"}, {"action": "old_phone"}],
+        }
+    ]
+    send_message_mock = await help_setup_notify(
+        hass, tmp_path, {"service1": 1}, group_setup
+    )
+
+    await hass.services.async_call(
+        "notify", "family", {"message": "Hello"}, blocking=True
+    )
+    await hass.async_block_till_done()
+
+    send_message_mock.assert_called_once_with("Hello", {"target": [1], "data": None})
+    assert (
+        "Failed to send notification to notify.old_phone from notify group "
+        "notify.family: Action notify.old_phone not found" in caplog.text
+    )
+    assert "Task exception was never retrieved" not in caplog.text
+
+
 async def test_invalid_configuration(
     hass: HomeAssistant, tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
