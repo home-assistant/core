@@ -20,5 +20,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "quality_scale": "platinum",
-  "requirements": ["pyimouapi==1.4.4"]
+  "requirements": ["pyimouapi==1.4.5"]
 }
