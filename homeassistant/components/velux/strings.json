@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -14,7 +15,7 @@
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "password": "The password for your KLF200 gateway."
+          "password": "[%key:component::velux::config::step::user::data_description::password%]"
         },
         "description": "Please enter the password for {name} ({host})"
       },
@@ -23,9 +24,20 @@
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "password": "The password for your KLF200 gateway."
+          "password": "[%key:component::velux::config::step::user::data_description::password%]"
         },
         "description": "The password for {host} is incorrect. Please enter the correct password."
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "host": "[%key:component::velux::config::step::user::data_description::host%]",
+          "password": "[%key:component::velux::config::step::user::data_description::password%]"
+        },
+        "description": "Update the connection details for your KLF200 gateway."
       },
       "user": {
         "data": {
