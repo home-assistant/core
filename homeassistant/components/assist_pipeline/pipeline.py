@@ -1,11 +1,10 @@
 """Classes for voice assistant pipelines."""
 
-import logging
 from typing import Any, override
 
 import probatio
 
-from homeassistant.components import conversation, stt, tts, websocket_api
+from homeassistant.components import conversation, websocket_api
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.collection import (
     CollectionError,
@@ -19,7 +18,13 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import Undefined, VolDictType
 from homeassistant.util import language as language_util, ulid as ulid_util
 
-from . import error as _error, models as _models, run as _run, runtime as _runtime
+from . import (
+    default_pipeline as _default_pipeline,
+    error as _error,
+    models as _models,
+    run as _run,
+    runtime as _runtime,
+)
 from .const import DOMAIN
 
 PipelineError = _error.PipelineError
@@ -44,8 +49,6 @@ DeviceAudioQueue = _runtime.DeviceAudioQueue
 PipelineData = _runtime.PipelineData
 PipelineRunDebug = _runtime.PipelineRunDebug
 PipelineRuns = _runtime.PipelineRuns
-
-_LOGGER = logging.getLogger(__name__)
 
 STORAGE_KEY = f"{DOMAIN}.pipelines"
 STORAGE_VERSION = 1
@@ -100,9 +103,7 @@ def _async_resolve_default_pipeline_settings(
     """
     conversation_language = "en"
     pipeline_language = "en"
-    stt_engine = None
     stt_language = None
-    tts_engine = None
     tts_language = None
     tts_voice = None
     wake_word_entity = None
@@ -121,56 +122,19 @@ def _async_resolve_default_pipeline_settings(
         pipeline_language = hass.config.language
         conversation_language = conversation_languages[0]
 
-    if stt_engine_id is None:
-        stt_engine_id = stt.async_default_engine(hass)
+    if stt_settings := _default_pipeline.async_resolve_stt_engine_language(
+        hass, pipeline_language, stt_engine_id
+    ):
+        stt_engine_id, stt_language = stt_settings
+    else:
+        stt_engine_id = None
 
-    if stt_engine_id is not None:
-        stt_engine = stt.async_get_speech_to_text_engine(hass, stt_engine_id)
-        if stt_engine is None:
-            stt_engine_id = None
-
-    if stt_engine:
-        stt_languages = language_util.matches(
-            pipeline_language,
-            stt_engine.supported_languages,
-            country=hass.config.country,
-        )
-        if stt_languages:
-            stt_language = stt_languages[0]
-        else:
-            _LOGGER.debug(
-                "Speech-to-text engine '%s' does not support language '%s'",
-                stt_engine_id,
-                pipeline_language,
-            )
-            stt_engine_id = None
-
-    if tts_engine_id is None:
-        tts_engine_id = tts.async_default_engine(hass)
-
-    if tts_engine_id is not None:
-        tts_engine = tts.get_engine_instance(hass, tts_engine_id)
-        if tts_engine is None:
-            tts_engine_id = None
-
-    if tts_engine:
-        tts_languages = language_util.matches(
-            pipeline_language,
-            tts_engine.supported_languages,
-            country=hass.config.country,
-        )
-        if tts_languages:
-            tts_language = tts_languages[0]
-            tts_voices = tts_engine.async_get_supported_voices(tts_language)
-            if tts_voices:
-                tts_voice = tts_voices[0].voice_id
-        else:
-            _LOGGER.debug(
-                "Text-to-speech engine '%s' does not support language '%s'",
-                tts_engine_id,
-                pipeline_language,
-            )
-            tts_engine_id = None
+    if tts_settings := _default_pipeline.async_resolve_tts_engine_language_voice(
+        hass, pipeline_language, tts_engine_id
+    ):
+        tts_engine_id, tts_language, tts_voice = tts_settings
+    else:
+        tts_engine_id = None
 
     return {
         "conversation_engine": conversation_engine_id,
@@ -240,6 +204,14 @@ def _async_get_pipeline_from_conversation_entity(
         conversation_engine_id=entity_id,
     )
     settings["id"] = entity_id
+
+    # The agent handles the spoken audio and the response audio itself
+    if agent_info := conversation.async_get_agent_info(hass, entity_id):
+        if agent_info.supports_audio_input:
+            settings["stt_engine"] = settings["stt_language"] = None
+        if agent_info.supports_audio_output:
+            settings["tts_engine"] = settings["tts_language"] = None
+            settings["tts_voice"] = None
 
     return Pipeline.from_json(settings)
 

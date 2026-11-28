@@ -12,7 +12,12 @@ from homeassistant.components.assist_pipeline.const import MS_PER_CHUNK
 from homeassistant.components.voice_support import AudioRun, AudioRunRequest
 from homeassistant.core import Context, HomeAssistant
 
-from .conftest import MockSTTProviderEntity, make_10ms_chunk
+from .conftest import (
+    AUDIO_AGENT_ID,
+    MockAudioConversationEntity,
+    MockSTTProviderEntity,
+    make_10ms_chunk,
+)
 
 from tests.components.voice_support.common import (
     Answer,
@@ -80,6 +85,8 @@ async def _async_run_pipeline(
     wake_word_phrase: str | None = PHRASE,
     is_vad_enabled: bool = False,
     client: MockClient | None = None,
+    pipeline_id: str | None = None,
+    end_stage: assist_pipeline.PipelineStage = assist_pipeline.PipelineStage.STT,
 ) -> list[PipelineEvent]:
     """Run a pipeline with ``client`` answering voice_support's one call."""
     events: list[PipelineEvent] = []
@@ -112,7 +119,9 @@ async def _async_run_pipeline(
             wake_word_audio_ms=wake_word_audio_ms,
             audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=is_vad_enabled),
             start_stage=assist_pipeline.PipelineStage.STT,
-            end_stage=assist_pipeline.PipelineStage.STT,
+            end_stage=end_stage,
+            pipeline_id=pipeline_id,
+            tts_audio_output="wav",
         )
     return events
 
@@ -518,3 +527,31 @@ async def test_delayed_boundary_after_audio_end(
     assert [
         event.data for event in events if event.type is PipelineEventType.STT_VAD_END
     ] == [{"timestamp": 40}]
+
+
+@pytest.mark.usefixtures("init_audio_agent")
+async def test_an_agent_that_hears_the_user_ends_the_command(
+    hass: HomeAssistant, mock_audio_agent: MockAudioConversationEntity
+) -> None:
+    """Test the app only verifies the wake word for an agent that hears the user."""
+    client = MockClient([(0, accepted(MS_PER_CHUNK))])
+    events = await _async_run_pipeline(
+        hass,
+        _audio_stream(WAKE, *[COMMAND] * 5),
+        is_vad_enabled=True,
+        client=client,
+        pipeline_id=AUDIO_AGENT_ID,
+        end_stage=assist_pipeline.PipelineStage.TTS,
+    )
+
+    assert client.requests[0].silence_seconds is None
+    assert [
+        event.type
+        for event in events
+        if event.type
+        in (PipelineEventType.STT_VAD_START, PipelineEventType.STT_VAD_END)
+    ] == [PipelineEventType.STT_VAD_END]
+    # The agent hears all of the command, without the wake word
+    assert b"".join(mock_audio_agent.received_audio) == COMMAND * 5
+    assert client.websocket is not None
+    assert client.websocket.closed

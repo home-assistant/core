@@ -1,13 +1,14 @@
 """Test the conversation session."""
 
 import asyncio
-from collections.abc import AsyncGenerator
-from contextlib import ExitStack
+from collections.abc import AsyncGenerator, Awaitable, Callable
+from contextlib import ExitStack, suppress
 import contextvars
+from dataclasses import replace
 from datetime import timedelta
 from pathlib import Path
 from typing import Any
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import ANY, AsyncMock, Mock, patch
 
 from freezegun import freeze_time
 import probatio
@@ -15,9 +16,11 @@ import pytest
 from pytest_homeassistant.common import MockUser, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components import tts
 from homeassistant.components.conversation import (
     AssistantContent,
     AssistantContentDeltaDict,
+    ConversationAudioInput,
     ConversationBusyError,
     ConversationInput,
     ConverseError,
@@ -1645,3 +1648,200 @@ async def test_add_delta_content_stream_deprecated_tool_result(
                 "mock-agent-id", stream()
             )
         ]
+
+
+async def test_chat_log_delta_listener_user_content(
+    hass: HomeAssistant, mock_conversation_input: ConversationInput
+) -> None:
+    """Test the delta listener receives user content added after the input."""
+    deltas: list[dict] = []
+
+    with (
+        chat_session.async_get_chat_session(hass, context=None) as session,
+        async_get_chat_log(
+            hass,
+            session,
+            mock_conversation_input,
+            chat_log_delta_listener=lambda chat_log, delta: deltas.append(delta),
+        ) as chat_log,
+    ):
+        assert chat_log.content[-1].content == "Hello"
+        assert not deltas
+
+        chat_log.async_add_user_content(UserContent(content="More"))
+
+    assert deltas == [{"role": "user", "content": "More", "created": ANY}]
+
+
+async def _audio_stream() -> AsyncGenerator[bytes]:
+    """Yield spoken audio."""
+    yield b"audio"
+
+
+async def test_chat_log_audio_input(
+    hass: HomeAssistant, mock_conversation_input: ConversationInput
+) -> None:
+    """Test the agent adds the transcript of spoken audio to the chat log."""
+    audio_input = replace(
+        mock_conversation_input,
+        text="",
+        audio=ConversationAudioInput(
+            pcm_format=tts.PcmFormat(sample_rate=16000, sample_width=2, channels=1),
+            stream=_audio_stream(),
+        ),
+    )
+    deltas: list[dict] = []
+
+    with (
+        chat_session.async_get_chat_session(hass, context=None) as session,
+        async_get_chat_log(
+            hass,
+            session,
+            audio_input,
+            chat_log_delta_listener=lambda chat_log, delta: deltas.append(delta),
+        ) as chat_log,
+    ):
+        # There is no text from the user until the agent has a transcript
+        assert [content.role for content in chat_log.content] == ["system"]
+
+        # Like an agent that opens the chat log of the pipeline
+        with async_get_chat_log(hass, session, audio_input) as agent_chat_log:
+            assert agent_chat_log is chat_log
+            assert [content.role for content in chat_log.content] == ["system"]
+
+            agent_chat_log.async_add_user_content(UserContent(content="transcript"))
+
+    assert deltas == [{"role": "user", "content": "transcript", "created": ANY}]
+
+
+def _spoken_input(conversation_input: ConversationInput) -> ConversationInput:
+    """Return the conversation input as a spoken turn."""
+    return replace(
+        conversation_input,
+        text="",
+        audio=ConversationAudioInput(
+            pcm_format=tts.PcmFormat(sample_rate=16000, sample_width=2, channels=1),
+            stream=_audio_stream(),
+        ),
+    )
+
+
+async def _add_without_tools(chat_log: ChatLog, content: AssistantContent) -> None:
+    chat_log.async_add_assistant_content_without_tools(content)
+
+
+async def _add_with_tools(chat_log: ChatLog, content: AssistantContent) -> None:
+    async for _result in chat_log.async_add_assistant_content(content):
+        pass
+
+
+async def _add_streamed(chat_log: ChatLog, content: AssistantContent) -> None:
+    async def stream() -> AsyncGenerator[AssistantContentDeltaDict]:
+        yield {"role": "assistant"}
+        yield {"content": content.content}
+
+    async for _content in chat_log.async_add_delta_content_stream(
+        content.agent_id, stream()
+    ):
+        pass
+
+
+@pytest.mark.parametrize(
+    "add_content",
+    [
+        pytest.param(_add_without_tools, id="without_tools"),
+        pytest.param(_add_with_tools, id="with_tools"),
+        pytest.param(_add_streamed, id="streamed"),
+    ],
+)
+async def test_chat_log_spoken_response_needs_transcript(
+    hass: HomeAssistant,
+    mock_conversation_input: ConversationInput,
+    add_content: Callable[[ChatLog, AssistantContent], Awaitable[None]],
+) -> None:
+    """Test the response of a spoken turn can only come after its transcript."""
+    answer = AssistantContent(agent_id="mock-agent-id", content="It's on")
+
+    with (
+        chat_session.async_get_chat_session(hass, context=None) as session,
+        async_get_chat_log(
+            hass, session, _spoken_input(mock_conversation_input)
+        ) as chat_log,
+    ):
+        with pytest.raises(ValueError, match="transcript of the spoken audio"):
+            await add_content(chat_log, answer)
+
+        chat_log.async_add_user_content(UserContent(content="turn on the light"))
+        await add_content(chat_log, answer)
+
+    assert [(content.role, content.content) for content in chat_log.content] == [
+        ("system", ""),
+        ("user", "turn on the light"),
+        ("assistant", "It's on"),
+    ]
+
+
+async def test_chat_log_transcript_in_delta_stream(
+    hass: HomeAssistant, mock_conversation_input: ConversationInput
+) -> None:
+    """Test an agent can add the transcript from its delta stream."""
+    with (
+        chat_session.async_get_chat_session(hass, context=None) as session,
+        async_get_chat_log(
+            hass, session, _spoken_input(mock_conversation_input)
+        ) as chat_log,
+    ):
+
+        async def stream() -> AsyncGenerator[AssistantContentDeltaDict]:
+            chat_log.async_add_user_content(UserContent(content="hello"))
+            yield {"role": "assistant"}
+            yield {"content": "Hi"}
+
+        async for _content in chat_log.async_add_delta_content_stream(
+            "mock-agent-id", stream()
+        ):
+            pass
+
+    assert [(content.role, content.content) for content in chat_log.content] == [
+        ("system", ""),
+        ("user", "hello"),
+        ("assistant", "Hi"),
+    ]
+
+
+def _return_without_transcript() -> None:
+    """End the turn like an agent that returns without a transcript."""
+
+
+def _fail_without_transcript() -> None:
+    """End the turn like an agent that fails before it has a transcript."""
+    raise HomeAssistantError("Agent failed")
+
+
+@pytest.mark.parametrize(
+    ("end_turn", "expected_reply"),
+    [
+        pytest.param(_return_without_transcript, "(no response)", id="no_response"),
+        pytest.param(_fail_without_transcript, "Error: Agent failed", id="error"),
+    ],
+)
+async def test_chat_log_spoken_turn_ends_without_transcript(
+    hass: HomeAssistant,
+    mock_conversation_input: ConversationInput,
+    end_turn: Callable[[], None],
+    expected_reply: str,
+) -> None:
+    """Test a spoken turn without a transcript still gets a reply in the log."""
+    with (
+        chat_session.async_get_chat_session(hass, context=None) as session,
+        suppress(HomeAssistantError),
+        async_get_chat_log(
+            hass, session, _spoken_input(mock_conversation_input)
+        ) as chat_log,
+    ):
+        end_turn()
+
+    assert [(content.role, content.content) for content in chat_log.content] == [
+        ("system", ""),
+        ("assistant", expected_reply),
+    ]
