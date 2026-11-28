@@ -1,6 +1,8 @@
 """Allow to set up simple automation rules via the config file."""
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.const import (
@@ -11,9 +13,11 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
+from .config import async_validate_config_item
 from .const import (
     ATTR_SOURCE,
     DATA_COMPONENT,
@@ -23,10 +27,11 @@ from .const import (
     LOGGER,
     AutomationService,
 )
+from .dry_run import async_dry_run
 from .entity import AutomationEntity, BaseAutomationEntity, UnavailableAutomationEntity
 from .helpers import async_get_blueprints
 from .services import async_setup_services
-from .util import async_process_config
+from .util import async_process_config, dry_run_input_from_config
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
@@ -205,6 +210,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async_setup_services(hass)
 
     websocket_api.async_register_command(hass, websocket_config)
+    websocket_api.async_register_command(hass, websocket_dry_run)
 
     return True
 
@@ -229,5 +235,63 @@ def websocket_config(
         msg["id"],
         {
             "config": automation.raw_config,
+        },
+    )
+
+
+@websocket_api.websocket_command(
+    probatio.All(
+        websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
+            {
+                probatio.Required("type"): "automation/dry_run",
+                probatio.Optional("entity_id"): str,
+                probatio.Optional("config"): dict,
+            }
+        ),
+        probatio.ExactlyOne("entity_id", "config"),
+    )
+)
+@websocket_api.require_admin
+@websocket_api.async_response
+async def websocket_dry_run(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Evaluate an automation against the current state without running it."""
+    if "config" in msg:
+        try:
+            config = await async_validate_config_item(hass, "", msg["config"])
+        except (probatio.Invalid, HomeAssistantError) as err:
+            connection.send_error(msg["id"], websocket_api.ERR_INVALID_FORMAT, str(err))
+            return
+        if TYPE_CHECKING:
+            assert config is not None
+        connection.send_result(
+            msg["id"], await async_dry_run(hass, dry_run_input_from_config(config))
+        )
+        return
+
+    automation = hass.data[DATA_COMPONENT].get_entity(msg["entity_id"])
+
+    if automation is None:
+        connection.send_error(
+            msg["id"], websocket_api.ERR_NOT_FOUND, "Entity not found"
+        )
+        return
+
+    if not isinstance(automation, AutomationEntity):
+        connection.send_error(
+            msg["id"],
+            websocket_api.ERR_NOT_SUPPORTED,
+            "Automation has an invalid configuration",
+        )
+        return
+
+    connection.send_result(
+        msg["id"],
+        {
+            "entity_id": automation.entity_id,
+            **await async_dry_run(hass, automation.dry_run_input()),
         },
     )
