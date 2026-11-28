@@ -10,6 +10,7 @@ from pytest_homeassistant.common import (
     MockConfigEntry,
     MockPlatform,
     async_fire_time_changed,
+    async_mock_service,
     get_fixture_path,
     mock_platform,
 )
@@ -18,6 +19,7 @@ from pytest_homeassistant.typing import WebSocketGenerator
 from homeassistant import config as hass_config, config_entries
 from homeassistant.components.calendar import (
     DOMAIN as CALENDAR_DOMAIN,
+    SIGNAL_CALENDAR_EVENTS_UPDATED,
     CalendarEntity,
     CalendarEvent,
     CalendarService,
@@ -31,6 +33,7 @@ from homeassistant.const import (
     TargetKey,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import async_setup_component
@@ -581,6 +584,99 @@ async def test_subscribe_updates_on_member_report(
         "Dinner",
         "Movie",
     ]
+
+
+@pytest.mark.parametrize(
+    "groups",
+    [
+        pytest.param([FAMILY_GROUP], id="group"),
+        pytest.param(
+            [
+                {**FAMILY_GROUP, "entities": ["calendar.nested"]},
+                {
+                    "platform": DOMAIN,
+                    "entities": ["calendar.home", GROUP_ENTITY_ID],
+                    "name": "Nested",
+                },
+            ],
+            id="nested_group_with_cycle",
+        ),
+    ],
+)
+async def test_trigger_updates_on_member_change(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    calendar_platform: list[MockCalendarEntity],
+    groups: list[ConfigType],
+) -> None:
+    """Test triggers pick up event changes reported by a member."""
+    await _setup_groups(hass, groups)
+    calls = async_mock_service(hass, "test", "automation")
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "trigger": {
+                    "platform": CALENDAR_DOMAIN,
+                    "entity_id": GROUP_ENTITY_ID,
+                    "event": "start",
+                },
+                "action": {
+                    "action": "test.automation",
+                    "data": {"summary": "{{ trigger.calendar_event.summary }}"},
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    home = calendar_platform[1]
+    home._events.append(
+        CalendarEvent(
+            start=NOW + dt.timedelta(minutes=5),
+            end=NOW + dt.timedelta(minutes=10),
+            summary="Call",
+        )
+    )
+    home.async_update_event_listeners()
+    await hass.async_block_till_done()
+
+    freezer.move_to(NOW + dt.timedelta(minutes=6))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert [call.data["summary"] for call in calls] == ["Call"]
+
+
+async def test_member_report_passed_on_once(
+    hass: HomeAssistant, calendar_platform: list[MockCalendarEntity]
+) -> None:
+    """Test a group passes on a report once when it reaches it through two members."""
+    await _setup_groups(
+        hass,
+        [
+            {**FAMILY_GROUP, "entities": ["calendar.left", "calendar.right"]},
+            {"platform": DOMAIN, "entities": ["calendar.home"], "name": "Left"},
+            {"platform": DOMAIN, "entities": ["calendar.home"], "name": "Right"},
+        ],
+    )
+    reports: list[None] = []
+    async_dispatcher_connect(
+        hass,
+        SIGNAL_CALENDAR_EVENTS_UPDATED.format(GROUP_ENTITY_ID),
+        lambda _passed_on: reports.append(None),
+    )
+
+    calendar_platform[1].async_update_event_listeners()
+    await hass.async_block_till_done()
+    assert len(reports) == 1
+
+    # Separate reports are each passed on, also when made right after each other
+    calendar_platform[1].async_update_event_listeners()
+    calendar_platform[1].async_update_event_listeners()
+    await hass.async_block_till_done()
+    assert len(reports) == 3
 
 
 @pytest.mark.usefixtures("calendar_platform")

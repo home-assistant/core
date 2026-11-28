@@ -1,7 +1,7 @@
 """Offer calendar automation rules."""
 
 import asyncio
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
 import datetime as dt
 import logging
@@ -21,6 +21,8 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback, split_ent
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.automation import move_top_level_schema_fields_to_options
+from homeassistant.helpers.debounce import Debouncer
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import (
     async_track_point_in_time,
@@ -35,15 +37,25 @@ from homeassistant.helpers.trigger import (
 )
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
+from homeassistant.util.hass_dict import HassKey
 
 from . import CalendarEntity, CalendarEvent
-from .const import DATA_COMPONENT, DOMAIN
+from .const import (
+    DATA_COMPONENT,
+    DOMAIN,
+    EVENT_LISTENER_DEBOUNCE_COOLDOWN,
+    SIGNAL_CALENDAR_EVENTS_UPDATED,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 EVENT_START = "start"
 EVENT_END = "end"
 UPDATE_INTERVAL = dt.timedelta(minutes=15)
+
+DATA_REFETCHERS: HassKey[dict[str, CalendarEventRefetcher]] = HassKey(
+    f"{DOMAIN}_event_refetchers"
+)
 
 CONF_OFFSET_TYPE = "offset_type"
 OFFSET_TYPE_BEFORE = "before"
@@ -202,46 +214,156 @@ def event_fetcher(hass: HomeAssistant, entity_ids: set[str]) -> EventFetcher:
     return async_get_events
 
 
-def queued_event_fetcher(
-    fetcher: EventFetcher, event_type: str, offset: dt.timedelta
-) -> QueuedEventFetcher:
-    """Build a fetcher that produces a schedule of upcoming trigger events."""
+def queue_events(
+    active_events: list[tuple[str, CalendarEvent]],
+    timespan: Timespan,
+    event_type: str,
+    offset: dt.timedelta,
+) -> list[QueuedCalendarEvent]:
+    """Return the schedule of events eligible to fire in the time span."""
 
     def get_trigger_time(event: CalendarEvent) -> dt.datetime:
         if event_type == EVENT_START:
             return event.start_datetime_local
         return event.end_datetime_local
 
+    offset_timespan = timespan.with_offset(-1 * offset)
+
+    # Determine the trigger eligibility of events during this time span.
+    # Example: For an EVENT_END trigger the event may start during this
+    # time span, but need to be triggered later when the end happens.
+    results = []
+    for entity_id, event in active_events:
+        trigger_time = get_trigger_time(event)
+        if trigger_time not in offset_timespan:
+            continue
+        results.append(
+            QueuedCalendarEvent(
+                _add_elapsed_time(trigger_time, offset), event, entity_id
+            )
+        )
+
+    _LOGGER.debug(
+        "Scan events @ %s%s found %s eligible of %s active",
+        offset_timespan,
+        f" (offset={offset})" if offset else "",
+        len(results),
+        len(active_events),
+    )
+    results.sort(key=lambda x: x.trigger_time_utc)
+    return results
+
+
+def queued_event_fetcher(
+    fetcher: EventFetcher, event_type: str, offset: dt.timedelta
+) -> QueuedEventFetcher:
+    """Build a fetcher that produces a schedule of upcoming trigger events."""
+
     async def async_get_events(timespan: Timespan) -> list[QueuedCalendarEvent]:
         """Get calendar event triggers eligible to fire in the time span."""
-        offset_timespan = timespan.with_offset(-1 * offset)
-        active_events = await fetcher(offset_timespan)
-
-        # Determine the trigger eligibility of events during this time span.
-        # Example: For an EVENT_END trigger the event may start during this
-        # time span, but need to be triggered later when the end happens.
-        results = []
-        for entity_id, event in active_events:
-            trigger_time = get_trigger_time(event)
-            if trigger_time not in offset_timespan:
-                continue
-            results.append(
-                QueuedCalendarEvent(
-                    _add_elapsed_time(trigger_time, offset), event, entity_id
-                )
-            )
-
-        _LOGGER.debug(
-            "Scan events @ %s%s found %s eligible of %s active",
-            offset_timespan,
-            f" (offset={offset})" if offset else "",
-            len(results),
-            len(active_events),
-        )
-        results.sort(key=lambda x: x.trigger_time_utc)
-        return results
+        active_events = await fetcher(timespan.with_offset(-1 * offset))
+        return queue_events(active_events, timespan, event_type, offset)
 
     return async_get_events
+
+
+class CalendarEventRefetcher:
+    """Fetch the events of a calendar again when they have changed.
+
+    Shared by all listeners of the calendar, so that a change leads to a single
+    fetch for all triggers whose windows overlap.
+    """
+
+    def __init__(self, hass: HomeAssistant, entity_id: str) -> None:
+        """Initialize CalendarEventRefetcher."""
+        self._hass = hass
+        self._entity_id = entity_id
+        self._fetcher = event_fetcher(hass, {entity_id})
+        self._listeners: list[CalendarEventListener] = []
+        self._pending = False
+        self._debouncer: Debouncer[Coroutine[Any, Any, None]] = Debouncer(
+            hass,
+            _LOGGER,
+            cooldown=EVENT_LISTENER_DEBOUNCE_COOLDOWN,
+            immediate=True,
+            function=self._async_refetch,
+        )
+        self._unsub_events_updated = async_dispatcher_connect(
+            hass,
+            SIGNAL_CALENDAR_EVENTS_UPDATED.format(entity_id),
+            self._async_events_updated,
+        )
+
+    @callback
+    def async_add_listener(self, listener: CalendarEventListener) -> None:
+        """Add a listener."""
+        self._listeners.append(listener)
+
+    @callback
+    def async_remove_listener(self, listener: CalendarEventListener) -> None:
+        """Remove a listener, and stop when it was the last one."""
+        self._listeners.remove(listener)
+        if self._listeners:
+            return
+        self._pending = False
+        self._unsub_events_updated()
+        self._debouncer.async_shutdown()
+        del self._hass.data[DATA_REFETCHERS][self._entity_id]
+
+    @callback
+    def _async_events_updated(self, _passed_on: set[str]) -> None:
+        """Handle a report of the calendar."""
+        self.async_schedule_refetch()
+
+    @callback
+    def async_schedule_refetch(self) -> None:
+        """Schedule a refetch."""
+        self._pending = True
+        self._debouncer.async_schedule_call()
+
+    async def _async_refetch(self) -> None:
+        """Fetch the events in the windows of all listeners."""
+        self._pending = False
+        # Only overlapping windows share a fetch, so none spans the gap between them
+        batches: list[tuple[Timespan, list[tuple[CalendarEventListener, Timespan]]]]
+        batches = []
+        for listener in sorted(
+            self._listeners,
+            key=lambda listener: dt_util.as_utc(listener.fetch_timespan.start),
+        ):
+            span = listener.fetch_timespan
+            window = (listener, listener.timespan)
+            if batches and dt_util.as_utc(span.start) <= dt_util.as_utc(
+                batches[-1][0].end
+            ):
+                batch_span, windows = batches[-1]
+                windows.append(window)
+                if dt_util.as_utc(span.end) > dt_util.as_utc(batch_span.end):
+                    batches[-1] = (Timespan(batch_span.start, span.end), windows)
+            else:
+                batches.append((span, [window]))
+        try:
+            for span, windows in batches:
+                try:
+                    events = await self._fetcher(span)
+                except HomeAssistantError as ex:
+                    _LOGGER.debug("Calendar trigger failed to fetch events: %s", ex)
+                    continue
+                for listener, timespan in windows:
+                    listener.async_replace_events(self._entity_id, timespan, events)
+        finally:
+            # The debouncer drops calls made while this runs
+            if self._pending:
+                self._debouncer.async_schedule_call()
+
+
+@callback
+def async_get_refetcher(hass: HomeAssistant, entity_id: str) -> CalendarEventRefetcher:
+    """Return the refetcher of a calendar, creating it if needed."""
+    refetchers = hass.data.setdefault(DATA_REFETCHERS, {})
+    if (refetcher := refetchers.get(entity_id)) is None:
+        refetcher = refetchers[entity_id] = CalendarEventRefetcher(hass, entity_id)
+    return refetcher
 
 
 class CalendarEventListener:
@@ -250,7 +372,9 @@ class CalendarEventListener:
     This listener will poll every UPDATE_INTERVAL to fetch a set of upcoming
     calendar events in the upcoming window of time, putting them into a queue.
     The queue is drained by scheduling an alarm for the next upcoming event
-    trigger time, one event at a time.
+    trigger time, one event at a time. When a calendar reports that its events
+    have changed, its upcoming queued events are replaced, so events that moved,
+    were removed or were added since the window was read are picked up.
     """
 
     def __init__(
@@ -258,7 +382,9 @@ class CalendarEventListener:
         hass: HomeAssistant,
         action_runner: TriggerActionRunner,
         trigger_payload: dict[str, Any],
-        fetcher: QueuedEventFetcher,
+        entity_ids: set[str],
+        event_type: str,
+        offset: dt.timedelta,
     ) -> None:
         """Initialize CalendarEventListener."""
         self._hass = hass
@@ -266,13 +392,37 @@ class CalendarEventListener:
         self._trigger_payload = trigger_payload
         self._unsub_event: CALLBACK_TYPE | None = None
         self._unsub_refresh: CALLBACK_TYPE | None = None
-        self._fetcher = fetcher
-        self._timespan = Timespan.from_duration(dt_util.now(), UPDATE_INTERVAL)
+        self._detached = False
+        self._entity_ids = entity_ids
+        self._event_type = event_type
+        self._offset = offset
+        self._fetcher = queued_event_fetcher(
+            event_fetcher(hass, entity_ids), event_type, offset
+        )
+        self._refetchers: dict[str, CalendarEventRefetcher] = {}
+        self._reading = False
+        # Calendars refetched while a window was being read
+        self._refetch_after_read: set[str] = set()
+        self.timespan = Timespan.from_duration(dt_util.now(), UPDATE_INTERVAL)
         self._events: list[QueuedCalendarEvent] = []
+
+    @property
+    def fetch_timespan(self) -> Timespan:
+        """Return the time span to fetch events in."""
+        return self.timespan.with_offset(-1 * self._offset)
 
     async def async_attach(self) -> None:
         """Attach a calendar event listener."""
-        self._events.extend(await self._fetcher(self._timespan))
+        # Subscribe first so changes during the initial fetch are not missed
+        for entity_id in self._entity_ids:
+            refetcher = async_get_refetcher(self._hass, entity_id)
+            refetcher.async_add_listener(self)
+            self._refetchers[entity_id] = refetcher
+        try:
+            await self._async_read_window()
+        except BaseException:
+            self.async_detach()
+            raise
         self._unsub_refresh = async_track_time_interval(
             self._hass, self._handle_refresh, UPDATE_INTERVAL
         )
@@ -281,15 +431,33 @@ class CalendarEventListener:
     @callback
     def async_detach(self) -> None:
         """Detach the calendar event listener."""
+        self._detached = True
         self._clear_event_listener()
         if self._unsub_refresh:
             self._unsub_refresh()
         self._unsub_refresh = None
+        for refetcher in self._refetchers.values():
+            refetcher.async_remove_listener(self)
+        self._refetchers.clear()
+
+    async def _async_read_window(self) -> None:
+        """Read the events of the current window into the queue."""
+        self._reading = True
+        try:
+            events = await self._fetcher(self.timespan)
+            self._events.extend(events)
+        finally:
+            self._reading = False
+            for entity_id in self._refetch_after_read:
+                if refetcher := self._refetchers.get(entity_id):
+                    refetcher.async_schedule_refetch()
+            self._refetch_after_read.clear()
 
     @callback
     def _listen_next_calendar_event(self) -> None:
         """Set up the calendar event listener."""
-        if not self._events:
+        self._clear_event_listener()
+        if self._detached or not self._events:
             return
 
         _LOGGER.debug(
@@ -311,7 +479,6 @@ class CalendarEventListener:
         """Handle calendar event."""
         _LOGGER.debug("Calendar event @ %s", dt_util.as_local(now))
         self._dispatch_events(now)
-        self._clear_event_listener()
         self._listen_next_calendar_event()
 
     def _dispatch_events(self, now: dt.datetime) -> None:
@@ -335,11 +502,47 @@ class CalendarEventListener:
         # fires before the calendar event.
         self._dispatch_events(now)
         self._clear_event_listener()
-        self._timespan = self._timespan.next_upcoming(now, UPDATE_INTERVAL)
+        self.timespan = self.timespan.next_upcoming(now, UPDATE_INTERVAL)
         try:
-            self._events.extend(await self._fetcher(self._timespan))
+            await self._async_read_window()
         except HomeAssistantError as ex:
             _LOGGER.error("Calendar trigger failed to fetch events: %s", ex)
+        self._listen_next_calendar_event()
+
+    @callback
+    def async_replace_events(
+        self,
+        entity_id: str,
+        timespan: Timespan,
+        events: list[tuple[str, CalendarEvent]],
+    ) -> None:
+        """Replace the upcoming queued events of a calendar.
+
+        The events are those fetched for the passed window.
+        """
+        # A window that is read during the fetch has newer events
+        if self._detached or timespan is not self.timespan:
+            return
+        if self._reading:
+            self._refetch_after_read.add(entity_id)
+            return
+        now_utc = dt_util.utcnow()
+        # An event that is due is not queued again below
+        self._dispatch_events(now_utc)
+        kept = [
+            queued_event
+            for queued_event in self._events
+            if queued_event.entity_id != entity_id
+        ]
+        kept.extend(
+            queued_event
+            for queued_event in queue_events(
+                events, self.timespan, self._event_type, self._offset
+            )
+            if queued_event.trigger_time_utc > now_utc
+        )
+        kept.sort(key=lambda x: x.trigger_time_utc)
+        self._events = kept
         self._listen_next_calendar_event()
 
 
@@ -394,11 +597,9 @@ class TargetCalendarEventListener(TargetEntityChangeTracker):
             self._hass,
             self._run_action,
             self._trigger_data,
-            queued_event_fetcher(
-                event_fetcher(self._hass, tracked_entities),
-                self._event_type,
-                self._offset,
-            ),
+            tracked_entities,
+            self._event_type,
+            self._offset,
         )
         await self._calendar_event_listener.async_attach()
 
@@ -466,12 +667,7 @@ class SingleEntityEventTrigger(Trigger):
             "offset": offset,
         }
         listener = CalendarEventListener(
-            self._hass,
-            run_action,
-            trigger_data,
-            queued_event_fetcher(
-                event_fetcher(self._hass, {entity_id}), event_type, offset
-            ),
+            self._hass, run_action, trigger_data, {entity_id}, event_type, offset
         )
         await listener.async_attach()
         return listener.async_detach

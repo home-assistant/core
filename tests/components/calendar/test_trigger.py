@@ -7,10 +7,12 @@ and create events using a relative time offset and then advance the clock
 forward exercising the triggers.
 """
 
+import asyncio
 from collections.abc import AsyncIterator, Callable, Generator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 import datetime as dt
+from functools import partial
 import logging
 from typing import Any
 from unittest.mock import patch
@@ -34,6 +36,7 @@ from homeassistant.components.calendar.trigger import (
     EVENT_START,
     OFFSET_TYPE_AFTER,
     OFFSET_TYPE_BEFORE,
+    CalendarEventListener,
 )
 from homeassistant.const import (
     CONF_OFFSET,
@@ -43,6 +46,7 @@ from homeassistant.const import (
     TargetKey,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
@@ -834,6 +838,678 @@ async def test_update_missed(
                 CALENDAR_ENTITY_ID, EVENT_START, event_data1
             ),
         ]
+
+
+def _test_time(time: str) -> dt.datetime:
+    """Return a datetime on the test day."""
+    return dt.datetime.fromisoformat(f"2022-04-19 {time}+00:00")
+
+
+def _create_departure(
+    entity: MockCalendarEntity, start: dt.datetime, uid: str | None = None
+) -> dict[str, Any]:
+    """Create a one minute event."""
+    return entity.create_event(
+        start=start, end=start + dt.timedelta(minutes=1), summary="Departure", uid=uid
+    )
+
+
+def _move_departure(entity: MockCalendarEntity, start: dt.datetime) -> dict[str, Any]:
+    """Move the departure and report that the events have changed."""
+    entity.remove_event("Departure")
+    event_data = _create_departure(entity, start)
+    entity.async_update_event_listeners()
+    return event_data
+
+
+@pytest.mark.parametrize(
+    ("event_type", "offset", "start_delta"),
+    [
+        pytest.param(EVENT_START, None, dt.timedelta(0), id="start"),
+        pytest.param(EVENT_END, None, dt.timedelta(minutes=-1), id="end"),
+        pytest.param(
+            EVENT_START,
+            dt.timedelta(hours=1),
+            dt.timedelta(hours=-1),
+            id="positive_offset",
+        ),
+        pytest.param(
+            EVENT_END,
+            dt.timedelta(hours=-1),
+            dt.timedelta(minutes=59),
+            id="negative_offset",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    ("initial_time", "updated_time"),
+    [
+        pytest.param("10:35:00", "10:35:00", id="unchanged"),
+        pytest.param("10:35:00", "10:37:00", id="later_in_same_window"),
+        pytest.param("10:35:00", "10:40:00", id="later_into_next_window"),
+        pytest.param("10:39:00", "10:37:00", id="earlier_into_read_window"),
+    ],
+)
+async def test_event_moved_after_read(
+    hass: HomeAssistant,
+    calls_data: Callable[[], list[dict[str, Any]]],
+    fake_schedule: FakeSchedule,
+    test_entity: MockCalendarEntity,
+    trigger_format: TriggerFormat,
+    event_type: str,
+    offset: dt.timedelta | None,
+    start_delta: dt.timedelta,
+    initial_time: str,
+    updated_time: str,
+) -> None:
+    """Test that an event moved after its window was read fires once, when due."""
+    _create_departure(test_entity, _test_time(initial_time) + start_delta)
+    async with create_automation(hass, trigger_format, event_type, offset):
+        # The first window, up to 10:38:02, is read when the automation is set up
+        await fake_schedule.fire_until(_test_time("10:33:00"))
+        event_data = _move_departure(
+            test_entity, _test_time(updated_time) + start_delta
+        )
+        await hass.async_block_till_done()
+
+        await fake_schedule.fire_until(
+            _test_time(updated_time) - dt.timedelta(minutes=1)
+        )
+        assert calls_data() == []
+        await fake_schedule.fire_until(_test_time("10:50:00"))
+
+    assert calls_data() == [
+        trigger_format.get_expected_call_data(
+            CALENDAR_ENTITY_ID, event_type, event_data
+        )
+    ]
+
+
+async def test_event_added_after_read(
+    hass: HomeAssistant,
+    calls_data: Callable[[], list[dict[str, Any]]],
+    fake_schedule: FakeSchedule,
+    test_entity: MockCalendarEntity,
+    trigger_format: TriggerFormat,
+) -> None:
+    """Test that an event added to a window that was already read fires."""
+    async with create_automation(hass, trigger_format, EVENT_START):
+        await fake_schedule.fire_until(_test_time("10:33:00"))
+        event_data = _move_departure(test_entity, _test_time("10:35:00"))
+        await hass.async_block_till_done()
+
+        await fake_schedule.fire_until(_test_time("10:50:00"))
+
+    assert calls_data() == [
+        trigger_format.get_expected_call_data(
+            CALENDAR_ENTITY_ID, EVENT_START, event_data
+        )
+    ]
+
+
+async def test_event_removed_after_read(
+    hass: HomeAssistant,
+    calls_data: Callable[[], list[dict[str, Any]]],
+    fake_schedule: FakeSchedule,
+    test_entity: MockCalendarEntity,
+    trigger_format: TriggerFormat,
+) -> None:
+    """Test that an event removed after its window was read does not fire."""
+    _create_departure(test_entity, _test_time("10:35:00"))
+    async with create_automation(hass, trigger_format, EVENT_START):
+        await fake_schedule.fire_until(_test_time("10:33:00"))
+        test_entity.remove_event("Departure")
+        test_entity.async_update_event_listeners()
+        await hass.async_block_till_done()
+
+        await fake_schedule.fire_until(_test_time("10:50:00"))
+
+    assert calls_data() == []
+
+
+async def test_event_moved_into_past_before_firing(
+    hass: HomeAssistant,
+    calls_data: Callable[[], list[dict[str, Any]]],
+    fake_schedule: FakeSchedule,
+    test_entity: MockCalendarEntity,
+    trigger_format: TriggerFormat,
+) -> None:
+    """Test an event moved to a time that has passed before it fired does not fire."""
+    _create_departure(test_entity, _test_time("10:37:00"))
+    async with create_automation(hass, trigger_format, EVENT_START):
+        await fake_schedule.fire_until(_test_time("10:36:00"))
+        _move_departure(test_entity, _test_time("10:35:00"))
+        await hass.async_block_till_done()
+
+        await fake_schedule.fire_until(_test_time("10:50:00"))
+
+    assert calls_data() == []
+
+
+@pytest.mark.parametrize(
+    ("initial_start", "update_time", "updated_start"),
+    [
+        pytest.param("10:35:00", "10:36:00", "10:37:00", id="same_window"),
+        pytest.param(
+            "10:35:00", "10:36:00", "10:40:00", id="into_next_window_before_read"
+        ),
+        pytest.param("10:37:00", "10:39:00", "10:40:00", id="next_window"),
+    ],
+)
+async def test_event_moved_later_after_firing(
+    hass: HomeAssistant,
+    calls_data: Callable[[], list[dict[str, Any]]],
+    fake_schedule: FakeSchedule,
+    test_entity: MockCalendarEntity,
+    trigger_format: TriggerFormat,
+    initial_start: str,
+    update_time: str,
+    updated_start: str,
+) -> None:
+    """Test an event that fired and then moved later fires again."""
+    event_data = _create_departure(test_entity, _test_time(initial_start))
+    async with create_automation(hass, trigger_format, EVENT_START):
+        await fake_schedule.fire_until(_test_time(update_time))
+        moved_event_data = _move_departure(test_entity, _test_time(updated_start))
+        await hass.async_block_till_done()
+
+        await fake_schedule.fire_until(_test_time("10:50:00"))
+
+    assert calls_data() == [
+        trigger_format.get_expected_call_data(
+            CALENDAR_ENTITY_ID, EVENT_START, event_data
+        ),
+        trigger_format.get_expected_call_data(
+            CALENDAR_ENTITY_ID, EVENT_START, moved_event_data
+        ),
+    ]
+
+
+@pytest.mark.parametrize(
+    "second_start",
+    [
+        pytest.param("10:37:00", id="same_window"),
+        pytest.param("10:40:00", id="next_window"),
+    ],
+)
+async def test_events_sharing_uid_fire_once_each(
+    hass: HomeAssistant,
+    calls_data: Callable[[], list[dict[str, Any]]],
+    fake_schedule: FakeSchedule,
+    test_entity: MockCalendarEntity,
+    trigger_format: TriggerFormat,
+    second_start: str,
+) -> None:
+    """Test events sharing a uid without a recurrence id each fire once."""
+    first = _create_departure(test_entity, _test_time("10:35:00"), uid="trip")
+    async with create_automation(hass, trigger_format, EVENT_START):
+        await fake_schedule.fire_until(_test_time("10:36:00"))
+
+        # The calendar no longer returns the event that has started
+        test_entity.remove_event("Departure")
+        second = _create_departure(test_entity, _test_time(second_start), uid="trip")
+        test_entity.async_update_event_listeners()
+        await hass.async_block_till_done()
+
+        await fake_schedule.fire_until(_test_time("10:50:00"))
+
+    assert calls_data() == [
+        trigger_format.get_expected_call_data(CALENDAR_ENTITY_ID, EVENT_START, first),
+        trigger_format.get_expected_call_data(CALENDAR_ENTITY_ID, EVENT_START, second),
+    ]
+
+
+async def test_failed_refetch_keeps_events(
+    hass: HomeAssistant,
+    calls_data: Callable[[], list[dict[str, Any]]],
+    fake_schedule: FakeSchedule,
+    test_entity: MockCalendarEntity,
+    trigger_format: TriggerFormat,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test queued events still fire when fetching them again fails."""
+    event_data = _create_departure(test_entity, _test_time("10:35:00"))
+    async with create_automation(hass, trigger_format, EVENT_START):
+        await fake_schedule.fire_until(_test_time("10:33:00"))
+
+        test_entity.async_get_events.reset_mock()
+        with patch.object(
+            test_entity.async_get_events, "side_effect", HomeAssistantError
+        ):
+            test_entity.async_update_event_listeners()
+            await hass.async_block_till_done()
+        test_entity.async_get_events.assert_called_once()
+        assert "Unexpected exception" not in caplog.text
+
+        await fake_schedule.fire_until(_test_time("10:50:00"))
+
+    assert calls_data() == [
+        trigger_format.get_expected_call_data(
+            CALENDAR_ENTITY_ID, EVENT_START, event_data
+        )
+    ]
+
+
+async def test_state_write_does_not_refetch(
+    hass: HomeAssistant,
+    calls_data: Callable[[], list[dict[str, Any]]],
+    fake_schedule: FakeSchedule,
+    test_entity: MockCalendarEntity,
+    trigger_format: TriggerFormat,
+) -> None:
+    """Test writing state, or an event starting or ending, does not fetch events."""
+    test_entity._attr_should_poll = False
+    _create_departure(test_entity, _test_time("10:35:00"))
+    async with create_automation(hass, trigger_format, EVENT_START):
+        test_entity.async_get_events.reset_mock()
+        test_entity.async_write_ha_state()
+        await fake_schedule.fire_until(_test_time("10:37:00"))
+
+        test_entity.async_get_events.assert_not_called()
+
+    assert len(calls_data()) == 1
+
+
+async def test_triggers_share_refetch(
+    hass: HomeAssistant,
+    calls_data: Callable[[], list[dict[str, Any]]],
+    fake_schedule: FakeSchedule,
+    test_entity: MockCalendarEntity,
+    trigger_format: TriggerFormat,
+) -> None:
+    """Test a change is fetched once for all triggers, until they are removed."""
+    _create_departure(test_entity, _test_time("10:35:00"))
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": EVENT_START,
+                "trigger": [
+                    trigger_format.get_trigger_data(CALENDAR_ENTITY_ID, EVENT_START),
+                    trigger_format.get_trigger_data(
+                        CALENDAR_ENTITY_ID, EVENT_END, dt.timedelta(minutes=-2)
+                    ),
+                ],
+                "action": TEST_AUTOMATION_ACTION,
+                "mode": "queued",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    await fake_schedule.fire_until(_test_time("10:33:00"))
+
+    test_entity.async_get_events.reset_mock()
+    _move_departure(test_entity, _test_time("10:37:00"))
+    await hass.async_block_till_done()
+    test_entity.async_get_events.assert_called_once()
+
+    await fake_schedule.fire_until(_test_time("10:40:00"))
+    assert [call["event"] for call in calls_data()] == [EVENT_END, EVENT_START]
+
+    await hass.services.async_call(
+        automation.DOMAIN,
+        AutomationService.TURN_OFF,
+        {TargetKey.ENTITY_ID: f"automation.{EVENT_START}"},
+        blocking=True,
+    )
+    test_entity.async_get_events.reset_mock()
+    test_entity.async_update_event_listeners()
+    await hass.async_block_till_done()
+    test_entity.async_get_events.assert_not_called()
+
+
+async def test_separate_windows_fetched_apart(
+    hass: HomeAssistant,
+    calls_data: Callable[[], list[dict[str, Any]]],
+    fake_schedule: FakeSchedule,
+    test_entity: MockCalendarEntity,
+    trigger_format: TriggerFormat,
+) -> None:
+    """Test a change is fetched apart for windows that don't overlap."""
+    _create_departure(test_entity, _test_time("10:35:00"))
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": EVENT_START,
+                "trigger": [
+                    trigger_format.get_trigger_data(CALENDAR_ENTITY_ID, EVENT_START),
+                    trigger_format.get_trigger_data(
+                        CALENDAR_ENTITY_ID, EVENT_START, dt.timedelta(days=-400)
+                    ),
+                ],
+                "action": TEST_AUTOMATION_ACTION,
+                "mode": "queued",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    await fake_schedule.fire_until(_test_time("10:33:00"))
+
+    test_entity.async_get_events.reset_mock()
+    _move_departure(test_entity, _test_time("10:37:00"))
+    await hass.async_block_till_done()
+    spans = [
+        (call.args[1], call.args[2])
+        for call in test_entity.async_get_events.call_args_list
+    ]
+    assert len(spans) == 2
+    assert all(end - start < dt.timedelta(hours=1) for start, end in spans)
+
+    await fake_schedule.fire_until(_test_time("10:40:00"))
+    assert [call["calendar_event"]["start"] for call in calls_data()] == [
+        _test_time("10:37:00").isoformat()
+    ]
+
+    await hass.services.async_call(
+        automation.DOMAIN,
+        AutomationService.TURN_OFF,
+        {TargetKey.ENTITY_ID: f"automation.{EVENT_START}"},
+        blocking=True,
+    )
+
+
+class BlockedFetch:
+    """Hold the next event fetch of a calendar until released."""
+
+    def __init__(self, entity: MockCalendarEntity) -> None:
+        """Hold the next fetch, returning the events as they were when called."""
+        self._fetch = partial(MockCalendarEntity.async_get_events, entity)
+        self.started = asyncio.Event()
+        self.release = asyncio.Event()
+        entity.async_get_events.side_effect = self._async_get_events
+
+    async def _async_get_events(
+        self, hass: HomeAssistant, start_date: dt.datetime, end_date: dt.datetime
+    ) -> list[calendar.CalendarEvent]:
+        events = await self._fetch(hass, start_date, end_date)
+        if not self.started.is_set():
+            self.started.set()
+            await self.release.wait()
+        return events
+
+
+async def test_event_moved_during_refetch(
+    hass: HomeAssistant,
+    calls_data: Callable[[], list[dict[str, Any]]],
+    fake_schedule: FakeSchedule,
+    test_entity: MockCalendarEntity,
+    trigger_format: TriggerFormat,
+) -> None:
+    """Test an event moved while a refetch is fetching is fetched again."""
+    _create_departure(test_entity, _test_time("10:35:00"))
+    async with create_automation(hass, trigger_format, EVENT_START):
+        await fake_schedule.fire_until(_test_time("10:33:00"))
+
+        blocked = BlockedFetch(test_entity)
+        test_entity.async_update_event_listeners()
+        async with asyncio.timeout(5):
+            await blocked.started.wait()
+
+        event_data = _move_departure(test_entity, _test_time("10:40:00"))
+        # The debouncer drops the call when its cooldown ends during the refetch
+        fake_schedule.freezer.tick(dt.timedelta(seconds=2))
+        async_fire_time_changed(hass)
+        await asyncio.sleep(0)
+        blocked.release.set()
+        await hass.async_block_till_done()
+
+        await fake_schedule.fire_until(_test_time("10:50:00"))
+
+    assert calls_data() == [
+        trigger_format.get_expected_call_data(
+            CALENDAR_ENTITY_ID, EVENT_START, event_data
+        )
+    ]
+
+
+async def test_refetch_finishing_after_event_is_due(
+    hass: HomeAssistant,
+    calls_data: Callable[[], list[dict[str, Any]]],
+    fake_schedule: FakeSchedule,
+    test_entity: MockCalendarEntity,
+    trigger_format: TriggerFormat,
+) -> None:
+    """Test an event fires when a refetch finishes between its time and its alarm."""
+    event_data = _create_departure(test_entity, _test_time("10:35:00"))
+    async with create_automation(hass, trigger_format, EVENT_START):
+        await fake_schedule.fire_until(_test_time("10:34:00"))
+
+        blocked = BlockedFetch(test_entity)
+        test_entity.async_update_event_listeners()
+        async with asyncio.timeout(5):
+            await blocked.started.wait()
+
+        # The event is due before its alarm runs
+        fake_schedule.freezer.move_to(_test_time("10:35:01"))
+        blocked.release.set()
+        await hass.async_block_till_done()
+
+        await fake_schedule.fire_until(_test_time("10:50:00"))
+
+    assert calls_data() == [
+        trigger_format.get_expected_call_data(
+            CALENDAR_ENTITY_ID, EVENT_START, event_data
+        )
+    ]
+
+
+async def test_event_moved_while_next_window_is_read(
+    hass: HomeAssistant,
+    calls_data: Callable[[], list[dict[str, Any]]],
+    fake_schedule: FakeSchedule,
+    test_entity: MockCalendarEntity,
+    trigger_format: TriggerFormat,
+) -> None:
+    """Test an event moved while the next window is read is fetched again."""
+    _create_departure(test_entity, _test_time("10:40:00"))
+    async with create_automation(hass, trigger_format, EVENT_START):
+        await fake_schedule.fire_until(_test_time("10:37:00"))
+
+        # The window starting at 10:38:02 is read
+        blocked = BlockedFetch(test_entity)
+        fake_schedule.freezer.move_to(_test_time("10:38:03"))
+        async_fire_time_changed(hass, _test_time("10:38:03"))
+        async with asyncio.timeout(5):
+            await blocked.started.wait()
+        event_data = _move_departure(test_entity, _test_time("10:42:00"))
+        await asyncio.sleep(0)
+        blocked.release.set()
+        await hass.async_block_till_done()
+
+        await fake_schedule.fire_until(_test_time("10:50:00"))
+
+    assert calls_data() == [
+        trigger_format.get_expected_call_data(
+            CALENDAR_ENTITY_ID, EVENT_START, event_data
+        )
+    ]
+
+
+async def test_event_moved_into_next_window_during_refetch(
+    hass: HomeAssistant,
+    calls_data: Callable[[], list[dict[str, Any]]],
+    fake_schedule: FakeSchedule,
+    test_entity: MockCalendarEntity,
+    trigger_format: TriggerFormat,
+) -> None:
+    """Test a refetch of a window that ended meanwhile does not lose events."""
+    async with create_automation(hass, trigger_format, EVENT_START):
+        await fake_schedule.fire_until(_test_time("10:37:00"))
+
+        blocked = BlockedFetch(test_entity)
+        test_entity.async_update_event_listeners()
+        async with asyncio.timeout(5):
+            await blocked.started.wait()
+
+        # The window starting at 10:38:02 is read during the refetch
+        event_data = _create_departure(test_entity, _test_time("10:40:00"))
+        fake_schedule.freezer.move_to(_test_time("10:38:03"))
+        async_fire_time_changed(hass, _test_time("10:38:03"))
+        await asyncio.sleep(0)
+        blocked.release.set()
+        await hass.async_block_till_done()
+
+        await fake_schedule.fire_until(_test_time("10:50:00"))
+
+    assert calls_data() == [
+        trigger_format.get_expected_call_data(
+            CALENDAR_ENTITY_ID, EVENT_START, event_data
+        )
+    ]
+
+
+@asynccontextmanager
+async def create_label_automation(hass: HomeAssistant) -> AsyncIterator[None]:
+    """Register an automation triggered by the calendar with the label."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": EVENT_START,
+                "trigger": {
+                    CONF_PLATFORM: "calendar.event_started",
+                    CONF_TARGET: {TargetKey.LABEL_ID: "calendar_1_label"},
+                },
+                "action": TEST_AUTOMATION_ACTION,
+                "mode": "queued",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    yield
+    await hass.services.async_call(
+        automation.DOMAIN,
+        AutomationService.TURN_OFF,
+        {TargetKey.ENTITY_ID: f"automation.{EVENT_START}"},
+        blocking=True,
+    )
+
+
+async def _remove_label(entity_registry: er.EntityRegistry) -> None:
+    """Remove the label from the calendar, which replaces the listener."""
+    detached = asyncio.Event()
+    detach = CalendarEventListener.async_detach
+
+    def detach_and_signal(listener: CalendarEventListener) -> None:
+        detach(listener)
+        detached.set()
+
+    with patch.object(CalendarEventListener, "async_detach", detach_and_signal):
+        entity_registry.async_update_entity("calendar.calendar_1", labels=set())
+        async with asyncio.timeout(5):
+            await detached.wait()
+
+
+@pytest.mark.usefixtures("target_calendars")
+async def test_listener_replaced_during_refetch(
+    hass: HomeAssistant,
+    calls_data: Callable[[], list[dict[str, Any]]],
+    fake_schedule: FakeSchedule,
+    test_entities: list[MockCalendarEntity],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a refetch finishing after its listener was replaced does not fire."""
+    calendar_1 = test_entities[0]
+    _create_departure(calendar_1, _test_time("10:36:00"))
+    async with create_label_automation(hass):
+        await fake_schedule.fire_until(_test_time("10:33:00"))
+
+        blocked = BlockedFetch(calendar_1)
+        calendar_1.async_update_event_listeners()
+        async with asyncio.timeout(5):
+            await blocked.started.wait()
+        await _remove_label(entity_registry)
+        # The event is due when the refetch finishes
+        fake_schedule.freezer.move_to(_test_time("10:36:01"))
+        blocked.release.set()
+        await hass.async_block_till_done()
+
+        await fake_schedule.fire_until(_test_time("10:50:00"))
+
+    assert calls_data() == []
+
+
+@pytest.mark.usefixtures("target_calendars")
+async def test_listener_replaced_during_read(
+    hass: HomeAssistant,
+    calls_data: Callable[[], list[dict[str, Any]]],
+    fake_schedule: FakeSchedule,
+    test_entities: list[MockCalendarEntity],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a read finishing after its listener was replaced does not fire."""
+    calendar_1 = test_entities[0]
+    _create_departure(calendar_1, _test_time("10:40:00"))
+    async with create_label_automation(hass):
+        await fake_schedule.fire_until(_test_time("10:37:00"))
+
+        # The window starting at 10:38:02 is read
+        blocked = BlockedFetch(calendar_1)
+        fake_schedule.freezer.move_to(_test_time("10:38:03"))
+        async_fire_time_changed(hass, _test_time("10:38:03"))
+        async with asyncio.timeout(5):
+            await blocked.started.wait()
+        await _remove_label(entity_registry)
+        blocked.release.set()
+        await hass.async_block_till_done()
+
+        await fake_schedule.fire_until(_test_time("10:50:00"))
+
+    assert calls_data() == []
+
+
+@pytest.mark.usefixtures("target_calendars")
+async def test_listener_replaced_after_change_during_read(
+    hass: HomeAssistant,
+    calls_data: Callable[[], list[dict[str, Any]]],
+    fake_schedule: FakeSchedule,
+    test_entities: list[MockCalendarEntity],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test no alarm is left behind by a change reported during a read."""
+    calendar_1 = test_entities[0]
+    _create_departure(calendar_1, _test_time("10:40:00"))
+    async with create_label_automation(hass):
+        await fake_schedule.fire_until(_test_time("10:37:00"))
+
+        blocked = BlockedFetch(calendar_1)
+        fake_schedule.freezer.move_to(_test_time("10:38:03"))
+        async_fire_time_changed(hass, _test_time("10:38:03"))
+        async with asyncio.timeout(5):
+            await blocked.started.wait()
+        _move_departure(calendar_1, _test_time("10:42:00"))
+        # End the cooldown, so that the read ending starts a refetch at once
+        fake_schedule.freezer.tick(dt.timedelta(seconds=2))
+        async_fire_time_changed(hass)
+        await asyncio.sleep(0)
+        blocked.release.set()
+        await hass.async_block_till_done()
+        await _remove_label(entity_registry)
+        await hass.async_block_till_done()
+
+        await fake_schedule.fire_until(_test_time("10:50:00"))
+
+    assert calls_data() == []
+
+
+async def test_failed_initial_read(
+    hass: HomeAssistant,
+    fake_schedule: FakeSchedule,
+    test_entity: MockCalendarEntity,
+    trigger_format: TriggerFormat,
+) -> None:
+    """Test changes are not fetched for a trigger that failed to attach."""
+    with patch.object(test_entity.async_get_events, "side_effect", HomeAssistantError):
+        async with create_automation(hass, trigger_format, EVENT_START):
+            test_entity.async_get_events.assert_called_once()
+            test_entity.async_get_events.reset_mock()
+            test_entity.async_update_event_listeners()
+            await hass.async_block_till_done()
+            test_entity.async_get_events.assert_not_called()
 
 
 @pytest.mark.parametrize(

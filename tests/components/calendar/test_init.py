@@ -1,6 +1,6 @@
 """The tests for the calendar component."""
 
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from datetime import timedelta
 from http import HTTPStatus
 import re
@@ -843,6 +843,43 @@ async def test_websocket_subscribe_updates_on_state_change(
     assert "New Event" in summaries
 
 
+async def test_websocket_subscribe_updates_on_reported_change(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    test_entities: list[MockCalendarEntity],
+) -> None:
+    """Test that subscribers receive updates when a calendar reports a change."""
+    client = await hass_ws_client(hass)
+    start = dt_util.now()
+
+    await client.send_json_auto_id(
+        {
+            "type": "calendar/event/subscribe",
+            "entity_id": "calendar.calendar_1",
+            "start": start.isoformat(),
+            "end": (start + timedelta(days=1)).isoformat(),
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    await client.receive_json()
+
+    entity = test_entities[0]
+    entity.create_event(
+        start=start + timedelta(hours=2),
+        end=start + timedelta(hours=3),
+        summary="New Event",
+    )
+    entity.async_update_event_listeners()
+    await hass.async_block_till_done()
+
+    msg = await client.receive_json()
+    assert {event["summary"] for event in msg["event"]["events"]} == {
+        "Future Event",
+        "New Event",
+    }
+
+
 async def test_websocket_subscribe_entity_not_found(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -926,12 +963,20 @@ async def test_websocket_subscribe_invalid_timespan(
     assert "Start must be before end" in msg["error"]["message"]
 
 
+@pytest.mark.parametrize(
+    "notify",
+    [
+        pytest.param(MockCalendarEntity.async_write_ha_state, id="state_write"),
+        pytest.param(MockCalendarEntity.async_update_event_listeners, id="report"),
+    ],
+)
 async def test_websocket_subscribe_debounces_rapid_updates(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     test_entities: list[MockCalendarEntity],
+    notify: Callable[[MockCalendarEntity], None],
 ) -> None:
-    """Test that rapid state writes are debounced for event listeners."""
+    """Test that rapid state writes and reports are debounced for event listeners."""
     client = await hass_ws_client(hass)
 
     start = dt_util.now()
@@ -963,7 +1008,7 @@ async def test_websocket_subscribe_debounces_rapid_updates(
             end=start + timedelta(hours=i + 3),
             summary=f"Rapid Event {i}",
         )
-        entity.async_write_ha_state()
+        notify(entity)
 
     await hass.async_block_till_done()
 

@@ -76,6 +76,7 @@ class MockCalendarEntity(CalendarEntity):
         summary: str | None = None,
         description: str | None = None,
         location: str | None = None,
+        uid: str | None = None,
     ) -> dict[str, Any]:
         """Create a new fake event, used by tests."""
         event = CalendarEvent(
@@ -84,9 +85,14 @@ class MockCalendarEntity(CalendarEntity):
             summary=summary or f"Event {secrets.token_hex(16)}",
             description=description,
             location=location,
+            uid=uid,
         )
         self._events.append(event)
         return event.as_dict()
+
+    def remove_event(self, summary: str) -> None:
+        """Remove a fake event, used by tests."""
+        self._events = [event for event in self._events if event.summary != summary]
 
     async def async_get_events(
         self,

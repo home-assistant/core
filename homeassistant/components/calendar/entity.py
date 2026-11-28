@@ -14,6 +14,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.debounce import Debouncer
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.event import async_track_point_in_time
 from homeassistant.helpers.template import DATE_STR_FORMAT
@@ -25,6 +26,7 @@ from .const import (
     EVENT_LISTENER_DEBOUNCE_COOLDOWN,
     EVENT_RRULE,
     EVENT_SUMMARY,
+    SIGNAL_CALENDAR_EVENTS_UPDATED,
     CalendarEntityStateAttribute,
     CalendarEventStatus,
 )
@@ -307,7 +309,7 @@ class CalendarEntity(Entity):
                 _LOGGER,
                 cooldown=EVENT_LISTENER_DEBOUNCE_COOLDOWN,
                 immediate=True,
-                function=self.async_update_event_listeners,
+                function=self._async_push_events,
             )
 
         listener_data = (start_date, end_date, event_listener)
@@ -325,7 +327,25 @@ class CalendarEntity(Entity):
     @final
     @callback
     def async_update_event_listeners(self) -> None:
-        """Push updated calendar events to all listeners."""
+        """Notify websocket subscribers and triggers that events have changed.
+
+        To be called by integrations when their events have changed. Triggers
+        fetch events again, so this should not be called on every poll.
+        """
+        self._async_notify_events_updated({self.entity_id})
+
+    @callback
+    def _async_notify_events_updated(self, passed_on: set[str]) -> None:
+        """Notify websocket subscribers and triggers of a report."""
+        if self._event_listeners and self._event_listener_debouncer:
+            self._event_listener_debouncer.async_schedule_call()
+        async_dispatcher_send(
+            self.hass, SIGNAL_CALENDAR_EVENTS_UPDATED.format(self.entity_id), passed_on
+        )
+
+    @callback
+    def _async_push_events(self) -> None:
+        """Push calendar events to all websocket subscribers."""
         if not self._event_listeners:
             return
 

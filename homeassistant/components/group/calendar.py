@@ -9,6 +9,7 @@ import probatio
 from homeassistant.components.calendar import (
     DOMAIN as CALENDAR_DOMAIN,
     PLATFORM_SCHEMA as CALENDAR_PLATFORM_SCHEMA,
+    SIGNAL_CALENDAR_EVENTS_UPDATED,
     CalendarEntity,
     CalendarEvent,
 )
@@ -16,6 +17,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ENTITIES, CONF_NAME, CONF_UNIQUE_ID
 from homeassistant.core import Event, EventStateReportedData, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -144,6 +146,23 @@ class CalendarGroup(GroupEntity, CalendarEntity):
                 self.hass, self._entity_ids, async_member_reported
             )
         )
+        for entity_id in self._entity_ids:
+            self.async_on_remove(
+                async_dispatcher_connect(
+                    self.hass,
+                    SIGNAL_CALENDAR_EVENTS_UPDATED.format(entity_id),
+                    self._async_member_events_updated,
+                )
+            )
+
+    @callback
+    def _async_member_events_updated(self, passed_on: set[str]) -> None:
+        """Pass on that the events of a member have changed."""
+        # A report can reach a group through several members, or around a cycle
+        if self.entity_id in passed_on:
+            return
+        passed_on.add(self.entity_id)
+        self._async_notify_events_updated(passed_on)
 
     @property
     @override
