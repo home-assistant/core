@@ -4,6 +4,7 @@ from collections import Counter
 from collections.abc import Iterable
 from http import HTTPStatus
 from pathlib import Path
+import re
 from typing import Any, TypedDict
 
 import pytest
@@ -174,6 +175,23 @@ def github_api_calls(aioclient_mock: AiohttpClientMocker) -> list[URL]:
         url
         for _, url, _, _ in aioclient_mock.mock_calls
         if url.host == "api.github.com"
+    ]
+
+
+# What checking a ref asks GitHub, any other request reads the content. The
+# check never asks for the default branch, installing asks for its newest commit.
+REF_CHECK_PATH = re.compile(
+    r"^/(graphql|repos/[^/]+/[^/]+/"
+    r"(branches(/(?!main$).*)?|(git/ref/tags|compare)/.*))$"
+)
+
+
+def content_requests(aioclient_mock: AiohttpClientMocker) -> list[URL]:
+    """Return the requests other than those that check a ref."""
+    return [
+        url
+        for _, url, _, _ in aioclient_mock.mock_calls
+        if url.host != "api.github.com" or not REF_CHECK_PATH.match(url.path)
     ]
 
 

@@ -1,0 +1,9 @@
+{
+  "ref": "refs/tags/20230101",
+  "url": "https://api.github.com/repos/hacs-test-org/integration-basic/git/refs/tags/20230101",
+  "object": {
+    "sha": "8888888888888888888888888888888888888888",
+    "type": "commit",
+    "url": "https://api.github.com/repos/hacs-test-org/integration-basic/git/commits/8888888888888888888888888888888888888888"
+  }
+}

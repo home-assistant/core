@@ -1,0 +1,12 @@
+{
+  "name": "feature",
+  "commit": {
+    "sha": "4444444444444444444444444444444444444444",
+    "url": "https://api.github.com/repos/hacs-test-org/integration-basic/commits/4444444444444444444444444444444444444444"
+  },
+  "protected": false,
+  "_links": {
+    "self": "https://api.github.com/repos/hacs-test-org/integration-basic/branches/feature",
+    "html": "https://github.com/hacs-test-org/integration-basic/tree/feature"
+  }
+}

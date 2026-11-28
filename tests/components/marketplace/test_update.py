@@ -43,12 +43,19 @@ from . import (
     CategoryTestData,
     assert_api_usage,
     category_test_data_parametrized,
+    content_requests,
     get_marketplace,
     github_api_calls,
     mocked_response,
 )
 from .conftest import MarketplaceResponses
-from .const import REPOSITORY_INTEGRATION, REPOSITORY_INTEGRATION_ID
+from .const import (
+    COMMIT_ON_FEATURE,
+    NOT_UPSTREAM_VERSIONS,
+    REPOSITORY_INTEGRATION,
+    REPOSITORY_INTEGRATION_ID,
+    TOKEN,
+)
 
 
 @pytest.fixture
@@ -390,6 +397,7 @@ async def test_install(
     entity_id = entity_registry.async_get_entity_id(
         Platform.UPDATE, DOMAIN, category_test_data["id"]
     )
+    installed_repository.data.published_tags = [category_test_data["version_update"]]
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
@@ -607,6 +615,85 @@ async def test_install_refuses_a_version_that_is_a_path(
             },
             blocking=True,
         )
+
+
+@pytest.mark.parametrize("github_token", [TOKEN, None], ids=["github", "anonymous"])
+@pytest.mark.parametrize("version", NOT_UPSTREAM_VERSIONS)
+async def test_install_refuses_a_version_not_upstream(
+    hass: HomeAssistant,
+    integration_update_entity: str,
+    aioclient_mock: AiohttpClientMocker,
+    version: str,
+) -> None:
+    """Test a version only a fork holds, or nothing holds, is not installed."""
+    repository = get_marketplace(hass).repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    aioclient_mock.mock_calls.clear()
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            UPDATE_DOMAIN,
+            SERVICE_INSTALL,
+            {ATTR_ENTITY_ID: integration_update_entity, ATTR_VERSION: version},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "version_not_in_repository"
+    assert exc_info.value.translation_placeholders == {
+        "repository": REPOSITORY_INTEGRATION,
+        "version": version,
+    }
+    assert content_requests(aioclient_mock) == []
+    assert repository.data.installed_version == "1.0.0"
+
+
+@pytest.mark.parametrize("github_token", [TOKEN, None], ids=["github", "anonymous"])
+async def test_install_short_commit_by_its_full_sha(
+    hass: HomeAssistant,
+    integration_update_entity: str,
+    aioclient_mock: AiohttpClientMocker,
+    response_mocker: MarketplaceResponses,
+) -> None:
+    """Test a short SHA is downloaded as the commit checked, not what it resolves to then."""
+    # The recordings of 2.0.0 stand in for the commit
+    fixtures = Path(__file__).parent / "fixtures/proxy"
+    for url, recording in (
+        (
+            f"https://raw.githubusercontent.com/{REPOSITORY_INTEGRATION}"
+            f"/{COMMIT_ON_FEATURE}/hacs.json",
+            f"raw.githubusercontent.com/{REPOSITORY_INTEGRATION}/2.0.0/hacs.json",
+        ),
+        (
+            f"https://github.com/{REPOSITORY_INTEGRATION}/archive/{COMMIT_ON_FEATURE}.zip",
+            f"github.com/{REPOSITORY_INTEGRATION}/archive/refs/tags/2.0.0.zip",
+        ),
+    ):
+        response_mocker.add(
+            url, mocked_response(url, content=(fixtures / recording).read_bytes())
+        )
+    aioclient_mock.mock_calls.clear()
+
+    await hass.services.async_call(
+        UPDATE_DOMAIN,
+        SERVICE_INSTALL,
+        {
+            ATTR_ENTITY_ID: integration_update_entity,
+            ATTR_VERSION: COMMIT_ON_FEATURE[:7],
+        },
+        blocking=True,
+    )
+
+    requested = [str(url) for url in content_requests(aioclient_mock)]
+    assert (
+        f"https://github.com/{REPOSITORY_INTEGRATION}/archive/{COMMIT_ON_FEATURE}.zip"
+        in requested
+    )
+    assert not [
+        url
+        for url in requested
+        if COMMIT_ON_FEATURE[:7] in url and COMMIT_ON_FEATURE not in url
+    ]
+    repository = get_marketplace(hass).repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    assert repository.data.installed_version == COMMIT_ON_FEATURE
 
 
 async def test_install_without_an_update(

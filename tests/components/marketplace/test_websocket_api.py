@@ -25,7 +25,10 @@ from homeassistant.components.marketplace.enums import (
     MarketplaceSignal,
     RepositoryCategory,
 )
-from homeassistant.components.marketplace.exceptions import MarketplaceError
+from homeassistant.components.marketplace.exceptions import (
+    GitHubAnonymousRateLimitError,
+    MarketplaceError,
+)
 from homeassistant.components.marketplace.repositories.base import RepositoryManifest
 from homeassistant.components.marketplace.repositories.integration import (
     IntegrationRepository,
@@ -49,10 +52,12 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.setup import async_setup_component
 
-from . import get_marketplace, github_api_calls, mocked_response
+from . import content_requests, get_marketplace, github_api_calls, mocked_response
 from .conftest import MarketplaceResponses
 from .const import (
+    COMMIT_ON_FEATURE,
     FROZEN_TIME,
+    NOT_UPSTREAM_VERSIONS,
     REPOSITORY_INTEGRATION,
     REPOSITORY_INTEGRATION_ID,
     REPOSITORY_PLUGIN_ID,
@@ -139,7 +144,8 @@ GITHUB_COMMANDS: tuple[dict[str, Any], ...] = (
 )
 
 # The commands that reach GitHub anonymously without a connection. Installing
-# the version the catalog names skips the API, so the install picks another.
+# the version the catalog names skips the API, and pinning a version the
+# repository knows skips its check, so both pick another.
 ANONYMOUS_GITHUB_COMMANDS: tuple[dict[str, Any], ...] = (
     {
         "type": "marketplace/repository/install",
@@ -149,7 +155,7 @@ ANONYMOUS_GITHUB_COMMANDS: tuple[dict[str, Any], ...] = (
     {
         "type": "marketplace/repository/version",
         "repository": REPOSITORY_INTEGRATION_ID,
-        "version": "1.0.0",
+        "version": "2.0.0",
     },
     {
         "type": "marketplace/repository/beta",
@@ -408,6 +414,44 @@ async def test_commands_refuse_a_version_that_is_a_path(
     assert not repository.data.installed
 
 
+@pytest.mark.parametrize("github_token", [TOKEN, None], ids=["github", "anonymous"])
+@pytest.mark.parametrize("version", NOT_UPSTREAM_VERSIONS)
+@pytest.mark.parametrize(
+    "command",
+    [
+        pytest.param("marketplace/repository/install", id="install"),
+        pytest.param("marketplace/repository/version", id="version"),
+    ],
+)
+async def test_commands_refuse_a_version_not_upstream(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    command: str,
+    version: str,
+) -> None:
+    """Test a version only a fork holds, or nothing holds, is not used."""
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    repository.data.selected_tag = "1.0.0"
+    repository.data.unchecked_selected_tag = COMMIT_ON_FEATURE
+    client = await hass_ws_client(hass)
+    aioclient_mock.mock_calls.clear()
+
+    await client.send_json_auto_id(
+        {"type": command, "repository": REPOSITORY_INTEGRATION_ID, "version": version}
+    )
+    response = await client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["code"] == "version_not_in_repository"
+    assert response["error"]["translation_key"] == "version_not_in_repository"
+    assert content_requests(aioclient_mock) == []
+    assert repository.data.selected_tag == "1.0.0"
+    assert repository.data.unchecked_selected_tag == COMMIT_ON_FEATURE
+    assert not repository.data.installed
+
+
 @pytest.mark.usefixtures("init_integration")
 async def test_repository_info(
     hass: HomeAssistant,
@@ -537,6 +581,60 @@ async def test_repository_info_survives_a_broken_update(
 
     assert response["success"]
     assert "Nope" in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("error", "code"),
+    [
+        pytest.param(MarketplaceError("Nope"), "error", id="refresh_failed"),
+        pytest.param(
+            GitHubAnonymousRateLimitError(), "github_rate_limited", id="rate_limited"
+        ),
+    ],
+)
+async def test_repository_version_refresh_failure(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+    error: MarketplaceError,
+    code: str,
+) -> None:
+    """Test a version that could not be refreshed leaves the selections as they were."""
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    # Installed, the check sees its selections
+    repository.data.installed = True
+    repository.data.published_tags = ["1.5.0"]
+    repository.data.selected_tag = "1.0.0"
+    repository.data.unchecked_selected_tag = COMMIT_ON_FEATURE
+    marketplace.async_schedule_unchecked_selected_tags_check()
+
+    waiting: list[str | None] = []
+
+    # The check of the waiting selection must not take the place of this pick.
+    # Finding none left, it stops meanwhile.
+    async def update_repository(*, force: bool = False) -> None:
+        waiting.append(repository.data.unchecked_selected_tag)
+        await marketplace.async_check_unchecked_selected_tags()
+        assert marketplace._stop_checking_selected_tags is None
+        raise error
+
+    client = await hass_ws_client(hass)
+    with patch.object(repository, "update_repository", update_repository):
+        await client.send_json_auto_id(
+            {
+                "type": "marketplace/repository/version",
+                "repository": REPOSITORY_INTEGRATION_ID,
+                "version": "1.5.0",
+            }
+        )
+        response = await client.receive_json()
+
+    assert response["error"]["code"] == code
+    assert waiting == [None]
+    assert repository.data.selected_tag == "1.0.0"
+    assert repository.data.unchecked_selected_tag == COMMIT_ON_FEATURE
+    # Put back, it is checked again
+    assert marketplace._stop_checking_selected_tags in marketplace.recurring_tasks
 
 
 async def test_repositories_list(
@@ -989,6 +1087,7 @@ async def test_repository_version(
 ) -> None:
     """Test pinning a repository to a version."""
     repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    repository.data.published_tags = ["1.5.0"]
 
     client = await hass_ws_client(hass)
     with patch.object(repository, "update_repository"):
@@ -1004,6 +1103,112 @@ async def test_repository_version(
         assert response["result"] is None
 
     assert repository.data.selected_tag == "1.5.0"
+
+
+@pytest.mark.parametrize("github_token", [TOKEN, None], ids=["github", "anonymous"])
+@pytest.mark.parametrize(
+    "version",
+    [
+        pytest.param(COMMIT_ON_FEATURE, id="commit"),
+        # Pinned by the full SHA, it can not resolve to a fork commit later
+        pytest.param(COMMIT_ON_FEATURE[:7], id="short_commit"),
+    ],
+)
+async def test_repository_version_on_another_branch(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+    version: str,
+) -> None:
+    """Test pinning a commit that only a branch other than the default holds."""
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    repository.data.unchecked_selected_tag = "refs/pull/1/head"
+
+    client = await hass_ws_client(hass)
+    with patch.object(repository, "update_repository"):
+        await client.send_json_auto_id(
+            {
+                "type": "marketplace/repository/version",
+                "repository": REPOSITORY_INTEGRATION_ID,
+                "version": version,
+            }
+        )
+        response = await client.receive_json()
+
+    assert response["success"]
+    assert repository.data.selected_tag == COMMIT_ON_FEATURE
+    # Picked again, the selection waiting for its check is not wanted anymore
+    assert repository.data.unchecked_selected_tag is None
+
+
+async def test_repository_version_check_failure(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+    response_mocker: MarketplaceResponses,
+) -> None:
+    """Test a version is not pinned when GitHub can not check it."""
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    repository.data.selected_tag = "1.0.0"
+    repository.data.unchecked_selected_tag = COMMIT_ON_FEATURE
+    url = "https://api.github.com/graphql"
+    response_mocker.add(
+        url,
+        mocked_response(
+            url,
+            status=HTTPStatus.INTERNAL_SERVER_ERROR,
+            json_content={"message": "Server Error"},
+        ),
+    )
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "marketplace/repository/version",
+            "repository": REPOSITORY_INTEGRATION_ID,
+            "version": "2.0.0",
+        }
+    )
+    response = await client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["translation_key"] == "github_failed"
+    assert repository.data.selected_tag == "1.0.0"
+    assert repository.data.unchecked_selected_tag == COMMIT_ON_FEATURE
+
+
+@pytest.mark.parametrize("github_token", [None])
+async def test_repository_version_check_rate_limited(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+    response_mocker: MarketplaceResponses,
+) -> None:
+    """Test running out of anonymous requests while checking a version pins nothing."""
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    repository.data.selected_tag = "1.0.0"
+    repository.data.unchecked_selected_tag = COMMIT_ON_FEATURE
+    url = f"https://api.github.com/repos/{REPOSITORY_INTEGRATION}/git/ref/tags/2.0.0"
+    response_mocker.add(
+        url,
+        mocked_response(url, status=HTTPStatus.FORBIDDEN, json_content=RATE_LIMITED),
+    )
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "marketplace/repository/version",
+            "repository": REPOSITORY_INTEGRATION_ID,
+            "version": "2.0.0",
+        }
+    )
+    response = await client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["code"] == "github_rate_limited"
+    assert repository.data.selected_tag == "1.0.0"
+    assert repository.data.unchecked_selected_tag == COMMIT_ON_FEATURE
+    assert not marketplace.system.disabled
 
 
 async def test_repository_version_default_branch(
@@ -1366,6 +1571,7 @@ async def test_repository_releases(
     response = await client.receive_json()
 
     assert response["success"]
+    # The draft 4.0.0 is not published
     assert [entry["tag"] for entry in response["result"]] == [
         "3.0.0",
         "2.5.0",

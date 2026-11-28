@@ -1,0 +1,34 @@
+[
+  {
+    "name": "deadbee",
+    "commit": {
+      "sha": "7fd1a60b01f91b314f59955a4e4d4e80d8edf11d",
+      "url": "https://api.github.com/repos/hacs-test-org/integration-basic/commits/7fd1a60b01f91b314f59955a4e4d4e80d8edf11d"
+    },
+    "protected": false
+  },
+  {
+    "name": "docs",
+    "commit": {
+      "sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "url": "https://api.github.com/repos/hacs-test-org/integration-basic/commits/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "protected": false
+  },
+  {
+    "name": "feature",
+    "commit": {
+      "sha": "4444444444444444444444444444444444444444",
+      "url": "https://api.github.com/repos/hacs-test-org/integration-basic/commits/4444444444444444444444444444444444444444"
+    },
+    "protected": false
+  },
+  {
+    "name": "main",
+    "commit": {
+      "sha": "7fd1a60b01f91b314f59955a4e4d4e80d8edf11d",
+      "url": "https://api.github.com/repos/hacs-test-org/integration-basic/commits/7fd1a60b01f91b314f59955a4e4d4e80d8edf11d"
+    },
+    "protected": false
+  }
+]

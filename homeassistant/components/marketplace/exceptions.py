@@ -72,6 +72,18 @@ class RepositoryBusyError(MarketplaceError):
         )
 
 
+class VersionNotInRepositoryError(MarketplaceError):
+    """For a version that is not a branch, tag or commit of the repository."""
+
+    def __init__(self, repository: str, version: str) -> None:
+        """Initialize the exception."""
+        super().__init__(
+            translation_domain=DOMAIN,
+            translation_key="version_not_in_repository",
+            translation_placeholders={"repository": repository, "version": version},
+        )
+
+
 class NotModifiedError(MarketplaceError):
     """For responses that are not modified."""
 
