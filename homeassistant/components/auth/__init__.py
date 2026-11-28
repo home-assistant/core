@@ -42,11 +42,13 @@ Request a new access token using a refresh token.
 }
 
 Return value will be a new access token. The access token will have
-a limited expiration.
+a limited expiration. The response also has the refresh token to use for the
+next request. Clients must store it.
 
 {
     "access_token": "ABCDEFGH",
     "expires_in": 1800,
+    "refresh_token": "IJKLMNOPQRST",
     "token_type": "Bearer"
 }
 
@@ -486,6 +488,9 @@ class TokenView(HomeAssistantView):
             {
                 "access_token": access_token,
                 "token_type": "Bearer",
+                # RFC 6749 section 6 lets the server name the refresh token
+                # to use for the next request.
+                "refresh_token": refresh_token.token,
                 "expires_in": int(
                     refresh_token.access_token_expiration.total_seconds()
                 ),

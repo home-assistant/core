@@ -113,8 +113,9 @@ async def test_login_new_user_and_trying_refresh_token(
     )
 
     assert resp.status == HTTPStatus.OK
+    refresh_token = tokens["refresh_token"]
     tokens = await resp.json()
-    assert "refresh_token" not in tokens
+    assert tokens["refresh_token"] == refresh_token
     assert hass.auth.async_validate_access_token(tokens["access_token"]) is not None
 
     # Test using access token to hit API.
