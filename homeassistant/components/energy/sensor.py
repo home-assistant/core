@@ -8,6 +8,7 @@ import logging
 from typing import Any, Final, Literal, Self, cast, override
 
 from homeassistant.components.sensor import (
+    DEVICE_CLASS_UNITS,
     RestoreSensor,
     SensorDeviceClass,
     SensorEntity,
@@ -49,21 +50,16 @@ SUPPORTED_STATE_CLASSES = {
 }
 VALID_ENERGY_UNITS: set[str] = set(UnitOfEnergy)
 
-VALID_ENERGY_UNITS_GAS = {
-    UnitOfVolume.CENTUM_CUBIC_FEET,
-    UnitOfVolume.CUBIC_FEET,
-    UnitOfVolume.CUBIC_METERS,
-    UnitOfVolume.LITERS,
-    UnitOfVolume.MILLE_CUBIC_FEET,
+VALID_ENERGY_UNITS_GAS: set[str] = {
+    *(
+        unit
+        for unit in UnitOfVolume
+        if unit in DEVICE_CLASS_UNITS[SensorDeviceClass.GAS]
+    ),
     *VALID_ENERGY_UNITS,
 }
 VALID_VOLUME_UNITS_WATER: set[str] = {
-    UnitOfVolume.CENTUM_CUBIC_FEET,
-    UnitOfVolume.CUBIC_FEET,
-    UnitOfVolume.CUBIC_METERS,
-    UnitOfVolume.GALLONS,
-    UnitOfVolume.LITERS,
-    UnitOfVolume.MILLE_CUBIC_FEET,
+    unit for unit in UnitOfVolume if unit in DEVICE_CLASS_UNITS[SensorDeviceClass.WATER]
 }
 _LOGGER = logging.getLogger(__name__)
 

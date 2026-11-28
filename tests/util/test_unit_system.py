@@ -581,6 +581,7 @@ def test_get_unit_system_invalid(key: str) -> None:
             UnitOfVolume.CUBIC_METERS,
         ),
         (SensorDeviceClass.WATER, UnitOfVolume.CUBIC_FEET, UnitOfVolume.CUBIC_METERS),
+        (SensorDeviceClass.WATER, UnitOfVolume.FLUID_OUNCES, UnitOfVolume.LITERS),
         (SensorDeviceClass.WATER, UnitOfVolume.GALLONS, UnitOfVolume.LITERS),
         (SensorDeviceClass.WATER, UnitOfVolume.CUBIC_METERS, None),
         (SensorDeviceClass.WATER, UnitOfVolume.LITERS, None),
@@ -901,6 +902,7 @@ def test_metric_converted_units(device_class: SensorDeviceClass) -> None:
         (SensorDeviceClass.WATER, UnitOfVolume.CENTUM_CUBIC_FEET, None),
         (SensorDeviceClass.WATER, UnitOfVolume.MILLE_CUBIC_FEET, None),
         (SensorDeviceClass.WATER, UnitOfVolume.CUBIC_FEET, None),
+        (SensorDeviceClass.WATER, UnitOfVolume.FLUID_OUNCES, None),
         (SensorDeviceClass.WATER, UnitOfVolume.GALLONS, None),
         (SensorDeviceClass.WATER, "very_much", None),
         # Test wind speed conversion
@@ -989,6 +991,7 @@ UNCONVERTED_UNITS_US_SYSTEM = {
         UnitOfVolume.CENTUM_CUBIC_FEET,
         UnitOfVolume.MILLE_CUBIC_FEET,
         UnitOfVolume.CUBIC_FEET,
+        UnitOfVolume.FLUID_OUNCES,
         UnitOfVolume.GALLONS,
     ),
 }
