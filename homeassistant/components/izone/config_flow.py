@@ -24,7 +24,7 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from . import discovery as izone_discovery
-from .const import DOMAIN
+from .const import DOMAIN, VERIFY_FAILURE_KEYS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -264,7 +264,7 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
                     endpoints = {**endpoints, endpoint.uid: endpoint}
         except pizone.EndpointVerifyError as err:
             _LOGGER.debug("iZone controller did not verify: %s", err)
-            return self.async_abort(reason="cannot_connect")
+            return self.async_abort(reason=VERIFY_FAILURE_KEYS[err.failure])
         except OSError:
             _LOGGER.debug("Unable to start iZone discovery service", exc_info=True)
             return self.async_abort(reason="discovery_failed")
@@ -402,7 +402,7 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
         except pizone.EndpointVerifyError as err:
             _LOGGER.debug("iZone controller did not verify: %s", err)
             return self._async_show_manual_host_form(
-                errors={"base": "cannot_connect"},
+                errors={"base": VERIFY_FAILURE_KEYS[err.failure]},
                 suggested_values={CONF_HOST: host},
             )
         except OSError:
@@ -411,11 +411,6 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
         except pizone.UnpairedBridgeError:
             return self._async_show_manual_host_form(
                 errors={"base": "unpaired_bridge"},
-                suggested_values={CONF_HOST: host},
-            )
-        except pizone.ControllerAlreadyClaimedError:
-            return self._async_show_manual_host_form(
-                errors={"base": "already_configured"},
                 suggested_values={CONF_HOST: host},
             )
 

@@ -18,11 +18,14 @@ CLIENT_RESTORE_MAX_AGE = timedelta(days=30)
 
 PLATFORMS = [
     Platform.BUTTON,
+    Platform.DATE,
     Platform.DEVICE_TRACKER,
     Platform.IMAGE,
     Platform.LIGHT,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.TIME,
     Platform.UPDATE,
 ]
 

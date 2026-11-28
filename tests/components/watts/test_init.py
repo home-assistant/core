@@ -18,9 +18,9 @@ from visionpluspython.exceptions import (
 from visionpluspython.models import create_device_from_data
 
 from homeassistant.components.climate import (
-    ATTR_TEMPERATURE,
     DOMAIN as CLIMATE_DOMAIN,
-    SERVICE_SET_TEMPERATURE,
+    ClimateService,
+    ClimateServiceArgument,
 )
 from homeassistant.components.watts.const import (
     DISCOVERY_INTERVAL_SECONDS,
@@ -30,7 +30,7 @@ from homeassistant.components.watts.const import (
     UPDATE_INTERVAL_SECONDS,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -340,10 +340,10 @@ async def test_device_coordinator_refresh_error(
     # Activate fast polling
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: "climate.living_room_living_room_thermostat",
-            ATTR_TEMPERATURE: 23.5,
+            TargetKey.ENTITY_ID: "climate.living_room_living_room_thermostat",
+            ClimateServiceArgument.TEMPERATURE: 23.5,
         },
         blocking=True,
     )

@@ -2,7 +2,7 @@
 
 from aiounifi.models.client import Client
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import (
@@ -16,7 +16,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, PLATFORMS, UNIFI_WIRELESS_CLIENTS
-from .entity import async_device_supported_fn
+from .entity import async_device_supported_fn, async_firewall_policy_id_of_device
 from .errors import AuthenticationRequired, CannotConnect
 from .hub import UnifiHub, get_unifi_api
 from .services import async_setup_services
@@ -83,8 +83,17 @@ async def async_remove_config_entry_device(
 ) -> bool:
     """Remove config entry from a device."""
     if not isinstance(device_entry, dr.DeviceEntry):
-        # This integration does not create child devices.
-        return False
+        # A firewall policy's device can go once the policy is no longer listed.
+        # Other child devices are retained until their removal can be confirmed.
+        if config_entry.state is not ConfigEntryState.LOADED:
+            return False
+        policies = config_entry.runtime_data.api.firewall_policies
+        policy_id = async_firewall_policy_id_of_device(device_entry)
+        return (
+            policy_id is not None
+            and bool(policies.values())
+            and policy_id not in policies
+        )
     hub = config_entry.runtime_data
     if any(
         identifier in hub.api.devices and async_device_supported_fn(hub, identifier)

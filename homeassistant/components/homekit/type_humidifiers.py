@@ -16,12 +16,7 @@ from homeassistant.components.humidifier import (
     HumidifierService,
     HumidifierServiceArgument,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    PERCENTAGE,
-    STATE_ON,
-    EntityStateAttribute,
-)
+from homeassistant.const import PERCENTAGE, STATE_ON, EntityStateAttribute, TargetKey
 from homeassistant.core import (
     Event,
     EventStateChangedData,
@@ -255,7 +250,7 @@ class HumidifierDehumidifier(HomeAccessory):
                 HumidifierService.TURN_ON
                 if char_values[CHAR_ACTIVE]
                 else HumidifierService.TURN_OFF,
-                {ATTR_ENTITY_ID: self.entity_id},
+                {TargetKey.ENTITY_ID: self.entity_id},
                 f"{CHAR_ACTIVE} to {char_values[CHAR_ACTIVE]}",
             )
 
@@ -276,7 +271,7 @@ class HumidifierDehumidifier(HomeAccessory):
                 HUMIDIFIER_DOMAIN,
                 HumidifierService.SET_HUMIDITY,
                 {
-                    ATTR_ENTITY_ID: self.entity_id,
+                    TargetKey.ENTITY_ID: self.entity_id,
                     HumidifierServiceArgument.HUMIDITY: humidity,
                 },
                 (

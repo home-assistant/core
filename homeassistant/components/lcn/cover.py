@@ -8,10 +8,10 @@ from typing import Any, override
 import pypck
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
     DOMAIN as COVER_DOMAIN,
     CoverEntity,
     CoverEntityFeature,
+    CoverServiceArgument,
 )
 from homeassistant.const import CONF_DOMAIN, CONF_ENTITIES
 from homeassistant.core import HomeAssistant
@@ -249,7 +249,7 @@ class LcnRelayCover(LcnEntity, CoverEntity):
     @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        position = kwargs[ATTR_POSITION]
+        position = kwargs[CoverServiceArgument.POSITION]
         if not await self.device_connection.control_motor_relays_position(
             self.motor.value, position, mode=self.positioning_mode
         ):

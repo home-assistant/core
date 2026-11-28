@@ -14,7 +14,13 @@ from .const import (
     CONF_REALM,
     DEFAULT_REALM,
 )
-from .coordinator import ProxmoxConfigEntry, ProxmoxCoordinator, node_device_info
+from .coordinator import (
+    ProxmoxConfigEntry,
+    ProxmoxRuntimeData,
+    ProxmoxSoftwareCoordinator,
+    ProxmoxStatusCoordinator,
+    node_device_info,
+)
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -29,18 +35,22 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ProxmoxConfigEntry) -> None:
     """Set up a ProxmoxVE from a config entry."""
-    coordinator = ProxmoxCoordinator(hass, entry)
-    await coordinator.async_config_entry_first_refresh()
+    status_coordinator = ProxmoxStatusCoordinator(hass, entry)
+    await status_coordinator.async_config_entry_first_refresh()
+    software_coordinator = ProxmoxSoftwareCoordinator(hass, entry, status_coordinator)
+    await software_coordinator.async_config_entry_first_refresh()
 
-    entry.runtime_data = coordinator
+    entry.runtime_data = ProxmoxRuntimeData(
+        status=status_coordinator, software=software_coordinator
+    )
 
     # Register node devices before forwarding platforms so that child devices
     # (VMs, containers, storages) can deterministically resolve their via_device.
     device_registry = dr.async_get(hass)
-    for node_data in coordinator.data.values():
+    for node_data in status_coordinator.data.values():
         device_registry.async_get_or_create_from_info(
             config_entry_id=entry.entry_id,
-            device_info=node_device_info(coordinator, node_data),
+            device_info=node_device_info(status_coordinator, node_data),
         )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

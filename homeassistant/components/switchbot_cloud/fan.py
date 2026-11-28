@@ -96,15 +96,24 @@ class SwitchBotCloudFan(SwitchBotCloudEntity, FanEntity):
         **kwargs: Any,
     ) -> None:
         """Turn on the fan."""
+        if percentage == 0:
+            await self.async_turn_off()
+            return
+        if percentage and preset_mode is None:
+            preset_mode = BatteryCirculatorFanMode.DIRECT.value
+        preset_mode = (
+            preset_mode or self.preset_mode or BatteryCirculatorFanMode.DIRECT.value
+        )
+        percentage = percentage or self.percentage
         await self.send_api_command(CommonCommands.ON)
         await self.send_api_command(
             command=BatteryCirculatorFanCommands.SET_WIND_MODE,
-            parameters=str(self.preset_mode),
+            parameters=preset_mode,
         )
-        if self.preset_mode == BatteryCirculatorFanMode.DIRECT.value:
+        if preset_mode == BatteryCirculatorFanMode.DIRECT.value and percentage:
             await self.send_api_command(
                 command=BatteryCirculatorFanCommands.SET_WIND_SPEED,
-                parameters=str(self.percentage),
+                parameters=percentage,
             )
         await asyncio.sleep(AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
@@ -119,9 +128,12 @@ class SwitchBotCloudFan(SwitchBotCloudEntity, FanEntity):
     @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
+        if percentage == 0:
+            await self.async_turn_off()
+            return
         await self.send_api_command(
             command=BatteryCirculatorFanCommands.SET_WIND_SPEED,
-            parameters=str(percentage),
+            parameters=percentage,
         )
         await asyncio.sleep(AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()

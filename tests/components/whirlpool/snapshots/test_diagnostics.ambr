@@ -2,8 +2,8 @@
 # name: test_entry_diagnostics
   dict({
     'appliances': dict({
-      'aircons': dict({
-        'Aircon said1': dict({
+      'aircons': list([
+        dict({
           'category': 'aircon',
           'model_number': '12345',
           'raw': dict({
@@ -18,7 +18,7 @@
           'raw_info': dict({
           }),
         }),
-        'Aircon said2': dict({
+        dict({
           'category': 'aircon',
           'model_number': '12345',
           'raw': dict({
@@ -33,9 +33,9 @@
           'raw_info': dict({
           }),
         }),
-      }),
-      'dryers': dict({
-        'Dryer': dict({
+      ]),
+      'dryers': list([
+        dict({
           'category': 'washer_dryer',
           'model_number': '12345',
           'raw': dict({
@@ -50,9 +50,35 @@
           'raw_info': dict({
           }),
         }),
-      }),
-      'ovens': dict({
-        'Dual Cavity Oven': dict({
+      ]),
+      'microwaves': list([
+        dict({
+          'category': 'microwave',
+          'model_number': '12345',
+          'raw': dict({
+            'microwaveCavity': dict({
+              'cavityState': 'idle',
+              'doorStatus': 'closed',
+            }),
+            'temperatureUnit': 'C',
+          }),
+          'raw_info': dict({
+            'attributes': dict({
+              'Category': 'Cooking',
+              'Name': '4d6963726f77617665',
+              'Serial': '**REDACTED**',
+            }),
+            'defaultClientId': '**REDACTED**',
+            'thingArn': '**REDACTED**',
+            'thingId': '**REDACTED**',
+            'thingName': '**REDACTED**',
+            'thingTypeName': '12345',
+            'version': 1,
+          }),
+        }),
+      ]),
+      'ovens': list([
+        dict({
           'category': 'oven',
           'model_number': '12345',
           'raw': dict({
@@ -67,7 +93,7 @@
           'raw_info': dict({
           }),
         }),
-        'Single Cavity Oven': dict({
+        dict({
           'category': 'oven',
           'model_number': '12345',
           'raw': dict({
@@ -82,9 +108,9 @@
           'raw_info': dict({
           }),
         }),
-      }),
-      'refrigerators': dict({
-        'Beer fridge': dict({
+      ]),
+      'refrigerators': list([
+        dict({
           'category': 'refrigerator',
           'model_number': '12345',
           'raw': dict({
@@ -99,9 +125,9 @@
           'raw_info': dict({
           }),
         }),
-      }),
-      'unsupported': dict({
-        'Unsupported appliance': dict({
+      ]),
+      'unsupported': list([
+        dict({
           'category': 'cooking',
           'model_number': '12345',
           'raw': dict({
@@ -126,9 +152,9 @@
             'version': 1,
           }),
         }),
-      }),
-      'washers': dict({
-        'Washer': dict({
+      ]),
+      'washers': list([
+        dict({
           'category': 'washer_dryer',
           'model_number': '12345',
           'raw': dict({
@@ -155,7 +181,7 @@
             'STATUS': 'CLAIMED',
           }),
         }),
-      }),
+      ]),
     }),
     'config_entry': dict({
       'data': dict({

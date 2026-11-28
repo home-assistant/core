@@ -9,17 +9,11 @@ from pytest_homeassistant.common import async_fire_time_changed
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
     AlarmControlPanelEntityFeature,
+    AlarmControlPanelService,
     AlarmControlPanelState,
 )
 from homeassistant.components.freebox import SCAN_INTERVAL
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_ALARM_ARM_AWAY,
-    SERVICE_ALARM_ARM_HOME,
-    SERVICE_ALARM_DISARM,
-    SERVICE_ALARM_TRIGGER,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import STATE_UNKNOWN, TargetKey
 from homeassistant.core import HomeAssistant
 
 from .common import setup_platform
@@ -33,10 +27,12 @@ async def test_alarm_changed_from_external(
     data_get_home_nodes = deepcopy(DATA_HOME_GET_NODES)
     data_get_home_endpoint_value = deepcopy(DATA_HOME_ALARM_GET_VALUE)
 
-    # Add remove arm_home feature
+    # Remove arm_home feature
     ALARM_NODE_ID = 7
-    ALARM_HOME_ENDPOINT_ID = 2
-    del data_get_home_nodes[ALARM_NODE_ID]["type"]["endpoints"][ALARM_HOME_ENDPOINT_ID]
+    alarm_node = next(n for n in data_get_home_nodes if n["id"] == ALARM_NODE_ID)
+    alarm_node["type"]["endpoints"] = [
+        ep for ep in alarm_node["type"]["endpoints"] if ep["name"] != "alarm2"
+    ]
     router().home.get_home_nodes.return_value = data_get_home_nodes
 
     data_get_home_endpoint_value["value"] = "alarm1_arming"
@@ -101,8 +97,8 @@ async def test_alarm_changed_from_hass(hass: HomeAssistant, router: Mock) -> Non
     router().home.get_home_endpoint_value.return_value = data_get_home_endpoint_value
     await hass.services.async_call(
         ALARM_CONTROL_PANEL_DOMAIN,
-        SERVICE_ALARM_DISARM,
-        {ATTR_ENTITY_ID: ["alarm_control_panel.systeme_d_alarme"]},
+        AlarmControlPanelService.DISARM,
+        {TargetKey.ENTITY_ID: ["alarm_control_panel.systeme_d_alarme"]},
         blocking=True,
     )
 
@@ -116,8 +112,8 @@ async def test_alarm_changed_from_hass(hass: HomeAssistant, router: Mock) -> Non
     router().home.get_home_endpoint_value.return_value = data_get_home_endpoint_value
     await hass.services.async_call(
         ALARM_CONTROL_PANEL_DOMAIN,
-        SERVICE_ALARM_ARM_AWAY,
-        {ATTR_ENTITY_ID: ["alarm_control_panel.systeme_d_alarme"]},
+        AlarmControlPanelService.ARM_AWAY,
+        {TargetKey.ENTITY_ID: ["alarm_control_panel.systeme_d_alarme"]},
         blocking=True,
     )
 
@@ -132,8 +128,8 @@ async def test_alarm_changed_from_hass(hass: HomeAssistant, router: Mock) -> Non
     router().home.get_home_endpoint_value.return_value = data_get_home_endpoint_value
     await hass.services.async_call(
         ALARM_CONTROL_PANEL_DOMAIN,
-        SERVICE_ALARM_ARM_HOME,
-        {ATTR_ENTITY_ID: ["alarm_control_panel.systeme_d_alarme"]},
+        AlarmControlPanelService.ARM_HOME,
+        {TargetKey.ENTITY_ID: ["alarm_control_panel.systeme_d_alarme"]},
         blocking=True,
     )
 
@@ -147,8 +143,8 @@ async def test_alarm_changed_from_hass(hass: HomeAssistant, router: Mock) -> Non
     router().home.get_home_endpoint_value.return_value = data_get_home_endpoint_value
     await hass.services.async_call(
         ALARM_CONTROL_PANEL_DOMAIN,
-        SERVICE_ALARM_TRIGGER,
-        {ATTR_ENTITY_ID: ["alarm_control_panel.systeme_d_alarme"]},
+        AlarmControlPanelService.TRIGGER,
+        {TargetKey.ENTITY_ID: ["alarm_control_panel.systeme_d_alarme"]},
         blocking=True,
     )
 

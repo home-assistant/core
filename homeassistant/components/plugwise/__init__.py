@@ -16,7 +16,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PlugwiseConfigEntry) -> 
 
     coordinator = PlugwiseDataUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
-    migrate_sensor_entities(hass, coordinator)
+    migrate_entities(hass, coordinator)
 
     entry.runtime_data = coordinator
 
@@ -67,16 +67,20 @@ def async_migrate_entity_entry(entry: er.RegistryEntry) -> dict[str, Any] | None
     return None
 
 
-def migrate_sensor_entities(
+def migrate_entities(
     hass: HomeAssistant,
     coordinator: PlugwiseDataUpdateCoordinator,
 ) -> None:
-    """Migrate Sensors if needed."""
+    """Migrate entities if needed."""
     ent_reg = er.async_get(hass)
+    is_adam = coordinator.api.smile.name == "Adam"
 
     # Migrating opentherm_outdoor_temperature
     # to opentherm_outdoor_air_temperature sensor
     for device_id, device in coordinator.data.items():
+        if is_adam and device["dev_class"] == "climate":
+            _remove_adam_thermozone_temperature_sensor(ent_reg, device_id)
+
         if device[DEV_CLASS] != "heater_central":
             continue
 
@@ -92,3 +96,13 @@ def migrate_sensor_entities(
                 new_unique_id,
             )
             ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
+
+
+def _remove_adam_thermozone_temperature_sensor(
+    ent_reg: er.EntityRegistry, device_id: str
+) -> None:
+    """Remove the obsolete Adam ThermoZone temperature sensor."""
+    unique_id = f"{device_id}-temperature"
+    if entity_id := ent_reg.async_get_entity_id(Platform.SENSOR, DOMAIN, unique_id):
+        ent_reg.async_remove(entity_id)
+        LOGGER.debug("Removed obsolete entity %s", unique_id)

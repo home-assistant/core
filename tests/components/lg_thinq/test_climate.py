@@ -10,8 +10,9 @@ from homeassistant.components.climate import (
     ATTR_FAN_MODE,
     DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_FAN_MODE,
+    ClimateService,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -104,7 +105,7 @@ async def test_service_call_connection_error_raises_home_assistant_error(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_FAN_MODE,
-            {ATTR_ENTITY_ID: "climate.test_air_conditioner", "fan_mode": "low"},
+            ClimateService.SET_FAN_MODE,
+            {TargetKey.ENTITY_ID: "climate.test_air_conditioner", "fan_mode": "low"},
             blocking=True,
         )

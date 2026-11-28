@@ -1,11 +1,21 @@
 """Tests for the BTHome integration."""
 
+import time
+from typing import Any
+
+from habluetooth import (
+    FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
+    DiscoveredDeviceAdvertisementData,
+    discovered_device_advertisement_data_to_dict,
+)
 from pytest_homeassistant.components.bluetooth import (
     generate_advertisement_data,
     generate_ble_device,
 )
 
-from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
+from homeassistant.components.bluetooth import BluetoothServiceInfoBleak, storage
+
+BTHOME_UUID = "0000fcd2-0000-1000-8000-00805f9b34fb"
 
 TEMP_HUMI_SERVICE_INFO = BluetoothServiceInfoBleak(
     name="ATC 8D18B2",
@@ -155,3 +165,68 @@ def make_bthome_v2_adv(address: str, payload: bytes) -> BluetoothServiceInfoBlea
         connectable=False,
         tx_power=-127,
     )
+
+
+def _stored_packets(
+    packets: dict[str, tuple[bytes, int, float]], now: float
+) -> dict[str, Any]:
+    """Return stored advertisements as Bluetooth storage data."""
+    return discovered_device_advertisement_data_to_dict(
+        DiscoveredDeviceAdvertisementData(
+            connectable=False,
+            expire_seconds=FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
+            discovered_device_advertisement_datas={
+                address: (
+                    generate_ble_device(address, "Test Device"),
+                    generate_advertisement_data(
+                        local_name="Test Device",
+                        service_data={BTHOME_UUID: payload},
+                        service_uuids=[BTHOME_UUID],
+                        rssi=rssi,
+                    ),
+                )
+                for address, (payload, rssi, _) in packets.items()
+            },
+            discovered_device_timestamps={
+                address: now - age for address, (_, _, age) in packets.items()
+            },
+        )
+    )
+
+
+def make_bluetooth_storage(
+    proxies: dict[str, dict[str, tuple[bytes, int, float]]],
+    accepted: dict[str, tuple[str, tuple[bytes, int, float]]],
+) -> dict[str, Any]:
+    """Return Bluetooth storage with packets per proxy and the accepted ones.
+
+    Each packet is (payload, rssi, age in seconds); accepted packets are keyed by
+    address with the proxy they came from.
+    """
+    now = time.monotonic()
+    return {
+        storage.REMOTE_SCANNER_STORAGE_KEY: {
+            "version": storage.REMOTE_SCANNER_STORAGE_VERSION,
+            "minor_version": 1,
+            "key": storage.REMOTE_SCANNER_STORAGE_KEY,
+            "data": {
+                proxy: _stored_packets(packets, now)
+                for proxy, packets in proxies.items()
+            },
+        },
+        storage.EVENT_DRIVEN_STORAGE_KEY: {
+            "version": storage.EVENT_DRIVEN_STORAGE_VERSION,
+            "minor_version": 1,
+            "key": storage.EVENT_DRIVEN_STORAGE_KEY,
+            "data": {
+                "sources": {
+                    address: {"source": source, "connectable": False}
+                    for address, (source, _) in accepted.items()
+                },
+                "advertisements": _stored_packets(
+                    {address: packet for address, (_, packet) in accepted.items()},
+                    now,
+                ),
+            },
+        },
+    }

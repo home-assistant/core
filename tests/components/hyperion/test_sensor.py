@@ -17,6 +17,7 @@ from homeassistant.components.hyperion.const import (
     HYPERION_MANUFACTURER_NAME,
     HYPERION_MODEL_NAME,
 )
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import slugify
@@ -179,3 +180,24 @@ async def test_visible_effect_state_changes(hass: HomeAssistant) -> None:
     assert entity_state.attributes["origin"] == client.priorities[0][KEY_ORIGIN]
     assert entity_state.attributes["priority"] == client.priorities[0][KEY_PRIORITY]
     assert entity_state.attributes["color"] == client.priorities[0][KEY_VALUE]
+
+
+async def test_sensor_availability_follows_connection(hass: HomeAssistant) -> None:
+    """Test the sensor becomes unavailable when the connection is lost."""
+    client = create_mock_client()
+    client.components = TEST_COMPONENTS
+    await setup_test_config_entry(hass, hyperion_client=client)
+
+    client.has_loaded_state = False
+    call_registered_callback(client, "client-update", {"loaded-state": False})
+
+    entity_state = hass.states.get(TEST_VISIBLE_EFFECT_SENSOR_ID)
+    assert entity_state
+    assert entity_state.state == STATE_UNAVAILABLE
+
+    client.has_loaded_state = True
+    call_registered_callback(client, "client-update", {"loaded-state": True})
+
+    entity_state = hass.states.get(TEST_VISIBLE_EFFECT_SENSOR_ID)
+    assert entity_state
+    assert entity_state.state != STATE_UNAVAILABLE

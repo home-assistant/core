@@ -1,8 +1,6 @@
 rules:
   # Bronze
-  action-setup:
-    status: exempt
-    comment: The integration uses entity services.
+  action-setup: done
   appropriate-polling:
     status: exempt
     comment: The integration does not poll.
@@ -61,19 +59,15 @@ rules:
   docs-use-cases: done
   dynamic-devices: done
   entity-category: done
-  entity-device-class:
-    status: todo
-    comment: Migrate time sensors to timestamp or a duration device class
+  entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
   exception-translations: done
   icon-translations: done
   reconfiguration-flow:
     status: exempt
-    comment: The integration does not have anything to reconfigure.
-  repair-issues:
-    status: exempt
-    comment: The integration does not have any issues to repair.
+    comment: The username and token are issued once by the vendor and cannot be changed; the reauthentication flow only adds them when a device that needs a token is discovered.
+  repair-issues: done
   stale-devices: done
 
   # Platinum

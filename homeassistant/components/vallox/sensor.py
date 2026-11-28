@@ -27,8 +27,6 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
 from .const import (
-    METRIC_KEY_MODE,
-    MODE_ON,
     PRESET_MODE_TO_VALLOX_PROFILE,
     VALLOX_CELL_STATE_TO_STR,
     VALLOX_PROFILE_TO_PRESET_MODE,
@@ -95,11 +93,11 @@ class ValloxComputedSensorEntity(ValloxSensorEntity):
 
 
 def _fan_speed(data: MetricData, metric_key: str) -> StateType:
-    """Return a fan speed, or 0 while the unit is off."""
-    if (mode := data.get(METRIC_KEY_MODE)) is None:
+    """Return a fan speed, or 0 while the unit is switched off."""
+    if (switched_on := data.is_switched_on) is None:
         return None
-    # The unit keeps reporting its last fan speeds after it is turned off.
-    return data.get(metric_key) if mode == MODE_ON else 0
+    # The unit keeps reporting its last fan speeds after it is switched off.
+    return data.get(metric_key) if switched_on else 0
 
 
 def _next_filter_change(data: MetricData) -> datetime | None:

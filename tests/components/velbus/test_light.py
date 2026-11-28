@@ -13,11 +13,11 @@ from homeassistant.components.light import (
     LightService,
     LightServiceArgument,
 )
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import init_integration
+from . import get_entity_id, init_integration
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -38,14 +38,16 @@ async def test_dimmer_actions(
     hass: HomeAssistant,
     mock_dimmer: AsyncMock,
     config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test every supported dimmer action."""
     await init_integration(hass, config_entry)
+    entity_id = get_entity_id(entity_registry, LIGHT_DOMAIN, "a1b2c3d4e5f6g7-10")
     # turn off
     await hass.services.async_call(
         LIGHT_DOMAIN,
         LightService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: "light.dimmer_full_name_dimmer"},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     mock_dimmer.set_dimmer_state.assert_called_once_with(0, 0)
@@ -54,7 +56,7 @@ async def test_dimmer_actions(
         LIGHT_DOMAIN,
         LightService.TURN_ON,
         {
-            CommonServiceArgument.ENTITY_ID: "light.dimmer_full_name_dimmer",
+            TargetKey.ENTITY_ID: entity_id,
             LightServiceArgument.TRANSITION: 1,
         },
         blocking=True,
@@ -65,7 +67,7 @@ async def test_dimmer_actions(
         LIGHT_DOMAIN,
         LightService.TURN_ON,
         {
-            CommonServiceArgument.ENTITY_ID: "light.dimmer_full_name_dimmer",
+            TargetKey.ENTITY_ID: entity_id,
             LightServiceArgument.BRIGHTNESS: 0,
             LightServiceArgument.TRANSITION: 1,
         },
@@ -78,7 +80,7 @@ async def test_dimmer_actions(
         LIGHT_DOMAIN,
         LightService.TURN_ON,
         {
-            CommonServiceArgument.ENTITY_ID: "light.dimmer_full_name_dimmer",
+            TargetKey.ENTITY_ID: entity_id,
             LightServiceArgument.BRIGHTNESS: 33,
         },
         blocking=True,
@@ -99,7 +101,7 @@ async def test_led_actions(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         LightService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: "light.bedroom_kid_1_led_buttonon"},
+        {TargetKey.ENTITY_ID: "light.bedroom_kid_1_led_buttonon"},
         blocking=True,
     )
     mock_button.set_led_state.assert_called_once_with("off")
@@ -107,7 +109,7 @@ async def test_led_actions(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         LightService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: "light.bedroom_kid_1_led_buttonon"},
+        {TargetKey.ENTITY_ID: "light.bedroom_kid_1_led_buttonon"},
         blocking=True,
     )
     mock_button.set_led_state.assert_called_with("on")
@@ -117,7 +119,7 @@ async def test_led_actions(
         LIGHT_DOMAIN,
         LightService.TURN_ON,
         {
-            CommonServiceArgument.ENTITY_ID: "light.bedroom_kid_1_led_buttonon",
+            TargetKey.ENTITY_ID: "light.bedroom_kid_1_led_buttonon",
             LightServiceArgument.FLASH: FLASH_LONG,
         },
         blocking=True,
@@ -129,7 +131,7 @@ async def test_led_actions(
         LIGHT_DOMAIN,
         LightService.TURN_ON,
         {
-            CommonServiceArgument.ENTITY_ID: "light.bedroom_kid_1_led_buttonon",
+            TargetKey.ENTITY_ID: "light.bedroom_kid_1_led_buttonon",
             LightServiceArgument.FLASH: FLASH_SHORT,
         },
         blocking=True,
@@ -141,7 +143,7 @@ async def test_led_actions(
         LIGHT_DOMAIN,
         LightService.TURN_ON,
         {
-            CommonServiceArgument.ENTITY_ID: "light.bedroom_kid_1_led_buttonon",
+            TargetKey.ENTITY_ID: "light.bedroom_kid_1_led_buttonon",
             LightServiceArgument.FLASH: FLASH_SHORT,
         },
         blocking=True,

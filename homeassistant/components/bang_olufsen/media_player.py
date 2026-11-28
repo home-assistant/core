@@ -36,7 +36,8 @@ from mozart_api.models import (
     VolumeMute,
     VolumeState,
 )
-from mozart_api.mozart_client import MozartClient, get_highest_resolution_artwork
+from mozart_api.mozart_client import MozartClient
+from mozart_api.util import get_highest_resolution_artwork
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (

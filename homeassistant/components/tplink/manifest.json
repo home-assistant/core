@@ -308,5 +308,5 @@
   "iot_class": "local_polling",
   "loggers": ["kasa"],
   "quality_scale": "platinum",
-  "requirements": ["python-kasa[speedups]==0.12.0"]
+  "requirements": ["python-kasa[speedups]==0.13.0"]
 }

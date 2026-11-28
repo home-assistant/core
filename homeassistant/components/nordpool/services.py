@@ -31,10 +31,11 @@ from homeassistant.helpers.selector import ConfigEntrySelector
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonValueType
 
-if TYPE_CHECKING:
-    from . import NordPoolConfigEntry
 from .const import DOMAIN
 from .coordinator import NordPoolDataUpdateCoordinator
+
+if TYPE_CHECKING:
+    from . import NordPoolConfigEntry
 
 
 def _validate_areas(areas: list[str]) -> list[str]:

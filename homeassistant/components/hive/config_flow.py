@@ -16,7 +16,7 @@ import probatio
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from .const import CONF_CODE, CONF_DEVICE_NAME, CONFIG_ENTRY_VERSION, DOMAIN
+from .const import CONF_CODE, CONFIG_ENTRY_VERSION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,7 +32,6 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
         self.data: dict[str, Any] = {}
         self.tokens: dict[str, Any] = {}
         self.device_registration: bool = False
-        self.device_name = "Home Assistant"
 
     @override
     async def async_step_user(
@@ -143,11 +142,10 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle hive configuration step."""
         errors = {}
 
-        if user_input:
+        if user_input is not None:
             if self.device_registration:
                 _LOGGER.debug("Attempting to register device")
-                self.device_name = user_input["device_name"]
-                await self.hive_auth.device_registration(user_input["device_name"])
+                await self.hive_auth.device_registration("Home Assistant")
                 self.data["device_data"] = await self.hive_auth.get_device_data()
                 _LOGGER.debug("Device registration successful")
             try:
@@ -155,14 +153,7 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
             except UnknownHiveError:
                 errors["base"] = "unknown"
 
-        schema = probatio.Schema(
-            # Name field is no longer allowed in config flow schemas
-            # pylint: disable-next=home-assistant-config-flow-name-field
-            {probatio.Optional(CONF_DEVICE_NAME, default=self.device_name): str}
-        )
-        return self.async_show_form(
-            step_id="configuration", data_schema=schema, errors=errors
-        )
+        return self.async_show_form(step_id="configuration", errors=errors)
 
     async def async_setup_hive_entry(self) -> ConfigFlowResult:
         """Finish setup and create the config entry."""

@@ -11,13 +11,17 @@ from unittest.mock import AsyncMock
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
-from solyx_energy_api.exceptions import SolyxEnergyDataError, SolyxEnergyTokenError
+from solyx_energy_api.exceptions import (
+    SolyxEnergyAuthError,
+    SolyxEnergyDataError,
+    SolyxEnergyTokenError,
+)
 
 from homeassistant.components.solyx_energy_cloud.const import (
     DATA_INTERVAL_SECONDS,
     DOMAIN,
 )
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 
 from .const import NYMO_DEVICE_ID, NYMO_DEVICE_ID_2
@@ -39,6 +43,25 @@ async def test_load_unload_config_entry(
     assert await hass.config_entries.async_unload(init_integration.entry_id)
     await hass.async_block_till_done()
     assert init_integration.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_config_entry_auth_failed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api_client_class: AsyncMock,
+) -> None:
+    """A rejected client secret fails setup and starts a reauth flow."""
+    mock_api_client_class.async_get_assets.side_effect = SolyxEnergyAuthError()
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
 
 
 @pytest.mark.parametrize(

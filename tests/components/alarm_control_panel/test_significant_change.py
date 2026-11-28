@@ -3,9 +3,7 @@
 import pytest
 
 from homeassistant.components.alarm_control_panel import (
-    ATTR_CHANGED_BY,
-    ATTR_CODE_ARM_REQUIRED,
-    ATTR_CODE_FORMAT,
+    AlarmControlPanelEntityStateAttribute,
 )
 from homeassistant.components.alarm_control_panel.significant_change import (
     async_check_significant_change,
@@ -22,22 +20,44 @@ async def test_significant_state_change() -> None:
 @pytest.mark.parametrize(
     ("old_attrs", "new_attrs", "expected_result"),
     [
-        ({ATTR_CHANGED_BY: "old_value"}, {ATTR_CHANGED_BY: "old_value"}, False),
-        ({ATTR_CHANGED_BY: "old_value"}, {ATTR_CHANGED_BY: "new_value"}, True),
         (
-            {ATTR_CODE_ARM_REQUIRED: "old_value"},
-            {ATTR_CODE_ARM_REQUIRED: "new_value"},
+            {AlarmControlPanelEntityStateAttribute.CHANGED_BY: "old_value"},
+            {AlarmControlPanelEntityStateAttribute.CHANGED_BY: "old_value"},
+            False,
+        ),
+        (
+            {AlarmControlPanelEntityStateAttribute.CHANGED_BY: "old_value"},
+            {AlarmControlPanelEntityStateAttribute.CHANGED_BY: "new_value"},
+            True,
+        ),
+        (
+            {AlarmControlPanelEntityStateAttribute.CODE_ARM_REQUIRED: "old_value"},
+            {AlarmControlPanelEntityStateAttribute.CODE_ARM_REQUIRED: "new_value"},
             True,
         ),
         # multiple attributes
         (
-            {ATTR_CHANGED_BY: "old_value", ATTR_CODE_ARM_REQUIRED: "old_value"},
-            {ATTR_CHANGED_BY: "new_value", ATTR_CODE_ARM_REQUIRED: "old_value"},
+            {
+                AlarmControlPanelEntityStateAttribute.CHANGED_BY: "old_value",
+                AlarmControlPanelEntityStateAttribute.CODE_ARM_REQUIRED: "old_value",
+            },
+            {
+                AlarmControlPanelEntityStateAttribute.CHANGED_BY: "new_value",
+                AlarmControlPanelEntityStateAttribute.CODE_ARM_REQUIRED: "old_value",
+            },
             True,
         ),
         # insignificant attributes
-        ({ATTR_CODE_FORMAT: "old_value"}, {ATTR_CODE_FORMAT: "old_value"}, False),
-        ({ATTR_CODE_FORMAT: "old_value"}, {ATTR_CODE_FORMAT: "new_value"}, False),
+        (
+            {AlarmControlPanelEntityStateAttribute.CODE_FORMAT: "old_value"},
+            {AlarmControlPanelEntityStateAttribute.CODE_FORMAT: "old_value"},
+            False,
+        ),
+        (
+            {AlarmControlPanelEntityStateAttribute.CODE_FORMAT: "old_value"},
+            {AlarmControlPanelEntityStateAttribute.CODE_FORMAT: "new_value"},
+            False,
+        ),
         ({"unknown_attr": "old_value"}, {"unknown_attr": "old_value"}, False),
         ({"unknown_attr": "old_value"}, {"unknown_attr": "new_value"}, False),
     ],

@@ -41,7 +41,7 @@
           "data_description": {
             "location": "The location to get weather data for",
             "name": "The name of the location",
-            "timestep": "If you choose to enable the `nowcast` forecast entity, you can configure the number of minutes between each forecast. The number of forecasts provided depends on the number of minutes chosen between forecasts."
+            "timestep": "The number of minutes between the forecasts returned by the \"Get minute forecast\" action. Up to 30 forecasts are returned, so shorter intervals cover less time."
           }
         }
       }
@@ -176,6 +176,12 @@
       "wind_gust": {
         "name": "Wind gust"
       }
+    }
+  },
+  "services": {
+    "get_minute_forecast": {
+      "description": "Retrieves the minute-level forecast (nowcast) for a location, in intervals of the length configured for that location. The data comes from the latest scheduled update, so this action does not use any API requests. Precipitation is the amount expected in each interval, in the weather entity's precipitation unit.",
+      "name": "Get minute forecast"
     }
   }
 }

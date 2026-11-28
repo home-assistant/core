@@ -4,8 +4,9 @@ from collections.abc import Generator
 from ipaddress import IPv4Address, ip_address
 from unittest.mock import ANY, AsyncMock, MagicMock, Mock, patch
 
-from pyatv import exceptions
-from pyatv.const import PairingRequirement, Protocol
+from pyatv import conf, exceptions
+from pyatv.const import DeviceModel, PairingRequirement, Protocol
+from pyatv.interface import DeviceInfo
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -1409,3 +1410,40 @@ async def test_zeroconf_rejects_ipv6(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "ipv6_not_supported"
+
+
+@pytest.mark.parametrize(
+    ("device_info", "expected_type"),
+    [
+        (DeviceInfo({DeviceInfo.MODEL: DeviceModel.Gen4K}), "Apple TV 4K"),
+        (
+            DeviceInfo({DeviceInfo.RAW_MODEL: "HomeAccessory17,1"}),
+            "HomeAccessory17,1",
+        ),
+        (DeviceInfo({}), "Unknown"),
+    ],
+)
+async def test_user_confirm_shows_device_type(
+    hass: HomeAssistant,
+    mock_scan: AsyncMock,
+    device_info: DeviceInfo,
+    expected_type: str,
+) -> None:
+    """Test the confirm step falls back to the raw model for unknown models."""
+    atv = conf.AppleTV(IPv4Address("127.0.0.1"), "Dining Room", device_info=device_info)
+    atv.add_service(airplay_service())
+    mock_scan.result.append(atv)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"device_input": "Dining Room"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm"
+    assert result["description_placeholders"] == {
+        "name": "Dining Room",
+        "type": expected_type,
+    }

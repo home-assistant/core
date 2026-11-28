@@ -1,9 +1,16 @@
 """UniFi Network entity helper."""
 
+import asyncio
+from collections.abc import Awaitable, Callable, Mapping
+from copy import deepcopy
 from datetime import datetime, timedelta
+from typing import Any, cast
 
 import aiounifi
+from aiounifi.interfaces.api_handlers import APIHandler
+from aiounifi.models.api import ApiItem
 from aiounifi.models.device import DeviceSetPoePortModeRequest
+from aiounifi.models.firewall_policy import FirewallPolicy, FirewallPolicySchedule
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -14,12 +21,21 @@ from homeassistant.util import dt as dt_util
 class UnifiEntityHelper:
     """UniFi Network integration handling platforms for entity registration."""
 
-    def __init__(self, hass: HomeAssistant, api: aiounifi.Controller) -> None:
-        """Initialize the UniFi entity loader."""
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        api: aiounifi.Controller,
+        write_lock: Callable[[APIHandler[Any]], asyncio.Lock],
+    ) -> None:
+        """Initialize the UniFi entity loader.
+
+        write_lock returns the lock a handler's fetches hold.
+        """
         self.hass = hass
         self.api = api
 
         self._device_command = UnifiDeviceCommand(hass, api)
+        self._object_command = UnifiObjectCommand(write_lock)
         self._heartbeat = UnifiEntityHeartbeat(hass)
 
     @callback
@@ -54,6 +70,37 @@ class UnifiEntityHelper:
     ) -> None:
         """Queue commands to execute them together per device."""
         self._device_command.queue_poe_command(device_id, port_idx, poe_mode)
+
+    async def save_firewall_policy(
+        self,
+        obj_id: str,
+        *,
+        enabled: bool | None = None,
+        schedule_fn: Callable[[Mapping[str, Any]], FirewallPolicySchedule]
+        | None = None,
+    ) -> None:
+        """Save a change to a firewall policy.
+
+        schedule_fn builds the new schedule from the current one.
+        """
+        policies = self.api.firewall_policies
+
+        async def save(policy: FirewallPolicy) -> None:
+            schedule = None
+            if schedule_fn is not None:
+                schedule = schedule_fn(policy.schedule or {})
+            response = await policies.save(policy, enabled=enabled, schedule=schedule)
+            if not response.get("data"):
+                # The controller accepted the change without sending the policy
+                # back. Cache what was sent, so the next write builds on it.
+                saved = cast(dict[str, Any], deepcopy(policy.raw))
+                if enabled is not None:
+                    saved["enabled"] = enabled
+                if schedule is not None:
+                    saved["schedule"] = schedule
+                policies.process_raw([saved])
+
+        await self._object_command.write(policies, obj_id, save)
 
 
 class UnifiEntityHeartbeat:
@@ -152,3 +199,30 @@ class UnifiDeviceCommand:
                 )
 
         self._cancel_command = async_call_later(self.hass, self.COMMAND_DELAY, _command)
+
+
+class UnifiObjectCommand:
+    """UniFi object command helper class.
+
+    Some writes send a whole object built from its cached copy. Writes to a
+    handler's objects run one at a time, each starting from the object as the
+    one before it left it. They hold the lock the handler's fetches hold, so a
+    fetch can't answer between writes with an object from before them.
+
+    Unlike PoE commands these aren't delayed and batched: the caller needs
+    to know whether its own change was accepted.
+    """
+
+    def __init__(self, write_lock: Callable[[APIHandler[Any]], asyncio.Lock]) -> None:
+        """Initialize object command helper."""
+        self._write_lock = write_lock
+
+    async def write[ItemT: ApiItem](
+        self,
+        handler: APIHandler[ItemT],
+        obj_id: str,
+        change: Callable[[ItemT], Awaitable[None]],
+    ) -> None:
+        """Apply a change to an object, starting from its latest cached copy."""
+        async with self._write_lock(handler):
+            await change(handler[obj_id])

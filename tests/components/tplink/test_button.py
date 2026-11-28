@@ -27,8 +27,8 @@ from homeassistant.const import (
     CONF_HOST,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    CommonServiceArgument,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -235,7 +235,7 @@ async def test_button_press(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     mocked_feature.set_value.assert_called_with(True)
@@ -339,7 +339,7 @@ async def test_ptz_preset_button_press(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: PTZ_PRESET_ENTITY_ID},
+        {TargetKey.ENTITY_ID: PTZ_PRESET_ENTITY_ID},
         blocking=True,
     )
     camera.modules[Module.PanTilt].goto_preset.assert_called_once_with("1")
@@ -386,7 +386,7 @@ async def test_ptz_preset_button_press_errors(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {CommonServiceArgument.ENTITY_ID: PTZ_PRESET_ENTITY_ID},
+            {TargetKey.ENTITY_ID: PTZ_PRESET_ENTITY_ID},
             blocking=True,
         )
     await hass.async_block_till_done()
@@ -489,7 +489,7 @@ async def test_ptz_preset_buttons_on_hub_cameras(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: BACK_CAMERA_DOOR_ENTITY_ID},
+        {TargetKey.ENTITY_ID: BACK_CAMERA_DOOR_ENTITY_ID},
         blocking=True,
     )
     back_camera.modules[Module.PanTilt].goto_preset.assert_called_once_with("1")

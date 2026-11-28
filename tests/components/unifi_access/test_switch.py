@@ -17,7 +17,7 @@ from unifi_access_api import (
 from unifi_access_api.models.websocket import SettingUpdate, SettingUpdateData
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -79,7 +79,7 @@ async def test_turn_on_switch(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -105,7 +105,7 @@ async def test_turn_off_switch(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert hass.states.get(entity_id).state == "on"
@@ -114,7 +114,7 @@ async def test_turn_off_switch(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -144,7 +144,7 @@ async def test_switch_api_error(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: EVACUATION_ENTITY},
+            {TargetKey.ENTITY_ID: EVACUATION_ENTITY},
             blocking=True,
         )
 
@@ -158,7 +158,7 @@ async def test_switches_are_independent(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: LOCKDOWN_ENTITY},
+        {TargetKey.ENTITY_ID: LOCKDOWN_ENTITY},
         blocking=True,
     )
     assert hass.states.get(LOCKDOWN_ENTITY).state == "on"
@@ -172,7 +172,7 @@ async def test_switches_are_independent(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: EVACUATION_ENTITY},
+        {TargetKey.ENTITY_ID: EVACUATION_ENTITY},
         blocking=True,
     )
     assert hass.states.get(EVACUATION_ENTITY).state == "on"
@@ -262,7 +262,7 @@ async def test_optimistic_update_before_ws_confirmation(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: EVACUATION_ENTITY},
+        {TargetKey.ENTITY_ID: EVACUATION_ENTITY},
         blocking=True,
     )
     assert hass.states.get(EVACUATION_ENTITY).state == "on"
@@ -301,7 +301,7 @@ async def test_no_optimistic_update_when_ws_disconnected(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: EVACUATION_ENTITY},
+        {TargetKey.ENTITY_ID: EVACUATION_ENTITY},
         blocking=True,
     )
     await hass.async_block_till_done()

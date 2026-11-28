@@ -10,12 +10,14 @@ from homeassistant.components.bluetooth import (
     DOMAIN as BLUETOOTH_DOMAIN,
     BluetoothScanningMode,
     BluetoothServiceInfoBleak,
+    async_advertisement_restored,
 )
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceRegistry
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.signal_type import SignalType
 
 from .const import (
@@ -32,6 +34,12 @@ from .types import BTHomeConfigEntry
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.EVENT, Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
+
+LAST_PROCESSED: HassKey[dict[str, tuple[dict[str, bytes], float]]] = HassKey(
+    f"{DOMAIN}_last_processed"
+)
+# Copies of one packet arrive within this time; the same payload after it is new
+REPEAT_SECONDS = 10
 
 
 def get_encryption_issue_id(entry_id: str) -> str:
@@ -80,6 +88,9 @@ def process_service_info(
     Runs side effects and returns sensor data.
     """
     coordinator = entry.runtime_data
+    if coordinator.paused:
+        # Kept in the Bluetooth history for the next start to replay
+        return SensorUpdate(title=None, devices={})
     data = coordinator.device_data
     issue_registry = ir.async_get(hass)
     issue_id = get_encryption_issue_id(entry.entry_id)
@@ -114,6 +125,25 @@ def process_service_info(
         hass.config_entries.async_update_entry(
             entry,
             data=entry.data | {CONF_SLEEPY_DEVICE: data.sleepy_device},
+        )
+        coordinator.async_set_event_driven(data.sleepy_device)
+    last_processed = coordinator.last_processed
+    # A packet replayed at start isn't a new event if it was restored from
+    # before the start or already processed, unlike one heard since
+    replayed_as: str | None = None
+    if coordinator.replaying:
+        if async_advertisement_restored(hass, service_info):
+            replayed_as = "restored from before the start"
+        elif (
+            (last := last_processed.get(service_info.address)) is not None
+            and last[0] == service_info.service_data
+            and service_info.time - last[1] <= REPEAT_SECONDS
+        ):
+            replayed_as = "already processed"
+    if data.encryption_scheme is EncryptionScheme.NONE or data.bindkey_verified:
+        last_processed[service_info.address] = (
+            service_info.service_data,
+            service_info.time,
         )
     if update.events:
         address = service_info.device.address
@@ -150,9 +180,21 @@ def process_service_info(
                     | {CONF_DISCOVERED_EVENT_CLASSES: list(discovered_event_classes)},
                 )
                 async_dispatcher_send(
-                    hass, format_discovered_event_class(address), event_class, ble_event
+                    hass,
+                    format_discovered_event_class(address),
+                    event_class,
+                    None if replayed_as else ble_event,
                 )
 
+            if replayed_as:
+                _LOGGER.debug(
+                    "%s: Not firing %s %s of a replayed packet %s",
+                    address,
+                    event_class,
+                    event_type,
+                    replayed_as,
+                )
+                continue
             hass.bus.async_fire(BTHOME_BLE_EVENT, ble_event)
             async_dispatcher_send(
                 hass,
@@ -177,7 +219,9 @@ def format_event_dispatcher_name(
     return SignalType(f"{DOMAIN}_event_{address}_{event_class}")
 
 
-def format_discovered_event_class(address: str) -> SignalType[str, BTHomeBleEvent]:
+def format_discovered_event_class(
+    address: str,
+) -> SignalType[str, BTHomeBleEvent | None]:
     """Format a discovered event class."""
     return SignalType(f"{DOMAIN}_discovered_event_class_{address}")
 
@@ -204,20 +248,32 @@ async def async_setup_entry(hass: HomeAssistant, entry: BTHomeConfigEntry) -> No
         discovered_event_classes=event_classes,
         connectable=False,
         entry=entry,
+        last_processed=hass.data.setdefault(LAST_PROCESSED, {}),
     )
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    # Registered before the start, so the replayed advertisement is the newest
+    coordinator.async_set_event_driven(coordinator.sleepy_device)
+    entry.async_on_unload(partial(coordinator.async_set_event_driven, False))
     # only start after all platforms have had a chance to subscribe
     entry.async_on_unload(coordinator.async_start())
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: BTHomeConfigEntry) -> None:
     """Unload a config entry."""
-    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    # Event entities unload before the coordinator stops
+    entry.runtime_data.paused = True
+    try:
+        await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    except Exception:
+        entry.runtime_data.paused = False
+        raise
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: BTHomeConfigEntry) -> None:
     """Remove a config entry."""
     # Issues raised before they were linked to the entry outlive it otherwise
     ir.async_delete_issue(hass, DOMAIN, get_encryption_issue_id(entry.entry_id))
+    if entry.unique_id:
+        hass.data.get(LAST_PROCESSED, {}).pop(entry.unique_id, None)

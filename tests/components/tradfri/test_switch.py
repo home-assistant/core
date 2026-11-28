@@ -1,13 +1,15 @@
 """Tradfri switch (recognised as sockets in the IKEA ecosystem) platform tests."""
 
+import json
+
 import pytest
 from pytest_homeassistant.common import load_fixture
-from pytradfri.const import ATTR_REACHABLE_STATE
+from pytradfri.const import ATTR_ID, ATTR_REACHABLE_STATE, ATTR_SWITCH_PLUG
 from pytradfri.device import Device
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.tradfri.const import DOMAIN
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 from .common import CommandStore, setup_integration
@@ -17,6 +19,14 @@ from .common import CommandStore, setup_integration
 def outlet() -> str:
     """Return an outlet response."""
     return load_fixture("outlet.json", DOMAIN)
+
+
+@pytest.fixture(scope="module")
+def outlet_without_values(outlet: str) -> str:
+    """Return an outlet response whose control reports no values."""
+    response = json.loads(outlet)
+    response[ATTR_SWITCH_PLUG] = [{ATTR_ID: 0}]
+    return json.dumps(response)
 
 
 @pytest.mark.parametrize("device", ["outlet"], indirect=True)
@@ -80,3 +90,14 @@ async def test_turn_on_off(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == expected_state
+
+
+@pytest.mark.parametrize("device", ["outlet_without_values"], indirect=True)
+@pytest.mark.usefixtures("device")
+async def test_switch_without_values(hass: HomeAssistant) -> None:
+    """Test a switch whose control reports no values."""
+    await setup_integration(hass)
+
+    state = hass.states.get("switch.test")
+    assert state
+    assert state.state == STATE_UNKNOWN
