@@ -1,7 +1,7 @@
 # serializer version: 1
-# name: test_diagnostics[api_key]
+# name: test_diagnostics[oauth]
   dict({
-    'api_key_configured': True,
+    'oauth_configured': True,
     'services': dict({
       'details': dict({
         'attributes': dict({
@@ -164,8 +164,8 @@
 # ---
 # name: test_diagnostics[web_login]
   dict({
-    'api_key_configured': False,
     'modules_last_update_success': True,
+    'oauth_configured': False,
     'services': dict({
     }),
     'web_login_configured': True,

@@ -15,7 +15,7 @@ from . import setup_integration
 @pytest.mark.parametrize(
     "config_entry_fixture",
     [
-        pytest.param("mock_config_entry", id="api_key"),
+        pytest.param("mock_config_entry", id="oauth"),
         pytest.param("mock_config_entry_web_login", id="web_login"),
     ],
 )
