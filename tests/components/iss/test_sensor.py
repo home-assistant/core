@@ -28,8 +28,8 @@ async def test_sensor_attributes_show_on_map_false(
     state = hass.states.get("sensor.iss")
     assert state is not None
     assert state.state == "7"
-    assert state.attributes["lat"] == "40.271698"
-    assert state.attributes["long"] == "15.619478"
+    assert state.attributes["lat"] == 40.271698
+    assert state.attributes["long"] == 15.619478
     # Should NOT have ATTR_LATITUDE/ATTR_LONGITUDE when show_on_map is False
     assert ATTR_LATITUDE not in state.attributes
     assert ATTR_LONGITUDE not in state.attributes
@@ -50,8 +50,8 @@ async def test_sensor_attributes_show_on_map_true(
     assert state is not None
     assert state.state == "7"
     # Should have ATTR_LATITUDE/ATTR_LONGITUDE when show_on_map is True
-    assert state.attributes[ATTR_LATITUDE] == "40.271698"
-    assert state.attributes[ATTR_LONGITUDE] == "15.619478"
+    assert state.attributes[ATTR_LATITUDE] == 40.271698
+    assert state.attributes[ATTR_LONGITUDE] == 15.619478
     # Should NOT have lat/long keys
     assert "lat" not in state.attributes
     assert "long" not in state.attributes
@@ -100,5 +100,5 @@ async def test_sensor_updates_with_coordinator(
     # Check sensor updated
     state = hass.states.get("sensor.iss")
     assert state.state == "10"
-    assert state.attributes["lat"] == "50.0"
-    assert state.attributes["long"] == "-100.0"
+    assert state.attributes["lat"] == 50.0
+    assert state.attributes["long"] == -100.0

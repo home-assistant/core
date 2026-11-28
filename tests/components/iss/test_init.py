@@ -30,8 +30,8 @@ async def test_setup_entry(
     assert coordinator.data is not None
     assert coordinator.data.number_of_people_in_space == 7
     assert coordinator.data.current_location == {
-        "latitude": "40.271698",
-        "longitude": "15.619478",
+        "latitude": 40.271698,
+        "longitude": 15.619478,
     }
 
 

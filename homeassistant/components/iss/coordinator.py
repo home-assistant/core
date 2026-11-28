@@ -25,7 +25,7 @@ class IssData:
     """Dataclass representation of data returned from pyiss."""
 
     number_of_people_in_space: int
-    current_location: dict[str, str]
+    current_location: dict[str, float]
 
 
 class IssDataUpdateCoordinator(DataUpdateCoordinator[IssData]):
@@ -47,9 +47,13 @@ class IssDataUpdateCoordinator(DataUpdateCoordinator[IssData]):
 
     def _fetch_iss_data(self) -> IssData:
         """Fetch data from ISS API (blocking)."""
+        location = self.iss.current_location()
         return IssData(
             number_of_people_in_space=self.iss.number_of_people_in_space(),
-            current_location=self.iss.current_location(),
+            current_location={
+                "latitude": float(location["latitude"]),
+                "longitude": float(location["longitude"]),
+            },
         )
 
     @override
