@@ -8,7 +8,10 @@ import pytest
 from pytest_homeassistant.common import CLIENT_ID, MockUser
 from pytest_homeassistant.typing import WebSocketGenerator
 
-from homeassistant.auth.providers import homeassistant as prov_ha
+from homeassistant.auth.providers import (
+    auth_provider_from_config,
+    homeassistant as prov_ha,
+)
 from homeassistant.components.config import auth_provider_homeassistant as auth_ha
 from homeassistant.core import HomeAssistant
 
@@ -423,6 +426,65 @@ async def test_delete_owner_credentials(
     assert result["error"]["code"] == "cannot_delete_owner_credentials"
     assert owner.credentials == [credential]
     assert any(entry["username"] == "owner-user" for entry in auth_provider.data.users)
+
+
+@pytest.mark.parametrize(
+    ("caller", "other_usernames", "expected_success"),
+    [
+        pytest.param("admin", ["owner"], False, id="admin"),
+        pytest.param("owner", ["owner"], True, id="owner-with-another-login"),
+        pytest.param("owner", [], False, id="owner-without-another-login"),
+    ],
+)
+async def test_delete_owner_credentials_by_caller(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_owner_user: MockUser,
+    hass_admin_user: MockUser,
+    auth_provider: prov_ha.HassAuthProvider,
+    caller: str,
+    other_usernames: list[str],
+    expected_success: bool,
+) -> None:
+    """Test only the owner may remove an owner's password, if they have another login."""
+    other_provider = await auth_provider_from_config(
+        hass, hass.auth._store, {"type": "insecure_example", "users": []}
+    )
+    hass.auth._providers[(other_provider.type, other_provider.id)] = other_provider
+    for username in other_usernames:
+        await hass.auth.async_link_user(
+            hass_owner_user,
+            other_provider.async_create_credentials({"username": username}),
+        )
+    await auth_provider.async_add_auth("owner-user", "owner-pass")
+    password = await auth_provider.async_get_or_create_credentials(
+        {"username": "owner-user"}
+    )
+    await hass.auth.async_link_user(hass_owner_user, password)
+    callers = {"admin": hass_admin_user, "owner": hass_owner_user}
+    refresh_token = await hass.auth.async_create_refresh_token(
+        callers[caller], CLIENT_ID
+    )
+    client = await hass_ws_client(
+        hass, hass.auth.async_create_access_token(refresh_token)
+    )
+
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "config/auth_provider/homeassistant/delete",
+            "username": "owner-user",
+        }
+    )
+
+    result = await client.receive_json()
+    assert result["success"] is expected_success, result
+    assert (password in hass_owner_user.credentials) is not expected_success
+    assert auth_provider.data is not None
+    assert (
+        any(entry["username"] == "owner-user" for entry in auth_provider.data.users)
+        is not expected_success
+    )
 
 
 async def test_delete_requires_admin(
