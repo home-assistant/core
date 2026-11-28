@@ -154,12 +154,18 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
     assert len(hass.config_entries.async_entries(dynalite.DOMAIN)) == 1
-    with patch.object(
-        hass.config_entries, "async_forward_entry_unload", return_value=True
-    ) as mock_unload:
+    with (
+        patch.object(
+            hass.config_entries, "async_forward_entry_unload", return_value=True
+        ) as mock_unload,
+        patch(
+            "homeassistant.components.dynalite.bridge.DynaliteDevices.async_reset"
+        ) as mock_reset,
+    ):
         assert await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
         assert mock_unload.call_count == len(dynalite.PLATFORMS)
         expected_calls = [call(entry, platform) for platform in dynalite.PLATFORMS]
         for cur_call in mock_unload.mock_calls:
             assert cur_call in expected_calls
+        mock_reset.assert_awaited_once()
