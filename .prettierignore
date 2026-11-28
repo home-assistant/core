@@ -1,5 +1,6 @@
 *.md
 .strict-typing
+codemeta.json
 homeassistant/components/*/translations/*.json
 homeassistant/generated/*
 tests/components/lidarr/fixtures/initialize.js
