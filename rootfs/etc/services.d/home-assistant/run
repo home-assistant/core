@@ -15,5 +15,10 @@ if [[ -n "${DISABLE_JEMALLOC+x}" ]]; then
   bashio::log.warning "DISABLE_JEMALLOC is set but no longer has any effect: jemalloc has been replaced by mimalloc. Set PYTHONMALLOC=pymalloc to use the default allocator instead."
 fi
 
+args=(--config /config)
+if [[ -n "${HA_LOG_ROTATE_DAYS:-}" ]]; then
+  args+=(--log-rotate-days "${HA_LOG_ROTATE_DAYS}")
+fi
+
 # -P keeps the working directory out of sys.path, so /config cannot shadow imports.
-exec python3 -P -m homeassistant --config /config
+exec python3 -P -m homeassistant "${args[@]}"
