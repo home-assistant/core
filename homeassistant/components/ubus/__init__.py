@@ -394,10 +394,13 @@ async def _async_migrate_other(
                 "Host %s already exists on the hub; removing the duplicate ubus entry",
                 ", ".join(collision_hosts),
             )
+            # The duplicate entry is removed with the collision, so the
+            # issue is tied to the hub; it clears when the hub does.
             ir.async_create_issue(
                 hass,
                 DOMAIN,
                 f"migration_host_collision_{entry.entry_id}",
+                config_entry_id=hub.entry_id,
                 is_fixable=False,
                 is_persistent=True,
                 issue_domain=DOMAIN,

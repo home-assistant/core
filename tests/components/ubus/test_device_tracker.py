@@ -4503,6 +4503,55 @@ async def test_migration_host_collision(
     assert state.state == STATE_HOME
 
 
+async def test_migration_host_collision_issue_clears_with_hub(
+    hass: HomeAssistant,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the collision issue is cleared when the hub entry is removed.
+
+    The duplicate entry is already gone when the issue is created, so
+    it is tied to the hub; removing the hub (e.g. by uninstalling the
+    integration) must clear it, not leave it behind.
+    """
+    _mock, ubus = mock_ubus_by_host
+    first = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG,
+        title=MOCK_HOST,
+        entry_id="00000000000000000000000000A",
+    )
+    duplicate = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG,
+        title=MOCK_HOST,
+        entry_id="00000000000000000000000000B",
+    )
+    duplicate.add_to_hass(hass)
+    ubus[MOCK_HOST].get_hostapd_clients.return_value = {
+        "clients": {MAC_PHONE: {"authorized": True}}
+    }
+    first.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(first.entry_id)
+    await hass.async_block_till_done()
+
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"migration_host_collision_{duplicate.entry_id}"
+    )
+    assert issue is not None
+    assert issue.config_entry_id == first.entry_id
+
+    # Removing the hub clears the collision issue tied to it.
+    assert await hass.config_entries.async_remove(first.entry_id)
+    await hass.async_block_till_done()
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, f"migration_host_collision_{duplicate.entry_id}"
+        )
+        is None
+    )
+
+
 async def test_migration_unload_failure_keeps_entry(
     hass: HomeAssistant,
     mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
