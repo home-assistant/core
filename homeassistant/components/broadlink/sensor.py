@@ -99,6 +99,24 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
+    SensorEntityDescription(
+        key="tvoc",
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+        device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="formaldehyde",
+        translation_key="formaldehyde",
+        native_unit_of_measurement=UnitOfDensity.MILLIGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="co2",
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
+        device_class=SensorDeviceClass.CO2,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
 )
 
 
@@ -144,4 +162,10 @@ class BroadlinkSensor(BroadlinkEntity, SensorEntity):
     @override
     def _update_state(self, data):
         """Update the state of the entity."""
+        # These sensors belong to a purifier unit that can be offline independently.
+        if self._device.api.type == "LIFAAIR" and self.entity_description.key in {
+            "temperature",
+            "humidity",
+        }:
+            self._attr_available = data["purifier_online"]
         self._attr_native_value = data[self.entity_description.key]

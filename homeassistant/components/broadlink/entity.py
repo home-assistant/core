@@ -55,7 +55,7 @@ class BroadlinkEntity(Entity):
     @override
     def available(self) -> bool:
         """Return True if the entity is available."""
-        return self._device.available
+        return super().available and self._device.available
 
     @property
     @override

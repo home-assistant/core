@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 DOMAIN = "broadlink"
 
 DOMAINS_AND_TYPES = {
-    Platform.BINARY_SENSOR: {"HYS"},
+    Platform.BINARY_SENSOR: {"HYS", "LIFAAIR"},
     Platform.CLIMATE: {"HYS"},
     Platform.INFRARED: {"RM4MINI", "RM4PRO", "RM5PLUS", "RMMINI", "RMMINIB", "RMPRO"},
     Platform.LIGHT: {"LB1", "LB2"},
@@ -32,6 +32,7 @@ DOMAINS_AND_TYPES = {
         "SP3S",
         "SP4",
         "SP4B",
+        "LIFAAIR",
     },
     Platform.SWITCH: {
         "BG1",
@@ -52,6 +53,7 @@ DOMAINS_AND_TYPES = {
         "SP4B",
     },
     Platform.TIME: {"HYS"},
+    Platform.FAN: {"LIFAAIR"},
 }
 DEVICE_TYPES = set.union(*DOMAINS_AND_TYPES.values())
 
