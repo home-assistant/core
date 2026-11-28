@@ -15,6 +15,7 @@ from pytest_homeassistant.common import (
     setup_test_component_platform,
 )
 from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
+from webrtc_models import RTCIceCandidateInit
 
 from homeassistant.components import camera
 from homeassistant.components.camera import (
@@ -1256,6 +1257,66 @@ async def test_camera_capabilities_changing_native_support(
     await hass.async_block_till_done()
 
     await _test_capabilities(hass, hass_ws_client, cam.entity_id, set(), set())
+
+
+@pytest.mark.usefixtures("mock_provider_source_webrtc_camera")
+async def test_webrtc_provider_stream_source_for_native_webrtc(
+    hass: HomeAssistant,
+    register_test_provider: SomeTestProvider,
+) -> None:
+    """Test a native WebRTC camera with a provider stream source gets a provider."""
+    camera_obj = get_camera_from_entity_id(hass, "camera.provider_source")
+    assert camera_obj.webrtc_provider is register_test_provider
+    assert await camera_obj.stream_source() is None
+    # Offers are still handled by the camera itself
+    assert camera_obj.camera_capabilities.frontend_stream_types == {StreamType.WEB_RTC}
+
+    # The camera's WebRTC sessions don't go to the provider
+    with (
+        patch.object(register_test_provider, "async_close_session") as close,
+        patch.object(
+            register_test_provider, "async_on_webrtc_candidate"
+        ) as on_candidate,
+    ):
+        camera_obj.close_webrtc_session("session_id")
+        with pytest.raises(HomeAssistantError, match="Cannot handle WebRTC candidate"):
+            await Camera.async_on_webrtc_candidate(
+                camera_obj, "session_id", RTCIceCandidateInit("candidate")
+            )
+    close.assert_not_called()
+    on_candidate.assert_not_called()
+
+
+@pytest.mark.usefixtures("mock_provider_source_webrtc_camera")
+async def test_native_webrtc_camera_provider_not_asked_to_preload(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a provider used for a native camera's source doesn't set up streams."""
+    provider = SomeTestProvider()
+    with (
+        patch.object(provider, "async_register_camera") as register_camera,
+        patch.object(provider, "async_on_camera_prefs_update") as prefs_update,
+    ):
+        unsub = camera.async_register_webrtc_provider(hass, provider)
+        await hass.async_block_till_done()
+        camera_obj = get_camera_from_entity_id(hass, "camera.provider_source")
+        assert camera_obj.webrtc_provider is provider
+
+        client = await hass_ws_client(hass)
+        await client.send_json_auto_id(
+            {
+                "type": "camera/update_prefs",
+                "entity_id": "camera.provider_source",
+                "preload_stream": True,
+            }
+        )
+        msg = await client.receive_json()
+        assert msg["success"]
+
+    register_camera.assert_not_called()
+    prefs_update.assert_not_called()
+    unsub()
 
 
 @pytest.mark.usefixtures("mock_camera", "mock_stream_source")

@@ -253,6 +253,54 @@ async def mock_test_webrtc_cameras(hass: HomeAssistant) -> None:
 
 
 @pytest.fixture
+async def mock_provider_source_webrtc_camera(hass: HomeAssistant) -> None:
+    """Initialize a native WebRTC camera with a WebRTC provider stream source."""
+
+    class ProviderSourceCamera(camera.Camera):
+        """Native WebRTC camera that uses a provider for its own source."""
+
+        _attr_name = "Provider source"
+        _attr_supported_features: camera.CameraEntityFeature = (
+            camera.CameraEntityFeature.STREAM
+        )
+
+        async def async_webrtc_provider_stream_source(self) -> str | None:
+            return STREAM_SOURCE
+
+        async def async_handle_async_webrtc_offer(
+            self, offer_sdp: str, session_id: str, send_message: WebRTCSendMessage
+        ) -> None:
+            send_message(WebRTCAnswer(WEBRTC_ANSWER))
+
+        async def async_on_webrtc_candidate(
+            self, session_id: str, candidate: RTCIceCandidateInit
+        ) -> None:
+            """Handle a WebRTC candidate."""
+
+    domain = "test"
+    entry = MockConfigEntry(domain=domain)
+    entry.add_to_hass(hass)
+
+    async def async_setup_entry_init(
+        hass: HomeAssistant, config_entry: ConfigEntry
+    ) -> None:
+        """Set up test config entry."""
+        await hass.config_entries.async_forward_entry_setups(
+            config_entry, [Platform.CAMERA]
+        )
+
+    mock_integration(hass, MockModule(domain, async_setup_entry=async_setup_entry_init))
+    setup_test_component_platform(
+        hass, camera.DOMAIN, [ProviderSourceCamera()], from_config_entry=True
+    )
+    mock_platform(hass, f"{domain}.config_flow", Mock())
+
+    with mock_config_flow(domain, ConfigFlow):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+
+@pytest.fixture
 async def register_test_provider(
     hass: HomeAssistant,
 ) -> AsyncGenerator[SomeTestProvider]:

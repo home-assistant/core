@@ -417,7 +417,7 @@ class WebRTCProvider(CameraWebRTCProvider):
 
     async def _update_stream_source(self, camera: Camera) -> None:
         """Update the stream source in go2rtc config if needed."""
-        if not (stream_source := await camera.stream_source()):
+        if not (stream_source := await camera.async_webrtc_provider_stream_source()):
             await self._close_camera_sessions(camera)
             raise HomeAssistantError("Camera has no stream source")
 
