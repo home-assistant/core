@@ -1885,3 +1885,75 @@ async def test_resource_metadata_unexpected_fetch_result(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
     assert "Unexpected fetch result: CancelledError" in caplog.text
+
+
+@pytest.mark.usefixtures("current_request_with_host", "credential", "mock_setup_entry")
+@respx.mock
+async def test_authentication_flow_canonicalizes_resource_uri(
+    hass: HomeAssistant,
+    mock_mcp_client: Mock,
+    aioclient_mock: AiohttpClientMocker,
+    hass_client_no_auth: ClientSessionGenerator,
+) -> None:
+    """Test resource URI strips userinfo and fragments and normalizes host/port."""
+    raw_url = "https://user:secret@Example.COM:443/mcp#fragment"
+    canonical_url = "https://example.com/mcp"
+    header_url = "https://example.com/custom-discovery"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    mock_mcp_client.side_effect = httpx2.HTTPStatusError(
+        "Authentication required",
+        request=None,
+        response=httpx2.Response(
+            401,
+            headers={"WWW-Authenticate": f'Bearer resource_metadata="{header_url}"'},
+        ),
+    )
+    respx.get(header_url).mock(
+        return_value=httpx2.Response(
+            status_code=200,
+            json={
+                "resource": canonical_url,
+                "authorization_servers": [AUTHORIZATION_SERVER],
+                "scopes_supported": SCOPES_SUPPORTED,
+            },
+        )
+    )
+    respx.get(OAUTH_AUTHORIZATION_SERVER_DISCOVERY_ENDPOINT).mock(
+        return_value=OAUTH_SERVER_METADATA_RESPONSE
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: raw_url},
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "credentials_choice"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": "pick_implementation"},
+    )
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    assert "secret" not in result["url"]
+    result = await perform_oauth_flow(
+        hass,
+        aioclient_mock,
+        hass_client_no_auth,
+        result,
+        scopes=SCOPES_SUPPORTED,
+        resource=canonical_url,
+    )
+
+    mock_mcp_client.side_effect = None
+    response = Mock()
+    response.server_info.name = TEST_API_NAME
+    response.server_info.title = None
+    mock_mcp_client.return_value.initialize.return_value = response
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert len(aioclient_mock.mock_calls) == 1
+    assert aioclient_mock.mock_calls[0][2]["resource"] == canonical_url

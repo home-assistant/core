@@ -15,6 +15,8 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     LocalOAuth2ImplementationWithPkce,
 )
 
+from .auth import canonical_resource_uri
+
 
 @dataclass(frozen=True)
 class MCPAuthContext:
@@ -67,7 +69,7 @@ class MCPOAuth2Implementation(LocalOAuth2ImplementationWithPkce):
             client_secret,
         )
         self._name = name
-        self._resource = resource
+        self._resource = canonical_resource_uri(resource)
 
     @property
     @override

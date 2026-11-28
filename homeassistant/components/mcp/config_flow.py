@@ -29,7 +29,7 @@ from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from . import async_get_config_entry_implementation
 from .application_credentials import authorization_server_context
-from .auth import AuthenticateHeader
+from .auth import AuthenticateHeader, canonical_resource_uri
 from .const import CONF_AUTHORIZATION_URL, CONF_SCOPE, CONF_SLUG, CONF_TOKEN_URL, DOMAIN
 from .coordinator import (
     TIMEOUT,
@@ -551,7 +551,7 @@ def _resource_metadata_from_response(
         isinstance(data, dict)
         and (authorization_servers := data.get("authorization_servers"))
         and isinstance(authorization_servers, list)
-        and data.get("resource") == mcp_server_url
+        and data.get("resource") == canonical_resource_uri(mcp_server_url)
     ):
         return ResourceMetadata(
             authorization_servers=authorization_servers,
