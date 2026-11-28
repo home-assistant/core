@@ -1,6 +1,10 @@
 {
   "domain": "bt_home_hub_5",
   "name": "BT Home Hub 5",
+  "categories": [
+    "presence_location.network_presence",
+    "computers_network.routers_network"
+  ],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/bt_home_hub_5",
   "iot_class": "local_polling",

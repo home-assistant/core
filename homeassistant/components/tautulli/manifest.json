@@ -1,6 +1,7 @@
 {
   "domain": "tautulli",
   "name": "Tautulli",
+  "categories": ["media_entertainment.tv_streaming"],
   "codeowners": ["@ludeeus", "@tkdrob"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/tautulli",

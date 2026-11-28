@@ -4,6 +4,8 @@ from datetime import datetime
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from pytrafikverket import CameraInfoModel
 
 from homeassistant.components.trafikverket_camera.const import DOMAIN
@@ -12,9 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from . import ENTRY_CONFIG
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture(name="load_int")

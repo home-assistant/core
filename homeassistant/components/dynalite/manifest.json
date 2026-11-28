@@ -2,6 +2,10 @@
   "domain": "dynalite",
   "name": "Philips Dynalite",
   "after_dependencies": ["panel_custom"],
+  "categories": [
+    "lighting.lighting_systems",
+    "hubs_protocols.building_automation"
+  ],
   "codeowners": ["@ziv1234"],
   "config_flow": true,
   "dependencies": ["http", "websocket_api"],

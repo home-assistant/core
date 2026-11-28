@@ -14,8 +14,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import AutomowerDataUpdateCoordinator
 from .const import DOMAIN, EXECUTION_TIME_DELAY
+from .coordinator import AutomowerDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 

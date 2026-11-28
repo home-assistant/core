@@ -141,6 +141,18 @@ TRIGGER_ICONS_SCHEMA = cv.schema_with_slug_keys(
 )
 
 
+INTEGRATION_CATEGORY_ICONS_SCHEMA = cv.schema_with_slug_keys(
+    {
+        probatio.Required("default"): icon_value_validator,
+        probatio.Optional("subcategory"): cv.schema_with_slug_keys(
+            {probatio.Required("default"): icon_value_validator},
+            slug_validator=translation_key_validator,
+        ),
+    },
+    slug_validator=translation_key_validator,
+)
+
+
 def icon_schema(
     core_integration: bool, integration_type: IntegrationType, no_entity_platform: bool
 ) -> probatio.Schema:
@@ -230,6 +242,39 @@ def icon_schema(
     return schema
 
 
+def integration_category_keys(categories: dict[str, Any]) -> set[str]:
+    """Return the category and subcategory keys, like `energy.meters_monitoring`."""
+    keys = set()
+    for category, details in categories.items():
+        keys.add(category)
+        keys.update(
+            f"{category}.{subcategory}"
+            for subcategory in details.get("subcategory", {})
+        )
+
+    return keys
+
+
+def validate_integration_category_icons(
+    integration: Integration, icons: dict[str, Any]
+) -> None:
+    """Validate every integration category has an icon, and every icon a category."""
+    # Invalid strings are reported by the json and translations plugins.
+    try:
+        strings = orjson.loads((integration.path / "strings.json").read_text())
+        categories = integration_category_keys(strings.get("integration_category", {}))
+    except ValueError, AttributeError, TypeError:
+        return
+
+    category_icons = integration_category_keys(icons.get("integration_category", {}))
+
+    for key in sorted(categories - category_icons):
+        integration.add_error("icons", f"Integration category `{key}` has no icon")
+
+    for key in sorted(category_icons - categories):
+        integration.add_error("icons", f"Icon for unknown integration category `{key}`")
+
+
 def validate_icon_file(config: Config, integration: Integration) -> None:
     """Validate icon file for integration."""
     icons_file = integration.path / "icons.json"
@@ -249,11 +294,23 @@ def validate_icon_file(config: Config, integration: Integration) -> None:
     schema = icon_schema(
         integration.core, integration.integration_type, no_entity_platform
     )
+    if integration.domain == "homeassistant":
+        schema = schema.extend(
+            {
+                probatio.Optional(
+                    "integration_category"
+                ): INTEGRATION_CATEGORY_ICONS_SCHEMA
+            }
+        )
 
     try:
         schema(icons)
     except probatio.Invalid as err:
         integration.add_error("icons", f"Invalid {name}: {humanize_error(icons, err)}")
+        return
+
+    if integration.domain == "homeassistant":
+        validate_integration_category_icons(integration, icons)
 
 
 def validate(integrations: dict[str, Integration], config: Config) -> None:

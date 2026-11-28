@@ -13,6 +13,9 @@
     "effect_colorloop": {
       "service": "mdi:looks"
     },
+    "effect_colorsweep": {
+      "service": "mdi:gradient-horizontal"
+    },
     "effect_flame": {
       "service": "mdi:fire"
     },

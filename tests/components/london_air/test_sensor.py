@@ -2,13 +2,12 @@
 
 from http import HTTPStatus
 
+from pytest_homeassistant.common import async_load_fixture
 import requests_mock
 
 from homeassistant.components.london_air.sensor import CONF_LOCATIONS, URL
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import async_load_fixture
 
 VALID_CONFIG = {"sensor": {"platform": "london_air", CONF_LOCATIONS: ["Merton"]}}
 

@@ -1,6 +1,7 @@
 """Test bluesound integration."""
 
 from pyblu.errors import PlayerUnreachableError
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.bluesound import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -8,8 +9,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import PlayerMocks
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_entry(

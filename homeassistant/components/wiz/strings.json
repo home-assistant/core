@@ -39,5 +39,16 @@
         "name": "Effect speed"
       }
     }
+  },
+  "exceptions": {
+    "communication_error": {
+      "message": "Error while communicating with the WiZ device"
+    },
+    "not_supported": {
+      "message": "The WiZ device does not support this command"
+    },
+    "timeout": {
+      "message": "Timed out waiting for the WiZ device to respond"
+    }
   }
 }

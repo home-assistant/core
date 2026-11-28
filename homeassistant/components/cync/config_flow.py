@@ -71,7 +71,7 @@ class CyncConfigFlow(ConfigFlow, domain=DOMAIN):
 
             if not errors:
                 return await self._create_config_entry(self.cync_auth.username)
-
+            # pylint: disable-next=home-assistant-step_id-match-method
             return self.async_show_form(
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
             )

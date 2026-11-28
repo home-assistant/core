@@ -28,7 +28,7 @@ from .coordinator import (
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: WeheatConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: WeheatConfigEntry) -> None:
     """Set up Weheat from a config entry."""
     implementation = await async_get_config_entry_implementation(hass, entry)
 
@@ -37,14 +37,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: WeheatConfigEntry) -> bo
     try:
         await session.async_ensure_token_valid()
     except aiohttp.ClientResponseError as ex:
-        LOGGER.warning("API error: %s (%s)", ex.status, ex.message)
         if ex.status in (
             HTTPStatus.BAD_REQUEST,
             HTTPStatus.UNAUTHORIZED,
             HTTPStatus.FORBIDDEN,
         ):
             raise ConfigEntryAuthFailed("Token not valid, trigger renewal") from ex
-        raise ConfigEntryNotReady from ex
+        raise ConfigEntryNotReady(f"API error: {ex.status} ({ex.message})") from ex
 
     token = session.token[CONF_ACCESS_TOKEN]
     entry.runtime_data = []
@@ -92,9 +91,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WeheatConfigEntry) -> bo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: WeheatConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: WeheatConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

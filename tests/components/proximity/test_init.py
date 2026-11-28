@@ -3,6 +3,7 @@
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.proximity.const import (
     CONF_IGNORED_ZONES,
@@ -19,8 +20,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.util import slugify
-
-from tests.common import MockConfigEntry
 
 
 async def async_setup_single_entry(

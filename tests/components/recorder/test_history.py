@@ -8,6 +8,17 @@ from unittest.mock import patch, sentinel
 
 from freezegun import freeze_time
 import pytest
+from pytest_homeassistant.components.recorder.common import (
+    assert_dict_of_states_equal_without_context_and_last_changed,
+    assert_multiple_states_equal_without_context,
+    assert_multiple_states_equal_without_context_and_last_changed,
+    assert_states_equal_without_context,
+    async_recorder_block_till_done,
+    async_wait_recording_done,
+    db_state_attributes_to_native,
+    db_state_to_native,
+)
+from pytest_homeassistant.typing import RecorderInstanceContextManager
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder import Recorder, history
@@ -22,19 +33,6 @@ from homeassistant.components.recorder.util import session_scope
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.util import dt as dt_util
-
-from .common import (
-    assert_dict_of_states_equal_without_context_and_last_changed,
-    assert_multiple_states_equal_without_context,
-    assert_multiple_states_equal_without_context_and_last_changed,
-    assert_states_equal_without_context,
-    async_recorder_block_till_done,
-    async_wait_recording_done,
-    db_state_attributes_to_native,
-    db_state_to_native,
-)
-
-from tests.typing import RecorderInstanceContextManager
 
 
 @pytest.fixture

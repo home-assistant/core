@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, MockUser
 from zwave_js_server.const import CommandClass
 from zwave_js_server.const.command_class.lock import (
     ATTR_CODE_SLOT,
@@ -34,8 +35,6 @@ from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 
 from .common import SCHLAGE_BE469_LOCK_ENTITY, replace_value_of_zwave_value
-
-from tests.common import MockConfigEntry, MockUser
 
 
 async def test_door_lock(

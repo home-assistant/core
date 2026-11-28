@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 from aiohttp import ClientError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.hassio import AddonError
 from homeassistant.components.homeassistant_hardware.firmware_config_flow import (
@@ -27,8 +28,6 @@ from .test_config_flow import (
     mock_firmware_info,
     mock_test_firmware_platform,  # noqa: F401
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(

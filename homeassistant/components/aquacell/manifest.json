@@ -1,6 +1,7 @@
 {
   "domain": "aquacell",
   "name": "AquaCell",
+  "categories": ["water.water_treatment"],
   "codeowners": ["@Jordi1990"],
   "config_flow": true,
   "dependencies": ["http", "network"],

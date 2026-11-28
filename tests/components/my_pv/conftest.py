@@ -5,13 +5,12 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.my_pv.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 
 from . import ELWA2_SERIAL_NUMBER
-
-from tests.common import MockConfigEntry
 
 SETUP_CONFIGURATION = {
     "bstmode": {
@@ -113,7 +112,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Prevent running the real integration setup during tests."""
     with patch(
         "homeassistant.components.my_pv.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup:
         yield mock_setup
 
@@ -146,6 +145,9 @@ def mock_my_pv_client(
         client.setup_uri = "http://127.0.0.1/"
         client.hardware_version = "v1.5A"
         client.firmware_version = "e0002200"
+        client.latest_firmware_version = "e0002200"
+        client.firmware_update_available = False
+        client.firmware_update_progress = None
         client.connected = True
         client.is_on = True
         client.current_temperature = 54.3
@@ -159,6 +161,7 @@ def mock_my_pv_client(
         client.is_on = True
         client.send_command = AsyncMock(return_value=True)
         client.get_data_configurations = Mock(return_value=DATA_CONFIGURATION)
+        client.get_data_configuration = Mock(side_effect=DATA_CONFIGURATION.get)
         client.get_data_value = Mock(side_effect=_data_value_lookup)
         client.supports_data = Mock(side_effect=DATA_CONFIGURATION.__contains__)
 

@@ -1,10 +1,12 @@
 """Tests for Shelly select platform."""
 
 from copy import deepcopy
+from typing import Any
 from unittest.mock import Mock
 
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
     ATTR_OPTION,
@@ -17,6 +19,7 @@ from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     Platform,
 )
@@ -25,7 +28,16 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from . import init_integration, patch_platforms, register_device, register_entity
+from . import (
+    init_integration,
+    mutate_rpc_device_status,
+    patch_platforms,
+    register_device,
+    register_entity,
+)
+from .conftest import MOCK_LEDSTRIP_STATUS_AURORA, MOCK_LEDSTRIP_STATUS_RAINBOW
+
+LEDSTRIP_ENTITY_ID = f"{SELECT_DOMAIN}.test_name_ledstrip_0_effect_palette"
 
 
 @pytest.fixture(autouse=True)
@@ -329,3 +341,65 @@ async def test_rpc_cury_mode_select(
 
     assert (state := hass.states.get(entity_id))
     assert state.state == "none"
+
+
+async def test_rpc_ledstrip_palette_select(
+    hass: HomeAssistant,
+    mock_ledstrip_rpc_device: Mock,
+    entity_registry: EntityRegistry,
+    snapshot: SnapshotAssertion,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC LED strip effect palette select."""
+    monkeypatch.setitem(
+        mock_ledstrip_rpc_device.status, "ledstrip:0", MOCK_LEDSTRIP_STATUS_AURORA
+    )
+
+    await init_integration(hass, 4)
+
+    state = hass.states.get(LEDSTRIP_ENTITY_ID)
+    assert state == snapshot(name=f"{LEDSTRIP_ENTITY_ID}-state")
+
+    entry = entity_registry.async_get(LEDSTRIP_ENTITY_ID)
+    assert entry == snapshot(name=f"{LEDSTRIP_ENTITY_ID}-entry")
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: LEDSTRIP_ENTITY_ID, ATTR_OPTION: "fire"},
+        blocking=True,
+    )
+    mock_ledstrip_rpc_device.ledstrip_set.assert_called_once_with(
+        0, {"palette": "fire"}
+    )
+
+    mutate_rpc_device_status(
+        monkeypatch, mock_ledstrip_rpc_device, "ledstrip:0", "palette", "fire"
+    )
+    mock_ledstrip_rpc_device.mock_update()
+
+    assert (state := hass.states.get(LEDSTRIP_ENTITY_ID))
+    assert state.state == "fire"
+
+
+@pytest.mark.parametrize(
+    ("ledstrip_status", "expected_state"),
+    [
+        (MOCK_LEDSTRIP_STATUS_AURORA, "ocean"),
+        (MOCK_LEDSTRIP_STATUS_RAINBOW, STATE_UNAVAILABLE),
+    ],
+)
+async def test_rpc_ledstrip_palette_select_availability(
+    hass: HomeAssistant,
+    mock_ledstrip_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    ledstrip_status: dict[str, Any],
+    expected_state: str,
+) -> None:
+    """Test RPC LED strip palette select availability depends on the effect."""
+    monkeypatch.setitem(mock_ledstrip_rpc_device.status, "ledstrip:0", ledstrip_status)
+
+    await init_integration(hass, 4)
+
+    assert (state := hass.states.get(LEDSTRIP_ENTITY_ID))
+    assert state.state == expected_state

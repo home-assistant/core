@@ -78,7 +78,7 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
         | WaterHeaterEntityFeature.ON_OFF
         | WaterHeaterEntityFeature.OPERATION_MODE
     )
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
     _evo_device: evo.HotWater
     _evo_id_attr = "dhw_id"

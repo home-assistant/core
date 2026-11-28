@@ -1,6 +1,7 @@
 {
   "domain": "rainbird",
   "name": "Rain Bird",
+  "categories": ["garden_plants"],
   "codeowners": ["@konikvranik", "@allenporter"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/rainbird",

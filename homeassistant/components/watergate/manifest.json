@@ -1,6 +1,7 @@
 {
   "domain": "watergate",
   "name": "Watergate",
+  "categories": ["water.meters_leak_detection"],
   "codeowners": ["@adam-the-hero"],
   "config_flow": true,
   "dependencies": ["http", "webhook"],

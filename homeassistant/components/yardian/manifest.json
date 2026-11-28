@@ -1,6 +1,7 @@
 {
   "domain": "yardian",
   "name": "Yardian",
+  "categories": ["garden_plants"],
   "codeowners": ["@aeon-matrix"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/yardian",

@@ -17,6 +17,10 @@
           "use_psk": "Use PSK authentication",
           "use_ssl": "Use SSL connection"
         },
+        "data_description": {
+          "use_psk": "Authenticate with a Pre-Shared Key (PSK) instead of a PIN code. PSK authentication is recommended as it is more stable.",
+          "use_ssl": "Connect to the TV over an encrypted SSL connection. Use only if your TV supports this connection type."
+        },
         "description": "Make sure that «Control remotely» is enabled on your TV. Go to: \nSettings -> Network -> Remote device settings -> Control remotely. \n\nThere are two authorization methods: PIN code or PSK (Pre-Shared Key). \nAuthorization via PSK is recommended, as it is more stable. \n\nUse an SSL connection only if your TV supports this connection type.",
         "title": "Authorize Sony Bravia TV"
       },
@@ -27,12 +31,18 @@
         "data": {
           "pin": "[%key:common::config_flow::data::pin%]"
         },
+        "data_description": {
+          "pin": "The PIN code shown on the TV screen."
+        },
         "description": "Enter the PIN code shown on the Sony Bravia TV. \n\nIf the PIN code is not shown, you have to unregister Home Assistant on your TV, go to: Settings -> Network -> Remote device settings -> Deregister remote device.",
         "title": "[%key:component::braviatv::config::step::authorize::title%]"
       },
       "psk": {
         "data": {
           "pin": "PSK"
+        },
+        "data_description": {
+          "pin": "The Pre-Shared Key configured in the IP Control settings of the TV."
         },
         "description": "To set up PSK on your TV, go to: Settings -> Network -> Home Network Setup -> IP Control. Set «Authentication» to «Normal and Pre-Shared Key» or «Pre-Shared Key» and define your Pre-Shared-Key string (e.g. sony). \n\nThen enter your PSK here.",
         "title": "[%key:component::braviatv::config::step::authorize::title%]"

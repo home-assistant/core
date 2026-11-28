@@ -9,6 +9,7 @@ from opendata_transport.exceptions import (
 )
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_array_fixture
 
 from homeassistant.components.swiss_public_transport.const import (
     ATTR_LIMIT,
@@ -25,8 +26,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_load_json_array_fixture
 
 _LOGGER = logging.getLogger(__name__)
 

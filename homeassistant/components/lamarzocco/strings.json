@@ -64,6 +64,9 @@
       "backflush_enabled": {
         "name": "Backflush active"
       },
+      "bluetooth_connected": {
+        "name": "Bluetooth connected"
+      },
       "brew_active": {
         "name": "Brewing active"
       },
@@ -200,6 +203,9 @@
     },
     "button_error": {
       "message": "Error while executing button {key}"
+    },
+    "migration_unsupported_version": {
+      "message": "Migration from version {version} is no longer supported, remove and re-add the integration"
     },
     "number_exception": {
       "message": "Error while setting value {value} for number {key}"

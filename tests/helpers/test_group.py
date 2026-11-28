@@ -1,5 +1,7 @@
 """Test the group helper."""
 
+from pytest_homeassistant.common import MockEntity, MockEntityPlatform
+
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_GROUP_ENTITIES, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, group
@@ -8,8 +10,6 @@ from homeassistant.helpers.group import (
     IntegrationSpecificGroup,
     get_group_entities,
 )
-
-from tests.common import MockEntity, MockEntityPlatform
 
 
 async def test_expand_entity_ids(hass: HomeAssistant) -> None:
@@ -170,6 +170,10 @@ async def test_group_entity_id_changed_in_registry(
 
     expanded = group.expand_entity_ids(hass, ["light.new_id"])
     assert sorted(expanded) == ["light.bulb1", "light.bulb2"]
+
+    entity_registry.async_remove("light.new_id")
+    await hass.async_block_till_done()
+    assert get_group_entities(hass) == {}
 
 
 async def test_multiple_group_entities(hass: HomeAssistant) -> None:

@@ -133,8 +133,70 @@ def platforms() -> Platform | list[Platform]:
                 ),
             ],
         ),
+        (
+            "twunby",
+            [
+                ("button.t90_pro_omni_relocate", SetRelocationState()),
+                (
+                    "button.t90_pro_omni_reset_main_brush_lifespan",
+                    ResetLifeSpan(LifeSpan.BRUSH),
+                ),
+                (
+                    "button.t90_pro_omni_reset_cleaning_solution_lifespan",
+                    ResetLifeSpan(LifeSpan.CLEANING_SOLUTION),
+                ),
+                (
+                    "button.t90_pro_omni_reset_dust_bag_lifespan",
+                    ResetLifeSpan(LifeSpan.DUST_BAG),
+                ),
+                (
+                    "button.t90_pro_omni_reset_dust_bucket_lifespan",
+                    ResetLifeSpan(LifeSpan.DUST_BUCKET),
+                ),
+                (
+                    "button.t90_pro_omni_reset_dust_container_filter_lifespan",
+                    ResetLifeSpan(LifeSpan.DUST_CONTAINER_FILTER),
+                ),
+                (
+                    "button.t90_pro_omni_reset_filter_lifespan",
+                    ResetLifeSpan(LifeSpan.FILTER),
+                ),
+                (
+                    "button.t90_pro_omni_reset_heavy_duty_cleaning_solution_lifespan",
+                    ResetLifeSpan(LifeSpan.HEAVY_DUTY_CLEANING_SOLUTION),
+                ),
+                (
+                    "button.t90_pro_omni_reset_mop_washing_tray_lifespan",
+                    ResetLifeSpan(LifeSpan.MOP_WASHING_TRAY),
+                ),
+                (
+                    "button.t90_pro_omni_reset_round_mop_lifespan",
+                    ResetLifeSpan(LifeSpan.ROUND_MOP),
+                ),
+                (
+                    "button.t90_pro_omni_reset_side_brush_lifespan",
+                    ResetLifeSpan(LifeSpan.SIDE_BRUSH),
+                ),
+                (
+                    "button.t90_pro_omni_reset_strainer_lifespan",
+                    ResetLifeSpan(LifeSpan.STRAINER),
+                ),
+                (
+                    "button.t90_pro_omni_reset_unit_care_lifespan",
+                    ResetLifeSpan(LifeSpan.UNIT_CARE),
+                ),
+                (
+                    "button.t90_pro_omni_dry_mop",
+                    station_action.StationAction(StationAction.DRY_MOP),
+                ),
+                (
+                    "button.t90_pro_omni_empty_dustbin",
+                    station_action.StationAction(StationAction.EMPTY_DUSTBIN),
+                ),
+            ],
+        ),
     ],
-    ids=["yna5x1", "5xu9h3", "qhe2o2", "9eamof"],
+    ids=["yna5x1", "5xu9h3", "qhe2o2", "9eamof", "twunby"],
 )
 async def test_buttons(
     hass: HomeAssistant,

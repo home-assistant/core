@@ -14,6 +14,7 @@ from typing import Any, Literal, override
 
 from psutil._common import POWER_TIME_UNKNOWN, POWER_TIME_UNLIMITED
 
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
@@ -39,7 +40,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util, slugify
 
 from . import SystemMonitorConfigEntry
-from .binary_sensor import BINARY_SENSOR_DOMAIN
 from .const import CONF_PROCESS, DOMAIN, NET_IO_TYPES
 from .coordinator import SystemMonitorCoordinator
 from .util import get_all_disk_mounts, get_all_network_interfaces, read_cpu_temperature
@@ -892,7 +892,7 @@ class SystemMonitorSensor(CoordinatorEntity[SystemMonitorCoordinator], SensorEnt
         """When added to hass."""
         self.coordinator.update_subscribers[
             self.entity_description.add_to_update(self)
-        ].add(self.entity_id)
+        ].add(self._attr_unique_id)
         return await super().async_added_to_hass()
 
     @override
@@ -900,7 +900,7 @@ class SystemMonitorSensor(CoordinatorEntity[SystemMonitorCoordinator], SensorEnt
         """When removed from hass."""
         self.coordinator.update_subscribers[
             self.entity_description.add_to_update(self)
-        ].remove(self.entity_id)
+        ].remove(self._attr_unique_id)
         return await super().async_will_remove_from_hass()
 
     @callback

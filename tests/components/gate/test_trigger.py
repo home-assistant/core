@@ -3,13 +3,7 @@
 from typing import Any
 
 import pytest
-
-from homeassistant.components.cover import ATTR_IS_CLOSED, CoverDeviceClass, CoverState
-from homeassistant.components.gate.trigger import TRIGGERS
-from homeassistant.const import ATTR_DEVICE_CLASS
-from homeassistant.core import HomeAssistant
-
-from tests.components.common import (
+from pytest_homeassistant.components.common import (
     TargetSupport,
     TriggerStateDescription,
     assert_trigger_behavior_all,
@@ -21,6 +15,11 @@ from tests.components.common import (
     parametrize_trigger_states,
     target_entities,
 )
+
+from homeassistant.components.cover import ATTR_IS_CLOSED, CoverDeviceClass, CoverState
+from homeassistant.components.gate.trigger import TRIGGERS
+from homeassistant.const import ATTR_DEVICE_CLASS
+from homeassistant.core import HomeAssistant
 
 
 @pytest.fixture

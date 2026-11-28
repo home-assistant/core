@@ -40,9 +40,7 @@ rules:
   integration-owner: done
   log-when-unavailable: todo
   parallel-updates: done
-  reauthentication-flow:
-    status: exempt
-    comment: Integration does not require reauthentication.
+  reauthentication-flow: done
   test-coverage: done
 
   # Gold

@@ -1,6 +1,7 @@
 {
   "domain": "nx584",
   "name": "NX584",
+  "categories": ["security_safety.alarm_systems"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/nx584",
   "iot_class": "local_push",

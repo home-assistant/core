@@ -1,6 +1,7 @@
 {
   "domain": "apcupsd",
   "name": "APC UPS Daemon",
+  "categories": ["energy.backup_power"],
   "codeowners": ["@yuxincs"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/apcupsd",

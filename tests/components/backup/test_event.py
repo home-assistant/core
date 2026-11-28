@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock, patch
 
+from pytest_homeassistant.common import snapshot_platform
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.backup.const import DOMAIN
@@ -12,9 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .common import setup_backup_integration
-
-from tests.common import snapshot_platform
-from tests.typing import WebSocketGenerator
 
 
 async def test_event_entity(

@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 from devolo_plc_api.exceptions.device import DeviceUnavailable
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
@@ -19,8 +20,6 @@ from homeassistant.helpers import entity_registry as er
 from . import configure_integration
 from .const import CONNECTED_STATIONS, NO_CONNECTED_STATIONS
 from .mock import MockDevice
-
-from tests.common import async_fire_time_changed
 
 STATION = CONNECTED_STATIONS[0]
 

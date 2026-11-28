@@ -1,6 +1,7 @@
 {
   "domain": "litterrobot",
   "name": "Whisker",
+  "categories": ["pets"],
   "codeowners": ["@natekspencer", "@tkdrob"],
   "config_flow": true,
   "dhcp": [
@@ -16,5 +17,5 @@
   "iot_class": "cloud_push",
   "loggers": ["pylitterbot"],
   "quality_scale": "platinum",
-  "requirements": ["pylitterbot==2025.6.5"]
+  "requirements": ["pylitterbot==2025.7.0"]
 }

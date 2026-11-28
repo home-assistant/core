@@ -2,12 +2,12 @@
 
 from unittest.mock import AsyncMock, MagicMock
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.cpuspeed.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 async def test_full_user_flow(
@@ -31,6 +31,7 @@ async def test_full_user_flow(
     assert result2.get("type") is FlowResultType.CREATE_ENTRY
     assert result2.get("title") == "CPU Speed"
     assert result2.get("data") == {}
+    assert result2["result"].unique_id == DOMAIN
 
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(mock_cpuinfo_config_flow.mock_calls) == 1

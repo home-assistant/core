@@ -9,6 +9,7 @@ from aioamazondevices.exceptions import (
     CannotRetrieveData,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.alexa_devices.const import DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SERVICE_TURN_ON
@@ -19,8 +20,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
 from .const import TEST_DEVICE_1_SN
-
-from tests.common import MockConfigEntry
 
 ENTITY_ID = "switch.echo_test_do_not_disturb"
 

@@ -115,6 +115,7 @@ def validate_query(
     query_template: str | Template,
     uses_recorder_db: bool,
     unique_id: str | None = None,
+    config_entry_id: str | None = None,
 ) -> None:
     """Validate the query against common performance issues.
 
@@ -124,6 +125,7 @@ def validate_query(
         uses_recorder_db: A boolean indicating if the query is
             against the recorder database.
         unique_id: The unique ID of the entity, used for creating issue registry keys.
+        config_entry_id: The config entry the issue belongs to, if any.
 
     Raises:
         ValueError: If the query uses `entity_id` without referencing `states_meta`.
@@ -157,6 +159,7 @@ def validate_query(
             hass,
             DOMAIN,
             f"entity_id_query_does_full_table_scan_{issue_key}",
+            config_entry_id=config_entry_id,
             translation_key="entity_id_query_does_full_table_scan",
             translation_placeholders={"query": redacted_query},
             is_fixable=False,

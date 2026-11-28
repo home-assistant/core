@@ -17,12 +17,13 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     CONF_PORT,
-    PERCENTAGE,
     REVOLUTIONS_PER_MINUTE,
+    EntityCategory,
     UnitOfElectricPotential,
     UnitOfFrequency,
     UnitOfInformation,
     UnitOfPower,
+    UnitOfRatio,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -42,6 +43,8 @@ ATTR_TYPE: Final = "type"
 ATTR_USED: Final = "used"
 
 PIXELS: Final = "px"
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True)
@@ -190,20 +193,31 @@ def gpu_usage_percentage(gpu: GPU) -> float | None:
 
 
 def memory_free(data: SystemBridgeData) -> float | None:
-    """Return the free memory."""
-    if (virtual := data.memory.virtual) is not None and (
-        free := virtual.free
-    ) is not None:
-        return round(free / 1000**3, 2)
+    """Return the free memory, counting reclaimable cache as free."""
+    if (
+        data.memory is not None
+        and (virtual := data.memory.virtual) is not None
+        and (available := virtual.available) is not None
+    ):
+        return round(available / 1000**3, 2)
     return None
 
 
 def memory_used(data: SystemBridgeData) -> float | None:
     """Return the used memory."""
-    if (virtual := data.memory.virtual) is not None and (
-        used := virtual.used
-    ) is not None:
+    if (
+        data.memory is not None
+        and (virtual := data.memory.virtual) is not None
+        and (used := virtual.used) is not None
+    ):
         return round(used / 1000**3, 2)
+    return None
+
+
+def memory_used_percentage(data: SystemBridgeData) -> float | None:
+    """Return the used memory percentage."""
+    if data.memory is not None and (virtual := data.memory.virtual) is not None:
+        return virtual.percent
     return None
 
 
@@ -214,7 +228,8 @@ def partition_usage(
 ) -> float | None:
     """Return the used memory."""
     if (
-        (devices := data.disks.devices) is not None
+        data.disks is not None
+        and (devices := data.disks.devices) is not None
         and device_index < len(devices)
         and (partitions := devices[device_index].partitions) is not None
         and partition_index < len(partitions)
@@ -229,6 +244,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         key="boot_time",
         translation_key="boot_time",
         device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: datetime.fromtimestamp(data.system.boot_time, tz=UTC),
     ),
     SystemBridgeSensorEntityDescription(
@@ -271,6 +287,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
     SystemBridgeSensorEntityDescription(
         key="kernel",
         translation_key="kernel",
+        entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.system.platform,
     ),
     SystemBridgeSensorEntityDescription(
@@ -286,9 +303,9 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         key="memory_used_percentage",
         translation_key="memory_used_percentage",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         suggested_display_precision=2,
-        value=lambda data: data.memory.virtual.percent,
+        value=memory_used_percentage,
     ),
     SystemBridgeSensorEntityDescription(
         key="memory_used",
@@ -303,6 +320,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
     SystemBridgeSensorEntityDescription(
         key="os",
         translation_key="os",
+        entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: f"{data.system.platform} {data.system.platform_version}",
     ),
     SystemBridgeSensorEntityDescription(
@@ -315,7 +333,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         key="processes_load",
         translation_key="load",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         suggested_display_precision=1,
         value=lambda data: data.cpu.usage,
     ),
@@ -331,11 +349,13 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
     SystemBridgeSensorEntityDescription(
         key="version",
         translation_key="version",
+        entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.system.version,
     ),
     SystemBridgeSensorEntityDescription(
         key="version_latest",
         translation_key="version_latest",
+        entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.system.version_latest,
     ),
 )
@@ -345,7 +365,7 @@ BATTERY_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         key="battery",
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         suggested_display_precision=2,
         value=lambda data: data.battery.percentage,
     ),
@@ -371,7 +391,10 @@ async def async_setup_entry(
         for description in BASE_SENSOR_TYPES
     ]
 
-    for index_device, device in enumerate(coordinator.data.disks.devices):
+    disk_devices = (
+        coordinator.data.disks.devices if coordinator.data.disks is not None else []
+    )
+    for index_device, device in enumerate(disk_devices):
         if device.partitions is None:
             continue
 
@@ -383,7 +406,7 @@ async def async_setup_entry(
                     translation_key="space_used",
                     translation_placeholders={"partition": partition.mount_point},
                     state_class=SensorStateClass.MEASUREMENT,
-                    native_unit_of_measurement=PERCENTAGE,
+                    native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
                     suggested_display_precision=2,
                     value=(
                         lambda data, dk=index_device, pk=index_partition: (
@@ -521,7 +544,7 @@ async def async_setup_entry(
                         translation_key="gpu_memory_used_percentage",
                         translation_placeholders={"gpu_name": gpu.name},
                         state_class=SensorStateClass.MEASUREMENT,
-                        native_unit_of_measurement=PERCENTAGE,
+                        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
                         suggested_display_precision=2,
                         value=lambda data, k=index: gpu_memory_used_percentage(data, k),
                     ),
@@ -590,7 +613,7 @@ async def async_setup_entry(
                         translation_key="gpu_usage_percentage",
                         translation_placeholders={"gpu_name": gpu.name},
                         state_class=SensorStateClass.MEASUREMENT,
-                        native_unit_of_measurement=PERCENTAGE,
+                        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
                         suggested_display_precision=2,
                         value=lambda data, k=index: gpu_usage_percentage(data, k),
                     ),
@@ -611,7 +634,7 @@ async def async_setup_entry(
                             translation_placeholders={"cpu_id": str(cpu.id)},
                             entity_registry_enabled_default=False,
                             state_class=SensorStateClass.MEASUREMENT,
-                            native_unit_of_measurement=PERCENTAGE,
+                            native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
                             suggested_display_precision=2,
                             value=lambda data, k=cpu.id: cpu_usage_per_cpu(data, k),
                         ),

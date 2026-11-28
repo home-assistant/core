@@ -162,13 +162,16 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
         probatio.Required(CONF_FILTERS): probatio.All(
             probatio.EnsureList(),
             [
-                probatio.Any(
-                    FILTER_OUTLIER_SCHEMA,
-                    FILTER_LOWPASS_SCHEMA,
-                    FILTER_TIME_SMA_SCHEMA,
-                    FILTER_THROTTLE_SCHEMA,
-                    FILTER_TIME_THROTTLE_SCHEMA,
-                    FILTER_RANGE_SCHEMA,
+                probatio.TaggedUnion(
+                    CONF_FILTER_NAME,
+                    [
+                        FILTER_OUTLIER_SCHEMA,
+                        FILTER_LOWPASS_SCHEMA,
+                        FILTER_TIME_SMA_SCHEMA,
+                        FILTER_THROTTLE_SCHEMA,
+                        FILTER_TIME_THROTTLE_SCHEMA,
+                        FILTER_RANGE_SCHEMA,
+                    ],
                 )
             ],
         ),
@@ -284,6 +287,16 @@ class SensorFilter(SensorEntity):
 
         temp_state = _State(new_state.last_updated, new_state.state)
 
+        # Reset before filtering so the new unit's first reading is kept
+        if self._attr_native_unit_of_measurement != new_state.attributes.get(
+            EntityStateAttribute.UNIT_OF_MEASUREMENT
+        ):
+            for filt in self._filters:
+                filt.reset()
+            self._attr_native_unit_of_measurement = new_state.attributes.get(
+                EntityStateAttribute.UNIT_OF_MEASUREMENT
+            )
+
         try:
             for filt in self._filters:
                 filtered_state = filt.filter_state(copy(temp_state))
@@ -314,15 +327,6 @@ class SensorFilter(SensorEntity):
         self._attr_state_class = new_state.attributes.get(
             SensorEntityCapabilityAttribute.STATE_CLASS
         )
-
-        if self._attr_native_unit_of_measurement != new_state.attributes.get(
-            EntityStateAttribute.UNIT_OF_MEASUREMENT
-        ):
-            for filt in self._filters:
-                filt.reset()
-            self._attr_native_unit_of_measurement = new_state.attributes.get(
-                EntityStateAttribute.UNIT_OF_MEASUREMENT
-            )
 
         if update_ha:
             self.async_write_ha_state()

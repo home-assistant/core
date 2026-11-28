@@ -2,6 +2,8 @@
 
 from unittest.mock import MagicMock, patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.huawei_lte.const import DOMAIN
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
@@ -13,8 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import magic_client
-
-from tests.common import MockConfigEntry
 
 SWITCH_WIFI_GUEST_NETWORK = "switch.test_router_wi_fi_guest_network"
 

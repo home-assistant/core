@@ -1,12 +1,13 @@
 {
   "domain": "airgradient",
   "name": "AirGradient",
+  "categories": ["sensors.air_quality"],
   "codeowners": ["@airgradienthq", "@joostlek"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/airgradient",
   "integration_type": "device",
   "iot_class": "local_polling",
   "quality_scale": "platinum",
-  "requirements": ["airgradient==0.10.0"],
+  "requirements": ["airgradient==0.11.0"],
   "zeroconf": ["_airgradient._tcp.local."]
 }

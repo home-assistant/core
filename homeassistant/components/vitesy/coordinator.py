@@ -28,21 +28,11 @@ def supports_mode(device: VitesyDevice) -> bool:
 
 
 @contextmanager
-def _translate_errors(*, auth_recoverable: bool = False) -> Iterator[None]:
-    """Convert aiovitesy errors into coordinator setup/update failures.
-
-    On a refresh, auth_recoverable must be True: the config flow has no
-    reauth step yet, so raising ConfigEntryAuthFailed there would stop
-    polling forever with no way to recover.
-    """
+def _translate_errors() -> Iterator[None]:
+    """Convert aiovitesy errors into coordinator setup/update failures."""
     try:
         yield
     except CannotAuthenticate as err:
-        if auth_recoverable:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="invalid_auth",
-            ) from err
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="invalid_auth",
@@ -83,7 +73,7 @@ class VitesyDataUpdateCoordinator(DataUpdateCoordinator[dict[str, VitesyDevice]]
     @override
     async def _async_update_data(self) -> dict[str, VitesyDevice]:
         """Fetch the latest state for every device in the account."""
-        with _translate_errors(auth_recoverable=True):
+        with _translate_errors():
             devices = await self.api.get_all_devices()
         self.mode_status = await self._async_get_mode_status(devices)
         return devices
@@ -103,6 +93,11 @@ class VitesyDataUpdateCoordinator(DataUpdateCoordinator[dict[str, VitesyDevice]]
                 continue
             try:
                 mode_status[device_id] = await self.api.get_mode_status(device_id)
+            except CannotAuthenticate as err:
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_auth",
+                ) from err
             except VitesyError as err:
                 LOGGER.debug("Could not read mode of %s: %s", device.name, err)
         return mode_status

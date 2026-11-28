@@ -5,9 +5,7 @@ from typing import Any
 import pytest
 
 from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.components.sensor.helpers import (  # pylint: disable=home-assistant-component-root-import
-    async_parse_date_datetime,
-)
+from homeassistant.components.sensor.helpers import async_parse_date_datetime  # pylint: disable=home-assistant-component-root-import
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ICON,

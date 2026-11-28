@@ -1,6 +1,7 @@
 {
   "domain": "denonavr",
   "name": "Denon AVR Network Receivers",
+  "categories": ["media_entertainment.speakers_audio"],
   "codeowners": ["@ol-iver", "@starkillerOG"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/denonavr",

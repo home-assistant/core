@@ -3,12 +3,11 @@
 from unittest.mock import AsyncMock, Mock, patch
 
 import nextcord
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.discord.const import DOMAIN
 from homeassistant.const import CONF_API_TOKEN, CONF_NAME
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 TOKEN = "abc123"
 NAME = "Discord Bot"

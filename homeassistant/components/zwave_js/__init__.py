@@ -38,7 +38,11 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.exceptions import (
+    ConfigEntryError,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 from homeassistant.helpers import (
     area_registry as ar,
     config_validation as cv,
@@ -168,7 +172,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ZwaveJSConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: ZwaveJSConfigEntry) -> None:
     """Migrate old config entry."""
     if entry.version == 1 and entry.minor_version < 2:
         unique_id = entry.unique_id
@@ -185,10 +189,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ZwaveJSConfigEntry) ->
             entry, data=data, unique_id=unique_id, minor_version=2
         )
 
-    return True
 
-
-async def async_setup_entry(hass: HomeAssistant, entry: ZwaveJSConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ZwaveJSConfigEntry) -> None:
     """Set up Z-Wave JS from a config entry."""
     if use_addon := entry.data.get(CONF_USE_ADDON):
         await async_ensure_addon_running(hass, entry)
@@ -310,8 +312,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ZwaveJSConfigEntry) -> b
             )
 
     entry.async_on_unload(entry.async_on_state_change(on_config_entry_loaded))
-
-    return True
 
 
 def _get_listen_task_error(
@@ -1172,31 +1172,32 @@ async def client_listen(
         )
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ZwaveJSConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ZwaveJSConfigEntry) -> None:
     """Unload a config entry."""
     # Wait for a running network neighbors refresh, so the client is not
     # disconnected before it has turned the radio back on
     async with entry.runtime_data.network_neighbors_lock:
         pass
 
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    try:
+        await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    finally:
+        entry_runtime_data = entry.runtime_data
+        client = entry_runtime_data.client
 
-    entry_runtime_data = entry.runtime_data
-    client = entry_runtime_data.client
+        if client.connected and (driver := client.driver):
+            await async_disable_server_logging_if_needed(hass, entry, driver)
 
-    if client.connected and (driver := client.driver):
-        await async_disable_server_logging_if_needed(hass, entry, driver)
-
-    if entry.data.get(CONF_USE_ADDON) and entry.disabled_by:
-        addon_manager: AddonManager = get_addon_manager(hass)
-        LOGGER.debug("Stopping Z-Wave JS add-on")
-        try:
-            await addon_manager.async_stop_addon()
-        except AddonError as err:
-            LOGGER.error("Failed to stop the Z-Wave JS add-on: %s", err)
-            return False
-
-    return unload_ok
+        if entry.data.get(CONF_USE_ADDON) and entry.disabled_by:
+            addon_manager: AddonManager = get_addon_manager(hass)
+            LOGGER.debug("Stopping Z-Wave JS add-on")
+            try:
+                await addon_manager.async_stop_addon()
+            except AddonError as err:
+                raise ConfigEntryError(
+                    translation_domain=DOMAIN,
+                    translation_key="addon_stop_failed",
+                ) from err
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: ZwaveJSConfigEntry) -> None:

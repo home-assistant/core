@@ -1,6 +1,7 @@
 {
   "domain": "klik_aan_klik_uit",
   "name": "KlikAanKlikUit",
+  "categories": ["plugs_switches"],
   "codeowners": ["@Phunkafizer"],
   "config_flow": true,
   "dependencies": ["radio_frequency"],

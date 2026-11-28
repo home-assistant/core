@@ -467,7 +467,7 @@
               },
               "data_description": {
                 "action_template": "A [template]({value_templating_url}) to render the value received on the action topic with.",
-                "action_topic": "The MQTT topic to subscribe for changes of the current action. If this is set, the climate graph uses the value received as data source. A \"None\" payload resets the current action state. An empty payload is ignored. Valid action values are: \"off\", \"heating\", \"cooling\", \"drying\", \"idle\" and \"fan\".  [Learn more.]({url}#action_topic)"
+                "action_topic": "The MQTT topic to subscribe for changes of the current action. If this is set, the climate graph uses the value received as data source. A \"None\" payload resets the current action state. An empty payload is ignored. Valid action values are: \"off\", \"heating\", \"cooling\", \"drying\", \"idle\" and \"fan\". [Learn more.]({url}#action_topic)"
               },
               "name": "Current action settings"
             },
@@ -922,7 +922,7 @@
                 "command_off_template": "Command \"off\" template"
               },
               "data_description": {
-                "command_off_template": "The [template]({command_templating_url}) for \"off\" state changes. By default the \"[Command template]({url}#command_template)\" will be used.  [Learn more.]({url}#command_off_template)"
+                "command_off_template": "The [template]({command_templating_url}) for \"off\" state changes. By default the \"[Command template]({url}#command_template)\" will be used. [Learn more.]({url}#command_off_template)"
               },
               "name": "Other siren settings"
             },

@@ -2,6 +2,8 @@
 
 from unittest.mock import MagicMock, patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant import config_entries
 from homeassistant.components import ps4
 from homeassistant.components.media_player import (
@@ -17,6 +19,7 @@ from homeassistant.components.ps4.const import (
     DOMAIN,
     PS4_DATA,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_COMMAND,
     ATTR_ENTITY_ID,
@@ -32,8 +35,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import location as location_util
-
-from tests.common import MockConfigEntry
 
 MOCK_HOST = "192.168.0.1"
 MOCK_NAME = "test_ps4"
@@ -118,7 +119,7 @@ async def test_creating_entry_sets_up_media_player(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.ps4.media_player.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup,
         patch(mock_flow, return_value=MOCK_FLOW_RESULT),
     ):
@@ -194,6 +195,30 @@ async def test_config_flow_entry_migrate(
     assert mock_entry.data["devices"][0][CONF_HOST] == MOCK_HOST
     assert mock_entry.data["devices"][0][CONF_NAME] == MOCK_NAME
     assert mock_entry.data["devices"][0][CONF_REGION] == DEFAULT_REGION
+
+
+async def test_config_flow_entry_migrate_no_location(hass: HomeAssistant) -> None:
+    """Test migration fails when the region cannot be detected."""
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_TOKEN: MOCK_CREDS, "devices": [dict(MOCK_DEVICE_VERSION_1)]},
+        version=1,
+    )
+    mock_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.util.location.async_detect_location_info",
+        return_value=None,
+    ):
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_entry.state is ConfigEntryState.MIGRATION_ERROR
+    assert mock_entry.reason == (
+        "Region codes have changed for the PlayStation 4 integration, remove and"
+        " re-add the integration"
+    )
+    assert mock_entry.version == 1
 
 
 async def test_media_player_is_setup(hass: HomeAssistant) -> None:

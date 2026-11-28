@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from pysma import SmaAuthenticationException, SmaConnectionException, SmaReadException
 from pysma.helpers import DeviceInfo
 import pytest
+from pytest_homeassistant.plugins import MockConfigEntry
 
 from homeassistant.components.sma.const import CONF_GROUP, DOMAIN
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
@@ -28,8 +29,6 @@ from . import (
     MOCK_USER_REAUTH,
     MOCK_USER_RECONFIGURE,
 )
-
-from tests.conftest import MockConfigEntry
 
 DHCP_DISCOVERY = DhcpServiceInfo(
     ip="1.1.1.1",
@@ -70,6 +69,7 @@ async def test_form(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_USER_INPUT["host"]
     assert result["data"] == MOCK_USER_INPUT
+    assert result["result"].unique_id == str(MOCK_DEVICE.serial)
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -85,24 +85,31 @@ async def test_form(
 )
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_exceptions(
-    hass: HomeAssistant, exception: Exception, error: str
+    hass: HomeAssistant,
+    mock_sma_client: MagicMock,
+    exception: Exception,
+    error: str,
 ) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.sma.config_flow.SMAWebConnect.new_session",
-        side_effect=exception,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            MOCK_USER_INPUT,
-        )
+    mock_sma_client.new_session.side_effect = exception
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        MOCK_USER_INPUT,
+    )
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
+
+    mock_sma_client.new_session.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        MOCK_USER_INPUT,
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

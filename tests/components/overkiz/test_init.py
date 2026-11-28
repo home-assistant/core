@@ -9,6 +9,11 @@ from pyoverkiz.exceptions import (
     TooManyRequestsError,
 )
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    RegistryEntryWithDefaults,
+    mock_registry,
+)
 
 from homeassistant import config_entries
 from homeassistant.components.overkiz.const import DOMAIN
@@ -23,8 +28,6 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import MockOverkizClient
 from .test_config_flow import TEST_EMAIL, TEST_GATEWAY_ID, TEST_PASSWORD, TEST_SERVER
-
-from tests.common import MockConfigEntry, RegistryEntryWithDefaults, mock_registry
 
 ENTITY_SENSOR_DISCRETE_RSSI_LEVEL = "sensor.zipscreen_woonkamer_discrete_rssi_level"
 ENTITY_ALARM_CONTROL_PANEL = "alarm_control_panel.alarm"

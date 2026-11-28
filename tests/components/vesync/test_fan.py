@@ -4,6 +4,8 @@ from contextlib import nullcontext
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fan import (
@@ -28,9 +30,6 @@ from .common import (
     ENTITY_PEDESTAL_FAN,
     mock_devices_response,
 )
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 NoException = nullcontext()
 

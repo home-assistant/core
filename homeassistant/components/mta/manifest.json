@@ -1,6 +1,7 @@
 {
   "domain": "mta",
   "name": "MTA New York City Transit",
+  "categories": ["vehicles_transport.public_transport"],
   "codeowners": ["@OnFreund"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/mta",

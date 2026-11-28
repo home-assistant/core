@@ -12,6 +12,7 @@ from pyoverkiz.exceptions import (
     TooManyRequestsError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.overkiz.const import DOMAIN, UPDATE_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
@@ -21,8 +22,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import FixtureDevice, MockOverkizClient, SetupOverkizIntegration
 from .helpers import async_deliver_events, device_created_event, device_removed_event
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 TEMPERATURE_SENSOR = FixtureDevice(
     "setup/cloud_nexity_rail_din_europe.json",

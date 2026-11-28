@@ -3,6 +3,7 @@
 from datetime import timedelta
 from unittest.mock import Mock, patch
 
+from pytest_homeassistant.common import async_fire_time_changed, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
@@ -15,8 +16,6 @@ from homeassistant.util import dt as dt_util
 
 from . import FritzEntityBaseMock, set_devices, setup_config_entry
 from .const import CONF_FAKE_NAME, MOCK_CONFIG
-
-from tests.common import async_fire_time_changed, snapshot_platform
 
 ENTITY_ID = f"{BUTTON_DOMAIN}.{CONF_FAKE_NAME}"
 

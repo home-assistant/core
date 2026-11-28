@@ -42,7 +42,20 @@
       }
     }
   },
+  "device": {
+    "intrusion_system": {
+      "name": "Alarm system"
+    }
+  },
   "entity": {
+    "button": {
+      "reset_tamper": {
+        "name": "Reset tamper"
+      },
+      "smoke_test": {
+        "name": "Start self-test"
+      }
+    },
     "event": {
       "smoke_detector_alarm": {
         "state_attributes": {
@@ -63,20 +76,101 @@
       "bypass_timeout": {
         "name": "Break function timeout"
       },
+      "energy_saving_enter_duration": {
+        "name": "Energy-saving enter duration"
+      },
       "energy_saving_power_threshold": {
         "name": "Energy-saving power threshold"
       },
       "impulse_length": {
         "name": "Pulse length"
+      },
+      "offset": {
+        "name": "Temperature offset"
       }
     },
     "select": {
+      "display_direction": {
+        "name": "Display orientation",
+        "state": {
+          "normal": "[%key:common::state::normal%]",
+          "reversed": "Rotated by 180°"
+        }
+      },
+      "displayed_temperature": {
+        "name": "Displayed temperature",
+        "state": {
+          "measured": "Measured",
+          "setpoint": "Set temperature"
+        }
+      },
+      "heater_type": {
+        "name": "Heater type",
+        "state": {
+          "convector_active": "Active convector (with fan)",
+          "convector_passive": "Passive convector (without fan)",
+          "floor_heating": "Underfloor heating",
+          "floor_heating_low_energy": "Underfloor heating low energy",
+          "radiator": "Radiator",
+          "volt_free_heating": "Central heating"
+        }
+      },
+      "motion_sensitivity": {
+        "name": "Motion sensitivity",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "middle": "[%key:common::state::medium%]"
+        }
+      },
       "siren_sound_level": {
         "name": "Siren volume",
         "state": {
           "high": "Loud",
           "low": "Reduced",
-          "medium": "Medium"
+          "medium": "[%key:common::state::medium%]"
+        }
+      },
+      "smoke_sensitivity": {
+        "name": "Smoke sensitivity",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "middle": "[%key:common::state::medium%]"
+        }
+      },
+      "state_after_power_outage": {
+        "name": "State after power outage",
+        "state": {
+          "last_state": "Last state",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      },
+      "switch_type": {
+        "name": "Switch type",
+        "state": {
+          "no_switch": "No switch",
+          "none": "None",
+          "pushbutton": "Push button",
+          "switch": "Rocker switch"
+        }
+      },
+      "valve_type": {
+        "name": "Valve type",
+        "state": {
+          "normally_close": "Normally closed",
+          "normally_open": "Normally open"
+        }
+      },
+      "vibration_sensitivity": {
+        "name": "Vibration sensitivity",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "very_high": "[%key:common::state::very_high%]",
+          "very_low": "[%key:common::state::very_low%]"
         }
       }
     },
@@ -144,6 +238,9 @@
       "camera_light": {
         "name": "Camera light"
       },
+      "camera_notification": {
+        "name": "Notifications"
+      },
       "child_lock": {
         "name": "Child lock"
       },
@@ -188,6 +285,11 @@
       "valve": {
         "name": "Valve"
       }
+    }
+  },
+  "exceptions": {
+    "unsupported_hvac_mode": {
+      "message": "This entity does not support the HVAC mode {hvac_mode}."
     }
   }
 }

@@ -8,6 +8,8 @@ from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockUser
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 
 from homeassistant.components import media_source, websocket_api
 from homeassistant.components.media_player import (
@@ -20,9 +22,6 @@ from homeassistant.components.media_source.local_source import MAX_SEARCH_RESULT
 from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockUser
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.fixture

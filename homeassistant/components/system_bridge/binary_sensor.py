@@ -9,13 +9,15 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.const import CONF_PORT
+from homeassistant.const import CONF_PORT, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import SystemBridgeConfigEntry, SystemBridgeDataUpdateCoordinator
 from .data import SystemBridgeData
 from .entity import SystemBridgeEntity
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True)
@@ -27,7 +29,7 @@ class SystemBridgeBinarySensorEntityDescription(BinarySensorEntityDescription):
 
 def camera_in_use(data: SystemBridgeData) -> bool | None:
     """Return if any camera is in use."""
-    if data.system.camera_usage is not None:
+    if data.system is not None and data.system.camera_usage is not None:
         return len(data.system.camera_usage) > 0
     return None
 
@@ -46,6 +48,7 @@ BASE_BINARY_SENSOR_TYPES: tuple[SystemBridgeBinarySensorEntityDescription, ...] 
     SystemBridgeBinarySensorEntityDescription(
         key="version_available",
         device_class=BinarySensorDeviceClass.UPDATE,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.system.version_newer_available,
     ),
 )

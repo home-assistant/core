@@ -46,7 +46,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utcnow
 
-from . import services
 from .const import DOMAIN
 from .coordinator import HeosConfigEntry, HeosCoordinator
 
@@ -119,7 +118,6 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add media players for a config entry."""
-    services.register_media_player_services()
 
     def add_entities_callback(players: Sequence[HeosPlayer]) -> None:
         """Add entities for each player."""

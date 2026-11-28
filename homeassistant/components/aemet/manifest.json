@@ -1,6 +1,7 @@
 {
   "domain": "aemet",
   "name": "AEMET OpenData",
+  "categories": ["weather_alerts.forecasts"],
   "codeowners": ["@Noltari"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/aemet",

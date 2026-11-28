@@ -1,6 +1,7 @@
 {
   "domain": "panasonic_viera",
   "name": "Panasonic Viera",
+  "categories": ["media_entertainment.tv_streaming"],
   "codeowners": [],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/panasonic_viera",

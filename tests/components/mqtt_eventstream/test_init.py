@@ -4,6 +4,12 @@ import json
 from unittest.mock import ANY, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    async_fire_mqtt_message,
+    async_fire_time_changed,
+    mock_state_change_event,
+)
+from pytest_homeassistant.typing import MqttMockHAClient
 
 from homeassistant.components import mqtt_eventstream as eventstream
 from homeassistant.const import EVENT_STATE_CHANGED, MATCH_ALL
@@ -11,13 +17,6 @@ from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import (
-    async_fire_mqtt_message,
-    async_fire_time_changed,
-    mock_state_change_event,
-)
-from tests.typing import MqttMockHAClient
 
 
 async def add_eventstream(

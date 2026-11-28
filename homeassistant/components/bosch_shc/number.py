@@ -1,14 +1,17 @@
 """Platform for number integration."""
 
-from collections.abc import Callable, Coroutine
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, override
+from typing import TYPE_CHECKING, override
 
 from boschshcpy import (
     SHCMicromoduleRelay,
+    SHCRoomThermostat2,
     SHCShutterContact2,
     SHCSmartPlug,
     SHCSmartPlugCompact,
+    SHCThermostat,
+    SHCWallThermostat,
 )
 from boschshcpy.device import SHCDevice
 
@@ -18,7 +21,12 @@ from homeassistant.components.number import (
     NumberEntityDescription,
     NumberMode,
 )
-from homeassistant.const import EntityCategory, UnitOfPower, UnitOfTime
+from homeassistant.const import (
+    EntityCategory,
+    UnitOfPower,
+    UnitOfTemperature,
+    UnitOfTime,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -33,7 +41,10 @@ class SHCNumberEntityDescription[_DeviceT: SHCDevice](NumberEntityDescription):
     """Describes a SHC number entity."""
 
     value_fn: Callable[[_DeviceT], float | None]
-    set_value_fn: Callable[[_DeviceT, float], Coroutine[Any, Any, None]]
+    set_value_fn: Callable[[_DeviceT, float], None]
+    min_value_fn: Callable[[_DeviceT], float] | None = None
+    max_value_fn: Callable[[_DeviceT], float] | None = None
+    step_fn: Callable[[_DeviceT], float] | None = None
 
 
 def _impulse_length_value_fn(device: SHCMicromoduleRelay) -> float | None:
@@ -49,16 +60,27 @@ def _impulse_length_value_fn(device: SHCMicromoduleRelay) -> float | None:
     return float(raw) / 10.0
 
 
-async def _impulse_length_set_value_fn(
-    device: SHCMicromoduleRelay, value: float
-) -> None:
-    await device.async_set_impulse_length(round(value * 10))
+def _impulse_length_set_value_fn(device: SHCMicromoduleRelay, value: float) -> None:
+    device.impulse_length = round(value * 10)
 
 
-async def _power_threshold_set_value_fn(
+def _power_threshold_set_value_fn(
     device: SHCSmartPlug | SHCSmartPlugCompact, value: float
 ) -> None:
-    await device.async_set_power_threshold(value)
+    device.power_threshold = value
+
+
+def _enter_duration_set_value_fn(
+    device: SHCSmartPlug | SHCSmartPlugCompact, value: float
+) -> None:
+    device.enter_duration_seconds = round(value)
+
+
+type _TemperatureOffsetDevice = SHCThermostat | SHCWallThermostat | SHCRoomThermostat2
+
+
+def _offset_set_value_fn(device: _TemperatureOffsetDevice, value: float) -> None:
+    device.offset = value
 
 
 IMPULSE_LENGTH = "impulse_length"
@@ -88,8 +110,8 @@ NUMBER_TYPES: dict[str, SHCNumberEntityDescription] = {
         native_step=1.0,
         mode=NumberMode.BOX,
         value_fn=lambda device: float(device.bypass_timeout),
-        set_value_fn=lambda device, value: device.async_set_bypass_timeout(
-            round(value)
+        set_value_fn=lambda device, value: device.set_bypass_configuration(
+            timeout=round(value)
         ),
     ),
     "power_threshold": SHCNumberEntityDescription[SHCSmartPlug | SHCSmartPlugCompact](
@@ -104,6 +126,32 @@ NUMBER_TYPES: dict[str, SHCNumberEntityDescription] = {
         mode=NumberMode.BOX,
         value_fn=lambda device: device.power_threshold,
         set_value_fn=_power_threshold_set_value_fn,
+    ),
+    "enter_duration": SHCNumberEntityDescription[SHCSmartPlug | SHCSmartPlugCompact](
+        key="enter_duration",
+        translation_key="energy_saving_enter_duration",
+        entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        native_min_value=1.0,
+        native_max_value=3600.0,
+        native_step=1.0,
+        mode=NumberMode.BOX,
+        value_fn=lambda device: float(device.enter_duration_seconds),
+        set_value_fn=_enter_duration_set_value_fn,
+    ),
+    "offset": SHCNumberEntityDescription[_TemperatureOffsetDevice](
+        key="offset",
+        translation_key="offset",
+        entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.TEMPERATURE_DELTA,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        mode=NumberMode.BOX,
+        value_fn=lambda device: float(device.offset),
+        set_value_fn=_offset_set_value_fn,
+        min_value_fn=lambda device: float(device.min_offset),
+        max_value_fn=lambda device: float(device.max_offset),
+        step_fn=lambda device: step if (step := device.step_size) > 0 else 0.5,
     ),
 }
 
@@ -168,10 +216,51 @@ async def async_setup_entry(
             device=device,
             parent_id=shc_info.unique_id,
             entry_id=config_entry.entry_id,
+            description=NUMBER_TYPES["enter_duration"],
+        )
+        for device in session.device_helper.smart_plugs
+        if device.supports_energy_saving_mode
+        and device.enter_duration_seconds is not None
+    )
+    entities.extend(
+        SHCNumber(
+            hass=hass,
+            device=device,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
             description=NUMBER_TYPES["power_threshold"],
         )
         for device in session.device_helper.smart_plugs_compact
         if device.supports_energy_saving_mode and device.power_threshold is not None
+    )
+    entities.extend(
+        SHCNumber(
+            hass=hass,
+            device=device,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=NUMBER_TYPES["enter_duration"],
+        )
+        for device in session.device_helper.smart_plugs_compact
+        if device.supports_energy_saving_mode
+        and device.enter_duration_seconds is not None
+    )
+
+    entities.extend(
+        SHCNumber(
+            hass=hass,
+            device=device,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=NUMBER_TYPES["offset"],
+        )
+        for device in (
+            *session.device_helper.thermostats,
+            *session.device_helper.wallthermostats,
+            *session.device_helper.roomthermostats,
+        )
+        if isinstance(device, SHCThermostat | SHCWallThermostat | SHCRoomThermostat2)
+        and device.supports_temperature_offset
     )
 
     async_add_entities(entities)
@@ -204,7 +293,31 @@ class SHCNumber[_DeviceT: SHCDevice](SHCEntity, NumberEntity):
         """Return the current value."""
         return self.entity_description.value_fn(self._device)
 
+    @property
     @override
-    async def async_set_native_value(self, value: float) -> None:
+    def native_min_value(self) -> float:
+        """Return the minimum value."""
+        if self.entity_description.min_value_fn is not None:
+            return self.entity_description.min_value_fn(self._device)
+        return super().native_min_value
+
+    @property
+    @override
+    def native_max_value(self) -> float:
+        """Return the maximum value."""
+        if self.entity_description.max_value_fn is not None:
+            return self.entity_description.max_value_fn(self._device)
+        return super().native_max_value
+
+    @property
+    @override
+    def native_step(self) -> float | None:
+        """Return the step."""
+        if self.entity_description.step_fn is not None:
+            return self.entity_description.step_fn(self._device)
+        return super().native_step
+
+    @override
+    def set_native_value(self, value: float) -> None:
         """Set a new value, writing it to the device."""
-        await self.entity_description.set_value_fn(self._device, value)
+        self.entity_description.set_value_fn(self._device, value)

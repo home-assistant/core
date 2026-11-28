@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 from aiovitesy.api import VitesyDevice
 from aiovitesy.exceptions import VitesyError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
@@ -15,8 +16,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 from .conftest import DEVICE_ID
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 FILTER_CHANGED = "button.kitchen_shelfy_mark_filter_as_changed"
 FRIDGE_CLEANED = "button.kitchen_shelfy_mark_fridge_as_cleaned"

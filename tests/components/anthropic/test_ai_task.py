@@ -17,6 +17,7 @@ from anthropic.types.raw_message_delta_event import Delta
 from freezegun import freeze_time
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import ai_task, media_source
@@ -25,8 +26,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, selector
 
 from . import create_content_block, create_server_tool_use_block
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_init_component")
@@ -79,8 +78,28 @@ async def test_empty_data(
     hass: HomeAssistant,
     mock_create_stream: AsyncMock,
 ) -> None:
-    """Test AI Task data generation but the data returned is empty."""
+    """Test a completed empty response returns empty data."""
     mock_create_stream.return_value = [create_content_block(0, [""])]
+
+    result = await ai_task.async_generate_data(
+        hass,
+        task_name="Test Task",
+        entity_id="ai_task.claude_ai_task",
+        instructions="Generate test data",
+    )
+
+    assert result.data == ""
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_missing_response(
+    hass: HomeAssistant,
+    mock_create_stream: AsyncMock,
+) -> None:
+    """Test a stream without a response still raises an error."""
+    mock_create_stream.side_effect = None
+    mock_create_stream.return_value = AsyncMock()
+    mock_create_stream.return_value.__aiter__.return_value = []
 
     with pytest.raises(
         HomeAssistantError, match="Last content in chat log is not an AssistantContent"
@@ -435,7 +454,7 @@ async def test_generate_data_invalid_attachments(
         pytest.raises(
             HomeAssistantError,
             match=re.escape(
-                "The Claude Haiku 4.5 model does not support"
+                "The Claude Haiku 5.5 model does not support"
                 " text/plain file types"
                 " (for `doorbell_snapshot.txt`)"
             ),

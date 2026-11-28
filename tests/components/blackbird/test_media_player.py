@@ -5,12 +5,14 @@ from unittest import mock
 
 import probatio
 import pytest
+from pytest_homeassistant.common import MockEntityPlatform
 
-from homeassistant.components.blackbird.const import DOMAIN, SERVICE_SETALLZONES
-from homeassistant.components.blackbird.media_player import (
+from homeassistant.components.blackbird.const import (
     DATA_BLACKBIRD,
-    PLATFORM_SCHEMA,
+    DOMAIN,
+    SERVICE_SETALLZONES,
 )
+from homeassistant.components.blackbird.media_player import PLATFORM_SCHEMA
 from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
@@ -18,8 +20,6 @@ from homeassistant.components.media_player import (
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockEntityPlatform
 
 
 class AttrDict(dict):

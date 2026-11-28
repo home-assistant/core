@@ -44,7 +44,13 @@ from .const import (
     DOMAIN,
     SUPPORTED_COMPONENTS,
 )
-from .models import DATA_MQTT, MqttComponentConfig, MqttOriginInfo, ReceiveMessage
+from .models import (
+    DATA_MQTT,
+    DiscoveredDisabledEntity,
+    MqttComponentConfig,
+    MqttOriginInfo,
+    ReceiveMessage,
+)
 from .schemas import DEVICE_DISCOVERY_SCHEMA, MQTT_ORIGIN_INFO_SCHEMA, SHARED_OPTIONS
 from .util import (
     async_cleanup_device_registry,
@@ -251,14 +257,24 @@ def _generate_device_config(
     """Generate a cleanup or discovery migration message on device cleanup.
 
     If an empty payload, or a migrate discovery request is received for a device,
-    we forward an empty payload for all previously discovered components.
+    we forward an empty payload for all previously discovered components,
+    including discovered disabled components.
     """
     mqtt_data = hass.data[DATA_MQTT]
     device_node_id: str = f"{node_id} {object_id}" if node_id else object_id
     config = MQTTDiscoveryPayload({CONF_DEVICE: {}, CONF_COMPONENTS: {}})
     config.migrate_discovery = migrate_discovery
     comp_config = config[CONF_COMPONENTS]
-    for platform, discover_id in mqtt_data.discovery_already_discovered:
+    disabled_discovery_hashes = (
+        discovery_hash
+        for discovery_hash, disabled_entity in (
+            mqtt_data.discovery_discovered_and_disabled.items()
+        )
+        if disabled_entity.discovery_data[ATTR_DISCOVERY_PAYLOAD].device_discovery
+    )
+    for platform, discover_id in chain(
+        mqtt_data.discovery_already_discovered, disabled_discovery_hashes
+    ):
         ids = discover_id.split(" ")
         component_node_id = f"{ids.pop(1)} {ids.pop(0)}" if len(ids) > 2 else ids.pop(0)
         component_object_id = " ".join(ids)
@@ -357,6 +373,141 @@ def _merge_common_device_options(
             component_config[option] = device_config.get(option)
 
 
+@callback
+def _async_is_conflicting_disabled_entity(
+    hass: HomeAssistant, discovery_hash: tuple[str, str], payload: MQTTDiscoveryPayload
+) -> bool:
+    """Return True if a payload conflicts with a discovered disabled entity.
+
+    Like a loaded entity, a disabled entity can only be updated through the topic
+    it was discovered on, until a discovery migration request is received on that
+    topic.
+    """
+    mqtt_data = hass.data[DATA_MQTT]
+    if (
+        disabled_entity := mqtt_data.discovery_discovered_and_disabled.get(
+            discovery_hash
+        )
+    ) is None:
+        return False
+    discovery_data = disabled_entity.discovery_data
+    discovery_topic: str = discovery_data[ATTR_DISCOVERY_TOPIC]
+    new_discovery_topic: str = payload.discovery_data[ATTR_DISCOVERY_TOPIC]
+    if discovery_topic == new_discovery_topic:
+        return False
+    if er.async_get(hass).async_get_entity_id(*disabled_entity.registry_key) is None:
+        # The disabled entity was removed from the entity registry
+        del mqtt_data.discovery_discovered_and_disabled[discovery_hash]
+        return False
+    _LOGGER.warning(
+        "Received a conflicting MQTT discovery message for disabled %s '%s' which "
+        "was previously discovered on topic %s%s; the conflicting discovery message "
+        "was received on topic %s%s; to move the component to another discovery "
+        'topic, publish {"migrate_discovery": true} to %s first',
+        discovery_hash[0],
+        discovery_hash[1],
+        discovery_topic,
+        get_origin_log_string(
+            discovery_data[ATTR_DISCOVERY_PAYLOAD], include_url=False
+        ),
+        new_discovery_topic,
+        get_origin_log_string(payload, include_url=False),
+        discovery_topic,
+    )
+    return True
+
+
+@callback
+def _async_untrack_disabled_entity_on_migration(
+    hass: HomeAssistant, discovery_hash: tuple[str, str], payload: MQTTDiscoveryPayload
+) -> None:
+    """Stop tracking a disabled entity when a discovery migration request is received.
+
+    A disabled entity is tracked to bind it to the topic it was discovered on.
+    A migration request on that topic removes the tracking, so the entity can be
+    discovered on the topic it is migrated to. A disabled entity is not loaded,
+    so there is nothing to unload.
+    """
+    mqtt_data = hass.data[DATA_MQTT]
+    if (
+        disabled_entity := mqtt_data.discovery_discovered_and_disabled.get(
+            discovery_hash
+        )
+    ) is not None and disabled_entity.discovery_data[
+        ATTR_DISCOVERY_TOPIC
+    ] == payload.discovery_data[ATTR_DISCOVERY_TOPIC]:
+        del mqtt_data.discovery_discovered_and_disabled[discovery_hash]
+
+
+@callback
+def _async_cleanup_disabled_entity(
+    hass: HomeAssistant,
+    discovery_hash: tuple[str, str],
+    disabled_entity: DiscoveredDisabledEntity,
+    payload: MQTTDiscoveryPayload,
+) -> None:
+    """Remove a discovered disabled entity and clean up its device."""
+    mqtt_data = hass.data[DATA_MQTT]
+    discovery_data = disabled_entity.discovery_data
+    discovery_payload: MQTTDiscoveryPayload = discovery_data[ATTR_DISCOVERY_PAYLOAD]
+    discovery_topic: str = discovery_data[ATTR_DISCOVERY_TOPIC]
+    removal_topic: str = payload.discovery_data[ATTR_DISCOVERY_TOPIC]
+    if discovery_topic != removal_topic:
+        # Removing the entity clears its retained discovery topic, which for
+        # device discovery would remove all other components of the device too
+        if discovery_payload.device_discovery:
+            how_to_remove = (
+                "after migration to device discovery, a component cannot be "
+                "removed by publishing an empty payload to its old single "
+                "component discovery topic; to remove the component, publish the "
+                f"device discovery payload to {discovery_topic} with only the "
+                "`platform` option for this component, then omit the component "
+                "from the device discovery payload"
+            )
+        else:
+            how_to_remove = (
+                "to remove the component, publish an empty payload to "
+                f"{discovery_topic}"
+            )
+        _LOGGER.warning(
+            "Ignoring empty MQTT discovery payload for disabled %s '%s' received "
+            "on topic %s, the component was discovered on topic %s%s; %s",
+            discovery_hash[0],
+            discovery_hash[1],
+            removal_topic,
+            discovery_topic,
+            get_origin_log_string(discovery_payload, include_url=False),
+            how_to_remove,
+        )
+        return
+
+    del mqtt_data.discovery_discovered_and_disabled[discovery_hash]
+    # Remove the registry hook, so removing the entity from the entity registry
+    # below does not publish an empty payload to the device discovery topic,
+    # which would remove all components of the device
+    if discovery_payload.device_discovery and (
+        remove_registry_hook := mqtt_data.discovery_registry_hooks.pop(
+            discovery_hash, None
+        )
+    ):
+        remove_registry_hook()
+    entity_registry = er.async_get(hass)
+    if (
+        entity_id := entity_registry.entities.get_entity_id(
+            disabled_entity.registry_key
+        )
+    ) and (entity_entry := entity_registry.async_get(entity_id)):
+        entity_registry.async_remove(entity_id)
+        hass.async_create_task(
+            async_cleanup_device_registry(
+                hass,
+                device_id=entity_entry.device_id,
+                config_entry_id=entity_entry.config_entry_id,
+            ),
+            name=f"Check for cleanup device registry for {entity_id}",
+        )
+
+
 async def async_start(  # noqa: C901
     hass: HomeAssistant, discovery_topic: str, config_entry: ConfigEntry
 ) -> None:
@@ -369,6 +520,16 @@ async def async_start(  # noqa: C901
     def _async_add_component(discovery_payload: MQTTDiscoveryPayload) -> None:
         """Add a component from a discovery message."""
         discovery_hash = discovery_payload.discovery_data[ATTR_DISCOVERY_HASH]
+        # A disabled entity is bound to the topic it was discovered on, ignore a
+        # config for it received on another topic, but mark the discovery message
+        # as handled, so pending discovery messages for this component are processed
+        if _async_is_conflicting_disabled_entity(
+            hass, discovery_hash, discovery_payload
+        ):
+            async_dispatcher_send(
+                hass, MQTT_DISCOVERY_DONE.format(*discovery_hash), None
+            )
+            return
         component, discovery_id = discovery_hash
         message = f"Found new component: {component} {discovery_id}"
         async_log_discovery_origin_info(message, discovery_payload)
@@ -576,25 +737,17 @@ async def async_start(  # noqa: C901
         elif payload:
             _async_add_component(payload)
         else:
-            entity_registry = er.async_get(hass)
-            if (
-                (
-                    entity_hash := mqtt_data.discovery_discovered_and_disabled.pop(
-                        discovery_hash, None
-                    )
+            if payload.migrate_discovery:
+                _async_untrack_disabled_entity_on_migration(
+                    hass, discovery_hash, payload
                 )
-                and (entity_id := entity_registry.entities.get_entity_id(entity_hash))
-                and (entity_entry := entity_registry.async_get(entity_id))
-            ):
-                # Cleanup discovered disabled entity / device
-                entity_registry.async_remove(entity_id)
-                hass.async_create_task(
-                    async_cleanup_device_registry(
-                        hass,
-                        device_id=entity_entry.device_id,
-                        config_entry_id=entity_entry.config_entry_id,
-                    ),
-                    name=f"Check for cleanup device registry for {entity_id}",
+            elif (
+                disabled_entity := mqtt_data.discovery_discovered_and_disabled.get(
+                    discovery_hash
+                )
+            ) is not None:
+                _async_cleanup_disabled_entity(
+                    hass, discovery_hash, disabled_entity, payload
                 )
 
             # Finish handling discovery message

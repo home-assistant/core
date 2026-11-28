@@ -136,9 +136,9 @@ class ISYButtonEvent(ISYNodeEntity, EventEntity):
             # these and most users only automate a few.
             self._attr_entity_registry_enabled_default = False
 
+    @callback
     @override
-    # pylint: disable-next=home-assistant-missing-super-call
-    async def async_added_to_hass(self) -> None:
+    def _async_subscribe_to_events(self) -> None:
         """Subscribe to control events and node enabled/disabled changes only.
 
         Skipping the base class's status_events subscription avoids a state

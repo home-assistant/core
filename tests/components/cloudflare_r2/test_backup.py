@@ -8,12 +8,18 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from botocore.exceptions import BotoCoreError, ConnectTimeoutError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import (
+    ClientSessionGenerator,
+    MagicMock,
+    WebSocketGenerator,
+)
 
 from homeassistant.components.backup import (
-    DATA_MANAGER,
     DOMAIN as BACKUP_DOMAIN,
     AgentBackup,
     UploadBackupEvent,
+    async_get_manager,
 )
 from homeassistant.components.cloudflare_r2.backup import (
     MULTIPART_MIN_PART_SIZE_BYTES,
@@ -31,9 +37,6 @@ from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 from .const import USER_INPUT
-
-from tests.common import MockConfigEntry
-from tests.typing import ClientSessionGenerator, MagicMock, WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -260,7 +263,7 @@ async def test_agents_delete(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {}}
+    assert response["result"] == {"agent_error_translations": {}, "agent_errors": {}}
     # Should delete both the tar and the metadata file
     assert mock_client.delete_object.call_count == 2
 
@@ -284,7 +287,7 @@ async def test_agents_delete_not_throwing_on_not_found(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {}}
+    assert response["result"] == {"agent_error_translations": {}, "agent_errors": {}}
     assert mock_client.delete_object.call_count == 0
 
 
@@ -440,7 +443,7 @@ async def test_agents_upload_on_progress(
     """Test agent upload backup emits UploadBackupEvent via on_progress."""
     client = await hass_client()
 
-    manager = hass.data[DATA_MANAGER]
+    manager = async_get_manager(hass)
     events: list[UploadBackupEvent] = []
 
     def _collect(event: UploadBackupEvent) -> None:
@@ -525,11 +528,12 @@ async def test_error_during_delete(
 
     assert response["success"]
     assert response["result"] == {
+        "agent_error_translations": {},
         "agent_errors": {
             f"{DOMAIN}.{mock_config_entry.entry_id}": (
                 "Failed during async_delete_backup"
             )
-        }
+        },
     }
 
 

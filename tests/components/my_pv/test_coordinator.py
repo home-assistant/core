@@ -5,12 +5,11 @@ from unittest.mock import AsyncMock
 from freezegun.api import FrozenDateTimeFactory
 from my_pv.exceptions import MyPVTooManyRequestsError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.my_pv.coordinator import UPDATE_INTERVAL
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("mock_my_pv_client")

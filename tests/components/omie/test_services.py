@@ -6,6 +6,7 @@ from unittest.mock import MagicMock
 import aiohttp
 from pyomie.model import OMIEResults
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.omie.const import DOMAIN
@@ -18,8 +19,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from . import setup_integration, spot_price_fetcher
-
-from tests.common import MockConfigEntry
 
 TEST_DATE = "2025-10-15"
 TEST_DST_DATE = "2025-10-26"

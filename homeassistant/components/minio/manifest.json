@@ -1,6 +1,7 @@
 {
   "domain": "minio",
   "name": "Minio",
+  "categories": ["computers_network.cloud_developer_tools"],
   "codeowners": ["@tkislan"],
   "documentation": "https://www.home-assistant.io/integrations/minio",
   "iot_class": "cloud_push",

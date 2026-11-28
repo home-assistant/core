@@ -9,6 +9,9 @@ from unittest.mock import patch
 from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 
 from homeassistant.components.map_tiles.const import (
     ASSET_MAX_AGE,
@@ -25,10 +28,6 @@ from homeassistant.components.map_tiles.const import (
 from homeassistant.components.map_tiles.views import MapTilesVectorView
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 VECTOR_TILE = b"\x1a\x0fnot-really-a-mvt"
 RASTER_TILE = b"\x89PNG\r\n\x1a\nnot-really-a-png"

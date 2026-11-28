@@ -1,6 +1,7 @@
 {
   "domain": "tolo",
   "name": "TOLO Sauna",
+  "categories": ["water.pools_spas"],
   "codeowners": ["@MatthiasLohr"],
   "config_flow": true,
   "dhcp": [

@@ -13,6 +13,7 @@
       "manufacturer_id": 43605
     }
   ],
+  "categories": ["sensors.temperature_humidity"],
   "codeowners": ["@bdraco"],
   "config_flow": true,
   "dependencies": ["bluetooth_adapters"],

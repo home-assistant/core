@@ -42,7 +42,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: EcobeeConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: EcobeeConfigEntry) -> None:
     """Set up ecobee via a config entry."""
     api_key = entry.data.get(CONF_API_KEY)
     username = entry.data.get(CONF_USERNAME)
@@ -67,14 +67,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: EcobeeConfigEntry) -> bo
     await runtime_data.update()
 
     if runtime_data.ecobee.thermostats is None:
-        LOGGER.error("No ecobee devices found to set up")
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="no_devices_found",
+        )
 
     entry.runtime_data = runtime_data
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    return True
 
 
 class EcobeeData:
@@ -171,6 +171,6 @@ class EcobeeData:
         return False
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: EcobeeConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: EcobeeConfigEntry) -> None:
     """Unload the config entry and platforms."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

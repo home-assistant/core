@@ -1,7 +1,7 @@
 """Teslemetry helper functions."""
 
 import asyncio
-from collections.abc import Awaitable
+from collections.abc import Awaitable, Callable
 from typing import Any, cast
 
 from aiohttp import ClientError
@@ -9,7 +9,7 @@ from aiopowerwall import PowerwallAuthenticationError, PowerwallClient
 from tesla_fleet_api.exceptions import TeslaFleetError
 from tesla_fleet_api.tesla import EnergySiteRouter
 from tesla_fleet_api.tesla.bluetooth import TeslaBluetooth
-from tesla_fleet_api.teslemetry import EnergySite
+from tesla_fleet_api.teslemetry import EnergySite, Vehicle
 from tesla_fleet_api.teslemetry.energysite import TeslemetryEnergySite
 
 from homeassistant.core import HomeAssistant, callback
@@ -99,10 +99,16 @@ async def handle_command(command: Awaitable[dict[str, Any]]) -> dict[str, Any]:
     try:
         result = await command
     except TeslaFleetError as e:
+        message = e.message
+        if isinstance(e.data, dict):
+            # An error equal to the class key is the machine code that selected it
+            if (error := e.data.get("error")) == e.key:
+                error = None
+            message = e.data.get("error_description") or error or message
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="command_exception",
-            translation_placeholders={"message": e.message},
+            translation_placeholders={"message": message},
         ) from e
     except (ClientError, TimeoutError) as e:
         raise HomeAssistantError(
@@ -130,7 +136,7 @@ async def handle_vehicle_command(command: Awaitable[dict[str, Any]]) -> Any:
         )
     if (result := response.get("result")) is not True:
         if reason := response.get("reason"):
-            if reason in ("already_set", "not_charging", "requested"):
+            if reason in ("already_set", "is_charging", "not_charging", "requested"):
                 # Reason is acceptable
                 return result
             # Result of false with reason
@@ -145,6 +151,30 @@ async def handle_vehicle_command(command: Awaitable[dict[str, Any]]) -> Any:
         )
     # Response with result of true
     return result
+
+
+async def async_set_charge_on_solar(
+    send: Callable[[Awaitable[dict[str, Any]]], Awaitable[Any]],
+    api: Vehicle,
+    *,
+    enabled: bool,
+    lower_charge_limit: int,
+    charge_limit_soc: int | None,
+) -> int:
+    """Send a charge-on-solar command, omitting the upper bound if it isn't known yet.
+
+    Returns the lower limit actually sent, clamped to the upper bound if it is known.
+    """
+    if charge_limit_soc is not None:
+        lower_charge_limit = min(lower_charge_limit, charge_limit_soc)
+    await send(
+        api.charge_on_solar(
+            enabled=enabled,
+            lower_charge_limit=lower_charge_limit,
+            upper_charge_limit=charge_limit_soc,
+        )
+    )
+    return lower_charge_limit
 
 
 @callback

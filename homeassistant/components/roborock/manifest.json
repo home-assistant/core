@@ -1,6 +1,7 @@
 {
   "domain": "roborock",
   "name": "Roborock",
+  "categories": ["appliances_cleaning.cleaning", "appliances_cleaning.laundry"],
   "codeowners": ["@Lash-L", "@allenporter"],
   "config_flow": true,
   "dhcp": [

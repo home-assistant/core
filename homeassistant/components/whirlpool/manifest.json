@@ -1,8 +1,18 @@
 {
   "domain": "whirlpool",
   "name": "Whirlpool Appliances",
+  "categories": [
+    "appliances_cleaning.laundry",
+    "appliances_cleaning.cooking",
+    "climate.heat_pumps_air_conditioning"
+  ],
   "codeowners": ["@abmantis", "@mkmer"],
   "config_flow": true,
+  "dhcp": [
+    {
+      "macaddress": "88E712*"
+    }
+  ],
   "documentation": "https://www.home-assistant.io/integrations/whirlpool",
   "integration_type": "hub",
   "iot_class": "cloud_push",

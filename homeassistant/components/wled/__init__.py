@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 from homeassistant.config_entries import SOURCE_IGNORE
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
@@ -31,23 +32,22 @@ PLATFORMS = (
     Platform.UPDATE,
 )
 
-WLED_KEY: HassKey[WLEDReleasesDataUpdateCoordinator] = HassKey(DOMAIN)
+WLED_KEY: HassKey[dict[str, WLEDReleasesDataUpdateCoordinator]] = HassKey(DOMAIN)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the WLED integration.
 
-    We set up a single coordinator for fetching WLED releases, which
-    is used across all WLED devices (and config entries) to avoid
-    fetching the same data multiple times for each.
+    Releases are fetched by one coordinator per firmware repository, shared
+    across all WLED devices (and config entries) using it, to avoid fetching
+    the same data multiple times for each.
     """
-    hass.data[WLED_KEY] = WLEDReleasesDataUpdateCoordinator(hass)
-    await hass.data[WLED_KEY].async_request_refresh()
+    hass.data[WLED_KEY] = {}
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: WLEDConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: WLEDConfigEntry) -> None:
     """Set up WLED from a config entry."""
     entry.runtime_data = WLEDDataUpdateCoordinator(hass, entry=entry)
     await entry.runtime_data.async_config_entry_first_refresh()
@@ -55,25 +55,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: WLEDConfigEntry) -> bool
     # Set up all platforms for this device/entry.
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: WLEDConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: WLEDConfigEntry) -> None:
     """Unload WLED config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        coordinator = entry.runtime_data
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    coordinator = entry.runtime_data
 
-        # Ensure disconnected and cleanup stop sub
-        await coordinator.wled.disconnect()
-        if coordinator.unsub:
-            coordinator.unsub()
-
-    return unload_ok
+    # Ensure disconnected and cleanup stop sub. Cleared once called, as the
+    # WebSocket listener also cleans it up when the disconnect ends it.
+    await coordinator.wled.disconnect()
+    if coordinator.unsub:
+        coordinator.unsub()
+        coordinator.unsub = None
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: WLEDConfigEntry
-) -> bool:
+) -> None:
     """Migrate old entry."""
     _LOGGER.debug(
         "Migrating configuration from version %s.%s",
@@ -113,12 +111,11 @@ async def async_migrate_entry(
                     ]
                 )
             if len(duplicate_entries) - len(ignored_entries) > 1:
-                _LOGGER.warning(
-                    "Found multiple WLED config entries with"
-                    " the same MAC address, cannot migrate"
-                    " to version 1.2"
+                raise ConfigEntryError(
+                    translation_domain=DOMAIN,
+                    translation_key="duplicate_mac_address",
+                    translation_placeholders={"mac_address": normalized_mac_address},
                 )
-                return False
 
             hass.config_entries.async_update_entry(
                 config_entry,
@@ -132,5 +129,3 @@ async def async_migrate_entry(
         config_entry.version,
         config_entry.minor_version,
     )
-
-    return True

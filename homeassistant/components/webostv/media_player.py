@@ -184,13 +184,13 @@ class LgWebOSMediaPlayerEntity(WebOsTvEntity, RestoreEntity, MediaPlayerEntity):
         maj_v = tv_info.software.get("major_ver")
         min_v = tv_info.software.get("minor_ver")
         if maj_v and min_v:
-            self._attr_device_info["sw_version"] = f"{maj_v}.{min_v}"
+            self._attr_device_info.sw_version = f"{maj_v}.{min_v}"
 
         if model := tv_info.system.get("modelName"):
-            self._attr_device_info["model"] = model
+            self._attr_device_info.model = model
 
         if serial_number := tv_info.system.get("serialNumber"):
-            self._attr_device_info["serial_number"] = serial_number
+            self._attr_device_info.serial_number = serial_number
 
         if tv_state.sound_output is not None:
             self._attr_extra_state_attributes = {

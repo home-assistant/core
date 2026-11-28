@@ -1,6 +1,7 @@
 {
   "domain": "ipma",
   "name": "Instituto Portugu\u00eas do Mar e Atmosfera (IPMA)",
+  "categories": ["weather_alerts.forecasts"],
   "codeowners": ["@dgomes"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ipma",

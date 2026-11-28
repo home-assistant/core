@@ -1,6 +1,7 @@
 {
   "domain": "freshr",
   "name": "Fresh-r",
+  "categories": ["climate.fans_ventilation", "sensors.air_quality"],
   "codeowners": ["@SierraNL"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/freshr",

@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from aiomodernforms import ModernFormsConnectionError
 import pytest
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.modern_forms.const import DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -19,8 +20,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import init_integration, init_integration_gen4
-
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_switch_state(

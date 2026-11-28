@@ -1,6 +1,7 @@
 {
   "domain": "weatherkit",
   "name": "Apple WeatherKit",
+  "categories": ["weather_alerts.forecasts"],
   "codeowners": ["@tjhorner"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/weatherkit",

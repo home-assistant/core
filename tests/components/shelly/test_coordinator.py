@@ -7,6 +7,11 @@ from aioshelly.const import MODEL_2PM_G3, MODEL_BULB, MODEL_BUTTON1
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+    mock_restore_cache,
+)
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -50,12 +55,6 @@ from . import (
     mock_rest_update,
     register_device,
     register_entity,
-)
-
-from tests.common import (
-    async_fire_time_changed,
-    async_load_json_object_fixture,
-    mock_restore_cache,
 )
 
 RECONNECT_ERROR = "An error occurred while reconnecting to Test name"
@@ -991,6 +990,29 @@ async def test_rpc_polling_disconnected(
 
     await mock_polling_rpc_update(hass, freezer)
 
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_rpc_polling_not_initialized(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC polling is skipped while the device is re-initializing."""
+    entity_id = register_entity(hass, SENSOR_DOMAIN, "test_name_rssi", "wifi-rssi")
+    await init_integration(hass, 2)
+
+    # The websocket is connected but initialization has not completed yet
+    monkeypatch.setattr(mock_rpc_device, "initialized", False)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "-63"
+
+    await mock_polling_rpc_update(hass, freezer)
+
+    mock_rpc_device.poll.assert_not_called()
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNAVAILABLE
 

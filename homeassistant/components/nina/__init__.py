@@ -25,7 +25,7 @@ PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: NinaConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NinaConfigEntry) -> None:
     """Set up platform from a ConfigEntry."""
     coordinator = NINADataUpdateCoordinator(hass, entry)
 
@@ -35,8 +35,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: NinaConfigEntry) -> bool
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_setup(hass: HomeAssistant, _: ConfigType) -> bool:
     """Set up services."""
@@ -44,12 +42,12 @@ async def async_setup(hass: HomeAssistant, _: ConfigType) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: NinaConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NinaConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: NinaConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: NinaConfigEntry) -> None:
     """Migrate the config to the new format."""
 
     version = entry.version
@@ -111,5 +109,3 @@ async def async_migrate_entry(hass: HomeAssistant, entry: NinaConfigEntry) -> bo
             options=new_data_options,
             minor_version=4,
         )
-
-    return True

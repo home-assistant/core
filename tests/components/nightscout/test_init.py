@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 from aiohttp import ClientError
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.nightscout.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -10,8 +11,6 @@ from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 
 from . import init_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_unload_entry(hass: HomeAssistant) -> None:

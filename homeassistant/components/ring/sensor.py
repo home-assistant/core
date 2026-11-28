@@ -4,14 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, Generic, cast, override
 
-from ring_doorbell import (
-    RingCapability,
-    RingChime,
-    RingDoorBell,
-    RingEventKind,
-    RingGeneric,
-    RingOther,
-)
+from ring_doorbell import RingCapability, RingDoorBell, RingEventKind, RingGeneric
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -29,10 +22,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import RingConfigEntry
-from .coordinator import RingDataCoordinator
+from .coordinator import RingConfigEntry, RingDataCoordinator
 from .entity import (
-    DeprecatedInfo,
     RingDeviceT,
     RingEntity,
     RingEntityDescription,
@@ -199,90 +190,6 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription[Any], ...] = (
         ),
         exists_fn=lambda device: (
             isinstance(device, RingDoorBell) and device.has_subscription
-        ),
-    ),
-    RingSensorEntityDescription[RingGeneric](
-        key="last_ding",
-        translation_key="last_ding",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda device: (
-            last_event.get("created_at")
-            if (last_event := _get_last_event(device.last_history, RingEventKind.DING))
-            else None
-        ),
-        extra_state_attributes_fn=lambda device: (
-            last_event_attrs
-            if (
-                last_event_attrs := _get_last_event_attrs(
-                    device.last_history, RingEventKind.DING
-                )
-            )
-            else None
-        ),
-        exists_fn=lambda device: device.has_capability(RingCapability.HISTORY),
-        deprecated_info=DeprecatedInfo(
-            new_platform=Platform.EVENT, breaks_in_ha_version="2025.4.0"
-        ),
-    ),
-    RingSensorEntityDescription[RingGeneric](
-        key="last_motion",
-        translation_key="last_motion",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda device: (
-            last_event.get("created_at")
-            if (
-                last_event := _get_last_event(device.last_history, RingEventKind.MOTION)
-            )
-            else None
-        ),
-        extra_state_attributes_fn=lambda device: (
-            last_event_attrs
-            if (
-                last_event_attrs := _get_last_event_attrs(
-                    device.last_history, RingEventKind.MOTION
-                )
-            )
-            else None
-        ),
-        exists_fn=lambda device: device.has_capability(RingCapability.HISTORY),
-        deprecated_info=DeprecatedInfo(
-            new_platform=Platform.EVENT, breaks_in_ha_version="2025.4.0"
-        ),
-    ),
-    RingSensorEntityDescription[RingDoorBell | RingChime](
-        key="volume",
-        translation_key="volume",
-        value_fn=lambda device: device.volume,
-        exists_fn=lambda device: isinstance(device, (RingDoorBell, RingChime)),
-        deprecated_info=DeprecatedInfo(
-            new_platform=Platform.NUMBER, breaks_in_ha_version="2025.4.0"
-        ),
-    ),
-    RingSensorEntityDescription[RingOther](
-        key="doorbell_volume",
-        translation_key="doorbell_volume",
-        value_fn=lambda device: device.doorbell_volume,
-        exists_fn=lambda device: isinstance(device, RingOther),
-        deprecated_info=DeprecatedInfo(
-            new_platform=Platform.NUMBER, breaks_in_ha_version="2025.4.0"
-        ),
-    ),
-    RingSensorEntityDescription[RingOther](
-        key="mic_volume",
-        translation_key="mic_volume",
-        value_fn=lambda device: device.mic_volume,
-        exists_fn=lambda device: isinstance(device, RingOther),
-        deprecated_info=DeprecatedInfo(
-            new_platform=Platform.NUMBER, breaks_in_ha_version="2025.4.0"
-        ),
-    ),
-    RingSensorEntityDescription[RingOther](
-        key="voice_volume",
-        translation_key="voice_volume",
-        value_fn=lambda device: device.voice_volume,
-        exists_fn=lambda device: isinstance(device, RingOther),
-        deprecated_info=DeprecatedInfo(
-            new_platform=Platform.NUMBER, breaks_in_ha_version="2025.4.0"
         ),
     ),
     RingSensorEntityDescription[RingGeneric](

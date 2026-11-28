@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.switch import SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.const import ATTR_ENTITY_ID
@@ -11,8 +12,6 @@ from homeassistant.exceptions import HomeAssistantError
 
 from .conftest import http_404_error, http_429_error, setup_integration
 from .const import MOCK_SWITCH_ENTITY_ID
-
-from tests.common import MockConfigEntry
 
 
 async def test_wallbox_switch_class(

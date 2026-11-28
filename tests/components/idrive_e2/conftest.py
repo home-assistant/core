@@ -5,6 +5,7 @@ import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.backup import AgentBackup
 from homeassistant.components.idrive_e2 import CONF_BUCKET
@@ -15,8 +16,6 @@ from homeassistant.components.idrive_e2.backup import (
 from homeassistant.components.idrive_e2.const import DOMAIN
 
 from .const import USER_INPUT
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(

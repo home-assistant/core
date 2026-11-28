@@ -14,12 +14,19 @@ from aiogithubapi import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.frontend import DATA_PANELS
 from homeassistant.components.marketplace import async_remove_config_entry_device
 from homeassistant.components.marketplace.base import MarketplaceManager
-from homeassistant.components.marketplace.const import DOMAIN, LEGACY_HACS_SYSTEM_ID
+from homeassistant.components.marketplace.const import (
+    DOMAIN,
+    LEGACY_HACS_SYSTEM_ID,
+    WEBSESSION_MAX_HEADER_SIZE,
+)
 from homeassistant.components.marketplace.enums import DisabledReason
 from homeassistant.components.marketplace.exceptions import (
     GitHubRateLimitError,
@@ -49,9 +56,22 @@ from .const import (
     REPOSITORY_PLUGIN_ID,
 )
 
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
+
+async def test_marketplace_session_header_limits(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test the session accepts large response headers from GitHub."""
+    with patch(
+        "homeassistant.components.marketplace.base.async_create_clientsession"
+    ) as create_session:
+        MarketplaceManager(hass, init_integration)
+
+    create_session.assert_called_once_with(
+        hass,
+        max_line_size=WEBSESSION_MAX_HEADER_SIZE,
+        max_field_size=WEBSESSION_MAX_HEADER_SIZE,
+    )
 
 
 async def test_load_unload_entry(

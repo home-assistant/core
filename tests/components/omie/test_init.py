@@ -5,13 +5,12 @@ from unittest.mock import MagicMock
 import aiohttp
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import spot_price_fetcher
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_setup_and_unload_entry(

@@ -1,6 +1,7 @@
 {
   "domain": "traccar",
   "name": "Traccar Client",
+  "categories": ["presence_location.phones_companion_apps"],
   "codeowners": ["@ludeeus"],
   "config_flow": true,
   "dependencies": ["webhook"],

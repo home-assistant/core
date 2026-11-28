@@ -1,6 +1,7 @@
 {
   "domain": "libre_hardware_monitor",
   "name": "Libre Hardware Monitor",
+  "categories": ["computers_network.monitoring"],
   "codeowners": ["@Sab44"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/libre_hardware_monitor",

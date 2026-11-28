@@ -18,7 +18,7 @@ PLATFORMS = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: VodafoneConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: VodafoneConfigEntry) -> None:
     """Set up Vodafone Station platform."""
 
     coordinator = VodafoneStationRouter(
@@ -32,10 +32,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: VodafoneConfigEntry) -> 
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_migrate_entry(hass: HomeAssistant, entry: VodafoneConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: VodafoneConfigEntry) -> None:
     """Migrate old entry."""
 
     if entry.version == 1 and entry.minor_version == 1:
@@ -71,13 +69,9 @@ async def async_migrate_entry(hass: HomeAssistant, entry: VodafoneConfigEntry) -
             "Migration to version %s.%s successful", entry.version, entry.minor_version
         )
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: VodafoneConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: VodafoneConfigEntry) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        coordinator = entry.runtime_data
-        await coordinator.api.logout()
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    coordinator = entry.runtime_data
+    await coordinator.api.logout()

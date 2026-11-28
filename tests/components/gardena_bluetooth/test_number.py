@@ -12,6 +12,7 @@ from gardena_bluetooth.exceptions import (
 from gardena_bluetooth.parse import Characteristic
 from habluetooth import BluetoothServiceInfo
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
@@ -23,8 +24,6 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 
 from . import AQUA_CONTOUR_SERVICE_INFO, WATER_TIMER_SERVICE_INFO, setup_entry
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("constant_advertisements")
 

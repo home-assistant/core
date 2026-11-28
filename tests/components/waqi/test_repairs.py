@@ -3,6 +3,12 @@
 from unittest.mock import AsyncMock
 
 from aiowaqi import WAQIUnknownStationError
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.repairs import (
+    process_repair_fix_flow,
+    start_repair_fix_flow,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
 from homeassistant.components.waqi.const import DOMAIN
@@ -12,10 +18,6 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
-from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
-from tests.typing import ClientSessionGenerator
 
 
 async def test_station_not_found_fix_flow(
@@ -34,12 +36,17 @@ async def test_station_not_found_fix_flow(
     )
     await setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.reason == (
+        'The measuring station "de Jongweg, Utrecht" can no longer be found'
+        " by the World Air Quality Index API"
+    )
 
     issue_id = f"station_not_found_{subentry_id}"
     issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert issue is not None
     assert issue.translation_key == "station_not_found"
     assert issue.is_fixable is True
+    assert issue.config_entry_id == mock_config_entry.entry_id
     assert issue.data == {
         "entry_id": mock_config_entry.entry_id,
         "subentry_id": subentry_id,
@@ -86,4 +93,25 @@ async def test_issue_cleared_on_recovery(
     await hass.async_block_till_done()
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+async def test_issue_removed_with_config_entry(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_waqi: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the issue is removed when the config entry is removed."""
+    subentry_id = list(mock_config_entry.subentries)[0]
+    mock_waqi.get_by_station_number.side_effect = WAQIUnknownStationError(
+        "Could not find station @4585"
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    issue_id = f"station_not_found_{subentry_id}"
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
+
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None

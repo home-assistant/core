@@ -1,6 +1,7 @@
 """Configuration for GDACS tests."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.gdacs.const import CONF_CATEGORIES, DOMAIN
 from homeassistant.const import (
@@ -10,8 +11,6 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_UNIT_SYSTEM,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

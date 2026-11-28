@@ -1,6 +1,7 @@
 {
   "domain": "madvr",
   "name": "madVR Envy",
+  "categories": ["media_entertainment.tv_streaming"],
   "codeowners": ["@iloveicedgreentea"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/madvr",

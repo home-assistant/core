@@ -286,7 +286,11 @@ class OptionsFlowHandler(OptionsFlow):
     ) -> ConfigFlowResult:
         """Handle options flow."""
         if user_input is not None:
-            events = [event.strip() for event in user_input[CONF_EVENTS].split(",")]
+            events = [
+                event
+                for part in user_input[CONF_EVENTS].split(",")
+                if (event := part.strip())
+            ]
             return self.async_create_entry(title="", data={CONF_EVENTS: events})
 
         current_events = self.config_entry.options.get(CONF_EVENTS, [])

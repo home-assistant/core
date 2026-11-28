@@ -2,8 +2,13 @@
 
 from unittest.mock import AsyncMock, patch
 
-from my_pv.exceptions import MyPVAuthenticationError, MyPVConnectionError
+from my_pv.exceptions import (
+    MyPVAuthenticationError,
+    MyPVConnectionError,
+    MyPVTooManyRequestsError,
+)
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
@@ -11,8 +16,6 @@ from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.usefixtures("mock_my_pv_client")
@@ -115,16 +118,17 @@ async def test_button_press_send_command_returns_false(
     [
         (MyPVConnectionError(), HomeAssistantError),
         (MyPVAuthenticationError(), ConfigEntryAuthFailed),
+        (MyPVTooManyRequestsError(), HomeAssistantError),
     ],
 )
-async def test_button_press_send_command_throws_error(
+async def test_button_press_send_command_raises_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_my_pv_client: AsyncMock,
     error: MyPVConnectionError | MyPVAuthenticationError,
     expected_ha_error: type[HomeAssistantError],
 ) -> None:
-    """Test for HomeAssistantError when send_command throws error."""
+    """Test for HomeAssistantError when send_command raises error."""
 
     with patch("homeassistant.components.my_pv.PLATFORMS", [Platform.BUTTON]):
         mock_config_entry.add_to_hass(hass)

@@ -2,11 +2,11 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.met_eireann.const import DOMAIN
 from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def init_integration(hass: HomeAssistant) -> MockConfigEntry:

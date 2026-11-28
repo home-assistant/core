@@ -1,6 +1,7 @@
 {
   "domain": "ifttt",
   "name": "IFTTT",
+  "categories": ["diy_makers.web_data_connectors", "other_ecosystems"],
   "codeowners": [],
   "config_flow": true,
   "dependencies": ["webhook"],

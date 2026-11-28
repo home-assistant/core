@@ -8,6 +8,7 @@ from homeassistant.components.device_automation import (
     InvalidDeviceAutomationConfig,
 )
 from homeassistant.components.homeassistant.triggers import event as event_trigger
+from homeassistant.components.homeassistant.triggers.event import EventTriggerArgument
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -79,9 +80,12 @@ async def async_attach_trigger(
 
     event_config = event_trigger.TRIGGER_SCHEMA(
         {
-            event_trigger.CONF_PLATFORM: "event",
-            event_trigger.CONF_EVENT_TYPE: ZHA_EVENT,
-            event_trigger.CONF_EVENT_DATA: {DEVICE_IEEE: ieee, **triggers[trigger_key]},
+            EventTriggerArgument.PLATFORM: "event",
+            EventTriggerArgument.EVENT_TYPE: ZHA_EVENT,
+            EventTriggerArgument.EVENT_DATA: {
+                DEVICE_IEEE: ieee,
+                **triggers[trigger_key],
+            },
         }
     )
     return await event_trigger.async_attach_trigger(

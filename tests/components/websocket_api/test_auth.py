@@ -5,6 +5,7 @@ from unittest.mock import patch
 import aiohttp
 from aiohttp import WSMsgType, web
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.auth.providers.homeassistant import HassAuthProvider
 from homeassistant.components.http.const import DATA_SUPERVISOR_USER
@@ -26,7 +27,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
 
 from tests.test_util import mock_real_ip
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture

@@ -1,6 +1,11 @@
 {
   "domain": "lutron",
   "name": "Lutron",
+  "categories": [
+    "lighting.lighting_systems",
+    "plugs_switches",
+    "blinds_curtains"
+  ],
   "codeowners": ["@cdheiser", "@wilburCForce"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/lutron",

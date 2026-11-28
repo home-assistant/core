@@ -3,12 +3,11 @@
 from datetime import timedelta
 
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.core import HomeAssistant
 
 from .test_init import init_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_pir_sensors_are_polled(

@@ -1,6 +1,7 @@
 {
   "domain": "maxcube",
   "name": "eQ-3 MAX!",
+  "categories": ["climate.thermostats_heating"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/maxcube",
   "iot_class": "local_polling",

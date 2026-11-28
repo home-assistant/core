@@ -1,6 +1,7 @@
 {
   "domain": "homeassistant_sky_connect",
   "name": "Home Assistant Connect ZBT-1",
+  "categories": ["hubs_protocols.wireless_protocols"],
   "codeowners": ["@home-assistant/core"],
   "config_flow": true,
   "dependencies": ["hardware", "usb", "homeassistant_hardware"],

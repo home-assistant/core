@@ -13,6 +13,16 @@ from aiopowerwall import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_fire_time_changed,
+)
+from pytest_homeassistant.components.repairs import (
+    process_repair_fix_flow,
+    start_repair_fix_flow,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 from tesla_fleet_api.exceptions import InvalidResponse, PrivateKeyError
 
 from homeassistant.components.repairs import ConfirmRepairFlow
@@ -33,10 +43,6 @@ from homeassistant.setup import async_setup_component
 
 from . import mock_config_entry, setup_platform
 from .const import METADATA
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
-from tests.typing import ClientSessionGenerator
 
 VEHICLE_VIN = "LRW3F7EK4NC700000"
 SITE_ID = 123456
@@ -175,6 +181,89 @@ async def test_repair_issue_removed_when_vehicle_no_longer_available(
         await hass.async_block_till_done()
 
     assert issue_registry.async_get_issue(DOMAIN, f"key_{VEHICLE_VIN}") is None
+
+
+async def test_ignored_repair_issue_kept_while_valid(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test an ignored repair issue survives metadata polls and reloads."""
+    issue_id = f"key_{VEHICLE_VIN}"
+    with patch(
+        "tesla_fleet_api.teslemetry.Teslemetry.metadata",
+        return_value=_metadata_with_issue("key"),
+    ):
+        entry = await setup_platform(hass, [])
+        ir.async_ignore_issue(hass, DOMAIN, issue_id, True)
+        issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+        assert issue is not None
+        dismissed_version = issue.dismissed_version
+        assert dismissed_version is not None
+        events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
+
+        freezer.tick(METADATA_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        with patch("homeassistant.components.teslemetry.PLATFORMS", []):
+            await hass.config_entries.async_reload(entry.entry_id)
+            await hass.async_block_till_done()
+
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.active
+    assert issue.dismissed_version == dismissed_version
+    assert not [event for event in events if event.data["action"] == "remove"]
+
+
+async def test_stale_repair_issues_deleted_on_setup(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test repair issues of vehicles gone from the account are deleted on setup.
+
+    Repair issues owned by another config entry, or created before issues were
+    linked to their config entry, are left alone. The latter are linked once the
+    issue is created again.
+    """
+    entry = mock_config_entry()
+    entry.add_to_hass(hass)
+    other_entry = MockConfigEntry(domain=DOMAIN)
+    other_entry.add_to_hass(hass)
+    for issue_id, config_entry_id in (
+        ("key_GONE", entry.entry_id),
+        ("key_OTHER_ACCOUNT", other_entry.entry_id),
+        ("key_GONE_UNLINKED", None),
+        (f"key_{VEHICLE_VIN}", None),
+    ):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            issue_id,
+            config_entry_id=config_entry_id,
+            is_fixable=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="key",
+            translation_placeholders={"vehicle": "Vehicle"},
+            data={"entry_id": config_entry_id or entry.entry_id},
+        )
+
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.Teslemetry.metadata",
+            return_value=_metadata_with_issue("key"),
+        ),
+        patch("homeassistant.components.teslemetry.PLATFORMS", []),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert issue_registry.async_get_issue(DOMAIN, "key_GONE") is None
+    assert issue_registry.async_get_issue(DOMAIN, "key_OTHER_ACCOUNT")
+    assert issue_registry.async_get_issue(DOMAIN, "key_GONE_UNLINKED")
+    issue = issue_registry.async_get_issue(DOMAIN, f"key_{VEHICLE_VIN}")
+    assert issue is not None
+    assert issue.config_entry_id == entry.entry_id
 
 
 async def test_repair_fix_flow(

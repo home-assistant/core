@@ -1,6 +1,7 @@
 {
   "domain": "earn_e_p1",
   "name": "EARN-E P1 Meter",
+  "categories": ["energy.meters_monitoring"],
   "codeowners": ["@Miggets7"],
   "config_flow": true,
   "dhcp": [

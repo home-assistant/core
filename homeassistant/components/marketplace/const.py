@@ -12,6 +12,10 @@ DOMAIN = "marketplace"
 CLIENT_ID = "395a8e669c5de9f7c6e8"
 CLIENT_NAME = f"HomeAssistantMarketplace/{HAVERSION}"
 
+# aiohttp's 8190 byte default is too small for some servers, e.g. GitHub's
+# release download redirects carry a ~9 KiB Content-Security-Policy header.
+WEBSESSION_MAX_HEADER_SIZE = 65536
+
 # Installed dashboard resources live in www/community, which the frontend
 # serves as /local.
 DASHBOARD_RESOURCE_BASE = "/local/community"

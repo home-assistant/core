@@ -1,6 +1,7 @@
 {
   "domain": "pushsafer",
   "name": "Pushsafer",
+  "categories": ["messaging_notifications.push_notifications"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/pushsafer",
   "iot_class": "cloud_push",

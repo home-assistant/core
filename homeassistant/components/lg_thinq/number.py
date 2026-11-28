@@ -195,6 +195,7 @@ def _check_deprecated_fan_speed_entity(
         hass,
         DOMAIN,
         f"deprecated_fan_speed_number_{entity_id}",
+        config_entry_id=entity_entry.config_entry_id,
         breaks_in_ha_version="2026.12.0",
         is_fixable=True,
         severity=IssueSeverity.WARNING,

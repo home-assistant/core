@@ -2,6 +2,7 @@
   "domain": "mill",
   "name": "Mill",
   "after_dependencies": ["recorder"],
+  "categories": ["climate.thermostats_heating"],
   "codeowners": ["@danielhiversen"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/mill",

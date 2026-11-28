@@ -87,6 +87,7 @@
         'Redox measurement active': True,
         'Redox measurement module detected': True,
         'filtration1_enable': 4,
+        'filtration1_period': 0,
         'filtration1_start': 0,
         'filtration1_stop': None,
         'filtration_mode': 'manual',

@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import async_get_device_automations
 from zwave_js_server.const import CommandClass
 from zwave_js_server.event import Event
 
@@ -21,8 +22,6 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.setup import async_setup_component
-
-from tests.common import async_get_device_automations
 
 
 async def test_get_conditions(

@@ -1,6 +1,7 @@
 {
   "domain": "incomfort",
   "name": "Intergas gateway",
+  "categories": ["climate.thermostats_heating"],
   "codeowners": ["@jbouwh"],
   "config_flow": true,
   "dhcp": [

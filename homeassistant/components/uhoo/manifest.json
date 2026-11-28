@@ -1,6 +1,7 @@
 {
   "domain": "uhoo",
   "name": "uHoo",
+  "categories": ["sensors.air_quality"],
   "codeowners": ["@getuhoo", "@joshsmonta"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/uhooair",

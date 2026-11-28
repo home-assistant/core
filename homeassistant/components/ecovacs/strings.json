@@ -74,14 +74,29 @@
       "reset_lifespan_dust_bag": {
         "name": "Reset dust bag lifespan"
       },
+      "reset_lifespan_dust_bucket": {
+        "name": "Reset dust bucket lifespan"
+      },
+      "reset_lifespan_dust_case_heap": {
+        "name": "Reset dust bin filter lifespan"
+      },
+      "reset_lifespan_dust_container_filter": {
+        "name": "Reset dust container filter lifespan"
+      },
       "reset_lifespan_filter": {
         "name": "Reset filter lifespan"
       },
       "reset_lifespan_hand_filter": {
         "name": "Reset hand filter lifespan"
       },
+      "reset_lifespan_heavy_duty_cleaning_solution": {
+        "name": "Reset heavy-duty cleaning solution lifespan"
+      },
       "reset_lifespan_lens_brush": {
         "name": "Reset lens brush lifespan"
+      },
+      "reset_lifespan_mop_washing_tray": {
+        "name": "Reset mop washing tray lifespan"
       },
       "reset_lifespan_round_mop": {
         "name": "Reset round mop lifespan"
@@ -94,6 +109,9 @@
       },
       "reset_lifespan_station_filter": {
         "name": "Reset station filter lifespan"
+      },
+      "reset_lifespan_strainer": {
+        "name": "Reset strainer lifespan"
       },
       "reset_lifespan_trimmer_brush": {
         "name": "Reset edge trimmer brush lifespan"
@@ -210,17 +228,32 @@
       "lifespan_dust_bag": {
         "name": "Dust bag lifespan"
       },
+      "lifespan_dust_bucket": {
+        "name": "Dust bucket lifespan"
+      },
+      "lifespan_dust_case_heap": {
+        "name": "Dust bin filter lifespan"
+      },
+      "lifespan_dust_container_filter": {
+        "name": "Dust container filter lifespan"
+      },
       "lifespan_filter": {
         "name": "Filter lifespan"
       },
       "lifespan_hand_filter": {
         "name": "Hand filter lifespan"
       },
+      "lifespan_heavy_duty_cleaning_solution": {
+        "name": "Heavy-duty cleaning solution lifespan"
+      },
       "lifespan_lens_brush": {
         "name": "Lens brush lifespan"
       },
       "lifespan_main_brush": {
         "name": "[%key:component::ecovacs::entity::sensor::lifespan_brush::name%]"
+      },
+      "lifespan_mop_washing_tray": {
+        "name": "Mop washing tray lifespan"
       },
       "lifespan_round_mop": {
         "name": "Round mop lifespan"
@@ -230,6 +263,12 @@
       },
       "lifespan_side_brush": {
         "name": "Side brush lifespan"
+      },
+      "lifespan_station_filter": {
+        "name": "Station filter lifespan"
+      },
+      "lifespan_strainer": {
+        "name": "Strainer lifespan"
       },
       "lifespan_trimmer_brush": {
         "name": "Edge trimmer brush lifespan"

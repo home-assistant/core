@@ -15,7 +15,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEGREE,
     PERCENTAGE,
@@ -37,7 +36,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import DeviceTuple, async_setup_platform_entry, get_rfx_object
+from . import DeviceTuple, RfxtrxConfigEntry, async_setup_platform_entry, get_rfx_object
 from .const import ATTR_EVENT
 from .entity import RfxtrxEntity
 
@@ -158,7 +157,6 @@ SENSOR_TYPES = (
     ),
     RfxtrxSensorEntityDescription(
         key="Wind direction",
-        translation_key="wind_direction",
         state_class=SensorStateClass.MEASUREMENT_ANGLE,
         device_class=SensorDeviceClass.WIND_DIRECTION,
         native_unit_of_measurement=DEGREE,
@@ -239,7 +237,7 @@ SENSOR_TYPES_DICT = {desc.key: desc for desc in SENSOR_TYPES}
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RfxtrxConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up config entry."""

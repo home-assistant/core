@@ -19,6 +19,7 @@ from asyncssh.sftp import SFTPNoSuchFile, SFTPPermissionDenied
 from homeassistant.components.backup import (
     AgentBackup,
     BackupAgentError,
+    OnProgressCallback,
     suggested_filename,
 )
 from homeassistant.core import HomeAssistant
@@ -221,15 +222,19 @@ class BackupAgentClient:
         self,
         iterator: AsyncIterator[bytes],
         backup: AgentBackup,
+        on_progress: OnProgressCallback,
     ) -> None:
         """Accept `iterator` as bytes iterator and write backup archive."""
 
         file_path = (
             f"{self.cfg.runtime_data.backup_location}/{suggested_filename(backup)}"
         )
+        bytes_uploaded = 0
         async with self.sftp.open(file_path, "wb") as f:
             async for b in iterator:
                 await f.write(b)
+                bytes_uploaded += len(b)
+                on_progress(bytes_uploaded=bytes_uploaded)
 
         LOGGER.debug("Writing backup metadata")
         metadata: dict[str, str | dict[str, list[str]]] = {

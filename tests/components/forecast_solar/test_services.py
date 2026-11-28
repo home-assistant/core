@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 from zoneinfo import ZoneInfo
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.forecast_solar.const import DOMAIN
 from homeassistant.components.forecast_solar.services import (
@@ -19,8 +20,6 @@ from homeassistant.components.forecast_solar.services import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry
 
 
 async def test_get_forecast_raw(

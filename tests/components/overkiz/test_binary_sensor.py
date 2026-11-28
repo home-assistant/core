@@ -7,6 +7,7 @@ from unittest.mock import patch
 from freezegun.api import FrozenDateTimeFactory
 from pyoverkiz.enums import OverkizState
 import pytest
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
@@ -19,8 +20,6 @@ from .helpers import (
     device_state_changed_event,
     device_unavailable_event,
 )
-
-from tests.common import snapshot_platform
 
 SMOKE_SENSOR = FixtureDevice(
     "setup/cloud_nexity_rail_din_europe.json",

@@ -4,6 +4,12 @@ from collections.abc import Awaitable, Callable
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_mqtt_message,
+    snapshot_platform,
+)
+from pytest_homeassistant.typing import MqttMockHAClient
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
@@ -14,9 +20,6 @@ from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, async_fire_mqtt_message, snapshot_platform
-from tests.typing import MqttMockHAClient
 
 _PAYLOAD_STEPPER_STATE_THE_HOTSTEPPER = (
     '{"id":"UL90","properties":{"value":2},"type":"state"}'

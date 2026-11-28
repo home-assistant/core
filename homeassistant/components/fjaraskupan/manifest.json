@@ -7,6 +7,7 @@
       "service_uuid": "77a2bd49-1e5a-4961-bba1-21f34fa4bc7b"
     }
   ],
+  "categories": ["appliances_cleaning.cooking", "climate.fans_ventilation"],
   "codeowners": ["@elupus"],
   "config_flow": true,
   "dependencies": ["bluetooth_adapters"],

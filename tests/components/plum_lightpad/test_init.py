@@ -1,11 +1,11 @@
 """Tests for the Plum Lightpad config flow."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.plum_lightpad import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
-
-from tests.common import MockConfigEntry
 
 
 async def test_repair_issue(

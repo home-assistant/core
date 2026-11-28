@@ -35,7 +35,7 @@ from .coordinator import (
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: OpenUvConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: OpenUvConfigEntry) -> None:
     """Set up OpenUV as config entry."""
     websession = aiohttp_client.async_get_clientsession(hass)
     client = Client(
@@ -82,15 +82,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenUvConfigEntry) -> bo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: OpenUvConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: OpenUvConfigEntry) -> None:
     """Unload an OpenUV config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: OpenUvConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: OpenUvConfigEntry) -> None:
     """Migrate the config entry upon new versions."""
     version = entry.version
     data = {**entry.data}
@@ -104,5 +102,3 @@ async def async_migrate_entry(hass: HomeAssistant, entry: OpenUvConfigEntry) -> 
         version = 2
         hass.config_entries.async_update_entry(entry, data=data, version=2)
         LOGGER.debug("Migration to version %s successful", version)
-
-    return True

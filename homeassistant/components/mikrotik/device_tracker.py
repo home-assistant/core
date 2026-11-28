@@ -12,7 +12,8 @@ from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .coordinator import Device, MikrotikConfigEntry, MikrotikDataUpdateCoordinator
+from .coordinator import MikrotikConfigEntry, MikrotikDataUpdateCoordinator
+from .device import Device
 from .entity import MikrotikBaseEntity
 
 PARALLEL_UPDATES = 0

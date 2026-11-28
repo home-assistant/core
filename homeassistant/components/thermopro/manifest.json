@@ -19,6 +19,7 @@
       "local_name": "TP97*"
     }
   ],
+  "categories": ["sensors.temperature_humidity", "appliances_cleaning.cooking"],
   "codeowners": ["@bdraco", "@h3ss"],
   "config_flow": true,
   "dependencies": ["bluetooth_adapters"],

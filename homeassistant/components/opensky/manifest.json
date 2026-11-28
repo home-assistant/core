@@ -1,6 +1,7 @@
 {
   "domain": "opensky",
   "name": "OpenSky Network",
+  "categories": ["vehicles_transport.flights"],
   "codeowners": ["@joostlek"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/opensky",

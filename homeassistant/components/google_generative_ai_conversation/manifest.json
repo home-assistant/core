@@ -2,6 +2,7 @@
   "domain": "google_generative_ai_conversation",
   "name": "Google Gemini",
   "after_dependencies": ["assist_pipeline", "intent"],
+  "categories": ["ai_voice.ai_models", "ai_voice.speech"],
   "codeowners": ["@tronikos", "@ivanlh"],
   "config_flow": true,
   "dependencies": ["conversation"],

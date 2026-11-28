@@ -36,7 +36,9 @@ class FreeboxHomeEntity(Entity):
             self._attr_unique_id += "-" + sub_node["name"].strip()
 
         self._available = True
-        self._firmware = node["props"].get("FwVersion")
+        # The Freebox reports the firmware version of home nodes as a number
+        firmware = node["props"].get("FwVersion")
+        self._firmware = str(firmware) if firmware is not None else None
         self._manufacturer = "Freebox SAS"
 
         self._model = CATEGORY_TO_MODEL.get(node["category"])

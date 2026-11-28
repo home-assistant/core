@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from probatio import to_field_list
 import pytest
+from pytest_homeassistant.common import async_get_device_automations
 from zwave_js_server.client import Client
 from zwave_js_server.const import CommandClass
 from zwave_js_server.model.node import Node
@@ -22,8 +23,6 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 from homeassistant.setup import async_setup_component
-
-from tests.common import async_get_device_automations
 
 
 async def test_get_actions(

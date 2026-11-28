@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 from tuya_sharing import CustomerDevice, Manager
 
@@ -24,8 +25,6 @@ from homeassistant.util.unit_system import (
 )
 
 from . import TuyaNotificationHelper, check_selective_state_update, initialize_entry
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -249,3 +248,37 @@ async def test_temp_unit_convert_number_invalid(
     assert state is not None
     assert state.attributes.get("device_class") is None
     assert state.attributes.get("unit_of_measurement") == ""
+
+
+@pytest.mark.parametrize("mock_device_code", ["hwsb_ircs2n82vgrozoew"])
+async def test_hwsb_number_with_quirk(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+) -> None:
+    """Test HWSB outdoor equipment number with quirk applied."""
+    mock_device.status["speed_set"] = 50
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    entity_id = "number.inverflow_speed"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "50.0"
+    assert state.attributes["min"] == 30
+    assert state.attributes["max"] == 120
+    assert state.attributes["step"] == 5
+    assert state.attributes["unit_of_measurement"] == "%"
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_VALUE: 75,
+        },
+        blocking=True,
+    )
+    mock_manager.send_commands.assert_called_once_with(
+        mock_device.id, [{"code": "speed_set", "value": 75}]
+    )

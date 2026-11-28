@@ -5,6 +5,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.squeezebox.const import (
     SENSOR_UPDATE_INTERVAL,
@@ -21,8 +22,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import dt as dt_util
 
 from .conftest import FAKE_QUERY_RESPONSE
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_update_lms(

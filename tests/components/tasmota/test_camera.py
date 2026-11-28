@@ -6,6 +6,12 @@ import json
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import async_fire_mqtt_message
+from pytest_homeassistant.typing import (
+    ClientSessionGenerator,
+    MqttMockHAClient,
+    MqttMockPahoClient,
+)
 
 from homeassistant.components.camera import CameraState
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX
@@ -25,9 +31,6 @@ from .test_common import (
     help_test_discovery_update_unchanged,
     help_test_entity_id_update_discovery_update,
 )
-
-from tests.common import async_fire_mqtt_message
-from tests.typing import ClientSessionGenerator, MqttMockHAClient, MqttMockPahoClient
 
 SMALLEST_VALID_JPEG = (
     "ffd8ffe000104a46494600010101004800480000ffdb00430003020202020203020202030303030406040404040408060"

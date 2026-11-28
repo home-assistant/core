@@ -199,7 +199,7 @@ class GardenaBluetoothRemainingOpenSetNumber(GardenaBluetoothEntity, NumberEntit
     """Representation of a entity with remaining time."""
 
     _attr_translation_key = "remaining_open_set"
-    _attr_native_unit_of_measurement = "min"
+    _attr_native_unit_of_measurement = UnitOfTime.MINUTES
     _attr_mode = NumberMode.BOX
     _attr_native_min_value = 0.0
     _attr_native_max_value = 24 * 60

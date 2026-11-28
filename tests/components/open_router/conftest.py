@@ -8,9 +8,11 @@ from unittest.mock import AsyncMock, patch
 from openai.types.chat import ChatCompletionChunk
 from openai.types.chat.chat_completion_chunk import Choice as ChunkChoice, ChoiceDelta
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_fixture
 from python_open_router import KeyData, ModelsDataWrapper
 
 from homeassistant.components.open_router.const import (
+    CONF_OUTPUT_MODALITIES,
     CONF_PROMPT,
     CONF_WEB_SEARCH,
     DOMAIN,
@@ -21,15 +23,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, async_load_fixture
-
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.open_router.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -60,10 +60,17 @@ def conversation_subentry_data(enable_assist: bool, web_search: str) -> dict[str
 
 
 @pytest.fixture
-def ai_task_data_subentry_data() -> dict[str, Any]:
+def output_modalities() -> list[str]:
+    """Mock AI task output modalities."""
+    return ["text", "image"]
+
+
+@pytest.fixture
+def ai_task_data_subentry_data(output_modalities: list[str]) -> dict[str, Any]:
     """Mock AI task subentry data."""
     return {
-        CONF_MODEL: "google/gemini-1.5-pro",
+        CONF_MODEL: "google/gemini-2.5-flash-image",
+        CONF_OUTPUT_MODALITIES: output_modalities,
     }
 
 
@@ -81,7 +88,7 @@ def mock_config_entry(
             CONF_API_KEY: "bla",
         },
         version=1,
-        minor_version=3,
+        minor_version=4,
         subentries_data=[
             ConfigSubentryData(
                 data=conversation_subentry_data,
@@ -94,7 +101,7 @@ def mock_config_entry(
                 data=ai_task_data_subentry_data,
                 subentry_id="ABCDEG",
                 subentry_type="ai_task_data",
-                title="Gemini 1.5 Pro",
+                title="Gemini 2.5 Flash Image",
                 unique_id=None,
             ),
         ],
@@ -155,6 +162,21 @@ async def mock_open_router_client(hass: HomeAssistant) -> AsyncGenerator[AsyncMo
             limit_remaining=None,
             is_free_tier=True,
         )
+        models = await async_load_fixture(hass, "models.json", DOMAIN)
+        client.get_models.return_value = ModelsDataWrapper.from_json(models).data
+        yield client
+
+
+@pytest.fixture
+async def mock_open_router_client_setup(
+    hass: HomeAssistant,
+) -> AsyncGenerator[AsyncMock]:
+    """Mock the OpenRouter client used during entry setup and migration."""
+    with patch(
+        "homeassistant.components.open_router.OpenRouterClient",
+        autospec=True,
+    ) as mock_client:
+        client = mock_client.return_value
         models = await async_load_fixture(hass, "models.json", DOMAIN)
         client.get_models.return_value = ModelsDataWrapper.from_json(models).data
         yield client

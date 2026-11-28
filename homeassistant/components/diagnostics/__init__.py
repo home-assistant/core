@@ -38,6 +38,7 @@ from .const import DOMAIN, REDACTED, DiagnosticsSubType, DiagnosticsType
 from .util import async_redact_data, device_entry_as_dict, entity_entry_as_dict
 
 __all__ = [
+    "DOMAIN",
     "REDACTED",
     "async_redact_data",
     "device_entry_as_dict",

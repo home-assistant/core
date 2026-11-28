@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 from pysmlight.exceptions import SmlightError
 from pysmlight.models import BuzzerPayload
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.smlight.const import DOMAIN
 from homeassistant.components.smlight.services import (
@@ -20,8 +21,6 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import setup_integration
-
-from tests.common import MockConfigEntry
 
 TEST_NOTES = "16e6,16e6"
 TEST_BPM = 100

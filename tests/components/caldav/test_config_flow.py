@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from caldav.lib.error import AuthorizationError, DAVError
 from caldav.lib.http_sync import requests as caldav_requests
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.caldav.const import DOMAIN
@@ -16,14 +17,12 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import TEST_PASSWORD, TEST_URL, TEST_USERNAME
 
-from tests.common import MockConfigEntry
-
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        f"homeassistant.components.{DOMAIN}.async_setup_entry", return_value=True
+        f"homeassistant.components.{DOMAIN}.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -82,6 +81,7 @@ async def test_form(
         (AuthorizationError(reason="Other"), "cannot_connect"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_caldav_client_error(
     hass: HomeAssistant,
     side_effect: Exception,
@@ -107,6 +107,19 @@ async def test_caldav_client_error(
 
     assert result2.get("type") is FlowResultType.FORM
     assert result2.get("errors") == {"base": expected_error}
+
+    dav_client.return_value.get_principal.side_effect = None
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_URL: TEST_URL,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result3.get("type") is FlowResultType.CREATE_ENTRY
 
 
 async def test_reauth_success(

@@ -1,6 +1,7 @@
 {
   "domain": "solarlog",
   "name": "Solar-Log",
+  "categories": ["energy.solar_batteries"],
   "codeowners": ["@Ernst79", "@dontinelli"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/solarlog",

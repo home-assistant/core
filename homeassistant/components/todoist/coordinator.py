@@ -35,7 +35,7 @@ class TodoistCoordinator(DataUpdateCoordinator[list[Task]]):
         self,
         hass: HomeAssistant,
         logger: logging.Logger,
-        entry: ConfigEntry | None,
+        entry: TodoistConfigEntry | None,
         update_interval: timedelta,
         api: TodoistAPIAsync,
         token: str,

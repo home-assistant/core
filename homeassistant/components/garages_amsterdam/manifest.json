@@ -1,6 +1,7 @@
 {
   "domain": "garages_amsterdam",
   "name": "Garages Amsterdam",
+  "categories": ["local_services"],
   "codeowners": ["@klaasnicolaas"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/garages_amsterdam",

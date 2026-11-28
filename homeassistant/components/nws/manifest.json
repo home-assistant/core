@@ -1,6 +1,7 @@
 {
   "domain": "nws",
   "name": "National Weather Service (NWS)",
+  "categories": ["weather_alerts.forecasts"],
   "codeowners": ["@MatthewFlamm", "@kamiyo"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/nws",

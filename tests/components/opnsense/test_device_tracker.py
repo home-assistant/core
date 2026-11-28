@@ -6,6 +6,7 @@ from unittest import mock
 from aiopnsense import OPNsenseConnectionError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components import device_tracker
 from homeassistant.components.opnsense import OPNsenseRuntimeData
@@ -13,8 +14,6 @@ from homeassistant.components.opnsense.const import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("mock_opnsense_client")

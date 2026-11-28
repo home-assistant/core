@@ -1,10 +1,11 @@
 """The tests for the Queensland Bushfire Alert Feed platform."""
 
-import datetime
+import datetime as dt
 from unittest.mock import MagicMock, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from georss_qld_bushfire_alert_client import QldBushfireAlertFeed
+from pytest_homeassistant.common import assert_setup_component, async_fire_time_changed
 
 from homeassistant.components import geo_location
 from homeassistant.components.geo_location import ATTR_SOURCE
@@ -32,8 +33,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import assert_setup_component, async_fire_time_changed
 
 CONFIG = {geo_location.DOMAIN: [{"platform": "qld_bushfire", CONF_RADIUS: 200}]}
 
@@ -84,8 +83,8 @@ async def test_setup(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> Non
         (38.0, -3.0),
         category="Category 1",
         attribution="Attribution 1",
-        published=datetime.datetime(2018, 9, 22, 8, 0, tzinfo=datetime.UTC),
-        updated=datetime.datetime(2018, 9, 22, 8, 10, tzinfo=datetime.UTC),
+        published=dt.datetime(2018, 9, 22, 8, 0, tzinfo=dt.UTC),
+        updated=dt.datetime(2018, 9, 22, 8, 10, tzinfo=dt.UTC),
         status="Status 1",
     )
     mock_entry_2 = _generate_mock_feed_entry("2345", "Title 2", 20.5, (38.1, -3.1))
@@ -121,12 +120,8 @@ async def test_setup(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> Non
                 ATTR_FRIENDLY_NAME: "Title 1",
                 ATTR_CATEGORY: "Category 1",
                 ATTR_ATTRIBUTION: "Attribution 1",
-                ATTR_PUBLICATION_DATE: datetime.datetime(
-                    2018, 9, 22, 8, 0, tzinfo=datetime.UTC
-                ),
-                ATTR_UPDATED_DATE: datetime.datetime(
-                    2018, 9, 22, 8, 10, tzinfo=datetime.UTC
-                ),
+                ATTR_PUBLICATION_DATE: dt.datetime(2018, 9, 22, 8, 0, tzinfo=dt.UTC),
+                ATTR_UPDATED_DATE: dt.datetime(2018, 9, 22, 8, 10, tzinfo=dt.UTC),
                 ATTR_STATUS: "Status 1",
                 ATTR_UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
                 ATTR_SOURCE: "qld_bushfire",

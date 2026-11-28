@@ -1,6 +1,7 @@
 {
   "domain": "horizon",
   "name": "Unitymedia Horizon HD Recorder",
+  "categories": ["media_entertainment.tv_streaming"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/horizon",
   "iot_class": "local_polling",

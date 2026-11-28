@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 import re
 
-import httpx
+import httpx2
 from yarl import URL
 
 # Headers and regex for WWW-Authenticate parsing for rfc9728
@@ -21,7 +21,7 @@ class AuthenticateHeader:
 
     @classmethod
     def from_header(
-        cls, url: str, error_response: httpx.Response
+        cls, url: str, error_response: httpx2.Response
     ) -> AuthenticateHeader | None:
         """Create AuthenticateHeader from WWW-Authenticate header."""
         if not (header := error_response.headers.get(WWW_AUTHENTICATE_HEADER)) or not (

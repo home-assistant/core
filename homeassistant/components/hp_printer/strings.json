@@ -1,0 +1,137 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "missing_serial_number": "The printer did not report a serial number."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your HP printer."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "black_level": {
+        "name": "Black level"
+      },
+      "black_pages_remaining": {
+        "name": "Black pages remaining",
+        "unit_of_measurement": "[%key:component::hp_printer::entity::sensor::total_pages::unit_of_measurement%]"
+      },
+      "color_pages": {
+        "name": "Printed color pages",
+        "unit_of_measurement": "[%key:component::hp_printer::entity::sensor::total_pages::unit_of_measurement%]"
+      },
+      "copied_pages": {
+        "name": "Copied pages",
+        "unit_of_measurement": "[%key:component::hp_printer::entity::sensor::total_pages::unit_of_measurement%]"
+      },
+      "cyan_level": {
+        "name": "Cyan level"
+      },
+      "cyan_pages_remaining": {
+        "name": "Cyan pages remaining",
+        "unit_of_measurement": "[%key:component::hp_printer::entity::sensor::total_pages::unit_of_measurement%]"
+      },
+      "duplex_sheets": {
+        "name": "Printed double-sided sheets",
+        "unit_of_measurement": "[%key:component::hp_printer::entity::sensor::simplex_sheets::unit_of_measurement%]"
+      },
+      "faxed_pages": {
+        "name": "Faxed pages",
+        "unit_of_measurement": "[%key:component::hp_printer::entity::sensor::total_pages::unit_of_measurement%]"
+      },
+      "jams": {
+        "name": "Paper jams"
+      },
+      "magenta_level": {
+        "name": "Magenta level"
+      },
+      "magenta_pages_remaining": {
+        "name": "Magenta pages remaining",
+        "unit_of_measurement": "[%key:component::hp_printer::entity::sensor::total_pages::unit_of_measurement%]"
+      },
+      "mispicks": {
+        "name": "Paper mispicks"
+      },
+      "monochrome_pages": {
+        "name": "Printed black and white pages",
+        "unit_of_measurement": "[%key:component::hp_printer::entity::sensor::total_pages::unit_of_measurement%]"
+      },
+      "scanned_adf_pages": {
+        "name": "Scanned pages from document feeder",
+        "unit_of_measurement": "[%key:component::hp_printer::entity::sensor::total_pages::unit_of_measurement%]"
+      },
+      "scanned_duplex_sheets": {
+        "name": "Scanned double-sided sheets",
+        "unit_of_measurement": "[%key:component::hp_printer::entity::sensor::simplex_sheets::unit_of_measurement%]"
+      },
+      "scanned_flatbed_pages": {
+        "name": "Scanned pages from glass",
+        "unit_of_measurement": "[%key:component::hp_printer::entity::sensor::total_pages::unit_of_measurement%]"
+      },
+      "scanned_pages": {
+        "name": "Scanned pages",
+        "unit_of_measurement": "[%key:component::hp_printer::entity::sensor::total_pages::unit_of_measurement%]"
+      },
+      "scanner_jams": {
+        "name": "Scanner jams"
+      },
+      "scanner_mispicks": {
+        "name": "Scanner mispicks"
+      },
+      "simplex_sheets": {
+        "name": "Printed single-sided sheets",
+        "unit_of_measurement": "sheets"
+      },
+      "status": {
+        "name": "Status",
+        "state": {
+          "cancel_job": "Canceling job",
+          "copying": "Copying",
+          "in_power_save": "Power save",
+          "off": "[%key:common::state::off%]",
+          "processing": "Printing",
+          "ready": "Ready",
+          "scan_processing": "Scanning",
+          "tray_empty": "Paper tray empty"
+        }
+      },
+      "total_pages": {
+        "name": "Printed pages",
+        "unit_of_measurement": "pages"
+      },
+      "tri_color_level": {
+        "name": "Tri-color level"
+      },
+      "tri_color_pages_remaining": {
+        "name": "Tri-color pages remaining",
+        "unit_of_measurement": "[%key:component::hp_printer::entity::sensor::total_pages::unit_of_measurement%]"
+      },
+      "yellow_level": {
+        "name": "Yellow level"
+      },
+      "yellow_pages_remaining": {
+        "name": "Yellow pages remaining",
+        "unit_of_measurement": "[%key:component::hp_printer::entity::sensor::total_pages::unit_of_measurement%]"
+      }
+    }
+  },
+  "exceptions": {
+    "unverified_printer": {
+      "message": "Could not verify that the device at {host} is the configured HP printer."
+    },
+    "update_failed": {
+      "message": "Error communicating with the HP printer at {host}."
+    }
+  }
+}

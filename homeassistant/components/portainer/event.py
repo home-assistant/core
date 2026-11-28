@@ -10,8 +10,12 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import PortainerConfigEntry
 from .const import CONTAINER_STATE_EVENT_TYPES
-from .coordinator import PortainerContainerData, PortainerCoordinator
-from .entity import PortainerContainerEntity, PortainerCoordinatorData
+from .coordinator import (
+    PortainerContainerData,
+    PortainerCoordinator,
+    PortainerCoordinatorData,
+)
+from .entity import PortainerContainerEntity
 
 PARALLEL_UPDATES = 0
 

@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, Mock, patch
 
 from freezegun import freeze_time
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from RFXtrx import Connect, RFXtrxTransport
 
 from homeassistant.components import rfxtrx
@@ -15,7 +16,6 @@ from homeassistant.util.dt import utcnow
 
 from . import ENTRY_VERSION
 
-from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
 

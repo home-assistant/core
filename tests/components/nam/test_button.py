@@ -62,7 +62,7 @@ async def test_button_press(hass: HomeAssistant) -> None:
     assert state.state == now.isoformat()
 
 
-@pytest.mark.parametrize(("exc"), [ApiError("API Error"), ClientError])
+@pytest.mark.parametrize(("exc"), [ApiError("API Error"), ClientError, TimeoutError])
 async def test_button_press_exc(hass: HomeAssistant, exc: Exception) -> None:
     """Test button press when exception occurs."""
     await init_integration(hass)

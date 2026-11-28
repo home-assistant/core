@@ -5,6 +5,7 @@ from typing import Any, override
 
 import probatio
 
+from homeassistant import data_entry_flow
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -21,7 +22,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
 )
 
-from .const import CONF_ALL_LLM_APIS, CONF_REQUIRE_ADMIN, DOMAIN
+from .const import CONF_ALL_LLM_APIS, CONF_READ_ONLY, CONF_REQUIRE_ADMIN, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,40 +57,40 @@ def _options_schema(
     all_llm_apis: bool,
     default: list[str],
     require_admin: bool,
+    read_only: bool,
 ) -> probatio.Schema:
     """Return the schema for the options flow."""
-    return probatio.Schema(
-        {
-            probatio.Required(
-                CONF_ALL_LLM_APIS, default=all_llm_apis
-            ): BooleanSelector(),
-            probatio.Optional(
-                CONF_LLM_HASS_API,
-                default=default,
-            ): SelectSelector(
-                SelectSelectorConfig(
-                    options=[
-                        SelectOptionDict(
-                            label=name,
-                            value=llm_api_id,
-                        )
-                        for llm_api_id, name in llm_apis.items()
-                    ],
-                    multiple=True,
-                )
-            ),
-            probatio.Required(
-                CONF_REQUIRE_ADMIN, default=require_admin
-            ): BooleanSelector(),
-        }
+    schema: dict[probatio.Marker, Any] = {
+        probatio.Required(CONF_ALL_LLM_APIS, default=all_llm_apis): BooleanSelector(),
+        data_entry_flow.Optional(
+            CONF_LLM_HASS_API,
+            default=default,
+            visible={"field": CONF_ALL_LLM_APIS, "value": False},
+        ): SelectSelector(
+            SelectSelectorConfig(
+                options=[
+                    SelectOptionDict(
+                        label=name,
+                        value=llm_api_id,
+                    )
+                    for llm_api_id, name in llm_apis.items()
+                ],
+                multiple=True,
+            )
+        ),
+    }
+    schema[probatio.Required(CONF_REQUIRE_ADMIN, default=require_admin)] = (
+        BooleanSelector()
     )
+    schema[probatio.Required(CONF_READ_ONLY, default=read_only)] = BooleanSelector()
+    return probatio.Schema(schema)
 
 
 class ModelContextServerProtocolConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Model Context Protocol Server."""
 
     VERSION = 1
-    MINOR_VERSION = 3
+    MINOR_VERSION = 4
 
     @staticmethod
     @callback
@@ -116,6 +117,7 @@ class ModelContextServerProtocolConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_ALL_LLM_APIS: True,
                 CONF_LLM_HASS_API: [],
                 CONF_REQUIRE_ADMIN: True,
+                CONF_READ_ONLY: False,
             },
         )
 
@@ -129,40 +131,42 @@ class ModelContextServerProtocolOptionsFlow(OptionsFlow):
         """Handle the options step."""
         errors: dict[str, str] = {}
         llm_apis = _llm_api_names(self.hass)
+        current = _selected_llm_apis(self.config_entry, llm_apis)
         # A disabled config entry has not migrated yet
         current_all = self.config_entry.data.get(CONF_ALL_LLM_APIS, False)
-        current = _selected_llm_apis(self.config_entry, llm_apis)
-        if user_input is not None:
-            if not user_input[CONF_ALL_LLM_APIS] and not user_input[CONF_LLM_HASS_API]:
-                errors[CONF_LLM_HASS_API] = "llm_api_required"
-            else:
-                updates: dict[str, Any] = {
-                    "data": {**self.config_entry.data, **user_input}
-                }
-                # Keep a title the user renamed, only refresh a generated one.
-                if self.config_entry.title == _llm_api_title(
-                    llm_apis, current_all, current
-                ):
-                    updates["title"] = _llm_api_title(
-                        llm_apis,
-                        user_input[CONF_ALL_LLM_APIS],
-                        user_input[CONF_LLM_HASS_API],
-                    )
-                self.hass.config_entries.async_update_entry(
-                    self.config_entry, **updates
+        require_admin = self.config_entry.data.get(CONF_REQUIRE_ADMIN, False)
+        read_only = self.config_entry.data.get(CONF_READ_ONLY, False)
+
+        if (
+            user_input is not None
+            and not user_input[CONF_ALL_LLM_APIS]
+            and not user_input[CONF_LLM_HASS_API]
+        ):
+            errors[CONF_LLM_HASS_API] = "llm_api_required"
+        elif user_input is not None:
+            updates: dict[str, Any] = {"data": {**self.config_entry.data, **user_input}}
+            # Keep a title the user renamed, only refresh a generated one.
+            if self.config_entry.title == _llm_api_title(
+                llm_apis, current_all, current
+            ):
+                updates["title"] = _llm_api_title(
+                    llm_apis,
+                    user_input[CONF_ALL_LLM_APIS],
+                    user_input.get(CONF_LLM_HASS_API, []),
                 )
-                # An open SSE session keeps serving the APIs it started with.
-                await self.hass.config_entries.async_reload(self.config_entry.entry_id)
-                return self.async_create_entry(data={})
+            self.hass.config_entries.async_update_entry(self.config_entry, **updates)
+            # An open SSE session keeps serving the APIs it started with.
+            await self.hass.config_entries.async_reload(self.config_entry.entry_id)
+            return self.async_create_entry(data={})
 
         return self.async_show_form(
             step_id="init",
-            data_schema=_options_schema(
-                llm_apis,
-                current_all,
-                current,
-                # A disabled config entry has not migrated yet
-                self.config_entry.data.get(CONF_REQUIRE_ADMIN, False),
+            # Show the submitted values again after an error
+            data_schema=self.add_suggested_values_to_schema(
+                _options_schema(
+                    llm_apis, current_all, current, require_admin, read_only
+                ),
+                user_input,
             ),
             description_placeholders={"more_info_url": MORE_INFO_URL},
             errors=errors,

@@ -24,7 +24,7 @@ from .coordinator import (
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: PowerfoxConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: PowerfoxConfigEntry) -> None:
     """Set up Powerfox from a config entry."""
     client = Powerfox(
         username=entry.data[CONF_EMAIL],
@@ -68,9 +68,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerfoxConfigEntry) -> 
     entry.runtime_data = coordinators
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: PowerfoxConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: PowerfoxConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

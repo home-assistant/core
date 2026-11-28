@@ -297,7 +297,7 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
         if self._supports_color_mode and color_modes:
             if (
                 try_keep_current_mode
-                and self._state is not None
+                and self._has_state
                 and self._state.color_mode in color_modes
             ):
                 # if possible, stay with the color mode that is already set

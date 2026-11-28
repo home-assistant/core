@@ -12,6 +12,7 @@ from easyenergy import (
 )
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.easyenergy.const import DOMAIN
@@ -25,8 +26,6 @@ from homeassistant.components.easyenergy.services import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("init_integration")

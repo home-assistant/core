@@ -1,6 +1,7 @@
 {
   "domain": "tasmota",
   "name": "Tasmota",
+  "categories": ["diy_makers", "plugs_switches"],
   "codeowners": ["@emontnemery"],
   "config_flow": true,
   "dependencies": ["mqtt"],

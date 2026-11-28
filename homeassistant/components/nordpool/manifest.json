@@ -1,6 +1,7 @@
 {
   "domain": "nordpool",
   "name": "Nord Pool",
+  "categories": ["energy.energy_prices"],
   "codeowners": ["@gjohansson-ST"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/nordpool",

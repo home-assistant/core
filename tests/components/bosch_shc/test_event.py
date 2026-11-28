@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 from boschshcpy import AlarmService
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.core import HomeAssistant
 
@@ -13,8 +14,6 @@ from .conftest import (
     setup_integration,
     smoke_detector_device,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
@@ -136,6 +135,28 @@ async def test_motion_detector_unregisters_callback_on_unload(
 
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
+
+    assert device.id not in latest_motion_service._event_callbacks
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"motion_detectors": [motion_detector_device()]}],
+    indirect=True,
+)
+async def test_motion_detector_unregisters_callback_on_failed_add(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """An aborted add removes the LatestMotion callback registration."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.motion_detectors[0]
+    latest_motion_service = device.device_services[0]
+    assert device.id in latest_motion_service._event_callbacks
+
+    entity = next(iter(hass.data["entity_components"]["event"].entities))
+    entity.add_to_platform_abort()
 
     assert device.id not in latest_motion_service._event_callbacks
 

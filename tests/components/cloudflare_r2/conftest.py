@@ -5,6 +5,7 @@ import json
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.backup import AgentBackup
 from homeassistant.components.cloudflare_r2.backup import (
@@ -15,8 +16,6 @@ from homeassistant.components.cloudflare_r2.const import DOMAIN
 from homeassistant.const import CONF_PREFIX
 
 from .const import USER_INPUT
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(

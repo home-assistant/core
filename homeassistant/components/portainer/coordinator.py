@@ -2,13 +2,13 @@
 
 from abc import abstractmethod
 import asyncio
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 import dataclasses
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 import time
-from typing import override
+from typing import Any, override
 
 from pyportainer import (
     DockerContainerState,
@@ -32,7 +32,7 @@ from pyportainer.models.docker import (
     PortainerImageUpdateStatus,
 )
 from pyportainer.models.docker_inspect import DockerInfo, DockerInspect, DockerVersion
-from pyportainer.models.portainer import Endpoint
+from pyportainer.models.portainer import Endpoint, PortainerSystemVersion
 from pyportainer.models.stacks import Stack
 from pyportainer.watcher import PortainerImageWatcher
 from yarl import URL
@@ -40,7 +40,7 @@ from yarl import URL
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -55,6 +55,8 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=60)
 DEFAULT_DF_SCAN_INTERVAL = timedelta(minutes=30)
+# Portainer checks GitHub for the latest release on every version request
+DEFAULT_VERSION_SCAN_INTERVAL = timedelta(hours=6)
 
 
 @dataclass
@@ -196,6 +198,27 @@ class PortainerBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
                 translation_key="timeout_connect",
             ) from err
 
+    async def async_call_portainer(self, coroutine: Awaitable[Any]) -> None:
+        """Await a Portainer call, mapping library errors to HomeAssistantError."""
+        try:
+            await coroutine
+        except PortainerAuthenticationError as err:
+            self.config_entry.async_start_reauth(self.hass)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+            ) from err
+        except PortainerConnectionError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from err
+        except PortainerTimeoutError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="timeout_connect",
+            ) from err
+
 
 class PortainerCoordinator(
     PortainerBaseCoordinator[dict[int, PortainerCoordinatorData]]
@@ -204,6 +227,7 @@ class PortainerCoordinator(
 
     config_entry: PortainerConfigEntry
     docker_disk_space: PortainerDockerDiskSpaceCoordinator | None = None
+    system_version: PortainerSystemVersionCoordinator | None = None
     watcher: PortainerImageWatcher | None = None
     _update_interval = DEFAULT_SCAN_INTERVAL
 
@@ -224,6 +248,8 @@ class PortainerCoordinator(
         self._event_listeners: dict[int, PortainerEventListener] = {}
         self._event_listeners_enabled = False
         self._container_ids_by_endpoint: dict[int, dict[str, str]] = {}
+        # Last successful fetch per endpoint, kept across timed-out polls
+        self._last_endpoint_data: dict[int, PortainerCoordinatorData] = {}
 
     @override
     async def update_data(self) -> dict[int, PortainerCoordinatorData]:
@@ -246,6 +272,7 @@ class PortainerCoordinator(
             ) from err
 
         mapped_endpoints: dict[int, PortainerCoordinatorData] = {}
+        timed_out_endpoints: set[int] = set()
         for endpoint in endpoints:
             if endpoint.status == EndpointStatus.DOWN:
                 _LOGGER.debug(
@@ -293,7 +320,7 @@ class PortainerCoordinator(
                     for stack in result
                 ]
 
-                prev_endpoint = self.data.get(endpoint.id) if self.data else None
+                prev_endpoint = self._last_endpoint_data.get(endpoint.id)
                 container_map: dict[str, PortainerContainerData] = {}
                 stack_map: dict[str, PortainerStackData] = {
                     stack.name: PortainerStackData(stack=stack, container_count=0)
@@ -433,9 +460,15 @@ class PortainerCoordinator(
                     endpoint.name,
                     endpoint.id,
                 )
+                timed_out_endpoints.add(endpoint.id)
                 continue
 
-        self._async_add_remove_endpoints(mapped_endpoints)
+        self._last_endpoint_data = {
+            endpoint_id: data
+            for endpoint_id, data in self._last_endpoint_data.items()
+            if endpoint_id in timed_out_endpoints
+        } | mapped_endpoints
+        self._async_add_remove_endpoints(mapped_endpoints, timed_out_endpoints)
         self._async_sync_event_listeners(mapped_endpoints)
 
         return mapped_endpoints
@@ -492,11 +525,17 @@ class PortainerCoordinator(
             )
 
     def _async_add_remove_endpoints(
-        self, mapped_endpoints: dict[int, PortainerCoordinatorData]
+        self,
+        mapped_endpoints: dict[int, PortainerCoordinatorData],
+        timed_out_endpoints: set[int],
     ) -> None:
-        """Add new endpoints, remove non-existing endpoints."""
+        """Add new endpoints, remove non-existing endpoints.
+
+        Timed-out endpoints keep their known entities, so they aren't added
+        again once the endpoint answers.
+        """
         current_endpoints = {endpoint.id for endpoint in mapped_endpoints.values()}
-        self.known_endpoints &= current_endpoints
+        self.known_endpoints &= current_endpoints | timed_out_endpoints
         new_endpoints = current_endpoints - self.known_endpoints
 
         # The stack ID is part of the key because it is part of the stack device
@@ -507,7 +546,11 @@ class PortainerCoordinator(
             for endpoint in mapped_endpoints.values()
             for stack_name, stack_data in endpoint.stacks.items()
         }
-        self.known_stacks &= current_stacks
+        self.known_stacks = {
+            stack
+            for stack in self.known_stacks
+            if stack in current_stacks or stack[0] in timed_out_endpoints
+        }
         new_stacks = current_stacks - self.known_stacks
 
         if new_endpoints or new_stacks:
@@ -534,7 +577,11 @@ class PortainerCoordinator(
         }
         # Prune departed containers so a recreated container is detected as new
         # and its entity is rebuilt with the fresh (ephemeral) Docker container ID.
-        self.known_containers &= current_containers
+        self.known_containers = {
+            container
+            for container in self.known_containers
+            if container in current_containers or container[0] in timed_out_endpoints
+        }
         new_containers = current_containers - self.known_containers
         if new_containers:
             _LOGGER.debug("New containers found: %s", new_containers)
@@ -556,7 +603,11 @@ class PortainerCoordinator(
             for volume_name in endpoint.volumes
         }
 
-        self.known_volumes &= current_volumes
+        self.known_volumes = {
+            volume
+            for volume in self.known_volumes
+            if volume in current_volumes or volume[0] in timed_out_endpoints
+        }
         new_volumes = current_volumes - self.known_volumes
         if new_volumes:
             _LOGGER.debug("New volumes found: %s", new_volumes)
@@ -717,9 +768,15 @@ class PortainerCoordinator(
         ):
             return
 
+        if (new_state := CONTAINER_STATE_ACTIONS.get(event.action)) is not None:
+            container_data.container = dataclasses.replace(
+                container_data.container, state=new_state
+            )
+
         updated_containers = dict(endpoint_data.containers)
         updated_containers[container_name] = dataclasses.replace(
             container_data,
+            container=container_data.container,
             last_docker_event=ContainerDockerEvent(
                 action=(
                     f"health_status_{event.action.rsplit(': ', 1)[-1]}"
@@ -765,3 +822,17 @@ class PortainerDockerDiskSpaceCoordinator(
                 )
                 continue
         return results
+
+
+class PortainerSystemVersionCoordinator(
+    PortainerBaseCoordinator[PortainerSystemVersion]
+):
+    """Data Update Coordinator for the Portainer version."""
+
+    config_entry: PortainerConfigEntry
+    _update_interval = DEFAULT_VERSION_SCAN_INTERVAL
+
+    @override
+    async def update_data(self) -> PortainerSystemVersion:
+        """Fetch the Portainer version and the latest available release."""
+        return await self.portainer.portainer_system_version()

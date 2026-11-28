@@ -7,8 +7,8 @@ import probatio
 from homeassistant.components.button import (
     DOMAIN as BUTTON_DOMAIN,
     PLATFORM_SCHEMA as BUTTON_PLATFORM_SCHEMA,
-    SERVICE_PRESS,
     ButtonEntity,
+    ButtonService,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -116,7 +116,7 @@ class ButtonGroup(GroupEntity, ButtonEntity):
         """Forward the press to all buttons in the group."""
         await self.hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
+            ButtonService.PRESS,
             {ATTR_ENTITY_ID: self._entity_ids},
             blocking=True,
             context=self._context,

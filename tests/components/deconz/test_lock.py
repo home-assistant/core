@@ -3,6 +3,7 @@
 from collections.abc import Callable
 
 import pytest
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.lock import (
     DOMAIN as LOCK_DOMAIN,
@@ -14,8 +15,6 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
 from .conftest import WebsocketDataType
-
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.mark.parametrize(

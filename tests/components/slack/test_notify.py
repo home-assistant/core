@@ -3,6 +3,8 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components import notify
 from homeassistant.components.slack import DOMAIN
@@ -12,9 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
 from . import CONF_DATA, TEAM_ID, mock_connection
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 SERVICE_NAME = "test_team"
 

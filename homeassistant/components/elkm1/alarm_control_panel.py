@@ -7,7 +7,6 @@ from elkm1_lib.const import AlarmState, ArmedStatus, ArmLevel, ArmUpState
 from elkm1_lib.elements import Element
 from elkm1_lib.elk import Elk
 from elkm1_lib.keypads import Keypad
-import probatio
 
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
@@ -16,40 +15,14 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelState,
     CodeFormat,
 )
-from homeassistant.const import SERVICE_ALARM_ARM_VACATION
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import VolDictType
 
 from . import ElkM1ConfigEntry
-from .const import (
-    ATTR_CHANGED_BY_ID,
-    ATTR_CHANGED_BY_KEYPAD,
-    ATTR_CHANGED_BY_TIME,
-    ELK_USER_CODE_SERVICE_SCHEMA,
-)
+from .const import ATTR_CHANGED_BY_ID, ATTR_CHANGED_BY_KEYPAD, ATTR_CHANGED_BY_TIME
 from .entity import ElkAttachedEntity, ElkEntity, create_elk_entities
 from .models import ELKM1Data
-
-DISPLAY_MESSAGE_SERVICE_SCHEMA: VolDictType = {
-    probatio.Optional("clear", default=2): probatio.All(
-        probatio.Coerce(int), probatio.In([0, 1, 2])
-    ),
-    probatio.Optional("beep", default=False): cv.boolean,
-    probatio.Optional("timeout", default=0): probatio.All(
-        probatio.Coerce(int), probatio.Range(min=0, max=65535)
-    ),
-    probatio.Optional("line1", default=""): cv.string,
-    probatio.Optional("line2", default=""): cv.string,
-}
-
-SERVICE_ALARM_DISPLAY_MESSAGE = "alarm_display_message"
-SERVICE_ALARM_ARM_HOME_INSTANT = "alarm_arm_home_instant"
-SERVICE_ALARM_ARM_NIGHT_INSTANT = "alarm_arm_night_instant"
-SERVICE_ALARM_BYPASS = "alarm_bypass"
-SERVICE_ALARM_CLEAR_BYPASS = "alarm_clear_bypass"
 
 
 async def async_setup_entry(
@@ -63,39 +36,6 @@ async def async_setup_entry(
     entities: list[ElkEntity] = []
     create_elk_entities(elk_data, elk.areas, "area", ElkArea, entities)
     async_add_entities(entities)
-
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        SERVICE_ALARM_ARM_VACATION,
-        ELK_USER_CODE_SERVICE_SCHEMA,
-        "async_alarm_arm_vacation",
-    )
-    platform.async_register_entity_service(
-        SERVICE_ALARM_ARM_HOME_INSTANT,
-        ELK_USER_CODE_SERVICE_SCHEMA,
-        "async_alarm_arm_home_instant",
-    )
-    platform.async_register_entity_service(
-        SERVICE_ALARM_ARM_NIGHT_INSTANT,
-        ELK_USER_CODE_SERVICE_SCHEMA,
-        "async_alarm_arm_night_instant",
-    )
-    platform.async_register_entity_service(
-        SERVICE_ALARM_DISPLAY_MESSAGE,
-        DISPLAY_MESSAGE_SERVICE_SCHEMA,
-        "async_display_message",
-    )
-    platform.async_register_entity_service(
-        SERVICE_ALARM_BYPASS,
-        ELK_USER_CODE_SERVICE_SCHEMA,
-        "async_bypass",
-    )
-    platform.async_register_entity_service(
-        SERVICE_ALARM_CLEAR_BYPASS,
-        ELK_USER_CODE_SERVICE_SCHEMA,
-        "async_clear_bypass",
-    )
 
 
 class ElkArea(ElkAttachedEntity, AlarmControlPanelEntity, RestoreEntity):

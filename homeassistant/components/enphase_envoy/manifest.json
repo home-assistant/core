@@ -1,6 +1,7 @@
 {
   "domain": "enphase_envoy",
   "name": "Enphase Envoy",
+  "categories": ["energy.solar_batteries"],
   "codeowners": ["@bdraco", "@cgarwood", "@catsmanac"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/enphase_envoy",

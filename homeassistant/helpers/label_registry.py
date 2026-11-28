@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Literal, TypedDict, override
 
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback, verify_event_loop_thread
 from homeassistant.util.dt import utc_from_timestamp, utcnow
 from homeassistant.util.event_type import EventType
 from homeassistant.util.hass_dict import HassKey
@@ -132,6 +132,7 @@ class LabelRegistry(BaseRegistry[LabelRegistryStoreData]):
         return self.labels.generate_id_from_name(name)
 
     @callback
+    @verify_event_loop_thread("label_registry.async_create")
     def async_create(
         self,
         name: str,
@@ -141,8 +142,6 @@ class LabelRegistry(BaseRegistry[LabelRegistryStoreData]):
         description: str | None = None,
     ) -> LabelEntry:
         """Create a new label."""
-        self.hass.verify_event_loop_thread("label_registry.async_create")
-
         if label := self.async_get_label_by_name(name):
             raise ValueError(
                 f"The name {name} ({label.normalized_name}) is already in use"
@@ -166,9 +165,9 @@ class LabelRegistry(BaseRegistry[LabelRegistryStoreData]):
         return label
 
     @callback
+    @verify_event_loop_thread("label_registry.async_delete")
     def async_delete(self, label_id: str) -> None:
         """Delete label."""
-        self.hass.verify_event_loop_thread("label_registry.async_delete")
         del self.labels[label_id]
         self.hass.bus.async_fire_internal(
             EVENT_LABEL_REGISTRY_UPDATED,
@@ -180,6 +179,7 @@ class LabelRegistry(BaseRegistry[LabelRegistryStoreData]):
         self.async_schedule_save()
 
     @callback
+    @verify_event_loop_thread("label_registry.async_update")
     def async_update(
         self,
         label_id: str,
@@ -209,7 +209,6 @@ class LabelRegistry(BaseRegistry[LabelRegistryStoreData]):
 
         changes["modified_at"] = utcnow()
 
-        self.hass.verify_event_loop_thread("label_registry.async_update")
         new = self.labels[label_id] = dataclasses.replace(old, **changes)
 
         self.async_schedule_save()

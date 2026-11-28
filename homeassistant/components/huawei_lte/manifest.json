@@ -1,6 +1,7 @@
 {
   "domain": "huawei_lte",
   "name": "Huawei LTE",
+  "categories": ["computers_network.routers_network"],
   "codeowners": ["@fphammerle"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/huawei_lte",

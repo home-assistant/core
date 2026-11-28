@@ -55,18 +55,14 @@ rules:
     status: exempt
     comment: This integration is a cloud service and does not support discovery.
   docs-data-update: done
-  docs-examples: todo
-  docs-known-limitations:
-    status: todo
-    comment: Add "No known limitations."
+  docs-examples: done
+  docs-known-limitations: done
   docs-supported-devices:
     status: exempt
     comment: This integration connects to a service, not supported devices.
-  docs-supported-functions:
-    status: todo
-    comment: The documentation does not describe the provided entities and platforms.
-  docs-troubleshooting: todo
-  docs-use-cases: todo
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
   dynamic-devices:
     status: exempt
     comment: Each config entry represents a fixed Airly service location.
@@ -76,7 +72,7 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: This integration does not raise any repairable issues.

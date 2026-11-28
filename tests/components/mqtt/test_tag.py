@@ -3,24 +3,25 @@
 import copy
 import json
 from typing import Any
-from unittest.mock import ANY, AsyncMock
+from unittest.mock import ANY, AsyncMock, patch
 
 import pytest
-
-from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.components.mqtt.const import DOMAIN
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
-from homeassistant.setup import async_setup_component
-
-from .common import help_test_unload_config_entry
-
-from tests.common import (
+from pytest_homeassistant.common import (
     MockConfigEntry,
     async_fire_mqtt_message,
     async_get_device_automations,
 )
-from tests.typing import MqttMockHAClientGenerator, WebSocketGenerator
+from pytest_homeassistant.components.mqtt.common import help_test_unload_config_entry
+from pytest_homeassistant.typing import MqttMockHAClientGenerator, WebSocketGenerator
+
+from homeassistant.components import mqtt
+from homeassistant.components.device_automation import DeviceAutomationType
+from homeassistant.components.mqtt.const import DOMAIN
+from homeassistant.components.mqtt.models import DATA_MQTT
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
+from homeassistant.setup import async_setup_component
 
 DEFAULT_CONFIG_DEVICE = {
     "device": {"identifiers": ["0AFFD2"]},
@@ -221,6 +222,88 @@ async def test_if_fires_on_mqtt_message_after_update_with_device(
     tag_mock.assert_not_called()
 
     async_fire_mqtt_message(hass, "foobar/tag_scanned2", DEFAULT_TAG_SCAN)
+    await hass.async_block_till_done()
+    tag_mock.assert_called_once_with(ANY, DEFAULT_TAG_ID, device_entry.id)
+
+
+async def test_invalid_update_keeps_current_config(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    tag_mock: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test an invalid update is rejected again when it is received again."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(
+        hass, "homeassistant/tag/bla1/config", json.dumps(DEFAULT_CONFIG_DEVICE)
+    )
+    await hass.async_block_till_done()
+    device_entry = device_registry.async_get_device_by_identifier(
+        ("mqtt", "0AFFD2"), hass.config_entries.async_entries("mqtt")[0].entry_id
+    )
+    assert device_entry is not None
+    update = json.dumps({**DEFAULT_CONFIG_DEVICE, "topic": "foobar/#/invalid"})
+    schema_error = (
+        "when processing MQTT discovery message topic: 'homeassistant/tag/bla1/config'"
+    )
+
+    async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", update)
+    await hass.async_block_till_done()
+    assert schema_error in caplog.text
+
+    caplog.clear()
+    async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", update)
+    await hass.async_block_till_done()
+    assert schema_error in caplog.text
+
+    # The current config is still active
+    async_fire_mqtt_message(hass, "foobar/tag_scanned", DEFAULT_TAG_SCAN)
+    await hass.async_block_till_done()
+    tag_mock.assert_called_once_with(ANY, DEFAULT_TAG_ID, device_entry.id)
+
+
+async def test_update_device_registration_error_keeps_current_config(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    tag_mock: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test an update with a device that can not be registered keeps the config."""
+    await mqtt_mock_entry()
+    # The identifiers and connections below belong to these two devices
+    for object_id, device in (
+        ("a", {"identifiers": ["device_a"]}),
+        ("b", {"connections": [["mac", "02:5b:26:a8:dc:12"]]}),
+    ):
+        async_fire_mqtt_message(
+            hass,
+            f"homeassistant/tag/{object_id}/config",
+            json.dumps({"topic": f"{object_id}/tag", "device": device}),
+        )
+    config = {**DEFAULT_CONFIG_JSON, "device": {"identifiers": ["device_c"]}}
+    async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", json.dumps(config))
+    await hass.async_block_till_done()
+    device_entry = device_registry.async_get_device_by_identifier(
+        ("mqtt", "device_c"), hass.config_entries.async_entries("mqtt")[0].entry_id
+    )
+    assert device_entry is not None
+
+    update = {
+        "topic": "foobar/tag_scanned2",
+        "value_template": "{{ value_json.PN532.DATA }}",
+        "device": {
+            "identifiers": ["device_a"],
+            "connections": [["mac", "02:5b:26:a8:dc:12"]],
+        },
+    }
+    async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", json.dumps(update))
+    await hass.async_block_till_done()
+    assert "Unable to register MQTT device" in caplog.text
+
+    # The current topic and value template are still used
+    async_fire_mqtt_message(hass, "foobar/tag_scanned", DEFAULT_TAG_SCAN_JSON)
     await hass.async_block_till_done()
     tag_mock.assert_called_once_with(ANY, DEFAULT_TAG_ID, device_entry.id)
 
@@ -1026,6 +1109,48 @@ async def test_unload_entry(
     async_fire_mqtt_message(hass, "foobar/tag_scanned", DEFAULT_TAG_SCAN)
     await hass.async_block_till_done()
     tag_mock.assert_not_called()
+
+
+@pytest.mark.usefixtures("mqtt_client_mock")
+@patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.UNSUBSCRIBE_COOLDOWN", 0.0)
+async def test_fires_once_after_entry_reload(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, tag_mock: AsyncMock
+) -> None:
+    """Test a tag scanner fires once per message after the MQTT entry reloads."""
+    # Uses a real MQTT client, so subscriptions are restored on reload
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={mqtt.CONF_BROKER: "mock-broker"},
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    config = json.dumps(DEFAULT_CONFIG_DEVICE)
+    async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", config, retain=True)
+    await hass.async_block_till_done()
+    device_entry = device_registry.async_get_device_by_identifier(
+        ("mqtt", "0AFFD2"), entry.entry_id
+    )
+
+    client_before_reload = hass.data[DATA_MQTT].client
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.LOADED
+    assert hass.data[DATA_MQTT].client is not client_before_reload
+
+    # The broker replays the retained discovery payload after the reload
+    async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", config, retain=True)
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, "foobar/tag_scanned", DEFAULT_TAG_SCAN)
+    await hass.async_block_till_done()
+    tag_mock.assert_called_once_with(ANY, DEFAULT_TAG_ID, device_entry.id)
 
 
 @pytest.mark.usefixtures("mqtt_mock", "tag_mock")

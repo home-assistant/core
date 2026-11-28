@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock, MagicMock, Mock, call, patch
 
+from pytest_homeassistant.common import assert_setup_component
+
 from homeassistant.components import ffmpeg
 from homeassistant.components.ffmpeg import DOMAIN, get_ffmpeg_manager
 from homeassistant.components.ffmpeg.services import (
@@ -16,8 +18,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
-
-from tests.common import assert_setup_component
 
 
 @callback

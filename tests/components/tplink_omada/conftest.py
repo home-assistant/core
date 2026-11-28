@@ -5,6 +5,11 @@ from functools import partial
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_load_json_array_fixture,
+    async_load_json_object_fixture,
+)
 from tplink_omada_client import (
     OmadaControllerStatus,
     OmadaControllerUpdateInfo,
@@ -29,12 +34,6 @@ from homeassistant.components.tplink_omada.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 
-from tests.common import (
-    MockConfigEntry,
-    async_load_json_array_fixture,
-    async_load_json_object_fixture,
-)
-
 
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
@@ -58,7 +57,7 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.tplink_omada.async_setup_entry", return_value=True
+        "homeassistant.components.tplink_omada.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup
 

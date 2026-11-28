@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import override
 
-from letpot.models import DeviceFeature, LetPotDeviceStatus
+from letpot.models import DeviceFeature, LetPotDeviceStatus, LetPotGardenStatus
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -15,7 +15,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import LetPotConfigEntry, LetPotDeviceCoordinator, LetPotGardenStatus
+from .coordinator import LetPotConfigEntry, LetPotDeviceCoordinator
 from .entity import LetPotEntity, LetPotEntityDescription
 
 # Coordinator is used to centralize the data updates

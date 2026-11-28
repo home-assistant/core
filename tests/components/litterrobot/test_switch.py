@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from pylitterbot import FeederRobot, Robot
 import pytest
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import (
@@ -23,8 +24,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import setup_integration
-
-from tests.common import snapshot_platform
 
 NIGHT_LIGHT_MODE_ENTITY_ID = "switch.test_night_light_mode"
 PANEL_LOCKOUT_ENTITY_ID = "switch.test_panel_lockout"

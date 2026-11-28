@@ -1,10 +1,11 @@
 """Test the MetOffice config flow."""
 
-import datetime
+import datetime as dt
 import json
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 import requests_mock
 
 from homeassistant import config_entries
@@ -17,12 +18,11 @@ from homeassistant.helpers import device_registry as dr
 from .const import (
     METOFFICE_CONFIG_WAVERTREE,
     TEST_API_KEY,
+    TEST_COORDINATES_WAVERTREE,
     TEST_LATITUDE_WAVERTREE,
     TEST_LONGITUDE_WAVERTREE,
     TEST_SITE_NAME_WAVERTREE,
 )
-
-from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 async def test_form(hass: HomeAssistant, requests_mock: requests_mock.Mocker) -> None:
@@ -46,7 +46,7 @@ async def test_form(hass: HomeAssistant, requests_mock: requests_mock.Mocker) ->
 
     with patch(
         "homeassistant.components.metoffice.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"api_key": TEST_API_KEY}
@@ -61,6 +61,7 @@ async def test_form(hass: HomeAssistant, requests_mock: requests_mock.Mocker) ->
         "longitude": TEST_LONGITUDE_WAVERTREE,
         "name": TEST_SITE_NAME_WAVERTREE,
     }
+    assert result2["result"].unique_id == TEST_COORDINATES_WAVERTREE
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -128,9 +129,26 @@ async def test_form_cannot_connect(
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
+    mock_json = await async_load_json_object_fixture(hass, "metoffice.json", DOMAIN)
+    requests_mock.get(
+        "https://data.hub.api.metoffice.gov.uk/sitespecific/v0/point/daily",
+        text=json.dumps(mock_json["wavertree_daily"]),
+    )
+    with patch(
+        "homeassistant.components.metoffice.async_setup_entry",
+        return_value=None,
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"api_key": TEST_API_KEY},
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_unknown_error(
-    hass: HomeAssistant, mock_simple_manager_fail
+    hass: HomeAssistant, mock_simple_manager_fail: MagicMock
 ) -> None:
     """Test we handle unknown error."""
     mock_instance = mock_simple_manager_fail.return_value
@@ -148,8 +166,22 @@ async def test_form_unknown_error(
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
+    mock_instance.get_forecast = MagicMock()
+    mock_instance.get_forecast.return_value.name = TEST_SITE_NAME_WAVERTREE
+    with patch(
+        "homeassistant.components.metoffice.async_setup_entry",
+        return_value=None,
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"api_key": TEST_API_KEY},
+        )
+        await hass.async_block_till_done()
 
-@pytest.mark.freeze_time(datetime.datetime(2024, 11, 23, 12, tzinfo=datetime.UTC))
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.freeze_time(dt.datetime(2024, 11, 23, 12, tzinfo=dt.UTC))
 async def test_reauth_flow(
     hass: HomeAssistant,
     requests_mock: requests_mock.Mocker,

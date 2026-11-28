@@ -103,7 +103,7 @@ async def _async_connect(
     return devices
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ZhongHongConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ZhongHongConfigEntry) -> None:
     """Set up ZhongHong from a config entry."""
     hub = ZhongHongGateway(
         entry.data[CONF_HOST],
@@ -127,9 +127,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ZhongHongConfigEntry) ->
     entry.runtime_data = ZhongHongData(hub, devices, coordinator)
     _async_migrate_unique_ids(hass, entry, devices)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ZhongHongConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ZhongHongConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

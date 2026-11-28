@@ -37,7 +37,6 @@ from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import VolDictType
 
 from . import (
-    DOMAIN,
     DeviceTuple,
     get_device_tuple_from_device,
     get_device_tuple_from_identifiers,
@@ -55,6 +54,7 @@ from .const import (
     CONST_VENETIAN_BLIND_MODE_EU,
     CONST_VENETIAN_BLIND_MODE_US,
     DEVICE_PACKET_TYPE_LIGHTING4,
+    DOMAIN,
 )
 
 CONF_EVENT_CODE = "event_code"

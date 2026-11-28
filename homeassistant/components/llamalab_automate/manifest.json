@@ -1,6 +1,7 @@
 {
   "domain": "llamalab_automate",
   "name": "LlamaLab Automate",
+  "categories": ["messaging_notifications.push_notifications"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/llamalab_automate",
   "iot_class": "cloud_push",

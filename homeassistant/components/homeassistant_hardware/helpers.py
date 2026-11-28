@@ -14,8 +14,7 @@ from homeassistant.components.usb import (
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
 
-from . import DATA_COMPONENT
-from .const import HARDWARE_INTEGRATION_DOMAINS
+from .const import DATA_COMPONENT, HARDWARE_INTEGRATION_DOMAINS
 
 if TYPE_CHECKING:
     from .util import FirmwareInfo

@@ -2,6 +2,7 @@
   "domain": "withings",
   "name": "Withings",
   "after_dependencies": ["cloud"],
+  "categories": ["health_wellbeing"],
   "codeowners": ["@joostlek"],
   "config_flow": true,
   "dependencies": ["application_credentials", "http", "webhook"],

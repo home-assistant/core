@@ -1,6 +1,7 @@
 {
   "domain": "buienradar",
   "name": "Buienradar",
+  "categories": ["weather_alerts.forecasts"],
   "codeowners": ["@mjj4791", "@ties", "@Robbie1221"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/buienradar",

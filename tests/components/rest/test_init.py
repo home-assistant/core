@@ -5,6 +5,12 @@ import ssl
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import (
+    assert_setup_component,
+    async_fire_time_changed,
+    get_fixture_path,
+)
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant import config as hass_config
 from homeassistant.components.rest.const import DOMAIN
@@ -18,13 +24,6 @@ from homeassistant.const import (
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
-
-from tests.common import (
-    assert_setup_component,
-    async_fire_time_changed,
-    get_fixture_path,
-)
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_setup_with_endpoint_timeout_with_recovery(

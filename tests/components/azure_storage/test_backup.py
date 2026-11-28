@@ -2,13 +2,21 @@
 
 from collections.abc import AsyncGenerator
 from io import StringIO
-from unittest.mock import ANY, Mock, patch
+from typing import Any
+from unittest.mock import ANY, AsyncMock, Mock, call, patch
 
 from azure.core.exceptions import AzureError, HttpResponseError, ServiceRequestError
 from azure.storage.blob import BlobProperties
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import (
+    ClientSessionGenerator,
+    MagicMock,
+    WebSocketGenerator,
+)
 
 from homeassistant.components.azure_storage.backup import (
+    async_get_backup_agents,
     async_register_backup_agents_listener,
 )
 from homeassistant.components.azure_storage.const import (
@@ -21,9 +29,6 @@ from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 from .const import BACKUP_METADATA, TEST_BACKUP
-
-from tests.common import MockConfigEntry
-from tests.typing import ClientSessionGenerator, MagicMock, WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -173,7 +178,7 @@ async def test_agents_delete(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {}}
+    assert response["result"] == {"agent_error_translations": {}, "agent_errors": {}}
     mock_client.delete_blob.assert_called_once()
 
 
@@ -194,7 +199,7 @@ async def test_agents_delete_not_throwing_on_not_found(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {}}
+    assert response["result"] == {"agent_error_translations": {}, "agent_errors": {}}
     assert mock_client.delete_blob.call_count == 0
 
 
@@ -230,7 +235,34 @@ async def test_agents_upload(
         metadata=BACKUP_METADATA,
         data=ANY,
         length=ANY,
+        progress_hook=ANY,
     )
+
+
+async def test_agents_upload_progress(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+) -> None:
+    """Test that upload progress is reported from the SDK progress hook."""
+
+    async def upload_blob(**kwargs: Any) -> None:
+        await kwargs["progress_hook"](4, 8)
+        await kwargs["progress_hook"](8, 8)
+
+    mock_client.upload_blob.side_effect = upload_blob
+    on_progress = Mock()
+    (agent,) = await async_get_backup_agents(hass)
+
+    await agent.async_upload_backup(
+        open_stream=AsyncMock(),
+        backup=TEST_BACKUP,
+        on_progress=on_progress,
+    )
+
+    assert on_progress.call_args_list == [
+        call(bytes_uploaded=4),
+        call(bytes_uploaded=8),
+    ]
 
 
 async def test_agents_download(
@@ -277,23 +309,22 @@ async def test_agents_error_on_download_not_found(
 
 
 @pytest.mark.parametrize(
-    ("error", "message"),
+    ("error", "message", "translation_key"),
     [
         (
             HttpResponseError("http error"),
-            (
-                "Error during backup operation in"
-                " async_delete_backup:"
-                " Status None, message: http error"
-            ),
+            "Backup operation failed",
+            "agent_operation_failed",
         ),
         (
             ServiceRequestError("timeout"),
-            "Timeout during backup operation in async_delete_backup",
+            "Backup operation timed out",
+            "agent_operation_timed_out",
         ),
         (
             AzureError("generic error"),
-            "Error during backup operation in async_delete_backup: generic error",
+            "Backup operation failed",
+            "agent_operation_failed",
         ),
     ],
 )
@@ -304,6 +335,7 @@ async def test_error_during_delete(
     mock_config_entry: MockConfigEntry,
     error: Exception,
     message: str,
+    translation_key: str,
 ) -> None:
     """Test the error wrapper."""
     mock_client.delete_blob.side_effect = error
@@ -319,8 +351,16 @@ async def test_error_during_delete(
     response = await client.receive_json()
 
     assert response["success"]
+    agent_id = f"{DOMAIN}.{mock_config_entry.entry_id}"
     assert response["result"] == {
-        "agent_errors": {f"{DOMAIN}.{mock_config_entry.entry_id}": message}
+        "agent_error_translations": {
+            agent_id: {
+                "translation_domain": "backup",
+                "translation_key": translation_key,
+                "translation_placeholders": None,
+            }
+        },
+        "agent_errors": {agent_id: message},
     }
 
 

@@ -9,6 +9,11 @@ from aioamazondevices.exceptions import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.alexa_devices.const import DOMAIN
@@ -19,8 +24,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import assert_device_removed_and_readded, setup_integration
 from .const import TEST_DEVICE_1, TEST_DEVICE_1_SN, TEST_DEVICE_2, TEST_DEVICE_2_SN
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 async def test_all_entities(

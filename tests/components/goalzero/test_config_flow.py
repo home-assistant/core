@@ -79,6 +79,14 @@ async def test_flow_user_cannot_connect(hass: HomeAssistant) -> None:
         assert result["step_id"] == "user"
         assert result["errors"]["base"] == "cannot_connect"
 
+        yetimock.side_effect = None
+        with _patch_setup():
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                user_input=CONF_DATA,
+            )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_flow_user_invalid_host(hass: HomeAssistant) -> None:
     """Test user initialized flow with invalid server."""
@@ -99,6 +107,14 @@ async def test_flow_user_invalid_host(hass: HomeAssistant) -> None:
         assert result["step_id"] == "user"
         assert result["errors"]["base"] == "invalid_host"
 
+        yetimock.side_effect = None
+        with _patch_setup():
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                user_input=CONF_DATA,
+            )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_flow_user_unknown_error(hass: HomeAssistant) -> None:
     """Test user initialized flow with unreachable server."""
@@ -118,6 +134,14 @@ async def test_flow_user_unknown_error(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"]["base"] == "unknown"
+
+        yetimock.side_effect = None
+        with _patch_setup():
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                user_input=CONF_DATA,
+            )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_dhcp_discovery(hass: HomeAssistant) -> None:

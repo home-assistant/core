@@ -12,8 +12,6 @@ from .coordinator import SofarConfigEntry
 
 TO_REDACT = {"serial_number"}
 
-_SERIAL_NUMBER_REGISTERS = range(0x0445, 0x044C)
-
 
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: SofarConfigEntry
@@ -23,13 +21,10 @@ async def async_get_config_entry_diagnostics(
     device = runtime_data.readings.device
     raw = masks = read_error = None
     try:
-        raw = await device.async_read_raw()
+        raw = await device.async_read_raw(redact_serial=True)
         masks = await device.async_read_masks()
     except ModbusError as err:
         read_error = type(err).__name__
-    if raw is not None and (holding := raw.get("holding")) is not None:
-        for address in _SERIAL_NUMBER_REGISTERS:
-            holding.pop(address, None)
 
     return async_redact_data(
         {
@@ -41,8 +36,8 @@ async def async_get_config_entry_diagnostics(
             "active_faults": sorted(fault.key for fault in device.state.active_faults),
             "address_masks": masks,
             "link": {
-                "tuning": asdict(runtime_data.tuner.tuning),
-                "stats": asdict(runtime_data.link.stats),
+                "tuning": asdict(device.link_tuning),
+                "stats": asdict(device.link_stats),
             },
             "read_error": read_error,
             "raw": raw,

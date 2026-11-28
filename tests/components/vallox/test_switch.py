@@ -1,14 +1,13 @@
 """Tests for Vallox switch platform."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
 
 from .conftest import patch_set_values
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(

@@ -1,6 +1,7 @@
 {
   "domain": "easyenergy",
   "name": "easyEnergy",
+  "categories": ["energy.energy_prices"],
   "codeowners": ["@klaasnicolaas"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/easyenergy",

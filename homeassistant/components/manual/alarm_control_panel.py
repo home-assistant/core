@@ -1,6 +1,6 @@
 """Support for manual alarms."""
 
-import datetime
+import datetime as dt
 from typing import Any, override
 
 import probatio
@@ -48,9 +48,9 @@ CONF_ALARM_PENDING = "pending"
 CONF_ALARM_TRIGGERED = "triggered"
 
 DEFAULT_ALARM_NAME = "HA Alarm"
-DEFAULT_DELAY_TIME = datetime.timedelta(seconds=60)
-DEFAULT_ARMING_TIME = datetime.timedelta(seconds=60)
-DEFAULT_TRIGGER_TIME = datetime.timedelta(seconds=120)
+DEFAULT_DELAY_TIME = dt.timedelta(seconds=60)
+DEFAULT_ARMING_TIME = dt.timedelta(seconds=60)
+DEFAULT_TRIGGER_TIME = dt.timedelta(seconds=120)
 DEFAULT_DISARM_AFTER_TRIGGER = False
 
 SUPPORTED_STATES = [
@@ -236,7 +236,7 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
         self._attr_code_arm_required = code_arm_required
         self._disarm_after_trigger = disarm_after_trigger
         self._previous_state: AlarmControlPanelState = self._state
-        self._state_ts: datetime.datetime = dt_util.utcnow()
+        self._state_ts: dt.datetime = dt_util.utcnow()
 
         self._delay_time_by_state: dict[AlarmControlPanelState, Any] = {
             state: config[state][CONF_DELAY_TIME]
@@ -263,7 +263,7 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
         if self._state == AlarmControlPanelState.TRIGGERED:
             if self._within_pending_time(self._state):
                 return AlarmControlPanelState.PENDING
-            trigger_time: datetime.timedelta = self._trigger_time_by_state[
+            trigger_time: dt.timedelta = self._trigger_time_by_state[
                 self._previous_state
             ]
             if (
@@ -291,14 +291,14 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
             return self._previous_state
         return self._state
 
-    def _arming_time(self, state: AlarmControlPanelState) -> datetime.timedelta:
+    def _arming_time(self, state: AlarmControlPanelState) -> dt.timedelta:
         """Get the arming time."""
-        arming_time: datetime.timedelta = self._arming_time_by_state[state]
+        arming_time: dt.timedelta = self._arming_time_by_state[state]
         return arming_time
 
-    def _pending_time(self, state: AlarmControlPanelState) -> datetime.timedelta:
+    def _pending_time(self, state: AlarmControlPanelState) -> dt.timedelta:
         """Get the pending time."""
-        delay_time: datetime.timedelta = self._delay_time_by_state[self._previous_state]
+        delay_time: dt.timedelta = self._delay_time_by_state[self._previous_state]
         return delay_time
 
     def _within_arming_time(self, state: AlarmControlPanelState) -> bool:
@@ -457,7 +457,7 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
         return {ATTR_PREVIOUS_STATE: prev_state, ATTR_NEXT_STATE: state}
 
     @callback
-    def async_scheduled_update(self, now: datetime.datetime) -> None:
+    def async_scheduled_update(self, now: dt.datetime) -> None:
         """Update state at a scheduled point in time."""
         self.async_write_ha_state()
 

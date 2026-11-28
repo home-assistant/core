@@ -11,12 +11,17 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
-from .const import DOMAIN
+from .const import DASHBOARD_ID_PREFIX, DOMAIN
 
 if TYPE_CHECKING:
     from music_assistant_client import MusicAssistantClient
 
     from . import MusicAssistantConfigEntry
+
+
+def dashboard_identifier(dashboard_id: str) -> str:
+    """Return the device identifier and entity unique id of a dashboard display."""
+    return f"{DASHBOARD_ID_PREFIX}{dashboard_id}"
 
 
 def catch_musicassistant_error[**_P, _R](

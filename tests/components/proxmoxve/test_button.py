@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 from proxmoxer import AuthenticationError
 from proxmoxer.core import ResourceException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from requests.exceptions import ConnectTimeout, SSLError
 from syrupy.assertion import SnapshotAssertion
 
@@ -16,8 +17,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import AUDIT_PERMISSIONS, setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 BUTTON_DOMAIN = "button"
 

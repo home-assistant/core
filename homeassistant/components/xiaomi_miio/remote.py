@@ -1,7 +1,5 @@
 """Support for the Xiaomi IR Remote (Chuangmi IR)."""
 
-import asyncio
-from datetime import timedelta
 import logging
 import time
 from typing import Any, override
@@ -9,7 +7,6 @@ from typing import Any, override
 from miio import ChuangmiIr, DeviceException
 import probatio
 
-from homeassistant.components import persistent_notification
 from homeassistant.components.remote import (
     ATTR_DELAY_SECS,
     ATTR_NUM_REPEATS,
@@ -26,18 +23,16 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util.dt import utcnow
 
-from .const import SERVICE_LEARN, SERVICE_SET_REMOTE_LED_OFF, SERVICE_SET_REMOTE_LED_ON
+from .const import CONF_SLOT
 
 _LOGGER = logging.getLogger(__name__)
 
 DATA_KEY = "remote.xiaomi_miio"
 
-CONF_SLOT = "slot"
 CONF_COMMANDS = "commands"
 
 DEFAULT_TIMEOUT = 10
@@ -113,71 +108,6 @@ async def async_setup_platform(
     hass.data[DATA_KEY][host] = xiaomi_miio_remote
 
     async_add_entities([xiaomi_miio_remote])
-
-    async def async_service_led_off_handler(entity, service):
-        """Handle set_led_off command."""
-        await hass.async_add_executor_job(entity.device.set_indicator_led, False)
-
-    async def async_service_led_on_handler(entity, service):
-        """Handle set_led_on command."""
-        await hass.async_add_executor_job(entity.device.set_indicator_led, True)
-
-    async def async_service_learn_handler(entity, service):
-        """Handle a learn command."""
-        device = entity.device
-
-        slot = service.data.get(CONF_SLOT, entity.slot)
-
-        await hass.async_add_executor_job(device.learn, slot)
-
-        timeout = service.data.get(CONF_TIMEOUT, entity.timeout)
-
-        _LOGGER.info("Press the key you want Home Assistant to learn")
-        start_time = utcnow()
-        while (utcnow() - start_time) < timedelta(seconds=timeout):
-            message = await hass.async_add_executor_job(device.read, slot)
-            _LOGGER.debug("Message received from device: '%s'", message)
-
-            if code := message.get("code"):
-                log_msg = f"Received command is: {code}"
-                _LOGGER.info(log_msg)
-                persistent_notification.async_create(
-                    hass, log_msg, title="Xiaomi Miio Remote"
-                )
-                return
-
-            if "error" in message and message["error"]["message"] == "learn timeout":
-                await hass.async_add_executor_job(device.learn, slot)
-
-            await asyncio.sleep(1)
-
-        _LOGGER.error("Timeout. No infrared command captured")
-        persistent_notification.async_create(
-            hass, "Timeout. No infrared command captured", title="Xiaomi Miio Remote"
-        )
-
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        SERVICE_LEARN,
-        {
-            probatio.Optional(CONF_TIMEOUT, default=10): cv.positive_int,
-            probatio.Optional(CONF_SLOT, default=1): probatio.All(
-                int, probatio.Range(min=1, max=1000000)
-            ),
-        },
-        async_service_learn_handler,
-    )
-    platform.async_register_entity_service(
-        SERVICE_SET_REMOTE_LED_ON,
-        None,
-        async_service_led_on_handler,
-    )
-    platform.async_register_entity_service(
-        SERVICE_SET_REMOTE_LED_OFF,
-        None,
-        async_service_led_off_handler,
-    )
 
 
 class XiaomiMiioRemote(RemoteEntity):

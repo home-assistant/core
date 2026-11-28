@@ -2402,3 +2402,25 @@
     }),
   })
 # ---
+# name: test_weather_state
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home',
+      <WeatherEntityStateAttribute.PRECIPITATION_UNIT: 'precipitation_unit'>: <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+      <WeatherEntityStateAttribute.PRESSURE_UNIT: 'pressure_unit'>: <UnitOfPressure.HPA: 'hPa'>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WeatherEntityFeature: 3>,
+      <WeatherEntityStateAttribute.TEMPERATURE: 'temperature'>: 5.5,
+      <WeatherEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
+      <WeatherEntityStateAttribute.VISIBILITY_UNIT: 'visibility_unit'>: <UnitOfLength.KILOMETERS: 'km'>,
+      <WeatherEntityStateAttribute.WIND_BEARING: 'wind_bearing'>: 168,
+      <WeatherEntityStateAttribute.WIND_SPEED: 'wind_speed'>: 5.3,
+      <WeatherEntityStateAttribute.WIND_SPEED_UNIT: 'wind_speed_unit'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'weather.home',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'cloudy',
+  })
+# ---

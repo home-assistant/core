@@ -1,6 +1,6 @@
 """Support for FRITZ!Box devices."""
 
-import datetime
+import datetime as dt
 from typing import override
 
 from homeassistant.components.device_tracker import ScannerEntity
@@ -68,7 +68,7 @@ class FritzBoxTracker(FritzDeviceBase, ScannerEntity):
         """Initialize a FRITZ!Box device."""
         super().__init__(avm_wrapper, device)
         self._attr_name: str = device.hostname or DEFAULT_DEVICE_NAME
-        self._last_activity: datetime.datetime | None = device.last_activity
+        self._last_activity: dt.datetime | None = device.last_activity
 
     @property
     @override

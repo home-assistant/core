@@ -1,6 +1,6 @@
 """Test the National Weather Service (NWS) config flow."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 import aiohttp
 import pytest
@@ -64,11 +64,13 @@ async def test_form_location(
         "longitude": -90,
         CONF_STATION: "ABC",
     }
+    assert result3["result"].unique_id == "35.0_-90.0"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_location_cannot_connect(
-    hass: HomeAssistant, mock_simple_nws_config
+    hass: HomeAssistant, mock_simple_nws_config: MagicMock
 ) -> None:
     """Test we handle cannot connect error in location path."""
     mock_instance = mock_simple_nws_config.return_value
@@ -87,9 +89,17 @@ async def test_form_location_cannot_connect(
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
+    mock_instance.set_station.side_effect = None
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_KEY: "test"},
+    )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
+
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_location_unknown_error(
-    hass: HomeAssistant, mock_simple_nws_config
+    hass: HomeAssistant, mock_simple_nws_config: MagicMock
 ) -> None:
     """Test we handle unknown error in location path."""
     mock_instance = mock_simple_nws_config.return_value
@@ -108,6 +118,13 @@ async def test_form_location_unknown_error(
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
+    mock_instance.set_station.side_effect = None
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_KEY: "test"},
+    )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_location_already_configured(
     hass: HomeAssistant, mock_simple_nws_config, mock_setup_entry: AsyncMock
@@ -125,6 +142,7 @@ async def test_form_location_already_configured(
     await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["result"].unique_id == "32.87336_-117.22743"
     assert len(mock_setup_entry.mock_calls) == 1
 
     mock_setup_entry.reset_mock()
@@ -181,9 +199,9 @@ async def test_form_entity(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_simple_nws_config", "mock_setup_entry")
 async def test_form_entity_no_coordinates(
     hass: HomeAssistant,
-    mock_simple_nws_config,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test entity path with entity that has no coordinates."""
@@ -204,10 +222,21 @@ async def test_form_entity_no_coordinates(
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "entity_no_coordinates"}
 
+    hass.states.async_set(
+        entry.entity_id,
+        "home",
+        {ATTR_LATITUDE: 40.0, ATTR_LONGITUDE: -80.0},
+    )
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_KEY: "test", CONF_LOCATION_ENTITY: entry.entity_id},
+    )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
+
+@pytest.mark.usefixtures("mock_simple_nws_config", "mock_setup_entry")
 async def test_form_entity_non_numeric_coordinates(
     hass: HomeAssistant,
-    mock_simple_nws_config,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test entity path with entity that has non-numeric coordinates."""
@@ -232,9 +261,21 @@ async def test_form_entity_non_numeric_coordinates(
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "entity_no_coordinates"}
 
+    hass.states.async_set(
+        entry.entity_id,
+        "home",
+        {ATTR_LATITUDE: 40.0, ATTR_LONGITUDE: -80.0},
+    )
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_KEY: "test", CONF_LOCATION_ENTITY: entry.entity_id},
+    )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
+
+@pytest.mark.usefixtures("mock_simple_nws_config", "mock_setup_entry")
 async def test_form_entity_not_found(
-    hass: HomeAssistant, mock_simple_nws_config
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test entity path with entity not in registry."""
     result = await hass.config_entries.flow.async_init(
@@ -250,10 +291,22 @@ async def test_form_entity_not_found(
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "entity_not_found"}
 
+    entry = entity_registry.async_get_or_create("person", "person", "test_user")
+    hass.states.async_set(
+        entry.entity_id,
+        "home",
+        {ATTR_LATITUDE: 40.0, ATTR_LONGITUDE: -80.0},
+    )
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_KEY: "test", CONF_LOCATION_ENTITY: entry.entity_id},
+    )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
+
+@pytest.mark.usefixtures("mock_simple_nws_config", "mock_setup_entry")
 async def test_form_entity_disabled(
     hass: HomeAssistant,
-    mock_simple_nws_config,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test entity path with disabled entity."""
@@ -276,10 +329,23 @@ async def test_form_entity_disabled(
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "entity_disabled"}
 
+    entity_registry.async_update_entity(entry.entity_id, disabled_by=None)
+    hass.states.async_set(
+        entry.entity_id,
+        "home",
+        {ATTR_LATITUDE: 40.0, ATTR_LONGITUDE: -80.0},
+    )
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_KEY: "test", CONF_LOCATION_ENTITY: entry.entity_id},
+    )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
+
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_entity_unknown_error(
     hass: HomeAssistant,
-    mock_simple_nws_config,
+    mock_simple_nws_config: MagicMock,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test we handle unknown error in entity path."""
@@ -307,10 +373,18 @@ async def test_form_entity_unknown_error(
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
+    mock_instance.set_station.side_effect = None
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_KEY: "test", CONF_LOCATION_ENTITY: entry.entity_id},
+    )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
+
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_entity_cannot_connect(
     hass: HomeAssistant,
-    mock_simple_nws_config,
+    mock_simple_nws_config: MagicMock,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test we handle cannot connect error in entity path."""
@@ -337,6 +411,13 @@ async def test_form_entity_cannot_connect(
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
+
+    mock_instance.set_station.side_effect = None
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_KEY: "test", CONF_LOCATION_ENTITY: entry.entity_id},
+    )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -365,6 +446,7 @@ async def test_form_entity_already_configured(
     )
     await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
 
     result = await hass.config_entries.flow.async_init(

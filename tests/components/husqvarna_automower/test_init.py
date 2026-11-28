@@ -23,6 +23,8 @@ from aioautomower.model import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.husqvarna_automower.const import DOMAIN, OAUTH2_TOKEN
@@ -37,9 +39,6 @@ from homeassistant.util import dt as dt_util
 
 from . import setup_integration
 from .const import TEST_MOWER_ID
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 ADDITIONAL_NUMBER_ENTITIES = 1
 ADDITIONAL_SENSOR_ENTITIES = 2

@@ -1,6 +1,7 @@
 {
   "domain": "clicksend_tts",
   "name": "ClickSend TTS",
+  "categories": ["messaging_notifications.email_sms_calls"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/clicksend_tts",
   "iot_class": "cloud_push",

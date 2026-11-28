@@ -1,6 +1,7 @@
 {
   "domain": "librenms",
   "name": "LibreNMS",
+  "categories": ["computers_network.monitoring"],
   "codeowners": ["@mib1185"],
   "config_flow": true,
   "dependencies": ["http"],

@@ -1,6 +1,6 @@
 """Enforce that the integration prevents duplicates from being configured.
 
-https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/unique-config-entry/
+https://contributors.home-assistant.io/core/quality-scale/unique-config-entry/
 """
 
 import ast

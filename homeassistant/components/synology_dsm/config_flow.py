@@ -11,8 +11,10 @@ import probatio
 from synology_dsm import SynologyDSM
 from synology_dsm.api.file_station.models import SynoFileSharedFolder
 from synology_dsm.exceptions import (
+    SynologyDSMAPIInsufficientPrivilegeException,
     SynologyDSMException,
     SynologyDSMLogin2SAFailedException,
+    SynologyDSMLogin2SAForcedException,
     SynologyDSMLogin2SARequiredException,
     SynologyDSMLoginInvalidException,
     SynologyDSMRequestException,
@@ -223,12 +225,16 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
             errors[CONF_OTP_CODE] = "otp_failed"
             user_input[CONF_OTP_CODE] = None
             return await self.async_step_2sa(user_input, errors)
+        except SynologyDSMLogin2SAForcedException:
+            errors["base"] = "otp_enforced"
         except SynologyDSMLoginInvalidException as ex:
             _LOGGER.error(ex)
             errors[CONF_USERNAME] = "invalid_auth"
         except SynologyDSMRequestException as ex:
             _LOGGER.error(ex)
             errors[CONF_HOST] = "cannot_connect"
+        except SynologyDSMAPIInsufficientPrivilegeException:
+            errors["base"] = "insufficient_privilege"
         except SynologyDSMException as ex:
             _LOGGER.error(ex)
             errors["base"] = "unknown"

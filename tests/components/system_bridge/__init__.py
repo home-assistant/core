@@ -4,6 +4,7 @@ from collections.abc import Awaitable, Callable
 from ipaddress import ip_address
 from typing import Any
 
+from pytest_homeassistant.common import MockConfigEntry
 from systembridgeconnector.models.fixtures.modules.battery import FIXTURE_BATTERY
 from systembridgeconnector.models.fixtures.modules.cpu import FIXTURE_CPU
 from systembridgeconnector.models.fixtures.modules.disks import FIXTURE_DISKS
@@ -18,8 +19,6 @@ from systembridgeconnector.models.modules import Module, ModulesData
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-from tests.common import MockConfigEntry
 
 FIXTURE_TITLE = "TestSystem"
 

@@ -2,6 +2,8 @@
 
 from unittest.mock import Mock
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.xiaomi_miio.const import DOMAIN
 from homeassistant.components.xiaomi_miio.coordinator import GatewayDeviceCoordinator
 from homeassistant.components.xiaomi_miio.entity import XiaomiGatewayDevice
@@ -9,8 +11,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import TEST_MAC
-
-from tests.common import MockConfigEntry
 
 
 async def test_gateway_sub_device_via_device_id(

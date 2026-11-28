@@ -48,8 +48,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import NeoPoolConfigEntry
-from .coordinator import NeoPoolCoordinator
+from .coordinator import NeoPoolConfigEntry, NeoPoolCoordinator
 from .entity import NeoPoolEntity
 
 PARALLEL_UPDATES = 0

@@ -1,6 +1,7 @@
 {
   "domain": "fuelprices_dk",
   "name": "Fuelprices.dk",
+  "categories": ["local_services"],
   "codeowners": ["@MTrab"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/fuelprices_dk",

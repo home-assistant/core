@@ -6,6 +6,7 @@
       "service_uuid": "39b31fec-b63a-4ef7-b163-a7317872007f"
     }
   ],
+  "categories": ["sensors"],
   "codeowners": ["@elafargue"],
   "config_flow": true,
   "dependencies": ["bluetooth_adapters"],

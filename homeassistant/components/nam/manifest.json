@@ -1,6 +1,7 @@
 {
   "domain": "nam",
   "name": "Nettigo Air Monitor",
+  "categories": ["sensors.air_quality"],
   "codeowners": ["@bieniu"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/nam",

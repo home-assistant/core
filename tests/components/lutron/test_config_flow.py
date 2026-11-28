@@ -5,14 +5,13 @@ from unittest.mock import patch
 from urllib.error import HTTPError
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.lutron.const import CONF_DEFAULT_DIMMER_LEVEL, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, InvalidData
-
-from tests.common import MockConfigEntry
 
 MOCK_DATA_STEP = {
     CONF_HOST: "127.0.0.1",
@@ -44,6 +43,7 @@ async def test_full_flow(hass: HomeAssistant) -> None:
         assert result["result"].title == "Lutron"
 
         assert result["data"] == MOCK_DATA_STEP
+        assert result["result"].unique_id == "12345678901"
 
 
 @pytest.mark.parametrize(

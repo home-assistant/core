@@ -1,5 +1,8 @@
 """Test DROP initialisation."""
 
+from pytest_homeassistant.common import async_fire_mqtt_message
+from pytest_homeassistant.typing import MqttMockHAClient
+
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
@@ -10,9 +13,6 @@ from .common import (
     TEST_DATA_HUB_TOPIC,
     config_entry_hub,
 )
-
-from tests.common import async_fire_mqtt_message
-from tests.typing import MqttMockHAClient
 
 
 async def test_bad_json(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> None:
@@ -61,6 +61,8 @@ async def test_no_mqtt(hass: HomeAssistant) -> None:
     entry = config_entry_hub()
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id) is False
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert entry.reason == "MQTT integration is not available"
 
     protect_mode_select_name = "select.hub_drop_1_c0ffee_protect_mode"
     assert hass.states.get(protect_mode_select_name) is None

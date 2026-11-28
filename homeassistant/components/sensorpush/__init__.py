@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 type SensorPushConfigEntry = ConfigEntry[PassiveBluetoothProcessorCoordinator]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SensorPushConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SensorPushConfigEntry) -> None:
     """Set up SensorPush BLE device from a config entry."""
     address = entry.unique_id
     assert address is not None
@@ -34,9 +34,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SensorPushConfigEntry) -
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     # only start after all platforms have had a chance to subscribe
     entry.async_on_unload(coordinator.async_start())
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

@@ -72,7 +72,7 @@ class EcoNetWaterHeater(EcoNetEntity[WaterHeater], WaterHeaterEntity):
     """Define an Econet water heater."""
 
     _attr_should_poll = True  # Override False default from EcoNetEntity
-    _attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
+    _attr_native_temperature_unit = UnitOfTemperature.FAHRENHEIT
 
     def __init__(self, water_heater: WaterHeater) -> None:
         """Initialize."""
@@ -141,7 +141,7 @@ class EcoNetWaterHeater(EcoNetEntity[WaterHeater], WaterHeaterEntity):
 
     @property
     @override
-    def target_temperature(self) -> int:
+    def native_target_temperature(self) -> int:
         """Return the temperature we try to reach."""
         return self.water_heater.set_point
 

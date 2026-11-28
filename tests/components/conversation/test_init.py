@@ -5,6 +5,8 @@ from unittest.mock import patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import MockUser, async_mock_service
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import conversation
@@ -31,9 +33,6 @@ from homeassistant.helpers import chat_session, intent
 from homeassistant.setup import async_setup_component
 
 from . import MockAgent
-
-from tests.common import MockUser, async_mock_service
-from tests.typing import ClientSessionGenerator
 
 AGENT_ID_OPTIONS = [
     None,
@@ -82,10 +81,10 @@ async def test_turn_on_intent(
 async def test_service_fails(hass: HomeAssistant, init_components) -> None:
     """Test calling the turn on intent."""
     with (
-        pytest.raises(HomeAssistantError),
+        pytest.raises(HomeAssistantError) as exc_info,
         patch(
             "homeassistant.components.conversation.services.async_converse",
-            side_effect=intent.IntentHandleError,
+            side_effect=intent.IntentHandleError("boom"),
         ),
     ):
         await hass.services.async_call(
@@ -94,6 +93,9 @@ async def test_service_fails(hass: HomeAssistant, init_components) -> None:
             {"text": "bla"},
             blocking=True,
         )
+    assert exc_info.value.translation_domain == "conversation"
+    assert exc_info.value.translation_key == "process_failed"
+    assert str(exc_info.value) == "Error processing bla: boom"
 
 
 @pytest.mark.parametrize("sentence", ["turn off kitchen", "turn kitchen off"])

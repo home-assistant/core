@@ -204,9 +204,6 @@
           "suspended": "Suspended"
         }
       },
-      "container_uptime": {
-        "name": "Uptime"
-      },
       "node_backup_duration": {
         "name": "Backup duration"
       },
@@ -240,9 +237,6 @@
           "offline": "Offline",
           "online": "Online"
         }
-      },
-      "node_uptime": {
-        "name": "Uptime"
       },
       "storage_available": {
         "name": "Available storage"
@@ -290,9 +284,6 @@
           "stopped": "Stopped",
           "suspended": "Suspended"
         }
-      },
-      "vm_uptime": {
-        "name": "Uptime"
       }
     },
     "update": {

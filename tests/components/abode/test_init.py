@@ -65,8 +65,10 @@ async def test_add_unique_id(hass: HomeAssistant) -> None:
 
     assert mock_entry.unique_id is None
 
-    await hass.config_entries.async_reload(mock_entry.entry_id)
-    await hass.async_block_till_done()
+    # The reload creates a new client, which would otherwise open a real socket
+    with patch("jaraco.abode.event_controller.sio"):
+        await hass.config_entries.async_reload(mock_entry.entry_id)
+        await hass.async_block_till_done()
 
     assert mock_entry.unique_id == mock_entry.data[CONF_USERNAME]
 

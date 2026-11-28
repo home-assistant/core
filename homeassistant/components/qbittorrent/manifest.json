@@ -1,6 +1,7 @@
 {
   "domain": "qbittorrent",
   "name": "qBittorrent",
+  "categories": ["computers_network.nas_servers"],
   "codeowners": ["@geoffreylagaisse", "@finder39"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/qbittorrent",

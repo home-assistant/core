@@ -22,18 +22,17 @@ class SystemBridgeEntity(CoordinatorEntity[SystemBridgeDataUpdateCoordinator]):
         """Initialize the System Bridge entity."""
         super().__init__(coordinator)
 
-        self._hostname = coordinator.data.system.hostname
+        system = coordinator.data.system
+        assert system is not None
+
+        self._hostname = system.hostname
         self._attr_unique_id = (
-            f"{coordinator.data.system.uuid}_{key}"
-            if key is not None
-            else coordinator.data.system.uuid
+            f"{system.uuid}_{key}" if key is not None else system.uuid
         )
-        self._configuration_url = (
-            f"http://{self._hostname}:{api_port}/app/settings.html"
-        )
-        self._mac_address = coordinator.data.system.mac_address
-        self._uuid = coordinator.data.system.uuid
-        self._version = coordinator.data.system.version
+        self._configuration_url = f"http://{self._hostname}:{api_port}/settings"
+        self._mac_address = system.mac_address
+        self._uuid = system.uuid
+        self._version = system.version
 
         self._attr_device_info = DeviceInfo(
             configuration_url=self._configuration_url,

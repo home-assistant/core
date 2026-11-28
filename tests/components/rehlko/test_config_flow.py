@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from aiokem import AuthenticationCredentialsError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.rehlko import DOMAIN
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
@@ -13,8 +14,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .conftest import TEST_EMAIL, TEST_PASSWORD, TEST_SUBJECT
-
-from tests.common import MockConfigEntry
 
 DHCP_DISCOVERY = DhcpServiceInfo(
     ip="1.1.1.1",
@@ -201,6 +200,7 @@ async def test_dhcp_discovery(hass: HomeAssistant, mock_rehlko: AsyncMock) -> No
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == TEST_SUBJECT
 
 
 async def test_dhcp_discovery_already_set_up(

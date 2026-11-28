@@ -1,6 +1,7 @@
 {
   "domain": "energieleser",
   "name": "energieleser",
+  "categories": ["energy.meters_monitoring", "water.meters_leak_detection"],
   "codeowners": ["@AjinkyaGokhale", "@NiccoFink"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/energieleser",

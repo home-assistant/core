@@ -76,4 +76,12 @@ def build_device_data(device: AmazonDevice) -> dict[str, Any]:
         "serial number": device.serial_number,
         "software version": device.software_version,
         "sensors": {key: asdict(sensor) for key, sensor in device.sensors.items()},
+        "features": {
+            key: {instance: asdict(feature) for instance, feature in instances.items()}
+            for key, instances in device.features.items()
+        },
+        "unsupported features": {
+            key: {instance: asdict(feature) for instance, feature in instances.items()}
+            for key, instances in device.unsupported_features.items()
+        },
     }

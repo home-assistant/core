@@ -1,6 +1,7 @@
 {
   "domain": "drop_connect",
   "name": "DROP",
+  "categories": ["water.meters_leak_detection", "water.water_treatment"],
   "codeowners": ["@ChandlerSystems", "@pfrazer"],
   "config_flow": true,
   "dependencies": ["mqtt"],

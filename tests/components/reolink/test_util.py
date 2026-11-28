@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from reolink_aio.exceptions import (
     ApiError,
     CredentialsInvalidError,
@@ -32,8 +33,6 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import TEST_CAM_NAME, TEST_UID, TEST_UID_CAM
-
-from tests.common import MockConfigEntry
 
 DEV_ID_NVR = f"{TEST_UID}_{TEST_UID_CAM}"
 DEV_ID_STANDALONE_CAM = f"{TEST_UID_CAM}"

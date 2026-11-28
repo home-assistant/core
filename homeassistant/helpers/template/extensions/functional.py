@@ -162,12 +162,12 @@ class FunctionalExtension(BaseTemplateExtension):
         if not value:
             return []
 
-        is_single_list = False
         response_items: list = []
         input_service_response = deepcopy(value)
         for entity_id, entity_response in input_service_response.items():  # pylint: disable=too-many-nested-blocks
             if not isinstance(entity_response, dict):
                 raise TypeError("Response is not a dictionary")
+            is_single_list = False
             for value_key, type_response in entity_response.items():
                 if len(entity_response) == 1 and isinstance(type_response, list):
                     is_single_list = True

@@ -3,6 +3,7 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, Mock
 
+from pytest_homeassistant.common import async_fire_time_changed
 import zigpy.zcl
 import zigpy.zcl.foundation as zcl_f
 
@@ -10,8 +11,6 @@ from homeassistant.components.zha.helpers import ZHADeviceProxy
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
-
-from tests.common import async_fire_time_changed
 
 
 def patch_cluster(cluster):

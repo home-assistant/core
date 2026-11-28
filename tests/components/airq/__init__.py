@@ -2,13 +2,13 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.airq.const import DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .common import TEST_DEVICE_INFO, TEST_USER_DATA
-
-from tests.common import MockConfigEntry
 
 
 async def setup_platform(hass: HomeAssistant, platform: Platform) -> None:

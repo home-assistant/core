@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import AsyncMock
 
 from pynina import ApiError
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.nina.const import (
     CONF_AREA_FILTER,
@@ -19,8 +20,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import setup_platform
-
-from tests.common import MockConfigEntry
 
 ENTRY_DATA: dict[str, Any] = {
     CONST_REGION_A_TO_D: ["095760000000_0", "095760000000_1"],

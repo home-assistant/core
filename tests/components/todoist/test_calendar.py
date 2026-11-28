@@ -10,6 +10,7 @@ import zoneinfo
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator
 from todoist_api_python.models import Due
 
 from homeassistant import setup
@@ -30,8 +31,6 @@ from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util import dt as dt_util
 
 from .conftest import PROJECT_ID, SECTION_ID, SUMMARY, make_api_due
-
-from tests.typing import ClientSessionGenerator
 
 # Set our timezone to CST/Regina so we can check calculations
 # This keeps UTC-6 all year round

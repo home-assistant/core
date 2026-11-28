@@ -14,7 +14,7 @@ PLATFORMS = [Platform.SENSOR]
 type WsdotConfigEntry = ConfigEntry[wsdot_api.WsdotTravelTimes]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: WsdotConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: WsdotConfigEntry) -> None:
     """Set up wsdot as config entry."""
     session = async_get_clientsession(hass)
     api_key = entry.data[CONF_API_KEY]
@@ -28,9 +28,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: WsdotConfigEntry) -> boo
     entry.runtime_data = wsdot_travel_times
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

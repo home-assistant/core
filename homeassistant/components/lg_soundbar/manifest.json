@@ -1,6 +1,7 @@
 {
   "domain": "lg_soundbar",
   "name": "LG Soundbars",
+  "categories": ["media_entertainment.speakers_audio"],
   "codeowners": [],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/lg_soundbar",

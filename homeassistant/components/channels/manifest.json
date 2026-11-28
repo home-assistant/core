@@ -1,6 +1,7 @@
 {
   "domain": "channels",
   "name": "Channels",
+  "categories": ["media_entertainment.tv_streaming"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/channels",
   "iot_class": "local_polling",

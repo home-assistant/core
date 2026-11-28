@@ -1,6 +1,7 @@
 {
   "domain": "huum",
   "name": "Huum",
+  "categories": ["water.pools_spas"],
   "codeowners": ["@frwickst", "@vincentwolsink"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/huum",

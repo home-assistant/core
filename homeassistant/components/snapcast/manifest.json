@@ -1,6 +1,7 @@
 {
   "domain": "snapcast",
   "name": "Snapcast",
+  "categories": ["media_entertainment.speakers_audio"],
   "codeowners": ["@luar123"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/snapcast",

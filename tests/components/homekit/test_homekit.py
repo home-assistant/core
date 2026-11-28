@@ -8,6 +8,7 @@ from uuid import uuid1
 from pyhap.accessory import Accessory
 from pyhap.const import CATEGORY_CAMERA, CATEGORY_TELEVISION
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, get_fixture_path
 
 from homeassistant import config as hass_config
 from homeassistant.components import homekit as homekit_base, zeroconf
@@ -82,8 +83,6 @@ from homeassistant.helpers.entityfilter import (
 from homeassistant.setup import async_setup_component
 
 from .util import PATH_HOMEKIT, async_init_entry, async_init_integration
-
-from tests.common import MockConfigEntry, get_fixture_path
 
 IP_ADDRESS = "127.0.0.1"
 

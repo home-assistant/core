@@ -1,6 +1,7 @@
 {
   "domain": "glances",
   "name": "Glances",
+  "categories": ["computers_network.monitoring"],
   "codeowners": ["@engrbm87"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/glances",

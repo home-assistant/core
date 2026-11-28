@@ -9,7 +9,7 @@ from .const import PLATFORMS
 from .controller import ZWaveMeConfigEntry, ZWaveMeController
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ZWaveMeConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ZWaveMeConfigEntry) -> None:
     """Set up Z-Wave-Me from a config entry."""
     controller = ZWaveMeController(hass, entry)
 
@@ -20,16 +20,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ZWaveMeConfigEntry) -> b
     await async_setup_platforms(hass, entry, controller)
     registry = dr.async_get(hass)
     controller.remove_stale_devices(registry)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ZWaveMeConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ZWaveMeConfigEntry) -> None:
     """Unload a config entry."""
 
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        await entry.runtime_data.zwave_api.close_ws()
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    await entry.runtime_data.zwave_api.close_ws()
 
 
 async def async_setup_platforms(

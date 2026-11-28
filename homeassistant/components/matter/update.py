@@ -21,7 +21,9 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.restore_state import ExtraStoredData
+from homeassistant.helpers.translation import async_get_translations
 
+from .const import DOMAIN
 from .entity import MatterEntity, MatterEntityDescription
 from .helpers import MatterConfigEntry
 from .models import MatterDiscoverySchema
@@ -173,29 +175,25 @@ class MatterUpdate(MatterEntity, UpdateEntity):
         if self.state != STATE_ON:
             return None
 
+        translations = await async_get_translations(
+            self.hass, self.hass.config.language, "common", integrations={DOMAIN}
+        )
+
         release_notes = ""
 
-        # insert extra heavy warning case the update is not from the main net
         if self._software_update.update_source is not UpdateSource.MAIN_NET_DCL:
+            warning = translations[
+                f"component.{DOMAIN}.common.release_notes_not_official_source"
+            ].format(update_source=self._software_update.update_source.value)
             release_notes += (
-                "\n\n<ha-alert alert-type='warning'>"
-                "Update provided by "
-                f"{self._software_update.update_source.value}. "
-                "Installing this update is at your own risk "
-                "and you may run into unexpected "
-                "problems such as the need to re-add and "
-                "factory reset your device.</ha-alert>\n\n"
+                f"\n\n<ha-alert alert-type='warning'>{warning}</ha-alert>\n\n"
             )
-        return release_notes + (
-            "\n\n<ha-alert alert-type='info'>"
-            "The update process can take a while, "
-            "especially for battery powered devices. "
-            "Please be patient and wait until the update "
-            "process is fully completed. Do not remove power "
-            "from the device while it's updating. "
-            "The device may restart during the update process "
-            "and be unavailable for several minutes."
-            "</ha-alert>\n\n"
+
+        notice = translations[
+            f"component.{DOMAIN}.common.release_notes_installation_notice"
+        ]
+        return (
+            release_notes + f"\n\n<ha-alert alert-type='info'>{notice}</ha-alert>\n\n"
         )
 
     @override

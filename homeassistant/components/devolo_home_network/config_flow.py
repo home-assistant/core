@@ -23,11 +23,11 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_IP_ADDRESS): str,
-        probatio.Optional(probatio.Secret(CONF_PASSWORD)): str,
+        probatio.Optional(probatio.Secret(CONF_PASSWORD), default=""): str,
     }
 )
 STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
-    {probatio.Optional(probatio.Secret(CONF_PASSWORD)): str}
+    {probatio.Optional(probatio.Secret(CONF_PASSWORD), default=""): str}
 )
 
 

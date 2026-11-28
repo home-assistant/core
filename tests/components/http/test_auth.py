@@ -11,6 +11,8 @@ from aiohttp import encode_basic_auth, web
 from aiohttp.web_exceptions import HTTPUnauthorized
 import jwt
 import pytest
+from pytest_homeassistant.common import MockUser
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 import yarl
 
 from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
@@ -41,9 +43,7 @@ from homeassistant.setup import async_setup_component
 
 from . import HTTP_HEADER_HA_AUTH
 
-from tests.common import MockUser
 from tests.test_util import mock_real_ip
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 _LOGGER = logging.getLogger(__name__)
 API_PASSWORD = "test-password"

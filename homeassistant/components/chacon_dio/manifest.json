@@ -1,6 +1,7 @@
 {
   "domain": "chacon_dio",
   "name": "Chacon DiO",
+  "categories": ["plugs_switches", "blinds_curtains"],
   "codeowners": ["@cnico"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/chacon_dio",

@@ -11,7 +11,12 @@ from aioaxlevpp import (
 )
 import probatio
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_API_KEY
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -79,6 +84,25 @@ class AxleConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Validate a replacement API key and reload the existing feed."""
+        return await self._async_update_api_key(
+            self._get_reauth_entry(), "reauth_confirm", user_input
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Allow the user to update the API key before authentication fails."""
+        return await self._async_update_api_key(
+            self._get_reconfigure_entry(), "reconfigure", user_input
+        )
+
+    async def _async_update_api_key(
+        self,
+        entry: ConfigEntry,
+        step_id: str,
+        user_input: dict[str, Any] | None,
+    ) -> ConfigFlowResult:
+        """Validate the API key for an existing feed."""
         errors = {}
         if user_input is not None:
             try:
@@ -90,11 +114,16 @@ class AxleConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 if not (errors := await self._validate(user_input)):
                     return self.async_update_reload_and_abort(
-                        self._get_reauth_entry(), data_updates=user_input
+                        entry, data_updates=user_input
                     )
         return self.async_show_form(
-            step_id="reauth_confirm",
-            data_schema=STEP_SCHEMA,
+            step_id=step_id,
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_SCHEMA,
+                (user_input or entry.data)
+                if self.source == SOURCE_RECONFIGURE
+                else None,
+            ),
             description_placeholders={
                 "token_url": "https://vpp.axle.energy/app/account/home-assistant"
             },

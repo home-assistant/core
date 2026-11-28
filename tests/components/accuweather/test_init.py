@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 
 from accuweather import ApiError, InvalidApiKeyError
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.accuweather.const import (
     DOMAIN,
@@ -18,8 +19,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_async_setup_entry(

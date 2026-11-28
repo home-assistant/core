@@ -5,6 +5,7 @@ from unittest.mock import Mock
 from aioshelly.const import MODEL_2PM_G3, MODEL_BLU_GATEWAY_G3, MODEL_PRO_EM3
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_load_json_object_fixture
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.shelly.const import (
@@ -16,8 +17,6 @@ from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
 from . import MOCK_MAC, force_uptime_value, init_integration, snapshot_device_entities
-
-from tests.common import async_load_json_object_fixture
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -473,12 +472,21 @@ async def test_shelly_pro_3em_with_emeter_name(
     assert device_entry.name == "Test name Phase C"
 
 
+@pytest.mark.parametrize(
+    "initialized",
+    [
+        pytest.param(True, id="initialized"),
+        # Device reconnecting during setup keeps the last known config
+        pytest.param(False, id="reinitializing"),
+    ],
+)
 async def test_shelly_fk_06x_with_zone_names(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
     entity_registry: EntityRegistry,
     device_registry: DeviceRegistry,
     monkeypatch: pytest.MonkeyPatch,
+    initialized: bool,
 ) -> None:
     """Test Shelly Irrigation controller FK-06X with zone names.
 
@@ -490,6 +498,7 @@ async def test_shelly_fk_06x_with_zone_names(
     monkeypatch.setattr(mock_rpc_device, "shelly", device_fixture["shelly"])
     monkeypatch.setattr(mock_rpc_device, "status", device_fixture["status"])
     monkeypatch.setattr(mock_rpc_device, "config", device_fixture["config"])
+    monkeypatch.setattr(mock_rpc_device, "initialized", initialized)
 
     await init_integration(hass, gen=3, model=MODEL_FRANKEVER_IRRIGATION_CONTROLLER)
 

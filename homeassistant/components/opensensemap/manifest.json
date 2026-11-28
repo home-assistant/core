@@ -1,6 +1,7 @@
 {
   "domain": "opensensemap",
   "name": "openSenseMap",
+  "categories": ["weather_alerts.air_quality_pollen"],
   "codeowners": ["@AlCalzone"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/opensensemap",

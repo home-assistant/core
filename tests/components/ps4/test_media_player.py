@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from pyps4_2ndscreen.credential import get_ddp_message
 from pyps4_2ndscreen.ddp import DEFAULT_UDP_PORT
 from pyps4_2ndscreen.media_art import TYPE_APP as PS_TYPE_APP
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import ps4
@@ -42,8 +43,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 MOCK_CREDS = "123412341234abcd12341234abcd12341234abcd12341234abcd12341234abcd"
 MOCK_NAME = "ha_ps4_name"

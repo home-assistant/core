@@ -4,11 +4,12 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockUser, mock_restore_cache
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.input_text import (
     ATTR_MAX,
     ATTR_MIN,
-    ATTR_MODE,
     ATTR_VALUE,
     CONF_INITIAL,
     CONF_MAX_VALUE,
@@ -21,6 +22,7 @@ from homeassistant.const import (
     ATTR_EDITABLE,
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
+    ATTR_MODE,
     ATTR_NAME,
     SERVICE_RELOAD,
 )
@@ -28,9 +30,6 @@ from homeassistant.core import Context, CoreState, HomeAssistant, State
 from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockUser, mock_restore_cache
-from tests.typing import WebSocketGenerator
 
 TEST_VAL_MIN = 2
 TEST_VAL_MAX = 22

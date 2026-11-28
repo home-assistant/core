@@ -156,8 +156,12 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         minio_client.remove_object(bucket, key)
 
+    # Should be adjusted to register actions in setup_services in services.py
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.register(DOMAIN, "put", put_file, schema=BUCKET_KEY_FILE_SCHEMA)
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.register(DOMAIN, "get", get_file, schema=BUCKET_KEY_FILE_SCHEMA)
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.register(DOMAIN, "remove", remove_file, schema=BUCKET_KEY_SCHEMA)
 
     return True

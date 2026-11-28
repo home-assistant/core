@@ -1,6 +1,7 @@
 {
   "domain": "generic_hygrostat",
   "name": "Generic hygrostat",
+  "categories": ["helpers", "climate.air_purifiers_humidifiers"],
   "codeowners": ["@Shulyaka"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/generic_hygrostat",

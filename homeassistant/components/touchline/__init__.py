@@ -15,7 +15,7 @@ PLATFORMS = [Platform.CLIMATE]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: TouchlineConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: TouchlineConfigEntry) -> None:
     """Set up touchline from a config entry."""
     host = entry.data[CONF_HOST]
     _LOGGER.debug(
@@ -36,9 +36,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TouchlineConfigEntry) ->
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a touchline config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

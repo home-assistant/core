@@ -1,0 +1,265 @@
+# serializer version: 1
+# name: test_diagnostics[all_answering]
+  dict({
+    'entry_data': dict({
+      'addresses': list([
+        1,
+        2,
+        4,
+      ]),
+      'inverters': dict({
+        '1': dict({
+          'model': '6400xi',
+          'sw_version': 'K222.36DE 6817',
+        }),
+        '2': dict({
+          'model': '6400xi',
+          'sw_version': 'K222.36DE 6817',
+        }),
+        '4': dict({
+          'model': '8000xi',
+          'sw_version': 'K222.36DE 1C5F',
+        }),
+      }),
+      'port': '/dev/ttyUSB0',
+    }),
+    'inverters': dict({
+      '1': dict({
+        'address': 1,
+        'consecutive_misses': 0,
+        'firmware': 'K222.36DE 6817',
+        'measured': dict({
+          'ac_current_a': 2.8,
+          'ac_power_w': 635,
+          'ac_voltage_v': 228.7,
+          'address': 2,
+          'checksum_ok': True,
+          'daily_yield_wh': 33801,
+          'dc_current_a': 1.65,
+          'dc_power_w': 671,
+          'dc_voltage_v': 406.8,
+          'inverter_type': '6400xi',
+          'status': 4,
+          'temperature_c': 34,
+        }),
+        'sleep_after': 3,
+        'totals': dict({
+          'address': None,
+          'daily_peak_w': 4899,
+          'daily_uptime': '12:12',
+          'daily_yield_wh': 33801,
+          'short_time_counter': 112706,
+          'short_time_uptime': '71858:00',
+          'total_uptime': '71858:00',
+          'total_yield_raw': 112706,
+        }),
+      }),
+      '2': dict({
+        'address': 2,
+        'consecutive_misses': 0,
+        'firmware': 'K222.36DE 6817',
+        'measured': dict({
+          'ac_current_a': 2.8,
+          'ac_power_w': 635,
+          'ac_voltage_v': 228.7,
+          'address': 2,
+          'checksum_ok': True,
+          'daily_yield_wh': 33801,
+          'dc_current_a': 1.65,
+          'dc_power_w': 671,
+          'dc_voltage_v': 406.8,
+          'inverter_type': '6400xi',
+          'status': 4,
+          'temperature_c': 34,
+        }),
+        'sleep_after': 3,
+        'totals': dict({
+          'address': None,
+          'daily_peak_w': 4899,
+          'daily_uptime': '12:12',
+          'daily_yield_wh': 33801,
+          'short_time_counter': 112706,
+          'short_time_uptime': '71858:00',
+          'total_uptime': '71858:00',
+          'total_yield_raw': 112706,
+        }),
+      }),
+      '4': dict({
+        'address': 4,
+        'consecutive_misses': 0,
+        'firmware': 'K222.36DE 1C5F',
+        'measured': dict({
+          'ac_current_a': 2.99,
+          'ac_power_w': 681,
+          'ac_voltage_v': 229.1,
+          'address': 4,
+          'checksum_ok': True,
+          'daily_yield_wh': 38749,
+          'dc_current_a': 1.42,
+          'dc_power_w': 739,
+          'dc_voltage_v': 520.7,
+          'inverter_type': '8000xi',
+          'status': 4,
+          'temperature_c': 35,
+        }),
+        'sleep_after': 3,
+        'totals': dict({
+          'address': None,
+          'daily_peak_w': 5702,
+          'daily_uptime': '12:19',
+          'daily_yield_wh': 38749,
+          'short_time_counter': 133788,
+          'short_time_uptime': '73251:09',
+          'total_uptime': '73251:09',
+          'total_yield_raw': 133788,
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_diagnostics[one_dark]
+  dict({
+    'entry_data': dict({
+      'addresses': list([
+        1,
+        2,
+        4,
+      ]),
+      'inverters': dict({
+        '1': dict({
+          'model': '6400xi',
+          'sw_version': 'K222.36DE 6817',
+        }),
+        '2': dict({
+          'model': '6400xi',
+          'sw_version': 'K222.36DE 6817',
+        }),
+        '4': dict({
+          'model': '8000xi',
+          'sw_version': 'K222.36DE 1C5F',
+        }),
+      }),
+      'port': '/dev/ttyUSB0',
+    }),
+    'inverters': dict({
+      '1': dict({
+        'address': 1,
+        'consecutive_misses': 4,
+        'firmware': 'K222.36DE 6817',
+        'measured': dict({
+          'ac_current_a': 2.8,
+          'ac_power_w': 635,
+          'ac_voltage_v': 228.7,
+          'address': 2,
+          'checksum_ok': True,
+          'daily_yield_wh': 33801,
+          'dc_current_a': 1.65,
+          'dc_power_w': 671,
+          'dc_voltage_v': 406.8,
+          'inverter_type': '6400xi',
+          'status': 4,
+          'temperature_c': 34,
+        }),
+        'sleep_after': 3,
+        'totals': dict({
+          'address': None,
+          'daily_peak_w': 4899,
+          'daily_uptime': '12:12',
+          'daily_yield_wh': 33801,
+          'short_time_counter': 112706,
+          'short_time_uptime': '71858:00',
+          'total_uptime': '71858:00',
+          'total_yield_raw': 112706,
+        }),
+      }),
+      '2': dict({
+        'address': 2,
+        'consecutive_misses': 0,
+        'firmware': 'K222.36DE 6817',
+        'measured': dict({
+          'ac_current_a': 2.8,
+          'ac_power_w': 635,
+          'ac_voltage_v': 228.7,
+          'address': 2,
+          'checksum_ok': True,
+          'daily_yield_wh': 33801,
+          'dc_current_a': 1.65,
+          'dc_power_w': 671,
+          'dc_voltage_v': 406.8,
+          'inverter_type': '6400xi',
+          'status': 4,
+          'temperature_c': 34,
+        }),
+        'sleep_after': 3,
+        'totals': dict({
+          'address': None,
+          'daily_peak_w': 4899,
+          'daily_uptime': '12:12',
+          'daily_yield_wh': 33801,
+          'short_time_counter': 112706,
+          'short_time_uptime': '71858:00',
+          'total_uptime': '71858:00',
+          'total_yield_raw': 112706,
+        }),
+      }),
+      '4': dict({
+        'address': 4,
+        'consecutive_misses': 0,
+        'firmware': 'K222.36DE 1C5F',
+        'measured': dict({
+          'ac_current_a': 2.99,
+          'ac_power_w': 681,
+          'ac_voltage_v': 229.1,
+          'address': 4,
+          'checksum_ok': True,
+          'daily_yield_wh': 38749,
+          'dc_current_a': 1.42,
+          'dc_power_w': 739,
+          'dc_voltage_v': 520.7,
+          'inverter_type': '8000xi',
+          'status': 4,
+          'temperature_c': 35,
+        }),
+        'sleep_after': 3,
+        'totals': dict({
+          'address': None,
+          'daily_peak_w': 5702,
+          'daily_uptime': '12:19',
+          'daily_yield_wh': 38749,
+          'short_time_counter': 133788,
+          'short_time_uptime': '73251:09',
+          'total_uptime': '73251:09',
+          'total_yield_raw': 133788,
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_diagnostics_before_the_first_poll
+  dict({
+    'entry_data': dict({
+      'addresses': list([
+        1,
+        2,
+        4,
+      ]),
+      'inverters': dict({
+        '1': dict({
+          'model': '6400xi',
+          'sw_version': 'K222.36DE 6817',
+        }),
+        '2': dict({
+          'model': '6400xi',
+          'sw_version': 'K222.36DE 6817',
+        }),
+        '4': dict({
+          'model': '8000xi',
+          'sw_version': 'K222.36DE 1C5F',
+        }),
+      }),
+      'port': '/dev/ttyUSB0',
+    }),
+    'inverters': dict({
+    }),
+  })
+# ---

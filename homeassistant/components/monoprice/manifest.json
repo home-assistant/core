@@ -1,6 +1,7 @@
 {
   "domain": "monoprice",
   "name": "Monoprice 6-Zone Amplifier",
+  "categories": ["media_entertainment.speakers_audio"],
   "codeowners": ["@etsinko", "@OnFreund"],
   "config_flow": true,
   "dependencies": ["usb"],

@@ -1,6 +1,7 @@
 """Test the WeatherflowCloud config flow."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.weatherflow_cloud.const import DOMAIN
@@ -8,8 +9,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 async def test_config(hass: HomeAssistant, mock_get_stations) -> None:

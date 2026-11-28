@@ -6,6 +6,7 @@ from pyimouapi.const import PARAM_REF, PARAM_STATE, PARAM_SUPPORTED, PARAM_VALUE
 from pyimouapi.exceptions import ImouException, InvalidAppIdOrSecretException
 from pyimouapi.ha_device import ImouHaDevice
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.alarm_control_panel import (
@@ -25,8 +26,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .const import create_online_device
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 ALARM_PANEL = {
     PARAM_REF: "arm_mode",

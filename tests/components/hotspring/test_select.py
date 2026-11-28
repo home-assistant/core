@@ -12,6 +12,7 @@ from hotspring import (
     Spa,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
@@ -25,8 +26,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_with_selected_platforms
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 JET_1_ENTITY_ID = "select.connectedspa_ddeeff_jet_1"
 HEATING_MODE_ENTITY_ID = "select.connectedspa_ddeeff_heating_mode"

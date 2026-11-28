@@ -1,6 +1,7 @@
 {
   "domain": "rhasspy",
   "name": "Rhasspy",
+  "categories": ["ai_voice.voice_assistants"],
   "codeowners": ["@synesthesiam"],
   "config_flow": true,
   "dependencies": ["intent"],

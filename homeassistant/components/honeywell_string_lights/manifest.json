@@ -1,6 +1,7 @@
 {
   "domain": "honeywell_string_lights",
   "name": "Honeywell String Lights",
+  "categories": ["lighting"],
   "codeowners": ["@balloob"],
   "config_flow": true,
   "dependencies": ["radio_frequency"],

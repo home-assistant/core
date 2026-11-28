@@ -3,7 +3,7 @@
 import logging
 from typing import Any, override
 
-from httpx import BasicAuth
+from httpx2 import BasicAuth
 import probatio
 from pyecoforest.api import EcoforestApi
 from pyecoforest.exceptions import EcoforestAuthenticationRequired

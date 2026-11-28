@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from irm_kmi_api import IrmKmiApiError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 
 from homeassistant.components.irm_kmi.const import CONF_LANGUAGE_OVERRIDE, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -15,8 +16,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_config_flow_forecast")

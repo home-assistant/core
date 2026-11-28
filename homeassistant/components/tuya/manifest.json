@@ -1,6 +1,7 @@
 {
   "domain": "tuya",
   "name": "Tuya",
+  "categories": ["hubs_protocols.smart_home_hubs"],
   "codeowners": ["@Tuya", "@zlinoliver"],
   "config_flow": true,
   "dependencies": ["ffmpeg"],
@@ -44,7 +45,7 @@
   "iot_class": "cloud_push",
   "loggers": ["tuya_sharing"],
   "requirements": [
-    "tuya-device-handlers==0.0.31",
+    "tuya-device-handlers==0.0.32",
     "tuya-device-sharing-sdk==0.2.15"
   ]
 }

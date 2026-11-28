@@ -1,6 +1,7 @@
 {
   "domain": "flume",
   "name": "Flume",
+  "categories": ["water.meters_leak_detection"],
   "codeowners": ["@ChrisMandich", "@bdraco", "@jeeftor"],
   "config_flow": true,
   "dhcp": [

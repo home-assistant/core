@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "sensor": {
+      "spot_price": {
+        "default": "mdi:transmission-tower"
+      }
+    }
+  }
+}

@@ -3,12 +3,15 @@
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, override
 
-from aiohttp import ClientError
 import probatio
-from pyrituals import Account, AuthenticationException
+from ritualsgenie import (
+    RitualsGenie,
+    RitualsGenieAuthenticationError,
+    RitualsGenieError,
+)
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
@@ -34,24 +37,24 @@ class RitualsPerfumeGenieConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             session = async_get_clientsession(self.hass)
-            account = Account(
+            client = RitualsGenie(
                 email=user_input[CONF_EMAIL],
                 password=user_input[CONF_PASSWORD],
                 session=session,
             )
 
             try:
-                await account.authenticate()
-            except AuthenticationException:
+                await client.login()
+            except RitualsGenieAuthenticationError:
                 errors["base"] = "invalid_auth"
-            except ClientError:
+            except RitualsGenieError:
                 errors["base"] = "cannot_connect"
             else:
                 await self.async_set_unique_id(user_input[CONF_EMAIL])
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=user_input[CONF_EMAIL],
-                    data=user_input,
+                    data={**user_input, CONF_TOKEN: client.token},
                 )
 
         return self.async_show_form(
@@ -77,17 +80,17 @@ class RitualsPerfumeGenieConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input:
             session = async_get_clientsession(self.hass)
-            account = Account(
+            client = RitualsGenie(
                 email=reauth_entry.unique_id,
                 password=user_input[CONF_PASSWORD],
                 session=session,
             )
 
             try:
-                await account.authenticate()
-            except AuthenticationException:
+                await client.login()
+            except RitualsGenieAuthenticationError:
                 errors["base"] = "invalid_auth"
-            except ClientError:
+            except RitualsGenieError:
                 errors["base"] = "cannot_connect"
             else:
                 return self.async_update_reload_and_abort(
@@ -95,6 +98,7 @@ class RitualsPerfumeGenieConfigFlow(ConfigFlow, domain=DOMAIN):
                     data={
                         CONF_EMAIL: reauth_entry.unique_id,
                         CONF_PASSWORD: user_input[CONF_PASSWORD],
+                        CONF_TOKEN: client.token,
                     },
                 )
 

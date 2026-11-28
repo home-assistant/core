@@ -1,7 +1,7 @@
 """Tests for the OpenRouter integration."""
 
 from collections.abc import AsyncGenerator
-import datetime
+import datetime as dt
 from unittest.mock import AsyncMock, patch
 
 from freezegun import freeze_time
@@ -14,6 +14,7 @@ from openai.types.chat.chat_completion_chunk import (
     ChoiceDeltaToolCallFunction,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import conversation
@@ -25,7 +26,6 @@ from homeassistant.helpers.llm import ToolInput, ToolResult
 from . import setup_integration
 from .conftest import get_generator_from_data
 
-from tests.common import MockConfigEntry, snapshot_platform
 from tests.components.conversation import MockChatLog, mock_chat_log  # noqa: F401
 
 
@@ -230,7 +230,7 @@ async def test_function_call(
                 data={
                     "speech": {"plain": {"speech": "12:00 PM", "extra_data": None}},
                     "response_type": "action_done",
-                    "speech_slots": {"time": datetime.time(12, 0)},
+                    "speech_slots": {"time": dt.time(12, 0)},
                     "data": {"success": [], "failed": []},
                 }
             ),

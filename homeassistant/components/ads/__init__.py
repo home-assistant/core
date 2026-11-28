@@ -11,42 +11,16 @@ from homeassistant.const import (
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_ADS_VAR, DATA_ADS, DOMAIN, AdsType
+from .const import DATA_ADS, DOMAIN
 from .hub import AdsHub
+from .services import setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
-
-ADS_TYPEMAP = {
-    AdsType.BOOL: pyads.PLCTYPE_BOOL,
-    AdsType.BYTE: pyads.PLCTYPE_BYTE,
-    AdsType.INT: pyads.PLCTYPE_INT,
-    AdsType.UINT: pyads.PLCTYPE_UINT,
-    AdsType.SINT: pyads.PLCTYPE_SINT,
-    AdsType.USINT: pyads.PLCTYPE_USINT,
-    AdsType.DINT: pyads.PLCTYPE_DINT,
-    AdsType.UDINT: pyads.PLCTYPE_UDINT,
-    AdsType.WORD: pyads.PLCTYPE_WORD,
-    AdsType.DWORD: pyads.PLCTYPE_DWORD,
-    AdsType.REAL: pyads.PLCTYPE_REAL,
-    AdsType.LREAL: pyads.PLCTYPE_LREAL,
-    AdsType.STRING: pyads.PLCTYPE_STRING,
-    AdsType.TIME: pyads.PLCTYPE_TIME,
-    AdsType.DATE: pyads.PLCTYPE_DATE,
-    AdsType.DATE_AND_TIME: pyads.PLCTYPE_DT,
-    AdsType.TOD: pyads.PLCTYPE_TOD,
-}
-
-CONF_ADS_FACTOR = "factor"
-CONF_ADS_TYPE = "adstype"
-CONF_ADS_VALUE = "value"
-
-
-SERVICE_WRITE_DATA_BY_NAME = "write_data_by_name"
 
 CONFIG_SCHEMA = probatio.Schema(
     {
@@ -61,17 +35,10 @@ CONFIG_SCHEMA = probatio.Schema(
     extra=probatio.ALLOW_EXTRA,
 )
 
-SCHEMA_SERVICE_WRITE_DATA_BY_NAME = probatio.Schema(
-    {
-        probatio.Required(CONF_ADS_TYPE): probatio.Coerce(AdsType),
-        probatio.Required(CONF_ADS_VALUE): probatio.Coerce(int),
-        probatio.Required(CONF_ADS_VAR): cv.string,
-    }
-)
-
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the ADS component."""
+    setup_services(hass)
 
     conf = config[DOMAIN]
 
@@ -94,23 +61,5 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.data[DATA_ADS] = ads
     hass.bus.listen(EVENT_HOMEASSISTANT_STOP, ads.shutdown)
-
-    def handle_write_data_by_name(call: ServiceCall) -> None:
-        """Write a value to the connected ADS device."""
-        ads_var: str = call.data[CONF_ADS_VAR]
-        ads_type: AdsType = call.data[CONF_ADS_TYPE]
-        value: int = call.data[CONF_ADS_VALUE]
-
-        try:
-            ads.write_by_name(ads_var, value, ADS_TYPEMAP[ads_type])
-        except pyads.ADSError as err:
-            _LOGGER.error(err)
-
-    hass.services.register(
-        DOMAIN,
-        SERVICE_WRITE_DATA_BY_NAME,
-        handle_write_data_by_name,
-        schema=SCHEMA_SERVICE_WRITE_DATA_BY_NAME,
-    )
 
     return True

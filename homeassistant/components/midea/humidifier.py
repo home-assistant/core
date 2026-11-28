@@ -113,25 +113,25 @@ class MideaHumidifier(MideaEntity, HumidifierEntity):
         return power
 
     @override
-    def set_humidity(self, humidity: int) -> None:
+    async def async_set_humidity(self, humidity: int) -> None:
         """Midea Humidifier set humidity."""
         with midea_api_call():
             self._device.set_attribute(attr="target_humidity", value=humidity)
 
     @override
-    def set_mode(self, mode: str) -> None:
+    async def async_set_mode(self, mode: str) -> None:
         """Midea Humidifier set mode."""
         with midea_api_call():
             self._device.set_attribute(attr="mode", value=mode)
 
     @override
-    def turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Midea Humidifier turn on."""
         with midea_api_call():
             self._device.set_attribute(attr="power", value=True)
 
     @override
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Midea Humidifier turn off."""
         with midea_api_call():
             self._device.set_attribute(attr="power", value=False)

@@ -4,6 +4,7 @@ import asyncio
 from collections.abc import Callable
 from functools import partial
 from pathlib import Path
+import re
 from typing import Any, Final, cast
 
 from aiohttp import ClientError
@@ -26,6 +27,8 @@ from tesla_fleet_api.exceptions import (
 )
 from tesla_fleet_api.router import VehicleRouter
 from tesla_fleet_api.tesla import EnergySiteRouter
+from tesla_fleet_api.tesla.vehicle.bluetooth import VehicleBluetooth
+from tesla_fleet_api.tesla.vehicle.stream_glue import BleBroadcastStreamGlue, StreamSink
 from tesla_fleet_api.teslemetry import EnergySite, Teslemetry, Vehicle
 from tesla_fleet_api.teslemetry.energysite import TeslemetryEnergySite
 from teslemetry_stream import TeslemetryStream, TeslemetryStreamAuthenticationError
@@ -35,7 +38,16 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.components.bluetooth import async_ble_device_from_address
+from homeassistant.components.bluetooth import (
+    BluetoothReachabilityIntent,
+    async_address_reachability_diagnostics,
+    async_ble_device_from_address,
+)
+from homeassistant.components.labs import (
+    EventLabsUpdatedData,
+    async_is_preview_feature_enabled,
+    async_subscribe_preview_feature,
+)
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigSubentry
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
@@ -44,7 +56,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     Platform,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
@@ -54,6 +66,7 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
+    entity_registry as er,
     issue_registry as ir,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -67,10 +80,13 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import (
     BLE_DISCONNECT_TIMEOUT,
+    CHARGE_ON_SOLAR_LOWER_LIMIT_KEY,
+    CHARGE_ON_SOLAR_SWITCH_KEY,
     CLIENT_ID,
     CONF_VIN,
     DOMAIN,
     ISSUE_GATEWAY_NOT_FOUND,
+    LABS_CHARGE_ON_SOLAR_FEATURE,
     LOGGER,
     POWERWALL_KEY_FILE,
     RSA_PARENT_KEY,
@@ -82,8 +98,10 @@ from .coordinator import (
     TeslemetryEnergyHistoryCoordinator,
     TeslemetryEnergySiteInfoCoordinator,
     TeslemetryEnergySiteLiveCoordinator,
+    TeslemetryLocalStatusCoordinator,
     TeslemetryMetadataCoordinator,
     TeslemetryVehicleDataCoordinator,
+    TeslemetryWallConnectorTotalsCoordinator,
 )
 from .helpers import (
     async_get_ble_parent,
@@ -91,7 +109,12 @@ from .helpers import (
     create_powerwall_client,
     flatten,
 )
-from .models import TeslemetryData, TeslemetryEnergyData, TeslemetryVehicleData
+from .models import (
+    TeslemetryChargeOnSolarStore,
+    TeslemetryData,
+    TeslemetryEnergyData,
+    TeslemetryVehicleData,
+)
 from .services import async_setup_services
 
 PLATFORMS: Final = [
@@ -109,6 +132,9 @@ PLATFORMS: Final = [
     Platform.SWITCH,
     Platform.UPDATE,
 ]
+_VEHICLE_ISSUE_ID_PATTERN = re.compile(
+    f"({'|'.join(map(re.escape, VEHICLE_ISSUE_LEARN_MORE))})_"
+)
 
 type TeslemetryConfigEntry = ConfigEntry[TeslemetryData]
 
@@ -126,6 +152,7 @@ STREAM_TOPICS: Final = (
     SseTopic.SITE_INFO,
     SseTopic.TARIFF_CONTENT_V2,
     SseTopic.ENERGY_TOTALS,
+    SseTopic.WALL_CONNECTOR_TOTALS,
 )
 
 
@@ -247,31 +274,35 @@ def _async_update_vehicle_repairs(
     vins: set[str],
     vehicle_metadata: dict[str, Any],
 ) -> None:
-    """Create or remove repair issues based on each vehicle's metadata issue."""
-    for vin in vins | set(vehicle_metadata):
-        info = vehicle_metadata.get(vin, {})
-        issue = info.get("issue")
-        for issue_type, learn_more_url in VEHICLE_ISSUE_LEARN_MORE.items():
-            issue_id = f"{issue_type}_{vin}"
-            if vin in vins and info.get("access") and issue == issue_type:
-                ir.async_create_issue(
-                    hass,
-                    DOMAIN,
-                    issue_id,
-                    is_fixable=True,
-                    severity=ir.IssueSeverity.WARNING,
-                    translation_key=issue_type,
-                    translation_placeholders={"vehicle": info.get("name") or vin},
-                    learn_more_url=learn_more_url,
-                    data={
-                        "entry_id": entry.entry_id,
-                        "vin": vin,
-                        "issue_type": issue_type,
-                        "vehicle": info.get("name") or vin,
-                    },
-                )
-            else:
-                ir.async_delete_issue(hass, DOMAIN, issue_id)
+    """Create repair issues for vehicle metadata issues and delete all others."""
+    with ir.async_begin_issues_refresh(
+        hass,
+        DOMAIN,
+        issue_id_pattern=_VEHICLE_ISSUE_ID_PATTERN,
+        config_entry_id=entry.entry_id,
+    ):
+        for vin in vins:
+            info = vehicle_metadata.get(vin, {})
+            issue_type = info.get("issue")
+            if not info.get("access") or issue_type not in VEHICLE_ISSUE_LEARN_MORE:
+                continue
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                f"{issue_type}_{vin}",
+                config_entry_id=entry.entry_id,
+                is_fixable=True,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key=issue_type,
+                translation_placeholders={"vehicle": info.get("name") or vin},
+                learn_more_url=VEHICLE_ISSUE_LEARN_MORE[issue_type],
+                data={
+                    "entry_id": entry.entry_id,
+                    "vin": vin,
+                    "issue_type": issue_type,
+                    "vehicle": info.get("name") or vin,
+                },
+            )
 
 
 def _setup_vehicle_repairs(
@@ -298,17 +329,6 @@ def _setup_vehicle_repairs(
     )
 
 
-def _ble_address_for_vin(entry: TeslemetryConfigEntry, vin: str) -> str | None:
-    """Return the paired Bluetooth address for a vehicle, if one was added."""
-    for subentry in entry.subentries.values():
-        if (
-            subentry.subentry_type == SUBENTRY_TYPE_VEHICLE
-            and subentry.data.get(CONF_VIN) == vin
-        ):
-            return subentry.data.get(CONF_ADDRESS)
-    return None
-
-
 # Two failure shapes must be caught to fall back to cloud control: the library
 # wraps existing-key failures in PrivateKeyError, the create-race path raises raw errors.
 _BLE_KEY_ERRORS: Final = (
@@ -322,14 +342,13 @@ _BLE_KEY_ERRORS: Final = (
 
 async def _async_resolve_vehicle_api(
     hass: HomeAssistant,
-    entry: TeslemetryConfigEntry,
     vin: str,
     cloud_vehicle: Vehicle,
-) -> Vehicle | VehicleRouter:
-    """Return the API a vehicle's platforms should call."""
-    address = _ble_address_for_vin(entry, vin)
+    address: str | None,
+) -> tuple[Vehicle | VehicleRouter, VehicleBluetooth | None]:
+    """Return the API a vehicle's platforms should call, and its Bluetooth backend."""
     if not address:
-        return cloud_vehicle
+        return cloud_vehicle, None
 
     # A bad BLE key file for one vehicle must not tear down the whole entry.
     try:
@@ -341,7 +360,7 @@ async def _async_resolve_vehicle_api(
             vin,
             exc_info=True,
         )
-        return cloud_vehicle
+        return cloud_vehicle, None
     # disable keep alive to allow vehicles to sleep
     bluetooth_vehicle = parent.vehicles.createBluetooth(
         vin,
@@ -355,12 +374,22 @@ async def _async_resolve_vehicle_api(
         """Report whether the vehicle is currently reachable over Bluetooth."""
         device = async_ble_device_from_address(hass, address, connectable=True)
         if device is None:
+            LOGGER.debug(
+                "Vehicle %s is not reachable over Bluetooth, using cloud: %s",
+                vin,
+                async_address_reachability_diagnostics(
+                    hass, address, BluetoothReachabilityIntent.CONNECTION
+                ),
+            )
             return False
         # The library never refreshes the BLE handle, so set it here while it is known fresh.
         bluetooth_vehicle.set_device(device)
         return True
 
-    return VehicleRouter(bluetooth_vehicle, cloud_vehicle, health=_in_range)
+    return (
+        VehicleRouter(bluetooth_vehicle, cloud_vehicle, health=_in_range),
+        bluetooth_vehicle,
+    )
 
 
 def _find_energy_subentry_id(entry: TeslemetryConfigEntry, site_id: int) -> str | None:
@@ -465,6 +494,8 @@ async def _async_resolve_local_control(
             site_id,
             exc_info=True,
         )
+        # Whether the gateway is found is unknown
+        ir.async_keep_issue(hass, DOMAIN, _gateway_issue_id(site_id))
         return True, subentry_id, cloud_energy_site
     return True, subentry_id, api
 
@@ -572,6 +603,7 @@ async def _async_rediscover_gateway(
         hass,
         DOMAIN,
         issue_id,
+        config_entry_id=entry.entry_id,
         is_fixable=True,
         severity=ir.IssueSeverity.WARNING,
         translation_key=ISSUE_GATEWAY_NOT_FOUND,
@@ -581,7 +613,48 @@ async def _async_rediscover_gateway(
     return stale_client
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -> bool:
+async def _async_setup_charge_on_solar(
+    hass: HomeAssistant,
+    entry: TeslemetryConfigEntry,
+    scopes: list[Scope],
+    vehicles: list[TeslemetryVehicleData],
+) -> TeslemetryChargeOnSolarStore | None:
+    """Load the charge-on-solar store, or remove its entities when unavailable."""
+    if (
+        async_is_preview_feature_enabled(hass, DOMAIN, LABS_CHARGE_ON_SOLAR_FEATURE)
+        and Scope.VEHICLE_CMDS in scopes
+    ):
+        store = TeslemetryChargeOnSolarStore(hass, entry.entry_id)
+        await store.async_load(vehicles)
+        return store
+
+    entity_registry = er.async_get(hass)
+    for entity_entry in er.async_entries_for_config_entry(
+        entity_registry, entry.entry_id
+    ):
+        if (entity_entry.domain, entity_entry.translation_key) in (
+            (Platform.SWITCH, CHARGE_ON_SOLAR_SWITCH_KEY),
+            (Platform.NUMBER, CHARGE_ON_SOLAR_LOWER_LIMIT_KEY),
+        ):
+            entity_registry.async_remove(entity_entry.entity_id)
+    return None
+
+
+@callback
+def _async_subscribe_charge_on_solar_labs(
+    hass: HomeAssistant, entry: TeslemetryConfigEntry
+) -> CALLBACK_TYPE:
+    """Reload the entry so the charge-on-solar entities follow the Labs toggle."""
+
+    async def _async_handle_labs_update(_event_data: EventLabsUpdatedData) -> None:
+        hass.config_entries.async_schedule_reload(entry.entry_id)
+
+    return async_subscribe_preview_feature(
+        hass, DOMAIN, LABS_CHARGE_ON_SOLAR_FEATURE, _async_handle_labs_update
+    )
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -> None:
     """Set up Teslemetry config."""
 
     if "token" not in entry.data:
@@ -668,6 +741,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
     # Track known devices for dynamic discovery (based on metadata access state)
     known_vins, known_site_ids = _get_subscribed_ids_from_metadata(metadata)
 
+    # Energy sites which are gone or no longer set up leave issues to be deleted
+    gateway_refresh = ir.async_begin_issues_refresh(
+        hass,
+        DOMAIN,
+        issue_id_pattern=f"{ISSUE_GATEWAY_NOT_FOUND}_",
+        config_entry_id=entry.entry_id,
+    )
+    entry.async_on_unload(gateway_refresh.async_cancel)
+
     for product in products:
         if (
             "vin" in product
@@ -709,12 +791,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             )
             stream_vehicle = stream.get_vehicle(vin)
 
-            vehicle_api = await _async_resolve_vehicle_api(
+            # Pairing always stores an address, so the subentry is the Bluetooth switch.
+            ble_address: str | None = next(
+                (
+                    subentry.data[CONF_ADDRESS]
+                    for subentry in entry.subentries.values()
+                    if subentry.subentry_type == SUBENTRY_TYPE_VEHICLE
+                    and subentry.data.get(CONF_VIN) == vin
+                ),
+                None,
+            )
+            vehicle_api, ble_api = await _async_resolve_vehicle_api(
                 hass,
-                entry,
                 vin,
                 vehicle,
+                ble_address,
             )
+
+            if isinstance(vehicle_api, VehicleRouter):
+                ble_broadcast_glue = BleBroadcastStreamGlue(
+                    vehicle_api.primary, cast(StreamSink, stream_vehicle)
+                )
+                entry.async_on_unload(ble_broadcast_glue.stop)
 
             vehicles.append(
                 TeslemetryVehicleData(
@@ -727,6 +825,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                     vin=vin,
                     firmware=firmware or "Unknown",
                     device=device,
+                    ble_address=ble_address,
+                    ble_api=ble_api,
                 )
             )
 
@@ -774,6 +874,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 live_coordinator,
                 info_coordinator,
                 history_coordinator,
+                wall_connector_totals_coordinator,
             ) = await _async_setup_energy_site(
                 hass,
                 entry,
@@ -782,6 +883,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 product,
                 site_id,
                 powerwall,
+                wall_connector,
             )
 
             (
@@ -792,18 +894,35 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 hass, entry, bool(battery), site_id, energy_site
             )
 
+            if isinstance(energy_site_api, EnergySiteRouter):
+                info_coordinator.enable_local_polling(energy_site_api.primary)
+                if live_coordinator is not None:
+                    live_coordinator.enable_local_polling(energy_site_api.primary)
+
+            local_status_coordinator = (
+                TeslemetryLocalStatusCoordinator(
+                    hass, entry, energy_site_api.primary.powerwall, site_id
+                )
+                if isinstance(energy_site_api, EnergySiteRouter)
+                else None
+            )
+
             energysites.append(
                 TeslemetryEnergyData(
                     api=energy_site_api,
                     live_coordinator=live_coordinator,
                     info_coordinator=info_coordinator,
                     history_coordinator=history_coordinator,
+                    wall_connector_totals_coordinator=wall_connector_totals_coordinator,
                     id=site_id,
                     device=device,
                     can_local_control=can_local_control,
                     subentry_id=subentry_id,
+                    local_status_coordinator=local_status_coordinator,
                 )
             )
+
+    gateway_refresh.async_finish()
 
     # Run all first refreshes
     await asyncio.gather(
@@ -836,12 +955,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
 
     _prune_energy_subentries(hass, entry, scopes, products)
 
+    charge_on_solar_store = await _async_setup_charge_on_solar(
+        hass, entry, scopes, vehicles
+    )
+
     entry.runtime_data = TeslemetryData(
         vehicles=vehicles,
         energysites=energysites,
         scopes=scopes,
         stream=stream,
         metadata_coordinator=metadata_coordinator,
+        charge_on_solar_store=charge_on_solar_store,
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -863,6 +987,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
         vehicle_metadata,
     )
 
+    entry.async_on_unload(_async_subscribe_charge_on_solar_labs(hass, entry))
+
     if stream:
         entry.async_on_unload(stream.close)
         # The stream is the only freshness signal for the energy coordinators, so
@@ -883,8 +1009,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 entry.async_start_reauth(hass)
 
         entry.async_create_background_task(hass, listen(), "Teslemetry Stream")
-
-    return True
 
 
 def _setup_subentry_change_reload(
@@ -932,6 +1056,10 @@ def create_handle_energy_stream_connection(
             energysite.info_coordinator.async_set_update_error(error)
             if energysite.history_coordinator is not None:
                 energysite.history_coordinator.async_set_update_error(error)
+            if energysite.wall_connector_totals_coordinator is not None:
+                energysite.wall_connector_totals_coordinator.async_set_update_error(
+                    error
+                )
 
     return handle_connection
 
@@ -944,10 +1072,12 @@ async def _async_setup_energy_site(
     product: dict[str, Any],
     site_id: int,
     powerwall: Any,
+    wall_connector: bool,
 ) -> tuple[
     TeslemetryEnergySiteLiveCoordinator | None,
     TeslemetryEnergySiteInfoCoordinator,
     TeslemetryEnergyHistoryCoordinator | None,
+    TeslemetryWallConnectorTotalsCoordinator | None,
 ]:
     """Cold-read live status, build the energy coordinators, and register listeners."""
     # The stream has no ready boundary, so keep a deterministic REST cold read
@@ -1019,50 +1149,76 @@ async def _async_setup_energy_site(
             )
         )
 
-    return live_coordinator, info_coordinator, history_coordinator
+    wall_connector_totals_coordinator = (
+        TeslemetryWallConnectorTotalsCoordinator(hass, entry, site_id)
+        if wall_connector
+        else None
+    )
+    if wall_connector_totals_coordinator is not None:
+        entry.async_on_unload(
+            stream_energysite.listen_WallConnectorTotals(
+                wall_connector_totals_coordinator.handle_stream_update
+            )
+        )
+
+    return (
+        live_coordinator,
+        info_coordinator,
+        history_coordinator,
+        wall_connector_totals_coordinator,
+    )
 
 
 async def _async_refresh_energy_site(energysite: TeslemetryEnergyData) -> None:
     """Cold read the site info, then resolve the site timezone it carries."""
     await energysite.info_coordinator.async_config_entry_first_refresh()
+    time_zone = energysite.info_coordinator.data.get("installation_time_zone")
+    if energysite.local_status_coordinator is not None:
+        # A local gateway failure must not block the cloud entities.
+        await energysite.local_status_coordinator.async_refresh()
     if energysite.history_coordinator is not None:
-        await energysite.history_coordinator.async_set_time_zone(
-            energysite.info_coordinator.data.get("installation_time_zone")
+        await energysite.history_coordinator.async_set_time_zone(time_zone)
+    if energysite.wall_connector_totals_coordinator is not None:
+        await energysite.wall_connector_totals_coordinator.async_set_time_zone(
+            time_zone
         )
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -> None:
     """Unload Teslemetry Config."""
-    unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unloaded:
-        # Release any on-demand Bluetooth link only after platforms unloaded, or the still-loaded entry's backends must keep working.
-        for vehicle in entry.runtime_data.vehicles:
-            if isinstance(vehicle.api, VehicleRouter):
-                try:
-                    async with asyncio.timeout(BLE_DISCONNECT_TIMEOUT):
-                        try:
-                            await vehicle.api.primary.disconnect()
-                        except (BleakError, TeslaFleetError, TimeoutError) as err:
-                            # Swallowed so one stuck link cannot block the
-                            # unload, but warn: a leaked BLE connection can
-                            # keep the vehicle awake.
-                            LOGGER.warning(
-                                "Error disconnecting Bluetooth for %s: %s",
-                                vehicle.vin,
-                                err,
-                            )
-                except TimeoutError:
-                    LOGGER.warning(
-                        "Bluetooth disconnect for %s timed out after %ss",
-                        vehicle.vin,
-                        BLE_DISCONNECT_TIMEOUT,
-                    )
-    return unloaded
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    # Release any on-demand Bluetooth link only after platforms unloaded, or the still-loaded entry's backends must keep working.
+    for vehicle in entry.runtime_data.vehicles:
+        if isinstance(vehicle.api, VehicleRouter):
+            try:
+                async with asyncio.timeout(BLE_DISCONNECT_TIMEOUT):
+                    try:
+                        await vehicle.api.primary.disconnect()
+                    except (BleakError, TeslaFleetError, TimeoutError) as err:
+                        # Swallowed so one stuck link cannot block the
+                        # unload, but warn: a leaked BLE connection can
+                        # keep the vehicle awake.
+                        LOGGER.warning(
+                            "Error disconnecting Bluetooth for %s: %s",
+                            vehicle.vin,
+                            err,
+                        )
+            except TimeoutError:
+                LOGGER.warning(
+                    "Bluetooth disconnect for %s timed out after %ss",
+                    vehicle.vin,
+                    BLE_DISCONNECT_TIMEOUT,
+                )
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -> None:
+    """Remove the stored charge-on-solar settings."""
+    await TeslemetryChargeOnSolarStore(hass, entry.entry_id).async_remove()
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: TeslemetryConfigEntry
-) -> bool:
+) -> None:
     """Migrate config entry."""
 
     if config_entry.version == 1:
@@ -1083,12 +1239,11 @@ async def async_migrate_entry(
         # Add auth_implementation for OAuth2 flow compatibility
         data["auth_implementation"] = DOMAIN
 
-        return hass.config_entries.async_update_entry(
+        hass.config_entries.async_update_entry(
             config_entry,
             data=data,
             version=2,
         )
-    return True
 
 
 def create_handle_vehicle_stream(
@@ -1125,13 +1280,13 @@ def async_setup_energy_device(
         if (part_name := component.get("part_name")) and part_name != "Unknown":
             models.add(part_name)
     if models:
-        energysite.device["model"] = ", ".join(sorted(models))
+        energysite.device.model = ", ".join(sorted(models))
 
     if version := data.get("version"):
-        energysite.device["sw_version"] = version
+        energysite.device.sw_version = version
 
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id, **energysite.device
+    device_registry.async_get_or_create_from_info(
+        config_entry_id=entry.entry_id, device_info=energysite.device
     )
 
     entry.async_on_unload(

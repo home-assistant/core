@@ -1,6 +1,10 @@
 {
   "domain": "samsung_infrared",
   "name": "Samsung Infrared",
+  "categories": [
+    "media_entertainment.tv_streaming",
+    "climate.heat_pumps_air_conditioning"
+  ],
   "codeowners": ["@lmaertin"],
   "config_flow": true,
   "dependencies": ["infrared"],

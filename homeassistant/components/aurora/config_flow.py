@@ -8,13 +8,14 @@ from auroranoaa import AuroraForecast
 import probatio
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
 from homeassistant.core import callback
-from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowFormStep,
     SchemaOptionsFlowHandler,
 )
+from homeassistant.helpers.selector import LocationSelector, LocationSelectorConfig
 
 from .const import CONF_THRESHOLD, DEFAULT_THRESHOLD, DOMAIN
 
@@ -54,14 +55,15 @@ class AuroraConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            longitude = user_input[CONF_LONGITUDE]
-            latitude = user_input[CONF_LATITUDE]
+            location = user_input[CONF_LOCATION]
 
             session = aiohttp_client.async_get_clientsession(self.hass)
             api = AuroraForecast(session=session)
 
             try:
-                await api.get_forecast_data(longitude, latitude)
+                await api.get_forecast_data(
+                    location[CONF_LONGITUDE], location[CONF_LATITUDE]
+                )
             except ClientError:
                 errors["base"] = "cannot_connect"
             except Exception:
@@ -69,25 +71,26 @@ class AuroraConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(
-                    f"{user_input[CONF_LONGITUDE]}_{user_input[CONF_LATITUDE]}"
+                    f"{location[CONF_LONGITUDE]}_{location[CONF_LATITUDE]}"
                 )
                 self._abort_if_unique_id_configured()
-                return self.async_create_entry(
-                    title="Aurora visibility", data=user_input
-                )
+                return self.async_create_entry(title="Aurora visibility", data=location)
 
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
                 probatio.Schema(
                     {
-                        probatio.Required(CONF_LONGITUDE): cv.longitude,
-                        probatio.Required(CONF_LATITUDE): cv.latitude,
+                        probatio.Required(CONF_LOCATION): LocationSelector(
+                            LocationSelectorConfig(radius=False)
+                        ),
                     }
                 ),
                 {
-                    CONF_LONGITUDE: self.hass.config.longitude,
-                    CONF_LATITUDE: self.hass.config.latitude,
+                    CONF_LOCATION: {
+                        CONF_LONGITUDE: self.hass.config.longitude,
+                        CONF_LATITUDE: self.hass.config.latitude,
+                    }
                 },
             ),
             errors=errors,

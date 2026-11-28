@@ -7,6 +7,8 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.marketplace.base import MarketplaceManager
 from homeassistant.components.marketplace.const import DOMAIN
@@ -30,9 +32,6 @@ from homeassistant.util import dt as dt_util
 
 from . import get_marketplace
 from .const import REPOSITORY_INTEGRATION_ID, REPOSITORY_PLUGIN_ID
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.typing import WebSocketGenerator
 
 CUSTOM_REPOSITORY = "hacs-test-org/integration-basic-custom"
 # An update of code this run already runs, it waits for a restart

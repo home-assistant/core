@@ -1,6 +1,7 @@
 {
   "domain": "fumis",
   "name": "Fumis",
+  "categories": ["climate.thermostats_heating"],
   "codeowners": ["@frenck"],
   "config_flow": true,
   "dhcp": [
@@ -13,5 +14,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["fumis"],
   "quality_scale": "platinum",
-  "requirements": ["fumis==0.4.1"]
+  "requirements": ["fumis==0.4.2"]
 }

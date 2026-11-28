@@ -16,8 +16,7 @@ from homeassistant.components.vacuum import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import TPLinkConfigEntry
-from .coordinator import TPLinkDataUpdateCoordinator
+from .coordinator import TPLinkConfigEntry, TPLinkDataUpdateCoordinator
 from .entity import (
     CoordinatedTPLinkModuleEntity,
     TPLinkModuleEntityDescription,

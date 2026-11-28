@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import async_load_json_object_fixture
 
 from homeassistant.components.nut.const import DOMAIN, INTEGRATION_SUPPORTED_COMMANDS
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -17,8 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .util import async_init_integration
-
-from tests.common import async_load_json_object_fixture
 
 
 @pytest.mark.parametrize(

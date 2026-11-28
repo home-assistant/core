@@ -1,11 +1,11 @@
 """The tests for the persistent notification component."""
 
+from pytest_homeassistant.typing import WebSocketGenerator
+
 from homeassistant.components import persistent_notification as pn
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.typing import WebSocketGenerator
 
 
 async def test_create(hass: HomeAssistant) -> None:

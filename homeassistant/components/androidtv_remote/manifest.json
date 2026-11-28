@@ -1,6 +1,7 @@
 {
   "domain": "androidtv_remote",
   "name": "Android TV Remote",
+  "categories": ["media_entertainment.tv_streaming"],
   "codeowners": ["@tronikos", "@Drafteed"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/androidtv_remote",

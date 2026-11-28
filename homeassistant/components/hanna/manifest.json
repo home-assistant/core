@@ -1,6 +1,7 @@
 {
   "domain": "hanna",
   "name": "Hanna",
+  "categories": ["water.pools_spas"],
   "codeowners": ["@bestycame"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/hanna",

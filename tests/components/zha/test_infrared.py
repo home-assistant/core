@@ -30,6 +30,7 @@ from homeassistant.components.zha.helpers import (
     get_zha_gateway,
     get_zha_gateway_proxy,
 )
+from homeassistant.components.zha.infrared import ZHAInfraredReceiver
 from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -273,3 +274,34 @@ async def test_infrared_receiver_removed(
     zha_entity.receive(InfraredSignal(timings=[9000, -4500]))
     await hass.async_block_till_done()
     assert received_signals == []
+
+
+async def test_infrared_receiver_entity_id_change(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
+) -> None:
+    """Test a renamed receiver keeps listening to the zha entity in place."""
+    zha_device_proxy = await _setup_device(hass, setup_zha, zigpy_device_mock)
+    entity_id, zha_entity = _get_entity(hass, zha_device_proxy, FakeReceiver)
+
+    with patch.object(
+        ZHAInfraredReceiver,
+        "async_added_to_hass",
+        autospec=True,
+        side_effect=ZHAInfraredReceiver.async_added_to_hass,
+    ) as mock_added_to_hass:
+        entity_registry.async_update_entity(entity_id, new_entity_id="infrared.renamed")
+        await hass.async_block_till_done()
+
+    # The entity_id is changed in place, the entity is not added again
+    mock_added_to_hass.assert_not_called()
+    assert hass.states.get(entity_id) is None
+    assert hass.states.get("infrared.renamed")
+
+    received_signals: list[InfraredReceivedSignal] = []
+    infrared.async_subscribe_receiver(hass, "infrared.renamed", received_signals.append)
+    zha_entity.receive(InfraredSignal(timings=[9000, -4500]))
+    await hass.async_block_till_done()
+    assert received_signals == [InfraredReceivedSignal(timings=[9000, -4500])]

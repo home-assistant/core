@@ -30,16 +30,7 @@
     'media_content_type': 'VIDEO',
   })
 # ---
-# name: test_play_media_service[https://soundcloud.com/bruttoband/brutto-11-AUDIO-audio_media_extractor_config]
-  ReadOnlyDict({
-    'entity_id': 'media_player.bedroom',
-    'extra': dict({
-    }),
-    'media_content_id': 'https://cf-media.sndcdn.com/50remGX1OqRY.128.mp3?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiKjovL2NmLW1lZGlhLnNuZGNkbi5jb20vNTByZW1HWDFPcVJZLjEyOC5tcDMqIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNjk0Nzk5MTc5fX19XX0_&Signature=JtF8BXxTCElhjCrhnSAq3W6z960VmdVXx7BPhQvI0MCxr~J43JFGO8CVw9-VBM2oEf14mqWo63-C0FO29DvUuBZnmLD3dhDfryVfWJsrix7voimoRDaNFE~3zntDbg7O2S8uWYyZK8OZC9anzwokvjH7jbmviWqK4~2IM9dwgejGgzrQU1aadV2Yro7NJZnF7SD~7tVjkM-hBg~X5zDYVxmGrdzN3tFoLwRmUch6RNDL~1DcWBk0AveBKQFAdBrFBjDDUeIyDz9Idhw2aG9~fjfckcf95KwqrVQxz1N5XEzfNDDo8xkUgDt0eb9dtXdwxLJ0swC6e5VLS8bsH91GMg__&Key-Pair-Id=APKAI6TU7MMXM5DG6EPQ',
-    'media_content_type': 'AUDIO',
-  })
-# ---
-# name: test_play_media_service[https://soundcloud.com/bruttoband/brutto-11-AUDIO-empty_media_extractor_config]
+# name: test_play_media_service[https://soundcloud.com/bruttoband/brutto-11-AUDIO]
   ReadOnlyDict({
     'entity_id': 'media_player.bedroom',
     'extra': dict({
@@ -48,16 +39,7 @@
     'media_content_type': 'AUDIO',
   })
 # ---
-# name: test_play_media_service[https://test.com/abc-AUDIO-audio_media_extractor_config]
-  ReadOnlyDict({
-    'entity_id': 'media_player.bedroom',
-    'extra': dict({
-    }),
-    'media_content_id': 'https://cf-media.sndcdn.com/50remGX1OqRY.128.mp3?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiKjovL2NmLW1lZGlhLnNuZGNkbi5jb20vNTByZW1HWDFPcVJZLjEyOC5tcDMqIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNjk0Nzk5MTc5fX19XX0_&Signature=JtF8BXxTCElhjCrhnSAq3W6z960VmdVXx7BPhQvI0MCxr~J43JFGO8CVw9-VBM2oEf14mqWo63-C0FO29DvUuBZnmLD3dhDfryVfWJsrix7voimoRDaNFE~3zntDbg7O2S8uWYyZK8OZC9anzwokvjH7jbmviWqK4~2IM9dwgejGgzrQU1aadV2Yro7NJZnF7SD~7tVjkM-hBg~X5zDYVxmGrdzN3tFoLwRmUch6RNDL~1DcWBk0AveBKQFAdBrFBjDDUeIyDz9Idhw2aG9~fjfckcf95KwqrVQxz1N5XEzfNDDo8xkUgDt0eb9dtXdwxLJ0swC6e5VLS8bsH91GMg__&Key-Pair-Id=APKAI6TU7MMXM5DG6EPQ',
-    'media_content_type': 'AUDIO',
-  })
-# ---
-# name: test_play_media_service[https://test.com/abc-AUDIO-empty_media_extractor_config]
+# name: test_play_media_service[https://test.com/abc-AUDIO]
   ReadOnlyDict({
     'entity_id': 'media_player.bedroom',
     'extra': dict({
@@ -66,16 +48,7 @@
     'media_content_type': 'AUDIO',
   })
 # ---
-# name: test_play_media_service[https://www.youtube.com/watch?v=dQw4w9WgXcQ-VIDEO-audio_media_extractor_config]
-  ReadOnlyDict({
-    'entity_id': 'media_player.bedroom',
-    'extra': dict({
-    }),
-    'media_content_id': 'https://rr3---sn-5hne6nzy.googlevideo.com/videoplayback?expire=1694805268&ei=tFgEZaHmFN2Px_AP2tSt2AQ&ip=45.93.75.130&id=o-AEj4DudORoGviGzjggo2mjXrQpjRh8L2BrOU-wekY859&itag=22&source=youtube&requiressl=yes&mh=7c&mm=31%2C29&mn=sn-5hne6nzy%2Csn-5hnekn7k&ms=au%2Crdu&mv=m&mvi=3&pl=22&initcwndbps=1957500&spc=UWF9f7_CV3gS4VV2VFq7hgxtUAyOlog&vprv=1&svpuc=1&mime=video%2Fmp4&cnr=14&ratebypass=yes&dur=212.091&lmt=1694045086815467&mt=1694783146&fvip=2&fexp=24007246&beids=24350018&c=ANDROID&txp=4532434&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Ccnr%2Cratebypass%2Cdur%2Clmt&sig=AOq0QJ8wRQIhAO2IJciEtkI3PvYyVC_zkyo61I70wYJQXuGOMueeacrKAiA-UAdaJSlqqkfaa6QtqVnC_BJJZn7BXs85gh_fdbGoSg%3D%3D&lsparams=mh%2Cmm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpl%2Cinitcwndbps&lsig=AG3C_xAwRQIgRCGi20K-ZvdukYkBZOidcHpGPUpIBOkw-jZGEncsKQECIQC5h-rCfQhDTQFqocOTtQXcNZVA54oIqjweF0mN5GpzFA%3D%3D',
-    'media_content_type': 'VIDEO',
-  })
-# ---
-# name: test_play_media_service[https://www.youtube.com/watch?v=dQw4w9WgXcQ-VIDEO-empty_media_extractor_config]
+# name: test_play_media_service[https://www.youtube.com/watch?v=dQw4w9WgXcQ-VIDEO]
   ReadOnlyDict({
     'entity_id': 'media_player.bedroom',
     'extra': dict({

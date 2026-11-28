@@ -134,6 +134,9 @@ SSDP = {
         {
             "st": "urn:schemas-frontier-silicon-com:undok:fsapi:1",
         },
+        {
+            "st": "urn:schemas-frontier-silicon-com:invalid:fsapi:1",
+        },
     ],
     "harman_luxury": [
         {

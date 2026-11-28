@@ -6,6 +6,11 @@ from unittest.mock import AsyncMock, MagicMock
 from freezegun.api import FrozenDateTimeFactory
 from py_rejseplan.dataclasses.departure import Departure
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.rejseplanen.const import DOMAIN
@@ -14,8 +19,6 @@ from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 def _board(departures: list[Departure]) -> MagicMock:

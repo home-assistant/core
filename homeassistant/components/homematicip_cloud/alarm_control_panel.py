@@ -3,6 +3,7 @@
 import logging
 from typing import TYPE_CHECKING, override
 
+from homematicip.async_home import AsyncHome
 from homematicip.functionalHomes import SecurityAndAlarmHome
 
 from homeassistant.components.alarm_control_panel import (
@@ -17,7 +18,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
-from .hap import AsyncHome, HomematicIPConfigEntry, HomematicipHAP
+from .hap import HomematicIPConfigEntry, HomematicipHAP
 
 _LOGGER = logging.getLogger(__name__)
 

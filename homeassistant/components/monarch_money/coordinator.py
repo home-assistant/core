@@ -2,7 +2,7 @@
 
 import asyncio
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Never, override
 
 from aiohttp import ClientError, ClientResponseError
@@ -11,6 +11,7 @@ from monarchmoney import LoginFailedException
 from typedmonarchmoney import TypedMonarchMoney
 from typedmonarchmoney.models import (
     MonarchAccount,
+    MonarchBudget,
     MonarchCashflowSummary,
     MonarchSubscription,
 )
@@ -30,6 +31,9 @@ class MonarchData:
 
     account_data: dict[str, MonarchAccount]
     cashflow_summary: MonarchCashflowSummary
+    budgets: dict[str, MonarchBudget]
+    budget_month: str
+    budget_month_start: datetime
 
 
 type MonarchMoneyConfigEntry = ConfigEntry[MonarchMoneyDataUpdateCoordinator]
@@ -81,21 +85,36 @@ class MonarchMoneyDataUpdateCoordinator(DataUpdateCoordinator[MonarchData]):
 
     @override
     async def _async_update_data(self) -> MonarchData:
-        """Fetch data for all accounts."""
+        """Fetch account, cashflow, and current budget data."""
 
         now = dt_util.now()
+        budget_month = f"{now.year:04d}-{now.month:02d}"
+        budget_start_date = f"{budget_month}-01"
+        next_month = now.replace(day=28) + timedelta(days=4)
+        budget_end_date = (next_month - timedelta(days=next_month.day)).strftime(
+            "%Y-%m-%d"
+        )
 
         try:
-            account_data, cashflow_summary = await asyncio.gather(
+            account_data, cashflow_summary, budgets = await asyncio.gather(
                 self.client.get_accounts_as_dict_with_id_key(),
                 self.client.get_cashflow_summary(
                     start_date=f"{now.year}-01-01", end_date=f"{now.year}-12-31"
+                ),
+                self.client.get_budgets_as_dict_with_id_key(
+                    start_date=budget_start_date, end_date=budget_end_date
                 ),
             )
         except (LoginFailedException, TransportError, ClientError, TimeoutError) as err:
             _raise_update_error(err)
 
-        return MonarchData(account_data=account_data, cashflow_summary=cashflow_summary)
+        return MonarchData(
+            account_data=account_data,
+            cashflow_summary=cashflow_summary,
+            budgets=budgets,
+            budget_month=budget_start_date,
+            budget_month_start=dt_util.start_of_local_day(now.replace(day=1)),
+        )
 
     @property
     def cashflow_summary(self) -> MonarchCashflowSummary:

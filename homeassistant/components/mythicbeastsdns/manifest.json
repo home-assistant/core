@@ -1,6 +1,7 @@
 {
   "domain": "mythicbeastsdns",
   "name": "Mythic Beasts DNS",
+  "categories": ["computers_network.routers_network"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/mythicbeastsdns",
   "iot_class": "cloud_push",

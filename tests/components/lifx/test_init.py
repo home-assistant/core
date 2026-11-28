@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from lifx import DiscoveredDevice, LifxError, LifxTimeoutError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components import lifx
 from homeassistant.components.lifx import DOMAIN
@@ -19,8 +20,6 @@ from homeassistant.util import dt as dt_util
 
 from . import IP_ADDRESS, SERIAL, _patch_config_flow_try_connect, async_setup_lifx_entry
 from .helpers import create_mock_light
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_configuring_lifx_causes_discovery(hass: HomeAssistant) -> None:

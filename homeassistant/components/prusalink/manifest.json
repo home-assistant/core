@@ -1,6 +1,7 @@
 {
   "domain": "prusalink",
   "name": "PrusaLink",
+  "categories": ["computers_network.printers"],
   "codeowners": [],
   "config_flow": true,
   "dhcp": [

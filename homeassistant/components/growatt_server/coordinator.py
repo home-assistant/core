@@ -1,6 +1,6 @@
 """Coordinator module for managing Growatt data fetching."""
 
-import datetime
+import datetime as dt
 import json
 import logging
 import math
@@ -38,17 +38,17 @@ if TYPE_CHECKING:
 
 type GrowattConfigEntry = ConfigEntry[GrowattRuntimeData]
 
-SCAN_INTERVAL = datetime.timedelta(minutes=5)
-_MAX_POWER_READING_AGE = datetime.timedelta(minutes=10)
+SCAN_INTERVAL = dt.timedelta(minutes=5)
+_MAX_POWER_READING_AGE = dt.timedelta(minutes=10)
 
 _LOGGER = logging.getLogger(__name__)
 
 
 def _latest_power_value(
-    power_overview: dict[str, Any], now: datetime.datetime
+    power_overview: dict[str, Any], now: dt.datetime
 ) -> float | None:
     """Return the newest recent power value from a plant power overview."""
-    latest_time: datetime.datetime | None = None
+    latest_time: dt.datetime | None = None
     latest_power: float | None = None
 
     for reading in power_overview.get("powers", []):
@@ -336,7 +336,7 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             time_str = sph_energy.get("time")
             if time_str:
                 try:
-                    parsed = datetime.datetime.strptime(time_str, "%Y-%m-%d %H:%M:%S")
+                    parsed = dt.datetime.strptime(time_str, "%Y-%m-%d %H:%M:%S")
                     combined["lastdataupdate"] = parsed.replace(
                         tzinfo=dt_util.get_default_time_zone()
                     )
@@ -365,7 +365,7 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 # Create datetime from the latest entry
                 date_now = dt_util.now().date()
                 last_updated_time = dt_util.parse_time(str(sorted_keys[-1]))
-                mix_detail["lastdataupdate"] = datetime.datetime.combine(
+                mix_detail["lastdataupdate"] = dt.datetime.combine(
                     date_now,
                     last_updated_time,  # type: ignore[arg-type]
                     dt_util.get_default_time_zone(),
@@ -418,7 +418,7 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     def get_data(
         self, entity_description: GrowattSensorEntityDescription
-    ) -> str | int | float | datetime.datetime | datetime.date | None:
+    ) -> str | int | float | dt.datetime | dt.date | None:
         """Get the data."""
         variable = entity_description.api_key
         api_value = self.data.get(variable)

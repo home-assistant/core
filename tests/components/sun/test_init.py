@@ -7,6 +7,7 @@ from astral import LocationInfo
 import astral.sun
 from freezegun import freeze_time
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components import sun
 from homeassistant.components.sun import entity
@@ -15,8 +16,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_setting_rising(hass: HomeAssistant) -> None:
@@ -133,7 +132,9 @@ async def test_state_change(
     assert hass.states.get(entity.ENTITY_ID).state == sun.STATE_ABOVE_HORIZON
 
     # Update core configuration
-    with patch("homeassistant.helpers.condition.dt_util.utcnow", return_value=now):
+    with patch(
+        "homeassistant.helpers.condition.conditions.dt_util.utcnow", return_value=now
+    ):
         await hass.config.async_update(longitude=hass.config.longitude + 90)
         await hass.async_block_till_done()
 
@@ -166,7 +167,9 @@ async def test_norway_in_june(hass: HomeAssistant) -> None:
 
     june = datetime(2016, 6, 1, tzinfo=dt_util.UTC)
 
-    with patch("homeassistant.helpers.condition.dt_util.utcnow", return_value=june):
+    with patch(
+        "homeassistant.helpers.condition.conditions.dt_util.utcnow", return_value=june
+    ):
         assert await async_setup_component(hass, sun.DOMAIN, {sun.DOMAIN: {}})
 
     state = hass.states.get(entity.ENTITY_ID)

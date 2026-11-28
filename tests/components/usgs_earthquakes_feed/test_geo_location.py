@@ -1,10 +1,11 @@
 """The tests for the USGS Earthquake Hazards Program Feed platform."""
 
-import datetime
+import datetime as dt
 from unittest.mock import ANY, MagicMock, call, patch
 
 from aio_geojson_usgs_earthquakes import UsgsEarthquakeHazardsProgramFeed
 from freezegun import freeze_time
+from pytest_homeassistant.common import assert_setup_component, async_fire_time_changed
 
 from homeassistant.components import geo_location
 from homeassistant.components.geo_location import ATTR_SOURCE
@@ -36,8 +37,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import assert_setup_component, async_fire_time_changed
 
 CONFIG = {
     geo_location.DOMAIN: [
@@ -103,8 +102,8 @@ async def test_setup(hass: HomeAssistant) -> None:
         (-31.0, 150.0),
         place="Location 1",
         attribution="Attribution 1",
-        time=datetime.datetime(2018, 9, 22, 8, 0, tzinfo=datetime.UTC),
-        updated=datetime.datetime(2018, 9, 22, 9, 0, tzinfo=datetime.UTC),
+        time=dt.datetime(2018, 9, 22, 8, 0, tzinfo=dt.UTC),
+        updated=dt.datetime(2018, 9, 22, 9, 0, tzinfo=dt.UTC),
         magnitude=5.7,
         status="Status 1",
         entry_type="Type 1",
@@ -145,8 +144,8 @@ async def test_setup(hass: HomeAssistant) -> None:
                 ATTR_FRIENDLY_NAME: "Title 1",
                 ATTR_PLACE: "Location 1",
                 ATTR_ATTRIBUTION: "Attribution 1",
-                ATTR_TIME: datetime.datetime(2018, 9, 22, 8, 0, tzinfo=datetime.UTC),
-                ATTR_UPDATED: datetime.datetime(2018, 9, 22, 9, 0, tzinfo=datetime.UTC),
+                ATTR_TIME: dt.datetime(2018, 9, 22, 8, 0, tzinfo=dt.UTC),
+                ATTR_UPDATED: dt.datetime(2018, 9, 22, 9, 0, tzinfo=dt.UTC),
                 ATTR_STATUS: "Status 1",
                 ATTR_TYPE: "Type 1",
                 ATTR_ALERT: "Alert 1",

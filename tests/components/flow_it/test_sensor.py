@@ -1,15 +1,19 @@
-"""Test Flow-it sensor platform."""
+"""Test AriaQ sensor platform."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.flow_it.coordinator import FlowItCoordinator
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 INDOOR_AIR_QUALITY_ENTITY_ID = "sensor.001122334455_indoor_air_quality"
 INDOOR_AIR_TEMPERATURE_ENTITY_ID = "sensor.001122334455_indoor_air_temperature"
@@ -17,7 +21,7 @@ INDOOR_AIR_TEMPERATURE_ENTITY_ID = "sensor.001122334455_indoor_air_temperature"
 
 async def test_sensor_setup(
     hass: HomeAssistant,
-    mock_flow_it: AsyncMock,
+    mock_ariaq: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
@@ -32,16 +36,16 @@ async def test_sensor_setup(
 
 async def test_sensor_none_values(
     hass: HomeAssistant,
-    mock_flow_it: AsyncMock,
+    mock_ariaq: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test sensor state when values are None."""
-    mock_flow_it.return_value.state.data.mode.temperatureIn = None
-    mock_flow_it.return_value.state.data.mode.temperatureOut = None
-    mock_flow_it.return_value.state.data.mode.humidityIn = None
-    mock_flow_it.return_value.state.data.mode.humidityOut = None
-    mock_flow_it.return_value.state.data.mode.pressureIn = None
-    mock_flow_it.return_value.state.data.mode.pressureOut = None
+    mock_ariaq.return_value.state.data.mode.temperatureIn = None
+    mock_ariaq.return_value.state.data.mode.temperatureOut = None
+    mock_ariaq.return_value.state.data.mode.humidityIn = None
+    mock_ariaq.return_value.state.data.mode.humidityOut = None
+    mock_ariaq.return_value.state.data.mode.pressureIn = None
+    mock_ariaq.return_value.state.data.mode.pressureOut = None
 
     with patch("homeassistant.components.flow_it.PLATFORMS", [Platform.SENSOR]):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -62,8 +66,9 @@ async def test_sensor_none_values(
 
 async def test_sensor_update(
     hass: HomeAssistant,
-    mock_flow_it: AsyncMock,
+    mock_ariaq: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test sensor state updates via coordinator."""
     with patch("homeassistant.components.flow_it.PLATFORMS", [Platform.SENSOR]):
@@ -74,10 +79,10 @@ async def test_sensor_update(
     assert state
     assert state.state == "100"
 
-    mock_flow_it.return_value.state.data.mode.iaq = 250
-    coordinator: FlowItCoordinator = mock_config_entry.runtime_data.coordinator
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
+    mock_ariaq.return_value.state.data.mode.iaq = 250
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(INDOOR_AIR_QUALITY_ENTITY_ID)
     assert state

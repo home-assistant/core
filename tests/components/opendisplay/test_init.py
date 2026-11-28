@@ -11,6 +11,7 @@ from opendisplay import (
     OpenDisplayError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.opendisplay.const import CONF_ENCRYPTION_KEY, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -18,8 +19,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import ENCRYPTION_KEY
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_and_unload(

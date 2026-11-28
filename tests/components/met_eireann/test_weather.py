@@ -1,9 +1,11 @@
 """Test Met Éireann weather entity."""
 
-import datetime
+import datetime as dt
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.met_eireann.const import DOMAIN
@@ -15,9 +17,6 @@ from homeassistant.components.weather import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 
 async def setup_config_entry(hass: HomeAssistant) -> ConfigEntry:
@@ -76,12 +75,12 @@ async def test_forecast_service(
     mock_weather.get_forecast.return_value = [
         {
             "condition": "SleetSunThunder",
-            "datetime": datetime.datetime(2023, 8, 8, 12, 0, tzinfo=datetime.UTC),
+            "datetime": dt.datetime(2023, 8, 8, 12, 0, tzinfo=dt.UTC),
             "temperature": 10.0,
         },
         {
             "condition": "SleetSunThunder",
-            "datetime": datetime.datetime(2023, 8, 9, 12, 0, tzinfo=datetime.UTC),
+            "datetime": dt.datetime(2023, 8, 9, 12, 0, tzinfo=dt.UTC),
             "temperature": 20.0,
         },
     ]
@@ -130,12 +129,12 @@ async def test_forecast_subscription(
     mock_weather.get_forecast.return_value = [
         {
             "condition": "SleetSunThunder",
-            "datetime": datetime.datetime(2023, 8, 8, 12, 0, tzinfo=datetime.UTC),
+            "datetime": dt.datetime(2023, 8, 8, 12, 0, tzinfo=dt.UTC),
             "temperature": 10.0,
         },
         {
             "condition": "SleetSunThunder",
-            "datetime": datetime.datetime(2023, 8, 9, 12, 0, tzinfo=datetime.UTC),
+            "datetime": dt.datetime(2023, 8, 9, 12, 0, tzinfo=dt.UTC),
             "temperature": 20.0,
         },
     ]
@@ -166,17 +165,17 @@ async def test_forecast_subscription(
     mock_weather.get_forecast.return_value = [
         {
             "condition": "SleetSunThunder",
-            "datetime": datetime.datetime(2023, 8, 8, 12, 0, tzinfo=datetime.UTC),
+            "datetime": dt.datetime(2023, 8, 8, 12, 0, tzinfo=dt.UTC),
             "temperature": 15.0,
         },
         {
             "condition": "SleetSunThunder",
-            "datetime": datetime.datetime(2023, 8, 9, 12, 0, tzinfo=datetime.UTC),
+            "datetime": dt.datetime(2023, 8, 9, 12, 0, tzinfo=dt.UTC),
             "temperature": 25.0,
         },
     ]
 
-    freezer.tick(UPDATE_INTERVAL + datetime.timedelta(seconds=1))
+    freezer.tick(UPDATE_INTERVAL + dt.timedelta(seconds=1))
     await hass.async_block_till_done()
     msg = await client.receive_json()
 

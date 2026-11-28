@@ -4,6 +4,8 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, MockUser
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant import setup
 from homeassistant.components import device_tracker, zone
@@ -21,9 +23,6 @@ from homeassistant.const import (
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, MockUser
-from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture
@@ -610,8 +609,8 @@ async def test_import_config_entry(hass: HomeAssistant) -> None:
 
     state = hass.states.get("zone.from_config_entry")
     assert state is not None
-    assert state.attributes[zone.ATTR_LATITUDE] == 1
-    assert state.attributes[zone.ATTR_LONGITUDE] == 2
+    assert state.attributes[ATTR_LATITUDE] == 1
+    assert state.attributes[ATTR_LONGITUDE] == 2
     assert state.attributes[zone.ATTR_RADIUS] == 3
     assert state.attributes[zone.ATTR_PASSIVE] is False
     assert state.attributes[ATTR_ICON] == "mdi:from-config-entry"

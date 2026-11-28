@@ -1,6 +1,7 @@
 {
   "domain": "rainforest_raven",
   "name": "Rainforest RAVEn",
+  "categories": ["energy.meters_monitoring"],
   "codeowners": ["@cottsay"],
   "config_flow": true,
   "dependencies": ["usb"],

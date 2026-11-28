@@ -1,6 +1,7 @@
 {
   "domain": "microbees",
   "name": "microBees",
+  "categories": ["hubs_protocols.smart_home_hubs", "plugs_switches"],
   "codeowners": ["@microBeesTech"],
   "config_flow": true,
   "dependencies": ["application_credentials"],

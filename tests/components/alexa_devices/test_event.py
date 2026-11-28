@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.alexa_devices.const import DOMAIN
@@ -21,8 +22,6 @@ from .const import (
     TEST_DEVICE_AQM_SN,
     TEST_VOCAL_RECORD_EVENT,
 )
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 ENTITY_ID = "event.echo_test_voice_event"
 

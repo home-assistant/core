@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockUser
 
 from homeassistant.components import google_assistant as ga
 from homeassistant.core import Context, HomeAssistant
@@ -10,8 +11,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 from .test_http import DUMMY_CONFIG
-
-from tests.common import MockUser
 
 
 async def test_sync_button(hass: HomeAssistant, hass_owner_user: MockUser) -> None:

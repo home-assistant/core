@@ -1,6 +1,7 @@
 {
   "domain": "blink",
   "name": "Blink",
+  "categories": ["security_safety.cameras"],
   "codeowners": ["@fronzbot"],
   "config_flow": true,
   "dhcp": [

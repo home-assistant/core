@@ -1,6 +1,7 @@
 {
   "domain": "wyoming",
   "name": "Wyoming Protocol",
+  "categories": ["ai_voice.speech", "ai_voice.voice_assistants"],
   "codeowners": ["@synesthesiam"],
   "config_flow": true,
   "dependencies": [

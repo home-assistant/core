@@ -1,11 +1,12 @@
 {
   "domain": "threema",
   "name": "Threema",
+  "categories": ["messaging_notifications.chat_apps"],
   "codeowners": ["@LukasQ"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/threema",
   "integration_type": "service",
   "iot_class": "cloud_push",
-  "quality_scale": "bronze",
-  "requirements": ["aiothreema==0.1.0"]
+  "quality_scale": "silver",
+  "requirements": ["aiothreema==0.2.0"]
 }

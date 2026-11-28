@@ -12,9 +12,8 @@ from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AdvantageAirDataConfigEntry
 from .const import ADVANTAGE_AIR_STATE_OPEN
-from .coordinator import AdvantageAirCoordinator
+from .coordinator import AdvantageAirCoordinator, AdvantageAirDataConfigEntry
 from .entity import AdvantageAirAcEntity, AdvantageAirZoneEntity
 
 ADVANTAGE_AIR_SET_COUNTDOWN_VALUE = "minutes"

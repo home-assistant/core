@@ -1,6 +1,7 @@
 {
   "domain": "aladdin_connect",
   "name": "Aladdin Connect",
+  "categories": ["blinds_curtains"],
   "codeowners": ["@swcloudgenie"],
   "config_flow": true,
   "dependencies": ["application_credentials"],

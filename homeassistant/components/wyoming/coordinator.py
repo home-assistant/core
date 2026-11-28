@@ -2,15 +2,17 @@
 
 from datetime import timedelta
 import logging
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from wyoming.info import Info
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .data import load_wyoming_info
+
+if TYPE_CHECKING:
+    from .models import WyomingConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +27,11 @@ class WyomingInfoCoordinator(DataUpdateCoordinator[Info]):
     """
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, host: str, port: int
+        self,
+        hass: HomeAssistant,
+        config_entry: WyomingConfigEntry,
+        host: str,
+        port: int,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(

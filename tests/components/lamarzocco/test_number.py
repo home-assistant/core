@@ -12,6 +12,7 @@ from pylamarzocco.const import (
 )
 from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
@@ -25,8 +26,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import async_init_integration
-
-from tests.common import MockConfigEntry
 
 DOSE_MODE_HA_TO_LM = {
     "dose1": DoseMode.DOSE_1,

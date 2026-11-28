@@ -9,6 +9,11 @@ from unittest.mock import patch
 
 from gazetteer_matcher import GazetteerMatcher, TargetReference
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_mock_service,
+)
 
 from homeassistant.components import conversation
 from homeassistant.components.conversation import default_agent, gazetteer
@@ -39,8 +44,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from . import expose_entity
-
-from tests.common import MockConfigEntry, async_fire_time_changed, async_mock_service
 
 KITCHEN_LIGHT = "light.kitchen_ceiling"
 BEDROOM_BLINDS = "cover.bedroom_blinds"

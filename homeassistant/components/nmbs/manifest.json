@@ -1,11 +1,12 @@
 {
   "domain": "nmbs",
   "name": "NMBS",
+  "categories": ["vehicles_transport.public_transport"],
   "codeowners": [],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/nmbs",
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["pyrail"],
-  "requirements": ["pyrail==0.4.1"]
+  "requirements": ["pyrail==0.6.1"]
 }

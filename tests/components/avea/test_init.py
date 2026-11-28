@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.avea.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -10,8 +11,6 @@ from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 
 def _mock_discovered_bulb(
@@ -42,7 +41,7 @@ async def _setup_yaml_import(hass: HomeAssistant, bulbs: list[MagicMock]) -> Non
         ),
         patch(
             "homeassistant.components.avea.async_setup_entry",
-            new=AsyncMock(return_value=True),
+            new=AsyncMock(return_value=None),
         ),
     ):
         assert await async_setup_component(

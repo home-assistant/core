@@ -1,6 +1,7 @@
 {
   "domain": "duco",
   "name": "Duco",
+  "categories": ["climate.fans_ventilation"],
   "codeowners": ["@ronaldvdmeer"],
   "config_flow": true,
   "dhcp": [

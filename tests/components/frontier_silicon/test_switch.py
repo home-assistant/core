@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock
 from afsapi import FSConnectionError, FSNotImplementedError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
@@ -20,8 +21,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 DST_SWITCH_ENTITY_ID = "switch.name_of_the_device_daylight_saving_time"
 

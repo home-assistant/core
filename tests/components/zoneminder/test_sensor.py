@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, PropertyMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from zoneminder.monitor import MonitorState, TimePeriod
 
 from homeassistant.components.zoneminder.const import DOMAIN
@@ -13,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .conftest import create_mock_monitor
-
-from tests.common import async_fire_time_changed
 
 
 async def _setup_zm_with_sensors(

@@ -24,8 +24,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import RingConfigEntry
-from .coordinator import RingDataCoordinator
+from .coordinator import RingConfigEntry, RingDataCoordinator
 from .entity import (
     RingDeviceT,
     RingEntity,

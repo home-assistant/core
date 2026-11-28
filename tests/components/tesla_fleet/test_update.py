@@ -6,19 +6,18 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.tesla_fleet.coordinator import VEHICLE_INTERVAL
 from homeassistant.components.tesla_fleet.update import INSTALLING, SCHEDULED
 from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN, SERVICE_INSTALL
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import assert_entities, setup_platform
 from .const import COMMAND_OK, VEHICLE_DATA, VEHICLE_DATA_ALT
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 def _get_software_update(data: dict[str, Any]) -> dict[str, Any]:
@@ -95,7 +94,7 @@ async def test_update_scheduled_far_future_not_in_progress(
     mock_vehicle_data: AsyncMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Tests that a scheduled update far in the future is not shown as in_progress."""
+    """Tests that a scheduled update far in the future is available but not in_progress."""
 
     await setup_platform(hass, normal_config_entry, [Platform.UPDATE])
 
@@ -121,6 +120,8 @@ async def test_update_scheduled_far_future_not_in_progress(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.attributes["in_progress"] is False
+    assert state.state == STATE_ON
+    assert state.attributes["latest_version"] == "2024.12.0.0"
 
 
 async def test_update_scheduled_soon_in_progress(
@@ -158,7 +159,7 @@ async def test_update_scheduled_no_time_not_in_progress(
     mock_vehicle_data: AsyncMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Tests that a scheduled update without scheduled_time_ms is not in_progress."""
+    """Tests that a scheduled update without scheduled_time_ms is available but not in_progress."""
 
     await setup_platform(hass, normal_config_entry, [Platform.UPDATE])
 
@@ -177,3 +178,5 @@ async def test_update_scheduled_no_time_not_in_progress(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.attributes["in_progress"] is False
+    assert state.state == STATE_ON
+    assert state.attributes["latest_version"] == "2024.12.0.0"

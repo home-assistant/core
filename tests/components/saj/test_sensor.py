@@ -5,6 +5,11 @@ from unittest.mock import AsyncMock, MagicMock
 from freezegun.api import FrozenDateTimeFactory
 import pysaj
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.saj.const import DOMAIN
@@ -16,8 +21,6 @@ from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.fixture

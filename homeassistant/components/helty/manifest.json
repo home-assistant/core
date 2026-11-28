@@ -1,6 +1,7 @@
 {
   "domain": "helty",
   "name": "Helty Flow",
+  "categories": ["climate.fans_ventilation"],
   "codeowners": ["@ebaschiera"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/helty",

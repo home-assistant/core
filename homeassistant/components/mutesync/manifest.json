@@ -1,6 +1,7 @@
 {
   "domain": "mutesync",
   "name": "mutesync",
+  "categories": ["computers_network"],
   "codeowners": ["@currentoor"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/mutesync",

@@ -1,0 +1,81 @@
+# serializer version: 1
+# name: test_async_get_tools
+  dict({
+    'additionalProperties': False,
+    'properties': dict({
+      'contains': dict({
+        'description': 'Only return records that contain this text (case-insensitive). Matches the logger name and the message, including tracebacks.',
+        'type': 'string',
+      }),
+      'end_time': dict({
+        'description': 'End of the time window as an ISO 8601 datetime. Local time is used when no UTC offset is given (default: now).',
+        'type': 'string',
+      }),
+      'level': dict({
+        'description': 'Minimum log level. Records without a level are always included.',
+        'enum': list([
+          'debug',
+          'info',
+          'warning',
+          'error',
+          'critical',
+        ]),
+        'format': 'lower',
+        'type': 'string',
+      }),
+      'limit': dict({
+        'default': 100,
+        'description': 'Maximum number of records to return from the start of the time window. Records with the same time as the last one are also returned (default: 100, max: 500).',
+        'maximum': 500,
+        'minimum': 1,
+        'type': 'integer',
+      }),
+      'source': dict({
+        'description': 'Logs to read (default: core, supervisor). Available: core (Home Assistant), supervisor (the Supervisor), host (the operating system, records have no level), dns (the DNS plugin, records have no level), audio (the audio plugin, records have no level), multicast (the multicast plugin, records have no level), app:core_mosquitto (the Mosquitto broker app, records have no level)',
+        'items': dict({
+          'enum': list([
+            'core',
+            'supervisor',
+            'host',
+            'dns',
+            'audio',
+            'multicast',
+            'app:core_mosquitto',
+          ]),
+          'type': 'string',
+        }),
+        'minItems': 1,
+        'type': 'array',
+      }),
+      'start_time': dict({
+        'description': 'Start of the time window as an ISO 8601 datetime. Local time is used when no UTC offset is given (default: 15 minutes before end_time).',
+        'type': 'string',
+      }),
+    }),
+    'type': 'object',
+  })
+# ---
+# name: test_get_logs_default
+  dict({
+    'data': dict({
+      'records': list([
+        dict({
+          'message': 'ERROR (MainThread) [homeassistant.components.mqtt] Disconnected',
+          'source': 'core',
+          'time': '2026-10-20T04:55:00.000-07:00',
+        }),
+        dict({
+          'message': 'INFO (MainThread) [supervisor.apps.app] App core_mosquitto restarted',
+          'source': 'supervisor',
+          'time': '2026-10-20T04:56:00.000-07:00',
+        }),
+        dict({
+          'message': 'INFO (MainThread) [homeassistant.components.mqtt] Connected',
+          'source': 'core',
+          'time': '2026-10-20T04:57:00.000-07:00',
+        }),
+      ]),
+    }),
+    'error': False,
+  })
+# ---

@@ -1,6 +1,7 @@
 {
   "domain": "meater",
   "name": "Meater",
+  "categories": ["appliances_cleaning.cooking"],
   "codeowners": ["@Sotolotl", "@emontnemery"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/meater",

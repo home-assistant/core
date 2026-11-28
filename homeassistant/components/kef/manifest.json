@@ -1,6 +1,7 @@
 {
   "domain": "kef",
   "name": "KEF",
+  "categories": ["media_entertainment.speakers_audio"],
   "codeowners": ["@basnijholt"],
   "documentation": "https://www.home-assistant.io/integrations/kef",
   "iot_class": "local_polling",

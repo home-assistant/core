@@ -5,12 +5,11 @@ from unittest.mock import patch
 
 from aiohttp import ClientConnectionError
 from py_nightscout.models import SGV, ServerStatus
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.nightscout.const import DOMAIN
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 GLUCOSE_READINGS = [
     SGV.new_from_json_dict(

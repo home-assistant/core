@@ -4,13 +4,11 @@ All containing methods are legacy helpers that should not be used by new
 components. Instead call the service directly.
 """
 
-from homeassistant.components.group import (
+from homeassistant.components.group import DOMAIN, SERVICE_REMOVE, SERVICE_SET
+from homeassistant.components.group.const import (
     ATTR_ADD_ENTITIES,
     ATTR_ENTITIES,
     ATTR_OBJECT_ID,
-    DOMAIN,
-    SERVICE_REMOVE,
-    SERVICE_SET,
 )
 from homeassistant.const import ATTR_ICON, ATTR_NAME, SERVICE_RELOAD
 from homeassistant.core import HomeAssistant, callback

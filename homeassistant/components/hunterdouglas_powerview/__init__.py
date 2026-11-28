@@ -11,7 +11,7 @@ from aiopvapi.shades import Shades
 
 from homeassistant.const import CONF_API_VERSION, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import DOMAIN, HUB_EXCEPTIONS, MANUFACTURER
@@ -33,7 +33,7 @@ PLATFORMS = [
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: PowerviewConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: PowerviewConfigEntry) -> None:
     """Set up Hunter Douglas PowerView from a config entry."""
     config = entry.data
     hub_address: str = config[CONF_HOST]
@@ -55,14 +55,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerviewConfigEntry) ->
     if hub.role != "Primary":
         # this should be caught in config_flow, but account for a hub changing roles
         # this will only happen manually by a user
-        _LOGGER.error(
-            "%s (%s) is performing role of %s Hub. "
-            "Only the Primary Hub can manage shades",
-            hub.name,
-            hub.hub_address,
-            hub.role,
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="not_primary_hub",
+            translation_placeholders={
+                "name": hub.name,
+                "address": hub.hub_address,
+                "role": hub.role,
+            },
         )
-        return False
 
     # manual registration of the hub
     device_registry = dr.async_get(hass)
@@ -120,15 +121,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerviewConfigEntry) ->
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: PowerviewConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: PowerviewConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: PowerviewConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: PowerviewConfigEntry) -> None:
     """Migrate entry."""
 
     _LOGGER.debug("Migrating from version %s.%s", entry.version, entry.minor_version)
@@ -142,8 +141,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: PowerviewConfigEntry) 
             hass.config_entries.async_update_entry(entry, minor_version=2)
 
     _LOGGER.debug("Migrated to version %s.%s", entry.version, entry.minor_version)
-
-    return True
 
 
 async def _async_add_missing_entry_unique_id(

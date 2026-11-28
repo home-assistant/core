@@ -1,6 +1,7 @@
 {
   "domain": "ouman_eh_800",
   "name": "Ouman EH-800",
+  "categories": ["climate.thermostats_heating"],
   "codeowners": ["@Markus98"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ouman_eh_800",

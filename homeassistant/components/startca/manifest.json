@@ -1,6 +1,7 @@
 {
   "domain": "startca",
   "name": "Start.ca",
+  "categories": ["computers_network.monitoring"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/startca",
   "iot_class": "cloud_polling",

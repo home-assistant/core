@@ -1,4 +1,326 @@
 {
+  "conditions": {
+    "host_reboot_required": {
+      "condition": "mdi:restart-alert"
+    },
+    "restart_required": {
+      "condition": "mdi:restart-alert"
+    }
+  },
+  "integration_category": {
+    "ai_voice": {
+      "default": "mdi:creation",
+      "subcategory": {
+        "ai_models": {
+          "default": "mdi:robot"
+        },
+        "image_recognition": {
+          "default": "mdi:image-search"
+        },
+        "speech": {
+          "default": "mdi:microphone-message"
+        },
+        "voice_assistants": {
+          "default": "mdi:account-voice"
+        }
+      }
+    },
+    "appliances_cleaning": {
+      "default": "mdi:washing-machine",
+      "subcategory": {
+        "cleaning": {
+          "default": "mdi:robot-vacuum"
+        },
+        "cooking": {
+          "default": "mdi:stove"
+        },
+        "laundry": {
+          "default": "mdi:tumble-dryer"
+        }
+      }
+    },
+    "blinds_curtains": {
+      "default": "mdi:blinds-horizontal"
+    },
+    "buttons_remotes": {
+      "default": "mdi:remote"
+    },
+    "climate": {
+      "default": "mdi:thermostat",
+      "subcategory": {
+        "air_purifiers_humidifiers": {
+          "default": "mdi:air-purifier"
+        },
+        "fans_ventilation": {
+          "default": "mdi:fan"
+        },
+        "heat_pumps_air_conditioning": {
+          "default": "mdi:heat-pump"
+        },
+        "thermostats_heating": {
+          "default": "mdi:radiator"
+        },
+        "water_heaters": {
+          "default": "mdi:water-boiler"
+        }
+      }
+    },
+    "computers_network": {
+      "default": "mdi:server-network",
+      "subcategory": {
+        "cloud_developer_tools": {
+          "default": "mdi:cloud-braces"
+        },
+        "monitoring": {
+          "default": "mdi:monitor-dashboard"
+        },
+        "nas_servers": {
+          "default": "mdi:nas"
+        },
+        "printers": {
+          "default": "mdi:printer"
+        },
+        "routers_network": {
+          "default": "mdi:router-wireless"
+        }
+      }
+    },
+    "diy_makers": {
+      "default": "mdi:chip",
+      "subcategory": {
+        "boards_hardware": {
+          "default": "mdi:developer-board"
+        },
+        "web_data_connectors": {
+          "default": "mdi:api"
+        }
+      }
+    },
+    "energy": {
+      "default": "mdi:lightning-bolt",
+      "subcategory": {
+        "backup_power": {
+          "default": "mdi:battery-charging-high"
+        },
+        "energy_prices": {
+          "default": "mdi:cash-clock"
+        },
+        "ev_charging": {
+          "default": "mdi:ev-station"
+        },
+        "meters_monitoring": {
+          "default": "mdi:meter-electric"
+        },
+        "solar_batteries": {
+          "default": "mdi:solar-power-variant"
+        }
+      }
+    },
+    "finance": {
+      "default": "mdi:finance"
+    },
+    "garden_plants": {
+      "default": "mdi:flower"
+    },
+    "health_wellbeing": {
+      "default": "mdi:heart-pulse"
+    },
+    "helpers": {
+      "default": "mdi:tools",
+      "subcategory": {
+        "calculate_value": {
+          "default": "mdi:calculator-variant"
+        },
+        "store_value": {
+          "default": "mdi:form-textbox"
+        }
+      }
+    },
+    "hubs_protocols": {
+      "default": "mdi:hub",
+      "subcategory": {
+        "building_automation": {
+          "default": "mdi:office-building-cog"
+        },
+        "smart_home_hubs": {
+          "default": "mdi:home-automation"
+        },
+        "wireless_protocols": {
+          "default": "mdi:zigbee"
+        }
+      }
+    },
+    "lighting": {
+      "default": "mdi:lightbulb",
+      "subcategory": {
+        "bulbs_lamps": {
+          "default": "mdi:lamp"
+        },
+        "led_strips_controllers": {
+          "default": "mdi:led-strip-variant"
+        },
+        "lighting_systems": {
+          "default": "mdi:lightbulb-group"
+        }
+      }
+    },
+    "local_services": {
+      "default": "mdi:city-variant"
+    },
+    "media_entertainment": {
+      "default": "mdi:television-play",
+      "subcategory": {
+        "gaming": {
+          "default": "mdi:gamepad-variant"
+        },
+        "music_radio_services": {
+          "default": "mdi:music"
+        },
+        "speakers_audio": {
+          "default": "mdi:speaker"
+        },
+        "tv_streaming": {
+          "default": "mdi:television"
+        }
+      }
+    },
+    "messaging_notifications": {
+      "default": "mdi:message-badge",
+      "subcategory": {
+        "chat_apps": {
+          "default": "mdi:chat"
+        },
+        "email_sms_calls": {
+          "default": "mdi:email"
+        },
+        "push_notifications": {
+          "default": "mdi:bell-ring"
+        }
+      }
+    },
+    "news_social_media": {
+      "default": "mdi:newspaper-variant"
+    },
+    "other_ecosystems": {
+      "default": "mdi:home-export-outline"
+    },
+    "pets": {
+      "default": "mdi:paw"
+    },
+    "plugs_switches": {
+      "default": "mdi:power-socket-eu"
+    },
+    "presence_location": {
+      "default": "mdi:map-marker-account",
+      "subcategory": {
+        "network_presence": {
+          "default": "mdi:lan-connect"
+        },
+        "phones_companion_apps": {
+          "default": "mdi:cellphone"
+        },
+        "trackers": {
+          "default": "mdi:crosshairs-gps"
+        }
+      }
+    },
+    "productivity_information": {
+      "default": "mdi:calendar-check",
+      "subcategory": {
+        "calendars_todos": {
+          "default": "mdi:calendar"
+        },
+        "documents_photos": {
+          "default": "mdi:file-document-multiple"
+        },
+        "shopping_groceries": {
+          "default": "mdi:cart"
+        }
+      }
+    },
+    "security_safety": {
+      "default": "mdi:shield-home",
+      "subcategory": {
+        "alarm_systems": {
+          "default": "mdi:alarm-light"
+        },
+        "cameras": {
+          "default": "mdi:cctv"
+        },
+        "doorbells_intercoms": {
+          "default": "mdi:doorbell-video"
+        },
+        "locks_access": {
+          "default": "mdi:lock"
+        },
+        "smoke_co_alarms": {
+          "default": "mdi:smoke-detector"
+        }
+      }
+    },
+    "sensors": {
+      "default": "mdi:motion-sensor",
+      "subcategory": {
+        "air_quality": {
+          "default": "mdi:air-filter"
+        },
+        "door_window": {
+          "default": "mdi:door-open"
+        },
+        "motion_presence": {
+          "default": "mdi:walk"
+        },
+        "temperature_humidity": {
+          "default": "mdi:thermometer-water"
+        }
+      }
+    },
+    "vehicles_transport": {
+      "default": "mdi:car",
+      "subcategory": {
+        "bikes_scooters": {
+          "default": "mdi:bicycle"
+        },
+        "cars_evs": {
+          "default": "mdi:car-electric"
+        },
+        "flights": {
+          "default": "mdi:airplane"
+        },
+        "public_transport": {
+          "default": "mdi:bus"
+        }
+      }
+    },
+    "water": {
+      "default": "mdi:water",
+      "subcategory": {
+        "meters_leak_detection": {
+          "default": "mdi:water-alert"
+        },
+        "pools_spas": {
+          "default": "mdi:pool"
+        },
+        "water_treatment": {
+          "default": "mdi:water-check"
+        }
+      }
+    },
+    "weather_alerts": {
+      "default": "mdi:weather-partly-cloudy",
+      "subcategory": {
+        "air_quality_pollen": {
+          "default": "mdi:flower-pollen"
+        },
+        "forecasts": {
+          "default": "mdi:weather-partly-rainy"
+        },
+        "public_warnings": {
+          "default": "mdi:alert"
+        }
+      }
+    }
+  },
   "services": {
     "check_config": {
       "service": "mdi:receipt-text-check"
@@ -38,6 +360,17 @@
     },
     "update_entity": {
       "service": "mdi:update"
+    }
+  },
+  "triggers": {
+    "host_reboot_required": {
+      "trigger": "mdi:restart-alert"
+    },
+    "restart_required": {
+      "trigger": "mdi:restart-alert"
+    },
+    "updated": {
+      "trigger": "mdi:package-up"
     }
   }
 }

@@ -1,6 +1,7 @@
 {
   "domain": "arest",
   "name": "aREST",
+  "categories": ["diy_makers.boards_hardware"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/arest",
   "iot_class": "local_polling",

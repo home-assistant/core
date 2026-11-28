@@ -1,6 +1,7 @@
 {
   "domain": "utility_meter",
   "name": "Utility Meter",
+  "categories": ["helpers.calculate_value", "energy.meters_monitoring"],
   "codeowners": ["@dgomes"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/utility_meter",

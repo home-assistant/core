@@ -1,6 +1,7 @@
 {
   "domain": "picotts",
   "name": "Pico TTS",
+  "categories": ["ai_voice.speech"],
   "codeowners": ["@rrooggiieerr"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/picotts",

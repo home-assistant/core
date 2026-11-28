@@ -12,6 +12,7 @@ from aioesphomeapi import (
     APIClient,
     APIVersion,
     BluetoothProxyFeature,
+    DeviceCapabilities,
     DeviceInfo,
     EntityInfo,
     EntityState,
@@ -25,6 +26,7 @@ from aioesphomeapi import (
     VoiceAssistantFeature,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from zeroconf import Zeroconf
 
 from homeassistant.components.esphome import dashboard
@@ -41,8 +43,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import DASHBOARD_HOST, DASHBOARD_PORT, DASHBOARD_SLUG
-
-from tests.common import MockConfigEntry
 
 if TYPE_CHECKING:
     from aioesphomeapi.api_pb2 import SubscribeLogsResponse
@@ -74,6 +74,7 @@ class MockESPHomeDeviceType(Protocol):
         entry: MockConfigEntry | None = ...,
         device_info: dict[str, Any] | None = ...,
         mock_storage: bool = ...,
+        device_capabilities: dict[str, Any] | None = ...,
     ) -> MockESPHomeDevice:
         """Mock an ESPHome device."""
 
@@ -222,6 +223,9 @@ def mock_client(mock_device_info) -> Generator[APIClient]:
 
     mock_client.side_effect = mock_constructor
     mock_client.device_info = AsyncMock(return_value=mock_device_info)
+    mock_client.device_capabilities_compat = AsyncMock(
+        return_value=DeviceCapabilities()
+    )
     mock_client.connect = AsyncMock()
     mock_client.disconnect = AsyncMock()
     mock_client.subscribe_logs = Mock()
@@ -241,9 +245,17 @@ def mock_client(mock_device_info) -> Generator[APIClient]:
 
 
 @pytest.fixture
-async def mock_dashboard(hass: HomeAssistant) -> AsyncGenerator[dict[str, Any]]:
+def mock_dashboard_devices() -> list[dict[str, Any]]:
+    """Return the devices the mocked dashboard knows from the start."""
+    return []
+
+
+@pytest.fixture
+async def mock_dashboard(
+    hass: HomeAssistant, mock_dashboard_devices: list[dict[str, Any]]
+) -> AsyncGenerator[dict[str, Any]]:
     """Mock dashboard."""
-    data = {"configured": [], "importable": []}
+    data = {"configured": mock_dashboard_devices, "importable": []}
     with patch(
         "esphome_dashboard_api.ESPHomeDashboardAPI.get_devices",
         return_value=data,
@@ -444,6 +456,7 @@ async def _mock_generic_device_entry(
     states: list[EntityState],
     entry: MockConfigEntry | None = None,
     hass_storage: dict[str, Any] | None = None,
+    device_capabilities: dict[str, Any] | None = None,
 ) -> MockESPHomeDevice:
     if not entry:
         entry = MockConfigEntry(
@@ -466,6 +479,10 @@ async def _mock_generic_device_entry(
         "mac_address": "11:22:33:44:55:AA",
     }
     device_info = DeviceInfo(**(default_device_info | mock_device_info))
+    if device_capabilities is not None:
+        mock_client.device_capabilities_compat = AsyncMock(
+            return_value=DeviceCapabilities.from_dict(device_capabilities)
+        )
 
     if hass_storage:
         storage_key = f"{DOMAIN}.{entry.entry_id}"
@@ -765,6 +782,7 @@ async def mock_esphome_device(
         entry: MockConfigEntry | None = None,
         device_info: dict[str, Any] | None = None,
         mock_storage: bool = False,
+        device_capabilities: dict[str, Any] | None = None,
     ) -> MockESPHomeDevice:
         return await _mock_generic_device_entry(
             hass,
@@ -774,6 +792,7 @@ async def mock_esphome_device(
             states or [],
             entry,
             hass_storage if mock_storage else None,
+            device_capabilities,
         )
 
     return _mock_device
@@ -784,9 +803,17 @@ async def reconnect_with_updated_entity_info(
     device: MockESPHomeDevice,
     entity_info: list[EntityInfo],
     states: list[EntityState] | None = None,
+    device_info: dict[str, Any] | None = None,
 ) -> None:
-    """Reconnect the mock device with updated entity info."""
+    """Reconnect the mock device with updated entity info.
+
+    device_info is merged into the device info the device reports back.
+    """
     mock_client = device.client
+    if device_info is not None:
+        device.device_info = DeviceInfo(
+            **{**device.device_info.to_dict(), **device_info}
+        )
     mock_client.list_entities_services = AsyncMock(return_value=(entity_info, []))
     mock_client.device_info_and_list_entities = AsyncMock(
         return_value=(device.device_info, entity_info, [])

@@ -31,7 +31,6 @@ from .entity import (
     PortainerEndpointEntity,
     PortainerStackEntity,
 )
-from .util import async_call_portainer
 
 PARALLEL_UPDATES = 1
 
@@ -40,10 +39,7 @@ PARALLEL_UPDATES = 1
 class PortainerEndpointButtonDescription(ButtonEntityDescription):
     """Class to describe a Portainer endpoint button entity."""
 
-    press_action: Callable[
-        [Portainer, int],
-        Coroutine[Any, Any, DockerContainer | None],
-    ]
+    press_action: Callable[[Portainer, int], Coroutine[Any, Any, Any]]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -82,6 +78,24 @@ ENDPOINT_BUTTONS: tuple[PortainerEndpointButtonDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         press_action=(
             lambda portainer, endpoint_id: portainer.prune_volumes(endpoint_id)
+        ),
+    ),
+    PortainerEndpointButtonDescription(
+        key="build_cache_prune",
+        translation_key="build_cache_prune",
+        entity_category=EntityCategory.CONFIG,
+        press_action=(
+            lambda portainer, endpoint_id: portainer.prune_build_cache(
+                endpoint_id, all_cache=True
+            )
+        ),
+    ),
+    PortainerEndpointButtonDescription(
+        key="networks_prune",
+        translation_key="networks_prune",
+        entity_category=EntityCategory.CONFIG,
+        press_action=(
+            lambda portainer, endpoint_id: portainer.prune_networks(endpoint_id)
         ),
     ),
 )
@@ -269,7 +283,7 @@ class PortainerBaseButton(ButtonEntity):
     @override
     async def async_press(self) -> None:
         """Trigger the Portainer button press service."""
-        await async_call_portainer(self._async_press_call())
+        await self.coordinator.async_call_portainer(self._async_press_call())
         await self.coordinator.async_request_refresh()
 
 

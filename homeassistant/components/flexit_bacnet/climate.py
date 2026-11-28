@@ -76,7 +76,7 @@ class FlexitClimateEntity(FlexitEntity, ClimateEntity):
     )
 
     _attr_target_temperature_step = PRECISION_HALVES
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_max_temp = MAX_TEMP
     _attr_min_temp = MIN_TEMP
 
@@ -95,13 +95,13 @@ class FlexitClimateEntity(FlexitEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float:
+    def native_current_temperature(self) -> float:
         """Return the current temperature."""
         return self.device.room_temperature
 
     @property
     @override
-    def target_temperature(self) -> float:
+    def native_target_temperature(self) -> float:
         """Return the temperature we try to reach."""
         if self.device.ventilation_mode == VENTILATION_MODE_AWAY:
             return self.device.air_temp_setpoint_away

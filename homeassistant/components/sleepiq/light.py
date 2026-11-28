@@ -45,6 +45,7 @@ class SleepIQLightEntity(SleepIQBedEntity[SleepIQDataUpdateCoordinator], LightEn
         self.light = light
         super().__init__(coordinator, bed)
         self._attr_name = f"SleepNumber {bed.name} Light {light.outlet_id}"
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         self._attr_unique_id = f"{bed.id}-light-{light.outlet_id}"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
     @override

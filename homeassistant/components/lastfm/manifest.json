@@ -1,6 +1,7 @@
 {
   "domain": "lastfm",
   "name": "Last.fm",
+  "categories": ["media_entertainment.music_radio_services"],
   "codeowners": ["@joostlek"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/lastfm",

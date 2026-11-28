@@ -27,6 +27,17 @@ async def test_button_unique_id(
     )
 
 
+async def test_pico_button_disabled_by_default(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test that unnamed caseta pico button entities are disabled by default."""
+    await async_setup_integration(hass, MockBridge)
+
+    entry = entity_registry.async_get("button.dining_room_dining_room_pico_stop")
+    assert entry
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+
 async def test_button_press(hass: HomeAssistant) -> None:
     """Test a button press."""
     await async_setup_integration(hass, MockBridge)

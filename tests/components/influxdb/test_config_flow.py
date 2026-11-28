@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.influxdb import (
@@ -43,8 +44,6 @@ from . import (
     _get_write_api_mock_v2,
 )
 
-from tests.common import MockConfigEntry
-
 PATH_FIXTURE = Path("/influxdb.crt")
 FIXTURE_UPLOAD_UUID = "0123456789abcdef0123456789abcdef"
 
@@ -53,7 +52,7 @@ FIXTURE_UPLOAD_UUID = "0123456789abcdef0123456789abcdef"
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.influxdb.async_setup_entry", return_value=True
+        "homeassistant.components.influxdb.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 from aiocomelit import CannotAuthenticate, CannotConnect
 from aiocomelit.const import BRIDGE, VEDO
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.comelit.config_flow import (
     InvalidPin,
@@ -28,8 +29,6 @@ from .const import (
     VEDO_PIN,
     VEDO_PORT,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_flow_serial_bridge(
@@ -478,3 +477,15 @@ async def test_flow_serial_bridge_with_vedo_auth_failure(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "invalid_vedo_auth"}
+
+    mock_serial_bridge.vedo_enabled.return_value = True
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: BRIDGE_HOST,
+            CONF_PORT: BRIDGE_PORT,
+            CONF_PIN: BRIDGE_PIN,
+            CONF_VEDO_PIN: BRIDGE_VEDO_PIN,
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY

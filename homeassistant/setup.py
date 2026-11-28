@@ -200,20 +200,22 @@ async def _async_process_dependencies(
     setup_futures = hass.data.setdefault(_DATA_SETUP, {})
 
     dependencies_tasks: dict[str, Awaitable[bool]] = {}
-    fut: Awaitable[bool]
+
+    def _dependency_awaitable(dep: str, kind: str) -> Awaitable[bool] | None:
+        """Return an awaitable for the setup of dep, or None if already set up."""
+        if (shared_fut := setup_futures.get(dep)) is not None:
+            return wait_shared_future(shared_fut)
+        if dep in hass.config.components:
+            return None
+        return create_eager_task(
+            async_setup_component(hass, dep, config),
+            name=f"setup {dep} as {kind} of {integration.domain}",
+            loop=hass.loop,
+        )
 
     for dep in integration.dependencies:
-        if (shared_fut := setup_futures.get(dep)) is not None:
-            fut = wait_shared_future(shared_fut)
-        elif dep in hass.config.components:
-            continue
-        else:
-            fut = create_eager_task(
-                async_setup_component(hass, dep, config),
-                name=f"setup {dep} as dependency of {integration.domain}",
-                loop=hass.loop,
-            )
-        dependencies_tasks[dep] = fut
+        if (fut := _dependency_awaitable(dep, "dependency")) is not None:
+            dependencies_tasks[dep] = fut
 
     to_be_loaded = hass.data.get(_DATA_SETUP_DONE, {})
     # We don't want to just wait for the futures from `to_be_loaded` here.
@@ -223,17 +225,8 @@ async def _async_process_dependencies(
     for dep in integration.after_dependencies:
         if dep not in to_be_loaded or dep in dependencies_tasks:
             continue
-        if (shared_fut := setup_futures.get(dep)) is not None:
-            fut = wait_shared_future(shared_fut)
-        elif dep in hass.config.components:
-            continue
-        else:
-            fut = create_eager_task(
-                async_setup_component(hass, dep, config),
-                name=f"setup {dep} as after dependency of {integration.domain}",
-                loop=hass.loop,
-            )
-        dependencies_tasks[dep] = fut
+        if (fut := _dependency_awaitable(dep, "after dependency")) is not None:
+            dependencies_tasks[dep] = fut
 
     if not dependencies_tasks:
         return []

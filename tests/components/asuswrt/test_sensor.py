@@ -6,6 +6,7 @@ from asusrouter import AsusRouterError
 from asusrouter.modules.data import AsusData
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components import device_tracker, sensor
 from homeassistant.components.asuswrt.const import (
@@ -41,8 +42,6 @@ from .common import (
     new_device,
 )
 from .conftest import make_async_get_data_side_effect
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 SENSORS_DEFAULT = [*SENSORS_BYTES, *SENSORS_LOAD_AVG, *SENSORS_RATES]
 

@@ -65,7 +65,10 @@ class OpenSkyDataUpdateCoordinator(DataUpdateCoordinator[int]):
         try:
             response = await self._opensky.get_states(bounding_box=self._bounding_box)
         except OpenSkyError as exc:
-            raise UpdateFailed from exc
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_error",
+            ) from exc
         currently_tracked = set()
         flight_metadata: dict[str, StateVector] = {}
         for flight in response.states:

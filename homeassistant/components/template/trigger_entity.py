@@ -200,7 +200,10 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
     @override
     def _render_script_variables(self) -> dict:
         """Render configured variables."""
-        return self._rendered_entity_variables or {}
+        return {
+            **self.coordinator.trigger_variables,
+            **(self._rendered_entity_variables or {}),
+        }
 
     @override
     def _render_single_template(
@@ -314,11 +317,21 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
                 write_state = True
                 continue
 
-            value = (
-                entity_template.validator(rendered)
-                if entity_template.validator
-                else rendered
-            )
+            try:
+                value = (
+                    entity_template.validator(rendered)
+                    if entity_template.validator
+                    else rendered
+                )
+            except probatio.Invalid as err:
+                log_validation_error(
+                    rendered,
+                    entity_template.template,
+                    entity_template.attribute,
+                    self.entity_id,
+                    err,
+                )
+                value = None
 
             if entity_template.on_update:
                 entity_template.on_update(value)

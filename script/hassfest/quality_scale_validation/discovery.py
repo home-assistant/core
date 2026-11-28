@@ -1,6 +1,6 @@
 """Enforce that the integration supports discovery.
 
-https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/discovery/
+https://contributors.home-assistant.io/core/quality-scale/discovery/
 """
 
 import ast
@@ -12,6 +12,7 @@ MANIFEST_KEYS = [
     "bluetooth",
     "dhcp",
     "homekit",
+    "lorawan",
     "mqtt",
     "ssdp",
     "usb",

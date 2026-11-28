@@ -1,5 +1,8 @@
 """Test DROP switch entities."""
 
+from pytest_homeassistant.common import async_fire_mqtt_message
+from pytest_homeassistant.typing import MqttMockHAClient
+
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
@@ -26,9 +29,6 @@ from .common import (
     config_entry_protection_valve,
     config_entry_softener,
 )
-
-from tests.common import async_fire_mqtt_message
-from tests.typing import MqttMockHAClient
 
 
 async def test_switches_hub(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> None:

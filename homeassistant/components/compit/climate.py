@@ -149,7 +149,7 @@ async def async_setup_entry(
 class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntity):
     """Representation of a Compit climate device."""
 
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_name = None
     _attr_has_entity_name = True
     entity_description: CompitDeviceDescription
@@ -190,7 +190,7 @@ class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntit
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         value = self.get_parameter_value(CompitParameter.CURRENT_TEMPERATURE)
         if value is None:
@@ -199,7 +199,7 @@ class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntit
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         value = self.get_parameter_value(CompitParameter.SET_TARGET_TEMPERATURE)
         if value is None:

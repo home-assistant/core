@@ -1,6 +1,7 @@
 {
   "domain": "fixer",
   "name": "Fixer",
+  "categories": ["finance"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/fixer",
   "iot_class": "cloud_polling",

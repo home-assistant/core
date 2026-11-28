@@ -12,6 +12,11 @@ from google_health_api.model import (
     _ListPairedDevicesModel,
 )
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.google_health.const import DOMAIN
@@ -26,8 +31,6 @@ from homeassistant.util.unit_system import (
 )
 
 from .conftest import _list_fixture, paired_devices_fixture
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.usefixtures("mock_google_health_client")

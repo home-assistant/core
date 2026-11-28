@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 from freezegun.api import FrozenDateTimeFactory
 import pycfdns
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.cloudflare.const import (
     CONF_RECORDS,
@@ -18,8 +19,6 @@ from homeassistant.core import HomeAssistant
 
 from . import ENTRY_CONFIG, init_integration
 from .conftest import LOCATION_PATCH_TARGET
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.parametrize(

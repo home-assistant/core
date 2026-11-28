@@ -11,9 +11,8 @@ from homeassistant.components.cover import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AdvantageAirDataConfigEntry
 from .const import ADVANTAGE_AIR_STATE_CLOSE, ADVANTAGE_AIR_STATE_OPEN
-from .coordinator import AdvantageAirCoordinator
+from .coordinator import AdvantageAirCoordinator, AdvantageAirDataConfigEntry
 from .entity import AdvantageAirThingEntity, AdvantageAirZoneEntity
 
 PARALLEL_UPDATES = 0

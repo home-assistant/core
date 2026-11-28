@@ -18,8 +18,8 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
-    UnitOfTemperature,
 )
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -144,6 +144,7 @@ class InputStateSensor(BaseSensorEntity):
         self._input = nasweb_input
         self._attr_native_value: str | None = None
         self._attr_translation_placeholders = {"index": f"{nasweb_input.index:2d}"}
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         self._attr_unique_id = (
             f"{DOMAIN}.{self._input.webio_serial}.input.{self._input.index}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         )
@@ -179,6 +180,7 @@ class TemperatureSensor(BaseSensorEntity):
         """Initialize TemperatureSensor entity."""
         super().__init__(coordinator)
         self._temp_sensor = nasweb_temp_sensor
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         self._attr_unique_id = f"{DOMAIN}.{self._temp_sensor.webio_serial}.temp_sensor"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain,home-assistant-entity-unique-id-redundant-platform
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._temp_sensor.webio_serial)}

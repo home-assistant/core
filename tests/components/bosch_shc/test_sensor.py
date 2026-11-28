@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 
 from boschshcpy.services_impl import ValveTappetService
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -14,8 +15,6 @@ from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util import dt as dt_util
 
 from .conftest import setup_integration, thermostat_device
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture(autouse=True)

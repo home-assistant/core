@@ -11,6 +11,8 @@ from unittest.mock import AsyncMock, MagicMock
 from elevenlabs.core import ApiError
 from elevenlabs.types import VoiceSettings
 import pytest
+from pytest_homeassistant.common import async_mock_service
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components import tts
 from homeassistant.components.elevenlabs.const import (
@@ -33,9 +35,7 @@ from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODEL
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.core_config import async_process_ha_core_config
 
-from tests.common import async_mock_service
 from tests.components.tts.common import retrieve_media
-from tests.typing import ClientSessionGenerator
 
 
 class _FakeResponse:

@@ -21,14 +21,16 @@ from opendisplay import (
 from PIL import Image as PILImage, ImageOps
 import probatio
 
-from homeassistant.components import camera, image as image_component
 from homeassistant.components.bluetooth import (
     BluetoothReachabilityIntent,
     async_address_reachability_diagnostics,
     async_ble_device_from_address,
 )
 from homeassistant.components.http.auth import async_sign_path
-from homeassistant.components.media_source import async_resolve_media
+from homeassistant.components.media_source import (
+    async_get_media_image,
+    async_resolve_media,
+)
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -135,17 +137,9 @@ async def _async_get_pil_image(
     """Return a PIL Image for the selected media."""
     media_content_id: str = image_data["media_content_id"]
 
-    # Camera and image entities resolve to never-ending MJPEG streams,
-    # so fetch a single snapshot from the entity instead.
-    for integration in camera, image_component:
-        media_source_prefix = f"media-source://{integration.DOMAIN}/"
-        if not media_content_id.startswith(media_source_prefix):
-            continue
-
-        entity_id = media_content_id.removeprefix(media_source_prefix)
-        snapshot = await integration.async_get_image(hass, entity_id)
+    if (media_image := await async_get_media_image(hass, media_content_id)) is not None:
         return await hass.async_add_executor_job(
-            _load_image_from_bytes, snapshot.content
+            _load_image_from_bytes, media_image.content
         )
 
     media = await async_resolve_media(hass, media_content_id, None)

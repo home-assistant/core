@@ -1,6 +1,7 @@
 {
   "domain": "fritzbox",
   "name": "FRITZ!SmartHome",
+  "categories": ["hubs_protocols.smart_home_hubs"],
   "codeowners": ["@mib1185", "@flabbamann"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/fritzbox",

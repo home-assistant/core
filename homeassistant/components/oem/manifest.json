@@ -1,6 +1,7 @@
 {
   "domain": "oem",
   "name": "OpenEnergyMonitor WiFi Thermostat",
+  "categories": ["climate.thermostats_heating"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/oem",
   "iot_class": "local_polling",

@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from flexit_bacnet import DecodingError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import (
@@ -17,8 +18,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_with_selected_platforms
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 ENTITY_ID = "switch.device_name_electric_heater"
 

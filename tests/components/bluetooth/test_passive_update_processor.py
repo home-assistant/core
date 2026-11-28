@@ -8,6 +8,18 @@ from unittest.mock import MagicMock, patch
 
 from home_assistant_bluetooth import BluetoothServiceInfo
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockEntityPlatform,
+    async_fire_time_changed,
+    async_test_home_assistant,
+)
+from pytest_homeassistant.components.bluetooth import (
+    inject_bluetooth_service_info,
+    inject_bluetooth_service_info_bleak,
+    patch_all_discovered_devices,
+    patch_bluetooth_time,
+)
 
 from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
@@ -42,23 +54,11 @@ from homeassistant.const import UnitOfTemperature
 from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
+from homeassistant.helpers.json import json_bytes
 from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from . import (
-    inject_bluetooth_service_info,
-    inject_bluetooth_service_info_bleak,
-    patch_all_discovered_devices,
-    patch_bluetooth_time,
-)
-
-from tests.common import (
-    MockConfigEntry,
-    MockEntityPlatform,
-    async_fire_time_changed,
-    async_test_home_assistant,
-)
+from homeassistant.util.json import json_loads
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -1982,3 +1982,43 @@ def test_deserialize_entity_description(
     """Test deserializing an entity description."""
     description = deserialize_entity_description(description_type, description_dict)
     assert description == expected_description
+
+
+def test_restore_data_device_info_round_trip() -> None:
+    """Test device infos are stored with their set fields only, and restored.
+
+    A stored key which is not a device info field is dropped on restore.
+    """
+    devices = {
+        None: DeviceInfo(name="Main", manufacturer="Test Manufacturer"),
+        "sub": DeviceInfo(name="Sub"),
+    }
+    data = PassiveBluetoothDataUpdate(devices=devices)
+
+    stored = json_loads(json_bytes(data.async_get_restore_data()))
+    assert stored["devices"] == {
+        "": {"name": "Main", "manufacturer": "Test Manufacturer"},
+        "sub": {"name": "Sub"},
+    }
+
+    stored["devices"]["sub"]["unknown"] = "value"
+    restored = PassiveBluetoothDataUpdate()
+    restored.async_set_restore_data(stored, EntityDescription)
+    assert restored.devices == devices
+
+
+def test_update_stores_equal_device_info() -> None:
+    """Test an equal incoming device info replaces the stored one, without a change.
+
+    After a restore, the next comparison is then with the same object.
+    """
+    restored = DeviceInfo(name="Main")
+    data = PassiveBluetoothDataUpdate(devices={None: restored})
+    incoming = DeviceInfo(name="Main")
+
+    assert data.update(PassiveBluetoothDataUpdate(devices={None: incoming})) == set()
+    assert data.devices[None] is incoming
+
+    changed = DeviceInfo(name="Renamed")
+    assert data.update(PassiveBluetoothDataUpdate(devices={None: changed})) is None
+    assert data.devices[None] is changed

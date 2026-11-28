@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 from pynina import Warning
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.nina.const import ATTR_HEADLINE
@@ -11,8 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_single_platform
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def test_binary_sensors(

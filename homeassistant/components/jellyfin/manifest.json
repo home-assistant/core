@@ -1,6 +1,7 @@
 {
   "domain": "jellyfin",
   "name": "Jellyfin",
+  "categories": ["media_entertainment.tv_streaming"],
   "codeowners": ["@RunC0deRun", "@ctalkington"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/jellyfin",

@@ -1,6 +1,7 @@
 {
   "domain": "tonewinner",
   "name": "Tonewinner",
+  "categories": ["media_entertainment.speakers_audio"],
   "codeowners": ["@emma-sg"],
   "config_flow": true,
   "dependencies": ["usb"],
@@ -9,5 +10,5 @@
   "iot_class": "local_push",
   "loggers": ["tonewinner_rs232"],
   "quality_scale": "silver",
-  "requirements": ["tonewinner-rs232==1.1.0"]
+  "requirements": ["tonewinner-rs232==1.3.0"]
 }

@@ -1,4 +1,58 @@
 {
+  "entity": {
+    "sensor": {
+      "altitude": {
+        "default": "mdi:altimeter"
+      },
+      "battery_status": {
+        "default": "mdi:battery-outline",
+        "state": {
+          "charging": "mdi:battery-charging",
+          "full": "mdi:battery",
+          "not_charging": "mdi:battery-outline"
+        }
+      },
+      "device_status": {
+        "default": "mdi:information-outline",
+        "state": {
+          "error": "mdi:alert-outline",
+          "offline": "mdi:cloud-off-outline",
+          "online": "mdi:cloud-check-variant",
+          "pending": "mdi:progress-clock",
+          "unregistered": "mdi:cloud-off"
+        }
+      },
+      "floor_level": {
+        "default": "mdi:floor-plan"
+      },
+      "last_location": {
+        "default": "mdi:map-clock"
+      },
+      "last_locked": {
+        "default": "mdi:lock-clock"
+      },
+      "last_lost": {
+        "default": "mdi:map-marker-question"
+      },
+      "last_wiped": {
+        "default": "mdi:delete-sweep"
+      },
+      "location_accuracy": {
+        "default": "mdi:crosshairs-gps"
+      },
+      "location_type": {
+        "default": "mdi:map-marker-radius",
+        "state": {
+          "cellular": "mdi:signal-cellular-3",
+          "gps": "mdi:crosshairs-gps",
+          "wifi": "mdi:wifi"
+        }
+      },
+      "owner": {
+        "default": "mdi:account"
+      }
+    }
+  },
   "services": {
     "display_message": {
       "service": "mdi:message-alert"

@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 from hotspring import HotSpringConnectionError, HotSpringError, Spa, TemperatureUnit
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
@@ -17,8 +18,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_with_selected_platforms
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 ENTITY_ID = "number.connectedspa_ddeeff_target_temperature"
 

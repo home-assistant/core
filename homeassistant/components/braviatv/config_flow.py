@@ -9,14 +9,7 @@ import probatio
 from pybravia import BraviaAuthError, BraviaClient, BraviaError, BraviaNotSupported
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
-from homeassistant.const import (
-    ATTR_MODEL,
-    CONF_CLIENT_ID,
-    CONF_HOST,
-    CONF_MAC,
-    CONF_NAME,
-    CONF_PIN,
-)
+from homeassistant.const import CONF_CLIENT_ID, CONF_HOST, CONF_MAC, CONF_NAME, CONF_PIN
 from homeassistant.helpers import instance_id
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.device_registry import format_mac
@@ -105,7 +98,7 @@ class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="already_configured")
 
         return self.async_create_entry(
-            title=f"{system_info['name']} {system_info[ATTR_MODEL]}",
+            title=f"{system_info['name']} {system_info['model']}",
             data=self.device_config,
         )
 

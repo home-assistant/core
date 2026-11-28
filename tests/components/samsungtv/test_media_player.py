@@ -14,6 +14,11 @@ from async_upnp_client.exceptions import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+)
 from samsungctl import exceptions
 from samsungtvws.async_remote import SamsungTVWSAsyncRemote
 from samsungtvws.command import SamsungTVSleepCommand
@@ -85,12 +90,6 @@ from .const import (
     ENTRYDATA_LEGACY,
     ENTRYDATA_WEBSOCKET,
     SAMPLE_DEVICE_INFO_WIFI,
-)
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_json_object_fixture,
 )
 
 ENTITY_ID = f"{MP_DOMAIN}.mock_title"

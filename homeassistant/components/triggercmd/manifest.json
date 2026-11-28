@@ -1,6 +1,7 @@
 {
   "domain": "triggercmd",
   "name": "TRIGGERcmd",
+  "categories": ["computers_network"],
   "codeowners": ["@rvmey"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/triggercmd",

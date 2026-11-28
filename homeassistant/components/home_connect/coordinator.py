@@ -33,7 +33,12 @@ from aiohomeconnect.model.program import EnumerateProgram, ProgramDefinitionOpti
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    OAuth2TokenRequestBaseError,
+    OAuth2TokenRequestReauthError,
+)
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -167,7 +172,19 @@ class HomeConnectRuntimeData:
                     assert appliance_coordinator
                     await appliance_coordinator.event_listener(event_message)
 
-            except (EventStreamInterruptedError, HomeConnectRequestError) as error:
+            except (HomeConnectApiError, OAuth2TokenRequestReauthError) as error:
+                _LOGGER.error("Error while listening for events: %s", error)
+                self.hass.config_entries.async_schedule_reload(
+                    self.config_entry.entry_id
+                )
+                break
+            except (
+                EventStreamInterruptedError,
+                HomeConnectRequestError,
+                OAuth2TokenRequestBaseError,
+                # The token request leaves a bare TimeoutError unmapped
+                TimeoutError,
+            ) as error:
                 _LOGGER.debug(
                     "Non-breaking error (%s) while listening for events,"
                     " continuing in %s seconds",
@@ -176,12 +193,6 @@ class HomeConnectRuntimeData:
                 )
                 await asyncio_sleep(retry_time)
                 retry_time = min(retry_time * 2, 3600)
-            except HomeConnectApiError as error:
-                _LOGGER.error("Error while listening for events: %s", error)
-                self.hass.config_entries.async_schedule_reload(
-                    self.config_entry.entry_id
-                )
-                break
 
     @callback
     def async_add_global_listener(

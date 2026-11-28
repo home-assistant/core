@@ -21,7 +21,7 @@ from .coordinator import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: MeteoFranceConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: MeteoFranceConfigEntry) -> None:
     """Set up a Meteo-France account from a config entry."""
     if (departments_with_alert := hass.data.get(METEO_FRANCE_DATA)) is None:
         departments_with_alert = hass.data[METEO_FRANCE_DATA] = set()
@@ -99,12 +99,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: MeteoFranceConfigEntry) 
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: MeteoFranceConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
     if entry.runtime_data.alert_coordinator:
         department = entry.runtime_data.forecast_coordinator.data.position.get("dept")
@@ -117,12 +115,9 @@ async def async_unload_entry(
             department,
         )
 
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        if not hass.data[METEO_FRANCE_DATA]:
-            hass.data.pop(METEO_FRANCE_DATA)
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    if not hass.data[METEO_FRANCE_DATA]:
+        hass.data.pop(METEO_FRANCE_DATA)
 
 
 async def _async_update_listener(

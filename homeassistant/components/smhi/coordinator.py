@@ -75,7 +75,8 @@ class SMHIDataUpdateCoordinator(DataUpdateCoordinator[SMHIForecastData]):
                 )
         except SmhiForecastException as ex:
             raise UpdateFailed(
-                "Failed to retrieve the forecast from the SMHI API"
+                translation_domain=DOMAIN,
+                translation_key="forecast_update_failed",
             ) from ex
 
         return SMHIForecastData(
@@ -123,7 +124,8 @@ class SMHIFireDataUpdateCoordinator(DataUpdateCoordinator[SMHIFireForecastData])
                 )
         except SmhiFireForecastException as ex:
             raise UpdateFailed(
-                "Failed to retrieve the forecast from the SMHI API"
+                translation_domain=DOMAIN,
+                translation_key="fire_forecast_update_failed",
             ) from ex
 
         return SMHIFireForecastData(

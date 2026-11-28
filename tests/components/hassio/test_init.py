@@ -31,6 +31,7 @@ from aiohasupervisor.models import (
 from freezegun.api import FrozenDateTimeFactory
 from probatio import Invalid
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.auth.models import User
@@ -78,8 +79,6 @@ from homeassistant.helpers.hassio import is_hassio
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.yaml import load_yaml_dict
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 
@@ -1368,7 +1367,7 @@ async def test_setup_hardware_integration(
         patch.dict(os.environ, MOCK_ENVIRON),
         patch(
             f"homeassistant.components.{integration}.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.homeassistant_yellow.config_flow.probe_silabs_firmware_info",

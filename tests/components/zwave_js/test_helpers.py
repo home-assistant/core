@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from zwave_js_server.const import SecurityClass
 from zwave_js_server.model.controller import ProvisioningEntry
 
@@ -18,8 +19,6 @@ from homeassistant.components.zwave_js.helpers import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import area_registry as ar, device_registry as dr
-
-from tests.common import MockConfigEntry
 
 CONTROLLER_PATCH_PREFIX = "zwave_js_server.model.controller.Controller"
 

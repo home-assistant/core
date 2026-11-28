@@ -70,8 +70,11 @@ class Plenticore:
             )
             return False
         except (ClientError, TimeoutError) as err:
-            _LOGGER.error("Error connecting to %s", self.host)
-            raise ConfigEntryNotReady from err
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"host": self.host},
+            ) from err
         else:
             _LOGGER.debug("Log-in successfully to %s", self.host)
 

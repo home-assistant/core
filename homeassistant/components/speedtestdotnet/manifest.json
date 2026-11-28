@@ -1,6 +1,7 @@
 {
   "domain": "speedtestdotnet",
   "name": "Speedtest.net",
+  "categories": ["computers_network.monitoring"],
   "codeowners": ["@rohankapoorcom", "@engrbm87"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/speedtestdotnet",

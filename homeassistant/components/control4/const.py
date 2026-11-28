@@ -1,9 +1,10 @@
 """Constants for the Control4 integration."""
 
+from datetime import timedelta
+
 DOMAIN = "control4"
 
-DEFAULT_SCAN_INTERVAL = 5
-MIN_SCAN_INTERVAL = 1
+SCAN_INTERVAL = timedelta(seconds=5)
 
 API_RETRY_TIMES = 5
 

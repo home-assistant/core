@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 
 from aioaquarite import AquariteError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.light import (
@@ -17,8 +18,6 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -96,43 +95,6 @@ async def test_light_set_value(
     mock_vistapool_client.set_value.assert_awaited_once_with(
         "ABCDEF1234567890", "light.status", expected_value
     )
-
-
-@pytest.mark.parametrize(
-    ("service", "initial_status", "initial_state", "expected_state"),
-    [
-        pytest.param(SERVICE_TURN_ON, 0, STATE_OFF, STATE_ON, id="turn_on"),
-        pytest.param(SERVICE_TURN_OFF, 1, STATE_ON, STATE_OFF, id="turn_off"),
-    ],
-)
-async def test_light_optimistic_state(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_vistapool_client: AsyncMock,
-    mock_pool_data: dict[str, Any],
-    service: str,
-    initial_status: int,
-    initial_state: str,
-    expected_state: str,
-) -> None:
-    """Test the entity state reflects the just-written value before the Firestore push."""
-    mock_pool_data["light"] = {"status": initial_status}
-    mock_vistapool_client.fetch_pool_data.return_value = mock_pool_data
-    mock_config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert hass.states.get("light.my_pool_light").state == initial_state
-
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        service,
-        {ATTR_ENTITY_ID: "light.my_pool_light"},
-        blocking=True,
-    )
-
-    assert hass.states.get("light.my_pool_light").state == expected_state
 
 
 async def test_light_set_value_raises_on_api_error(

@@ -405,7 +405,7 @@ class SongpalEntity(MediaPlayerEntity):
     @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level."""
-        volume = int(volume * self._volume_max)
+        volume = round(volume * self._volume_max)
         _LOGGER.debug("Setting volume to %s", volume)
         return await self._volume_control.set_volume(volume)
 

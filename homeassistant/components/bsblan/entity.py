@@ -59,9 +59,9 @@ class BSBLanCircuitEntity(BSBLanEntity):
                 (DOMAIN, mac),
                 config_entry_id=coordinator.config_entry.entry_id,
             ),
-            manufacturer=main_info["manufacturer"],
-            model=main_info.get("model"),
-            model_id=main_info.get("model_id"),
+            manufacturer=main_info.manufacturer,
+            model=main_info.model,
+            model_id=main_info.model_id,
         )
 
 
@@ -111,7 +111,7 @@ class BSBLanWaterHeaterDeviceEntity(BSBLanDualCoordinatorEntity):
                 (DOMAIN, mac),
                 config_entry_id=fast_coordinator.config_entry.entry_id,
             ),
-            manufacturer=main_info["manufacturer"],
-            model=main_info.get("model"),
-            model_id=main_info.get("model_id"),
+            manufacturer=main_info.manufacturer,
+            model=main_info.model,
+            model_id=main_info.model_id,
         )

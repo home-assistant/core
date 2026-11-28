@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Literal, TypedDict, override
 
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback, verify_event_loop_thread
 from homeassistant.util.dt import utc_from_timestamp, utcnow
 from homeassistant.util.event_type import EventType
 from homeassistant.util.hass_dict import HassKey
@@ -121,6 +121,7 @@ class CategoryRegistry(BaseRegistry[CategoryRegistryStoreData]):
         return self.categories[scope].values()
 
     @callback
+    @verify_event_loop_thread("category_registry.async_create")
     def async_create(
         self,
         *,
@@ -129,7 +130,6 @@ class CategoryRegistry(BaseRegistry[CategoryRegistryStoreData]):
         icon: str | None = None,
     ) -> CategoryEntry:
         """Create a new category."""
-        self.hass.verify_event_loop_thread("category_registry.async_create")
         self._async_ensure_name_is_available(scope, name)
         category = CategoryEntry(
             icon=icon,
@@ -151,9 +151,9 @@ class CategoryRegistry(BaseRegistry[CategoryRegistryStoreData]):
         return category
 
     @callback
+    @verify_event_loop_thread("category_registry.async_delete")
     def async_delete(self, *, scope: str, category_id: str) -> None:
         """Delete category."""
-        self.hass.verify_event_loop_thread("category_registry.async_delete")
         del self.categories[scope][category_id]
         self.hass.bus.async_fire_internal(
             EVENT_CATEGORY_REGISTRY_UPDATED,
@@ -166,6 +166,7 @@ class CategoryRegistry(BaseRegistry[CategoryRegistryStoreData]):
         self.async_schedule_save()
 
     @callback
+    @verify_event_loop_thread("category_registry.async_update")
     def async_update(
         self,
         *,
@@ -190,7 +191,6 @@ class CategoryRegistry(BaseRegistry[CategoryRegistryStoreData]):
 
         changes["modified_at"] = utcnow()
 
-        self.hass.verify_event_loop_thread("category_registry.async_update")
         new = self.categories[scope][category_id] = dataclasses.replace(old, **changes)
 
         self.async_schedule_save()

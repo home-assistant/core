@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock
 from devolo_plc_api.exceptions.device import DevicePasswordProtected, DeviceUnavailable
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.devolo_home_network.const import (
@@ -22,8 +23,6 @@ from homeassistant.helpers import entity_registry as er
 from . import configure_integration
 from .const import PLCNET, PLCNET_MISSING_DATA_RATE
 from .mock import MockDevice
-
-from tests.common import async_fire_time_changed
 
 
 @pytest.mark.usefixtures("mock_device")
@@ -60,6 +59,25 @@ async def test_sensor_setup(
         f"{SENSOR_DOMAIN}.{device_name}_plc_uplink_phy_rate_{PLCNET.devices[2].user_device_name}"
     ).disabled
     assert entity_registry.async_get(f"{SENSOR_DOMAIN}.{device_name}_uptime").disabled
+
+
+async def test_expensive_coordinator_not_refreshed_when_disabled(
+    hass: HomeAssistant,
+    mock_device: MockDevice,
+) -> None:
+    """Test that neighboring access points are not scanned if no entity wants them."""
+    entry = configure_integration(hass)
+    device_name = entry.title.replace(" ", "_").lower()
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.LOADED
+
+    mock_device.device.async_get_wifi_neighbor_access_points.assert_not_called()
+    mock_device.device.async_get_wifi_connected_station.assert_called_once()
+    assert (
+        hass.states.get(f"{SENSOR_DOMAIN}.{device_name}_neighboring_wi_fi_networks")
+        is None
+    )
 
 
 @pytest.mark.parametrize(

@@ -3,6 +3,7 @@
 from unittest.mock import Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.growatt_server.const import (
     AUTH_API_TOKEN,
@@ -15,8 +16,6 @@ from homeassistant.components.growatt_server.const import (
 )
 from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -456,6 +455,6 @@ def mock_setup_entry():
     """Mock async_setup_entry to prevent actual setup during config flow tests."""
     with patch(
         "homeassistant.components.growatt_server.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock:
         yield mock

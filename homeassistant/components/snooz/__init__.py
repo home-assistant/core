@@ -14,12 +14,23 @@ from homeassistant.components.bluetooth import (
 from homeassistant.const import CONF_ADDRESS, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, PLATFORMS
 from .models import SnoozConfigEntry, SnoozConfigurationData
+from .services import async_setup_services
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SnoozConfigEntry) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Snooz integration."""
+    async_setup_services(hass)
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: SnoozConfigEntry) -> None:
     """Set up Snooz device from a config entry."""
     address: str = entry.data[CONF_ADDRESS]
     token: str = entry.data[CONF_TOKEN]
@@ -50,7 +61,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SnoozConfigEntry) -> boo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
-    return True
 
 
 async def _async_update_listener(hass: HomeAssistant, entry: SnoozConfigEntry) -> None:
@@ -59,10 +69,8 @@ async def _async_update_listener(hass: HomeAssistant, entry: SnoozConfigEntry) -
         await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: SnoozConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SnoozConfigEntry) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        # also called by fan entities, but do it here too for good measure
-        await entry.runtime_data.device.async_disconnect()
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    # also called by fan entities, but do it here too for good measure
+    await entry.runtime_data.device.async_disconnect()

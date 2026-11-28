@@ -1,6 +1,7 @@
 """Tests for tplink number platform."""
 
 from kasa import Feature
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
@@ -25,8 +26,6 @@ from . import (
     snapshot_platform,
 )
 from .const import DEVICE_ID, MAC_ADDRESS
-
-from tests.common import MockConfigEntry
 
 
 async def test_states(

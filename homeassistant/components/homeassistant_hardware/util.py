@@ -28,8 +28,8 @@ from homeassistant.helpers.importlib import async_import_module
 from homeassistant.helpers.singleton import singleton
 from homeassistant.util import dt as dt_util
 
-from . import DATA_COMPONENT
 from .const import (
+    DATA_COMPONENT,
     OTBR_ADDON_MANAGER_DATA,
     OTBR_ADDON_NAME,
     OTBR_ADDON_SLUG,
@@ -346,9 +346,7 @@ async def guess_hardware_owners(
         device_guesses[otbr_path].append(otbr_addon_fw_info)
 
     # Lazy import to avoid circular dependency
-    from .silabs_multiprotocol_addon import (  # noqa: PLC0415
-        get_multiprotocol_addon_manager,
-    )
+    from .silabs_multiprotocol_addon import get_multiprotocol_addon_manager  # noqa: PLC0415
 
     multipan_addon_manager = await get_multiprotocol_addon_manager(hass)
 

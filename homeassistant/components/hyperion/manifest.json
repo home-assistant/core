@@ -1,6 +1,7 @@
 {
   "domain": "hyperion",
   "name": "Hyperion",
+  "categories": ["lighting.led_strips_controllers"],
   "codeowners": ["@dermotduffy"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/hyperion",

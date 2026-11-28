@@ -2,6 +2,7 @@
   "domain": "zwave_me",
   "name": "Z-Wave.Me",
   "after_dependencies": ["zeroconf"],
+  "categories": ["hubs_protocols.smart_home_hubs"],
   "codeowners": ["@lawfulchaos", "@Z-Wave-Me", "@PoltoS"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/zwave_me",

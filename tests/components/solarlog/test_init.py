@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from solarlog_cli.solarlog_exceptions import (
     SolarLogAuthenticationError,
     SolarLogConnectionError,
@@ -23,8 +24,6 @@ from homeassistant.helpers.entity_registry import EntityRegistry
 
 from . import setup_platform
 from .const import HOST
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_load_unload(

@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock
 
 from pyenphase import EnvoyAuthenticationError, EnvoyError, EnvoyTokenAuth
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.enphase_envoy.const import (
     CONF_MANUAL_TOKEN,
@@ -28,8 +29,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from . import envoy_token, setup_integration
-
-from tests.common import MockConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

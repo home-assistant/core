@@ -4,6 +4,7 @@ from datetime import timedelta
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN, HVACMode
 from homeassistant.components.gree.const import UPDATE_INTERVAL
@@ -11,8 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from .common import async_setup_gree, build_device_mock
-
-from tests.common import async_fire_time_changed
 
 ENTITY_ID_1 = f"{CLIMATE_DOMAIN}.fake_device_1"
 ENTITY_ID_2 = f"{CLIMATE_DOMAIN}.fake_device_2"

@@ -1,6 +1,6 @@
 """Tests for the DSMR integration."""
 
-import datetime
+import datetime as dt
 from decimal import Decimal
 from unittest.mock import MagicMock
 
@@ -11,13 +11,12 @@ from dsmr_parser.obis_references import (
 )
 from dsmr_parser.objects import CosemObject, MBusObject, Telegram
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.dsmr.const import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import MockConfigEntry
 
 
 async def test_migrate_gas_to_mbus(
@@ -85,7 +84,7 @@ async def test_migrate_gas_to_mbus(
         MBusObject(
             (0, 1),
             [
-                {"value": datetime.datetime.fromtimestamp(1551642213)},
+                {"value": dt.datetime.fromtimestamp(1551642213)},
                 {"value": Decimal("745.695"), "unit": "m3"},
             ],
         ),
@@ -196,7 +195,7 @@ async def test_migrate_hourly_gas_to_mbus(
         MBusObject(
             (0, 1),
             [
-                {"value": datetime.datetime.fromtimestamp(1722749707)},
+                {"value": dt.datetime.fromtimestamp(1722749707)},
                 {"value": Decimal("778.963"), "unit": "m3"},
             ],
         ),
@@ -307,7 +306,7 @@ async def test_migrate_gas_with_devid_to_mbus(
         MBusObject(
             (0, 1),
             [
-                {"value": datetime.datetime.fromtimestamp(1551642213)},
+                {"value": dt.datetime.fromtimestamp(1551642213)},
                 {"value": Decimal("745.695"), "unit": "m3"},
             ],
         ),
@@ -432,7 +431,7 @@ async def test_migrate_gas_to_mbus_exists(
         MBusObject(
             (0, 1),
             [
-                {"value": datetime.datetime.fromtimestamp(1551642213)},
+                {"value": dt.datetime.fromtimestamp(1551642213)},
                 {"value": Decimal("745.695"), "unit": "m3"},
             ],
         ),

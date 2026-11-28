@@ -33,6 +33,7 @@ async def test_flow_user(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == NAME
     assert result["data"] == CONF_DATA
+    assert result["result"].unique_id == "1234567890"
 
 
 async def test_flow_user_already_configured(hass: HomeAssistant) -> None:

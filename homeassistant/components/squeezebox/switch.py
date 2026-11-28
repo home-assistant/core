@@ -1,6 +1,6 @@
 """Switch entity representing a Squeezebox alarm."""
 
-import datetime
+import datetime as dt
 import logging
 from typing import Any, cast, override
 
@@ -121,7 +121,7 @@ class SqueezeBoxAlarmEntity(SqueezeboxEntity, SwitchEntity):
         """Set up alarm switch when added to hass."""
         await super().async_added_to_hass()
 
-        async def async_write_state_daily(now: datetime.datetime) -> None:
+        async def async_write_state_daily(now: dt.datetime) -> None:
             """Update alarm state attributes each calendar day."""
             _LOGGER.debug("Updating state attributes for %s", self.name)
             self.async_write_ha_state()

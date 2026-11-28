@@ -1,6 +1,7 @@
 {
   "domain": "prana",
   "name": "Prana",
+  "categories": ["climate.fans_ventilation"],
   "codeowners": ["@prana-dev-official"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/prana",

@@ -3,6 +3,7 @@
 from unittest.mock import Mock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from roborock import RoborockException
 from roborock.data.v1 import RoborockDockTypeCode
 from roborock.device_features import RoborockDockFeatures
@@ -18,8 +19,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import FakeDevice
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture

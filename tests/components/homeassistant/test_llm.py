@@ -1,7 +1,11 @@
 """Tests for the homeassistant LLM tools platform."""
 
+from typing import Any
+from unittest.mock import patch
+
 from probatio import to_openapi
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import llm as llm_component
@@ -17,9 +21,8 @@ from homeassistant.helpers import (
 )
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
-
 ENTITY_ID = "light.kitchen"
+RENDER_TEMPLATE_TOOL = "homeassistant__render_template"
 
 
 @pytest.fixture(autouse=True)
@@ -53,6 +56,101 @@ async def test_live_context_always_offered(hass: HomeAssistant) -> None:
 async def test_no_tools_for_other_api(hass: HomeAssistant) -> None:
     """Test the platform returns None for an unsupported API."""
     assert ha_llm.async_get_tools(hass, _llm_context(), "other") is None
+
+
+async def test_home_assistant_api_tools(hass: HomeAssistant) -> None:
+    """Test the platform offers only the render template tool to the Home Assistant API."""
+    result = ha_llm.async_get_tools(hass, _llm_context(), llm.LLM_API_HOME_ASSISTANT)
+    assert [tool.name for tool in result.tools] == [RENDER_TEMPLATE_TOOL]
+    assert result.prompt is None
+
+
+async def _async_render_template(
+    hass: HomeAssistant, tool_args: dict[str, Any]
+) -> llm.ToolResult:
+    """Render a template with the render template tool."""
+    llm_context = _llm_context()
+    result = await llm_component.async_get_tools(
+        hass, llm_context, llm.LLM_API_HOME_ASSISTANT
+    )
+    tool = next(tool for tool in result.tools if tool.name == RENDER_TEMPLATE_TOOL)
+    return await tool.async_call(
+        hass,
+        llm.ToolInput(RENDER_TEMPLATE_TOOL, tool_args),
+        llm_context,
+    )
+
+
+@pytest.mark.parametrize(
+    ("tool_args", "expected"),
+    [
+        pytest.param(
+            {"template": "{{ states('light.kitchen') }}"},
+            {"result": "on"},
+            id="state",
+        ),
+        pytest.param(
+            {"template": "{{ [1, 2] }}"}, {"result": "[1, 2]"}, id="not_parsed"
+        ),
+        pytest.param(
+            {"template": "static text"}, {"result": "static text"}, id="static"
+        ),
+        pytest.param(
+            {
+                "template": "{{ trigger.to_state.state }}",
+                "variables": {"trigger": {"to_state": {"state": "on"}}},
+            },
+            {"result": "on"},
+            id="variables",
+        ),
+    ],
+)
+async def test_render_template(
+    hass: HomeAssistant, tool_args: dict[str, Any], expected: dict[str, Any]
+) -> None:
+    """Test the render template tool returns the rendered template as a string."""
+    response = await _async_render_template(hass, tool_args)
+    assert response == llm.ToolResult(data=expected)
+
+
+@pytest.mark.parametrize(
+    "template",
+    [
+        pytest.param("{{ states('light.kitchen') ", id="syntax_error"),
+        pytest.param("{{ undefined_variable }}", id="undefined_variable"),
+        pytest.param("{{ 1 / 0 }}", id="render_error"),
+    ],
+)
+async def test_render_template_error(hass: HomeAssistant, template: str) -> None:
+    """Test the render template tool reports template errors."""
+    response = await _async_render_template(hass, {"template": template})
+    assert response.error is True
+    assert response.data["error"]
+
+
+async def test_render_template_timeout(hass: HomeAssistant) -> None:
+    """Test the render template tool reports a template that renders too slowly."""
+    with patch(
+        "homeassistant.components.homeassistant.llm.Template.async_render_will_timeout",
+        return_value=True,
+    ):
+        response = await _async_render_template(hass, {"template": "{{ 1 }}"})
+    assert response == llm.ToolResult(
+        data={"error": "Template rendering exceeded the maximum time of 3 seconds"},
+        error=True,
+    )
+
+
+async def test_render_template_output_too_large(hass: HomeAssistant) -> None:
+    """Test the render template tool reports output that exceeds the maximum size."""
+    response = await _async_render_template(hass, {"template": "{{ 'a' * 16385 }}"})
+    assert response == llm.ToolResult(
+        data={
+            "error": "Template output of 16385 characters exceeded "
+            "the maximum of 16384 characters"
+        },
+        error=True,
+    )
 
 
 async def test_prompt_includes_context(hass: HomeAssistant) -> None:

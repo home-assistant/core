@@ -2,6 +2,7 @@
   "domain": "onedrive",
   "name": "OneDrive",
   "after_dependencies": ["cloud"],
+  "categories": ["productivity_information.documents_photos"],
   "codeowners": ["@zweckj"],
   "config_flow": true,
   "dependencies": ["application_credentials"],
@@ -10,5 +11,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["onedrive_personal_sdk"],
   "quality_scale": "platinum",
-  "requirements": ["onedrive-personal-sdk==0.1.7"]
+  "requirements": ["onedrive-personal-sdk==0.2.0"]
 }

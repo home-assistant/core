@@ -5,6 +5,13 @@ import time
 
 from home_assistant_bluetooth import BluetoothServiceInfo
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.components.bluetooth import (
+    generate_advertisement_data,
+    generate_ble_device,
+    inject_advertisement_with_time_and_source_connectable,
+    inject_bluetooth_service_info,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.bluetooth.passive_update_processor import (
@@ -46,14 +53,6 @@ from .fixtures import (
     VICTRON_VEBUS_SERVICE_INFO,
     VICTRON_VEBUS_TOKEN,
     VICTRON_VEBUS_UNRECOGNIZED_MODE_SERVICE_INFO,
-)
-
-from tests.common import MockConfigEntry, snapshot_platform
-from tests.components.bluetooth import (
-    generate_advertisement_data,
-    generate_ble_device,
-    inject_advertisement_with_time_and_source_connectable,
-    inject_bluetooth_service_info,
 )
 
 # Crafted solar charger advertisements with specific charger_error values.

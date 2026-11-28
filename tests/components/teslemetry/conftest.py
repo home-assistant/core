@@ -6,7 +6,8 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from teslemetry_stream.const import EnergyTotalsEvent
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from teslemetry_stream.const import EnergyTotalsEvent, WallConnectorTotalsEvent
 from teslemetry_stream.stream import recursive_match
 
 from homeassistant.components.teslemetry.const import TOKEN_URL
@@ -19,21 +20,22 @@ from .const import (
     METADATA,
     METADATA_ENERGY,
     METADATA_LEGACY,
+    METADATA_OLD_FIRMWARE,
+    POWERWALL_STATUS,
     PRODUCTS,
     PRODUCTS_ENERGY,
     SITE_INFO,
     VEHICLE_DATA,
     WAKE_UP_ONLINE,
+    WALL_CONNECTOR_TOTALS,
 )
-
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture
 def mock_setup_entry():
     """Mock Teslemetry async_setup_entry method."""
     with patch(
-        "homeassistant.components.teslemetry.async_setup_entry", return_value=True
+        "homeassistant.components.teslemetry.async_setup_entry", return_value=None
     ) as mock_async_setup_entry:
         yield mock_async_setup_entry
 
@@ -94,6 +96,16 @@ def mock_legacy():
         yield mock_products
 
 
+@pytest.fixture
+def mock_old_firmware():
+    """Mock a non-polling vehicle whose firmware predates ChargeLimitSoc streaming."""
+    with patch(
+        "tesla_fleet_api.teslemetry.Teslemetry.metadata",
+        return_value=METADATA_OLD_FIRMWARE,
+    ) as mock_products:
+        yield mock_products
+
+
 @pytest.fixture(autouse=True)
 def mock_wake_up():
     """Mock Tesla Fleet API Vehicle Specific wake_up method."""
@@ -145,6 +157,36 @@ def mock_site_info():
 
 
 @pytest.fixture(autouse=True)
+def mock_powerwall_live_status() -> Generator[AsyncMock]:
+    """Stub the paired gateway's local live_status so tests never hit the LAN.
+
+    The default mirrors the cloud document, so an unoverridden local poll is a
+    no-op merge; paired tests override the return value or side effect.
+    """
+    with patch(
+        "aiopowerwall.energysite.PowerwallEnergySite.live_status",
+        new_callable=AsyncMock,
+    ) as mock_powerwall_live_status:
+        mock_powerwall_live_status.side_effect = lambda: deepcopy(LIVE_STATUS)
+        yield mock_powerwall_live_status
+
+
+@pytest.fixture(autouse=True)
+def mock_powerwall_local_config() -> Generator[AsyncMock]:
+    """Stub the paired gateway's local config.json read so tests never hit the LAN.
+
+    The default is empty, so an unoverridden local poll overlays nothing and the
+    config-backed entities keep their cloud values; paired tests override it.
+    """
+    with patch(
+        "aiopowerwall.energysite.PowerwallEnergySite.local_config",
+        new_callable=AsyncMock,
+        return_value={},
+    ) as mock_powerwall_local_config:
+        yield mock_powerwall_local_config
+
+
+@pytest.fixture(autouse=True)
 def mock_stream_listen():
     """Mock Teslemetry Stream listen method."""
     with patch(
@@ -156,9 +198,13 @@ def mock_stream_listen():
 @pytest.fixture(autouse=True)
 def mock_add_listener():
     """Mock Teslemetry Stream add listener method."""
-    with patch(
-        "teslemetry_stream.TeslemetryStream.async_add_listener",
-    ) as mock_add_listener:
+    with (
+        patch(
+            "teslemetry_stream.TeslemetryStream.async_add_listener",
+        ) as mock_add_listener,
+        # Route ingest() into this registry, as the real one is never populated.
+        patch("teslemetry_stream.TeslemetryStream._dispatch") as mock_dispatch,
+    ):
         mock_add_listener.listeners = []
 
         def unsubscribe() -> None:
@@ -175,6 +221,7 @@ def mock_add_listener():
 
         mock_add_listener.send = send
         mock_add_listener.side_effect = side_effect
+        mock_dispatch.side_effect = send
         yield mock_add_listener
 
 
@@ -282,6 +329,43 @@ def mock_energy_totals_stream() -> Generator[MagicMock]:
 
 
 @pytest.fixture
+def mock_wall_connector_totals_stream() -> Generator[MagicMock]:
+    """Capture the callback the integration registers for wall_connector_totals events."""
+    with patch(
+        "teslemetry_stream.TeslemetryStreamEnergySite.listen_WallConnectorTotals",
+    ) as mock_listen:
+        callbacks: list = []
+
+        def side_effect(callback):
+            callbacks.append(callback)
+            return MagicMock()
+
+        def send(
+            totals: dict[str, float] | None = None,
+            *,
+            date: str = ENERGY_TOTALS_DATE,
+            created_at: str = "2024-09-18T08:50:00.000Z",
+            is_cache: bool = False,
+        ) -> None:
+            """Deliver a wire event through the library's own parsing."""
+            event = WallConnectorTotalsEvent.from_dict(
+                {
+                    "id": 123456,
+                    "date": date,
+                    "createdAt": created_at,
+                    "isCache": is_cache,
+                    "totals": WALL_CONNECTOR_TOTALS if totals is None else totals,
+                }
+            )
+            for callback in callbacks:
+                callback(event)
+
+        mock_listen.side_effect = side_effect
+        mock_listen.send = send
+        yield mock_listen
+
+
+@pytest.fixture
 def mock_energy_tariff_stream() -> Generator[MagicMock]:
     """Capture the callback the integration registers for tariff events."""
     with patch(
@@ -344,3 +428,13 @@ def mock_powerwall_connect() -> Generator[AsyncMock]:
         "aiopowerwall.PowerwallClient.connect", return_value="GATEWAY-DIN"
     ) as mock_connect:
         yield mock_connect
+
+
+@pytest.fixture(autouse=True)
+def mock_powerwall_status() -> Generator[AsyncMock]:
+    """Mock the local Powerwall gateway status."""
+    with patch(
+        "aiopowerwall.PowerwallClient.get_status",
+        side_effect=lambda: deepcopy(POWERWALL_STATUS),
+    ) as mock_status:
+        yield mock_status

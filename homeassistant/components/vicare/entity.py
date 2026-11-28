@@ -33,24 +33,7 @@ class ViCareEntity(Entity):
     """Base class for ViCare entities."""
 
     _attr_has_entity_name = True
-
-    @contextmanager
-    def vicare_api_handler(self) -> Generator[None]:
-        """Handle common ViCare API errors."""
-        try:
-            yield
-        except RequestConnectionError:
-            _LOGGER.error("Unable to retrieve data from ViCare server")
-        except ValueError:
-            _LOGGER.error("Unable to decode data from ViCare server")
-        except PyViCareRateLimitError as err:
-            _LOGGER.error("ViCare API rate limit exceeded: %s", err)
-        except PyViCareInvalidDataError as err:
-            _LOGGER.error("Invalid data from ViCare server: %s", err)
-        except PyViCareDeviceCommunicationError as err:
-            _LOGGER.warning("Device communication error: %s", err)
-        except PyViCareInternalServerError as err:
-            _LOGGER.warning("ViCare server error: %s", err)
+    _logged_api_error: tuple[str, tuple[str, ...]] | None = None
 
     def __init__(
         self,
@@ -81,6 +64,39 @@ class ViCareEntity(Entity):
         self._device_identifier = identifier
         self._model = model
 
+    @contextmanager
+    def vicare_api_handler(self) -> Generator[None]:
+        """Handle common ViCare API errors."""
+        try:
+            yield
+        except RequestConnectionError:
+            self._log_once(logging.ERROR, "Unable to retrieve data from ViCare server")
+        except ValueError:
+            self._log_once(logging.ERROR, "Unable to decode data from ViCare server")
+        except PyViCareRateLimitError as err:
+            self._log_once(logging.ERROR, "ViCare API rate limit exceeded: %s", err)
+        except PyViCareInvalidDataError as err:
+            self._log_once(logging.ERROR, "Invalid data from ViCare server: %s", err)
+        except PyViCareDeviceCommunicationError as err:
+            self._log_once(logging.WARNING, "Device communication error: %s", err)
+        except PyViCareInternalServerError as err:
+            self._log_once(logging.WARNING, "ViCare server error: %s", err)
+        else:
+            self._logged_api_error = None
+
+    def _log_once(self, level: int, message: str, *args: object) -> None:
+        """Log an API error when it appears, then at debug while it lasts.
+
+        Every entity of a device runs this on every poll, so an outage logged
+        per read writes a line per entity per poll.
+        """
+        error = (message, tuple(str(arg) for arg in args))
+        if error == self._logged_api_error:
+            _LOGGER.debug(message, *args)
+            return
+        self._logged_api_error = error
+        _LOGGER.log(level, message, *args)
+
     @property
     @override
     def device_info(self) -> DeviceInfo:
@@ -108,16 +124,16 @@ class ViCareEntity(Entity):
                     config_entry.entry_id,
                 )
                 if gateway_device is not None:
-                    device_info["via_device_id"] = gateway_device.id
+                    device_info.via_device_id = gateway_device.id
             elif (
                 len(parts) == 2
                 and len(zigbee_ieee := device_serial.removeprefix("zigbee-")) == 16
             ):
-                device_info["serial_number"] = "-".join(
+                device_info.serial_number = "-".join(
                     zigbee_ieee.upper()[i : i + 2] for i in range(0, 16, 2)
                 )
         else:
-            device_info["serial_number"] = device_serial
+            device_info.serial_number = device_serial
 
         return device_info
 

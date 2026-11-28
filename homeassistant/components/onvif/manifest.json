@@ -1,6 +1,7 @@
 {
   "domain": "onvif",
   "name": "ONVIF",
+  "categories": ["security_safety.cameras"],
   "codeowners": ["@jterrace"],
   "config_flow": true,
   "dependencies": ["ffmpeg"],
