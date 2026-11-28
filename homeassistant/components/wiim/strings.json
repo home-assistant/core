@@ -34,6 +34,40 @@
     }
   },
   "entity": {
+    "media_player": {
+      "speaker": {
+        "state_attributes": {
+          "sound_mode": {
+            "state": {
+              "acoustic": "Acoustic",
+              "bass_booster": "Bass booster",
+              "bass_reducer": "Bass reducer",
+              "classical": "Classical",
+              "dance": "Dance",
+              "deep": "Deep",
+              "electronic": "Electronic",
+              "flat": "Flat",
+              "game": "Game",
+              "hip_hop": "Hip-hop",
+              "jazz": "Jazz",
+              "latin": "Latin",
+              "loudness": "Loudness",
+              "lounge": "Lounge",
+              "movie": "Movie",
+              "piano": "Piano",
+              "pop": "Pop",
+              "r_and_b": "R&B",
+              "rock": "Rock",
+              "small_speakers": "Small speakers",
+              "spoken_word": "Spoken word",
+              "treble_booster": "Treble booster",
+              "treble_reducer": "Treble reducer",
+              "vocal_booster": "Vocal booster"
+            }
+          }
+        }
+      }
+    },
     "select": {
       "audio_output": {
         "name": "Audio output",
@@ -67,6 +101,9 @@
     },
     "invalid_preset_id": {
       "message": "Invalid preset ID: {media_id}"
+    },
+    "invalid_sound_mode": {
+      "message": "Unsupported sound mode: {sound_mode}"
     },
     "invalid_track_id": {
       "message": "Invalid media ID: {media_id}. Expected a valid track index."
