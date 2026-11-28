@@ -4,7 +4,7 @@
     'api': dict({
       'current_warning_level': None,
       'current_warnings': None,
-      'data_valid': False,
+      'data_valid': True,
       'expected_warning_level': None,
       'expected_warnings': None,
       'last_update': None,
