@@ -13,8 +13,21 @@ from switchbot_api import (
 
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN, CoverService
 from homeassistant.components.switchbot_cloud import SwitchBotAPI
+from homeassistant.components.switchbot_cloud.const import (
+    CURTAIN_MODE_NORMAL,
+    CURTAIN_MODE_SILENT,
+)
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_CLOSED, STATE_OPEN, STATE_UNKNOWN, TargetKey
+from homeassistant.const import (
+    SERVICE_CLOSE_COVER,
+    SERVICE_OPEN_COVER,
+    SERVICE_SET_COVER_POSITION,
+    SERVICE_STOP_COVER,
+    STATE_CLOSED,
+    STATE_OPEN,
+    STATE_UNKNOWN,
+    TargetKey,
+)
 from homeassistant.core import HomeAssistant
 
 from . import configure_integration
@@ -97,8 +110,79 @@ async def test_cover_set_attributes_coordinator_is_none(
     assert state.state == STATE_UNKNOWN
 
 
+@pytest.mark.parametrize(
+    ("device_type", "service", "command", "args", "param"),
+    [
+        ("Curtain4", SERVICE_OPEN_COVER, CommonCommands.ON, {}, "default"),
+        ("Curtain4", SERVICE_CLOSE_COVER, CommonCommands.OFF, {}, "default"),
+        ("Curtain4", SERVICE_STOP_COVER, CurtainCommands.PAUSE, {}, "default"),
+        (
+            "Curtain4",
+            SERVICE_OPEN_COVER,
+            CurtainCommands.SET_POSITION,
+            {"speed": CURTAIN_MODE_NORMAL},
+            "0,0,0",
+        ),
+        (
+            "Curtain4",
+            SERVICE_OPEN_COVER,
+            CurtainCommands.SET_POSITION,
+            {"speed": CURTAIN_MODE_SILENT},
+            "0,1,0",
+        ),
+        (
+            "Curtain4",
+            SERVICE_CLOSE_COVER,
+            CurtainCommands.SET_POSITION,
+            {"speed": CURTAIN_MODE_NORMAL},
+            "0,0,100",
+        ),
+        (
+            "Curtain4",
+            SERVICE_CLOSE_COVER,
+            CurtainCommands.SET_POSITION,
+            {"speed": CURTAIN_MODE_SILENT},
+            "0,1,100",
+        ),
+        (
+            "Curtain4",
+            SERVICE_SET_COVER_POSITION,
+            CurtainCommands.SET_POSITION,
+            {"position": 50},
+            "0,ff,50",
+        ),
+        (
+            "Curtain4",
+            SERVICE_SET_COVER_POSITION,
+            CurtainCommands.SET_POSITION,
+            {"position": 50, "speed": CURTAIN_MODE_SILENT},
+            "0,1,50",
+        ),
+        (
+            "Curtain4",
+            SERVICE_SET_COVER_POSITION,
+            CurtainCommands.SET_POSITION,
+            {"position": 50, "speed": CURTAIN_MODE_NORMAL},
+            "0,0,50",
+        ),
+        (
+            "Curtain",
+            SERVICE_SET_COVER_POSITION,
+            CurtainCommands.SET_POSITION,
+            {"position": 50},
+            "0,ff,50",
+        ),
+    ],
+)
 async def test_curtain_features(
-    hass: HomeAssistant, mock_list_devices, mock_get_status
+    hass: HomeAssistant,
+    mock_list_devices,
+    mock_get_status,
+    device_type,
+    service,
+    command,
+    args,
+    param,
 ) -> None:
     """Test curtain features."""
     mock_list_devices.return_value = [
@@ -106,7 +190,7 @@ async def test_curtain_features(
             version="V1.0",
             deviceId="cover-id-1",
             deviceName="cover-1",
-            deviceType="Curtain",
+            deviceType=device_type,
             hubDeviceId="test-hub-id",
         ),
     ]
@@ -115,72 +199,21 @@ async def test_curtain_features(
         {
             "slidePosition": 95,
         },
-        {
-            "slidePosition": 95,
-        },
-        {
-            "slidePosition": 95,
-        },
-        {
-            "slidePosition": 95,
-        },
-        {
-            "slidePosition": 95,
-        },
-        {
-            "slidePosition": 95,
-        },
-        {
-            "slidePosition": 95,
-        },
     ]
     entry = await configure_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
 
     cover_id = "cover.cover_1"
+    service_data = {TargetKey.ENTITY_ID: cover_id}
+    service_data.update(args)
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             COVER_DOMAIN,
-            CoverService.OPEN,
-            {TargetKey.ENTITY_ID: cover_id},
+            service,
+            service_data,
             blocking=True,
         )
-    mock_send_command.assert_called_once_with(
-        "cover-id-1", CommonCommands.ON, "command", "default"
-    )
-
-    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
-        await hass.services.async_call(
-            COVER_DOMAIN,
-            CoverService.CLOSE,
-            {TargetKey.ENTITY_ID: cover_id},
-            blocking=True,
-        )
-    mock_send_command.assert_called_once_with(
-        "cover-id-1", CommonCommands.OFF, "command", "default"
-    )
-
-    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
-        await hass.services.async_call(
-            COVER_DOMAIN,
-            CoverService.STOP,
-            {TargetKey.ENTITY_ID: cover_id},
-            blocking=True,
-        )
-    mock_send_command.assert_called_once_with(
-        "cover-id-1", CurtainCommands.PAUSE, "command", "default"
-    )
-
-    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
-        await hass.services.async_call(
-            COVER_DOMAIN,
-            CoverService.SET_POSITION,
-            {"position": 50, TargetKey.ENTITY_ID: cover_id},
-            blocking=True,
-        )
-    mock_send_command.assert_called_once_with(
-        "cover-id-1", CurtainCommands.SET_POSITION, "command", "0,ff,50"
-    )
+    mock_send_command.assert_called_once_with("cover-id-1", command, "command", param)
 
 
 async def test_blind_tilt_features(
