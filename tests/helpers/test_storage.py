@@ -37,6 +37,7 @@ from homeassistant.helpers import issue_registry as ir, storage
 from homeassistant.helpers.json import json_bytes, prepare_save_json
 from homeassistant.util import dt as dt_util
 from homeassistant.util.color import RGBColor
+from homeassistant.util.file import WriteError
 from homeassistant.util.json import JsonValueType, SerializationError
 
 MOCK_VERSION = 1
@@ -249,6 +250,34 @@ async def test_saving_unserializable_data_with_delay_raises(
 
     assert len(exceptions) == 1
     assert isinstance(exceptions[0], SerializationError)
+    assert store.key not in hass_storage
+
+
+async def test_saving_write_error_raises(
+    store: storage.Store, hass_storage: dict[str, Any]
+) -> None:
+    """Test a write error while saving raises."""
+    with (
+        patch.object(store._io, "async_write", side_effect=WriteError("disk full")),
+        pytest.raises(WriteError),
+    ):
+        await store.async_save(MOCK_DATA)
+    assert store.key not in hass_storage
+
+
+async def test_saving_write_error_with_delay_logs(
+    hass: HomeAssistant,
+    store: storage.Store,
+    hass_storage: dict[str, Any],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a write error in a delayed save is logged."""
+    store.async_delay_save(lambda: MOCK_DATA, 1)
+    with patch.object(store._io, "async_write", side_effect=WriteError("disk full")):
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
+        await hass.async_block_till_done()
+
+    assert "Error writing config for storage-test: disk full" in caplog.text
     assert store.key not in hass_storage
 
 

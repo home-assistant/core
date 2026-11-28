@@ -515,7 +515,11 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
         return stored
 
     async def async_save(self, data: _T) -> None:
-        """Save data."""
+        """Save data.
+
+        Raises SerializationError if the data cannot be serialized and
+        WriteError if the data cannot be written.
+        """
         self._data = {
             "version": self.version,
             "minor_version": self.minor_version,
@@ -614,12 +618,19 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
         if self.hass.state is CoreState.stopping:
             self._async_ensure_final_write_listener()
             return
-        await self._async_handle_write_data()
+        await self._async_handle_write_data_log_errors()
 
     async def _async_callback_final_write(self, _event: Event) -> None:
         """Handle a write because Home Assistant is in final write state."""
         self._unsub_final_write_listener = None
-        await self._async_handle_write_data()
+        await self._async_handle_write_data_log_errors()
+
+    async def _async_handle_write_data_log_errors(self) -> None:
+        """Write the data and log a write error, because no caller waits for it."""
+        try:
+            await self._async_handle_write_data()
+        except WriteError as err:
+            _LOGGER.error("Error writing config for %s: %s", self.key, err)
 
     async def _async_handle_write_data(self, *_args):
         """Handle writing the config."""
@@ -638,10 +649,7 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
             if self._read_only:
                 return
 
-            try:
-                await self._async_write_data(data)
-            except WriteError as err:
-                _LOGGER.error("Error writing config for %s: %s", self.key, err)
+            await self._async_write_data(data)
 
     async def _async_write_data(self, data: dict) -> None:
         if self._serialize_in_event_loop:
