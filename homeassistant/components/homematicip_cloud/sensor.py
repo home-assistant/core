@@ -43,12 +43,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import HMIPC_CLIENT_ID, HMIPC_HAPID
+from .const import HMIPC_HAPID
 from .entity import HomematicipGenericEntity
 from .hap import HomematicIPConfigEntry, HomematicipHAP
 from .helpers import (
     get_channel_index_by_type,
     get_channels_from_device,
+    get_own_client,
     smoke_detector_channel_data_exists,
 )
 
@@ -651,9 +652,7 @@ async def async_setup_entry(
         if getattr(channel, "carbonDioxideConcentration", None) is not None
     )
 
-    if (client_id := config_entry.data.get(HMIPC_CLIENT_ID)) and (
-        client := hap.home.search_client_by_id(client_id)
-    ):
+    if client := get_own_client(config_entry):
         entities.extend(
             HomematicipClientRoleSensor(hap, device, client)
             for device in hap.home.devices
