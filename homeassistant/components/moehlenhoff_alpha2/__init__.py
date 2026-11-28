@@ -7,7 +7,13 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import Alpha2BaseCoordinator, Alpha2ConfigEntry
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.CLIMATE, Platform.SENSOR]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.CLIMATE,
+    Platform.NUMBER,
+    Platform.SENSOR,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: Alpha2ConfigEntry) -> None:
