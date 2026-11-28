@@ -613,6 +613,10 @@ class MarketplaceManager:
 
     async def async_can_update(self) -> int:
         """Return how many repositories the rate limit leaves room for."""
+        # The relays spend their shared quota, an account's rate limit is not
+        # at stake and a stranger's consumption must not disable the Marketplace
+        if not self.configuration.profile.uses_github_account:
+            return self.queue.pending_tasks
         # The anonymous rate limit is too small to spend on background work
         if not self.github_connected:
             return 0
@@ -927,9 +931,10 @@ class MarketplaceManager:
             if not critical["acknowledged"]:
                 async_create_critical_repository_issue(self.hass, critical)
 
-        # Keeping installed repositories up to date takes a connected account,
-        # the catalog comes from the data feed.
-        if self.github_connected:
+        # Keeping installed repositories up to date takes a connected account
+        # or a relay that brings its own credentials, the catalog comes from
+        # the data feed.
+        if self.github_connected or not self.configuration.profile.uses_github_account:
             self._async_track_interval(
                 self.async_update_installed_custom_repositories, timedelta(hours=48)
             )
@@ -945,6 +950,9 @@ class MarketplaceManager:
             self._async_track_interval(
                 self.async_check_rate_limit, timedelta(minutes=5)
             )
+
+        # The relays bring their own credentials, the queue works without an account
+        if self.github_connected or not self.configuration.profile.uses_github_account:
             self._async_track_interval(self.async_process_queue, timedelta(minutes=10))
 
         self._async_track_interval(
@@ -1308,7 +1316,7 @@ class MarketplaceManager:
 
     async def async_process_queue(self, _: datetime | None = None) -> None:
         """Process the queue."""
-        if not self.github_connected:
+        if not self.github_connected and self.configuration.profile.uses_github_account:
             LOGGER.debug("No GitHub account connected, not processing the queue")
             return
         if self.system.disabled:
@@ -1425,7 +1433,9 @@ class MarketplaceManager:
         self, _: datetime | None = None
     ) -> None:
         """Queue an update of every installed custom repository."""
-        if self.system.disabled or not self.github_connected:
+        if self.system.disabled or (
+            not self.github_connected and self.configuration.profile.uses_github_account
+        ):
             return
         LOGGER.info(
             "Starting recurring background task for installed custom repositories"

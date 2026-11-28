@@ -606,6 +606,56 @@ async def test_queue_waits_for_a_github_connection(
     marketplace.queue.clear()
 
 
+@pytest.mark.parametrize("download_profile", ["hasscn"])
+async def test_queue_processes_without_an_account_on_a_relay(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test the queue runs on a relay without spending an account's rate limit."""
+    task = AsyncMock()
+
+    marketplace.queue.add(task())
+    await marketplace.async_process_queue()
+
+    task.assert_awaited_once()
+    marketplace.queue.clear()
+
+
+@pytest.mark.parametrize("download_profile", ["hasscn"])
+async def test_a_relay_does_not_consult_the_rate_limit_to_update(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test a relay updates with its shared quota, no rate limit is consulted."""
+
+    async def task() -> None:
+        """Do nothing, the queue only has to hold it."""
+
+    marketplace.queue.add(task())
+    with patch.object(marketplace, "async_github_api_method") as api_method:
+        assert await marketplace.async_can_update() == 1
+
+    api_method.assert_not_called()
+    marketplace.queue.clear()
+
+
+@pytest.mark.parametrize("download_profile", ["hasscn"])
+async def test_custom_repositories_update_without_an_account_on_a_relay(
+    marketplace: MarketplaceManager,
+    mock_repository: Repository,
+) -> None:
+    """Test an installed custom repository updates on a relay profile."""
+    mock_repository.data.id = "1337"
+    mock_repository.data.category = RepositoryCategory.INTEGRATION
+    mock_repository.data.installed = True
+    marketplace.repositories = Repositories()
+    marketplace.repositories.register(mock_repository)
+    mock_repository.update_repository = AsyncMock()
+
+    await marketplace.async_update_installed_custom_repositories()
+    await marketplace.async_process_queue()
+
+    mock_repository.update_repository.assert_awaited_once()
+
+
 async def test_download_gives_up_after_five_timeouts(
     marketplace: MarketplaceManager, response_mocker: MarketplaceResponses
 ) -> None:
