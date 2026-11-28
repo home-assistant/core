@@ -4,6 +4,7 @@ from datetime import timedelta
 import logging
 from typing import override
 
+from aiohttp import ClientError
 from pynintendoauth.exceptions import (
     HttpException,
     InvalidOAuthConfigurationException,
@@ -47,12 +48,17 @@ class NintendoUpdateCoordinator(DataUpdateCoordinator[None]):
         self.api = NintendoParental(
             authenticator, hass.config.time_zone, hass.config.language
         )
+        self._unavailable_devices: set[str] = set()
+
+    def device_available(self, device_id: str) -> bool:
+        """Return if the device was updated in the last poll."""
+        return device_id not in self._unavailable_devices
 
     @override
     async def _async_update_data(self) -> None:
         """Update data from Nintendo's API."""
         try:
-            return await self.api.update()
+            await self.api.discover_devices()
         except InvalidOAuthConfigurationException as err:
             # pylint: disable-next=home-assistant-exception-translation-key-missing
             raise ConfigEntryError(
@@ -74,3 +80,23 @@ class NintendoUpdateCoordinator(DataUpdateCoordinator[None]):
                     translation_key="update_required",
                 ) from err
             raise UpdateFailed(retry_after=900) from err
+        unavailable: set[str] = set()
+        for device in self.api.devices.values():
+            was_unavailable = device.device_id in self._unavailable_devices
+            try:
+                await device.update()
+            except InvalidSessionTokenException as err:
+                _LOGGER.debug("Session token invalid, will renew on next update")
+                raise UpdateFailed from err
+            except (HttpException, ClientError, TimeoutError) as err:
+                unavailable.add(device.device_id)
+                if not was_unavailable:
+                    _LOGGER.warning(
+                        "Updating Nintendo device %s failed, marking it unavailable: %s",
+                        device.name,
+                        err,
+                    )
+            else:
+                if was_unavailable:
+                    _LOGGER.info("Nintendo device %s is available again", device.name)
+        self._unavailable_devices = unavailable

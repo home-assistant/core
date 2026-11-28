@@ -149,7 +149,9 @@ def mock_nintendo_client(
         autospec=True,
     ) as mock_client_class:
         mock_client_class.return_value = mock_client_instance
-        mock_client_instance.update.return_value = None
+        mock_client_instance.discover_devices.return_value = (
+            mock_client_instance.devices
+        )
 
         yield mock_client_instance
 
