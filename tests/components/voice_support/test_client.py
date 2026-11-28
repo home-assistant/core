@@ -19,6 +19,7 @@ from homeassistant.components.voice_support.client import (
     WakeWordAccepted,
     WakeWordRejected,
     normalize_wake_word,
+    wake_word_matches,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -51,6 +52,24 @@ async def _no_audio() -> AsyncGenerator[bytes]:
 def test_normalize_wake_word(wake_word: str, expected: str) -> None:
     """Test the spellings of a wake word come out the same."""
     assert normalize_wake_word(wake_word) == expected
+
+
+@pytest.mark.parametrize(
+    ("phrase", "wake_word", "expected"),
+    [
+        pytest.param("okay nabu", "okay_nabu", True, id="exact"),
+        pytest.param("Okay Nabu", "okay-nabu", True, id="spelling"),
+        pytest.param("Internal - MWW - Okay Nabu", "okay_nabu", True, id="text_before"),
+        pytest.param("okay nabu please", "okay_nabu", True, id="text_after"),
+        pytest.param(
+            "Internal - MWW - Hey Jarvis", "okay_nabu", False, id="other_wake_word"
+        ),
+        pytest.param("nabu", "okay_nabu", False, id="part_of_wake_word"),
+    ],
+)
+def test_wake_word_matches(phrase: str, wake_word: str, expected: bool) -> None:
+    """Test a phrase names a wake word with any text around it."""
+    assert wake_word_matches(phrase, wake_word) is expected
 
 
 @pytest.mark.parametrize(

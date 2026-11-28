@@ -473,6 +473,7 @@ async def test_verifies_wake_word(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert async_verifies_wake_word(hass, "Okay Nabu")
+    assert async_verifies_wake_word(hass, "Internal - MWW - Okay Nabu")
     assert not async_verifies_wake_word(hass, "Hey Jarvis")
 
     await async_update_preview_feature(
