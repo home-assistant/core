@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any, override
 
 from boschshcpy import (
     BatteryLevelService,
+    CommunicationQualityMixin,
     SHCBatteryDevice,
     SHCLightControl,
     SHCLightSwitchBSM,
@@ -301,12 +302,12 @@ _COMPACT_ENERGY_DESCRIPTION: SHCSensorEntityDescription[SHCSmartPlugCompact] = (
         value_fn=lambda device: device.energyconsumption / 1000.0,
     )
 )
-_COMMUNICATION_QUALITY_DESCRIPTION: SHCSensorEntityDescription[SHCSmartPlugCompact] = (
-    SHCSensorEntityDescription(
-        key=COMMUNICATION_QUALITY_SENSOR,
-        translation_key=COMMUNICATION_QUALITY_SENSOR,
-        value_fn=lambda device: device.communicationquality.name,
-    )
+_COMMUNICATION_QUALITY_DESCRIPTION: SHCSensorEntityDescription[
+    CommunicationQualityMixin
+] = SHCSensorEntityDescription(
+    key=COMMUNICATION_QUALITY_SENSOR,
+    translation_key=COMMUNICATION_QUALITY_SENSOR,
+    value_fn=lambda device: device.communicationquality.name,
 )
 
 
@@ -496,8 +497,24 @@ async def async_setup_entry(
         for description in (
             _COMPACT_POWER_DESCRIPTION,
             _COMPACT_ENERGY_DESCRIPTION,
-            _COMMUNICATION_QUALITY_DESCRIPTION,
         )
+    )
+
+    communication_quality_devices: list[CommunicationQualityMixin] = [
+        *session.device_helper.smart_plugs_compact,
+        *session.device_helper.micromodule_shutter_controls,
+        *session.device_helper.micromodule_blinds,
+        *session.device_helper.shutter_contacts2,
+    ]
+    entities.extend(
+        SHCSensor(
+            hass,
+            device,
+            _COMMUNICATION_QUALITY_DESCRIPTION,
+            shc_info.unique_id,
+            config_entry.entry_id,
+        )
+        for device in communication_quality_devices
     )
 
     entities.extend(

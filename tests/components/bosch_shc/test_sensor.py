@@ -4,7 +4,12 @@ from collections.abc import Generator
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
-from boschshcpy import BatteryLevelService, SHCRoomThermostat2, TerminalConfiguration
+from boschshcpy import (
+    BatteryLevelService,
+    CommunicationQualityService,
+    SHCRoomThermostat2,
+    TerminalConfiguration,
+)
 from boschshcpy.services_impl import OutdoorSirenPowerSupplyService, ValveTappetService
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
@@ -19,9 +24,13 @@ from homeassistant.util import dt as dt_util
 from .conftest import (
     battery_only_device,
     light_control_device,
+    micromodule_blinds_device,
+    micromodule_shutter_control_device,
     motion_detector2_device,
     outdoor_siren_device,
     setup_integration,
+    shutter_contact2_device,
+    smart_plug_compact_device,
     thermostat_device,
     thermostat_gen2_device,
     twinguard_device,
@@ -469,3 +478,41 @@ async def test_battery_level_disabled_by_default(
     assert entry is not None
     assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
     assert entry.unique_id == "serial-hdm:HomeMaticIP:motion1_battery_level"
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "shutter_contacts2": [
+                shutter_contact2_device(
+                    communication_quality=CommunicationQualityService.State.BAD
+                )
+            ],
+            "micromodule_blinds": [micromodule_blinds_device()],
+            "micromodule_shutter_controls": [micromodule_shutter_control_device()],
+            "smart_plugs_compact": [smart_plug_compact_device()],
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_communication_quality_sensors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Devices that report their radio link quality get a sensor for it."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert (
+        hass.states.get("sensor.shutter_contact_communication_quality").state == "BAD"
+    )
+    assert hass.states.get("sensor.blinds_communication_quality").state == "GOOD"
+    assert (
+        hass.states.get("sensor.micromodule_shutter_communication_quality").state
+        == "GOOD"
+    )
+    assert (
+        hass.states.get("sensor.smart_plug_compact_communication_quality").state
+        == "GOOD"
+    )
