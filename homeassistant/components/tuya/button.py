@@ -48,6 +48,10 @@ BUTTONS: dict[DeviceCategory, tuple[TuyaButtonEntityDescription, ...]] = {
             translation_key="manual_clean",
             entity_category=EntityCategory.CONFIG,
         ),
+        TuyaButtonEntityDescription(
+            key=DPCode.START,
+            translation_key="start_cleaning",
+        ),
     ),
     DeviceCategory.SD: (
         TuyaButtonEntityDescription(

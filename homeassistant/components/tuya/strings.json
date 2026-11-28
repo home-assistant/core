@@ -253,6 +253,9 @@
       },
       "snooze": {
         "name": "Snooze"
+      },
+      "start_cleaning": {
+        "name": "Start cleaning"
       }
     },
     "cover": {
