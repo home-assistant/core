@@ -417,9 +417,18 @@ class WebRTCProvider(CameraWebRTCProvider):
 
     async def _update_stream_source(self, camera: Camera) -> None:
         """Update the stream source in go2rtc config if needed."""
-        if not (stream_source := await camera.stream_source()):
+        # Resolve each source once, as stream_source can be slow (e.g. it asks
+        # the camera for its URLs) and is the default webrtc_source
+        ffmpeg_source = await camera.stream_source()
+        if getattr(camera.webrtc_source, "__func__", None) is Camera.webrtc_source:
+            stream_source = ffmpeg_source
+        else:
+            stream_source = await camera.webrtc_source()
+        if not stream_source:
             await self._close_camera_sessions(camera)
             raise HomeAssistantError("Camera has no stream source")
+        # A source native to go2rtc, which FFmpeg can't open
+        native_source = stream_source != ffmpeg_source
 
         if camera.platform.platform_name == "generic":
             # This is a workaround to use ffmpeg for generic cameras
@@ -434,7 +443,12 @@ class WebRTCProvider(CameraWebRTCProvider):
         camera_prefs = await get_dynamic_camera_stream_settings(
             self._hass, camera.entity_id
         )
-        if camera_prefs.orientation is not Orientation.NO_TRANSFORM:
+        # FFmpeg applies the orientation, so live view of a native source
+        # isn't transformed
+        if (
+            camera_prefs.orientation is not Orientation.NO_TRANSFORM
+            and not native_source
+        ):
             # Camera orientation manually set by user
             if not stream_source.startswith(_FFMPEG):
                 stream_source = _FFMPEG + ":" + stream_source

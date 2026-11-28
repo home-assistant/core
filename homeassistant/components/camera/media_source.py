@@ -19,7 +19,19 @@ from homeassistant.exceptions import HomeAssistantError
 
 from . import Camera, _async_get_image
 from .const import DATA_COMPONENT, DOMAIN, StreamType
+from .entity import _has_own_webrtc_source
 from .helper import async_stream_endpoint_url
+
+
+def _uses_mjpeg_proxy(camera: Camera, stream_types: set[StreamType]) -> bool:
+    """Return if media players get the camera through the MJPEG proxy.
+
+    A camera with its own WebRTC source may have nothing HLS can play, e.g.
+    when its WebRTC provider can't restream it.
+    """
+    return not stream_types or (
+        StreamType.HLS not in stream_types and _has_own_webrtc_source(camera)
+    )
 
 
 async def async_get_media_source(hass: HomeAssistant) -> CameraMediaSource:
@@ -68,7 +80,8 @@ class CameraMediaSource(MediaSource):
         if not camera:
             raise Unresolvable(f"Could not resolve media item: {item.identifier}")
 
-        if not (stream_types := camera.camera_capabilities.frontend_stream_types):
+        stream_types = camera.camera_capabilities.frontend_stream_types
+        if _uses_mjpeg_proxy(camera, stream_types):
             return PlayMedia(
                 f"/api/camera_proxy_stream/{camera.entity_id}", camera.content_type
             )
@@ -115,7 +128,7 @@ class CameraMediaSource(MediaSource):
 
         async def _filter_browsable_camera(camera: Camera) -> BrowseMediaSource | None:
             stream_types = camera.camera_capabilities.frontend_stream_types
-            if not stream_types:
+            if _uses_mjpeg_proxy(camera, stream_types):
                 return _media_source_for_camera(self.hass, camera, camera.content_type)
             if not can_stream_hls:
                 return None
