@@ -28,7 +28,6 @@ from homeassistant.exceptions import (
     OAuth2TokenRequestReauthError,
 )
 from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
 
 from .conftest import MockOverkizClient
 from .test_config_flow import TEST_EMAIL, TEST_GATEWAY_ID, TEST_PASSWORD, TEST_SERVER
@@ -96,7 +95,7 @@ async def test_unique_id_migration(hass: HomeAssistant) -> None:
             ),
         },
     )
-    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
 
     ent_reg = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
@@ -196,7 +195,7 @@ async def test_go_to_alias_button_unique_id_migration(
         "homeassistant.components.overkiz.create_cloud_client",
         return_value=mock_client,
     ):
-        assert await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
     assert entity_registry.async_get(pergola_button.entity_id) is None
@@ -312,7 +311,7 @@ async def test_go_to_alias_button_migration_without_legacy_buttons(
         "homeassistant.components.overkiz.create_cloud_client",
         return_value=mock_client,
     ) as mock_create_cloud_client:
-        assert await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
     assert mock_entry.state is ConfigEntryState.LOADED
