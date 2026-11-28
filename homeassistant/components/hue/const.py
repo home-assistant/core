@@ -65,6 +65,8 @@ class HueService(StrEnum):
 
     HUE_ACTIVATE_SCENE = "hue_activate_scene"
     ACTIVATE_SCENE = "activate_scene"
+    FLASH = "flash"
+    STOP_FLASH = "stop_flash"
 
 
 class HueServiceArgument(StrEnum):
@@ -76,3 +78,5 @@ class HueServiceArgument(StrEnum):
     TRANSITION = "transition"
     SPEED = "speed"
     BRIGHTNESS = "brightness"
+    DURATION = "duration"
+    SECOND_RGB_COLOR = "second_rgb_color"

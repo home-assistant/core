@@ -38,8 +38,14 @@
     "activate_scene": {
       "service": "mdi:palette"
     },
+    "flash": {
+      "service": "mdi:alarm-light"
+    },
     "hue_activate_scene": {
       "service": "mdi:palette"
+    },
+    "stop_flash": {
+      "service": "mdi:alarm-light-off"
     }
   }
 }
