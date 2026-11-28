@@ -55,6 +55,7 @@ async def test_get_config(
         assert result["engine_version"] == "unknown"
         assert result["firmware"] == 0x00
         assert result["buttons"] == {"1": "on_off_switch"}
+        assert result["controller_groups"] == [1]
 
 
 async def test_get_device_with_buttons(
@@ -79,6 +80,7 @@ async def test_get_device_with_buttons(
         result = msg["result"]
 
         assert result["address"] == "33.33.33"
+        assert result["controller_groups"] == list(range(1, 9))
         assert result["buttons"] == {
             "1": "dimmable_light_main",
             "2": "on_off_switch_b",

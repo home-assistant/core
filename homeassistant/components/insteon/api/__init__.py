@@ -44,8 +44,10 @@ from .properties import (
 )
 from .scenes import (
     websocket_delete_scene,
+    websocket_get_device_scenes,
     websocket_get_scene,
     websocket_get_scenes,
+    websocket_import_scene,
     websocket_save_scene,
 )
 
@@ -63,6 +65,8 @@ def async_load_api(hass):
     websocket_api.async_register_command(hass, websocket_get_scene)
     websocket_api.async_register_command(hass, websocket_save_scene)
     websocket_api.async_register_command(hass, websocket_delete_scene)
+    websocket_api.async_register_command(hass, websocket_get_device_scenes)
+    websocket_api.async_register_command(hass, websocket_import_scene)
 
     websocket_api.async_register_command(hass, websocket_get_aldb)
     websocket_api.async_register_command(hass, websocket_change_aldb_record)
