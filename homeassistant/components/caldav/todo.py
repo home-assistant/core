@@ -9,7 +9,14 @@ from typing import Any, NamedTuple, cast, override
 
 from caldav.calendarobjectresource import CalendarObjectResource, Todo
 from caldav.collection import Calendar, SynchronizableCalendarObjectCollection
-from caldav.lib.error import DAVError, NotFoundError
+from caldav.elements import dav
+from caldav.lib.error import (
+    ConsistencyError,
+    DAVError,
+    ETagMismatchError,
+    NotFoundError,
+    ScheduleTagMismatchError,
+)
 from caldav.lib.http_sync import requests as caldav_requests
 
 from homeassistant.components.todo import (
@@ -25,6 +32,7 @@ from homeassistant.util import dt as dt_util
 
 from . import CalDavConfigEntry
 from .api import calendars_supporting, get_attr_value
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -110,9 +118,30 @@ def _get_todos(calendar: Calendar) -> list[_SortedTodo]:
     return sorted(todos, key=lambda todo: todo.position)
 
 
-def _get_todo_items(calendar: Calendar) -> list[TodoItem]:
-    """Fetch and parse todo items."""
-    return [todo.item for todo in _get_todos(calendar)]
+def _strong_etag(todo: CalendarObjectResource) -> str | None:
+    """Return the ETag of a todo, None if it is weak."""
+    # If-Match never matches a weak ETag (RFC 9110 section 13.1.1)
+    if (etag := todo.etag) and not etag.startswith("W/"):
+        return etag
+    return None
+
+
+def _get_etags(todos: list[_SortedTodo]) -> dict[str, str]:
+    """Return the ETag of each todo by its URL."""
+    return {
+        str(todo.resource.url): etag
+        for todo in todos
+        if (etag := _strong_etag(todo.resource)) is not None
+    }
+
+
+def _expect_listed(todo: CalendarObjectResource, etags: dict[str, str]) -> None:
+    """Raise if a todo is not the version listed, and make its save expect that version."""
+    if (etag := etags.get(str(todo.url))) is None:
+        return
+    if todo.etag not in (None, etag):
+        raise ETagMismatchError
+    todo.props[dav.GetEtag.tag] = etag
 
 
 def _sort_position(todo: Any) -> int:
@@ -249,6 +278,7 @@ class WebDavTodoListEntity(TodoListEntity):
         self._attr_name = (calendar_name or "Unknown").capitalize()
         self._attr_unique_id = f"{config_entry_id}-{calendar.id}"
         self._sync_token: str | None = None
+        self._etags: dict[str, str] = {}
         self._skips_left = 0
         self._writes = 0
         self._writes_seen = 0
@@ -258,7 +288,8 @@ class WebDavTodoListEntity(TodoListEntity):
         """Update To-do list entity state.
 
         A write during the full read had its refresh dropped while this update
-        ran, so another refresh follows once it is done.
+        ran, so another refresh follows once it is done. The items and ETags of
+        that read may be from before the write and are not kept.
         """
         changed, sync_token = await self.hass.async_add_executor_job(
             _get_changes, self._calendar, self._sync_token
@@ -267,13 +298,14 @@ class WebDavTodoListEntity(TodoListEntity):
         if not changed and self._skips_left and writes == self._writes_seen:
             self._skips_left -= 1
             return
-        todo_items = await self.hass.async_add_executor_job(
-            _get_todo_items, self._calendar
-        )
+        todos = await self.hass.async_add_executor_job(_get_todos, self._calendar)
+        todo_items = [todo.item for todo in todos]
         if not changed and todo_items != self._attr_todo_items:
             # The report missed a change
             sync_token = None
-        self._attr_todo_items = todo_items
+        if self._writes == writes:
+            self._attr_todo_items = todo_items
+            self._etags = _get_etags(todos)
         self._sync_token = sync_token
         self._skips_left = MAX_SKIPPED_UPDATES
         self._writes_seen = writes
@@ -281,6 +313,31 @@ class WebDavTodoListEntity(TodoListEntity):
             self.hass.async_create_task(
                 self.async_update_ha_state(force_refresh=True), eager_start=False
             )
+
+    def _expect_saved(self, todo: CalendarObjectResource) -> None:
+        """Expect the saved version in later writes, if the server named it."""
+        # A strong ETag is only allowed for data stored as sent (RFC 4791 section 5.3.4)
+        if (etag := _strong_etag(todo)) is None:
+            self._etags.pop(str(todo.url), None)
+        else:
+            self._etags[str(todo.url)] = etag
+
+    def _replace_listed(self, todo: CalendarObjectResource) -> None:
+        """Show a todo as saved until the list is read again."""
+        self._expect_saved(todo)
+        if (saved := _todo_item(todo)) is not None and self._attr_todo_items:
+            self._attr_todo_items = [
+                saved if item.uid == saved.uid else item
+                for item in self._attr_todo_items
+            ]
+
+    def _item_changed(self) -> HomeAssistantError:
+        """Read the list again, and return the error for an item changed elsewhere."""
+        self._writes += 1
+        self.hass.async_create_task(self.async_update_ha_state(force_refresh=True))
+        return HomeAssistantError(
+            translation_domain=DOMAIN, translation_key="item_changed"
+        )
 
     @override
     async def async_create_todo_item(self, item: TodoItem) -> None:
@@ -311,6 +368,7 @@ class WebDavTodoListEntity(TodoListEntity):
     @override
     async def async_update_todo_item(self, item: TodoItem) -> None:
         """Update a To-do item."""
+        etags = dict(self._etags)
         async with self._write_lock:
             uid: str = cast(str, item.uid)
             try:
@@ -321,7 +379,7 @@ class WebDavTodoListEntity(TodoListEntity):
                     ),
                 )
             except NotFoundError as err:
-                raise HomeAssistantError(f"Could not find To-do item {uid}") from err
+                raise self._item_changed() from err
             except (
                 caldav_requests.exceptions.ConnectionError,
                 caldav_requests.exceptions.Timeout,
@@ -349,28 +407,45 @@ class WebDavTodoListEntity(TodoListEntity):
             else:
                 vtodo.pop("DESCRIPTION", None)
             try:
+                _expect_listed(todo, etags)
                 await self.hass.async_add_executor_job(
                     partial(
                         todo.save,
                         no_create=True,
                         obj_type="todo",
+                        only_this_recurrence=False,
+                        precondition="etag",
                     ),
                 )
                 self._writes += 1
+                self._replace_listed(todo)
                 # refreshing async otherwise it would take too much time
                 self.hass.async_create_task(
                     self.async_update_ha_state(force_refresh=True)
                 )
+            # caldav raises ConsistencyError for a todo that is gone by then
+            except (
+                ConsistencyError,
+                ETagMismatchError,
+                ScheduleTagMismatchError,
+            ) as err:
+                raise self._item_changed() from err
             except (
                 caldav_requests.exceptions.ConnectionError,
                 caldav_requests.exceptions.Timeout,
                 DAVError,
             ) as err:
+                # A save that failed may still have been applied
+                self._writes += 1
+                self.hass.async_create_task(
+                    self.async_update_ha_state(force_refresh=True)
+                )
                 raise HomeAssistantError(f"CalDAV save error: {err}") from err
 
     @override
     async def async_delete_todo_items(self, uids: list[str]) -> None:
         """Delete To-do items."""
+        etags = dict(self._etags)
         async with self._write_lock:
             tasks = (
                 self.hass.async_add_executor_job(self._calendar.get_todo_by_uid, uid)
@@ -380,7 +455,7 @@ class WebDavTodoListEntity(TodoListEntity):
             try:
                 items = cast(list[Todo], await asyncio.gather(*tasks))
             except NotFoundError as err:
-                raise HomeAssistantError("Could not find To-do item") from err
+                raise self._item_changed() from err
             except (
                 caldav_requests.exceptions.ConnectionError,
                 caldav_requests.exceptions.Timeout,
@@ -395,11 +470,17 @@ class WebDavTodoListEntity(TodoListEntity):
                 nonlocal deleted
                 # Run serially as some CalDAV servers do not support concurrent changes
                 for item in items:
-                    item.delete()
+                    item.delete(if_match=etags.get(str(item.url)))
                     deleted += 1
 
             try:
+                # SOGo deletes an item whatever If-Match says
+                for item in items:
+                    _expect_listed(item, etags)
                 await self.hass.async_add_executor_job(delete_items)
+            # caldav raises on a 404 only if the delete is conditional
+            except (ETagMismatchError, NotFoundError) as err:
+                raise self._item_changed() from err
             except (
                 caldav_requests.exceptions.ConnectionError,
                 caldav_requests.exceptions.Timeout,
@@ -444,6 +525,12 @@ class WebDavTodoListEntity(TodoListEntity):
                 raise
             if items != self._attr_todo_items:
                 self._writes += 1
+            shown = {
+                str(todo.url)
+                for todo in todos
+                if (etag := _strong_etag(todo)) is not None
+                and self._etags.get(str(todo.url)) == etag
+            }
             try:
                 await self.hass.async_add_executor_job(_save_todos, todos)
                 if todos:
@@ -457,6 +544,9 @@ class WebDavTodoListEntity(TodoListEntity):
                 self._writes += 1
                 raise HomeAssistantError(f"CalDAV save error: {err}") from err
             finally:
+                for todo in todos:
+                    if str(todo.url) in shown:
+                        self._expect_saved(todo)
                 self.hass.async_create_task(
                     self.async_update_ha_state(force_refresh=True)
                 )

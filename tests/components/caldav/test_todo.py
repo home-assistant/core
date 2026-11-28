@@ -2,12 +2,14 @@
 
 import asyncio
 from datetime import UTC, date, datetime
+import threading
 import time
-from typing import Any
+from typing import Any, Literal
 from unittest.mock import MagicMock, Mock
 
 from caldav.calendarobjectresource import Todo
 from caldav.collection import SynchronizableCalendarObjectCollection
+from caldav.elements import cdav, dav
 from caldav.lib.error import DAVError, NotFoundError
 from caldav.lib.http_sync import requests as caldav_requests
 from caldav.lib.url import URL
@@ -740,7 +742,7 @@ async def test_update_item_failure(
 
 @pytest.mark.parametrize(
     ("side_effect", "match"),
-    [(DAVError, "CalDAV lookup error"), (NotFoundError, "Could not find")],
+    [(DAVError, "CalDAV lookup error"), (NotFoundError, "changed on the server")],
 )
 async def test_update_item_lookup_failure(
     hass: HomeAssistant,
@@ -829,7 +831,7 @@ async def test_remove_item(
     ("todos", "side_effect", "match"),
     [
         ([TODO_NEEDS_ACTION], DAVError, "CalDAV lookup error"),
-        ([TODO_NEEDS_ACTION], NotFoundError, "Could not find"),
+        ([TODO_NEEDS_ACTION], NotFoundError, "changed on the server"),
     ],
 )
 async def test_remove_item_lookup_failure(
@@ -902,7 +904,7 @@ async def test_remove_item_not_found(
 
     calendar.get_todo_by_uid.side_effect = NotFoundError()
 
-    with pytest.raises(HomeAssistantError, match="Could not find"):
+    with pytest.raises(HomeAssistantError, match="changed on the server"):
         await hass.services.async_call(
             TODO_DOMAIN,
             TodoServices.REMOVE_ITEM,
@@ -2120,3 +2122,1006 @@ async def test_move_item_past_unreadable_item(
     assert resp["error"]["code"] == "failed"
     assert resp["error"]["message"].startswith("CalDAV lookup error")
     assert not dav_client.put.called
+
+
+class FakeServer:
+    """A calendar that gives each stored todo a new ETag and honors If-Match."""
+
+    def __init__(self, dav_client: Mock, calendar: Mock) -> None:
+        """Answer the reads and writes of the calendar."""
+        self.todos: dict[str, str] = {}
+        self.etags: dict[str, str] = {}
+        self.schedule_tags = False
+        self.fixed_schedule_tag: str | None = None
+        self.put_etag: Literal["strong", "weak"] | None = "strong"
+        self._dav_client = dav_client
+        self._calendar = calendar
+        self._versions = 0
+        calendar.search.side_effect = self.search
+        calendar.get_todo_by_uid.side_effect = self.lookup
+        dav_client.put.side_effect = self.put
+        dav_client.delete.side_effect = self.delete
+
+    def store(self, uid: str, *lines: str, etag: str | None = None) -> None:
+        """Store a todo with the given lines, as another client does."""
+        self.store_ics(uid, sorted_todo(uid, *lines), etag)
+
+    def store_ics(self, uid: str, ics: str, etag: str | None = None) -> None:
+        """Store a todo, as another client does."""
+        self._versions += 1
+        self.todos[uid] = ics
+        self.etags[uid] = etag or f'"{self._versions}"'
+
+    def url(self, uid: str) -> str:
+        """Return the URL of a todo."""
+        return str(self._dav_client.url.join(f"{uid}.ics"))
+
+    def schedule_tag(self, uid: str) -> str:
+        """Return the Schedule-Tag of a todo, unless fixed one for each version."""
+        return self.fixed_schedule_tag or f'"s{self.etags[uid].strip('"')}"'
+
+    def lookup(self, uid: str, with_etag: bool = True) -> Todo:
+        """Return a todo, with its ETag as a report has it."""
+        if uid not in self.todos:
+            raise NotFoundError
+        props = {dav.GetEtag.tag: self.etags[uid]} if with_etag else {}
+        if self.schedule_tags:
+            props[cdav.ScheduleTag.tag] = self.schedule_tag(uid)
+        return Todo(
+            self._dav_client, f"{uid}.ics", self.todos[uid], self._calendar, uid, props
+        )
+
+    def search(self, **kwargs: Any) -> list[Todo]:
+        """Return all todos with their ETags."""
+        return [self.lookup(uid) for uid in self.todos]
+
+    def _refuses(self, uid: str, headers: dict[str, str]) -> bool:
+        return headers.get("if-match") not in (None, "*", self.etags[uid]) or (
+            headers.get("if-schedule-tag-match") not in (None, self.schedule_tag(uid))
+        )
+
+    def put(self, url: str, data: str, headers: dict[str, str]) -> MagicMock:
+        """Store a todo unless another version than the stored one is expected."""
+        uid = url.rsplit("/", 1)[-1].removesuffix(".ics")
+        if self._refuses(uid, headers):
+            return MagicMock(status=412)
+        self._versions += 1
+        self.todos[uid] = data
+        self.etags[uid] = f'"{self._versions}"'
+        headers = {}
+        if self.put_etag is not None:
+            weak = "W/" if self.put_etag == "weak" else ""
+            headers["Etag"] = weak + self.etags[uid]
+        return MagicMock(status=204, headers=headers)
+
+    def delete(self, url: str, headers: dict[str, str] | None = None) -> MagicMock:
+        """Delete a todo unless another version than the stored one is expected."""
+        uid = url.rsplit("/", 1)[-1].removesuffix(".ics")
+        if uid not in self.todos:
+            return MagicMock(status=404)
+        if self._refuses(uid, headers or {}):
+            return MagicMock(status=412)
+        del self.todos[uid]
+        return MagicMock(status=204)
+
+
+@pytest.fixture(name="server")
+def mock_server(dav_client: Mock, calendar: Mock) -> FakeServer:
+    """Fixture for a calendar that honors If-Match."""
+    return FakeServer(dav_client, calendar)
+
+
+async def get_items(hass: HomeAssistant) -> list[dict[str, Any]]:
+    """Return the items the list shows."""
+    result = await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.GET_ITEMS,
+        {},
+        target={TargetKey.ENTITY_ID: TEST_ENTITY},
+        blocking=True,
+        return_response=True,
+    )
+    return result[TEST_ENTITY]["items"]
+
+
+ITEM_CHANGED = (
+    "The to-do item was changed on the server in the meantime. "
+    "Check the list and try again"
+)
+CHANGED_ELSEWHERE = {
+    "uid": "a",
+    "summary": "a",
+    "status": "needs_action",
+    "description": "Added elsewhere",
+}
+
+
+@pytest.mark.parametrize(
+    ("data", "lookup_with_etag"),
+    [
+        ({ATTR_RENAME: "b"}, True),
+        ({ATTR_STATUS: "completed"}, True),
+        ({ATTR_STATUS: "completed"}, False),
+    ],
+    ids=["rename", "complete", "complete_found_without_etag"],
+)
+async def test_update_item_changed_elsewhere(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    calendar: Mock,
+    server: FakeServer,
+    data: dict[str, Any],
+    lookup_with_etag: bool,
+) -> None:
+    """Test an update doesn't overwrite an item changed since the list was read."""
+    server.store("a")
+    calendar.get_todo_by_uid.side_effect = lambda uid: server.lookup(
+        uid, lookup_with_etag
+    )
+    calendar.get_objects_by_sync_token.return_value = sync_report("token-1")
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    server.store("a", "DESCRIPTION:Added elsewhere")
+
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            TODO_DOMAIN,
+            TodoServices.UPDATE_ITEM,
+            {ATTR_ITEM: "a", **data},
+            target={TargetKey.ENTITY_ID: TEST_ENTITY},
+            blocking=True,
+        )
+    await hass.async_block_till_done()
+
+    assert err.value.translation_key == "item_changed"
+    assert str(err.value) == ITEM_CHANGED
+    assert "DESCRIPTION:Added elsewhere" in server.todos["a"]
+    assert await get_items(hass) == [CHANGED_ELSEWHERE]
+
+
+async def test_update_item_found_without_etag_expects_listed_version(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    dav_client: Mock,
+    calendar: Mock,
+    server: FakeServer,
+) -> None:
+    """Test an item caldav finds without its ETag is saved as the version listed."""
+    server.store("a")
+    calendar.get_todo_by_uid.side_effect = lambda uid: server.lookup(uid, False)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.UPDATE_ITEM,
+        {ATTR_ITEM: "a", ATTR_STATUS: "completed"},
+        target={TargetKey.ENTITY_ID: TEST_ENTITY},
+        blocking=True,
+    )
+
+    assert dav_client.put.call_args.args[2]["if-match"] == '"1"'
+    assert "STATUS:COMPLETED" in server.todos["a"].splitlines()
+
+
+async def test_update_item_changed_elsewhere_with_changed_occurrence_first(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    server: FakeServer,
+) -> None:
+    """Test a todo that caldav reads again to save it is not overwritten either."""
+    server.store_ics("b", TODO_OVERRIDE_FIRST)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    changed = TODO_OVERRIDE_FIRST.replace("SUMMARY:b", "SUMMARY:Changed elsewhere")
+    server.store_ics("b", changed)
+
+    with pytest.raises(HomeAssistantError, match=ITEM_CHANGED):
+        await hass.services.async_call(
+            TODO_DOMAIN,
+            TodoServices.UPDATE_ITEM,
+            {ATTR_ITEM: "b", ATTR_STATUS: "completed"},
+            target={TargetKey.ENTITY_ID: TEST_ENTITY},
+            blocking=True,
+        )
+
+    assert server.todos["b"] == changed
+
+
+async def test_update_skips_unchanged_list_again_after_item_changed_elsewhere(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    calendar: Mock,
+    server: FakeServer,
+) -> None:
+    """Test a refused write is followed by one full read and a new sync token."""
+    server.store("a")
+    calendar.get_objects_by_sync_token.return_value = sync_report("token-1")
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    server.store("a", "DESCRIPTION:Added elsewhere")
+    reads = calendar.search.call_count
+
+    with pytest.raises(HomeAssistantError, match=ITEM_CHANGED):
+        await hass.services.async_call(
+            TODO_DOMAIN,
+            TodoServices.UPDATE_ITEM,
+            {ATTR_ITEM: "a", ATTR_STATUS: "completed"},
+            target={TargetKey.ENTITY_ID: TEST_ENTITY},
+            blocking=True,
+        )
+    await hass.async_block_till_done()
+    assert calendar.search.call_count == reads + 1
+
+    await async_update_entity(hass, TEST_ENTITY)
+    calendar.get_objects_by_sync_token.assert_called_with(None, disable_fallback=True)
+    assert calendar.search.call_count == reads + 2
+    await async_update_entity(hass, TEST_ENTITY)
+    assert calendar.search.call_count == reads + 2
+
+
+@pytest.mark.parametrize(
+    ("lookup_with_etag", "expected_left"),
+    [(True, ["b", "a", "c"]), (False, ["a", "c"])],
+    ids=["found_with_etag", "found_without_etag"],
+)
+async def test_remove_items_changed_elsewhere(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    calendar: Mock,
+    server: FakeServer,
+    lookup_with_etag: bool,
+    expected_left: list[str],
+) -> None:
+    """Test a delete doesn't remove an item changed since the list was read."""
+    server.store("b")
+    server.store("a")
+    server.store("c")
+    calendar.get_todo_by_uid.side_effect = lambda uid: server.lookup(
+        uid, lookup_with_etag
+    )
+    calendar.get_objects_by_sync_token.return_value = sync_report("token-1")
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    server.store("a", "DESCRIPTION:Added elsewhere")
+
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            TODO_DOMAIN,
+            TodoServices.REMOVE_ITEM,
+            {ATTR_ITEM: ["b", "a", "c"]},
+            target={TargetKey.ENTITY_ID: TEST_ENTITY},
+            blocking=True,
+        )
+    await hass.async_block_till_done()
+
+    assert err.value.translation_key == "item_changed"
+    assert list(server.todos) == expected_left
+    assert "DESCRIPTION:Added elsewhere" in server.todos["a"]
+    assert [item["uid"] for item in await get_items(hass)] == expected_left
+    assert CHANGED_ELSEWHERE in await get_items(hass)
+
+
+async def test_remove_item_expects_only_a_strong_etag(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    dav_client: Mock,
+    server: FakeServer,
+) -> None:
+    """Test a delete expects the listed version unless its ETag is a weak one."""
+    server.store("a")
+    server.store("b", etag='W/"2"')
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.REMOVE_ITEM,
+        {ATTR_ITEM: ["a", "b"]},
+        target={TargetKey.ENTITY_ID: TEST_ENTITY},
+        blocking=True,
+    )
+
+    assert [request.args for request in dav_client.delete.call_args_list] == [
+        (server.url("a"), {"if-match": '"1"'}),
+        (server.url("b"),),
+    ]
+
+
+async def test_remove_item_removed_elsewhere_during_delete(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    calendar: Mock,
+    server: FakeServer,
+) -> None:
+    """Test a delete of an item that is gone by then shows the list without it."""
+    server.store("a")
+    calendar.get_objects_by_sync_token.return_value = sync_report("token-1")
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    def remove_after_lookup(uid: str) -> Todo:
+        todo = server.lookup(uid)
+        del server.todos[uid]
+        return todo
+
+    calendar.get_todo_by_uid.side_effect = remove_after_lookup
+
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            TODO_DOMAIN,
+            TodoServices.REMOVE_ITEM,
+            {ATTR_ITEM: ["a"]},
+            target={TargetKey.ENTITY_ID: TEST_ENTITY},
+            blocking=True,
+        )
+    await hass.async_block_till_done()
+
+    assert err.value.translation_key == "item_changed"
+    assert await get_items(hass) == []
+
+
+async def test_move_item_changed_elsewhere_keeps_that_change(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    calendar: Mock,
+    server: FakeServer,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a move of an item changed since the list was read keeps that change."""
+    server.store("a", "X-APPLE-SORT-ORDER:100")
+    server.store("b", "X-APPLE-SORT-ORDER:200")
+    server.store("c", "X-APPLE-SORT-ORDER:300")
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    server.store("c", "X-APPLE-SORT-ORDER:300", "DESCRIPTION:Added elsewhere")
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "todo/item/move",
+            "entity_id": TEST_ENTITY,
+            "uid": "c",
+            "previous_uid": "a",
+        }
+    )
+    assert (await client.receive_json())["success"]
+    await hass.async_block_till_done()
+
+    lines = server.todos["c"].splitlines()
+    assert "DESCRIPTION:Added elsewhere" in lines
+    assert "X-APPLE-SORT-ORDER:150" in lines
+    assert await get_items(hass) == [
+        {"uid": "a", "summary": "a", "status": "needs_action"},
+        {**CHANGED_ELSEWHERE, "uid": "c", "summary": "c"},
+        {"uid": "b", "summary": "b", "status": "needs_action"},
+    ]
+
+
+async def update_description(hass: HomeAssistant, description: str) -> None:
+    """Change the description of the item b."""
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.UPDATE_ITEM,
+        {ATTR_ITEM: "b", ATTR_DESCRIPTION: description},
+        target={TargetKey.ENTITY_ID: TEST_ENTITY},
+        blocking=True,
+    )
+
+
+@pytest.mark.parametrize(
+    "put_etag",
+    ["strong", "weak", None],
+    ids=["etag_returned", "weak_etag_returned", "no_etag_returned"],
+)
+@pytest.mark.parametrize("first_write", ["update", "move"])
+async def test_update_item_changed_elsewhere_after_own_writes(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    calendar: Mock,
+    server: FakeServer,
+    hass_ws_client: WebSocketGenerator,
+    first_write: str,
+    put_etag: Literal["strong", "weak"] | None,
+) -> None:
+    """Test an item counts as changed by another client only, also before a refresh."""
+    server.put_etag = put_etag
+    server.store("a", "X-APPLE-SORT-ORDER:100")
+    server.store("b", "X-APPLE-SORT-ORDER:200")
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    if first_write == "update":
+        calendar.search.side_effect = DAVError
+        await update_description(hass, "First")
+    else:
+        calendar.search.side_effect = [server.search(), DAVError()]
+        client = await hass_ws_client(hass)
+        await client.send_json_auto_id(
+            {"type": "todo/item/move", "entity_id": TEST_ENTITY, "uid": "b"}
+        )
+        assert (await client.receive_json())["success"]
+    await hass.async_block_till_done()
+    calendar.search.side_effect = server.search
+
+    await update_description(hass, "Second")
+    await hass.async_block_till_done()
+    assert "DESCRIPTION:Second" in server.todos["b"].splitlines()
+
+    server.store("b", "DESCRIPTION:Added elsewhere")
+    with pytest.raises(HomeAssistantError) as err:
+        await update_description(hass, "Third")
+    assert err.value.translation_key == "item_changed"
+    assert "DESCRIPTION:Added elsewhere" in server.todos["b"]
+
+
+async def test_update_item_changed_elsewhere_after_own_write_during_read(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    calendar: Mock,
+    server: FakeServer,
+) -> None:
+    """Test a read that an own write overtook doesn't make the item count as changed."""
+    server.store("b")
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    def write_during_search(**kwargs: Any) -> list[Todo]:
+        todos = server.search()
+        calendar.search.side_effect = DAVError
+        asyncio.run_coroutine_threadsafe(
+            update_description(hass, "First"), hass.loop
+        ).result()
+        return todos
+
+    calendar.search.side_effect = write_during_search
+    await async_update_entity(hass, TEST_ENTITY)
+    await hass.async_block_till_done()
+    calendar.search.side_effect = server.search
+
+    await update_description(hass, "Second")
+    await hass.async_block_till_done()
+    assert "DESCRIPTION:Second" in server.todos["b"].splitlines()
+
+    server.store("b", "DESCRIPTION:Added elsewhere")
+    with pytest.raises(HomeAssistantError) as err:
+        await update_description(hass, "Third")
+    assert err.value.translation_key == "item_changed"
+    assert "DESCRIPTION:Added elsewhere" in server.todos["b"]
+
+
+async def update_item(hass: HomeAssistant, item: str, **data: Any) -> None:
+    """Update an item of the list."""
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.UPDATE_ITEM,
+        {ATTR_ITEM: item, **data},
+        target={TargetKey.ENTITY_ID: TEST_ENTITY},
+        blocking=True,
+    )
+
+
+async def test_update_item_changed_elsewhere_and_read_during_lookup(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    calendar: Mock,
+    server: FakeServer,
+) -> None:
+    """Test a refresh during the lookup doesn't let the outdated item through."""
+    server.store("a")
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    server.store("a", "DESCRIPTION:Added elsewhere")
+
+    lookup = calendar.get_todo_by_uid
+
+    def refresh_during_lookup(uid: str) -> Todo:
+        calendar.get_todo_by_uid = lookup
+        asyncio.run_coroutine_threadsafe(
+            async_update_entity(hass, TEST_ENTITY), hass.loop
+        ).result()
+        return server.lookup(uid)
+
+    # A plain function, as the test harness runs a Mock in the event loop
+    calendar.get_todo_by_uid = refresh_during_lookup
+    with pytest.raises(HomeAssistantError) as err:
+        await update_item(hass, "a", **{ATTR_STATUS: "completed"})
+
+    assert err.value.translation_key == "item_changed"
+    assert "DESCRIPTION:Added elsewhere" in server.todos["a"]
+
+
+async def test_update_item_changed_elsewhere_after_lookup_with_occurrence_first(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    calendar: Mock,
+    server: FakeServer,
+) -> None:
+    """Test a todo with an occurrence first is saved as the version looked up."""
+    server.store_ics("b", TODO_OVERRIDE_FIRST)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    changed = TODO_OVERRIDE_FIRST.replace("SUMMARY:b", "SUMMARY:Changed elsewhere")
+
+    def change_after_lookup(uid: str) -> Todo:
+        todo = server.lookup(uid)
+        calendar.get_todo_by_uid.side_effect = server.lookup
+        server.store_ics("b", changed)
+        return todo
+
+    calendar.get_todo_by_uid.side_effect = change_after_lookup
+    with pytest.raises(HomeAssistantError) as err:
+        await update_item(hass, "b", **{ATTR_STATUS: "completed"})
+
+    assert err.value.translation_key == "item_changed"
+    assert server.todos["b"] == changed
+
+
+async def test_update_item_after_own_save_timed_out(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    dav_client: Mock,
+    server: FakeServer,
+) -> None:
+    """Test a save that timed out but was stored doesn't refuse the next one."""
+    server.store("a")
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    def store_then_time_out(url: str, data: str, headers: dict[str, str]) -> None:
+        server.put(url, data, headers)
+        raise caldav_requests.exceptions.Timeout
+
+    dav_client.put.side_effect = store_then_time_out
+    with pytest.raises(HomeAssistantError, match="CalDAV save error"):
+        await update_item(hass, "a", **{ATTR_RENAME: "renamed"})
+    await hass.async_block_till_done()
+    dav_client.put.side_effect = server.put
+
+    await update_item(hass, "a", **{ATTR_STATUS: "completed"})
+    lines = server.todos["a"].splitlines()
+    assert "SUMMARY:renamed" in lines
+    assert "STATUS:COMPLETED" in lines
+
+
+@pytest.mark.parametrize(
+    "put_etag",
+    ["strong", "weak", None],
+    ids=["etag_returned", "weak_etag_returned", "no_etag_returned"],
+)
+async def test_update_item_twice_before_refresh(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    calendar: Mock,
+    server: FakeServer,
+    put_etag: Literal["strong", "weak"] | None,
+) -> None:
+    """Test a second update before the list is read again keeps the first one."""
+    server.put_etag = put_etag
+    server.store("a")
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    calendar.search.side_effect = DAVError
+
+    await update_item(hass, "a", **{ATTR_RENAME: "renamed"})
+    await hass.async_block_till_done()
+    await update_item(hass, "a", **{ATTR_STATUS: "completed"})
+
+    lines = server.todos["a"].splitlines()
+    assert "SUMMARY:renamed" in lines
+    assert "STATUS:COMPLETED" in lines
+
+
+async def test_update_item_after_own_write_during_read(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    calendar: Mock,
+    server: FakeServer,
+) -> None:
+    """Test a read that an own write overtook doesn't undo that write."""
+    server.store("a")
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    def rename_during_search(**kwargs: Any) -> list[Todo]:
+        todos = server.search()
+        calendar.search.side_effect = DAVError
+        asyncio.run_coroutine_threadsafe(
+            update_item(hass, "a", **{ATTR_RENAME: "renamed"}), hass.loop
+        ).result()
+        return todos
+
+    calendar.search.side_effect = rename_during_search
+    await async_update_entity(hass, TEST_ENTITY)
+    await hass.async_block_till_done()
+    await update_item(hass, "a", **{ATTR_STATUS: "completed"})
+
+    lines = server.todos["a"].splitlines()
+    assert "SUMMARY:renamed" in lines
+    assert "STATUS:COMPLETED" in lines
+
+
+@pytest.mark.parametrize("first_write", ["update", "move"])
+async def test_update_other_item_changed_elsewhere_after_own_write(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    calendar: Mock,
+    server: FakeServer,
+    hass_ws_client: WebSocketGenerator,
+    first_write: str,
+) -> None:
+    """Test an own write keeps the check of the other items until the next read."""
+    server.store("a", "X-APPLE-SORT-ORDER:100")
+    server.store("b", "X-APPLE-SORT-ORDER:200")
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    if first_write == "update":
+        calendar.search.side_effect = DAVError
+        await update_description(hass, "Own")
+    else:
+        calendar.search.side_effect = [server.search(), DAVError()]
+        client = await hass_ws_client(hass)
+        await client.send_json_auto_id(
+            {"type": "todo/item/move", "entity_id": TEST_ENTITY, "uid": "b"}
+        )
+        assert (await client.receive_json())["success"]
+    await hass.async_block_till_done()
+    calendar.search.side_effect = server.search
+    server.store("a", "X-APPLE-SORT-ORDER:100", "DESCRIPTION:Added elsewhere")
+
+    with pytest.raises(HomeAssistantError) as err:
+        await update_item(hass, "a", **{ATTR_STATUS: "completed"})
+    assert err.value.translation_key == "item_changed"
+    assert "DESCRIPTION:Added elsewhere" in server.todos["a"]
+
+
+@pytest.mark.parametrize("first_write", ["update", "move"])
+async def test_update_item_changed_elsewhere_after_own_write_before_refresh(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    calendar: Mock,
+    server: FakeServer,
+    hass_ws_client: WebSocketGenerator,
+    first_write: str,
+) -> None:
+    """Test an item changed after an own write is refused before the list is read."""
+    server.store("a", "X-APPLE-SORT-ORDER:100")
+    server.store("b", "X-APPLE-SORT-ORDER:200")
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    if first_write == "update":
+        calendar.search.side_effect = DAVError
+        await update_description(hass, "Own")
+    else:
+        calendar.search.side_effect = [server.search(), DAVError()]
+        client = await hass_ws_client(hass)
+        await client.send_json_auto_id(
+            {"type": "todo/item/move", "entity_id": TEST_ENTITY, "uid": "b"}
+        )
+        assert (await client.receive_json())["success"]
+    await hass.async_block_till_done()
+    calendar.search.side_effect = DAVError
+    server.store("b", "DESCRIPTION:Added elsewhere")
+
+    with pytest.raises(HomeAssistantError) as err:
+        await update_item(hass, "b", **{ATTR_STATUS: "completed"})
+    assert err.value.translation_key == "item_changed"
+    assert "DESCRIPTION:Added elsewhere" in server.todos["b"]
+
+
+async def test_update_item_moved_after_it_changed_elsewhere(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    calendar: Mock,
+    server: FakeServer,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a move of an item changed elsewhere doesn't make that change count as shown."""
+    server.store("a", "X-APPLE-SORT-ORDER:100")
+    server.store("b", "X-APPLE-SORT-ORDER:200")
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    server.store("b", "X-APPLE-SORT-ORDER:200", "DESCRIPTION:Added elsewhere")
+
+    calendar.search.side_effect = [server.search(), DAVError()]
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "todo/item/move", "entity_id": TEST_ENTITY, "uid": "b"}
+    )
+    assert (await client.receive_json())["success"]
+    await hass.async_block_till_done()
+    calendar.search.side_effect = DAVError
+
+    with pytest.raises(HomeAssistantError) as err:
+        await update_item(hass, "b", **{ATTR_STATUS: "completed"})
+    assert err.value.translation_key == "item_changed"
+    assert "DESCRIPTION:Added elsewhere" in server.todos["b"]
+
+
+@pytest.mark.parametrize(
+    "changed_elsewhere", [False, True], ids=["unchanged", "changed_elsewhere"]
+)
+async def test_update_item_spread_out_by_move(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    calendar: Mock,
+    server: FakeServer,
+    hass_ws_client: WebSocketGenerator,
+    changed_elsewhere: bool,
+) -> None:
+    """Test an item spread out by a move is checked like the moved one."""
+    server.store("a", "X-APPLE-SORT-ORDER:100")
+    server.store("b", "X-APPLE-SORT-ORDER:101")
+    server.store("c", "X-APPLE-SORT-ORDER:102")
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    calendar.search.side_effect = [server.search(), DAVError()]
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "todo/item/move",
+            "entity_id": TEST_ENTITY,
+            "uid": "c",
+            "previous_uid": "a",
+        }
+    )
+    assert (await client.receive_json())["success"]
+    await hass.async_block_till_done()
+    assert "X-APPLE-SORT-ORDER:101" not in server.todos["b"]
+    calendar.search.side_effect = DAVError
+    if changed_elsewhere:
+        server.store_ics(
+            "b",
+            server.todos["b"].replace(
+                "END:VTODO", "DESCRIPTION:Added elsewhere\nEND:VTODO"
+            ),
+        )
+        with pytest.raises(HomeAssistantError) as err:
+            await update_item(hass, "b", **{ATTR_STATUS: "completed"})
+        assert err.value.translation_key == "item_changed"
+        assert "DESCRIPTION:Added elsewhere" in server.todos["b"]
+    else:
+        await update_item(hass, "b", **{ATTR_STATUS: "completed"})
+        assert "STATUS:COMPLETED" in server.todos["b"].splitlines()
+
+
+@pytest.mark.parametrize(
+    ("etag", "fixed_schedule_tag"),
+    [(None, None), ('W/"1"', None), (None, '"s"')],
+    ids=["strong_etag", "weak_etag", "schedule_tag_kept_on_change"],
+)
+async def test_update_item_changed_elsewhere_after_lookup_with_schedule_tag(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    calendar: Mock,
+    server: FakeServer,
+    etag: str | None,
+    fixed_schedule_tag: str | None,
+) -> None:
+    """Test an item with a Schedule-Tag, as Xandikos gives every item, is saved as listed."""
+    server.schedule_tags = True
+    server.fixed_schedule_tag = fixed_schedule_tag
+    server.store("a", etag=etag)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    def change_after_lookup(uid: str) -> Todo:
+        todo = server.lookup(uid)
+        calendar.get_todo_by_uid.side_effect = server.lookup
+        server.store("a", "DESCRIPTION:Added elsewhere")
+        return todo
+
+    calendar.get_todo_by_uid.side_effect = change_after_lookup
+    with pytest.raises(HomeAssistantError) as err:
+        await update_item(hass, "a", **{ATTR_STATUS: "completed"})
+    await hass.async_block_till_done()
+    assert err.value.translation_key == "item_changed"
+
+    await update_item(hass, "a", **{ATTR_RENAME: "renamed"})
+    lines = server.todos["a"].splitlines()
+    assert "SUMMARY:renamed" in lines
+    assert "DESCRIPTION:Added elsewhere" in lines
+
+
+@pytest.mark.parametrize("stored", [False, True], ids=["not_stored", "stored"])
+async def test_update_item_changed_elsewhere_after_own_save_failed(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    calendar: Mock,
+    dav_client: Mock,
+    server: FakeServer,
+    stored: bool,
+) -> None:
+    """Test an item is still checked after a failed save, also if no read follows."""
+    server.store("a")
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    calendar.search.side_effect = DAVError
+
+    def time_out(url: str, data: str, headers: dict[str, str]) -> None:
+        if stored:
+            server.put(url, data, headers)
+        raise caldav_requests.exceptions.Timeout
+
+    dav_client.put.side_effect = time_out
+    with pytest.raises(HomeAssistantError, match="CalDAV save error"):
+        await update_item(hass, "a", **{ATTR_RENAME: "renamed"})
+    await hass.async_block_till_done()
+    dav_client.put.side_effect = server.put
+    server.store("a", "DESCRIPTION:Added elsewhere")
+
+    with pytest.raises(HomeAssistantError) as err:
+        await update_item(hass, "a", **{ATTR_STATUS: "completed"})
+    assert err.value.translation_key == "item_changed"
+    assert "DESCRIPTION:Added elsewhere" in server.todos["a"]
+
+
+async def test_update_item_after_own_save_timed_out_during_read(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    calendar: Mock,
+    dav_client: Mock,
+    server: FakeServer,
+) -> None:
+    """Test a read that a stored but timed out save overtook doesn't refuse the next one."""
+    server.store("a")
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    def store_then_time_out(url: str, data: str, headers: dict[str, str]) -> None:
+        server.put(url, data, headers)
+        raise caldav_requests.exceptions.Timeout
+
+    errors: list[HomeAssistantError] = []
+
+    def save_during_search(**kwargs: Any) -> list[Todo]:
+        todos = server.search()
+        calendar.search.side_effect = server.search
+        dav_client.put.side_effect = store_then_time_out
+        try:
+            asyncio.run_coroutine_threadsafe(
+                update_item(hass, "a", **{ATTR_RENAME: "renamed"}), hass.loop
+            ).result()
+        except HomeAssistantError as err:
+            errors.append(err)
+        dav_client.put.side_effect = server.put
+        return todos
+
+    calendar.search.side_effect = save_during_search
+    await async_update_entity(hass, TEST_ENTITY)
+    await hass.async_block_till_done()
+    assert str(errors[0]).startswith("CalDAV save error")
+
+    await update_item(hass, "a", **{ATTR_STATUS: "completed"})
+    lines = server.todos["a"].splitlines()
+    assert "SUMMARY:renamed" in lines
+    assert "STATUS:COMPLETED" in lines
+
+
+@pytest.mark.parametrize(
+    ("service", "data"),
+    [
+        (TodoServices.UPDATE_ITEM, {ATTR_ITEM: "a", ATTR_RENAME: "renamed"}),
+        (TodoServices.REMOVE_ITEM, {ATTR_ITEM: ["a"]}),
+    ],
+    ids=["update", "remove"],
+)
+async def test_write_item_removed_elsewhere(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    calendar: Mock,
+    server: FakeServer,
+    service: TodoServices,
+    data: dict[str, Any],
+) -> None:
+    """Test a write of an item removed since the list was read shows the list without it."""
+    server.store("a")
+    calendar.get_objects_by_sync_token.return_value = sync_report("token-1")
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    del server.todos["a"]
+
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            TODO_DOMAIN,
+            service,
+            data,
+            target={TargetKey.ENTITY_ID: TEST_ENTITY},
+            blocking=True,
+        )
+    await hass.async_block_till_done()
+
+    assert err.value.translation_key == "item_changed"
+    assert await get_items(hass) == []
+
+
+async def test_update_item_removed_elsewhere_after_lookup(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    calendar: Mock,
+    server: FakeServer,
+) -> None:
+    """Test an update of an item removed after its lookup shows the list without it."""
+    server.store("a")
+    calendar.get_objects_by_sync_token.return_value = sync_report("token-1")
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    def remove_after_lookup(uid: str) -> Todo:
+        todo = server.lookup(uid)
+        calendar.get_todo_by_uid.side_effect = server.lookup
+        del server.todos[uid]
+        return todo
+
+    calendar.get_todo_by_uid.side_effect = remove_after_lookup
+    with pytest.raises(HomeAssistantError) as err:
+        await update_item(hass, "a", **{ATTR_RENAME: "renamed"})
+    await hass.async_block_till_done()
+
+    assert err.value.translation_key == "item_changed"
+    assert server.todos == {}
+    assert await get_items(hass) == []
+
+
+async def test_update_item_again_while_it_is_saved(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    dav_client: Mock,
+    server: FakeServer,
+) -> None:
+    """Test an update sent while the item is saved doesn't undo that save."""
+    server.store("a")
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    saving, release = threading.Event(), threading.Event()
+
+    def save_on_release(url: str, data: str, headers: dict[str, str]) -> MagicMock:
+        dav_client.put.side_effect = server.put
+        saving.set()
+        release.wait(5)
+        return server.put(url, data, headers)
+
+    dav_client.put.side_effect = save_on_release
+    rename = hass.async_create_task(update_item(hass, "a", **{ATTR_RENAME: "renamed"}))
+    await hass.async_add_executor_job(saving.wait, 5)
+    complete = hass.async_create_task(
+        update_item(hass, "a", **{ATTR_STATUS: "completed"})
+    )
+    await asyncio.sleep(0)
+    release.set()
+    await rename
+
+    with pytest.raises(HomeAssistantError) as err:
+        await complete
+    assert err.value.translation_key == "item_changed"
+    assert "SUMMARY:renamed" in server.todos["a"].splitlines()
+
+
+@pytest.mark.parametrize(
+    ("service", "data"),
+    [
+        (TodoServices.UPDATE_ITEM, {ATTR_ITEM: "a", ATTR_STATUS: "completed"}),
+        (TodoServices.REMOVE_ITEM, {ATTR_ITEM: ["a"]}),
+    ],
+    ids=["update", "remove"],
+)
+async def test_write_item_changed_elsewhere_and_read_while_waiting(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    dav_client: Mock,
+    server: FakeServer,
+    service: TodoServices,
+    data: dict[str, Any],
+) -> None:
+    """Test a refresh while a write waits for another doesn't let the outdated item through."""
+    server.store("a")
+    server.store("b")
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    saving, release = threading.Event(), threading.Event()
+
+    def save_on_release(url: str, data: str, headers: dict[str, str]) -> MagicMock:
+        dav_client.put.side_effect = server.put
+        saving.set()
+        release.wait(5)
+        return server.put(url, data, headers)
+
+    dav_client.put.side_effect = save_on_release
+    rename = hass.async_create_task(update_item(hass, "b", **{ATTR_RENAME: "renamed"}))
+    await hass.async_add_executor_job(saving.wait, 5)
+    waiting = hass.async_create_task(
+        hass.services.async_call(
+            TODO_DOMAIN,
+            service,
+            data,
+            target={TargetKey.ENTITY_ID: TEST_ENTITY},
+            blocking=True,
+        )
+    )
+    await asyncio.sleep(0)
+    server.store("a", "DESCRIPTION:Added elsewhere")
+    await async_update_entity(hass, TEST_ENTITY)
+    release.set()
+    await rename
+
+    with pytest.raises(HomeAssistantError) as err:
+        await waiting
+    assert err.value.translation_key == "item_changed"
+    assert "DESCRIPTION:Added elsewhere" in server.todos["a"]

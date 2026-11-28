@@ -44,6 +44,9 @@
     }
   },
   "exceptions": {
+    "item_changed": {
+      "message": "The to-do item was changed on the server in the meantime. Check the list and try again."
+    },
     "unexpected_response": {
       "message": "Unexpected response from the CalDAV server"
     }
