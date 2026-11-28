@@ -1149,8 +1149,8 @@ async def test_triggers_share_refetch(
 
     await hass.services.async_call(
         automation.DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: f"automation.{EVENT_START}"},
+        AutomationService.TURN_OFF,
+        {TargetKey.ENTITY_ID: f"automation.{EVENT_START}"},
         blocking=True,
     )
     test_entity.async_get_events.reset_mock()
@@ -1320,7 +1320,7 @@ async def create_label_automation(hass: HomeAssistant) -> AsyncIterator[None]:
                 "alias": EVENT_START,
                 "trigger": {
                     CONF_PLATFORM: "calendar.event_started",
-                    CONF_TARGET: {ATTR_LABEL_ID: "calendar_1_label"},
+                    CONF_TARGET: {TargetKey.LABEL_ID: "calendar_1_label"},
                 },
                 "action": TEST_AUTOMATION_ACTION,
                 "mode": "queued",
@@ -1331,8 +1331,8 @@ async def create_label_automation(hass: HomeAssistant) -> AsyncIterator[None]:
     yield
     await hass.services.async_call(
         automation.DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: f"automation.{EVENT_START}"},
+        AutomationService.TURN_OFF,
+        {TargetKey.ENTITY_ID: f"automation.{EVENT_START}"},
         blocking=True,
     )
 
