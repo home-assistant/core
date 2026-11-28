@@ -1,11 +1,23 @@
 """Config flow for the OpenWrt (ubus) integration."""
 
+import contextlib
+from types import MappingProxyType
 from typing import Any, override
 
 from openwrt.ubus import Ubus
 import probatio
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.components.device_tracker.const import CONF_CONSIDER_HOME
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    ConfigSubentry,
+    ConfigSubentryData,
+    ConfigSubentryFlow,
+    OptionsFlow,
+    SubentryFlowResult,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -13,7 +25,12 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.selector import (
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -26,7 +43,10 @@ from .const import (
     DEFAULT_VERIFY_SSL,
     DHCP_SOFTWARES,
     DOMAIN,
+    SUBENTRY_TYPE_ROUTER,
 )
+
+HUB_TITLE = "OpenWrt (ubus)"
 
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
@@ -42,6 +62,20 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
                 options=DHCP_SOFTWARES,
                 translation_key="dhcp_software",
                 mode=SelectSelectorMode.DROPDOWN,
+            )
+        ),
+    }
+)
+
+OPTIONS_SCHEMA = probatio.Schema(
+    {
+        probatio.Optional(CONF_CONSIDER_HOME): NumberSelector(
+            NumberSelectorConfig(
+                # Below the polling interval the window rarely means anything.
+                min=30,
+                max=86400,
+                mode=NumberSelectorMode.BOX,
+                unit_of_measurement="s",
             )
         ),
     }
@@ -68,19 +102,95 @@ def validate_connection(data: dict[str, Any]) -> None:
         raise InvalidAuth
 
 
+def _router_subentry_data(data: dict[str, Any]) -> ConfigSubentryData:
+    """Return the subentry data for a router configuration."""
+    return ConfigSubentryData(
+        data=data,
+        subentry_type=SUBENTRY_TYPE_ROUTER,
+        title=data[CONF_HOST],
+        unique_id=data[CONF_HOST],
+    )
+
+
+def _async_supported_entries(hass: HomeAssistant) -> list[ConfigEntry]:
+    """Return the entries this release can still read.
+
+    An entry on a schema newer than the config flow's version is refused
+    by this release, as its hosts cannot be deduped; a disabled entry
+    still counts, as its hosts remain configured while it is off.
+    """
+    return [
+        entry
+        for entry in hass.config_entries.async_entries(DOMAIN)
+        if entry.version <= UbusConfigFlow.VERSION
+    ]
+
+
+def _async_hub_candidates(hass: HomeAssistant) -> list[ConfigEntry]:
+    """Return the entries eligible to become the hub.
+
+    A disabled entry is off, and an entry on a schema newer than the
+    config flow's version is refused by this release; a router added to
+    either would never be polled, as in the migration's eligibility.
+    """
+    return [
+        entry for entry in _async_supported_entries(hass) if entry.disabled_by is None
+    ]
+
+
+def _async_find_hub(entries: list[ConfigEntry]) -> ConfigEntry | None:
+    """Return the entry which is, or becomes, the hub of the install.
+
+    A hub has no data and holds routers, so an empty shell left by a
+    failed removal never wins over one. Otherwise the entry which is
+    set up first (the lowest id) becomes the hub, so an import joins
+    the same entry the setup migration will use.
+    """
+    hub = next(
+        (entry for entry in entries if not entry.data and entry.subentries), None
+    )
+    if hub is None and entries:
+        hub = min(entries, key=lambda entry: entry.entry_id)
+    return hub
+
+
 class UbusConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for OpenWrt (ubus)."""
 
-    VERSION = 1
+    # The hub entry holds no data of its own; an older release which reads
+    # the router data from entry.data must reject such an entry instead of
+    # adopting it, which a version-2 entry guarantees.
+    VERSION = 2
+
+    @classmethod
+    @callback
+    @override
+    def async_get_supported_subentry_types(
+        cls, config_entry: ConfigEntry
+    ) -> dict[str, type[ConfigSubentryFlow]]:
+        """Return the subentry types this integration supports."""
+        return {SUBENTRY_TYPE_ROUTER: RouterSubentryFlow}
+
+    @staticmethod
+    @override
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+        """Return the options flow."""
+        return UbusOptionsFlow()
 
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle the initial step."""
+        """Handle the initial step.
+
+        The entry is a pure hub, so a second entry flow is rejected; routers
+        are added as subentries of the existing entry.
+        """
+        if self._async_current_entries():
+            return self.async_abort(reason="already_configured")
         errors: dict[str, str] = {}
         if user_input is not None:
-            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
             try:
                 await self.hass.async_add_executor_job(validate_connection, user_input)
             except CannotConnect:
@@ -88,8 +198,14 @@ class UbusConfigFlow(ConfigFlow, domain=DOMAIN):
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
             else:
+                # A concurrent flow may have created the hub while the
+                # validation was in flight.
+                if self._async_current_entries():
+                    return self.async_abort(reason="already_configured")
                 return self.async_create_entry(
-                    title=user_input[CONF_HOST], data=user_input
+                    title=HUB_TITLE,
+                    data={},
+                    subentries=[_router_subentry_data(user_input)],
                 )
 
         return self.async_show_form(
@@ -98,7 +214,15 @@ class UbusConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import a configuration from configuration.yaml."""
-        self._async_abort_entries_match({CONF_HOST: import_data[CONF_HOST]})
+        entries = _async_supported_entries(self.hass)
+        hosts = {entry.data[CONF_HOST] for entry in entries if entry.data} | {
+            subentry.unique_id
+            for entry in entries
+            for subentry in entry.subentries.values()
+            if subentry.unique_id
+        }
+        if import_data[CONF_HOST] in hosts:
+            return self.async_abort(reason="already_configured")
 
         try:
             await self.hass.async_add_executor_job(validate_connection, import_data)
@@ -107,7 +231,124 @@ class UbusConfigFlow(ConfigFlow, domain=DOMAIN):
         except InvalidAuth:
             return self.async_abort(reason="invalid_auth")
 
-        return self.async_create_entry(title=import_data[CONF_HOST], data=import_data)
+        # A concurrent import may have created or joined the hub while the
+        # validation was in flight.
+        hub = _async_find_hub(_async_hub_candidates(self.hass))
+        if hub is None:
+            return self.async_create_entry(
+                title=HUB_TITLE,
+                data={},
+                subentries=[_router_subentry_data(import_data)],
+            )
+
+        # The concurrent import may have added this host itself.
+        with contextlib.suppress(AbortFlow):
+            self.hass.config_entries.async_add_subentry(
+                hub,
+                ConfigSubentry(
+                    data=MappingProxyType(import_data),
+                    subentry_type=SUBENTRY_TYPE_ROUTER,
+                    title=import_data[CONF_HOST],
+                    unique_id=import_data[CONF_HOST],
+                ),
+            )
+        return self.async_abort(reason="already_configured")
+
+
+class RouterSubentryFlow(ConfigSubentryFlow):
+    """Handle the subentry flow for adding and modifying a router."""
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Handle the step to add a router."""
+        entry = self._get_entry()
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            if any(
+                subentry.unique_id == user_input[CONF_HOST]
+                for subentry in entry.subentries.values()
+            ):
+                errors["base"] = "already_configured"
+            else:
+                try:
+                    await self.hass.async_add_executor_job(
+                        validate_connection, user_input
+                    )
+                except CannotConnect:
+                    errors["base"] = "cannot_connect"
+                except InvalidAuth:
+                    errors["base"] = "invalid_auth"
+                else:
+                    return self.async_create_entry(
+                        title=user_input[CONF_HOST],
+                        data=user_input,
+                        unique_id=user_input[CONF_HOST],
+                    )
+        return self.async_show_form(
+            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Handle the step to change a router.
+
+        Finishes with an update-and-abort: the entry's update listener
+        polls the new router right away, and the combined update-and-reload
+        helper is unusable for an entry with update listeners.
+        """
+        entry = self._get_entry()
+        subentry = self._get_reconfigure_subentry()
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            if any(
+                other.unique_id == user_input[CONF_HOST]
+                for other in entry.subentries.values()
+                if other is not subentry
+            ):
+                errors["base"] = "already_configured"
+            else:
+                try:
+                    await self.hass.async_add_executor_job(
+                        validate_connection, user_input
+                    )
+                except CannotConnect:
+                    errors["base"] = "cannot_connect"
+                except InvalidAuth:
+                    errors["base"] = "invalid_auth"
+                else:
+                    return self.async_update_and_abort(
+                        entry,
+                        subentry,
+                        data=user_input,
+                        unique_id=user_input[CONF_HOST],
+                        title=user_input[CONF_HOST],
+                    )
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, dict(subentry.data)
+            ),
+            errors=errors,
+        )
+
+
+class UbusOptionsFlow(OptionsFlow):
+    """Handle the options flow for the OpenWrt (ubus) entry."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the options step."""
+        if user_input is not None:
+            return self.async_create_entry(data=user_input)
+        return self.async_show_form(
+            step_id="init",
+            data_schema=self.add_suggested_values_to_schema(
+                OPTIONS_SCHEMA, self.config_entry.options
+            ),
+        )
 
 
 class CannotConnect(Exception):
