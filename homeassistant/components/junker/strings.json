@@ -1,0 +1,90 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_area": "The selected area does not provide a collection calendar.",
+      "invalid_municipality": "The municipality does not provide a collection calendar.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "area": {
+        "data": {
+          "area_id": "Area"
+        },
+        "data_description": {
+          "area_id": "Select the area that matches your collection schedule."
+        },
+        "description": "Select the collection area for your municipality."
+      },
+      "names": {
+        "data": {
+          "waste_name": "Name"
+        },
+        "data_description": {
+          "waste_name": "Custom name for this waste type."
+        },
+        "title": "Rename {waste_type}"
+      },
+      "settings": {
+        "data": {
+          "waste_types": "Waste types to show"
+        },
+        "data_description": {
+          "waste_types": "Only the selected waste types appear in the calendar and sensors."
+        }
+      },
+      "user": {
+        "data": {
+          "municipality": "Municipality"
+        },
+        "data_description": {
+          "municipality": "Enter the municipality name as it appears in Junker. You can look it up [here]({lookup_url})."
+        }
+      }
+    }
+  },
+  "entity": {
+    "calendar": {
+      "calendar": {
+        "name": "Collection schedule"
+      }
+    },
+    "sensor": {
+      "tomorrow_collection": {
+        "name": "Tomorrow collection"
+      }
+    }
+  },
+  "exceptions": {
+    "update_failed": {
+      "message": "Unable to fetch the collection calendar from Junker."
+    }
+  },
+  "options": {
+    "abort": {
+      "entry_not_loaded": "The integration must be loaded to change its options."
+    },
+    "step": {
+      "init": {
+        "data": {
+          "waste_types": "Waste types to show"
+        },
+        "data_description": {
+          "waste_types": "Only the selected waste types appear in the calendar and sensors."
+        }
+      },
+      "names": {
+        "data": {
+          "waste_name": "Name"
+        },
+        "data_description": {
+          "waste_name": "Custom name for this waste type."
+        },
+        "title": "Rename {waste_type}"
+      }
+    }
+  }
+}

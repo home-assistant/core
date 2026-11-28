@@ -7591,6 +7591,18 @@
       ],
       "supported_by": "palazzetti"
     },
+    "junker": {
+      "name": "Junker",
+      "integration_type": "service",
+      "categories": [
+        "local_services"
+      ],
+      "connectivity": [
+        "cloud"
+      ],
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "justnimbus": {
       "name": "JustNimbus",
       "integration_type": "device",
