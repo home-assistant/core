@@ -306,6 +306,12 @@ async def handle_backup_start(
     try:
         await manager.async_pre_backup_actions()
     except Exception as err:  # noqa: BLE001
+        # Supervisor sends no backup/end after a failed start, so undo the
+        # steps that did run, like the recorder locking its database
+        try:
+            await manager.async_post_backup_actions()
+        except Exception as post_err:  # noqa: BLE001
+            LOGGER.debug("Error undoing pre backup actions: %s", post_err)
         connection.send_error(msg["id"], "pre_backup_actions_failed", str(err))
         return
 
