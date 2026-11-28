@@ -200,7 +200,7 @@ def _setup_entities(
     )
 
 
-class VeSyncSelectEntity(VeSyncBaseEntity, SelectEntity):
+class VeSyncSelectEntity(VeSyncBaseEntity[VeSyncBaseDevice], SelectEntity):
     """A class to set numeric options on Vesync device."""
 
     entity_description: VeSyncSelectEntityDescription

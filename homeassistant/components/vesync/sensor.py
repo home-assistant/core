@@ -377,7 +377,7 @@ def _setup_entities(
     async_add_entities(entities, update_before_add=True)
 
 
-class VeSyncSensorEntity(VeSyncBaseEntity, SensorEntity):
+class VeSyncSensorEntity(VeSyncBaseEntity[VeSyncBaseDevice], SensorEntity):
     """Representation of a sensor describing a VeSync device."""
 
     entity_description: VeSyncSensorEntityDescription
@@ -437,7 +437,9 @@ class VeSyncSensorEntity(VeSyncBaseEntity, SensorEntity):
     @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit the value was reported in by the sensor."""
-        if self.entity_description.use_device_temperature_unit:
+        if self.entity_description.use_device_temperature_unit and is_air_fryer(
+            self.device
+        ):
             if self.device.temp_unit == TemperatureUnits.CELSIUS:
                 return UnitOfTemperature.CELSIUS
             if self.device.temp_unit == TemperatureUnits.FAHRENHEIT:
