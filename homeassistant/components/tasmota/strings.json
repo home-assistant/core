@@ -23,6 +23,60 @@
     },
     "camera_image_timeout": {
       "message": "Timeout getting camera image from {entity_id}"
+    },
+    "device_offline": {
+      "message": "The Tasmota device is offline."
+    },
+    "download_check_failed": {
+      "message": "Could not check the firmware image {url}: {error}"
+    },
+    "firmware_changed": {
+      "message": "The firmware of the device changed while the update was being prepared."
+    },
+    "firmware_not_available": {
+      "message": "The firmware image {url} is not available (HTTP status {status})."
+    },
+    "install_in_progress": {
+      "message": "A firmware update of this device is already running."
+    },
+    "install_interrupted": {
+      "message": "The firmware update was interrupted because the Tasmota integration was unloaded."
+    },
+    "install_not_supported": {
+      "message": "Firmware {version} can't be updated from Home Assistant. Only official Tasmota release builds from version 14.0.0 can be updated."
+    },
+    "install_timeout": {
+      "message": "The device did not report a new firmware version within {minutes} minutes."
+    },
+    "no_response": {
+      "message": "The device did not answer the OtaUrl command."
+    },
+    "same_version": {
+      "message": "The device restarted, but still runs firmware version {version}."
+    },
+    "topic_changed": {
+      "message": "The device announced a new MQTT topic, which Home Assistant did not accept. Fix the topic of the device first."
+    },
+    "topic_duplicated": {
+      "message": "Several Tasmota devices share the topic {topic}. A firmware update would be sent to all of them."
+    },
+    "topic_group": {
+      "message": "The MQTT topic {topic} of the device is also the default group topic of Tasmota. A firmware update would be sent to all devices of the group."
+    },
+    "topic_overlap": {
+      "message": "The MQTT topic {topic} of the device starts with the topic {other} of another device, which would receive the firmware update as well."
+    },
+    "unexpected_ota_url": {
+      "message": "The device reported {url} as its default OTA URL, which is not the official Tasmota release image for this device."
+    },
+    "unexpected_version": {
+      "message": "The device restarted with firmware version {version}, which is older than version {previous} before the update."
+    },
+    "upgrade_failed": {
+      "message": "The device reported a failed upgrade: {message}"
+    },
+    "upgrade_url_mismatch": {
+      "message": "The device downloads the firmware from {url}, which is not the image that was checked."
     }
   },
   "issues": {
