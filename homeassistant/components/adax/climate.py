@@ -2,7 +2,6 @@
 
 from typing import Any, cast, override
 
-from adax import Adax
 from adax_local import Adax as AdaxLocal
 
 from homeassistant.components.climate import (
@@ -65,7 +64,6 @@ class AdaxDevice(CoordinatorEntity[AdaxCloudCoordinator], ClimateEntity):
     ) -> None:
         """Initialize the heater."""
         super().__init__(coordinator)
-        self._adax_data_handler: Adax = coordinator.adax_data_handler
         self._device_id = device_id
 
         self._attr_name = self.room["name"]
@@ -98,11 +96,11 @@ class AdaxDevice(CoordinatorEntity[AdaxCloudCoordinator], ClimateEntity):
             temperature = max(
                 self.min_temp, self.native_target_temperature or self.min_temp
             )
-            await self._adax_data_handler.set_room_target_temperature(
+            await self.coordinator.adax_data_handler.set_room_target_temperature(
                 self._device_id, temperature, True
             )
         elif hvac_mode == HVACMode.OFF:
-            await self._adax_data_handler.set_room_target_temperature(
+            await self.coordinator.adax_data_handler.set_room_target_temperature(
                 self._device_id, self.min_temp, False
             )
         else:
@@ -116,7 +114,7 @@ class AdaxDevice(CoordinatorEntity[AdaxCloudCoordinator], ClimateEntity):
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
-        await self._adax_data_handler.set_room_target_temperature(
+        await self.coordinator.adax_data_handler.set_room_target_temperature(
             self._device_id, temperature, True
         )
 
