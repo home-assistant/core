@@ -9,6 +9,9 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, MockUser
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
@@ -56,10 +59,6 @@ from .const import (
     TOKEN,
     WARNING_ACCEPTANCE,
 )
-
-from tests.common import MockConfigEntry, MockUser
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import WebSocketGenerator
 
 CRITICAL_REPOSITORY = {
     "repository": "critical/repository",
@@ -1866,6 +1865,43 @@ async def test_repository_info_shows_the_readme_when_rate_limited(
     assert response["success"]
     # The README comes from raw.githubusercontent.com, the limit does not cover it
     assert response["result"]["additional_info"]
+
+
+@pytest.mark.parametrize(
+    ("message", "expected"),
+    [
+        pytest.param({"language": "de"}, "Deutsch", id="language_of_user"),
+        pytest.param({}, "Deutsch", id="language_of_home_assistant"),
+        pytest.param({"language": "fr"}, "English", id="fallback"),
+    ],
+)
+async def test_repository_info_shows_translated_readme(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+    message: dict[str, str],
+    expected: str,
+) -> None:
+    """Test the README in the language replaces README.md."""
+    await hass.config.async_update(language="de")
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    repository.updated_info = True
+    repository.treefiles = ["README.md", "README.de.md"]
+    repository.additional_info = "English"
+    client = await hass_ws_client(hass)
+
+    with patch.object(repository, "get_documentation", return_value="Deutsch"):
+        await client.send_json_auto_id(
+            {
+                "type": "marketplace/repository/info",
+                "repository_id": REPOSITORY_INTEGRATION_ID,
+                **message,
+            }
+        )
+        response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"]["additional_info"] == expected
 
 
 @pytest.mark.parametrize("github_token", [None])

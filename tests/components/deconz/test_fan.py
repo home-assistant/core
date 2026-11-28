@@ -4,23 +4,21 @@ from collections.abc import Callable
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import snapshot_platform
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
     DOMAIN as FAN_DOMAIN,
-    SERVICE_SET_PERCENTAGE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
+    FanService,
+    FanServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
+from homeassistant.const import STATE_OFF, STATE_ON, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import ConfigEntryFactoryType, WebsocketDataType
-
-from tests.common import snapshot_platform
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.mark.parametrize(
@@ -79,8 +77,8 @@ async def test_fans(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "fan.ceiling_fan"},
+        FanService.TURN_ON,
+        {TargetKey.ENTITY_ID: "fan.ceiling_fan"},
         blocking=True,
     )
     assert aioclient_mock.mock_calls[1][2] == {"speed": 4}
@@ -89,8 +87,8 @@ async def test_fans(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "fan.ceiling_fan"},
+        FanService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "fan.ceiling_fan"},
         blocking=True,
     )
     assert aioclient_mock.mock_calls[2][2] == {"speed": 0}
@@ -99,8 +97,8 @@ async def test_fans(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "fan.ceiling_fan", ATTR_PERCENTAGE: 20},
+        FanService.TURN_ON,
+        {TargetKey.ENTITY_ID: "fan.ceiling_fan", FanServiceArgument.PERCENTAGE: 20},
         blocking=True,
     )
     assert aioclient_mock.mock_calls[3][2] == {"speed": 1}
@@ -111,8 +109,11 @@ async def test_fans(
         aioclient_mock.mock_calls.clear()
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_SET_PERCENTAGE,
-            {ATTR_ENTITY_ID: "fan.ceiling_fan", ATTR_PERCENTAGE: percent},
+            FanService.SET_PERCENTAGE,
+            {
+                TargetKey.ENTITY_ID: "fan.ceiling_fan",
+                FanServiceArgument.PERCENTAGE: percent,
+            },
             blocking=True,
         )
         assert aioclient_mock.mock_calls[0][2] == {"speed": speed}

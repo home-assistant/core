@@ -1,15 +1,17 @@
 """Tests for the AEMET OpenData integration."""
 
+import base64
+from datetime import datetime
+import json
 from typing import Any
 from unittest.mock import patch
 
 from aemet_opendata.const import ATTR_BYTES, ATTR_DATA, ATTR_TIMESTAMP, ATTR_TYPE
+from pytest_homeassistant.common import MockConfigEntry, load_json_value_fixture
 
 from homeassistant.components.aemet.const import CONF_RADAR_UPDATES, DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, load_json_value_fixture
 
 FORECAST_DAILY_DATA_MOCK = {
     ATTR_DATA: load_json_value_fixture("aemet/town-28065-forecast-daily-data.json"),
@@ -67,7 +69,22 @@ def mock_api_call(cmd: str, fetch_data: bool = False) -> dict[str, Any]:
     return {}
 
 
-async def async_init_integration(hass: HomeAssistant) -> MockConfigEntry:
+def create_api_key(expiration: datetime) -> str:
+    """Create a fake API key JWT with an expiration claim."""
+    header = base64.urlsafe_b64encode(b'{"alg":"none"}').rstrip(b"=").decode()
+    payload = (
+        base64.urlsafe_b64encode(json.dumps({"exp": expiration.timestamp()}).encode())
+        .rstrip(b"=")
+        .decode()
+    )
+    return f"{header}.{payload}.signature"
+
+
+async def async_init_integration(
+    hass: HomeAssistant,
+    data: dict[str, Any] | None = None,
+    options: dict[str, Any] | None = None,
+) -> MockConfigEntry:
     """Set up the AEMET OpenData integration in Home Assistant."""
 
     config_entry = MockConfigEntry(
@@ -77,11 +94,13 @@ async def async_init_integration(hass: HomeAssistant) -> MockConfigEntry:
             CONF_LATITUDE: "40.30403754",
             CONF_LONGITUDE: "-3.72935236",
             CONF_NAME: "AEMET",
+            **(data or {}),
         },
         entry_id="7442b231f139e813fc1939281123f220",
         unique_id="40.30403754--3.72935236",
         options={
             CONF_RADAR_UPDATES: True,
+            **(options or {}),
         },
     )
     config_entry.add_to_hass(hass)

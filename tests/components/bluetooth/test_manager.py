@@ -14,6 +14,28 @@ from habluetooth import BluetoothScanningMode, HaScanner
 from habluetooth.advertisement_tracker import TRACKER_BUFFERING_WOBBLE_SECONDS
 from habluetooth.const import STALE_ROAM_FACTOR
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    async_call_logger_set_level,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+    mock_integration,
+)
+from pytest_homeassistant.components.bluetooth import (
+    HCI0_SOURCE_ADDRESS,
+    HCI1_SOURCE_ADDRESS,
+    FakeRemoteScanner,
+    FakeScanner,
+    MockBleakClient,
+    _get_manager,
+    generate_advertisement_data,
+    generate_ble_device,
+    inject_advertisement_with_source,
+    inject_advertisement_with_time_and_source,
+    inject_advertisement_with_time_and_source_connectable,
+    patch_bluetooth_time,
+)
 
 from homeassistant import config_entries
 from homeassistant.components import bluetooth
@@ -45,30 +67,6 @@ from homeassistant.helpers.discovery_flow import DiscoveryKey
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.dt import utcnow
-
-from . import (
-    HCI0_SOURCE_ADDRESS,
-    HCI1_SOURCE_ADDRESS,
-    FakeRemoteScanner,
-    FakeScanner,
-    MockBleakClient,
-    _get_manager,
-    generate_advertisement_data,
-    generate_ble_device,
-    inject_advertisement_with_source,
-    inject_advertisement_with_time_and_source,
-    inject_advertisement_with_time_and_source_connectable,
-    patch_bluetooth_time,
-)
-
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    async_call_logger_set_level,
-    async_fire_time_changed,
-    async_load_json_object_fixture,
-    mock_integration,
-)
 
 
 @pytest.mark.usefixtures("enable_bluetooth")
@@ -1773,6 +1771,8 @@ async def test_repair_issue_created_for_degraded_scanner_in_docker(
     """Test repair issue is created when scanner is in degraded mode in Docker."""
     await async_setup_component(hass, bluetooth.DOMAIN, {})
     await hass.async_block_till_done()
+    entry = MockConfigEntry(domain=bluetooth.DOMAIN, unique_id="00:11:22:33:44:55")
+    entry.add_to_hass(hass)
 
     manager = _get_manager()
 
@@ -1813,6 +1813,11 @@ async def test_repair_issue_created_for_degraded_scanner_in_docker(
         assert issue.severity == ir.IssueSeverity.WARNING
         assert not issue.is_fixable
         assert issue.translation_key == "bluetooth_adapter_missing_permissions"
+        assert issue.config_entry_id == entry.entry_id
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(bluetooth.DOMAIN, issue_id) is None
 
 
 @pytest.mark.usefixtures("one_adapter")
@@ -1944,6 +1949,8 @@ async def test_repair_issue_created_for_passive_mode_fallback(
     """Test repair issue is created when scanner falls back to passive mode."""
     assert await async_setup_component(hass, bluetooth.DOMAIN, {})
     await hass.async_block_till_done()
+    entry = MockConfigEntry(domain=bluetooth.DOMAIN, unique_id="00:11:22:33:44:55")
+    entry.add_to_hass(hass)
 
     manager = _get_manager()
 
@@ -1970,8 +1977,13 @@ async def test_repair_issue_created_for_passive_mode_fallback(
     # Should default to USB translation key when adapter type is unknown
     assert issue.translation_key == "bluetooth_adapter_passive_mode_usb"
     assert not issue.is_fixable
+    assert issue.config_entry_id == entry.entry_id
 
     cancel()
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(bluetooth.DOMAIN, issue_id) is None
 
 
 async def test_repair_issue_created_for_passive_mode_fallback_uart(

@@ -5,6 +5,7 @@ from unittest.mock import PropertyMock
 import blebox_uniapi
 import blebox_uniapi.sensor
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -17,8 +18,6 @@ from .conftest import (
     patch_product_identify,
     setup_product_mock,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(

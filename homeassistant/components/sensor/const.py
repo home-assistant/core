@@ -83,6 +83,11 @@ ATTR_LAST_RESET: Final = "last_reset"
 ATTR_STATE_CLASS: Final = "state_class"
 ATTR_OPTIONS: Final = "options"
 
+UPTIME_DEFAULT_TOLERANCE_SECONDS: Final = 60
+UPTIME_MIN_TOLERANCE_SECONDS: Final = 5
+
+TEMPERATURE_UNITS = {UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT}
+
 
 class SensorEntityCapabilityAttribute(StrEnum):
     """Capability attributes for sensor entities."""
@@ -514,7 +519,7 @@ class SensorDeviceClass(StrEnum):
 
     Unit of measurement: UnitOfVolumeFlowRate
     - SI / metric: `m³/h`, `m³/min`, `m³/s`, `L/h`, `L/min`, `L/s`, `mL/s`
-    - USCS / imperial: `ft³/min`, `gal/min`, `gal/d`
+    - USCS / imperial: `ft³/h`, `ft³/min`, `gal/h`, `gal/min`, `gal/d`
     """
 
     WATER = "water"

@@ -28,13 +28,17 @@
       'data': dict({
         'account_id': 654321,
         'client_id': 123456,
-        'hardware_id': 'Home Assistant',
+        'expiration_date': None,
+        'expires_in': None,
+        'hardware_id': '**REDACTED**',
         'host': 'u034.immedia-semi.com',
         'password': '**REDACTED**',
+        'refresh_token': '**REDACTED**',
         'region_id': 'u034',
         'token': '**REDACTED**',
         'uid': 'BlinkCamera_e1233333e2-0909-09cd-777a-123456789012',
         'unique_id': '**REDACTED**',
+        'user_id': None,
         'username': '**REDACTED**',
       }),
       'disabled_by': None,
@@ -52,7 +56,7 @@
       ]),
       'title': 'Mock Title',
       'unique_id': None,
-      'version': 4,
+      'version': 5,
     }),
   })
 # ---

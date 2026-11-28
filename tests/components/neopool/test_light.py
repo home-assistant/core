@@ -8,25 +8,22 @@ from neopool_modbus import NeoPoolInvalidStateError
 from neopool_modbus.exceptions import NeoPoolConnectionError
 from neopool_modbus.registers import RelayKind, TimerRelayMode
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN, LightService
 from homeassistant.components.neopool.const import FOLLOW_UP_REFRESH_DELAY
-from homeassistant.const import (
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-    Platform,
-)
+from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 from .conftest import MOCK_POOL_DATA
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -42,7 +39,7 @@ def _seed_light_relay_manual(mock_neopool_client: MagicMock) -> None:
 async def _turn_on(hass: HomeAssistant, entity_id: str) -> None:
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {"entity_id": entity_id},
         blocking=True,
     )
@@ -51,7 +48,7 @@ async def _turn_on(hass: HomeAssistant, entity_id: str) -> None:
 async def _turn_off(hass: HomeAssistant, entity_id: str) -> None:
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
+        LightService.TURN_OFF,
         {"entity_id": entity_id},
         blocking=True,
     )

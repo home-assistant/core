@@ -4,15 +4,20 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 from teltasync.modems import ModemStatusFull
 from teltasync.system import DeviceStatusData
 from teltasync.unauthorized import UnauthorizedStatusData
 
 from homeassistant.components.teltonika.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SSL,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture
@@ -20,7 +25,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.teltonika.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup:
         yield mock_setup
 
@@ -72,8 +77,11 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         title="RUTX50 Test",
+        version=2,
         data={
             CONF_HOST: "192.168.1.1",
+            CONF_PORT: 443,
+            CONF_SSL: True,
             CONF_USERNAME: "admin",
             CONF_PASSWORD: "test_password",
         },

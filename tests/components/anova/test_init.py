@@ -3,15 +3,14 @@
 from unittest.mock import patch
 
 from anova_wifi import AnovaApi
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.anova.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_DEVICES, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from . import async_init_integration, create_entry
-
-from tests.common import MockConfigEntry
 
 
 async def test_async_setup_entry(hass: HomeAssistant, anova_api: AnovaApi) -> None:
@@ -28,7 +27,13 @@ async def test_wrong_login(
     """Test for setup failure if connection to Anova is missing."""
     entry = create_entry(hass)
     await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.SETUP_ERROR
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == entry.entry_id
 
 
 async def test_unload_entry(hass: HomeAssistant, anova_api: AnovaApi) -> None:

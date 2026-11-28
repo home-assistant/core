@@ -77,4 +77,4 @@ rules:
   inject-websession:
     status: done
     comment: Uses async_create_clientsession in case where unsafe cookies are needed.
-  strict-typing: todo
+  strict-typing: done

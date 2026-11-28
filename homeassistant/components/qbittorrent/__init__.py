@@ -1,34 +1,26 @@
 """The qbittorrent component."""
 
 import logging
-from typing import Any
 
 from qbittorrentapi import APIConnectionError, Forbidden403Error, LoginFailed
+from yarl import URL
 
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
-    ATTR_DEVICE_ID,
     CONF_PASSWORD,
     CONF_URL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
     Platform,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
-from homeassistant.exceptions import ConfigEntryNotReady, ServiceValidationError
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    DOMAIN,
-    SERVICE_GET_ALL_TORRENTS,
-    SERVICE_GET_TORRENTS,
-    STATE_ATTR_ALL_TORRENTS,
-    STATE_ATTR_TORRENTS,
-    TORRENT_FILTER,
-)
+from .const import DOMAIN
 from .coordinator import QBittorrentConfigEntry, QBittorrentDataCoordinator
-from .helpers import format_torrents, setup_client
+from .helpers import setup_client
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,82 +34,14 @@ CONF_ENTRY = "entry"
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up qBittorrent services."""
 
-    async def handle_get_torrents(service_call: ServiceCall) -> dict[str, Any] | None:
-        device_registry = dr.async_get(hass)
-        device_entry = device_registry.async_get(service_call.data[ATTR_DEVICE_ID])
-
-        if device_entry is None:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="invalid_device",
-                translation_placeholders={
-                    "device_id": service_call.data[ATTR_DEVICE_ID]
-                },
-            )
-
-        entry_id = None
-
-        for key, value in device_entry.identifiers:
-            if key == DOMAIN:
-                entry_id = value
-                break
-        else:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="invalid_entry_id",
-                translation_placeholders={"device_id": entry_id or ""},
-            )
-
-        entry: QBittorrentConfigEntry | None = hass.config_entries.async_get_entry(
-            entry_id
-        )
-        if entry is None or entry.state is not ConfigEntryState.LOADED:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="invalid_entry_id",
-                translation_placeholders={"device_id": entry_id},
-            )
-        coordinator = entry.runtime_data
-        items = await coordinator.get_torrents(service_call.data[TORRENT_FILTER])
-        info = format_torrents(items)
-        return {
-            STATE_ATTR_TORRENTS: info,
-        }
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_GET_TORRENTS,
-        handle_get_torrents,
-        supports_response=SupportsResponse.ONLY,
-    )
-
-    async def handle_get_all_torrents(
-        service_call: ServiceCall,
-    ) -> dict[str, Any] | None:
-        torrents = {}
-
-        for entry in hass.config_entries.async_loaded_entries(DOMAIN):
-            coordinator: QBittorrentDataCoordinator = entry.runtime_data
-            items = await coordinator.get_torrents(service_call.data[TORRENT_FILTER])
-            torrents[entry.entry_id] = format_torrents(items)
-
-        return {
-            STATE_ATTR_ALL_TORRENTS: torrents,
-        }
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_GET_ALL_TORRENTS,
-        handle_get_all_torrents,
-        supports_response=SupportsResponse.ONLY,
-    )
+    async_setup_services(hass)
 
     return True
 
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: QBittorrentConfigEntry
-) -> bool:
+) -> None:
     """Set up qBittorrent from a config entry."""
 
     try:
@@ -138,15 +62,28 @@ async def async_setup_entry(
     coordinator = QBittorrentDataCoordinator(hass, config_entry, client)
 
     await coordinator.async_config_entry_first_refresh()
+
+    web_ui_url = URL(config_entry.data[CONF_URL])
+    configuration_url = None
+    # shortcut: entries without a scheme have no link until the client exposes its resolved URL.
+    if web_ui_url.scheme in ("http", "https") and web_ui_url.host:
+        configuration_url = (
+            web_ui_url.with_user(None).with_query(None).with_fragment(None)
+        )
+    dr.async_get(hass).async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        configuration_url=configuration_url,
+        entry_type=dr.DeviceEntryType.SERVICE,
+        identifiers={(DOMAIN, config_entry.entry_id)},
+        manufacturer="QBittorrent",
+    )
+
     config_entry.runtime_data = coordinator
-
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: QBittorrentConfigEntry
-) -> bool:
+) -> None:
     """Unload qBittorrent config entry."""
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)

@@ -8,29 +8,26 @@ from eheimdigital.classic_led_ctrl import EheimDigitalClassicLEDControl
 from eheimdigital.types import EheimDeviceType, EheimDigitalClientError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.eheimdigital.const import EFFECT_DAYCL_MODE
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_EFFECT,
     DOMAIN as LIGHT_DOMAIN,
+    LightService,
+    LightServiceArgument,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_UNAVAILABLE,
-    Platform,
-)
+from homeassistant.const import STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.color import value_to_brightness
 
 from .conftest import init_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.parametrize(
@@ -134,8 +131,10 @@ async def test_turn_off(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "light.mock_aquarium_mock_classicledcontrol_e_channel_1"},
+            LightService.TURN_OFF,
+            {
+                TargetKey.ENTITY_ID: "light.mock_aquarium_mock_classicledcontrol_e_channel_1"
+            },
             blocking=True,
         )
 
@@ -145,8 +144,8 @@ async def test_turn_off(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.mock_aquarium_mock_classicledcontrol_e_channel_1"},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "light.mock_aquarium_mock_classicledcontrol_e_channel_1"},
         blocking=True,
     )
 
@@ -189,10 +188,10 @@ async def test_turn_on_brightness(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
+            LightService.TURN_ON,
             {
-                ATTR_ENTITY_ID: "light.mock_aquarium_mock_classicledcontrol_e_channel_1",
-                ATTR_BRIGHTNESS: dim_input,
+                TargetKey.ENTITY_ID: "light.mock_aquarium_mock_classicledcontrol_e_channel_1",
+                LightServiceArgument.BRIGHTNESS: dim_input,
             },
             blocking=True,
         )
@@ -203,10 +202,10 @@ async def test_turn_on_brightness(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.mock_aquarium_mock_classicledcontrol_e_channel_1",
-            ATTR_BRIGHTNESS: dim_input,
+            TargetKey.ENTITY_ID: "light.mock_aquarium_mock_classicledcontrol_e_channel_1",
+            LightServiceArgument.BRIGHTNESS: dim_input,
         },
         blocking=True,
     )
@@ -239,10 +238,10 @@ async def test_turn_on_effect(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.mock_aquarium_mock_classicledcontrol_e_channel_1",
-            ATTR_EFFECT: EFFECT_DAYCL_MODE,
+            TargetKey.ENTITY_ID: "light.mock_aquarium_mock_classicledcontrol_e_channel_1",
+            LightServiceArgument.EFFECT: EFFECT_DAYCL_MODE,
         },
         blocking=True,
     )

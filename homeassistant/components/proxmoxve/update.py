@@ -4,6 +4,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import override
 
+from aioproxmox.model.pve import OperationalStatus
+
 from homeassistant.components.update import (
     UpdateEntity,
     UpdateEntityDescription,
@@ -12,9 +14,17 @@ from homeassistant.components.update import (
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .coordinator import ProxmoxConfigEntry, ProxmoxNodeData
-from .entity import ProxmoxNodeEntity
+from .const import ProxmoxPermission
+from .coordinator import (
+    ProxmoxConfigEntry,
+    ProxmoxNodeData,
+    ProxmoxNodeSoftware,
+    ProxmoxSoftwareCoordinator,
+    node_device_info,
+    proxmox_node_url,
+)
 from .helpers import ProxmoxUpdateInfo, update_version
 
 PARALLEL_UPDATES = 1
@@ -24,8 +34,8 @@ PARALLEL_UPDATES = 1
 class ProxmoxNodeUpdateEntityDescription(UpdateEntityDescription):
     """Describes Proxmox node update entity."""
 
-    installed_version: Callable[[ProxmoxNodeData], str]
-    update_info: Callable[[ProxmoxNodeData], ProxmoxUpdateInfo | bool]
+    installed_version: Callable[[ProxmoxNodeSoftware], str | None]
+    update_info: Callable[[ProxmoxNodeSoftware], ProxmoxUpdateInfo | None]
 
 
 NODE_UPDATES: tuple[ProxmoxNodeUpdateEntityDescription, ...] = (
@@ -33,10 +43,11 @@ NODE_UPDATES: tuple[ProxmoxNodeUpdateEntityDescription, ...] = (
         key="node_update",
         translation_key="node_update",
         entity_category=EntityCategory.CONFIG,
-        installed_version=lambda node_data: node_data.version.get("version", "unknown"),
-        update_info=lambda node_data: update_version(
-            node_data.version.get("version", "unknown"),
-            node_data.update if isinstance(node_data.update, list) else [],
+        installed_version=lambda data: data.version.version,
+        update_info=lambda data: (
+            update_version(data.version.version, data.update)
+            if data.update is not None
+            else None
         ),
     ),
 )
@@ -48,33 +59,63 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Proxmox VE update entities."""
-    coordinator = entry.runtime_data
+    status_coordinator = entry.runtime_data.status
+    software_coordinator = entry.runtime_data.software
 
     def _async_add_new_nodes(nodes: list[ProxmoxNodeData]) -> None:
         """Add update entities for newly discovered nodes."""
         async_add_entities(
-            ProxmoxNodeUpdateEntity(coordinator, entity_description, node)
+            ProxmoxNodeUpdateEntity(software_coordinator, entity_description, node)
             for node in nodes
             for entity_description in NODE_UPDATES
-            if node.update
-            is not False  # Only create entities for nodes where update information is available
+            if status_coordinator.permissions.has_node_permission(
+                node.node.node, ProxmoxPermission.SYSMOD
+            )
         )
 
-    coordinator.new_nodes_callbacks.append(_async_add_new_nodes)
+    status_coordinator.new_nodes_callbacks.append(_async_add_new_nodes)
     _async_add_new_nodes(
         [
-            node_data
-            for node_data in coordinator.data.values()
-            if node_data.node["node"] in coordinator.known_nodes
+            data
+            for data in status_coordinator.data.values()
+            if data.node.node in status_coordinator.known_nodes
         ]
     )
 
 
-class ProxmoxNodeUpdateEntity(ProxmoxNodeEntity, UpdateEntity):
+class ProxmoxNodeUpdateEntity(
+    CoordinatorEntity[ProxmoxSoftwareCoordinator], UpdateEntity
+):
     """Represents a Proxmox VE node software update."""
 
+    _attr_has_entity_name = True
     _attr_supported_features = UpdateEntityFeature.RELEASE_NOTES
     entity_description: ProxmoxNodeUpdateEntityDescription
+
+    def __init__(
+        self,
+        coordinator: ProxmoxSoftwareCoordinator,
+        entity_description: ProxmoxNodeUpdateEntityDescription,
+        node_data: ProxmoxNodeData,
+    ) -> None:
+        """Initialize the Proxmox node update entity."""
+        super().__init__(coordinator)
+        self.device_name = node_data.node.node
+        self.entity_description = entity_description
+        self._attr_device_info = node_device_info(coordinator.status, node_data)
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}"
+            f"_{node_data.node.id}"
+            f"_{entity_description.key}"
+        )
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Also follow the status coordinator, which tracks if the node is online."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self.coordinator.status.async_add_listener(self._handle_coordinator_update)
+        )
 
     @property
     @override
@@ -93,9 +134,16 @@ class ProxmoxNodeUpdateEntity(ProxmoxNodeEntity, UpdateEntity):
 
     @property
     @override
+    def has_update(self) -> bool:
+        """Return True if package updates are pending."""
+        update_info = self._update_info()
+        return update_info is not None and update_info.total_updates > 0
+
+    @property
+    @override
     def release_summary(self) -> str | None:
         """Return the release summary for the update."""
-        url = self.device_info.get("configuration_url") if self.device_info else None
+        url = proxmox_node_url(self.coordinator.status, self.device_name)
         update_info = self._update_info()
         if update_info and update_info.total_updates > 0:
             return f"A total of {update_info.total_updates} package update(s) are pending installation: of these {update_info.proxmox_updates} relate to Proxmox and {update_info.other_updates} to other updates. Please visit the [Proxmox VE node]({url}) for details on the pending updates and to upgrade to {update_info.latest_version}."
@@ -105,7 +153,14 @@ class ProxmoxNodeUpdateEntity(ProxmoxNodeEntity, UpdateEntity):
     @override
     def available(self) -> bool:
         """Return if the update platform is available."""
-        return self._update_info() is not None
+        return (
+            super().available
+            and (node_data := self.coordinator.status.data.get(self.device_name))
+            is not None
+            and node_data.node.status == OperationalStatus.ONLINE
+            and self.device_name in self.coordinator.data
+            and self._update_info() is not None
+        )
 
     @override
     def release_notes(self) -> str | None:
@@ -114,7 +169,6 @@ class ProxmoxNodeUpdateEntity(ProxmoxNodeEntity, UpdateEntity):
 
     def _update_info(self) -> ProxmoxUpdateInfo | None:
         """Return update info or None if unavailable."""
-        info = self.entity_description.update_info(
+        return self.entity_description.update_info(
             self.coordinator.data[self.device_name]
         )
-        return info if isinstance(info, ProxmoxUpdateInfo) else None

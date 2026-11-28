@@ -1,10 +1,12 @@
 """Test the Theben Conexa Smartmeter gateway config flow."""
 
+import asyncio
 from types import SimpleNamespace
-from unittest.mock import AsyncMock
+from unittest.mock import ANY, AsyncMock
 
 import aiohttp
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from theben_conexa_smgw import ConexaSMGW
 
 from homeassistant import config_entries
@@ -13,13 +15,134 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
-
 TEST_CONFIG_DATA = {
     CONF_HOST: "1.1.1.1",
     CONF_USERNAME: "test-username",
     CONF_PASSWORD: "test-password",
 }
+
+
+async def test_client_creation_for_same_host_is_serialized(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_conexa_smgw: SimpleNamespace,
+) -> None:
+    """Test client creation for the same host is serialized across config flows."""
+    first_flow = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    second_flow = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    active_requests = 0
+    max_active_requests = 0
+    active_probes = 0
+    max_active_probes = 0
+
+    async def check_network(*args: object) -> None:
+        nonlocal active_probes, max_active_probes
+        active_probes += 1
+        max_active_probes = max(max_active_probes, active_probes)
+        try:
+            await asyncio.sleep(0.01)
+        finally:
+            active_probes -= 1
+
+    async def create_client(*args: object) -> ConexaSMGW:
+        nonlocal active_requests, max_active_requests
+        active_requests += 1
+        max_active_requests = max(max_active_requests, active_requests)
+        try:
+            await asyncio.sleep(0.01)
+            return mock_conexa_smgw.client
+        finally:
+            active_requests -= 1
+
+    mock_conexa_smgw.network.side_effect = check_network
+    mock_conexa_smgw.create.side_effect = create_client
+
+    first_result, second_result = await asyncio.gather(
+        hass.config_entries.flow.async_configure(
+            first_flow["flow_id"], TEST_CONFIG_DATA
+        ),
+        hass.config_entries.flow.async_configure(
+            second_flow["flow_id"],
+            {**TEST_CONFIG_DATA, CONF_USERNAME: "another-user"},
+        ),
+    )
+
+    assert first_result["type"] is FlowResultType.CREATE_ENTRY
+    assert (
+        first_result["result"].unique_id
+        == f"{mock_conexa_smgw.client.gatewayInfo.smgwID}-test-username"
+    )
+    assert second_result["type"] is FlowResultType.CREATE_ENTRY
+    assert (
+        second_result["result"].unique_id
+        == f"{mock_conexa_smgw.client.gatewayInfo.smgwID}-another-user"
+    )
+    assert max_active_requests == 1
+    assert max_active_probes == 1
+
+
+async def test_client_creation_for_different_hosts_is_not_serialized(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_conexa_smgw: SimpleNamespace,
+) -> None:
+    """Test client creation for different hosts use independent locks."""
+    first_flow = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    second_flow = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    active_requests = 0
+    max_active_requests = 0
+    requests_started = asyncio.Barrier(2)
+    probes_started = asyncio.Barrier(2)
+
+    async def check_network(*args: object) -> None:
+        await asyncio.wait_for(probes_started.wait(), timeout=1)
+
+    async def create_client(*args: object) -> ConexaSMGW:
+        nonlocal active_requests, max_active_requests
+        active_requests += 1
+        max_active_requests = max(max_active_requests, active_requests)
+        try:
+            await asyncio.wait_for(requests_started.wait(), timeout=1)
+            return mock_conexa_smgw.client
+        finally:
+            active_requests -= 1
+
+    mock_conexa_smgw.network.side_effect = check_network
+    mock_conexa_smgw.create.side_effect = create_client
+
+    first_result, second_result = await asyncio.gather(
+        hass.config_entries.flow.async_configure(
+            first_flow["flow_id"], TEST_CONFIG_DATA
+        ),
+        hass.config_entries.flow.async_configure(
+            second_flow["flow_id"],
+            {
+                **TEST_CONFIG_DATA,
+                CONF_HOST: "2.2.2.2",
+                CONF_USERNAME: "another-user",
+            },
+        ),
+    )
+
+    assert first_result["type"] is FlowResultType.CREATE_ENTRY
+    assert (
+        first_result["result"].unique_id
+        == f"{mock_conexa_smgw.client.gatewayInfo.smgwID}-test-username"
+    )
+    assert second_result["type"] is FlowResultType.CREATE_ENTRY
+    assert (
+        second_result["result"].unique_id
+        == f"{mock_conexa_smgw.client.gatewayInfo.smgwID}-another-user"
+    )
+    assert max_active_requests == 2
 
 
 def _assert_create_entry_result(
@@ -218,3 +341,100 @@ async def test_same_gateway_different_user(
         mock_conexa_smgw.client,
     )
     assert len(mock_setup_entry.mock_calls) == 2
+
+
+async def test_reauth_flow(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_conexa_smgw: SimpleNamespace,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauthentication updates the password."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["description_placeholders"] == {
+        "name": mock_config_entry.title,
+        CONF_HOST: "1.1.1.1",
+        CONF_USERNAME: "test-username",
+    }
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "new-password"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data == {
+        **TEST_CONFIG_DATA,
+        CONF_PASSWORD: "new-password",
+    }
+    mock_conexa_smgw.create.assert_called_with(
+        ANY, "1.1.1.1", "test-username", "new-password"
+    )
+
+
+@pytest.mark.parametrize(
+    ("network_side_effect", "create_side_effect", "expected_error"),
+    [
+        pytest.param(aiohttp.ClientError, None, "cannot_connect", id="cannot-connect"),
+        pytest.param(None, aiohttp.ClientError, "invalid_auth", id="invalid-auth"),
+        pytest.param(None, ValueError, "unknown", id="unknown"),
+    ],
+)
+async def test_reauth_flow_errors(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_conexa_smgw: SimpleNamespace,
+    mock_config_entry: MockConfigEntry,
+    network_side_effect: type[Exception] | None,
+    create_side_effect: type[Exception] | None,
+    expected_error: str,
+) -> None:
+    """Test reauthentication errors and recovery."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    mock_conexa_smgw.network.side_effect = network_side_effect
+    mock_conexa_smgw.create.side_effect = create_side_effect
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "new-password"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": expected_error}
+
+    mock_conexa_smgw.network.side_effect = None
+    mock_conexa_smgw.create.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "new-password"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_PASSWORD] == "new-password"
+
+
+async def test_reauth_flow_unique_id_mismatch(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_conexa_smgw: SimpleNamespace,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauthentication aborts when the host now points to another gateway."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    mock_conexa_smgw.client.gatewayInfo.smgwID = "other-gateway-id"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "new-password"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert mock_config_entry.data == TEST_CONFIG_DATA

@@ -5,6 +5,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, replace
 import logging
 import math
+import time
 from typing import Any, cast, override
 import unicodedata
 
@@ -53,7 +54,12 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+# Expiry window for deduplicating access events, in seconds
+_ACCESS_EVENT_DEDUP_WINDOW = 10.0
+
 type UnifiAccessConfigEntry = ConfigEntry[UnifiAccessCoordinator]
+# (event object, event type, published, result, auth, actor, door)
+type _AccessEventKey = tuple[str, str, int, str, str, str, str]
 
 
 @dataclass(frozen=True)
@@ -101,6 +107,7 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
         self.client = client
         self._event_listeners: list[Callable[[DoorEvent], None]] = []
         self._device_to_door: dict[str, str] = {}
+        self._recent_access_events: dict[_AccessEventKey, float] = {}
 
     @callback
     def async_subscribe_door_events(
@@ -219,7 +226,11 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
                 translation_key="update_failed_timeout",
             ) from err
 
-        previous_lock_rules = self.data.door_lock_rules.copy() if self.data else {}
+        previous_lock_rules = (
+            data.door_lock_rules.copy()
+            if (data := self.data_or_none) is not None
+            else {}
+        )
         door_lock_rules: dict[str, DoorLockRuleStatus] = {}
         unconfirmed_lock_rule_doors: set[str] = set()
         lock_rule_support_complete = True
@@ -455,9 +466,9 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
             )
             return
         door_name = remote_view.data.door_name
-        if self.data and door_name:
+        if (data := self.data_or_none) is not None and door_name:
             normalized = unicodedata.normalize("NFC", door_name.strip())
-            for door in self.data.doors.values():
+            for door in data.doors.values():
                 if unicodedata.normalize("NFC", door.name.strip()) == normalized:
                     self._dispatch_door_event(door.id, "doorbell", "ring", {})
                     return
@@ -490,6 +501,39 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
         if update.data.unique_id and update.data.door and update.data.door.unique_id:
             self._device_to_door[update.data.unique_id] = update.data.door.unique_id
 
+    def _is_duplicate_access_event(
+        self,
+        event_object_id: str,
+        event_type: str,
+        published: int | None,
+        result: str,
+        auth_id: str,
+        actor: str,
+        door_id: str,
+    ) -> bool:
+        """Record an access event and return True when it was already dispatched.
+
+        The controller can deliver the same door event twice — once as an
+        ``access.logs.insights.add`` and once as an ``access.logs.add``
+        message. Only events that reach this point are recorded, so a copy
+        that could not be resolved to a door does not shadow its pair.
+        """
+        published = published or 0
+        if not published:
+            return False
+        now = time.monotonic()
+        self._recent_access_events = {
+            key: seen_at
+            for key, seen_at in self._recent_access_events.items()
+            if now - seen_at <= _ACCESS_EVENT_DEDUP_WINDOW
+        }
+        key = (event_object_id, event_type, published, result, auth_id, actor, door_id)
+        if key in self._recent_access_events:
+            _LOGGER.debug("Suppressing duplicate access event %s", key)
+            return True
+        self._recent_access_events[key] = now
+        return False
+
     async def _handle_insights_add(self, msg: WebsocketMessage) -> None:
         """Handle access insights events (entry/exit)."""
         insights = cast(InsightsAdd, msg)
@@ -509,8 +553,60 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
         if insights.data.metadata.direction:
             attrs["direction"] = insights.data.metadata.direction
         for door in door_entries:
-            if door.id:
-                self._dispatch_door_event(door.id, "access", event_type, attrs)
+            if not door.id:
+                continue
+            if (door_id := self._resolve_insights_door_id(door.id, msg)) is None:
+                _LOGGER.debug(
+                    "Received access.logs.insights.add for unknown door %s", door.id
+                )
+                continue
+            if self._is_duplicate_access_event(
+                insights.event_object_id,
+                insights.data.event_type,
+                insights.data.published,
+                insights.data.result,
+                insights.data.metadata.authentication.id or "",
+                insights.data.metadata.actor.display_name,
+                door_id,
+            ):
+                continue
+            self._dispatch_door_event(door_id, "access", event_type, attrs)
+
+    def _resolve_insights_door_id(
+        self, metadata_door_id: str, msg: WebsocketMessage
+    ) -> str | None:
+        """Return the door for an insights door entry.
+
+        UAH-DOOR hubs send their own MAC as the door ID.
+        """
+        if self.data is None:
+            return None  # type: ignore[unreachable]
+        if metadata_door_id in self.data.doors:
+            return metadata_door_id
+        if metadata_door_id == msg.event_object_id:
+            return self._resolve_hub_door_id(msg)
+        return None
+
+    def _resolve_logs_door_id(self, log: LogAdd) -> str | None:
+        """Return the door for a logs.add event without a mapped device.
+
+        UAH-DOOR hubs send their own MAC as the door target.
+        """
+        if self.data is None:
+            return None  # type: ignore[unreachable]
+        for target in log.data.source.target:
+            if target.type == "door" and target.id in self.data.doors:
+                return target.id
+        return self._resolve_hub_door_id(log)
+
+    def _resolve_hub_door_id(self, msg: WebsocketMessage) -> str | None:
+        """Return the door of the hub that sent the message."""
+        doors = self.data.doors
+        if (door_id := self._device_to_door.get(msg.event_object_id)) in doors:
+            return door_id
+        if msg.door_id in doors:
+            return msg.door_id
+        return None
 
     async def _handle_logs_add(self, msg: WebsocketMessage) -> None:
         """Handle access log events (entry/exit via access.logs.add)."""
@@ -521,10 +617,12 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
             return
         if device_target.id in self._device_to_door:
             door_id = self._device_to_door[device_target.id]
-        elif msg.door_id:
-            # UAH-DOOR devices: door_id is enriched by the library via MAC→door map
-            door_id = msg.door_id
+        elif (resolved_door_id := self._resolve_logs_door_id(log)) is not None:
+            door_id = resolved_door_id
         else:
+            _LOGGER.debug(
+                "Received access.logs.add for unknown device %s", device_target.id
+            )
             return
         event_type = (
             "access_granted" if source.event.result == "ACCESS" else "access_denied"
@@ -538,6 +636,16 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
             attrs["result"] = source.event.result
         if source.direction:
             attrs["direction"] = source.direction
+        if self._is_duplicate_access_event(
+            log.event_object_id,
+            source.event.type,
+            source.event.published,
+            source.event.result,
+            source.authentication.issuer or "",
+            source.actor.display_name,
+            door_id,
+        ):
+            return
         self._dispatch_door_event(door_id, "access", event_type, attrs)
 
     def get_lock_rule_status(self, door_id: str) -> DoorLockRuleStatus | None:

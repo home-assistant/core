@@ -1,7 +1,6 @@
 """Provide methods to bootstrap a Home Assistant instance."""
 
 import asyncio
-from collections import defaultdict
 import contextlib
 from functools import partial
 from itertools import chain
@@ -25,6 +24,7 @@ import yarl
 
 from . import (
     block_async_io,
+    block_shared_serial,
     config as conf_util,
     config_entries,
     core,
@@ -64,10 +64,8 @@ from .components import (
 from .components.sensor import recorder as sensor_recorder  # noqa: F401
 from .const import (
     BASE_PLATFORMS,
-    FORMAT_DATETIME,
     KEY_DATA_LOGGING as DATA_LOGGING,
     KEY_DATA_LOGGING_DISABLED_REASON as DATA_LOGGING_DISABLED_REASON,
-    SIGNAL_BOOTSTRAP_INTEGRATIONS,
 )
 from .core_config import async_process_ha_core_config
 from .exceptions import HomeAssistantError, UnsupportedStorageVersionError
@@ -89,7 +87,7 @@ from .helpers import (
     translation,
     trigger,
 )
-from .helpers.dispatcher import async_dispatcher_send_internal
+from .helpers.bootstrap_progress import BootstrapPhase, WatchPendingSetups
 from .helpers.storage import get_internal_store_manager
 from .helpers.system_info import async_get_system_info
 from .helpers.typing import ConfigType
@@ -107,7 +105,11 @@ from .setup import (
 )
 from .util.async_ import create_eager_task
 from .util.hass_dict import HassKey
-from .util.logging import async_activate_log_queue_handler
+from .util.logging import (
+    LOG_FORMAT,
+    HomeAssistantLogFormatter,
+    async_activate_log_queue_handler,
+)
 from .util.package import is_docker_env
 from .util.system_info import is_official_image
 
@@ -116,7 +118,7 @@ with contextlib.suppress(ImportError):
     from anyio._backends import _asyncio  # noqa: F401
 
 with contextlib.suppress(ImportError):
-    # httpx will import trio if it is installed which does
+    # httpcore2 will import trio if it is installed which does
     # blocking I/O in the event loop. We want to avoid that.
     import trio  # noqa: F401
 
@@ -138,9 +140,6 @@ LOG_FILE_DISABLED_REASON_SUPERVISOR = "supervisor"
 
 # hass.data key for logging information.
 DATA_REGISTRIES_LOADED: HassKey[None] = HassKey("bootstrap_registries_loaded")
-
-LOG_SLOW_STARTUP_INTERVAL = 60
-SLOW_STARTUP_CHECK_INTERVAL = 1
 
 STAGE_0_SUBSTAGE_TIMEOUT = 60
 STAGE_1_TIMEOUT = 120
@@ -349,12 +348,16 @@ async def async_setup_hass(
     _LOGGER.info("Config directory: %s", runtime_config.config_dir)
 
     block_async_io.enable()
+    block_shared_serial.enable()
 
     if not (recovery_mode := runtime_config.recovery_mode):
         config_dict = None
         basic_setup_success = False
 
-        await hass.async_add_executor_job(conf_util.process_ha_config_upgrade, hass)
+        if previous_version := await hass.async_add_executor_job(
+            conf_util.process_ha_config_upgrade, hass
+        ):
+            hass.data[conf_util.DATA_PREVIOUS_VERSION] = previous_version
 
         try:
             config_dict = await conf_util.async_hass_config_yaml(hass)
@@ -474,25 +477,29 @@ async def async_load_base_functionality(hass: core.HomeAssistant) -> bool:
 
     recovery = hass.config.recovery_mode
     device_registry.async_setup(hass)
+    load_tasks: list[asyncio.Future[Any]] = [
+        create_eager_task(get_internal_store_manager(hass).async_initialize()),
+        create_eager_task(area_registry.async_load(hass, load_empty=recovery)),
+        create_eager_task(category_registry.async_load(hass, load_empty=recovery)),
+        create_eager_task(device_registry.async_load(hass, load_empty=recovery)),
+        create_eager_task(entity_registry.async_load(hass, load_empty=recovery)),
+        create_eager_task(floor_registry.async_load(hass, load_empty=recovery)),
+        create_eager_task(issue_registry.async_load(hass, load_empty=recovery)),
+        create_eager_task(label_registry.async_load(hass, load_empty=recovery)),
+        hass.async_add_executor_job(_init_blocking_io_modules_in_executor),
+        create_eager_task(template.async_load_custom_templates(hass)),
+        create_eager_task(restore_state.async_load(hass, load_empty=recovery)),
+        create_eager_task(hass.config_entries.async_initialize()),
+        create_eager_task(async_get_system_info(hass)),
+        create_eager_task(condition.async_setup(hass)),
+        create_eager_task(trigger.async_setup(hass)),
+    ]
     try:
-        await asyncio.gather(
-            create_eager_task(get_internal_store_manager(hass).async_initialize()),
-            create_eager_task(area_registry.async_load(hass, load_empty=recovery)),
-            create_eager_task(category_registry.async_load(hass, load_empty=recovery)),
-            create_eager_task(device_registry.async_load(hass, load_empty=recovery)),
-            create_eager_task(entity_registry.async_load(hass, load_empty=recovery)),
-            create_eager_task(floor_registry.async_load(hass, load_empty=recovery)),
-            create_eager_task(issue_registry.async_load(hass, load_empty=recovery)),
-            create_eager_task(label_registry.async_load(hass, load_empty=recovery)),
-            hass.async_add_executor_job(_init_blocking_io_modules_in_executor),
-            create_eager_task(template.async_load_custom_templates(hass)),
-            create_eager_task(restore_state.async_load(hass, load_empty=recovery)),
-            create_eager_task(hass.config_entries.async_initialize()),
-            create_eager_task(async_get_system_info(hass)),
-            create_eager_task(condition.async_setup(hass)),
-            create_eager_task(trigger.async_setup(hass)),
-        )
+        await asyncio.gather(*load_tasks)
     except UnsupportedStorageVersionError as err:
+        for task in load_tasks:
+            task.cancel()
+
         # If we're already in recovery mode, we don't want to handle the exception
         # and activate recovery mode again, as that would lead to an infinite loop.
         if recovery:
@@ -563,7 +570,7 @@ async def async_from_config_dict(
         )
         return None
 
-    await _async_set_up_integrations(hass, config)
+    await _async_set_up_integrations(hass, config, start)
 
     stop = monotonic()
     _LOGGER.info("Home Assistant initialized in %.2fs", stop - start)
@@ -581,39 +588,33 @@ async def async_enable_logging(
 
     This method must be run in the event loop.
     """
-    fmt = (
-        "%(asctime)s.%(msecs)03d %(levelname)s (%(threadName)s) [%(name)s] %(message)s"
-    )
-
+    formatter: logging.Formatter = HomeAssistantLogFormatter(LOG_FORMAT)
     if not log_no_color:
         try:
             from colorlog import ColoredFormatter  # noqa: PLC0415
-
-            # basicConfig must be called after importing colorlog in order to
-            # ensure that the handlers it sets up wraps the correct streams.
-            logging.basicConfig(level=logging.INFO)
-
-            colorfmt = f"%(log_color)s{fmt}%(reset)s"
-            logging.getLogger().handlers[0].setFormatter(
-                ColoredFormatter(
-                    colorfmt,
-                    datefmt=FORMAT_DATETIME,
-                    reset=True,
-                    log_colors={
-                        "DEBUG": "cyan",
-                        "INFO": "green",
-                        "WARNING": "yellow",
-                        "ERROR": "red",
-                        "CRITICAL": "red",
-                    },
-                )
-            )
         except ImportError:
             pass
+        else:
 
-    # If the above initialization failed for any reason, setup the default
-    # formatting.  If the above succeeds, this will result in a no-op.
-    logging.basicConfig(format=fmt, datefmt=FORMAT_DATETIME, level=logging.INFO)
+            class _ColoredFormatter(HomeAssistantLogFormatter, ColoredFormatter):
+                """Colored formatter using the Home Assistant timestamp format."""
+
+            formatter = _ColoredFormatter(
+                f"%(log_color)s{LOG_FORMAT}%(reset)s",
+                reset=True,
+                log_colors={
+                    "DEBUG": "cyan",
+                    "INFO": "green",
+                    "WARNING": "yellow",
+                    "ERROR": "red",
+                    "CRITICAL": "red",
+                },
+            )
+
+    # basicConfig must be called after importing colorlog in order to
+    # ensure that the handlers it sets up wraps the correct streams.
+    logging.basicConfig(level=logging.INFO)
+    logging.getLogger().handlers[0].setFormatter(formatter)
 
     # Capture warnings.warn(...) and friends messages in logs.
     # The standard destination for them is stderr, which may end up unnoticed.
@@ -624,7 +625,7 @@ async def async_enable_logging(
     logging.getLogger("requests").setLevel(logging.WARNING)
     logging.getLogger("urllib3").setLevel(logging.WARNING)
     logging.getLogger("aiohttp.access").setLevel(logging.WARNING)
-    logging.getLogger("httpx").setLevel(logging.WARNING)
+    logging.getLogger("httpx2").setLevel(logging.WARNING)
 
     sys.excepthook = lambda *args: logging.getLogger().exception(
         "Uncaught exception", exc_info=args
@@ -667,7 +668,7 @@ async def async_enable_logging(
             _create_log_file, err_log_path, log_rotate_days
         )
 
-        err_handler.setFormatter(logging.Formatter(fmt, datefmt=FORMAT_DATETIME))
+        err_handler.setFormatter(HomeAssistantLogFormatter(LOG_FORMAT))
         logger.addHandler(err_handler)
 
         # Save the log file location for access by other components.
@@ -758,14 +759,15 @@ def _get_domains(hass: core.HomeAssistant, config: dict[str, Any]) -> set[str]:
 
 async def _async_resolve_domains_and_preload(
     hass: core.HomeAssistant, config: dict[str, Any]
-) -> tuple[dict[str, Integration], dict[str, Integration]]:
+) -> tuple[dict[str, Integration], dict[str, Integration], set[str]]:
     """Resolve all dependencies and return integrations to set up.
 
-    The return value is a tuple of two dictionaries:
+    The return value is a tuple of two dictionaries and a set:
     - The first dictionary contains integrations
       specified by the configuration (including config entries).
     - The second dictionary contains the same integrations as the first dictionary
       together with all their dependencies.
+    - The set contains the domains that were not found.
     """
     domains_to_setup = _get_domains(hass, config)
 
@@ -884,19 +886,29 @@ async def _async_resolve_domains_and_preload(
         eager_start=True,
     )
 
-    return integrations_to_setup, all_integrations_to_setup
+    return (
+        integrations_to_setup,
+        all_integrations_to_setup,
+        {
+            domain
+            for domain, itg in integrations_or_excs.items()
+            if isinstance(itg, loader.IntegrationNotFound)
+        },
+    )
 
 
 async def _async_set_up_integrations(
-    hass: core.HomeAssistant, config: dict[str, Any]
+    hass: core.HomeAssistant, config: dict[str, Any], start: float
 ) -> None:
     """Set up all the integrations."""
-    watcher = _WatchPendingSetups(hass, _setup_started(hass))
+    watcher = WatchPendingSetups(hass, _setup_started(hass), start)
     watcher.async_start()
 
-    integrations, all_integrations = await _async_resolve_domains_and_preload(
-        hass, config
-    )
+    (
+        integrations,
+        all_integrations,
+        not_found_domains,
+    ) = await _async_resolve_domains_and_preload(hass, config)
     # Detect all cycles
     integrations_after_dependencies = (
         await loader.resolve_integrations_after_dependencies(
@@ -926,6 +938,22 @@ async def _async_set_up_integrations(
         ("1", STAGE_1_INTEGRATIONS, STAGE_1_TIMEOUT),
         ("2", domains, STAGE_2_TIMEOUT),
     ]
+    # Not every resolved domain is set up by a stage, only count those that are.
+    # Domains dropped while resolving dependencies count as failed.
+    watcher.async_set_planned_domains(
+        {
+            dep
+            for _, domain_group, _ in stages
+            for domain in domain_group & all_domains
+            for dep in (domain, *integrations_after_dependencies[domain])
+        }
+        | (
+            (_get_domains(hass, config) | all_integrations.keys())
+            - all_domains
+            # Safe mode does not load custom integrations, so they are not found.
+            - (not_found_domains if hass.config.safe_mode else set())
+        )
+    )
 
     _LOGGER.info("Setting up stage 0")
     for name, domain_group, timeout in stages:
@@ -939,6 +967,7 @@ async def _async_set_up_integrations(
             _LOGGER.info("Already set up stage %s: %s", name, stage_domains_unfiltered)
             continue
 
+        watcher.async_set_phase(BootstrapPhase.SETUP)
         stage_dep_domains_unfiltered = {
             dep
             for domain in stage_domains
@@ -978,6 +1007,7 @@ async def _async_set_up_integrations(
 
     # Wrap up startup
     _LOGGER.debug("Waiting for startup to wrap up")
+    watcher.async_set_phase(BootstrapPhase.WRAP_UP)
     try:
         async with hass.timeout.async_timeout(
             WRAP_UP_TIMEOUT,
@@ -999,77 +1029,6 @@ async def _async_set_up_integrations(
             "Integration setup times: %s",
             dict(sorted(setup_time.items(), key=itemgetter(1), reverse=True)),
         )
-
-
-class _WatchPendingSetups:
-    """Periodic log and dispatch of setups that are pending."""
-
-    def __init__(
-        self,
-        hass: core.HomeAssistant,
-        setup_started: dict[tuple[str, str | None], float],
-    ) -> None:
-        """Initialize the WatchPendingSetups class."""
-        self._hass = hass
-        self._setup_started = setup_started
-        self._duration_count = 0
-        self._handle: asyncio.TimerHandle | None = None
-        self._previous_was_empty = True
-        self._loop = hass.loop
-
-    def _async_watch(self) -> None:
-        """Periodic log of setups that are pending."""
-        now = monotonic()
-        self._duration_count += SLOW_STARTUP_CHECK_INTERVAL
-
-        remaining_with_setup_started: defaultdict[str, float] = defaultdict(float)
-        for integration_group, start_time in self._setup_started.items():
-            domain, _ = integration_group
-            remaining_with_setup_started[domain] += now - start_time
-
-        if remaining_with_setup_started:
-            _LOGGER.debug("Integration remaining: %s", remaining_with_setup_started)
-        elif waiting_tasks := self._hass._active_tasks:  # noqa: SLF001
-            _LOGGER.debug("Waiting on tasks: %s", waiting_tasks)
-        self._async_dispatch(remaining_with_setup_started)
-        if (
-            self._setup_started
-            and self._duration_count % LOG_SLOW_STARTUP_INTERVAL == 0
-        ):
-            # We log every LOG_SLOW_STARTUP_INTERVAL until all integrations are done
-            # once we take over LOG_SLOW_STARTUP_INTERVAL (60s) to start up
-            _LOGGER.warning(
-                "Waiting for integrations to complete setup: %s",
-                self._setup_started,
-            )
-
-        _LOGGER.debug("Running timeout Zones: %s", self._hass.timeout.zones)
-        self._async_schedule_next()
-
-    def _async_dispatch(self, remaining_with_setup_started: dict[str, float]) -> None:
-        """Dispatch the signal."""
-        if remaining_with_setup_started or not self._previous_was_empty:
-            async_dispatcher_send_internal(
-                self._hass, SIGNAL_BOOTSTRAP_INTEGRATIONS, remaining_with_setup_started
-            )
-        self._previous_was_empty = not remaining_with_setup_started
-
-    def _async_schedule_next(self) -> None:
-        """Schedule the next call."""
-        self._handle = self._loop.call_later(
-            SLOW_STARTUP_CHECK_INTERVAL, self._async_watch
-        )
-
-    def async_start(self) -> None:
-        """Start watching."""
-        self._async_schedule_next()
-
-    def async_stop(self) -> None:
-        """Stop watching."""
-        self._async_dispatch({})
-        if self._handle:
-            self._handle.cancel()
-            self._handle = None
 
 
 async def _async_setup_multi_components(

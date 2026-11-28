@@ -3,9 +3,10 @@
 import asyncio
 from collections import defaultdict
 from collections.abc import Mapping
+from datetime import datetime
 import logging
 from time import time as time_now
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 import aiohttp
 from aiohttp.web import Request
@@ -51,6 +52,7 @@ from .exceptions import (
     ReolinkWebhookException,
     UserNotAdmin,
 )
+from .hls import ReolinkHlsPlayback
 from .util import ReolinkConfigEntry, get_store
 
 DEFAULT_TIMEOUT = 30
@@ -119,6 +121,8 @@ class ReolinkHost:
         )
         self.firmware_ch_list: list[int | None] = []
 
+        self.hls_playback: ReolinkHlsPlayback | None = None
+        self._hls_playback_lock = asyncio.Lock()
         self.starting: bool = True
         self.privacy_mode: bool | None = None
         self.credential_errors: int = 0
@@ -167,6 +171,44 @@ class ReolinkHost:
         """Return the API object."""
         return self._api
 
+    @callback
+    def _async_create_issue(
+        self,
+        issue_id: str,
+        translation_key: str,
+        translation_placeholders: dict[str, str],
+    ) -> None:
+        """Create a repair issue linked to the config entry of this host."""
+        if self._config_entry is None:
+            # Config flow probe; the issue is raised when the entry is set up
+            return
+        ir.async_create_issue(
+            self._hass,
+            DOMAIN,
+            f"{issue_id}_{self._config_entry.entry_id}",
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=translation_key,
+            translation_placeholders=translation_placeholders,
+            config_entry_id=self._config_entry.entry_id,
+        )
+
+    @callback
+    def _async_delete_issue(self, issue_id: str) -> None:
+        """Delete a repair issue of this host."""
+        if self._config_entry is None:
+            return
+        ir.async_delete_issue(
+            self._hass, DOMAIN, f"{issue_id}_{self._config_entry.entry_id}"
+        )
+
+    @callback
+    def _async_delete_webhook_issues(self) -> None:
+        """Delete the push issues once push events are received."""
+        self._async_delete_issue("webhook_url")
+        self._async_delete_issue("https_webhook")
+        self._async_delete_issue("ssl")
+
     async def async_init(self) -> None:
         """Connect to Reolink host."""
         if not self._api.valid_password():
@@ -182,14 +224,13 @@ class ReolinkHost:
                     severity=ir.IssueSeverity.ERROR,
                     translation_key="password_too_long",
                     translation_placeholders={"name": self._config_entry.title},
+                    config_entry_id=self._config_entry.entry_id,
                 )
 
-            # pylint: disable-next=home-assistant-exception-not-translated
             raise PasswordIncompatible(
-                "Reolink password contains incompatible special character or "
-                "is too long, please change the password to only contain characters: "
-                f"a-z, A-Z, 0-9 or {ALLOWED_SPECIAL_CHARS} "
-                "and not be longer than 31 characters"
+                translation_domain=DOMAIN,
+                translation_key="password_incompatible",
+                translation_placeholders={"special_chars": ALLOWED_SPECIAL_CHARS},
             )
 
         store: Store[str] | None = None
@@ -206,14 +247,19 @@ class ReolinkHost:
         await self._api.get_host_data()
 
         if self._api.mac_address is None:
-            # pylint: disable-next=home-assistant-exception-not-translated
-            raise ReolinkSetupException("Could not get mac address")
+            raise ReolinkSetupException(
+                translation_domain=DOMAIN,
+                translation_key="no_mac_address",
+            )
 
         if not self._api.is_admin:
-            # pylint: disable-next=home-assistant-exception-not-translated
             raise UserNotAdmin(
-                f"User '{self._api.username}' has authorization level "
-                f"'{self._api.user_level}', only admin users can change camera settings"
+                translation_domain=DOMAIN,
+                translation_key="user_not_admin",
+                translation_placeholders={
+                    "username": self._api.username,
+                    "userlevel": self._api.user_level,
+                },
             )
 
         self.privacy_mode = self._api.baichuan.privacy_mode()
@@ -277,21 +323,17 @@ class ReolinkHost:
                 if enable_rtmp:
                     ports += "RTMP "
 
-                ir.async_create_issue(
-                    self._hass,
-                    DOMAIN,
+                self._async_create_issue(
                     "enable_port",
-                    is_fixable=False,
-                    severity=ir.IssueSeverity.WARNING,
-                    translation_key="enable_port",
-                    translation_placeholders={
+                    "enable_port",
+                    {
                         "name": self._api.nvr_name,
                         "ports": ports,
                         "info_link": "https://support.reolink.com/hc/en-us/articles/900004435763-How-to-Set-up-Reolink-Ports-Settings-via-Reolink-Client-New-Client-",
                     },
                 )
         else:
-            ir.async_delete_issue(self._hass, DOMAIN, "enable_port")
+            self._async_delete_issue("enable_port")
 
         if self._api.supported(None, "UID"):
             self._unique_id = self._api.uid
@@ -318,14 +360,10 @@ class ReolinkHost:
 
             key = ch if ch is not None else "host"
             if self._api.camera_sw_version_update_required(ch):
-                ir.async_create_issue(
-                    self._hass,
-                    DOMAIN,
+                self._async_create_issue(
                     f"firmware_update_{key}",
-                    is_fixable=False,
-                    severity=ir.IssueSeverity.WARNING,
-                    translation_key="firmware_update",
-                    translation_placeholders={
+                    "firmware_update",
+                    {
                         "required_firmware": self._api.camera_sw_version_required(
                             ch
                         ).version_string,
@@ -337,12 +375,12 @@ class ReolinkHost:
                     },
                 )
             else:
-                ir.async_delete_issue(self._hass, DOMAIN, f"firmware_update_{key}")
+                self._async_delete_issue(f"firmware_update_{key}")
 
     async def _async_check_tcp_push(self, *_: Any) -> None:
         """Check the TCP push subscription."""
         if self._api.baichuan.events_active:
-            ir.async_delete_issue(self._hass, DOMAIN, "webhook_url")
+            self._async_delete_webhook_issues()
             self._cancel_tcp_push_check = None
             return
 
@@ -410,7 +448,7 @@ class ReolinkHost:
     async def _async_check_onvif(self, *_: Any) -> None:
         """Check the ONVIF subscription."""
         if self._webhook_reachable:
-            ir.async_delete_issue(self._hass, DOMAIN, "webhook_url")
+            self._async_delete_webhook_issues()
             self._cancel_onvif_check = None
             return
         if self._api.supported(None, "initial_ONVIF_state"):
@@ -435,14 +473,10 @@ class ReolinkHost:
                 "Did not receive state through ONVIF long polling after %i seconds",
                 FIRST_ONVIF_LONG_POLL_TIMEOUT,
             )
-            ir.async_create_issue(
-                self._hass,
-                DOMAIN,
+            self._async_create_issue(
                 "webhook_url",
-                is_fixable=False,
-                severity=ir.IssueSeverity.WARNING,
-                translation_key="webhook_url",
-                translation_placeholders={
+                "webhook_url",
+                {
                     "name": self._api.nvr_name,
                     "base_url": self._base_url,
                     "network_link": "https://my.home-assistant.io/redirect/network/",
@@ -452,14 +486,11 @@ class ReolinkHost:
             )
 
             if self._base_url.startswith("https"):
-                ir.async_create_issue(
-                    self._hass,
-                    DOMAIN,
+                self._async_create_issue(
                     "https_webhook",
-                    is_fixable=False,
-                    severity=ir.IssueSeverity.WARNING,
-                    translation_key="https_webhook",
-                    translation_placeholders={
+                    "https_webhook",
+                    {
+                        "name": self._api.nvr_name,
                         "base_url": self._base_url,
                         "network_link": "https://my.home-assistant.io/redirect/network/",
                         "example_ip": "192.168.1.10",
@@ -467,17 +498,14 @@ class ReolinkHost:
                     },
                 )
             else:
-                ir.async_delete_issue(self._hass, DOMAIN, "https_webhook")
+                self._async_delete_issue("https_webhook")
 
             if self._hass.config.api is not None and self._hass.config.api.use_ssl:
-                ir.async_create_issue(
-                    self._hass,
-                    DOMAIN,
+                self._async_create_issue(
                     "ssl",
-                    is_fixable=False,
-                    severity=ir.IssueSeverity.WARNING,
-                    translation_key="ssl",
-                    translation_placeholders={
+                    "ssl",
+                    {
+                        "name": self._api.nvr_name,
                         "ssl_link": "https://www.home-assistant.io/integrations/http/#ssl_certificate",
                         "base_url": self._base_url,
                         "network_link": "https://my.home-assistant.io/redirect/network/",
@@ -485,11 +513,9 @@ class ReolinkHost:
                     },
                 )
             else:
-                ir.async_delete_issue(self._hass, DOMAIN, "ssl")
+                self._async_delete_issue("ssl")
         else:
-            ir.async_delete_issue(self._hass, DOMAIN, "webhook_url")
-            ir.async_delete_issue(self._hass, DOMAIN, "https_webhook")
-            ir.async_delete_issue(self._hass, DOMAIN, "ssl")
+            self._async_delete_webhook_issues()
 
         # If no ONVIF push or long polling state is received, start fast polling
         await self._async_poll_all_motion()
@@ -629,7 +655,31 @@ class ReolinkHost:
         await self._async_stop_long_polling()
         self.unregister_webhook(ONVIF)
         self.unregister_webhook(BC)
+        async with self._hls_playback_lock:
+            if self.hls_playback is not None:
+                await self.hls_playback.async_close()
+                self.hls_playback = None
         await self.disconnect()
+
+    async def async_start_hls_playback(
+        self, channel: int, stream: str, start: datetime, end: datetime
+    ) -> ReolinkHlsPlayback:
+        """Start downloading a recording for HLS playback."""
+        if TYPE_CHECKING:
+            # playback is only started for hosts of a set up config entry
+            assert self._config_entry is not None
+        # the host allows only one download at a time, stop the previous playback
+        # lock: the previous download is stopped before the next one is started
+        async with self._hls_playback_lock:
+            if self.hls_playback is not None:
+                await self.hls_playback.async_close()
+                self.hls_playback = None
+            playback = ReolinkHlsPlayback(
+                self._hass, self._config_entry, self.api, channel, stream, start, end
+            )
+            self.hls_playback = playback
+            await playback.async_start()
+            return playback
 
     async def subscribe(self) -> None:
         """Subscribe to motion events and register the webhook as a callback."""
@@ -812,7 +862,7 @@ class ReolinkHost:
 
             if not self._long_poll_received:
                 self._long_poll_received = True
-                ir.async_delete_issue(self._hass, DOMAIN, "webhook_url")
+                self._async_delete_webhook_issues()
 
             self._signal_write_ha_state(channels)
 
@@ -924,7 +974,7 @@ class ReolinkHost:
         """Process the data from the Reolink ONVIF webhook."""
         if not self._webhook_reachable:
             self._webhook_reachable = True
-            ir.async_delete_issue(self._hass, DOMAIN, "webhook_url")
+            self._async_delete_webhook_issues()
 
         message = data.decode("utf-8")
         channels = await self._api.ONVIF_event_callback(message)

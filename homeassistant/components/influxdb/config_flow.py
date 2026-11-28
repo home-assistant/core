@@ -11,6 +11,7 @@ from yarl import URL
 from homeassistant.components.file_upload import process_uploaded_file
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
+    CONF_API_VERSION,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PATH,
@@ -31,20 +32,17 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.helpers.storage import STORAGE_DIR
 
-from . import DOMAIN, create_influx_url, get_influx_connection
+from . import get_influx_connection
 from .const import (
     API_VERSION_2,
-    CONF_API_VERSION,
     CONF_BUCKET,
     CONF_DB_NAME,
     CONF_ORG,
     CONF_SSL_CA_CERT,
     DEFAULT_API_VERSION,
-    DEFAULT_BUCKET,
-    DEFAULT_DATABASE,
     DEFAULT_HOST,
     DEFAULT_PORT,
-    DEFAULT_VERIFY_SSL,
+    DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -341,50 +339,3 @@ class InfluxDBConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
-
-    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Handle the initial step."""
-        import_data = {**import_data}
-        import_data.setdefault(CONF_API_VERSION, DEFAULT_API_VERSION)
-        import_data.setdefault(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
-        import_data.setdefault(CONF_DB_NAME, DEFAULT_DATABASE)
-        import_data.setdefault(CONF_BUCKET, DEFAULT_BUCKET)
-
-        api_version = import_data[CONF_API_VERSION]
-
-        if api_version == DEFAULT_API_VERSION:
-            host = import_data.get(CONF_HOST, DEFAULT_HOST)
-            database = import_data[CONF_DB_NAME]
-            title = f"{database} ({host})"
-            data = {
-                CONF_API_VERSION: api_version,
-                CONF_HOST: host,
-                CONF_PORT: import_data.get(CONF_PORT),
-                CONF_USERNAME: import_data.get(CONF_USERNAME),
-                CONF_PASSWORD: import_data.get(CONF_PASSWORD),
-                CONF_DB_NAME: database,
-                CONF_SSL: import_data.get(CONF_SSL),
-                CONF_PATH: import_data.get(CONF_PATH),
-                CONF_VERIFY_SSL: import_data[CONF_VERIFY_SSL],
-                CONF_SSL_CA_CERT: import_data.get(CONF_SSL_CA_CERT),
-            }
-        else:
-            create_influx_url(import_data)  # Only modifies dict for api_version == 2
-            bucket = import_data[CONF_BUCKET]
-            url = import_data.get(CONF_URL)
-            title = f"{bucket} ({url})"
-            data = {
-                CONF_API_VERSION: api_version,
-                CONF_URL: url,
-                CONF_TOKEN: import_data.get(CONF_TOKEN),
-                CONF_ORG: import_data.get(CONF_ORG),
-                CONF_BUCKET: bucket,
-                CONF_VERIFY_SSL: import_data[CONF_VERIFY_SSL],
-                CONF_SSL_CA_CERT: import_data.get(CONF_SSL_CA_CERT),
-            }
-
-        errors = await _validate_influxdb_connection(self.hass, data)
-        if errors:
-            return self.async_abort(reason=errors["base"])
-
-        return self.async_create_entry(title=title, data=data)

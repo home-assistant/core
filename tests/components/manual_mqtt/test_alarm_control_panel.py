@@ -5,6 +5,12 @@ from unittest.mock import Mock, patch
 
 from freezegun import freeze_time
 import pytest
+from pytest_homeassistant.common import (
+    assert_setup_component,
+    async_fire_mqtt_message,
+    async_fire_time_changed,
+)
+from pytest_homeassistant.typing import MqttMockHAClient
 
 from homeassistant.components import alarm_control_panel
 from homeassistant.components.alarm_control_panel import AlarmControlPanelState
@@ -24,13 +30,7 @@ from homeassistant.helpers.entity_component import DATA_INSTANCES
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import (
-    assert_setup_component,
-    async_fire_mqtt_message,
-    async_fire_time_changed,
-)
 from tests.components.alarm_control_panel import common
-from tests.typing import MqttMockHAClient
 
 CODE = "HELLO_CODE"
 

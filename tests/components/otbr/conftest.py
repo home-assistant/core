@@ -1,4 +1,4 @@
-"""Test fixtures for the Open Thread Border Router integration."""
+"""Test fixtures for the OpenThread Border Router integration."""
 
 from collections.abc import Generator
 from http import HTTPStatus
@@ -7,6 +7,8 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from python_otbr_api import KeyFormat
 
 from homeassistant.components import otbr
@@ -20,9 +22,6 @@ from . import (
     TEST_BORDER_AGENT_ID,
     TEST_COPROCESSOR_VERSION,
 )
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture(name="enable_compute_pskc")
@@ -115,12 +114,12 @@ async def otbr_config_entry_multipan_fixture(
     get_extended_address: AsyncMock,
     get_coprocessor_version: AsyncMock,
 ) -> str:
-    """Mock Open Thread Border Router config entry."""
+    """Mock OpenThread Border Router config entry."""
     config_entry = MockConfigEntry(
         data=CONFIG_ENTRY_DATA_MULTIPAN,
         domain=otbr.DOMAIN,
         options={},
-        title="Open Thread Border Router",
+        title="OpenThread Border Router",
         unique_id=TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
     )
     config_entry.add_to_hass(hass)
@@ -136,16 +135,26 @@ async def otbr_config_entry_thread_fixture(
     get_extended_address: AsyncMock,
     get_coprocessor_version: AsyncMock,
 ) -> None:
-    """Mock Open Thread Border Router config entry."""
+    """Mock OpenThread Border Router config entry."""
     config_entry = MockConfigEntry(
         data=CONFIG_ENTRY_DATA_THREAD,
         domain=otbr.DOMAIN,
         options={},
-        title="Open Thread Border Router",
+        title="OpenThread Border Router",
         unique_id=TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
     )
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+
+@pytest.fixture(name="fast_border_agent_discovery")
+def fast_border_agent_discovery_fixture() -> Generator[None]:
+    """Shorten Thread router discovery so block_till_done does not wait 30s."""
+    with patch(
+        "homeassistant.components.thread.dataset_store.BORDER_AGENT_DISCOVERY_TIMEOUT",
+        0.1,
+    ):
+        yield
 
 
 @pytest.fixture(autouse=True)

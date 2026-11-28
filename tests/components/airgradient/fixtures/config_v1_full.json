@@ -1,6 +1,7 @@
 {
   "pmStandard": "ugm3",
   "temperatureUnit": "c",
+  "altitudeUnit": "m",
   "measurementInterval": 10,
   "gpsMode": "tracking",
   "frontLedBrightness": 1,

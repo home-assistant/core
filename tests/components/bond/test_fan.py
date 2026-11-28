@@ -5,32 +5,26 @@ from unittest.mock import call
 
 from bond_async import Action, DeviceType, Direction
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant import core
 from homeassistant.components import fan
 from homeassistant.components.bond.const import DOMAIN
 from homeassistant.components.bond.fan import PRESET_MODE_BREEZE
-from homeassistant.components.bond.services import SERVICE_SET_FAN_SPEED_TRACKED_STATE
+from homeassistant.components.bond.services import BondService
 from homeassistant.components.fan import (
     ATTR_DIRECTION,
-    ATTR_PERCENTAGE,
     ATTR_PRESET_MODE,
     ATTR_PRESET_MODES,
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
     DOMAIN as FAN_DOMAIN,
-    SERVICE_SET_DIRECTION,
-    SERVICE_SET_PERCENTAGE,
-    SERVICE_SET_PRESET_MODE,
     FanEntityFeature,
+    FanService,
+    FanServiceArgument,
     NotValidPresetModeError,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-)
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -44,8 +38,6 @@ from .common import (
     patch_bond_device_state,
     setup_platform,
 )
-
-from tests.common import async_fire_time_changed
 
 
 def ceiling_fan_with_breeze(name: str):
@@ -71,7 +63,7 @@ async def turn_fan_on(
         service_data[fan.ATTR_PERCENTAGE] = percentage
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_ON,
+        FanService.TURN_ON,
         service_data=service_data,
         blocking=True,
     )
@@ -228,10 +220,10 @@ async def test_turn_on_fan_preset_mode(hass: HomeAssistant) -> None:
     with patch_bond_action() as mock_set_preset_mode, patch_bond_device_state():
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
+            FanService.SET_PRESET_MODE,
             service_data={
-                ATTR_PRESET_MODE: PRESET_MODE_BREEZE,
-                ATTR_ENTITY_ID: "fan.name_1",
+                FanServiceArgument.PRESET_MODE: PRESET_MODE_BREEZE,
+                TargetKey.ENTITY_ID: "fan.name_1",
             },
             blocking=True,
         )
@@ -263,10 +255,10 @@ async def test_turn_on_fan_preset_mode_not_supported(hass: HomeAssistant) -> Non
     ):
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
+            FanService.SET_PRESET_MODE,
             service_data={
-                ATTR_PRESET_MODE: PRESET_MODE_BREEZE,
-                ATTR_ENTITY_ID: "fan.name_1",
+                FanServiceArgument.PRESET_MODE: PRESET_MODE_BREEZE,
+                TargetKey.ENTITY_ID: "fan.name_1",
             },
             blocking=True,
         )
@@ -328,8 +320,11 @@ async def test_set_speed_off(hass: HomeAssistant) -> None:
     with patch_bond_action() as mock_turn_off, patch_bond_device_state():
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_SET_PERCENTAGE,
-            service_data={ATTR_ENTITY_ID: "fan.name_1", ATTR_PERCENTAGE: 0},
+            FanService.SET_PERCENTAGE,
+            service_data={
+                TargetKey.ENTITY_ID: "fan.name_1",
+                FanServiceArgument.PERCENTAGE: 0,
+            },
             blocking=True,
         )
     await hass.async_block_till_done()
@@ -346,8 +341,8 @@ async def test_turn_off_fan(hass: HomeAssistant) -> None:
     with patch_bond_action() as mock_turn_off, patch_bond_device_state():
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "fan.name_1"},
+            FanService.TURN_OFF,
+            {TargetKey.ENTITY_ID: "fan.name_1"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -364,7 +359,7 @@ async def test_set_speed_belief_speed_zero(hass: HomeAssistant) -> None:
     with patch_bond_action() as mock_action, patch_bond_device_state():
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_FAN_SPEED_TRACKED_STATE,
+            BondService.SET_FAN_SPEED_TRACKED_STATE,
             {ATTR_ENTITY_ID: "fan.name_1", "speed": 0},
             blocking=True,
         )
@@ -388,7 +383,7 @@ async def test_set_speed_belief_speed_api_error(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_FAN_SPEED_TRACKED_STATE,
+            BondService.SET_FAN_SPEED_TRACKED_STATE,
             {ATTR_ENTITY_ID: "fan.name_1", "speed": 100},
             blocking=True,
         )
@@ -403,7 +398,7 @@ async def test_set_speed_belief_speed_100(hass: HomeAssistant) -> None:
     with patch_bond_action() as mock_action, patch_bond_device_state():
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_FAN_SPEED_TRACKED_STATE,
+            BondService.SET_FAN_SPEED_TRACKED_STATE,
             {ATTR_ENTITY_ID: "fan.name_1", "speed": 100},
             blocking=True,
         )
@@ -466,8 +461,11 @@ async def test_set_fan_direction(hass: HomeAssistant) -> None:
     with patch_bond_action() as mock_set_direction, patch_bond_device_state():
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_SET_DIRECTION,
-            {ATTR_ENTITY_ID: "fan.name_1", ATTR_DIRECTION: DIRECTION_FORWARD},
+            FanService.SET_DIRECTION,
+            {
+                TargetKey.ENTITY_ID: "fan.name_1",
+                FanServiceArgument.DIRECTION: DIRECTION_FORWARD,
+            },
             blocking=True,
         )
         await hass.async_block_till_done()

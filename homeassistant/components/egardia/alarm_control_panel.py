@@ -13,6 +13,7 @@ from homeassistant.components.alarm_control_panel import (
 )
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -20,6 +21,7 @@ from . import (
     CONF_REPORT_SERVER_CODES,
     CONF_REPORT_SERVER_ENABLED,
     CONF_REPORT_SERVER_PORT,
+    DOMAIN,
     EGARDIA_DEVICE,
     EGARDIA_SERVER,
     REPORT_SERVER_CODES_IGNORE,
@@ -136,33 +138,30 @@ class EgardiaAlarm(AlarmControlPanelEntity):
         """Send disarm command."""
         try:
             self._egardiasystem.alarm_disarm()
-        # pylint: disable-next=home-assistant-action-swallowed-exception
         except requests.exceptions.RequestException as err:
-            _LOGGER.error(
-                "Egardia device exception occurred when sending disarm command: %s",
-                err,
-            )
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="disarm_failed",
+            ) from err
 
     @override
     def alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         try:
             self._egardiasystem.alarm_arm_home()
-        # pylint: disable-next=home-assistant-action-swallowed-exception
         except requests.exceptions.RequestException as err:
-            _LOGGER.error(
-                "Egardia device exception occurred when sending arm home command: %s",
-                err,
-            )
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="arm_home_failed",
+            ) from err
 
     @override
     def alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         try:
             self._egardiasystem.alarm_arm_away()
-        # pylint: disable-next=home-assistant-action-swallowed-exception
         except requests.exceptions.RequestException as err:
-            _LOGGER.error(
-                "Egardia device exception occurred when sending arm away command: %s",
-                err,
-            )
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="arm_away_failed",
+            ) from err

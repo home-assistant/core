@@ -1,13 +1,13 @@
 """Tests for Home Assistant View."""
 
-from collections.abc import Generator
+from collections.abc import AsyncIterator, Generator
 from decimal import Decimal
 from http import HTTPStatus
 import json
 import math
 from unittest.mock import AsyncMock, Mock, patch
 
-from aiohttp import hdrs
+from aiohttp import hdrs, web
 from aiohttp.web_exceptions import (
     HTTPBadRequest,
     HTTPInternalServerError,
@@ -15,6 +15,8 @@ from aiohttp.web_exceptions import (
 )
 import probatio
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator
+from yarl import URL
 
 from homeassistant.components.http import KEY_HASS
 from homeassistant.components.http.request_context import current_request
@@ -30,7 +32,9 @@ from homeassistant.helpers.network import NoURLAvailableError
 @pytest.fixture
 def mock_request() -> Mock:
     """Mock a request."""
-    return Mock(app={KEY_HASS: Mock(is_stopping=False)}, match_info={})
+    return Mock(
+        app={KEY_HASS: Mock(is_stopping=False)}, match_info={}, rel_url=URL("/")
+    )
 
 
 @pytest.fixture
@@ -106,11 +110,24 @@ async def test_invalid_handler(mock_request: Mock) -> None:
         )(mock_request)
 
 
+@pytest.mark.parametrize(
+    ("raw_url", "expected_suffix"),
+    [
+        pytest.param("/", "", id="root"),
+        pytest.param("/api/mcp", "/api/mcp", id="subpath"),
+        pytest.param("/api/", "/api/", id="trailing_slash"),
+        pytest.param('/api/mcp/foo"bar', "/api/mcp/foo%22bar", id="encoded_chars"),
+        pytest.param("/api/mcp?foo=bar", "/api/mcp", id="query_stripped"),
+    ],
+)
 async def test_requires_auth_includes_www_authenticate(
     mock_request: Mock,
+    raw_url: str,
+    expected_suffix: str,
 ) -> None:
     """Test that 401 responses include WWW-Authenticate header per RFC9728."""
     mock_request.get = Mock(return_value=False)
+    mock_request.rel_url = URL(raw_url)
     with (
         patch(
             "homeassistant.helpers.network.get_url",
@@ -125,7 +142,7 @@ async def test_requires_auth_includes_www_authenticate(
         )(mock_request)
     assert exc_info.value.headers["WWW-Authenticate"] == (
         "Bearer resource_metadata="
-        '"https://example.com/.well-known/oauth-protected-resource"'
+        f'"https://example.com/.well-known/oauth-protected-resource{expected_suffix}"'
     )
 
 
@@ -273,3 +290,61 @@ async def test_requires_auth_www_authenticate_prefer_external(
         "Bearer resource_metadata="
         f'"{expected_url}/.well-known/oauth-protected-resource"'
     )
+
+
+class _LimitedBodyView(HomeAssistantView):
+    """View with a small body limit."""
+
+    url = "/limited"
+    name = "test:limited"
+    requires_auth = False
+    max_body_size = 16
+
+    async def post(self, request: web.Request) -> web.Response:
+        """Echo the JSON body."""
+        return self.json(await request.json())
+
+
+async def _chunked(data: bytes) -> AsyncIterator[bytes]:
+    """Yield data without a Content-Length header."""
+    yield data
+
+
+@pytest.mark.parametrize(
+    ("chunked", "body", "expected_status"),
+    [
+        pytest.param(False, b'{"a": 1}', HTTPStatus.OK, id="within_limit"),
+        pytest.param(
+            False,
+            b'{"a": "' + b"x" * 16 + b'"}',
+            HTTPStatus.REQUEST_ENTITY_TOO_LARGE,
+            id="too_large",
+        ),
+        pytest.param(
+            True,
+            b'{"a": "' + b"x" * 16 + b'"}',
+            HTTPStatus.REQUEST_ENTITY_TOO_LARGE,
+            id="too_large_chunked",
+        ),
+    ],
+)
+async def test_max_body_size(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    chunked: bool,
+    body: bytes,
+    expected_status: HTTPStatus,
+) -> None:
+    """Test a view rejects bodies above its max_body_size."""
+    app = web.Application()
+    app[KEY_HASS] = hass
+    _LimitedBodyView().register(hass, app, app.router)
+    client = await aiohttp_client(app)
+
+    resp = await client.post(
+        "/limited",
+        data=_chunked(body) if chunked else body,
+        headers={"Content-Type": "application/json"},
+    )
+
+    assert resp.status == expected_status

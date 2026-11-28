@@ -1,19 +1,12 @@
 """Test reproduce state for Text entities."""
 
 import pytest
+from pytest_homeassistant.common import async_mock_service
 
-from homeassistant.components.text.const import (
-    ATTR_MAX,
-    ATTR_MIN,
-    ATTR_PATTERN,
-    DOMAIN,
-    SERVICE_SET_VALUE,
-)
-from homeassistant.const import ATTR_MODE
+from homeassistant.components.text import TextEntityCapabilityAttribute, TextService
+from homeassistant.components.text.const import DOMAIN
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.state import async_reproduce_state
-
-from tests.common import async_mock_service
 
 VALID_TEXT1 = "Hello"
 VALID_TEXT2 = "World"
@@ -27,7 +20,12 @@ async def test_reproducing_states(
     hass.states.async_set(
         "text.test_text",
         VALID_TEXT1,
-        {ATTR_MIN: 1, ATTR_MAX: 5, ATTR_MODE: "text", ATTR_PATTERN: None},
+        {
+            TextEntityCapabilityAttribute.MIN: 1,
+            TextEntityCapabilityAttribute.MAX: 5,
+            TextEntityCapabilityAttribute.MODE: "text",
+            TextEntityCapabilityAttribute.PATTERN: None,
+        },
     )
 
     # These calls should do nothing as entities already in desired state
@@ -43,7 +41,7 @@ async def test_reproducing_states(
     assert hass.states.get("text.test_text").state == VALID_TEXT1
 
     # Test reproducing with different state
-    calls = async_mock_service(hass, DOMAIN, SERVICE_SET_VALUE)
+    calls = async_mock_service(hass, DOMAIN, TextService.SET_VALUE)
     await async_reproduce_state(
         hass,
         [

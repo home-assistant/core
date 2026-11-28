@@ -5,17 +5,9 @@ from typing import Any, override
 import probatio
 
 from homeassistant.components.climate import HVACMode
-from homeassistant.components.infrared import (
-    DOMAIN as INFRARED_DOMAIN,
-    async_get_emitters,
-    async_get_receivers,
-)
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
+from homeassistant.components.infrared import InfraredConsumerConfigFlow
+from homeassistant.core import callback
 from homeassistant.helpers.selector import (
-    EntitySelector,
-    EntitySelectorConfig,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -25,6 +17,7 @@ from .const import (
     CONF_HVAC_MODES,
     CONF_INFRARED_EMITTER_ENTITY_ID,
     CONF_INFRARED_RECEIVER_ENTITY_ID,
+    DEFAULT_HVAC_MODES,
     DOMAIN,
 )
 
@@ -35,74 +28,48 @@ _HVAC_MODE_OPTIONS = [
     HVACMode.FAN_ONLY,
     HVACMode.AUTO,
 ]
-_DEFAULT_HVAC_MODES = [HVACMode.COOL, HVACMode.DRY]
 
 
-@callback
-def _user_schema(hass: HomeAssistant) -> probatio.Schema:
-    """Return the emitter/receiver/mode selection schema."""
-    return probatio.Schema(
-        {
-            probatio.Required(CONF_INFRARED_EMITTER_ENTITY_ID): EntitySelector(
-                EntitySelectorConfig(
-                    domain=INFRARED_DOMAIN,
-                    include_entities=async_get_emitters(hass),
-                )
-            ),
-            probatio.Optional(CONF_INFRARED_RECEIVER_ENTITY_ID): EntitySelector(
-                EntitySelectorConfig(
-                    domain=INFRARED_DOMAIN,
-                    include_entities=async_get_receivers(hass),
-                )
-            ),
-            probatio.Required(
-                CONF_HVAC_MODES, default=_DEFAULT_HVAC_MODES
-            ): probatio.All(
-                SelectSelector(
-                    SelectSelectorConfig(
-                        options=[mode.value for mode in _HVAC_MODE_OPTIONS],
-                        translation_key=CONF_HVAC_MODES,
-                        mode=SelectSelectorMode.LIST,
-                        multiple=True,
-                    )
-                ),
-                probatio.Length(min=1, msg="no_hvac_modes"),
-            ),
-        }
-    )
-
-
-class GreeIrConfigFlow(ConfigFlow, domain=DOMAIN):
+class GreeIrConfigFlow(InfraredConsumerConfigFlow, domain=DOMAIN):
     """Handle config flow for Gree IR."""
 
     VERSION = 1
-
-    def _entity_name(self, entity_id: str) -> str:
-        ent_reg = er.async_get(self.hass)
-        entry = ent_reg.async_get(entity_id)
-        return entry.name or entry.original_name or entity_id if entry else entity_id
+    INFRARED_EMITTER_KEY = CONF_INFRARED_EMITTER_ENTITY_ID
+    INFRARED_RECEIVER_KEY = CONF_INFRARED_RECEIVER_ENTITY_ID
 
     @override
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle emitter, receiver and mode selection."""
-        if not async_get_emitters(self.hass):
-            return self.async_abort(reason="no_infrared_emitters")
+    @callback
+    def _async_infrared_schema(self) -> probatio.Schema:
+        """Return the emitter/receiver/mode selection schema."""
+        return probatio.Schema(
+            {
+                **self._async_infrared_entity_fields(),
+                probatio.Required(
+                    CONF_HVAC_MODES, default=DEFAULT_HVAC_MODES
+                ): probatio.All(
+                    SelectSelector(
+                        SelectSelectorConfig(
+                            options=[mode.value for mode in _HVAC_MODE_OPTIONS],
+                            translation_key=CONF_HVAC_MODES,
+                            mode=SelectSelectorMode.LIST,
+                            multiple=True,
+                        )
+                    ),
+                    probatio.Length(min=1, msg="no_hvac_modes"),
+                ),
+            }
+        )
 
-        if user_input is not None:
-            emitter_id = user_input[CONF_INFRARED_EMITTER_ENTITY_ID]
-            self._async_abort_entries_match(
-                {CONF_INFRARED_EMITTER_ENTITY_ID: emitter_id}
-            )
-            if receiver_id := user_input.get(CONF_INFRARED_RECEIVER_ENTITY_ID):
-                self._async_abort_entries_match(
-                    {CONF_INFRARED_RECEIVER_ENTITY_ID: receiver_id}
-                )
+    @override
+    @callback
+    def _async_infrared_reconfigure_schema(self) -> probatio.Schema:
+        """Return the emitter/receiver/mode selection schema."""
+        return self._async_infrared_schema()
 
-            return self.async_create_entry(
-                title=f"Gree AC via {self._entity_name(emitter_id)}",
-                data=user_input,
-            )
-
-        return self.async_show_form(step_id="user", data_schema=_user_schema(self.hass))
+    @override
+    async def _async_infrared_entry_title(self, user_input: dict[str, Any]) -> str:
+        """Return the title of a new entry."""
+        emitter_name = self._async_infrared_entity_name(
+            user_input[CONF_INFRARED_EMITTER_ENTITY_ID]
+        )
+        return f"Gree AC via {emitter_name}"

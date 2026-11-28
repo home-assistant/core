@@ -2,23 +2,29 @@
 
 import asyncio
 from collections.abc import AsyncGenerator
+from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from aioonkyo import Code, Instruction, Kind, Zone, command, query, status
+from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import (
-    ATTR_INPUT_SOURCE,
-    ATTR_MEDIA_CONTENT_ID,
-    ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
-    ATTR_SOUND_MODE,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
-    SERVICE_PLAY_MEDIA,
-    SERVICE_SELECT_SOUND_MODE,
-    SERVICE_SELECT_SOURCE,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
+)
+from homeassistant.components.onkyo.media_player import (
+    QUERY_AV_INFO_DELAY,
+    QUERY_STATE_DELAY,
 )
 from homeassistant.components.onkyo.services import (
     ATTR_HDMI_OUTPUT,
@@ -34,14 +40,13 @@ from homeassistant.const import (
     SERVICE_VOLUME_UP,
     STATE_UNAVAILABLE,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
-from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
+from . import DISCONNECT, receive_messages, setup_integration
 
 ENTITY_ID = "media_player.tx_nr7100"
 ENTITY_ID_ZONE_2 = "media_player.tx_nr7100_zone_2"
@@ -51,23 +56,20 @@ ENTITY_ID_ZONE_3 = "media_player.tx_nr7100_zone_3"
 @pytest.fixture(autouse=True)
 async def auto_setup_integration(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_receiver: AsyncMock,
     writes: list[Instruction],
 ) -> AsyncGenerator[None]:
     """Auto setup integration."""
-    with (
-        patch(
-            "homeassistant.components.onkyo.media_player.QUERY_AV_INFO_DELAY",
-            0,
-        ),
-        patch(
-            "homeassistant.components.onkyo.media_player.QUERY_STATE_DELAY",
-            0,
-        ),
-        patch("homeassistant.components.onkyo.PLATFORMS", [Platform.MEDIA_PLAYER]),
-    ):
+    with patch("homeassistant.components.onkyo.PLATFORMS", [Platform.MEDIA_PLAYER]):
         await setup_integration(hass, mock_config_entry)
+
+        # Let the delayed queries triggered by the initial messages run
+        freezer.tick(timedelta(seconds=max(QUERY_STATE_DELAY, QUERY_AV_INFO_DELAY)))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
         writes.clear()
         yield
 
@@ -87,20 +89,18 @@ async def test_availability(hass: HomeAssistant, read_queue: asyncio.Queue) -> N
     assert (state := hass.states.get(ENTITY_ID)) is not None
     assert state.state != STATE_UNAVAILABLE
 
-    # Simulate a disconnect
-    read_queue.put_nowait(None)
-    await asyncio.sleep(0)
+    await receive_messages(read_queue, DISCONNECT)
 
     assert (state := hass.states.get(ENTITY_ID)) is not None
     assert state.state == STATE_UNAVAILABLE
 
     # Simulate first status update after reconnect
-    read_queue.put_nowait(
+    await receive_messages(
+        read_queue,
         status.Power(
             Code.from_kind_zone(Kind.POWER, Zone.MAIN), None, status.Power.Param.ON
-        )
+        ),
     )
-    await asyncio.sleep(0)
 
     assert (state := hass.states.get(ENTITY_ID)) is not None
     assert state.state != STATE_UNAVAILABLE
@@ -151,8 +151,8 @@ async def test_select_source(hass: HomeAssistant, writes: list[Instruction]) -> 
     """Test select source."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_SELECT_SOURCE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_INPUT_SOURCE: "TV"},
+        MediaPlayerService.SELECT_SOURCE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, MediaPlayerServiceArgument.SOURCE: "TV"},
         blocking=True,
     )
     assert writes[0] == command.InputSource(Zone.MAIN, command.InputSource.Param("12"))
@@ -161,8 +161,11 @@ async def test_select_source(hass: HomeAssistant, writes: list[Instruction]) -> 
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_SELECT_SOURCE,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_INPUT_SOURCE: "InvalidSource"},
+            MediaPlayerService.SELECT_SOURCE,
+            {
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                MediaPlayerServiceArgument.SOURCE: "InvalidSource",
+            },
             blocking=True,
         )
     assert not writes
@@ -174,8 +177,8 @@ async def test_select_sound_mode(
     """Test select sound mode."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_SELECT_SOUND_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_SOUND_MODE: "THX"},
+        MediaPlayerService.SELECT_SOUND_MODE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, MediaPlayerServiceArgument.SOUND_MODE: "THX"},
         blocking=True,
     )
     assert writes[0] == command.ListeningMode(
@@ -186,8 +189,11 @@ async def test_select_sound_mode(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_SELECT_SOUND_MODE,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_SOUND_MODE: "InvalidMode"},
+            MediaPlayerService.SELECT_SOUND_MODE,
+            {
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                MediaPlayerServiceArgument.SOUND_MODE: "InvalidMode",
+            },
             blocking=True,
         )
     assert not writes
@@ -197,11 +203,11 @@ async def test_play_media(hass: HomeAssistant, writes: list[Instruction]) -> Non
     """Test play media (radio preset)."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_MEDIA_CONTENT_TYPE: "radio",
-            ATTR_MEDIA_CONTENT_ID: "5",
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "radio",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "5",
         },
         blocking=True,
     )
@@ -210,11 +216,11 @@ async def test_play_media(hass: HomeAssistant, writes: list[Instruction]) -> Non
     writes.clear()
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_MEDIA_CONTENT_TYPE: "music",
-            ATTR_MEDIA_CONTENT_ID: "5",
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "music",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "5",
         },
         blocking=True,
     )
@@ -223,11 +229,11 @@ async def test_play_media(hass: HomeAssistant, writes: list[Instruction]) -> Non
     writes.clear()
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: ENTITY_ID_ZONE_2,
-            ATTR_MEDIA_CONTENT_TYPE: "radio",
-            ATTR_MEDIA_CONTENT_ID: "5",
+            TargetKey.ENTITY_ID: ENTITY_ID_ZONE_2,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "radio",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "5",
         },
         blocking=True,
     )
@@ -236,11 +242,11 @@ async def test_play_media(hass: HomeAssistant, writes: list[Instruction]) -> Non
     writes.clear()
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: ENTITY_ID_ZONE_3,
-            ATTR_MEDIA_CONTENT_TYPE: "radio",
-            ATTR_MEDIA_CONTENT_ID: "5",
+            TargetKey.ENTITY_ID: ENTITY_ID_ZONE_3,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "radio",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "5",
         },
         blocking=True,
     )
@@ -260,57 +266,77 @@ async def test_select_hdmi_output(
     assert writes[0] == command.HDMIOutput(command.HDMIOutput.Param.BOTH)
 
 
-async def test_query_state_task(
-    read_queue: asyncio.Queue, writes: list[Instruction]
+async def test_query_state_delayed(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    read_queue: asyncio.Queue,
+    writes: list[Instruction],
 ) -> None:
-    """Test query state task."""
-    read_queue.put_nowait(
-        status.Power(
-            Code.from_kind_zone(Kind.POWER, Zone.MAIN), None, status.Power.Param.STANDBY
-        )
+    """Test state query."""
+    power_standby = status.Power(
+        Code.from_kind_zone(Kind.POWER, Zone.MAIN), None, status.Power.Param.STANDBY
     )
-    read_queue.put_nowait(
-        status.Power(
-            Code.from_kind_zone(Kind.POWER, Zone.MAIN), None, status.Power.Param.ON
-        )
-    )
-    read_queue.put_nowait(
-        status.Power(
-            Code.from_kind_zone(Kind.POWER, Zone.MAIN), None, status.Power.Param.STANDBY
-        )
-    )
-    read_queue.put_nowait(
-        status.Power(
-            Code.from_kind_zone(Kind.POWER, Zone.MAIN), None, status.Power.Param.ON
-        )
+    power_on = status.Power(
+        Code.from_kind_zone(Kind.POWER, Zone.MAIN), None, status.Power.Param.ON
     )
 
-    await asyncio.sleep(0.1)
+    await receive_messages(read_queue, power_standby, power_on)
+
+    freezer.tick(timedelta(seconds=QUERY_STATE_DELAY / 2))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Powering on again restarts the delay
+    await receive_messages(read_queue, power_standby, power_on)
+
+    freezer.tick(timedelta(seconds=QUERY_STATE_DELAY / 2))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    queries = [w for w in writes if isinstance(w, query.Volume)]
+    assert not queries
+
+    freezer.tick(timedelta(seconds=QUERY_STATE_DELAY / 2))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     queries = [w for w in writes if isinstance(w, query.Volume)]
     assert len(queries) == 1
 
 
-async def test_query_av_info_task(
-    read_queue: asyncio.Queue, writes: list[Instruction]
+async def test_query_av_info_delayed(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    read_queue: asyncio.Queue,
+    writes: list[Instruction],
 ) -> None:
-    """Test query AV info task."""
-    read_queue.put_nowait(
+    """Test AV info query."""
+    await receive_messages(
+        read_queue,
         status.InputSource(
             Code.from_kind_zone(Kind.INPUT_SOURCE, Zone.MAIN),
             None,
             status.InputSource.Param("24"),
-        )
+        ),
     )
-    read_queue.put_nowait(
+
+    freezer.tick(timedelta(seconds=QUERY_AV_INFO_DELAY / 2))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Another source change while a query is pending does not restart the delay
+    await receive_messages(
+        read_queue,
         status.InputSource(
             Code.from_kind_zone(Kind.INPUT_SOURCE, Zone.MAIN),
             None,
             status.InputSource.Param("00"),
-        )
+        ),
     )
 
-    await asyncio.sleep(0.1)
+    freezer.tick(timedelta(seconds=QUERY_AV_INFO_DELAY / 2))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     queries = [w for w in writes if isinstance(w, query.AudioInformation)]
     assert len(queries) == 1

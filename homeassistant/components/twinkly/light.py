@@ -8,18 +8,23 @@ from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
+    EFFECT_OFF,
     ColorMode,
     LightEntity,
     LightEntityFeature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util.color import brightness_to_value
 
-from .const import DEV_LED_PROFILE, DEV_PROFILE_RGB, DEV_PROFILE_RGBW
+from .const import BRIGHTNESS_SCALE, DEV_LED_PROFILE, DEV_PROFILE_RGB, DEV_PROFILE_RGBW
 from .coordinator import TwinklyConfigEntry, TwinklyCoordinator
 from .entity import TwinklyEntity
 
 _LOGGER = logging.getLogger(__name__)
+
+# "off" is the standard no-effect value. "None" is the old name some scenes still use.
+NO_EFFECT_OPTIONS = {EFFECT_OFF, "None", "none"}
 
 
 async def async_setup_entry(
@@ -65,17 +70,20 @@ class TwinklyLight(TwinklyEntity, LightEntity):
     @override
     def effect(self) -> str | None:
         """Return the current effect."""
+        # The device keeps reporting the last movie id while showing a solid color.
+        if self.coordinator.data.current_mode != "movie":
+            return EFFECT_OFF
         if (current_movie_id := self.coordinator.data.current_movie) is not None:
-            return (
-                f"{current_movie_id} {self.coordinator.data.movies[current_movie_id]}"
-            )
+            movie_name = self.coordinator.data.movies.get(current_movie_id)
+            if movie_name is not None:
+                return f"{current_movie_id} {movie_name}"
         return None
 
     @property
     @override
     def effect_list(self) -> list[str]:
         """Return the list of saved effects."""
-        return [
+        return [EFFECT_OFF] + [
             f"{identifier} {name}"
             for identifier, name in self.coordinator.data.movies.items()
         ]
@@ -83,16 +91,17 @@ class TwinklyLight(TwinklyEntity, LightEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
+        current_mode = self.coordinator.data.current_mode
+
         if ATTR_BRIGHTNESS in kwargs:
-            brightness = int(int(kwargs[ATTR_BRIGHTNESS]) / 2.55)
-
-            # If brightness is 0, the twinkly will only "disable" the brightness,
-            # which means that it will be 100%.
-            if brightness == 0:
-                await self.client.turn_off()
-                return
-
-            await self.client.set_brightness(brightness)
+            await self.client.set_brightness(
+                max(
+                    1,
+                    round(
+                        brightness_to_value(BRIGHTNESS_SCALE, kwargs[ATTR_BRIGHTNESS])
+                    ),
+                )
+            )
 
         if (
             ATTR_RGBW_COLOR in kwargs
@@ -110,6 +119,7 @@ class TwinklyLight(TwinklyEntity, LightEntity):
                 )
                 await self.client.set_mode("color")
                 self.client.default_mode = "color"
+                current_mode = "color"
             else:
                 await self.client.set_cycle_colours(
                     (
@@ -129,6 +139,7 @@ class TwinklyLight(TwinklyEntity, LightEntity):
                 await self.client.set_static_colour(kwargs[ATTR_RGB_COLOR])
                 await self.client.set_mode("color")
                 self.client.default_mode = "color"
+                current_mode = "color"
             else:
                 await self.client.set_cycle_colours(kwargs[ATTR_RGB_COLOR])
                 await self.client.set_mode("movie")
@@ -140,15 +151,24 @@ class TwinklyLight(TwinklyEntity, LightEntity):
             ATTR_EFFECT in kwargs
             and LightEntityFeature.EFFECT & self.supported_features
         ):
-            movie_id = kwargs[ATTR_EFFECT].split(" ")[0]
-            if (
-                self.coordinator.data.current_movie is None
-                or int(movie_id) != self.coordinator.data.current_movie
-            ):
+            effect = kwargs[ATTR_EFFECT]
+            if effect in NO_EFFECT_OPTIONS:
                 await self.client.interview()
-                await self.client.set_current_movie(int(movie_id))
-                await self.client.set_mode("movie")
-                self.client.default_mode = "movie"
+                await self.client.set_mode("color")
+                self.client.default_mode = "color"
+            else:
+                # Skip only when this movie is already playing. A solid color
+                # keeps the last movie id, so the same effect is sent again.
+                movie_id = int(effect.split(" ")[0])
+                if (
+                    current_mode != "movie"
+                    or self.coordinator.data.current_movie is None
+                    or movie_id != self.coordinator.data.current_movie
+                ):
+                    await self.client.interview()
+                    await self.client.set_current_movie(movie_id)
+                    await self.client.set_mode("movie")
+                    self.client.default_mode = "movie"
         if not self._attr_is_on:
             await self.client.turn_on()
         await self.coordinator.async_refresh()
@@ -164,6 +184,7 @@ class TwinklyLight(TwinklyEntity, LightEntity):
         self._attr_is_on = self.coordinator.data.is_on
         self._attr_brightness = self.coordinator.data.brightness
 
+    @callback
     @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""

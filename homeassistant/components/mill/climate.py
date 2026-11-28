@@ -56,7 +56,7 @@ class MillHeater(MillBaseEntity, ClimateEntity):
         | ClimateEntityFeature.TURN_ON
     )
     _attr_target_temperature_step = PRECISION_TENTHS
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(
         self, coordinator: MillDataUpdateCoordinator, device: mill.Heater
@@ -104,8 +104,8 @@ class MillHeater(MillBaseEntity, ClimateEntity):
             self._attr_extra_state_attributes["avg_room_temp"] = device.room_avg_temp
         else:
             self._attr_extra_state_attributes["room"] = "Independent device"
-        self._attr_target_temperature = device.set_temp
-        self._attr_current_temperature = device.current_temp
+        self._attr_native_target_temperature = device.set_temp
+        self._attr_native_current_temperature = device.current_temp
         if device.is_heating:
             self._attr_hvac_action = HVACAction.HEATING
         else:
@@ -130,7 +130,7 @@ class LocalMillHeater(CoordinatorEntity[MillDataUpdateCoordinator], ClimateEntit
         | ClimateEntityFeature.TURN_ON
     )
     _attr_target_temperature_step = PRECISION_TENTHS
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, coordinator: MillDataUpdateCoordinator) -> None:
         """Initialize the thermostat."""
@@ -183,8 +183,8 @@ class LocalMillHeater(CoordinatorEntity[MillDataUpdateCoordinator], ClimateEntit
     @callback
     def _update_attr(self) -> None:
         data = self.coordinator.data
-        self._attr_target_temperature = data["set_temperature"]
-        self._attr_current_temperature = data["ambient_temperature"]
+        self._attr_native_target_temperature = data["set_temperature"]
+        self._attr_native_current_temperature = data["ambient_temperature"]
 
         operation_mode = data["operation_mode"]
         is_heating = data["current_power"] > 0

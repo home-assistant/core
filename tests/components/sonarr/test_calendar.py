@@ -6,21 +6,17 @@ from unittest.mock import MagicMock, patch
 from aiopyarr import SonarrCalendar
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from syrupy.assertion import SnapshotAssertion
-
-from homeassistant.components.calendar import (
-    DOMAIN as CALENDAR_DOMAIN,
-    SERVICE_GET_EVENTS,
-)
-from homeassistant.const import STATE_OFF, STATE_ON, Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
-
-from tests.common import (
+from pytest_homeassistant.common import (
     MockConfigEntry,
     async_load_json_array_fixture,
     snapshot_platform,
 )
+from syrupy.assertion import SnapshotAssertion
+
+from homeassistant.components.calendar import DOMAIN as CALENDAR_DOMAIN, CalendarService
+from homeassistant.const import STATE_OFF, STATE_ON, Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 ENTITY_ID = "calendar.sonarr"
 
@@ -87,7 +83,7 @@ async def test_calendar_get_events(
 
     response = await hass.services.async_call(
         CALENDAR_DOMAIN,
-        SERVICE_GET_EVENTS,
+        CalendarService.GET_EVENTS,
         {
             "entity_id": ENTITY_ID,
             "start_date_time": datetime(2014, 1, 1).isoformat(),
@@ -125,7 +121,7 @@ async def test_calendar_get_events_without_overview(
 
     response = await hass.services.async_call(
         CALENDAR_DOMAIN,
-        SERVICE_GET_EVENTS,
+        CalendarService.GET_EVENTS,
         {
             "entity_id": ENTITY_ID,
             "start_date_time": datetime(2014, 1, 1).isoformat(),

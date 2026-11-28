@@ -8,7 +8,7 @@ from orvibo.s20 import S20, S20Exception, discover
 import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
+from homeassistant.const import CONF_HOST, CONF_MAC
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 
@@ -192,19 +192,4 @@ class S20ConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_menu(
             step_id="discovery_failed", menu_options=["start_discovery", "edit"]
-        )
-
-    async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
-        """Handle import from configuration.yaml."""
-        _LOGGER.debug("Importing config: %s", user_input)
-
-        error = await self._validate_input(user_input)
-        if error:
-            return self.async_abort(reason=error)
-
-        await self.async_set_unique_id(user_input[CONF_MAC])
-        self._abort_if_unique_id_configured()
-
-        return self.async_create_entry(
-            title=user_input.get(CONF_NAME, user_input[CONF_HOST]), data=user_input
         )

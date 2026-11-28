@@ -11,7 +11,7 @@ from uiprotect.data import (
 )
 from uiprotect.data.public_devices import PublicLight
 
-from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
+from homeassistant.components.light import ColorMode, LightEntity, LightServiceArgument
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -36,9 +36,7 @@ async def async_setup_entry(
 
     @callback
     def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
-        if device.model is ModelType.LIGHT and device.can_write(
-            data.api.bootstrap.auth_user
-        ):
+        if device.model is ModelType.LIGHT:
             light = cast(Light, device)
             public = data.async_get_public_device(light)
             async_add_entities(
@@ -70,8 +68,9 @@ async def async_setup_entry(
                 entities.append(ProtectLight(data, public, None))
             continue
         # Created even without a public mirror; unavailable until one arrives.
-        if private.can_write(data.api.bootstrap.auth_user):
-            entities.append(ProtectLight(data, public, private))
+        # It writes through the API key, so the local user's permission does
+        # not gate it.
+        entities.append(ProtectLight(data, public, private))
     async_add_entities(entities)
 
 
@@ -141,7 +140,7 @@ class ProtectLight(ProtectDeviceEntity, LightEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
-        brightness = kwargs.get(ATTR_BRIGHTNESS)
+        brightness = kwargs.get(LightServiceArgument.BRIGHTNESS)
         led_level: int | None = None
         if brightness is not None:
             led_level = hass_to_unifi_brightness(brightness)

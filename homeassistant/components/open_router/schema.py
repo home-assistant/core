@@ -8,6 +8,8 @@ from urllib.parse import unquote
 
 from homeassistant.exceptions import HomeAssistantError
 
+from .const import DOMAIN
+
 _SCHEMA_MAPS = (
     "properties",
     "$defs",
@@ -83,7 +85,9 @@ def _reference_parts(reference: str) -> list[str]:
         return []
     if not reference.startswith("#/"):
         raise HomeAssistantError(
-            f"Unsupported OpenRouter output schema reference: {reference}"
+            translation_domain=DOMAIN,
+            translation_key="unsupported_schema_reference",
+            translation_placeholders={"reference": reference},
         )
     return [
         part.replace("~1", "/").replace("~0", "~")
@@ -102,11 +106,15 @@ def _resolve_reference(reference: str, root: dict[str, Any]) -> dict[str, Any] |
                 target = target[part]
     except (KeyError, IndexError, TypeError, ValueError) as err:
         raise HomeAssistantError(
-            f"Invalid OpenRouter output schema reference: {reference}"
+            translation_domain=DOMAIN,
+            translation_key="invalid_schema_reference",
+            translation_placeholders={"reference": reference},
         ) from err
     if not isinstance(target, (dict, bool)):
         raise HomeAssistantError(
-            f"Unsupported OpenRouter output schema reference: {reference}"
+            translation_domain=DOMAIN,
+            translation_key="unsupported_schema_reference",
+            translation_placeholders={"reference": reference},
         )
     return target
 

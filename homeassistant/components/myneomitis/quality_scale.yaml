@@ -46,11 +46,11 @@ rules:
   parallel-updates:
     status: exempt
     comment: Integration uses WebSocket callbacks to push updates directly to entities, not coordinator-based polling.
-  reauthentication-flow: todo
+  reauthentication-flow: done
   test-coverage: done
 
   # Gold tier rules
-  devices: todo
+  devices: done
   diagnostics: todo
   discovery-update-info:
     status: exempt

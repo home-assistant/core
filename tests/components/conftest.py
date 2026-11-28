@@ -6,6 +6,7 @@ from functools import lru_cache
 from importlib.util import find_spec
 import inspect
 from ipaddress import IPv4Address, IPv4Network
+import os
 from pathlib import Path
 import re
 import string
@@ -49,11 +50,15 @@ from aiohasupervisor.models import (
 from aiohasupervisor.mounts import MountsClient
 from aiohasupervisor.network import NetworkClient
 from aiohasupervisor.os import OSClient
+from aiohasupervisor.plugins import PluginsClient
 from aiohasupervisor.resolution import ResolutionClient
 from aiohasupervisor.store import StoreClient
 from aiohasupervisor.supervisor import SupervisorManagementClient
 import probatio
 import pytest
+from pytest_homeassistant.common import QualityScaleStatus, get_quality_scale
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant import components, loader
 from homeassistant.components import repairs
@@ -87,22 +92,19 @@ from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.helpers.typing import VolSchemaType
+from homeassistant.setup import async_setup_component
 from homeassistant.util import yaml as yaml_util
-
-from tests.common import QualityScaleStatus, get_quality_scale
 
 if TYPE_CHECKING:
     from homeassistant.components.hassio import AddonManager
 
     from .conversation import MockAgent
     from .device_tracker.common import MockScanner
-    from .infrared.common import MockInfraredEmitterEntity, MockInfraredReceiverEntity
     from .light.common import MockLight
-    from .radio_frequency.common import MockRadioFrequencyEntity
     from .sensor.common import MockSensor
     from .switch.common import MockSwitch
 
-pytest.register_assert_rewrite("tests.components.common")
+pytest.register_assert_rewrite("pytest_homeassistant.components.common")
 
 # Regex for accessing the integration name from the test path
 RE_REQUEST_DOMAIN = re.compile(r".*tests\/components\/([^/]+)\/.*")
@@ -123,22 +125,6 @@ def prevent_io() -> Generator[None]:
     """Fixture to prevent certain I/O from happening."""
     with patch(
         "homeassistant.components.http.ban.load_yaml_config_file",
-    ):
-        yield
-
-
-@pytest.fixture
-def entity_registry_enabled_by_default() -> Generator[None]:
-    """Test fixture that ensures all entities are enabled in the registry."""
-    with (
-        patch(
-            "homeassistant.helpers.entity.Entity.entity_registry_enabled_default",
-            return_value=True,
-        ),
-        patch(
-            "homeassistant.components.device_tracker.config_entry.ScannerEntity.entity_registry_enabled_default",
-            return_value=True,
-        ),
     ):
         yield
 
@@ -165,9 +151,7 @@ def mock_tts_init_cache_dir_fixture(
 @pytest.fixture(name="init_tts_cache_dir_side_effect")
 def init_tts_cache_dir_side_effect_fixture() -> Any:
     """Return the cache dir."""
-    from .tts.common import (  # noqa: PLC0415
-        init_tts_cache_dir_side_effect_fixture_helper,
-    )
+    from .tts.common import init_tts_cache_dir_side_effect_fixture_helper  # noqa: PLC0415
 
     return init_tts_cache_dir_side_effect_fixture_helper()
 
@@ -198,65 +182,9 @@ def tts_mutagen_mock_fixture() -> Generator[MagicMock]:
 @pytest.fixture(name="mock_conversation_agent")
 def mock_conversation_agent_fixture(hass: HomeAssistant) -> MockAgent:
     """Mock a conversation agent."""
-    from .conversation.common import (  # noqa: PLC0415
-        mock_conversation_agent_fixture_helper,
-    )
+    from .conversation.common import mock_conversation_agent_fixture_helper  # noqa: PLC0415
 
     return mock_conversation_agent_fixture_helper(hass)
-
-
-# Radio frequency test fixtures
-@pytest.fixture(name="init_radio_frequency")
-async def init_radio_frequency_fixture(hass: HomeAssistant) -> None:
-    """Set up the Radio Frequency integration for testing."""
-    from .radio_frequency.common import (  # noqa: PLC0415
-        init_radio_frequency_fixture_helper,
-    )
-
-    await init_radio_frequency_fixture_helper(hass)
-
-
-@pytest.fixture(name="mock_rf_entity")
-async def mock_rf_entity_fixture(
-    hass: HomeAssistant, init_radio_frequency: None
-) -> MockRadioFrequencyEntity:
-    """Return a mock radio frequency entity."""
-    from .radio_frequency.common import mock_rf_entity_fixture_helper  # noqa: PLC0415
-
-    return await mock_rf_entity_fixture_helper(hass)
-
-
-# Infrared test fixtures
-@pytest.fixture(name="init_infrared")
-async def init_infrared_fixture(hass: HomeAssistant) -> None:
-    """Set up the Infrared integration for testing."""
-    from .infrared.common import init_infrared_fixture_helper  # noqa: PLC0415
-
-    await init_infrared_fixture_helper(hass)
-
-
-@pytest.fixture(name="mock_infrared_emitter_entity")
-async def mock_infrared_emitter_entity_fixture(
-    hass: HomeAssistant, init_infrared: None
-) -> MockInfraredEmitterEntity:
-    """Return a mock infrared emitter entity."""
-    from .infrared.common import (  # noqa: PLC0415
-        mock_infrared_emitter_entity_fixture_helper,
-    )
-
-    return await mock_infrared_emitter_entity_fixture_helper(hass)
-
-
-@pytest.fixture(name="mock_infrared_receiver_entity")
-async def mock_infrared_receiver_entity_fixture(
-    hass: HomeAssistant, init_infrared: None
-) -> MockInfraredReceiverEntity:
-    """Return a mock infrared receiver entity."""
-    from .infrared.common import (  # noqa: PLC0415
-        mock_infrared_receiver_entity_fixture_helper,
-    )
-
-    return await mock_infrared_receiver_entity_fixture_helper(hass)
 
 
 @pytest.fixture(scope="session", autouse=find_spec("haffmpeg") is not None)
@@ -864,6 +792,7 @@ def supervisor_client() -> Generator[AsyncMock]:
     )
     supervisor_client.network = AsyncMock(spec=NetworkClient)
     supervisor_client.os = AsyncMock(spec=OSClient)
+    supervisor_client.plugins = AsyncMock(spec=PluginsClient)
     supervisor_client.resolution = AsyncMock(spec=ResolutionClient)
     supervisor_client.supervisor = AsyncMock(spec=SupervisorManagementClient)
     supervisor_client.store = AsyncMock(spec=StoreClient)
@@ -898,6 +827,10 @@ def supervisor_client() -> Generator[AsyncMock]:
             return_value=supervisor_client,
         ),
         patch(
+            "homeassistant.components.hassio.websocket_api.get_supervisor_client",
+            return_value=supervisor_client,
+        ),
+        patch(
             "homeassistant.components.hassio.repairs.get_supervisor_client",
             return_value=supervisor_client,
         ),
@@ -910,12 +843,49 @@ def supervisor_client() -> Generator[AsyncMock]:
             return_value=supervisor_client,
         ),
         patch(
+            "homeassistant.components.hassio.llm.get_supervisor_client",
+            return_value=supervisor_client,
+        ),
+        patch(
             "homeassistant.components.homeassistant_hardware.util."
             "get_supervisor_client",
             return_value=supervisor_client,
         ),
     ):
         yield supervisor_client
+
+
+@pytest.fixture
+def hassio_env(
+    supervisor_is_connected: AsyncMock, supervisor_root_info: AsyncMock
+) -> Generator[None]:
+    """Fixture to inject hassio env."""
+    from aiohasupervisor import SupervisorError  # noqa: PLC0415
+
+    from .hassio import SUPERVISOR_TOKEN  # noqa: PLC0415
+
+    supervisor_root_info.side_effect = SupervisorError()
+    with (
+        patch.dict(os.environ, {"SUPERVISOR": "127.0.0.1"}),
+        patch.dict(os.environ, {"SUPERVISOR_TOKEN": SUPERVISOR_TOKEN}),
+    ):
+        yield
+
+
+@pytest.fixture
+async def hassio_stubs(
+    hassio_env: None,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    supervisor_client: AsyncMock,
+    ingress_panels: AsyncMock,
+) -> None:
+    """Create mock hassio http client."""
+    with patch(
+        "homeassistant.components.hassio.coordinator.SupervisorIssuesCoordinator.async_refresh",
+    ):
+        await async_setup_component(hass, "hassio", {})
 
 
 def _validate_translation_placeholders(
@@ -1345,7 +1315,9 @@ async def _check_exception_translation(
 
 _DYNAMIC_SERVICE_DOMAINS = {
     "esphome",
+    "joaoapps_join",
     "notify",
+    "python_script",
     "rest_command",
     "script",
     "shell_command",
@@ -1425,6 +1397,7 @@ async def check_translations(
     _original_issue_registry_async_create_issue = ir.IssueRegistry.async_get_or_create
     _original_service_registry_async_call = ServiceRegistry.async_call
     _original_service_registry_async_register = ServiceRegistry.async_register
+    _original_service_registry_register = ServiceRegistry.register
 
     # Prepare override functions
     async def _flow_manager_async_handle_step(
@@ -1535,6 +1508,37 @@ async def check_translations(
             description_placeholders=description_placeholders,
         )
 
+    def _service_registry_register(
+        self: ServiceRegistry,
+        domain: str,
+        service: str,
+        service_func: Callable[
+            [ServiceCall],
+            Coroutine[Any, Any, ServiceResponse] | ServiceResponse | None,
+        ],
+        schema: probatio.Schema | None = None,
+        supports_response: SupportsResponse = SupportsResponse.NONE,
+    ) -> None:
+        if (
+            (current_frame := inspect.currentframe()) is not None
+            and (caller := current_frame.f_back) is not None
+            and not caller.f_code.co_filename.startswith(str(Path(__file__).parents[0]))
+        ):
+            translation_coros.add(
+                _check_service_registration_translation(
+                    self._hass,
+                    domain,
+                    service,
+                    None,
+                    translation_errors,
+                    ignored_domains,
+                )
+            )
+
+        _original_service_registry_register(
+            self, domain, service, service_func, schema, supports_response
+        )
+
     # Use override functions
     with (
         patch(
@@ -1552,6 +1556,10 @@ async def check_translations(
         patch(
             "homeassistant.core.ServiceRegistry.async_register",
             _service_registry_async_register,
+        ),
+        patch(
+            "homeassistant.core.ServiceRegistry.register",
+            _service_registry_register,
         ),
     ):
         yield

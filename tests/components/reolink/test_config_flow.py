@@ -7,10 +7,12 @@ from unittest.mock import ANY, AsyncMock, MagicMock, call, patch
 from aiohttp import ClientSession
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from reolink_aio.enums import ConnectionEnum
 from reolink_aio.exceptions import (
     ApiError,
     CredentialsInvalidError,
+    LoginAccountDeviceError,
     LoginFirmwareError,
     LoginPrivacyModeError,
     ReolinkError,
@@ -40,6 +42,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
@@ -63,14 +66,19 @@ from .conftest import (
     TEST_USERNAME2,
 )
 
-from tests.common import MockConfigEntry, async_fire_time_changed
-
 pytestmark = pytest.mark.usefixtures("reolink_host")
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_config_flow_manual_success(hass: HomeAssistant) -> None:
+async def test_config_flow_manual_success(
+    hass: HomeAssistant,
+    reolink_host: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
     """Successful flow manually initialized by the user."""
+    # No repair issue should be created while probing during the config flow
+    reolink_host.camera_sw_version_update_required.return_value = True
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -106,6 +114,7 @@ async def test_config_flow_manual_success(hass: HomeAssistant) -> None:
         CONF_PROTOCOL: DEFAULT_PROTOCOL,
     }
     assert result["result"].unique_id == TEST_MAC
+    assert not issue_registry.issues
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -253,6 +262,23 @@ async def test_config_flow_errors(hass: HomeAssistant, reolink_host: MagicMock) 
     assert result["step_id"] == "user"
     assert result["errors"] == {CONF_HOST: "cannot_connect"}
 
+    reolink_host.get_host_data.side_effect = None
+    reolink_host.mac_address = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_HOST: TEST_HOST,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {CONF_HOST: "no_mac_address"}
+    assert result["description_placeholders"]["error"] == ""
+
+    reolink_host.mac_address = TEST_MAC
     reolink_host.get_host_data.side_effect = ReolinkWebhookException("Test error")
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -310,6 +336,20 @@ async def test_config_flow_errors(hass: HomeAssistant, reolink_host: MagicMock) 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "update_needed"}
+
+    reolink_host.get_host_data.side_effect = LoginAccountDeviceError("Test error")
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_HOST: TEST_HOST,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "account_device"}
 
     reolink_host.valid_password.return_value = False
     result = await hass.config_entries.flow.async_configure(
@@ -505,6 +545,7 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
     assert result["options"] == {
         CONF_PROTOCOL: DEFAULT_PROTOCOL,
     }
+    assert result["result"].unique_id == TEST_MAC
 
 
 async def test_dhcp_ip_update_aborted_if_wrong_mac(

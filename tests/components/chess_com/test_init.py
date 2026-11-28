@@ -2,15 +2,16 @@
 
 from unittest.mock import AsyncMock
 
+from chess_com_api import ChessComAPIError
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.chess_com.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_device(
@@ -27,3 +28,19 @@ async def test_device(
     )
     assert device
     assert device == snapshot
+
+
+async def test_setup_entry_update_failed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_chess_client: AsyncMock,
+) -> None:
+    """Test setup is retried when Chess.com cannot be reached."""
+    mock_chess_client.get_player.side_effect = ChessComAPIError("Boom")
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == "update_error"
+    assert mock_config_entry.reason == (
+        "An error occurred while communicating with Chess.com: Boom"
+    )

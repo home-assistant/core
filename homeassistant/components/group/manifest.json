@@ -1,6 +1,7 @@
 {
   "domain": "group",
   "name": "Group",
+  "categories": ["helpers.calculate_value"],
   "codeowners": ["@home-assistant/core"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/group",

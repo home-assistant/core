@@ -1,10 +1,10 @@
 """Tests for the Yoto integration setup."""
 
-import logging
 from unittest.mock import MagicMock, Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from yoto_api import AuthenticationError, Device, YotoAPIError, YotoError, YotoPlayer
 
 from homeassistant.components.yoto import coordinator
@@ -27,8 +27,6 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 
 from . import setup_integration
 from .conftest import PLAYER_ID
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 pytestmark = pytest.mark.usefixtures("setup_credentials")
 
@@ -127,7 +125,6 @@ async def test_status_push_tick_error(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """A failed status request is logged and the timer keeps running."""
-    caplog.set_level(logging.DEBUG)
     mock_yoto_client.is_mqtt_connected = True
     await setup_integration(hass, mock_config_entry)
     mock_yoto_client.request_player_status.side_effect = YotoError("timed out")

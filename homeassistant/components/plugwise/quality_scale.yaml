@@ -55,9 +55,7 @@ rules:
   reconfiguration-flow: done
   dynamic-devices: done
   discovery-update-info: done
-  repair-issues:
-    status: exempt
-    comment: This integration does not have repairs
+  repair-issues: done
   docs-use-cases: done
   docs-supported-devices: done
   docs-supported-functions: done

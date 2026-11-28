@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from freezegun import freeze_time
 import pytest
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import Platform
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_mikrotik_entry
-
-from tests.common import snapshot_platform
 
 
 @freeze_time("2026-01-01T12:00:00+00:00")
@@ -67,6 +66,7 @@ async def test_sensor_entities_created(
                 "sensor.mikrotik_memory_usage",
                 "sensor.mikrotik_disk_usage",
                 "sensor.mikrotik_uptime",
+                "sensor.mikrotik_fan_1_speed",
             ],
             id="no_data",
         ),
@@ -153,3 +153,25 @@ async def test_sensor_health_data_reordered(hass: HomeAssistant) -> None:
 
     assert (state := hass.states.get("sensor.mikrotik_temperature"))
     assert state.state == "50.0"
+
+
+@pytest.mark.parametrize("fan_speed", [960, 0])
+async def test_sensor_fan_speed(hass: HomeAssistant, fan_speed: int) -> None:
+    """Test CRS310 fan RPM, including a stopped fan, supports statistics."""
+    with patch("homeassistant.components.mikrotik.PLATFORMS", [Platform.SENSOR]):
+        await setup_mikrotik_entry(
+            hass,
+            health_data=[
+                {"name": "cpu-temperature", "value": 55, "type": "C"},
+                {"name": "phy-temperature", "value": 60, "type": "C"},
+                {"name": "fan-state", "value": "ok", "type": ""},
+                {"name": "fan1-speed", "value": fan_speed, "type": "RPM"},
+                {"name": "board-temperature1", "value": 45, "type": "C"},
+            ],
+        )
+
+    assert (state := hass.states.get("sensor.mikrotik_fan_1_speed"))
+    assert state.state == str(fan_speed)
+    assert state.attributes["unit_of_measurement"] == "rpm"
+    assert state.attributes["state_class"] == "measurement"
+    assert state.attributes["friendly_name"] == "Mikrotik Fan 1 speed"

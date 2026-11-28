@@ -1,16 +1,28 @@
 """Test the Volvo config flow."""
 
-from collections.abc import AsyncGenerator
-from unittest.mock import AsyncMock, patch
+from collections.abc import AsyncGenerator, Sequence
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 from volvocarsapi.api import VolvoCarsApi
-from volvocarsapi.auth import AUTHORIZE_URL, TOKEN_URL
+from volvocarsapi.auth import LEGACY_VOLVOID_SERVER, VOLVOID_SERVER
 from volvocarsapi.models import VolvoApiException, VolvoCarsVehicle
 from volvocarsapi.scopes import ALL_SCOPES
 from yarl import URL
 
 from homeassistant import config_entries
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
+from homeassistant.components.cloud import (
+    DATA_CLOUD,
+    DOMAIN as CLOUD_DOMAIN,
+    account_link,
+)
 from homeassistant.components.volvo.const import CONF_VIN, DOMAIN
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_API_KEY, CONF_TOKEN
@@ -21,16 +33,14 @@ from homeassistant.helpers import config_entry_oauth2_flow
 from . import async_load_fixture_as_json, configure_mock
 from .const import (
     CLIENT_ID,
+    CLIENT_SECRET,
     DEFAULT_API_KEY,
     DEFAULT_MODEL,
     DEFAULT_VIN,
+    LEGACY_CLIENT_ID,
     REDIRECT_URI,
     SERVER_TOKEN_RESPONSE,
 )
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -74,6 +84,90 @@ async def test_single_vin_flow(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup_entry.mock_calls) == 1
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == DEFAULT_VIN
+
+
+@pytest.mark.parametrize("client_id", [LEGACY_CLIENT_ID])
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
+async def test_legacy_credential_flow(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_config_flow_api: VolvoCarsApi,
+) -> None:
+    """Test that a legacy credential keeps using the legacy Volvo ID system."""
+    aioclient_mock.post(LEGACY_VOLVOID_SERVER.token_url, json=SERVER_TOKEN_RESPONSE)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result_url = URL(result["url"])
+    assert (
+        f"{result_url.origin()}{result_url.path}" == LEGACY_VOLVOID_SERVER.authorize_url
+    )
+    assert result_url.query["client_id"] == LEGACY_CLIENT_ID
+    assert result_url.query["scope"] == " ".join(ALL_SCOPES)
+
+    client = await hass_client_no_auth()
+    resp = await client.get(
+        f"/auth/external/callback?code=abcd&state={result_url.query['state']}"
+    )
+    assert resp.status == 200
+
+    result = await _async_run_flow_to_completion(hass, result, mock_config_flow_api)
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == DEFAULT_VIN
+    assert [call[1] for call in aioclient_mock.mock_calls] == [
+        URL(LEGACY_VOLVOID_SERVER.token_url)
+    ]
+
+
+@pytest.mark.parametrize(
+    ("authorize_url", "expected_scopes"),
+    [
+        pytest.param(
+            f"{VOLVOID_SERVER.authorize_url}?client_id=vid-dc-cloud",
+            VOLVOID_SERVER.all_scopes,
+            id="new_client",
+        ),
+        pytest.param(
+            f"{LEGACY_VOLVOID_SERVER.authorize_url}?client_id=dc-cloud",
+            ALL_SCOPES,
+            id="legacy_client",
+        ),
+        pytest.param("https://example.com/auth", ALL_SCOPES, id="no_client_id"),
+    ],
+)
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_account_linking_scopes(
+    hass: HomeAssistant, authorize_url: str, expected_scopes: Sequence[str]
+) -> None:
+    """Test that account linking requests the scopes of the cloud's client ID."""
+    hass.data[DATA_CLOUD] = Mock()
+    config_entry_oauth2_flow.async_register_implementation(
+        hass, DOMAIN, account_link.CloudOAuth2Implementation(hass, DOMAIN)
+    )
+    helper = Mock(
+        async_get_authorize_url=AsyncMock(return_value=authorize_url),
+        async_get_tokens=AsyncMock(side_effect=TimeoutError),
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["step_id"] == "pick_implementation"
+
+    with patch(
+        "hass_nabucasa.account_link.AuthorizeAccountHelper", return_value=helper
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"implementation": CLOUD_DOMAIN}
+        )
+
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    assert URL(result["url"]).query["scope"] == " ".join(expected_scopes)
 
 
 @pytest.mark.parametrize(("api_key_failure"), [pytest.param(True), pytest.param(False)])
@@ -164,6 +258,45 @@ async def test_reauth_no_stale_data(
         assert old_access_token != access_token_arg
 
 
+@pytest.mark.parametrize("client_id", [LEGACY_CLIENT_ID])
+@pytest.mark.usefixtures("current_request_with_host", "mock_config_flow_api")
+async def test_reauth_flow_new_credential(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    hass_client_no_auth: ClientSessionGenerator,
+) -> None:
+    """Test reauth with a new credential always asks for the API key."""
+    await async_import_client_credential(
+        hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET), "volvo_new"
+    )
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["step_id"] == "pick_implementation"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"implementation": "volvo_new"}
+    )
+
+    client = await hass_client_no_auth()
+    await client.get(
+        f"/auth/external/callback?code=abcd&state={URL(result['url']).query['state']}"
+    )
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "api_key"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: "new-api-key"}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+    assert mock_config_entry.data["auth_implementation"] == "volvo_new"
+    assert mock_config_entry.data[CONF_API_KEY] == "new-api-key"
+
+
 async def test_reconfigure_flow(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -244,14 +377,14 @@ async def config_flow(
     )
 
     result_url = URL(result["url"])
-    assert f"{result_url.origin()}{result_url.path}" == AUTHORIZE_URL
+    assert f"{result_url.origin()}{result_url.path}" == VOLVOID_SERVER.authorize_url
     assert result_url.query["response_type"] == "code"
     assert result_url.query["client_id"] == CLIENT_ID
     assert result_url.query["redirect_uri"] == REDIRECT_URI
     assert result_url.query["state"] == state
     assert result_url.query["code_challenge"]
     assert result_url.query["code_challenge_method"] == "S256"
-    assert result_url.query["scope"] == " ".join(ALL_SCOPES)
+    assert result_url.query["scope"] == " ".join(VOLVOID_SERVER.all_scopes)
 
     client = await hass_client_no_auth()
     resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
@@ -288,7 +421,7 @@ async def mock_auth_client(
     """Mock auth requests."""
     aioclient_mock.clear_requests()
     aioclient_mock.post(
-        TOKEN_URL,
+        VOLVOID_SERVER.token_url,
         json=SERVER_TOKEN_RESPONSE,
     )
 

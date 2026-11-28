@@ -5,7 +5,7 @@ import io
 from unittest.mock import AsyncMock, MagicMock, patch
 import wave
 
-import httpx
+import httpx2
 from openai import (
     APIConnectionError,
     AuthenticationError,
@@ -14,6 +14,7 @@ from openai import (
     omit,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import stt
 from homeassistant.components.litellm.const import (
@@ -28,8 +29,6 @@ from homeassistant.core import HomeAssistant
 
 from . import setup_integration
 from .conftest import TEST_URL
-
-from tests.common import MockConfigEntry
 
 
 async def _audio_stream(*chunks: bytes) -> AsyncIterable[bytes]:
@@ -256,8 +255,8 @@ async def test_stt_auth_error_refreshes_coordinator(
     mock_openai_client.audio.transcriptions.create = AsyncMock(
         side_effect=error_cls(
             message="invalid api key",
-            response=httpx.Response(
-                401, request=httpx.Request("POST", "http://localhost")
+            response=httpx2.Response(
+                401, request=httpx2.Request("POST", "http://localhost")
             ),
             body=None,
         )

@@ -7,21 +7,23 @@ from unittest.mock import MagicMock, call
 from demetriek import LaMetricConnectionError, LaMetricError, ScreensaverMode
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.time import DOMAIN as TIME_DOMAIN, SERVICE_SET_VALUE
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_TIME,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-    Platform,
+from homeassistant.components.lametric.const import SCAN_INTERVAL
+from homeassistant.components.time import (
+    DOMAIN as TIME_DOMAIN,
+    TimeService,
+    TimeServiceArgument,
 )
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 ENTITY_START_TIME = "time.frenck_s_lametric_screensaver_start_time"
 ENTITY_END_TIME = "time.frenck_s_lametric_screensaver_end_time"
@@ -64,8 +66,11 @@ async def test_set_value(
     """
     await hass.services.async_call(
         TIME_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_TIME: "20:00:00"},
+        TimeService.SET_VALUE,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            TimeServiceArgument.TIME: "20:00:00",
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -105,8 +110,11 @@ async def test_set_value_around_dst(
 
     await hass.services.async_call(
         TIME_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: ENTITY_START_TIME, ATTR_TIME: value},
+        TimeService.SET_VALUE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_START_TIME,
+            TimeServiceArgument.TIME: value,
+        },
         blocking=True,
     )
 
@@ -114,8 +122,9 @@ async def test_set_value_around_dst(
 
     time_based = mock_lametric.device.return_value.display.screensaver.modes.time_based
     time_based.start_time = expected
-    await mock_config_entry.runtime_data.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(ENTITY_START_TIME)
     assert state
@@ -154,8 +163,11 @@ async def test_set_values_in_quick_succession(
     ):
         await hass.services.async_call(
             TIME_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_TIME: value},
+            TimeService.SET_VALUE,
+            {
+                TargetKey.ENTITY_ID: entity_id,
+                TimeServiceArgument.TIME: value,
+            },
             blocking=True,
         )
 
@@ -229,8 +241,11 @@ async def test_set_value_without_both_times(
 
     await hass.services.async_call(
         TIME_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_TIME: "20:00:00"},
+        TimeService.SET_VALUE,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            TimeServiceArgument.TIME: "20:00:00",
+        },
         blocking=True,
     )
 
@@ -261,8 +276,11 @@ async def test_set_value_keeps_when_dark(
 
     await hass.services.async_call(
         TIME_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: ENTITY_START_TIME, ATTR_TIME: "20:00:00"},
+        TimeService.SET_VALUE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_START_TIME,
+            TimeServiceArgument.TIME: "20:00:00",
+        },
         blocking=True,
     )
 
@@ -317,8 +335,11 @@ async def test_time_errors(
     with pytest.raises(HomeAssistantError, match=error_message):
         await hass.services.async_call(
             TIME_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: ENTITY_START_TIME, ATTR_TIME: "20:00:00"},
+            TimeService.SET_VALUE,
+            {
+                TargetKey.ENTITY_ID: ENTITY_START_TIME,
+                TimeServiceArgument.TIME: "20:00:00",
+            },
             blocking=True,
         )
 

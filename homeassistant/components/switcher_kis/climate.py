@@ -30,10 +30,10 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SwitcherConfigEntry
-from .const import API_CONTROL_BREEZE_DEVICE, SIGNAL_DEVICE_ADD
+from .const import API_CONTROL_BREEZE_DEVICE, DOMAIN, SIGNAL_DEVICE_ADD
 from .coordinator import SwitcherDataUpdateCoordinator
 from .entity import SwitcherEntity
-from .utils import get_breeze_remote_manager
+from .utils import async_get_breeze_remote
 
 PARALLEL_UPDATES = 1
 
@@ -68,9 +68,12 @@ async def async_setup_entry(
         """Get remote and add climate from Switcher device."""
         data = cast(SwitcherThermostat, coordinator.data)
         if coordinator.data.device_type.category is DeviceCategory.THERMOSTAT:
-            remote: SwitcherBreezeRemote = await hass.async_add_executor_job(
-                get_breeze_remote_manager(hass).get_remote, data.remote_id
-            )
+            if (
+                remote := await async_get_breeze_remote(
+                    hass, coordinator.name, data.remote_id
+                )
+            ) is None:
+                return
             async_add_entities([SwitcherClimateEntity(coordinator, remote)])
 
     config_entry.async_on_unload(
@@ -95,7 +98,7 @@ class SwitcherClimateEntity(SwitcherEntity, ClimateEntity):
         self._attr_min_temp = remote.min_temperature
         self._attr_max_temp = remote.max_temperature
         self._attr_target_temperature_step = 1
-        self._attr_temperature_unit = UnitOfTemperature.CELSIUS
+        self._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
         self._attr_hvac_modes = [HVACMode.OFF]
         for mode in remote.modes_features:
@@ -124,11 +127,11 @@ class SwitcherClimateEntity(SwitcherEntity, ClimateEntity):
         features = self._remote.modes_features[data.mode]
 
         # Ignore empty update from device that was power cycled
-        if data.target_temperature == 0 and self.target_temperature is not None:
+        if data.target_temperature == 0 and self.native_target_temperature is not None:
             return
 
-        self._attr_current_temperature = data.temperature
-        self._attr_target_temperature = float(data.target_temperature)
+        self._attr_native_current_temperature = data.temperature
+        self._attr_native_target_temperature = float(data.target_temperature)
 
         self._attr_hvac_mode = HVACMode.OFF
         if data.device_state is DeviceState.ON:
@@ -158,7 +161,8 @@ class SwitcherClimateEntity(SwitcherEntity, ClimateEntity):
         data = cast(SwitcherThermostat, self.coordinator.data)
         if not self._remote.modes_features[data.mode]["temperature_control"]:
             raise ServiceValidationError(
-                "Current mode does not support setting 'Target temperature'."
+                translation_domain=DOMAIN,
+                translation_key="target_temperature_not_supported",
             )
 
         await self._async_control_breeze_device(

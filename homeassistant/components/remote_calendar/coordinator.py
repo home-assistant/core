@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 from typing import override
 
-from httpx import HTTPError, InvalidURL, TimeoutException
+from httpx2 import HTTPError, InvalidURL, TimeoutException
 from ical.calendar import Calendar
 
 from homeassistant.config_entries import ConfigEntry

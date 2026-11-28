@@ -10,3 +10,5 @@ date:
       selector:
         date:
           no_year: true
+host_reboot_required: {}
+restart_required: {}

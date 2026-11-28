@@ -6,6 +6,8 @@ from typing import Any
 
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import fan, template
@@ -21,10 +23,11 @@ from homeassistant.components.fan import (
     FanEntityStateAttribute,
     NotValidPresetModeError,
 )
+from homeassistant.components.template.const import FAN_INCOMPLETE_PRESET_MODE_OPTIONS
 from homeassistant.components.template.fan import DEFAULT_NAME
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
 
 from .conftest import (
@@ -38,6 +41,7 @@ from .conftest import (
     assert_state_and_attributes,
     async_get_flow_preview_state,
     async_trigger,
+    get_issues_with_prefix,
     make_test_action,
     make_test_trigger,
     setup_and_test_nested_unique_id,
@@ -47,9 +51,7 @@ from .conftest import (
     setup_restore_template_entity,
 )
 
-from tests.common import MockConfigEntry
 from tests.components.fan import common
-from tests.typing import WebSocketGenerator
 
 TEST_INPUT_BOOLEAN = "input_boolean.state"
 TEST_STATE_ENTITY_ID = "sensor.test_sensor"
@@ -1762,3 +1764,103 @@ async def test_attributes_template_with_blocked_attributes(
 
     error = f"Unsupported attribute(s) found for {TEST_FAN.entity_id}: {attribute}"
     assert error in caplog.text
+
+
+def get_incomplete_preset_mode_options_issues(
+    issue_registry: ir.IssueRegistry,
+) -> list[ir.IssueEntry]:
+    """Return the incomplete fan preset mode options issues."""
+    return get_issues_with_prefix(
+        issue_registry, FAN_INCOMPLETE_PRESET_MODE_OPTIONS.translation_key
+    )
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    ("config", "options"),
+    [
+        pytest.param(
+            {"preset_mode": "{{ 'auto' }}"},
+            "- `preset_mode` requires `preset_modes` and `set_preset_mode`",
+            id="preset_mode_only",
+        ),
+        pytest.param(
+            {"preset_mode": "{{ 'auto' }}", "preset_modes": ["auto"]},
+            "- `preset_mode` requires `preset_modes` and `set_preset_mode`\n"
+            "- `preset_modes` requires `set_preset_mode`",
+            id="preset_mode_without_action",
+        ),
+        pytest.param(
+            {"preset_modes": ["auto"]},
+            "- `preset_modes` requires `set_preset_mode`",
+            id="list_only",
+        ),
+        pytest.param(
+            PRESET_MODE_ACTION,
+            "- `set_preset_mode` requires `preset_modes`",
+            id="action_only",
+        ),
+        pytest.param(
+            {**PRESET_MODE_ACTION, "preset_modes": []},
+            "- `set_preset_mode` requires `preset_modes`",
+            id="action_with_empty_list",
+        ),
+    ],
+)
+async def test_incomplete_preset_mode_options_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    style: ConfigurationStyle,
+    config: ConfigType,
+    options: str,
+) -> None:
+    """Test a repair issue is created for partially set preset mode options."""
+    await setup_entity(
+        hass, TEST_FAN, style, 1, {**OPTIMISTIC_ON_OFF_ACTIONS, **config}, "{{ True }}"
+    )
+
+    issues = get_incomplete_preset_mode_options_issues(issue_registry)
+    assert len(issues) == 1
+    assert issues[0].breaks_in_ha_version == "2027.6.0"
+    assert issues[0].is_fixable is False
+    assert issues[0].severity == ir.IssueSeverity.WARNING
+    assert issues[0].learn_more_url == (
+        "https://www.home-assistant.io/integrations/template/#fan"
+    )
+    assert (
+        issues[0].translation_key == FAN_INCOMPLETE_PRESET_MODE_OPTIONS.translation_key
+    )
+    assert issues[0].translation_placeholders == {
+        "identifier": f"name: {TEST_FAN.object_id}",
+        "options": options,
+    }
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    "config",
+    [
+        pytest.param({}, id="none"),
+        pytest.param(OPTIMISTIC_PRESET_MODE_CONFIG2, id="without_preset_mode"),
+        pytest.param(
+            {**OPTIMISTIC_PRESET_MODE_CONFIG2, "preset_mode": "{{ 'auto' }}"},
+            id="all",
+        ),
+    ],
+)
+async def test_no_incomplete_preset_mode_options_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    style: ConfigurationStyle,
+    config: ConfigType,
+) -> None:
+    """Test no repair issue is created for complete preset mode options."""
+    await setup_entity(
+        hass, TEST_FAN, style, 1, {**OPTIMISTIC_ON_OFF_ACTIONS, **config}, "{{ True }}"
+    )
+
+    assert get_incomplete_preset_mode_options_issues(issue_registry) == []

@@ -11,6 +11,12 @@ from unittest.mock import AsyncMock, MagicMock, PropertyMock, call, patch
 
 from aiohttp import ClientError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, MockUser
+from pytest_homeassistant.typing import (
+    ClientSessionGenerator,
+    MockHAClientWebSocket,
+    WebSocketGenerator,
+)
 from zwave_js_server.const import (
     ExclusionStrategy,
     InclusionState,
@@ -99,14 +105,7 @@ from homeassistant.components.zwave_js.const import (
 )
 from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
-
-from tests.common import MockConfigEntry, MockUser
-from tests.typing import (
-    ClientSessionGenerator,
-    MockHAClientWebSocket,
-    WebSocketGenerator,
-)
+from homeassistant.helpers import area_registry as ar, device_registry as dr
 
 CONTROLLER_PATCH_PREFIX = "zwave_js_server.model.controller.Controller"
 
@@ -1696,6 +1695,7 @@ async def test_validate_dsk_and_enter_pin(
 
 async def test_provision_smart_start_node(
     hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
     device_registry: dr.DeviceRegistry,
     integration,
     client,
@@ -1748,6 +1748,7 @@ async def test_provision_smart_start_node(
     client.async_send_command.return_value = {"success": True}
 
     # Test QR provisioning information with device name and area
+    area_registry.async_create("test_area")
     await ws_client.send_json(
         {
             ID: 4,
@@ -1867,6 +1868,50 @@ async def test_provision_smart_start_node(
 
     assert not msg["success"]
     assert msg["error"]["code"] == ERR_NOT_LOADED
+
+
+async def test_provision_smart_start_node_unknown_area(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    integration,
+    client,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test provisioning with an unknown area creates no device and provisions nothing."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+    client.async_send_command.return_value = {"success": True}
+
+    await ws_client.send_json_auto_id(
+        {
+            TYPE: "zwave_js/provision_smart_start_node",
+            ENTRY_ID: entry.entry_id,
+            QR_PROVISIONING_INFORMATION: {
+                VERSION: 1,
+                SECURITY_CLASSES: [0],
+                DSK: "test",
+                GENERIC_DEVICE_CLASS: 1,
+                SPECIFIC_DEVICE_CLASS: 1,
+                INSTALLER_ICON_TYPE: 1,
+                MANUFACTURER_ID: 1,
+                PRODUCT_TYPE: 1,
+                PRODUCT_ID: 1,
+                APPLICATION_VERSION: "test",
+            },
+            DEVICE_NAME: "test_name",
+            AREA_ID: "unknown",
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_FOUND
+    assert not device_registry.async_get_device_by_identifier(
+        (DOMAIN, "provision_test"), entry.entry_id
+    )
+    assert [
+        call[0][0]["command"] for call in client.async_send_command.call_args_list
+    ] == ["config_manager.lookup_device"]
 
 
 async def test_unprovision_smart_start_node(

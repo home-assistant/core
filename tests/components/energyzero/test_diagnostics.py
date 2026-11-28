@@ -5,16 +5,15 @@ from unittest.mock import AsyncMock, MagicMock
 from energyzero import EnergyZeroNoDataError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.energyzero.const import SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 pytestmark = pytest.mark.freeze_time("2026-04-10 20:32:59")
 
@@ -27,6 +26,7 @@ async def test_entry_diagnostics(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the EnergyZero entry diagnostics."""
+    await hass.config.async_set_time_zone("Europe/Amsterdam")
     await setup_integration(hass, mock_config_entry)
 
     result = await get_diagnostics_for_config_entry(

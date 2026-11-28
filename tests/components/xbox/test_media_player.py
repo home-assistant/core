@@ -6,8 +6,17 @@ from typing import Any
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
-from httpx import HTTPStatusError, RequestError, TimeoutException
+from httpx2 import HTTPStatusError, RequestError, TimeoutException
 import pytest
+from pytest_homeassistant.common import (
+    AsyncMock,
+    Mock,
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
+from pytest_homeassistant.typing import MagicMock, WebSocketGenerator
 from pythonxbox.api.provider.catalog.models import CatalogResponse
 from pythonxbox.api.provider.smartglass.models import (
     CommandResponse,
@@ -23,12 +32,12 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     SERVICE_PLAY_MEDIA,
+    MediaPlayerService,
     MediaType,
 )
 from homeassistant.components.xbox import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
@@ -40,20 +49,11 @@ from homeassistant.const import (
     SERVICE_VOLUME_UP,
     STATE_UNAVAILABLE,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import (
-    AsyncMock,
-    Mock,
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_json_object_fixture,
-    snapshot_platform,
-)
-from tests.typing import MagicMock, WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -160,6 +160,40 @@ async def test_media_player_added_before_console_status(
     freezer.tick(timedelta(seconds=15))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
+
+    assert (state := hass.states.get("media_player.xonex")) is not None
+    assert state.state != STATE_UNAVAILABLE
+
+
+async def test_media_player_unavailable_on_failed_update(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    xbox_live_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the media player becomes unavailable when a status update fails."""
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("media_player.xonex")) is not None
+    assert state.state != STATE_UNAVAILABLE
+
+    xbox_live_client.smartglass.get_console_status.side_effect = TimeoutException(
+        "timeout"
+    )
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (state := hass.states.get("media_player.xonex")) is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    xbox_live_client.smartglass.get_console_status.side_effect = None
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (state := hass.states.get("media_player.xonex")) is not None
     assert state.state != STATE_UNAVAILABLE
@@ -279,7 +313,7 @@ async def test_media_player_actions(
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         service,
-        target={ATTR_ENTITY_ID: "media_player.xone", **service_args},
+        target={TargetKey.ENTITY_ID: "media_player.xone", **service_args},
         blocking=True,
     )
 
@@ -356,7 +390,7 @@ async def test_media_player_action_exceptions(
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
             service,
-            target={ATTR_ENTITY_ID: "media_player.xone", **service_args},
+            target={TargetKey.ENTITY_ID: "media_player.xone", **service_args},
             blocking=True,
         )
     assert e.value.translation_key == translation_key
@@ -384,8 +418,8 @@ async def test_media_player_turn_on_failed(
     with pytest.raises(HomeAssistantError) as e:
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_TURN_ON,
-            target={ATTR_ENTITY_ID: "media_player.xone"},
+            MediaPlayerService.TURN_ON,
+            target={TargetKey.ENTITY_ID: "media_player.xone"},
             blocking=True,
         )
     assert e.value.translation_key == "turn_on_failed"

@@ -4,8 +4,13 @@ from unittest.mock import AsyncMock, patch
 
 from aiomealie import About, MealieAuthenticationError, MealieConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.mealie.const import CONF_PARSER, DOMAIN
+from homeassistant.components.mealie.const import (
+    CONF_PARSER,
+    DOMAIN,
+    MIN_REQUIRED_MEALIE_VERSION,
+)
 from homeassistant.config_entries import (
     SOURCE_HASSIO,
     SOURCE_IGNORE,
@@ -18,8 +23,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -124,11 +127,12 @@ async def test_ingress_host(hass: HomeAssistant, mock_mealie_client: AsyncMock) 
         ("v0.1.0"),
         ("v1.9.0"),
         ("v2.0.0beta-2"),
+        ("v3.6.0"),
     ],
 )
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_flow_version_error(
-    hass: HomeAssistant, mock_mealie_client: AsyncMock, version
+    hass: HomeAssistant, mock_mealie_client: AsyncMock, version: str
 ) -> None:
     """Test flow version error."""
     mock_mealie_client.get_about.return_value = About(version=version)
@@ -147,6 +151,17 @@ async def test_flow_version_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "mealie_version"}
+    assert (
+        result["description_placeholders"]["min_version"] == MIN_REQUIRED_MEALIE_VERSION
+    )
+
+    mock_mealie_client.get_about.return_value = About(version="v3.7.0")
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "demo.mealie.io", CONF_API_TOKEN: "token"},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -425,7 +440,10 @@ async def test_hassio_success(
 
     assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "hassio_confirm"
-    assert result.get("description_placeholders") == {"addon": "Mealie"}
+    assert result.get("description_placeholders") == {
+        "addon": "Mealie",
+        "min_version": MIN_REQUIRED_MEALIE_VERSION,
+    }
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_API_TOKEN: "token"}
@@ -517,7 +535,10 @@ async def test_hassio_connection_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "hassio_confirm"
-    assert result["description_placeholders"] == {"addon": "Mealie"}
+    assert result["description_placeholders"] == {
+        "addon": "Mealie",
+        "min_version": MIN_REQUIRED_MEALIE_VERSION,
+    }
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_API_TOKEN: "token"}

@@ -8,7 +8,7 @@ from habiticalib import Avatar, ContentData, extract_avatar
 
 from homeassistant.components.image import Image, ImageEntity, ImageEntityDescription
 from homeassistant.config_entries import ConfigSubentry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
@@ -93,6 +93,7 @@ class HabiticaImage(HabiticaBase, ImageEntity):
             assert self.user
         self._avatar = extract_avatar(self.user)
 
+    @callback
     @override
     def _handle_coordinator_update(self) -> None:
         """Check if equipped gear and other things have changed.
@@ -156,6 +157,7 @@ class HabiticaPartyImage(HabiticaPartyBase, ImageEntity):
         self._attr_image_url = self.image_url
         self._attr_image_last_updated = dt_util.utcnow()
 
+    @callback
     @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""

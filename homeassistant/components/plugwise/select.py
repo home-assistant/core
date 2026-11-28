@@ -113,11 +113,7 @@ async def async_setup_entry(
             PlugwiseSelectEntity(coordinator, device_id, description)
             for device_id in coordinator.new_devices
             for description in SELECT_TYPES
-            if (device := coordinator.data[device_id]).get(description.key)
-            and (
-                description.key not in (DHW_MODE, SELECT_DHW_MODE)
-                or len(device[description.options_key]) > 2
-            )
+            if coordinator.data[device_id].get(description.key)
         )
 
     _add_entities()

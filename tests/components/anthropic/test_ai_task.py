@@ -17,16 +17,20 @@ from anthropic.types.raw_message_delta_event import Delta
 from freezegun import freeze_time
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import ai_task, media_source
+from homeassistant.components.anthropic.const import (
+    CONF_CHAT_MODEL,
+    CONF_EFFORT,
+    CONF_THINKING_TYPE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, selector
 
 from . import create_content_block, create_server_tool_use_block
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_init_component")
@@ -79,8 +83,28 @@ async def test_empty_data(
     hass: HomeAssistant,
     mock_create_stream: AsyncMock,
 ) -> None:
-    """Test AI Task data generation but the data returned is empty."""
+    """Test a completed empty response returns empty data."""
     mock_create_stream.return_value = [create_content_block(0, [""])]
+
+    result = await ai_task.async_generate_data(
+        hass,
+        task_name="Test Task",
+        entity_id="ai_task.claude_ai_task",
+        instructions="Generate test data",
+    )
+
+    assert result.data == ""
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_missing_response(
+    hass: HomeAssistant,
+    mock_create_stream: AsyncMock,
+) -> None:
+    """Test a stream without a response still raises an error."""
+    mock_create_stream.side_effect = None
+    mock_create_stream.return_value = AsyncMock()
+    mock_create_stream.return_value.__aiter__.return_value = []
 
     with pytest.raises(
         HomeAssistantError, match="Last content in chat log is not an AssistantContent"
@@ -268,10 +292,26 @@ async def test_generate_invalid_structured_data(
 @pytest.mark.usefixtures("mock_init_component")
 async def test_generate_structured_data(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
     mock_create_stream: AsyncMock,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test AI Task structured data generation."""
+    """Test that structured output preserves effort with thinking disabled."""
+    subentry = next(
+        entry
+        for entry in mock_config_entry.subentries.values()
+        if entry.subentry_type == "ai_task_data"
+    )
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        subentry,
+        data={
+            CONF_CHAT_MODEL: "claude-sonnet-4-6",
+            CONF_EFFORT: "medium",
+            CONF_THINKING_TYPE: "disabled",
+        },
+    )
+    await hass.async_block_till_done()
     mock_create_stream.return_value = [
         create_content_block(0, ['{"charac', 'ters": ["Mario', '", "Luigi"]}'])
     ]
@@ -435,7 +475,7 @@ async def test_generate_data_invalid_attachments(
         pytest.raises(
             HomeAssistantError,
             match=re.escape(
-                "The Claude Haiku 4.5 model does not support"
+                "The Claude Haiku 5.5 model does not support"
                 " text/plain file types"
                 " (for `doorbell_snapshot.txt`)"
             ),

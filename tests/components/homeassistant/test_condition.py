@@ -1,18 +1,17 @@
-"""Tests for the Home Assistant date condition."""
+"""Tests for the Home Assistant conditions."""
 
 from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
+from pytest_homeassistant.components.common import assert_condition_options_supported
+from pytest_homeassistant.typing import MockHAClientWebSocket, WebSocketGenerator
 
 from homeassistant.components import automation
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers import condition, trace
+from homeassistant.helpers import condition, system_state, trace
 from homeassistant.setup import async_setup_component
-
-from tests.components.common import assert_condition_options_supported
-from tests.typing import MockHAClientWebSocket, WebSocketGenerator
 
 CONDITION = "homeassistant.date"
 WINTER = {"start": "10-01", "end": "03-31"}
@@ -27,11 +26,14 @@ def prepare_condition_trace() -> None:
     trace.trace_clear()
 
 
-async def _evaluate(hass: HomeAssistant, options: dict[str, str]) -> bool | None:
-    """Validate and evaluate a date condition."""
-    config = await condition.async_validate_condition_config(
-        hass, {"condition": CONDITION, "options": options}
-    )
+async def _evaluate(
+    hass: HomeAssistant, condition_key: str, options: dict[str, str] | None = None
+) -> bool | None:
+    """Validate and evaluate a condition."""
+    config: dict[str, Any] = {"condition": condition_key}
+    if options is not None:
+        config["options"] = options
+    config = await condition.async_validate_condition_config(hass, config)
     checker = await condition.async_from_config(hass, config)
     return checker(hass)
 
@@ -73,7 +75,7 @@ async def test_date_window(
     """Test date condition windows."""
     freezer.move_to(f"{now} 20:00:00+00:00")
 
-    assert await _evaluate(hass, options) is expected
+    assert await _evaluate(hass, CONDITION, options) is expected
 
 
 async def test_date_uses_local_date(
@@ -83,8 +85,8 @@ async def test_date_uses_local_date(
     # Shortly after midnight UTC on January 1 it is still December 31 in US/Pacific
     freezer.move_to("2027-01-01 02:00:00+00:00")
 
-    assert await _evaluate(hass, {"start": "12-31", "end": "12-31"}) is True
-    assert await _evaluate(hass, {"start": "01-01", "end": "01-01"}) is False
+    assert await _evaluate(hass, CONDITION, {"start": "12-31", "end": "12-31"}) is True
+    assert await _evaluate(hass, CONDITION, {"start": "01-01", "end": "01-01"}) is False
 
 
 @pytest.mark.parametrize(
@@ -189,3 +191,30 @@ async def test_date_automation_trace(
         "now_date": now,
         "end": "01-06",
     }
+
+
+async def test_restart_required(hass: HomeAssistant) -> None:
+    """Test the restart condition follows the restart flag."""
+    assert await _evaluate(hass, "homeassistant.restart_required") is False
+
+    system_state.async_set_home_assistant_restart_required(hass, "hacs")
+
+    assert await _evaluate(hass, "homeassistant.restart_required") is True
+
+
+async def test_host_reboot_required(hass: HomeAssistant) -> None:
+    """Test the reboot condition follows the reboot flag."""
+    assert await _evaluate(hass, "homeassistant.host_reboot_required") is False
+
+    system_state.async_set_host_reboot_required(hass, True)
+
+    assert await _evaluate(hass, "homeassistant.host_reboot_required") is True
+
+
+async def test_rejects_options(hass: HomeAssistant) -> None:
+    """Test the conditions do not take options."""
+    with pytest.raises(probatio.Invalid):
+        await condition.async_validate_condition_config(
+            hass,
+            {"condition": "homeassistant.restart_required", "options": {"x": 1}},
+        )

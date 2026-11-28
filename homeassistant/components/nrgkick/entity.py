@@ -37,7 +37,7 @@ class NRGkickEntity(CoordinatorEntity[NRGkickDataUpdateCoordinator]):
         assert data is not None
 
         info_data: dict[str, Any] = data.info
-        device_info: dict[str, Any] = info_data.get("general", {})
+        general_info: dict[str, Any] = info_data.get("general", {})
         network_info: dict[str, Any] = info_data.get("network", {})
 
         # The config flow requires a serial number and sets it as unique_id.
@@ -53,19 +53,19 @@ class NRGkickEntity(CoordinatorEntity[NRGkickDataUpdateCoordinator]):
             connections = {(CONNECTION_NETWORK_MAC, mac_address)}
 
         self._attr_unique_id = f"{serial}_{self._key}"
-        device_info_typed = DeviceInfo(
+        device_info = DeviceInfo(
             configuration_url=f"http://{self.coordinator.config_entry.data[CONF_HOST]}",
             identifiers={(DOMAIN, serial)},
             serial_number=serial,
             manufacturer="DiniTech",
-            model=device_info.get("model_type", "NRGkick Gen2"),
+            model=general_info.get("model_type", "NRGkick Gen2"),
             sw_version=versions.get("sw_sm"),
             hw_version=versions.get("hw_sm"),
         )
         if connections is not None:
-            device_info_typed["connections"] = connections
+            device_info.connections = connections
 
-        self._attr_device_info = device_info_typed
+        self._attr_device_info = device_info
 
     async def _async_call_api[_T](self, awaitable: Awaitable[_T]) -> _T:
         """Call the API, map errors, and refresh coordinator data."""

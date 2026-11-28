@@ -6,40 +6,14 @@ from pyisy.constants import ISY_VALUE_UNKNOWN
 
 from homeassistant.components.lock import LockEntity
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-    async_get_current_platform,
-)
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import ISYNodeEntity, ISYProgramEntity
 from .models import IsyConfigEntry
-from .services import (
-    SERVICE_DELETE_USER_CODE_SCHEMA,
-    SERVICE_DELETE_ZWAVE_LOCK_USER_CODE,
-    SERVICE_SET_USER_CODE_SCHEMA,
-    SERVICE_SET_ZWAVE_LOCK_USER_CODE,
-)
 
 VALUE_TO_STATE = {0: False, 100: True}
-
-
-@callback
-def async_setup_lock_services(hass: HomeAssistant) -> None:
-    """Create lock-specific services for the ISY Integration."""
-    platform = async_get_current_platform()
-
-    platform.async_register_entity_service(
-        SERVICE_SET_ZWAVE_LOCK_USER_CODE,
-        SERVICE_SET_USER_CODE_SCHEMA,
-        "async_set_zwave_lock_user_code",
-    )
-    platform.async_register_entity_service(
-        SERVICE_DELETE_ZWAVE_LOCK_USER_CODE,
-        SERVICE_DELETE_USER_CODE_SCHEMA,
-        "async_delete_zwave_lock_user_code",
-    )
 
 
 async def async_setup_entry(
@@ -61,7 +35,6 @@ async def async_setup_entry(
     )
 
     async_add_entities(entities)
-    async_setup_lock_services(hass)
 
 
 class ISYLockEntity(ISYNodeEntity, LockEntity):

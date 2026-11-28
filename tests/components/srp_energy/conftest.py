@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.srp_energy.const import DOMAIN, PHOENIX_TIME_ZONE
@@ -15,8 +16,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from . import MOCK_USAGE_AT_TIMES, TEST_CONFIG_HOME
-
-from tests.common import MockConfigEntry
 
 PHOENIX_ZONE_INFO = dt_util.get_time_zone(PHOENIX_TIME_ZONE)
 
@@ -123,6 +122,6 @@ async def init_integration(
 def mock_setup_entry() -> Generator[MagicMock]:
     """Mock async_setup_entry."""
     with patch(
-        "homeassistant.components.srp_energy.async_setup_entry", return_value=True
+        "homeassistant.components.srp_energy.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry

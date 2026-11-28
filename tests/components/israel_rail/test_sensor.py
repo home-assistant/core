@@ -4,6 +4,11 @@ from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.israel_rail.const import DEPARTURES_COUNT
@@ -13,8 +18,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import goto_future, init_integration
 from .conftest import TRAINS, get_time, get_train_route
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 # A moment just before the first train in TRAINS departs (10:10 UTC), so the
 # coordinator considers the head of the list as an upcoming departure.

@@ -9,6 +9,7 @@ from airos.exceptions import (
     AirOSKeyDataMissingError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.airos.const import (
     CONF_LEGACY_SSL,
@@ -35,8 +36,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import MockConfigEntry
 
 MOCK_CONFIG_V1 = {
     CONF_HOST: "1.1.1.1",

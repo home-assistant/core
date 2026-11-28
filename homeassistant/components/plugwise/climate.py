@@ -4,15 +4,13 @@ from dataclasses import asdict, dataclass
 from typing import Any, override
 
 from homeassistant.components.climate import (
-    ATTR_HVAC_MODE,
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
     ClimateEntity,
     ClimateEntityFeature,
+    ClimateServiceArgument,
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, STATE_ON, UnitOfTemperature
+from homeassistant.const import STATE_OFF, STATE_ON, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -93,7 +91,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
     """Representation of a Plugwise thermostat."""
 
     _attr_name = None
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = DOMAIN
 
     def __init__(
@@ -163,13 +161,13 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self.device["sensors"].get("temperature")
 
     @property
     @override
-    def target_temperature(self) -> float:
+    def native_target_temperature(self) -> float:
         """Return the temperature we try to reach.
 
         Connected to the HVACMode combination of AUTO-HEAT.
@@ -179,7 +177,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
 
     @property
     @override
-    def target_temperature_high(self) -> float:
+    def native_target_temperature_high(self) -> float:
         """Return the temperature we try to reach in case of cooling.
 
         Connected to the HVACMode combination of AUTO-HEAT_COOL.
@@ -188,7 +186,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
 
     @property
     @override
-    def target_temperature_low(self) -> float:
+    def native_target_temperature_low(self) -> float:
         """Return the heating temperature we try to reach in case of heating.
 
         Connected to the HVACMode combination AUTO-HEAT_COOL.
@@ -259,14 +257,14 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         data: dict[str, Any] = {}
-        if ATTR_TEMPERATURE in kwargs:
-            data["setpoint"] = kwargs.get(ATTR_TEMPERATURE)
-        if ATTR_TARGET_TEMP_HIGH in kwargs:
-            data["setpoint_high"] = kwargs.get(ATTR_TARGET_TEMP_HIGH)
-        if ATTR_TARGET_TEMP_LOW in kwargs:
-            data["setpoint_low"] = kwargs.get(ATTR_TARGET_TEMP_LOW)
+        if ClimateServiceArgument.TEMPERATURE in kwargs:
+            data["setpoint"] = kwargs.get(ClimateServiceArgument.TEMPERATURE)
+        if ClimateServiceArgument.TARGET_TEMP_HIGH in kwargs:
+            data["setpoint_high"] = kwargs.get(ClimateServiceArgument.TARGET_TEMP_HIGH)
+        if ClimateServiceArgument.TARGET_TEMP_LOW in kwargs:
+            data["setpoint_low"] = kwargs.get(ClimateServiceArgument.TARGET_TEMP_LOW)
 
-        if mode := kwargs.get(ATTR_HVAC_MODE):
+        if mode := kwargs.get(ClimateServiceArgument.HVAC_MODE):
             await self.async_set_hvac_mode(mode)
 
         await self._api.set_temperature(self._location, data)

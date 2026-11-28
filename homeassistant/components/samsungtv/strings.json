@@ -84,14 +84,20 @@
     "media_id_invalid": {
       "message": "Media ID must be a positive integer."
     },
+    "send_command_failed": {
+      "message": "Unable to send command to {host}."
+    },
     "service_unsupported": {
-      "message": "Entity {entity} does not support this action."
+      "message": "Unable to turn on {entity}, as it does not have an automation configured."
     },
     "source_unsupported": {
       "message": "Entity {entity} does not support source {source}."
     },
     "unhandled_trigger_type": {
       "message": "Unhandled trigger type {trigger_type}."
+    },
+    "upnp_not_available": {
+      "message": "Unable to set volume level on {host}, as UPnP services are not available."
     }
   }
 }

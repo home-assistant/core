@@ -4,7 +4,7 @@ from collections.abc import Callable, Coroutine, Generator
 from unittest.mock import patch
 
 import pytest
-from zha.application.platforms import ENTITY_REGISTRY, ClusterMatch
+from zha.application.platforms import ENTITY_REGISTRY, ClusterMatch, ZclPlatformEntity
 from zha.application.platforms.valve import BaseValve
 from zha.application.platforms.valve.const import (
     ValveDeviceClass as ZHAValveDeviceClass,
@@ -18,10 +18,11 @@ from zigpy.zcl.clusters import general
 
 from homeassistant.components.valve import (
     ATTR_CURRENT_POSITION,
-    ATTR_POSITION,
     DOMAIN as VALVE_DOMAIN,
     ValveDeviceClass,
     ValveEntityFeature,
+    ValveService,
+    ValveServiceArgument,
     ValveState,
 )
 from homeassistant.components.zha.helpers import (
@@ -32,14 +33,10 @@ from homeassistant.components.zha.helpers import (
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
-    ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
-    SERVICE_CLOSE_VALVE,
-    SERVICE_OPEN_VALVE,
-    SERVICE_SET_VALVE_POSITION,
-    SERVICE_STOP_VALVE,
     STATE_UNKNOWN,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -47,7 +44,7 @@ from homeassistant.exceptions import HomeAssistantError
 from .common import find_entity_id
 
 
-class FakeValve(BaseValve):
+class FakeValve(ZclPlatformEntity, BaseValve):
     """Valve entity that only opens and closes."""
 
     _unique_id_suffix = "fake"
@@ -236,12 +233,15 @@ async def test_valve_open_close(
     entity_id = await _setup_device(hass, setup_zha, zigpy_device_mock)
 
     await hass.services.async_call(
-        VALVE_DOMAIN, SERVICE_CLOSE_VALVE, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        VALVE_DOMAIN,
+        ValveService.CLOSE,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
     )
     assert hass.states.get(entity_id).state == ValveState.CLOSED
 
     await hass.services.async_call(
-        VALVE_DOMAIN, SERVICE_OPEN_VALVE, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        VALVE_DOMAIN, ValveService.OPEN, {TargetKey.ENTITY_ID: entity_id}, blocking=True
     )
     assert hass.states.get(entity_id).state == ValveState.OPEN
 
@@ -268,14 +268,14 @@ async def test_valve_position(
 
     await hass.services.async_call(
         VALVE_DOMAIN,
-        SERVICE_SET_VALVE_POSITION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_POSITION: 80},
+        ValveService.SET_POSITION,
+        {TargetKey.ENTITY_ID: entity_id, ValveServiceArgument.POSITION: 80},
         blocking=True,
     )
     assert hass.states.get(entity_id).state == ValveState.OPENING
 
     await hass.services.async_call(
-        VALVE_DOMAIN, SERVICE_STOP_VALVE, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        VALVE_DOMAIN, ValveService.STOP, {TargetKey.ENTITY_ID: entity_id}, blocking=True
     )
     state = hass.states.get(entity_id)
     assert state.state == ValveState.OPEN
@@ -283,18 +283,21 @@ async def test_valve_position(
 
     # Opening a positional valve moves it to 100
     await hass.services.async_call(
-        VALVE_DOMAIN, SERVICE_OPEN_VALVE, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        VALVE_DOMAIN, ValveService.OPEN, {TargetKey.ENTITY_ID: entity_id}, blocking=True
     )
     assert hass.states.get(entity_id).state == ValveState.OPENING
 
     await hass.services.async_call(
-        VALVE_DOMAIN, SERVICE_STOP_VALVE, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        VALVE_DOMAIN, ValveService.STOP, {TargetKey.ENTITY_ID: entity_id}, blocking=True
     )
     assert hass.states.get(entity_id).attributes[ATTR_CURRENT_POSITION] == 70
 
     # Closing a positional valve moves it to 0
     await hass.services.async_call(
-        VALVE_DOMAIN, SERVICE_CLOSE_VALVE, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        VALVE_DOMAIN,
+        ValveService.CLOSE,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
     )
     assert hass.states.get(entity_id).state == ValveState.CLOSING
 
@@ -311,8 +314,8 @@ async def test_valve_command_failure(
     with pytest.raises(HomeAssistantError, match="Failed to open valve"):
         await hass.services.async_call(
             VALVE_DOMAIN,
-            SERVICE_OPEN_VALVE,
-            {ATTR_ENTITY_ID: entity_id},
+            ValveService.OPEN,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 

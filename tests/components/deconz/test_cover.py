@@ -4,31 +4,22 @@ from collections.abc import Callable
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import snapshot_platform
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
-    ATTR_POSITION,
-    ATTR_TILT_POSITION,
     DOMAIN as COVER_DOMAIN,
-    SERVICE_CLOSE_COVER,
-    SERVICE_CLOSE_COVER_TILT,
-    SERVICE_OPEN_COVER,
-    SERVICE_OPEN_COVER_TILT,
-    SERVICE_SET_COVER_POSITION,
-    SERVICE_SET_COVER_TILT_POSITION,
-    SERVICE_STOP_COVER,
-    SERVICE_STOP_COVER_TILT,
+    CoverService,
+    CoverServiceArgument,
     CoverState,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import ConfigEntryFactoryType, WebsocketDataType
-
-from tests.common import snapshot_platform
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.mark.parametrize(
@@ -79,8 +70,8 @@ async def test_cover(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: "cover.window_covering_device"},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: "cover.window_covering_device"},
         blocking=True,
     )
     assert aioclient_mock.mock_calls[1][2] == {"open": True}
@@ -89,8 +80,8 @@ async def test_cover(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: "cover.window_covering_device"},
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: "cover.window_covering_device"},
         blocking=True,
     )
     assert aioclient_mock.mock_calls[2][2] == {"open": False}
@@ -99,8 +90,11 @@ async def test_cover(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: "cover.window_covering_device", ATTR_POSITION: 40},
+        CoverService.SET_POSITION,
+        {
+            TargetKey.ENTITY_ID: "cover.window_covering_device",
+            CoverServiceArgument.POSITION: 40,
+        },
         blocking=True,
     )
     assert aioclient_mock.mock_calls[3][2] == {"lift": 60}
@@ -109,8 +103,8 @@ async def test_cover(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: "cover.window_covering_device"},
+        CoverService.STOP,
+        {TargetKey.ENTITY_ID: "cover.window_covering_device"},
         blocking=True,
     )
     assert aioclient_mock.mock_calls[4][2] == {"stop": True}
@@ -160,8 +154,11 @@ async def test_tilt_cover(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_TILT_POSITION,
-        {ATTR_ENTITY_ID: "cover.covering_device", ATTR_TILT_POSITION: 40},
+        CoverService.SET_TILT_POSITION,
+        {
+            TargetKey.ENTITY_ID: "cover.covering_device",
+            CoverServiceArgument.TILT_POSITION: 40,
+        },
         blocking=True,
     )
     assert aioclient_mock.mock_calls[1][2] == {"tilt": 60}
@@ -170,8 +167,8 @@ async def test_tilt_cover(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER_TILT,
-        {ATTR_ENTITY_ID: "cover.covering_device"},
+        CoverService.OPEN_TILT,
+        {TargetKey.ENTITY_ID: "cover.covering_device"},
         blocking=True,
     )
     assert aioclient_mock.mock_calls[2][2] == {"tilt": 0}
@@ -180,8 +177,8 @@ async def test_tilt_cover(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER_TILT,
-        {ATTR_ENTITY_ID: "cover.covering_device"},
+        CoverService.CLOSE_TILT,
+        {TargetKey.ENTITY_ID: "cover.covering_device"},
         blocking=True,
     )
     assert aioclient_mock.mock_calls[3][2] == {"tilt": 100}
@@ -190,8 +187,8 @@ async def test_tilt_cover(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER_TILT,
-        {ATTR_ENTITY_ID: "cover.covering_device"},
+        CoverService.STOP_TILT,
+        {TargetKey.ENTITY_ID: "cover.covering_device"},
         blocking=True,
     )
     assert aioclient_mock.mock_calls[4][2] == {"stop": True}
@@ -241,8 +238,8 @@ async def test_level_controllable_output_cover(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: "cover.vent"},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: "cover.vent"},
         blocking=True,
     )
     assert aioclient_mock.mock_calls[1][2] == {"on": False}
@@ -251,8 +248,8 @@ async def test_level_controllable_output_cover(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: "cover.vent"},
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: "cover.vent"},
         blocking=True,
     )
     assert aioclient_mock.mock_calls[2][2] == {"on": True}
@@ -261,8 +258,8 @@ async def test_level_controllable_output_cover(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: "cover.vent", ATTR_POSITION: 40},
+        CoverService.SET_POSITION,
+        {TargetKey.ENTITY_ID: "cover.vent", CoverServiceArgument.POSITION: 40},
         blocking=True,
     )
     assert aioclient_mock.mock_calls[3][2] == {"bri": 152}
@@ -271,8 +268,8 @@ async def test_level_controllable_output_cover(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_TILT_POSITION,
-        {ATTR_ENTITY_ID: "cover.vent", ATTR_TILT_POSITION: 40},
+        CoverService.SET_TILT_POSITION,
+        {TargetKey.ENTITY_ID: "cover.vent", CoverServiceArgument.TILT_POSITION: 40},
         blocking=True,
     )
     assert aioclient_mock.mock_calls[4][2] == {"sat": 152}
@@ -281,8 +278,8 @@ async def test_level_controllable_output_cover(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER_TILT,
-        {ATTR_ENTITY_ID: "cover.vent"},
+        CoverService.OPEN_TILT,
+        {TargetKey.ENTITY_ID: "cover.vent"},
         blocking=True,
     )
     assert aioclient_mock.mock_calls[5][2] == {"sat": 0}
@@ -291,8 +288,8 @@ async def test_level_controllable_output_cover(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER_TILT,
-        {ATTR_ENTITY_ID: "cover.vent"},
+        CoverService.CLOSE_TILT,
+        {TargetKey.ENTITY_ID: "cover.vent"},
         blocking=True,
     )
     assert aioclient_mock.mock_calls[6][2] == {"sat": 254}
@@ -301,8 +298,8 @@ async def test_level_controllable_output_cover(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER_TILT,
-        {ATTR_ENTITY_ID: "cover.vent"},
+        CoverService.STOP_TILT,
+        {TargetKey.ENTITY_ID: "cover.vent"},
         blocking=True,
     )
     assert aioclient_mock.mock_calls[7][2] == {"bri_inc": 0}

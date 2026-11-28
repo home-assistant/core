@@ -9,26 +9,24 @@ from typing import TYPE_CHECKING, Any, Self, override
 import probatio
 
 from homeassistant.components.climate import (
-    ATTR_HVAC_MODE,
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
     DOMAIN as CLIMATE_DOMAIN,
     ENTITY_ID_FORMAT,
     ClimateEntity,
     ClimateEntityCapabilityAttribute,
     ClimateEntityFeature,
     ClimateEntityStateAttribute,
+    ClimateServiceArgument,
     HVACAction,
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_TEMPERATURE,
     CONF_NAME,
     CONF_TEMPERATURE_UNIT,
     PRECISION_HALVES,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
@@ -42,7 +40,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from . import validators as tcv
-from .const import DOMAIN
+from .const import DEFAULT_NAMES, DOMAIN
 from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .helpers import (
@@ -58,7 +56,7 @@ from .schemas import (
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
 
-DEFAULT_NAME = "Template Climate"
+DEFAULT_NAME = DEFAULT_NAMES[Platform.CLIMATE]
 
 CONF_CURRENT_HUMIDITY = "current_humidity"
 CONF_CURRENT_TEMPERATURE = "current_temperature"
@@ -406,7 +404,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
     ) -> None:
         """Initialize the features."""
 
-        self._attr_temperature_unit = (
+        self._attr_native_temperature_unit = (
             config.get(CONF_TEMPERATURE_UNIT) or hass.config.units.temperature_unit
         )
         self._attr_target_humidity_step = config.get(CONF_TARGET_HUMIDITY_STEP)
@@ -434,8 +432,8 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
         self._attr_swing_modes = None
         self._attr_swing_horizontal_mode = None
         self._attr_swing_horizontal_modes = None
-        self._attr_target_temperature_low = None
-        self._attr_target_temperature_high = None
+        self._attr_native_target_temperature_low = None
+        self._attr_native_target_temperature_high = None
 
         self.setup_template(
             CONF_HVAC_MODES,
@@ -460,17 +458,17 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
 
         self.setup_template(
             CONF_CURRENT_TEMPERATURE,
-            "_attr_current_temperature",
+            "_attr_native_current_temperature",
             tcv.number(self, CONF_CURRENT_TEMPERATURE),
         )
 
         for option, attr in (
             (
                 CONF_TARGET_TEMPERATURE,
-                "_attr_target_temperature",
+                "_attr_native_target_temperature",
             ),
-            (CONF_TARGET_TEMPERATURE_LOW, "_attr_target_temperature_low"),
-            (CONF_TARGET_TEMPERATURE_HIGH, "_attr_target_temperature_high"),
+            (CONF_TARGET_TEMPERATURE_LOW, "_attr_native_target_temperature_low"),
+            (CONF_TARGET_TEMPERATURE_HIGH, "_attr_native_target_temperature_high"),
         ):
             self.setup_template(
                 option,
@@ -773,8 +771,8 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
         }
         write_state = False
 
-        breadcrumb = f"{SET_TEMPERATURE_ACTION} {ATTR_HVAC_MODE}"
-        if (hvac_value := kwargs.get(ATTR_HVAC_MODE)) and (
+        breadcrumb = f"{SET_TEMPERATURE_ACTION} {ClimateServiceArgument.HVAC_MODE}"
+        if (hvac_value := kwargs.get(ClimateServiceArgument.HVAC_MODE)) and (
             hvac_mode := tcv.strenum(self, breadcrumb, HVACMode)(hvac_value)
         ) is not None:
             self._valid_mode_or_raise("hvac", hvac_mode, self.hvac_modes)
@@ -788,17 +786,17 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
         for option, attr, param in (
             (
                 CONF_TARGET_TEMPERATURE,
-                ATTR_TEMPERATURE,
+                ClimateServiceArgument.TEMPERATURE,
                 "temperature",
             ),
             (
                 CONF_TARGET_TEMPERATURE_HIGH,
-                ATTR_TARGET_TEMP_HIGH,
+                ClimateServiceArgument.TARGET_TEMP_HIGH,
                 "target_temp_high",
             ),
             (
                 CONF_TARGET_TEMPERATURE_LOW,
-                ATTR_TARGET_TEMP_LOW,
+                ClimateServiceArgument.TARGET_TEMP_LOW,
                 "target_temp_low",
             ),
         ):
@@ -834,7 +832,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
         """Return climate specific state data to be restored."""
         return ClimateExtraStoredData(
             current_humidity=self._attr_current_humidity,
-            current_temperature=self._attr_current_temperature,
+            current_temperature=self._attr_native_current_temperature,
             fan_mode=self._attr_fan_mode,
             fan_modes=self._attr_fan_modes,
             hvac_action=self._attr_hvac_action,
@@ -847,16 +845,16 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
             swing_horizontal_mode=self._attr_swing_horizontal_mode,
             swing_horizontal_modes=self._attr_swing_horizontal_modes,
             target_humidity=self._attr_target_humidity,
-            target_temperature_high=self._attr_target_temperature_high,
-            target_temperature_low=self._attr_target_temperature_low,
-            target_temperature=self._attr_target_temperature,
+            target_temperature_high=self._attr_native_target_temperature_high,
+            target_temperature_low=self._attr_native_target_temperature_low,
+            target_temperature=self._attr_native_target_temperature,
         )
 
     @override
     def restore_extra_data(self, extra_data: ClimateExtraStoredData) -> None:
         """Restore the extra data."""
         self._attr_current_humidity = extra_data.current_humidity
-        self._attr_current_temperature = extra_data.current_temperature
+        self._attr_native_current_temperature = extra_data.current_temperature
         self._attr_fan_mode = extra_data.fan_mode
         self._attr_fan_modes = extra_data.fan_modes
         self._attr_hvac_action = extra_data.hvac_action
@@ -869,9 +867,9 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEnti
         self._attr_swing_horizontal_mode = extra_data.swing_horizontal_mode
         self._attr_swing_horizontal_modes = extra_data.swing_horizontal_modes
         self._attr_target_humidity = extra_data.target_humidity
-        self._attr_target_temperature_high = extra_data.target_temperature_high
-        self._attr_target_temperature_low = extra_data.target_temperature_low
-        self._attr_target_temperature = extra_data.target_temperature
+        self._attr_native_target_temperature_high = extra_data.target_temperature_high
+        self._attr_native_target_temperature_low = extra_data.target_temperature_low
+        self._attr_native_target_temperature = extra_data.target_temperature
 
 
 class StateClimateEntity(TemplateEntity, AbstractTemplateClimate):

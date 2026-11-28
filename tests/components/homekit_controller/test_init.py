@@ -9,11 +9,17 @@ from aiohomekit import AccessoryNotFoundError
 from aiohomekit.model import Accessory, Transport
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import Service, ServicesTypes
-from aiohomekit.testing import FakePairing
+from aiohomekit.testing import FakeController, FakePairing
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.homekit_controller.const import DOMAIN, ENTITY_MAP
+from homeassistant.components.homekit_controller.const import (
+    DEBOUNCE_COOLDOWN,
+    DOMAIN,
+    ENTITY_MAP,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -28,9 +34,6 @@ from .common import (
     setup_test_accessories_with_controller,
     setup_test_component,
 )
-
-from tests.common import async_fire_time_changed
-from tests.typing import WebSocketGenerator
 
 FIXTURES_DIR = pathlib.Path(__file__).parent / "fixtures"
 FIXTURES = [path.relative_to(FIXTURES_DIR) for path in FIXTURES_DIR.glob("*.json")]
@@ -116,6 +119,29 @@ async def test_device_remove_devices(
     )
     response = await client.remove_device(dead_device_entry.id)
     assert response["success"]
+
+
+async def test_device_remove_child_devices(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test we can't remove the child device of a service that still exists."""
+    assert await async_setup_component(hass, "config", {})
+    accessories = await setup_accessories_from_file(hass, "connectsense.json")
+    config_entry, _ = await setup_test_accessories(hass, accessories)
+    child_devices = dr.async_child_entries_for_config_entry(
+        device_registry, config_entry.entry_id
+    )
+    assert len(child_devices) == 2
+
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(child_devices[0].id)
+
+    assert not response["success"]
+    assert entity_registry.async_get("switch.inwall_outlet_0394de_outlet_a")
+    assert entity_registry.async_get("switch.inwall_outlet_0394de_outlet_b")
 
 
 async def test_offline_device_raises(
@@ -283,10 +309,18 @@ async def test_snapshots(
     accessories = await setup_accessories_from_file(hass, example)
     config_entry, _ = await setup_test_accessories(hass, accessories)
 
-    registry_devices = dr.async_entries_for_config_entry(
-        device_registry, config_entry.entry_id
-    )
-    registry_devices.sort(key=lambda device: device.name)
+    registry_devices: list[dr.AnyDeviceEntry] = []
+    for device in sorted(
+        dr.async_entries_for_config_entry(device_registry, config_entry.entry_id),
+        key=lambda device: device.name,
+    ):
+        registry_devices.append(device)
+        registry_devices.extend(
+            sorted(
+                dr.async_entries_for_parent_device(device_registry, device.id),
+                key=lambda child_device: child_device.name or "",
+            )
+        )
 
     devices = []
 
@@ -318,3 +352,36 @@ async def test_snapshots(
         devices.append({"device": device, "entities": entities})
 
     assert snapshot == devices
+
+
+@pytest.mark.usefixtures("fake_ble_discovery", "fake_ble_pairing")
+async def test_ble_device_polls_after_reload(
+    hass: HomeAssistant, controller: FakeController
+) -> None:
+    """Test a BLE device is polled again after its entry is reloaded."""
+    accessory = Accessory.create_with_info(
+        1, "TestDevice", "example.com", "Test", "0001", "0.1"
+    )
+    create_alive_service(accessory)
+    await async_setup_component(hass, DOMAIN, {})
+    config_entry, pairing = await setup_test_accessories_with_controller(
+        hass, [accessory], controller
+    )
+
+    assert await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    with patch.object(
+        pairing, "get_characteristics", wraps=pairing.get_characteristics
+    ) as mock_get_characteristics:
+        # The poll requests a debounced update, which runs after its cooldown
+        async_fire_time_changed(hass, utcnow() + pairing.poll_interval)
+        await hass.async_block_till_done()
+        async_fire_time_changed(
+            hass,
+            utcnow() + pairing.poll_interval + timedelta(seconds=DEBOUNCE_COOLDOWN),
+        )
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_get_characteristics.assert_called()

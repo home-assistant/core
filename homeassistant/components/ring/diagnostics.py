@@ -5,7 +5,7 @@ from typing import Any
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 
-from . import RingConfigEntry
+from .coordinator import RingConfigEntry
 
 TO_REDACT = {
     "id",

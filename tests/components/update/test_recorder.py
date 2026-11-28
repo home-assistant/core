@@ -2,25 +2,22 @@
 
 from datetime import timedelta
 
+from pytest_homeassistant.common import (
+    async_fire_time_changed,
+    setup_test_component_platform,
+)
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
+
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.history import get_significant_states
-from homeassistant.components.update.const import (
-    ATTR_DISPLAY_PRECISION,
-    ATTR_IN_PROGRESS,
-    ATTR_INSTALLED_VERSION,
-    ATTR_RELEASE_SUMMARY,
-    ATTR_UPDATE_PERCENTAGE,
-    DOMAIN,
-)
-from homeassistant.const import ATTR_ENTITY_PICTURE, CONF_PLATFORM
+from homeassistant.components.update import UpdateEntityStateAttribute
+from homeassistant.components.update.const import DOMAIN
+from homeassistant.const import CONF_PLATFORM, EntityStateAttribute
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .common import MockUpdateEntity
-
-from tests.common import async_fire_time_changed, setup_test_component_platform
-from tests.components.recorder.common import async_wait_recording_done
 
 
 async def test_exclude_attributes(
@@ -34,11 +31,12 @@ async def test_exclude_attributes(
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
     state = hass.states.get("update.update_already_in_progress")
-    assert state.attributes[ATTR_DISPLAY_PRECISION] == 0
-    assert state.attributes[ATTR_IN_PROGRESS] is True
-    assert state.attributes[ATTR_UPDATE_PERCENTAGE] == 50
+    assert state.attributes[UpdateEntityStateAttribute.DISPLAY_PRECISION] == 0
+    assert state.attributes[UpdateEntityStateAttribute.IN_PROGRESS] is True
+    assert state.attributes[UpdateEntityStateAttribute.UPDATE_PERCENTAGE] == 50
     assert (
-        state.attributes[ATTR_ENTITY_PICTURE] == "/api/brands/integration/test/icon.png"
+        state.attributes[EntityStateAttribute.ENTITY_PICTURE]
+        == "/api/brands/integration/test/icon.png"
     )
     await async_setup_component(hass, DOMAIN, {})
 
@@ -53,9 +51,9 @@ async def test_exclude_attributes(
     assert len(states) >= 1
     for entity_states in states.values():
         for state in entity_states:
-            assert ATTR_DISPLAY_PRECISION not in state.attributes
-            assert ATTR_ENTITY_PICTURE not in state.attributes
-            assert ATTR_IN_PROGRESS not in state.attributes
-            assert ATTR_RELEASE_SUMMARY not in state.attributes
-            assert ATTR_INSTALLED_VERSION in state.attributes
-            assert ATTR_UPDATE_PERCENTAGE not in state.attributes
+            assert UpdateEntityStateAttribute.DISPLAY_PRECISION not in state.attributes
+            assert EntityStateAttribute.ENTITY_PICTURE not in state.attributes
+            assert UpdateEntityStateAttribute.IN_PROGRESS not in state.attributes
+            assert UpdateEntityStateAttribute.RELEASE_SUMMARY not in state.attributes
+            assert UpdateEntityStateAttribute.INSTALLED_VERSION in state.attributes
+            assert UpdateEntityStateAttribute.UPDATE_PERCENTAGE not in state.attributes

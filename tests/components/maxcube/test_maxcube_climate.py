@@ -12,28 +12,25 @@ from maxcube.device import (
 from maxcube.thermostat import MaxThermostat
 from maxcube.wallthermostat import MaxWallThermostat
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_HVAC_ACTION,
-    ATTR_HVAC_MODE,
     ATTR_HVAC_MODES,
     ATTR_MAX_TEMP,
     ATTR_MIN_TEMP,
     ATTR_PRESET_MODE,
     ATTR_PRESET_MODES,
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
     DOMAIN as CLIMATE_DOMAIN,
     PRESET_AWAY,
     PRESET_BOOST,
     PRESET_COMFORT,
     PRESET_ECO,
     PRESET_NONE,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_PRESET_MODE,
-    SERVICE_SET_TEMPERATURE,
     ClimateEntityFeature,
+    ClimateService,
+    ClimateServiceArgument,
     HVACAction,
     HVACMode,
 )
@@ -45,17 +42,15 @@ from homeassistant.components.maxcube.climate import (
     PRESET_ON,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import utcnow
-
-from tests.common import async_fire_time_changed
 
 ENTITY_ID = "climate.testroom_testthermostat"
 WALL_ENTITY_ID = "climate.testroom_testwallthermostat"
@@ -127,8 +122,11 @@ async def test_thermostat_set_hvac_mode_off(
     """Turn off thermostat."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.OFF},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.OFF,
+        },
         blocking=True,
     )
     cube.set_temperature_mode.assert_called_once_with(
@@ -158,8 +156,11 @@ async def test_thermostat_set_hvac_mode_heat(
     """Set hvac mode to heat."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.HEAT},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT,
+        },
         blocking=True,
     )
     cube.set_temperature_mode.assert_called_once_with(
@@ -182,8 +183,11 @@ async def test_thermostat_set_invalid_hvac_mode(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.DRY},
+            ClimateService.SET_HVAC_MODE,
+            {
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                ClimateServiceArgument.HVAC_MODE: HVACMode.DRY,
+            },
             blocking=True,
         )
     cube.set_temperature_mode.assert_not_called()
@@ -195,8 +199,8 @@ async def test_thermostat_set_temperature(
     """Set hvac mode to heat."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 10.0},
+        ClimateService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.TEMPERATURE: 10.0},
         blocking=True,
     )
     cube.set_temperature_mode.assert_called_once_with(thermostat, 10.0, None)
@@ -219,11 +223,11 @@ async def test_thermostat_set_no_temperature(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
+            ClimateService.SET_TEMPERATURE,
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_TARGET_TEMP_HIGH: 29.0,
-                ATTR_TARGET_TEMP_LOW: 10.0,
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                ClimateServiceArgument.TARGET_TEMP_HIGH: 29.0,
+                ClimateServiceArgument.TARGET_TEMP_LOW: 10.0,
             },
             blocking=True,
         )
@@ -236,8 +240,8 @@ async def test_thermostat_set_preset_on(
     """Set preset mode to on."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: PRESET_ON},
+        ClimateService.SET_PRESET_MODE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.PRESET_MODE: PRESET_ON},
         blocking=True,
     )
 
@@ -262,8 +266,11 @@ async def test_thermostat_set_preset_comfort(
     """Set preset mode to comfort."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: PRESET_COMFORT},
+        ClimateService.SET_PRESET_MODE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.PRESET_MODE: PRESET_COMFORT,
+        },
         blocking=True,
     )
     cube.set_temperature_mode.assert_called_once_with(
@@ -287,8 +294,11 @@ async def test_thermostat_set_preset_eco(
     """Set preset mode to eco."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: PRESET_ECO},
+        ClimateService.SET_PRESET_MODE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.PRESET_MODE: PRESET_ECO,
+        },
         blocking=True,
     )
     cube.set_temperature_mode.assert_called_once_with(
@@ -312,8 +322,11 @@ async def test_thermostat_set_preset_away(
     """Set preset mode to away."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: PRESET_AWAY},
+        ClimateService.SET_PRESET_MODE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.PRESET_MODE: PRESET_AWAY,
+        },
         blocking=True,
     )
     cube.set_temperature_mode.assert_called_once_with(
@@ -337,8 +350,11 @@ async def test_thermostat_set_preset_boost(
     """Set preset mode to boost."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: PRESET_BOOST},
+        ClimateService.SET_PRESET_MODE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.PRESET_MODE: PRESET_BOOST,
+        },
         blocking=True,
     )
     cube.set_temperature_mode.assert_called_once_with(
@@ -362,8 +378,11 @@ async def test_thermostat_set_preset_none(
     """Set preset mode to boost."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: PRESET_NONE},
+        ClimateService.SET_PRESET_MODE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.PRESET_MODE: PRESET_NONE,
+        },
         blocking=True,
     )
     cube.set_temperature_mode.assert_called_once_with(
@@ -378,8 +397,11 @@ async def test_thermostat_set_invalid_preset(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: "invalid"},
+            ClimateService.SET_PRESET_MODE,
+            {
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                ClimateServiceArgument.PRESET_MODE: "invalid",
+            },
             blocking=True,
         )
     cube.set_temperature_mode.assert_not_called()
@@ -391,8 +413,11 @@ async def test_wallthermostat_set_hvac_mode_heat(
     """Set wall thermostat hvac mode to heat."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: WALL_ENTITY_ID, ATTR_HVAC_MODE: HVACMode.HEAT},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: WALL_ENTITY_ID,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT,
+        },
         blocking=True,
     )
     cube.set_temperature_mode.assert_called_once_with(
@@ -414,8 +439,11 @@ async def test_wallthermostat_set_hvac_mode_auto(
     """Set wall thermostat hvac mode to auto."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: WALL_ENTITY_ID, ATTR_HVAC_MODE: HVACMode.AUTO},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: WALL_ENTITY_ID,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.AUTO,
+        },
         blocking=True,
     )
     cube.set_temperature_mode.assert_called_once_with(

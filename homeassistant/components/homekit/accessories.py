@@ -51,18 +51,14 @@ from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchDeviceClass
-from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN
+from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN, VacuumEntityFeature
 from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN
 from homeassistant.components.water_heater import DOMAIN as WATER_HEATER_DOMAIN
 from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL,
     ATTR_ENTITY_ID,
-    ATTR_HW_VERSION,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
     ATTR_SERVICE,
-    ATTR_SW_VERSION,
     CONF_NAME,
     CONF_TYPE,
     LIGHT_LUX,
@@ -71,6 +67,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     EntityStateAttribute,
+    TargetKey,
     UnitOfTemperature,
     __version__,
 )
@@ -98,7 +95,11 @@ from .climate_util import (
 )
 from .const import (
     ATTR_DISPLAY_NAME,
+    ATTR_HW_VERSION,
     ATTR_INTEGRATION,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_SW_VERSION,
     ATTR_VALUE,
     BRIDGE_MODEL,
     BRIDGE_SERIAL_NUMBER,
@@ -129,9 +130,12 @@ from .const import (
     TYPE_FAUCET,
     TYPE_HEATER_COOLER,
     TYPE_OUTLET,
+    TYPE_SET_TOP_BOX,
     TYPE_SHOWER,
     TYPE_SPRINKLER,
+    TYPE_STREAMING_STICK,
     TYPE_SWITCH,
+    TYPE_TELEVISION,
     TYPE_THERMOSTAT,
     TYPE_VALVE,
 )
@@ -162,6 +166,11 @@ FAN_TYPES = {
 CLIMATE_TYPES = {
     TYPE_HEATER_COOLER: "HeaterCooler",
     TYPE_THERMOSTAT: "Thermostat",
+}
+MEDIA_PLAYER_TYPES = {
+    TYPE_SET_TOP_BOX: "SetTopBoxMediaPlayer",
+    TYPE_STREAMING_STICK: "StreamingStickMediaPlayer",
+    TYPE_TELEVISION: "TelevisionMediaPlayer",
 }
 TYPES: Registry[str, type[HomeAccessory]] = Registry()
 
@@ -350,7 +359,7 @@ def get_accessory(  # noqa: C901
             MediaPlayerDeviceClass.TV,
             MediaPlayerDeviceClass.PROJECTOR,
         ):
-            a_type = "TelevisionMediaPlayer"
+            a_type = MEDIA_PLAYER_TYPES[config.get(CONF_TYPE, TYPE_TELEVISION)]
         elif validate_media_player_features(state, feature_list):
             a_type = "MediaPlayer"
 
@@ -373,6 +382,10 @@ def get_accessory(  # noqa: C901
             a_type = "NitrogenDioxideSensor"
         elif device_class == SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS:
             a_type = "VolatileOrganicCompoundsSensor"
+        elif device_class == SensorDeviceClass.OZONE:
+            a_type = "OzoneSensor"
+        elif device_class == SensorDeviceClass.SULPHUR_DIOXIDE:
+            a_type = "SulphurDioxideSensor"
         elif device_class == SensorDeviceClass.GAS:
             a_type = "AirQualitySensor"
         elif device_class == SensorDeviceClass.CO:
@@ -414,7 +427,7 @@ def get_accessory(  # noqa: C901
     elif state.domain == VALVE_DOMAIN:
         a_type = "Valve"
 
-    elif state.domain == VACUUM_DOMAIN:
+    elif state.domain == VACUUM_DOMAIN and features & VacuumEntityFeature.START:
         a_type = "Vacuum"
 
     elif (
@@ -803,7 +816,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         requested action.
         """
         event_data = {
-            ATTR_ENTITY_ID: service_data.get(ATTR_ENTITY_ID, self.entity_id),
+            ATTR_ENTITY_ID: service_data.get(TargetKey.ENTITY_ID, self.entity_id),
             ATTR_DISPLAY_NAME: self.display_name,
             ATTR_SERVICE: service,
             ATTR_VALUE: value,
@@ -858,6 +871,10 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
             SIGNAL_RELOAD_ENTITIES.format(self.driver.entry_id),
             (self.entity_id,),
         )
+
+    def diagnostics(self) -> dict[str, Any]:
+        """Return accessory specific diagnostics."""
+        return {}
 
     @ha_callback
     def async_stop(self) -> None:
@@ -926,6 +943,21 @@ class HomeDriver(AccessoryDriver):  # type: ignore[misc]
         self._bridge_name = bridge_name
         self._entry_title = entry_title
         self.iid_storage = iid_storage
+
+    @ha_callback
+    def async_update_accessories_hash(self) -> bool:
+        """Update the accessories hash, advertising a new config number if changed."""
+        old_hash = self.state.accessories_hash
+        new_hash = self.accessories_hash
+        if self.state.set_accessories_hash(new_hash):
+            _LOGGER.debug(
+                "Updating HomeKit accessories hash from %s -> %s", old_hash, new_hash
+            )
+            self.async_persist()
+            self.async_update_advertisement()
+            return True
+        _LOGGER.debug("HomeKit accessories hash is unchanged: %s", new_hash)
+        return False
 
     @pyhap_callback  # type: ignore[untyped-decorator]
     def pair(

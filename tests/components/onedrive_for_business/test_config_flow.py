@@ -6,6 +6,9 @@ from unittest.mock import AsyncMock, MagicMock
 from onedrive_personal_sdk.exceptions import OneDriveException
 from onedrive_personal_sdk.models.items import Drive, IdentitySet
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant import config_entries
 from homeassistant.components.onedrive_for_business.const import (
@@ -24,10 +27,6 @@ from homeassistant.helpers import config_entry_oauth2_flow
 
 from . import setup_integration
 from .const import CLIENT_ID, TENANT_ID
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 
 async def _do_get_token(
@@ -105,7 +104,7 @@ async def test_full_flow(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup_entry.mock_calls) == 1
     assert result["title"] == "John Doe's OneDrive (john@doe.com)"
-    assert result["result"].unique_id == "mock_drive_id"
+    assert result["result"].unique_id == "MOCK_DRIVE_ID"
     assert result["data"][CONF_TOKEN][CONF_ACCESS_TOKEN] == "mock-access-token"
     assert result["data"][CONF_TOKEN]["refresh_token"] == "mock-refresh-token"
     assert result["data"][CONF_FOLDER_PATH] == "myFolder"
@@ -146,7 +145,7 @@ async def test_full_flow_with_owner_not_found(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup_entry.mock_calls) == 1
     assert result["title"] == "OneDrive"
-    assert result["result"].unique_id == "mock_drive_id"
+    assert result["result"].unique_id == "MOCK_DRIVE_ID"
     assert result["data"][CONF_TOKEN][CONF_ACCESS_TOKEN] == "mock-access-token"
     assert result["data"][CONF_TOKEN]["refresh_token"] == "mock-refresh-token"
     assert result["data"][CONF_FOLDER_PATH] == "myFolder"
@@ -194,7 +193,7 @@ async def test_error_during_folder_creation(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "John Doe's OneDrive (john@doe.com)"
-    assert result["result"].unique_id == "mock_drive_id"
+    assert result["result"].unique_id == "MOCK_DRIVE_ID"
     assert result["data"][CONF_TOKEN][CONF_ACCESS_TOKEN] == "mock-access-token"
     assert result["data"][CONF_TOKEN]["refresh_token"] == "mock-refresh-token"
     assert result["data"][CONF_FOLDER_PATH] == "myFolder"
@@ -264,6 +263,39 @@ async def test_already_configured(
 
 
 @pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
+async def test_already_configured_unmigrated_entry(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a disabled entry that still has a lowercase drive ID is detected."""
+    MockConfigEntry(
+        unique_id="mock_drive_id",
+        title=mock_config_entry.title,
+        domain=DOMAIN,
+        data=mock_config_entry.data,
+        minor_version=1,
+        disabled_by=config_entries.ConfigEntryDisabler.USER,
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "pick_tenant"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_TENANT_ID: TENANT_ID}
+    )
+    await _do_get_token(hass, result, hass_client_no_auth, aioclient_mock)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
 async def test_reconfigure_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -291,6 +323,32 @@ async def test_reconfigure_flow(
     assert mock_config_entry.data[CONF_FOLDER_ID] == "my_folder_id"
     assert mock_config_entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN] == "mock-access-token"
     assert mock_config_entry.data[CONF_TOKEN]["refresh_token"] == "mock-refresh-token"
+
+
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
+async def test_reconfigure_flow_unmigrated_entry(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfiguring a disabled entry that still has a lowercase drive ID."""
+    config_entry = MockConfigEntry(
+        unique_id="mock_drive_id",
+        title=mock_config_entry.title,
+        domain=DOMAIN,
+        data=mock_config_entry.data,
+        minor_version=1,
+        disabled_by=config_entries.ConfigEntryDisabler.USER,
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    await _do_get_token(hass, result, hass_client_no_auth, aioclient_mock)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure_folder"
 
 
 @pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
@@ -354,13 +412,23 @@ async def test_reconfigure_flow_wrong_drive(
 
 
 @pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
+@pytest.mark.parametrize(
+    "drive_id",
+    [
+        pytest.param("MOCK_DRIVE_ID", id="same_casing"),
+        pytest.param("mock_drive_id", id="different_casing"),
+    ],
+)
 async def test_reauth_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     mock_config_entry: MockConfigEntry,
+    mock_drive: Drive,
+    drive_id: str,
 ) -> None:
     """Test that the reauth flow works."""
+    mock_drive.id = drive_id
 
     await setup_integration(hass, mock_config_entry)
 

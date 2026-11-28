@@ -1,12 +1,12 @@
-"""Offer date based automation conditions."""
+"""Offer Home Assistant date and system state conditions."""
 
-from typing import Unpack, cast, override
+from typing import TYPE_CHECKING, Unpack, cast, override
 
 import probatio
 
 from homeassistant.const import CONF_END, CONF_OPTIONS, CONF_START
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, system_state
 from homeassistant.helpers.condition import (
     Condition,
     ConditionCheckParams,
@@ -28,6 +28,10 @@ _DATE_CONDITION_SCHEMA = probatio.Schema(
             probatio.AtLeastOne(CONF_START, CONF_END),
         )
     }
+)
+
+_SYSTEM_STATE_CONDITION_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_OPTIONS, default=dict): {}}
 )
 
 
@@ -54,7 +58,8 @@ class DateCondition(Condition):
     def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
         """Initialize condition."""
         super().__init__(hass, config)
-        assert config.options is not None
+        if TYPE_CHECKING:
+            assert config.options is not None
         self._start: MonthDay = config.options.get(CONF_START, (1, 1))
         self._end: MonthDay = config.options.get(CONF_END, (12, 31))
 
@@ -74,8 +79,40 @@ class DateCondition(Condition):
         return now_month_day >= self._start or now_month_day <= self._end
 
 
+class _SystemStateCondition(Condition):
+    """Base class for the option-less system state conditions."""
+
+    @classmethod
+    @override
+    async def async_validate_config(
+        cls, hass: HomeAssistant, config: ConfigType
+    ) -> ConfigType:
+        """Validate config."""
+        return cast(ConfigType, _SYSTEM_STATE_CONDITION_SCHEMA(config))
+
+
+class RestartRequiredCondition(_SystemStateCondition):
+    """Test if Home Assistant needs a restart."""
+
+    @override
+    def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
+        """Check the condition."""
+        return system_state.async_get(self._hass).home_assistant_restart_required
+
+
+class HostRebootRequiredCondition(_SystemStateCondition):
+    """Test if the host needs a reboot."""
+
+    @override
+    def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
+        """Check the condition."""
+        return system_state.async_get(self._hass).host_reboot_required
+
+
 CONDITIONS: dict[str, type[Condition]] = {
     "date": DateCondition,
+    "host_reboot_required": HostRebootRequiredCondition,
+    "restart_required": RestartRequiredCondition,
 }
 
 

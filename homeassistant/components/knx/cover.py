@@ -7,13 +7,11 @@ from xknx.devices import Cover as XknxCover
 
 from homeassistant import config_entries
 from homeassistant.components.cover import (
-    ATTR_CURRENT_POSITION,
-    ATTR_CURRENT_TILT_POSITION,
-    ATTR_POSITION,
-    ATTR_TILT_POSITION,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
+    CoverEntityStateAttribute,
+    CoverServiceArgument,
 )
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
@@ -39,16 +37,8 @@ from .entity import (
 )
 from .knx_module import KNXModule
 from .schema import CoverSchema
-from .storage.const import (
-    CONF_GA_ANGLE,
-    CONF_GA_POSITION_SET,
-    CONF_GA_POSITION_STATE,
-    CONF_GA_STEP,
-    CONF_GA_STOP,
-    CONF_GA_UP_DOWN,
-)
-from .storage.entity_store_schema import KnxEntityData
-from .storage.util import ConfigExtractor
+from .storage.entity_store_schema import CoverKnxConfig, KnxEntityData
+from .storage.knx_selector import state_and_passive, write_and_passive
 
 
 async def async_setup_entry(
@@ -74,7 +64,9 @@ async def async_setup_entry(
             KnxYamlCover(knx_module, entity_config)
             for entity_config in yaml_platform_config
         )
-    if ui_config := knx_module.config_store.get_entity_configs(Platform.COVER):
+    if ui_config := knx_module.config_store.get_entity_configs(
+        Platform.COVER, CoverKnxConfig
+    ):
         entities.extend(
             KnxUiCover(knx_module, unique_id, config)
             for unique_id, config in ui_config.items()
@@ -126,11 +118,17 @@ class _KnxCover(CoverEntity, RestoreEntity):
             last_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
         ):
             return
-        if (position := last_state.attributes.get(ATTR_CURRENT_POSITION)) is not None:
+        if (
+            position := last_state.attributes.get(
+                CoverEntityStateAttribute.CURRENT_POSITION
+            )
+        ) is not None:
             # In KNX 0 is open, 100 is closed.
             self._device.travelcalculator.set_position(100 - position)
         if (
-            tilt_position := last_state.attributes.get(ATTR_CURRENT_TILT_POSITION)
+            tilt_position := last_state.attributes.get(
+                CoverEntityStateAttribute.CURRENT_TILT_POSITION
+            )
         ) is not None:
             self._device.angle.value = 100 - tilt_position
 
@@ -193,7 +191,7 @@ class _KnxCover(CoverEntity, RestoreEntity):
     @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        knx_position = 100 - kwargs[ATTR_POSITION]
+        knx_position = 100 - kwargs[CoverServiceArgument.POSITION]
         await self._device.set_position(knx_position)
 
     @override
@@ -212,7 +210,7 @@ class _KnxCover(CoverEntity, RestoreEntity):
     @override
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
-        knx_tilt_position = 100 - kwargs[ATTR_TILT_POSITION]
+        knx_tilt_position = 100 - kwargs[CoverServiceArgument.TILT_POSITION]
         await self._device.set_angle(knx_tilt_position)
 
     @override
@@ -276,27 +274,24 @@ class KnxYamlCover(_KnxCover, KnxYamlEntity):
             self._attr_device_class = custom_device_class
 
 
-def _create_ui_cover(xknx: XKNX, knx_config: ConfigType, name: str) -> XknxCover:
-    """Return a KNX Light device to be used within XKNX."""
-
-    conf = ConfigExtractor(knx_config)
-
+def _create_ui_cover(xknx: XKNX, conf: CoverKnxConfig, name: str | None) -> XknxCover:
+    """Return a KNX Cover device to be used within XKNX."""
     return XknxCover(
         xknx=xknx,
         name=name,
-        group_address_long=conf.get_write_and_passive(CONF_GA_UP_DOWN),
-        group_address_short=conf.get_write_and_passive(CONF_GA_STEP),
-        group_address_stop=conf.get_write_and_passive(CONF_GA_STOP),
-        group_address_position=conf.get_write_and_passive(CONF_GA_POSITION_SET),
-        group_address_position_state=conf.get_state_and_passive(CONF_GA_POSITION_STATE),
-        group_address_angle=conf.get_write(CONF_GA_ANGLE),
-        group_address_angle_state=conf.get_state_and_passive(CONF_GA_ANGLE),
-        travel_time_down=conf.get(CoverConf.TRAVELLING_TIME_DOWN),
-        travel_time_up=conf.get(CoverConf.TRAVELLING_TIME_UP),
-        invert_updown=conf.get(CoverConf.INVERT_UPDOWN, default=False),
-        invert_position=conf.get(CoverConf.INVERT_POSITION, default=False),
-        invert_angle=conf.get(CoverConf.INVERT_ANGLE, default=False),
-        sync_state=conf.get(CONF_SYNC_STATE),
+        group_address_long=write_and_passive(conf.ga_up_down),
+        group_address_short=write_and_passive(conf.ga_step),
+        group_address_stop=write_and_passive(conf.ga_stop),
+        group_address_position=write_and_passive(conf.ga_position_set),
+        group_address_position_state=state_and_passive(conf.ga_position_state),
+        group_address_angle=conf.ga_angle.write if conf.ga_angle else None,
+        group_address_angle_state=state_and_passive(conf.ga_angle),
+        travel_time_down=conf.travelling_time_down,
+        travel_time_up=conf.travelling_time_up,
+        invert_updown=conf.invert_updown,
+        invert_position=conf.invert_position,
+        invert_angle=conf.invert_angle,
+        sync_state=conf.sync_state,
     )
 
 
@@ -306,7 +301,10 @@ class KnxUiCover(_KnxCover, KnxUiEntity):
     _device: XknxCover
 
     def __init__(
-        self, knx_module: KNXModule, unique_id: str, config: KnxEntityData[Any]
+        self,
+        knx_module: KNXModule,
+        unique_id: str,
+        config: KnxEntityData[CoverKnxConfig],
     ) -> None:
         """Initialize KNX cover."""
         super().__init__(
@@ -314,7 +312,5 @@ class KnxUiCover(_KnxCover, KnxUiEntity):
             unique_id=unique_id,
             entity_config=config.entity,
         )
-        self._device = _create_ui_cover(
-            knx_module.xknx, config.knx, config.entity.xknx_name
-        )
+        self._device = _create_ui_cover(knx_module.xknx, config.knx, config.entity.name)
         self.init_base()

@@ -3,16 +3,7 @@
 from typing import Any
 
 import pytest
-
-from homeassistant.components.alarm_control_panel import (
-    AlarmControlPanelEntityFeature,
-    AlarmControlPanelState,
-)
-from homeassistant.components.alarm_control_panel.condition import CONDITIONS
-from homeassistant.const import ATTR_SUPPORTED_FEATURES
-from homeassistant.core import HomeAssistant
-
-from tests.components.common import (
+from pytest_homeassistant.components.common import (
     ConditionStateDescription,
     TargetSupport,
     assert_condition_behavior_all,
@@ -25,6 +16,14 @@ from tests.components.common import (
     parametrize_target_entities,
     target_entities,
 )
+
+from homeassistant.components.alarm_control_panel import (
+    AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
+)
+from homeassistant.components.alarm_control_panel.condition import CONDITIONS
+from homeassistant.const import EntityStateAttribute
+from homeassistant.core import HomeAssistant
 
 
 @pytest.fixture
@@ -107,7 +106,7 @@ def test_condition_target_support() -> None:
             target_states=[AlarmControlPanelState.ARMED_AWAY],
             other_states=other_states(AlarmControlPanelState.ARMED_AWAY),
             required_filter_attributes={
-                ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_AWAY
+                EntityStateAttribute.SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_AWAY
             },
         ),
         *parametrize_condition_states_any(
@@ -115,7 +114,7 @@ def test_condition_target_support() -> None:
             target_states=[AlarmControlPanelState.ARMED_HOME],
             other_states=other_states(AlarmControlPanelState.ARMED_HOME),
             required_filter_attributes={
-                ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_HOME
+                EntityStateAttribute.SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_HOME
             },
         ),
         *parametrize_condition_states_any(
@@ -123,7 +122,7 @@ def test_condition_target_support() -> None:
             target_states=[AlarmControlPanelState.ARMED_NIGHT],
             other_states=other_states(AlarmControlPanelState.ARMED_NIGHT),
             required_filter_attributes={
-                ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_NIGHT
+                EntityStateAttribute.SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_NIGHT
             },
         ),
         *parametrize_condition_states_any(
@@ -131,7 +130,7 @@ def test_condition_target_support() -> None:
             target_states=[AlarmControlPanelState.ARMED_VACATION],
             other_states=other_states(AlarmControlPanelState.ARMED_VACATION),
             required_filter_attributes={
-                ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_VACATION
+                EntityStateAttribute.SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_VACATION
             },
         ),
         *parametrize_condition_states_any(
@@ -198,7 +197,7 @@ async def test_alarm_control_panel_state_condition_behavior_any(
             target_states=[AlarmControlPanelState.ARMED_AWAY],
             other_states=other_states(AlarmControlPanelState.ARMED_AWAY),
             required_filter_attributes={
-                ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_AWAY
+                EntityStateAttribute.SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_AWAY
             },
         ),
         *parametrize_condition_states_all(
@@ -206,7 +205,7 @@ async def test_alarm_control_panel_state_condition_behavior_any(
             target_states=[AlarmControlPanelState.ARMED_HOME],
             other_states=other_states(AlarmControlPanelState.ARMED_HOME),
             required_filter_attributes={
-                ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_HOME
+                EntityStateAttribute.SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_HOME
             },
         ),
         *parametrize_condition_states_all(
@@ -214,7 +213,7 @@ async def test_alarm_control_panel_state_condition_behavior_any(
             target_states=[AlarmControlPanelState.ARMED_NIGHT],
             other_states=other_states(AlarmControlPanelState.ARMED_NIGHT),
             required_filter_attributes={
-                ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_NIGHT
+                EntityStateAttribute.SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_NIGHT
             },
         ),
         *parametrize_condition_states_all(
@@ -222,7 +221,7 @@ async def test_alarm_control_panel_state_condition_behavior_any(
             target_states=[AlarmControlPanelState.ARMED_VACATION],
             other_states=other_states(AlarmControlPanelState.ARMED_VACATION),
             required_filter_attributes={
-                ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_VACATION
+                EntityStateAttribute.SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_VACATION
             },
         ),
         *parametrize_condition_states_all(

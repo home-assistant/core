@@ -7,7 +7,7 @@ from homeassistant.components.notify import (
     DOMAIN as NOTIFY_DOMAIN,
     BaseNotificationService,
 )
-from homeassistant.const import CONF_COMMAND, CONF_NAME
+from homeassistant.const import CONF_COMMAND
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -16,6 +16,7 @@ from .const import CONF_COMMAND_TIMEOUT, DOMAIN, LOGGER
 from .utils import (
     async_run_shell_command,
     create_platform_yaml_not_supported_issue,
+    notify_name,
     render_template_args,
 )
 
@@ -33,9 +34,7 @@ async def async_get_service(
     notify_config = discovery_info
     command: str = notify_config[CONF_COMMAND]
     timeout: int = notify_config[CONF_COMMAND_TIMEOUT]
-    name: str = notify_config.get(CONF_NAME) or DOMAIN
-
-    return CommandLineNotificationService(command, timeout, name)
+    return CommandLineNotificationService(command, timeout, notify_name(notify_config))
 
 
 class CommandLineNotificationService(BaseNotificationService):

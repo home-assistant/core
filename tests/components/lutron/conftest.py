@@ -3,19 +3,18 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pylutron import OccupancyGroup
+from pylutron import OccupancyGroup, Shade
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.lutron.const import DOMAIN
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.lutron.async_setup_entry", return_value=True
+        "homeassistant.components.lutron.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -68,8 +67,8 @@ def mock_lutron() -> Generator[MagicMock]:
         switch.last_level.return_value = 0
         area.outputs.append(switch)
 
-        # Mock a cover
-        cover = MagicMock()
+        # Mock a cover (pylutron parses SYSTEM_SHADE outputs as Shade)
+        cover = MagicMock(spec=Shade)
         cover.name = "Test Cover"
         cover.id = 3
         cover.uuid = "cover_uuid"

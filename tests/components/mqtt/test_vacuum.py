@@ -6,6 +6,41 @@ from typing import Any
 from unittest.mock import call, patch
 
 import pytest
+from pytest_homeassistant.common import async_fire_mqtt_message
+from pytest_homeassistant.components.mqtt.common import (
+    help_custom_config,
+    help_test_availability_when_connection_lost,
+    help_test_availability_without_topic,
+    help_test_custom_availability_payload,
+    help_test_default_availability_payload,
+    help_test_discovery_broken,
+    help_test_discovery_removal,
+    help_test_discovery_update,
+    help_test_discovery_update_attr,
+    help_test_discovery_update_unchanged,
+    help_test_encoding_subscribable_topics,
+    help_test_entity_debug_info_message,
+    help_test_entity_device_info_remove,
+    help_test_entity_device_info_update,
+    help_test_entity_device_info_with_connection,
+    help_test_entity_device_info_with_identifier,
+    help_test_entity_id_update_discovery_update,
+    help_test_entity_id_update_subscriptions,
+    help_test_publishing_with_custom_encoding,
+    help_test_reloadable,
+    help_test_setting_attribute_via_mqtt_json_message,
+    help_test_setting_attribute_with_template,
+    help_test_setting_blocked_attribute_via_mqtt_json_message,
+    help_test_skipped_async_ha_write_state,
+    help_test_unique_id,
+    help_test_update_with_json_attrs_bad_json,
+    help_test_update_with_json_attrs_not_dict,
+)
+from pytest_homeassistant.typing import (
+    MqttMockHAClientGenerator,
+    MqttMockPahoClient,
+    WebSocketGenerator,
+)
 
 from homeassistant.components import vacuum
 from homeassistant.components.mqtt import vacuum as mqttvacuum
@@ -41,43 +76,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 
-from .common import (
-    help_custom_config,
-    help_test_availability_when_connection_lost,
-    help_test_availability_without_topic,
-    help_test_custom_availability_payload,
-    help_test_default_availability_payload,
-    help_test_discovery_broken,
-    help_test_discovery_removal,
-    help_test_discovery_update,
-    help_test_discovery_update_attr,
-    help_test_discovery_update_unchanged,
-    help_test_encoding_subscribable_topics,
-    help_test_entity_debug_info_message,
-    help_test_entity_device_info_remove,
-    help_test_entity_device_info_update,
-    help_test_entity_device_info_with_connection,
-    help_test_entity_device_info_with_identifier,
-    help_test_entity_id_update_discovery_update,
-    help_test_entity_id_update_subscriptions,
-    help_test_publishing_with_custom_encoding,
-    help_test_reloadable,
-    help_test_setting_attribute_via_mqtt_json_message,
-    help_test_setting_attribute_with_template,
-    help_test_setting_blocked_attribute_via_mqtt_json_message,
-    help_test_skipped_async_ha_write_state,
-    help_test_unique_id,
-    help_test_update_with_json_attrs_bad_json,
-    help_test_update_with_json_attrs_not_dict,
-)
-
-from tests.common import async_fire_mqtt_message
 from tests.components.vacuum import common
-from tests.typing import (
-    MqttMockHAClientGenerator,
-    MqttMockPahoClient,
-    WebSocketGenerator,
-)
 
 COMMAND_TOPIC = "vacuum/command"
 SEND_COMMAND_TOPIC = "vacuum/send_command"
@@ -442,6 +441,118 @@ async def test_clean_segments_command(
         {"id": "2", "name": "Kitchen", "group": None},
         {"id": "3", "name": "Diningroom", "group": None},
     ]
+
+
+SEGMENTS_MATCHING = {"1": "Livingroom", "2": "Kitchen"}
+SEGMENTS_IDS_AS_NAMES = {"1": "1", "2": "2"}
+
+
+@pytest.mark.parametrize("hass_config", [CONFIG_CLEAN_SEGMENTS])
+@pytest.mark.parametrize(
+    ("payload_after_mismatch", "expected_issues"),
+    [
+        pytest.param(
+            {"state": "cleaning", "segments": SEGMENTS_MATCHING},
+            0,
+            id="segments_restored",
+        ),
+        pytest.param({"state": "cleaning", "segments": {}}, 1, id="empty_segments"),
+        pytest.param({"state": "cleaning"}, 1, id="no_segments"),
+    ],
+)
+async def test_clean_segments_repair_issue_cleared(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    payload_after_mismatch: dict[str, Any],
+    expected_issues: int,
+) -> None:
+    """Test the repair issue is cleared when the mapped segments are reported again."""
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    entity_registry.async_get_or_create(
+        vacuum.DOMAIN,
+        DOMAIN,
+        "veryunique",
+        config_entry=config_entry,
+        suggested_object_id="test",
+    )
+    entity_registry.async_update_entity_options(
+        "vacuum.test",
+        vacuum.DOMAIN,
+        {
+            "area_mapping": {"Nabu Casa": ["1", "2"]},
+            "last_seen_segments": [
+                {"id": "1", "name": "Livingroom"},
+                {"id": "2", "name": "Kitchen"},
+            ],
+        },
+    )
+    await mqtt_mock_entry()
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(
+        hass,
+        "vacuum/state",
+        json.dumps({"state": "cleaning", "segments": SEGMENTS_IDS_AS_NAMES}),
+    )
+    await hass.async_block_till_done()
+    assert len(issue_registry.issues) == 1
+
+    async_fire_mqtt_message(hass, "vacuum/state", json.dumps(payload_after_mismatch))
+    await hass.async_block_till_done()
+    assert len(issue_registry.issues) == expected_issues
+
+
+@pytest.mark.parametrize("hass_config", [CONFIG_CLEAN_SEGMENTS])
+async def test_clean_segments_stale_repair_issue_cleared(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test a repair issue created by an earlier entity instance is cleared."""
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    entity_entry = entity_registry.async_get_or_create(
+        vacuum.DOMAIN,
+        DOMAIN,
+        "veryunique",
+        config_entry=config_entry,
+        suggested_object_id="test",
+    )
+    entity_registry.async_update_entity_options(
+        "vacuum.test",
+        vacuum.DOMAIN,
+        {
+            "area_mapping": {"Nabu Casa": ["1", "2"]},
+            "last_seen_segments": [
+                {"id": "1", "name": "Livingroom"},
+                {"id": "2", "name": "Kitchen"},
+            ],
+        },
+    )
+    issue_id = f"segments_changed_{entity_entry.id}"
+    # Simulates an issue left open by an entity instance removed in a reload
+    ir.async_create_issue(
+        hass,
+        vacuum.DOMAIN,
+        issue_id,
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="segments_changed",
+        translation_placeholders={"entity_id": "vacuum.test"},
+    )
+    await mqtt_mock_entry()
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(vacuum.DOMAIN, issue_id) is not None
+
+    async_fire_mqtt_message(
+        hass,
+        "vacuum/state",
+        json.dumps({"state": "idle", "segments": SEGMENTS_MATCHING}),
+    )
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(vacuum.DOMAIN, issue_id) is None
 
 
 @pytest.mark.parametrize(

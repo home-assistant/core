@@ -10,6 +10,7 @@ from homeassistant.core import (
     Event,
     HassJob,
     HomeAssistant,
+    async_noop,
     callback,
 )
 from homeassistant.util.event_type import EventType
@@ -32,7 +33,7 @@ def _async_at_core_state(
     at_start_job = HassJob(at_start_cb)
     if check_state(hass):
         hass.async_run_hass_job(at_start_job, hass)
-        return lambda: None
+        return async_noop
 
     unsub: CALLBACK_TYPE | None = None
 

@@ -13,7 +13,8 @@ from homeassistant.util.hass_dict import HassKey
 if TYPE_CHECKING:
     from homeassistant.helpers.entity_component import EntityComponent
 
-    from . import LightEntity, Profiles
+    from . import Profiles
+    from .entity import LightEntity
 
 DOMAIN: Final = "light"
 DATA_COMPONENT: HassKey[EntityComponent[LightEntity]] = HassKey(DOMAIN)
@@ -143,6 +144,7 @@ EFFECT_RANDOM = "random"
 EFFECT_WHITE = "white"
 
 COLOR_GROUP = "Color descriptors"
+BRIGHTNESS_GROUP = "brightness"
 
 LIGHT_PROFILES_FILE = "light_profiles.csv"
 
@@ -158,18 +160,56 @@ VALID_BRIGHTNESS_STEP_PCT = probatio.All(
 )
 VALID_FLASH = probatio.In([FLASH_SHORT, FLASH_LONG])
 
+
+class LightService(StrEnum):
+    """Store keys for light services."""
+
+    TOGGLE = "toggle"
+    TURN_OFF = "turn_off"
+    TURN_ON = "turn_on"
+
+
+class LightServiceArgument(StrEnum):
+    """Store keys for light service arguments."""
+
+    BRIGHTNESS = "brightness"
+    BRIGHTNESS_PCT = "brightness_pct"
+    BRIGHTNESS_STEP = "brightness_step"
+    BRIGHTNESS_STEP_PCT = "brightness_step_pct"
+    COLOR_NAME = "color_name"
+    COLOR_TEMP_KELVIN = "color_temp_kelvin"
+    EFFECT = "effect"
+    FLASH = "flash"
+    HS_COLOR = "hs_color"
+    PROFILE = "profile"
+    RGB_COLOR = "rgb_color"
+    RGBW_COLOR = "rgbw_color"
+    RGBWW_COLOR = "rgbww_color"
+    TRANSITION = "transition"
+    WHITE = "white"
+    XY_COLOR = "xy_color"
+
+
 LIGHT_TURN_ON_SCHEMA: VolDictType = {
-    probatio.Exclusive(ATTR_PROFILE, COLOR_GROUP): cv.string,
-    ATTR_TRANSITION: VALID_TRANSITION,
-    probatio.Exclusive(ATTR_BRIGHTNESS, ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
-    probatio.Exclusive(ATTR_BRIGHTNESS_PCT, ATTR_BRIGHTNESS): VALID_BRIGHTNESS_PCT,
-    probatio.Exclusive(ATTR_BRIGHTNESS_STEP, ATTR_BRIGHTNESS): VALID_BRIGHTNESS_STEP,
+    probatio.Exclusive(LightServiceArgument.PROFILE, COLOR_GROUP): cv.string,
+    LightServiceArgument.TRANSITION: VALID_TRANSITION,
     probatio.Exclusive(
-        ATTR_BRIGHTNESS_STEP_PCT, ATTR_BRIGHTNESS
+        LightServiceArgument.BRIGHTNESS, BRIGHTNESS_GROUP
+    ): VALID_BRIGHTNESS,
+    probatio.Exclusive(
+        LightServiceArgument.BRIGHTNESS_PCT, BRIGHTNESS_GROUP
+    ): VALID_BRIGHTNESS_PCT,
+    probatio.Exclusive(
+        LightServiceArgument.BRIGHTNESS_STEP, BRIGHTNESS_GROUP
+    ): VALID_BRIGHTNESS_STEP,
+    probatio.Exclusive(
+        LightServiceArgument.BRIGHTNESS_STEP_PCT, BRIGHTNESS_GROUP
     ): VALID_BRIGHTNESS_STEP_PCT,
-    probatio.Exclusive(ATTR_COLOR_NAME, COLOR_GROUP): cv.string,
-    probatio.Exclusive(ATTR_COLOR_TEMP_KELVIN, COLOR_GROUP): cv.positive_int,
-    probatio.Exclusive(ATTR_HS_COLOR, COLOR_GROUP): probatio.All(
+    probatio.Exclusive(LightServiceArgument.COLOR_NAME, COLOR_GROUP): cv.string,
+    probatio.Exclusive(
+        LightServiceArgument.COLOR_TEMP_KELVIN, COLOR_GROUP
+    ): cv.positive_int,
+    probatio.Exclusive(LightServiceArgument.HS_COLOR, COLOR_GROUP): probatio.All(
         probatio.Coerce(tuple),
         probatio.ExactSequence(
             (
@@ -178,24 +218,26 @@ LIGHT_TURN_ON_SCHEMA: VolDictType = {
             )
         ),
     ),
-    probatio.Exclusive(ATTR_RGB_COLOR, COLOR_GROUP): probatio.All(
+    probatio.Exclusive(LightServiceArgument.RGB_COLOR, COLOR_GROUP): probatio.All(
         probatio.Coerce(tuple), probatio.ExactSequence((cv.byte,) * 3)
     ),
-    probatio.Exclusive(ATTR_RGBW_COLOR, COLOR_GROUP): probatio.All(
+    probatio.Exclusive(LightServiceArgument.RGBW_COLOR, COLOR_GROUP): probatio.All(
         probatio.Coerce(tuple), probatio.ExactSequence((cv.byte,) * 4)
     ),
-    probatio.Exclusive(ATTR_RGBWW_COLOR, COLOR_GROUP): probatio.All(
+    probatio.Exclusive(LightServiceArgument.RGBWW_COLOR, COLOR_GROUP): probatio.All(
         probatio.Coerce(tuple), probatio.ExactSequence((cv.byte,) * 5)
     ),
-    probatio.Exclusive(ATTR_XY_COLOR, COLOR_GROUP): probatio.All(
+    probatio.Exclusive(LightServiceArgument.XY_COLOR, COLOR_GROUP): probatio.All(
         probatio.Coerce(tuple), probatio.ExactSequence((cv.small_float, cv.small_float))
     ),
-    probatio.Exclusive(ATTR_WHITE, COLOR_GROUP): probatio.Any(True, VALID_BRIGHTNESS),
-    ATTR_FLASH: VALID_FLASH,
-    ATTR_EFFECT: cv.string,
+    probatio.Exclusive(LightServiceArgument.WHITE, COLOR_GROUP): probatio.Any(
+        True, VALID_BRIGHTNESS
+    ),
+    LightServiceArgument.FLASH: VALID_FLASH,
+    LightServiceArgument.EFFECT: cv.string,
 }
 
 LIGHT_TURN_OFF_SCHEMA: VolDictType = {
-    ATTR_TRANSITION: VALID_TRANSITION,
-    ATTR_FLASH: VALID_FLASH,
+    LightServiceArgument.TRANSITION: VALID_TRANSITION,
+    LightServiceArgument.FLASH: VALID_FLASH,
 }

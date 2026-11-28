@@ -6,10 +6,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from hydropeak_opendata import PeakEvent
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.hydroquebec_peak.const import CONF_OFFER, DOMAIN
-
-from tests.common import MockConfigEntry
 
 TEST_OFFER = "CPC-D"
 OTHER_OFFER = "TPC-DPC"
@@ -46,7 +45,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.hydroquebec_peak.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 

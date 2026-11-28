@@ -13,6 +13,7 @@ from homeassistant.components import cloud, webhook
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import CONF_CLOUDHOOK_URL, DOMAIN
@@ -20,6 +21,14 @@ from .const import CONF_CLOUDHOOK_URL, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 type LoqedConfigEntry = ConfigEntry[LoqedDataCoordinator]
+
+
+def is_auth_error(err: TimeoutError | aiohttp.ClientError) -> bool:
+    """Return whether the client error is an authentication rejection."""
+    return isinstance(err, aiohttp.ClientResponseError) and err.status in (
+        HTTPStatus.UNAUTHORIZED,
+        HTTPStatus.FORBIDDEN,
+    )
 
 
 class BatteryMessage(TypedDict):
@@ -89,12 +98,29 @@ class LoqedDataCoordinator(DataUpdateCoordinator[StatusMessage]):
         self._api = api
         self.lock = lock
         self.device_name = config_entry.data[CONF_NAME]
+        self._lock_online = lock.online
+        if not self._lock_online:
+            _LOGGER.info("LOQED lock %s is unavailable", self.device_name)
 
     @override
     async def _async_update_data(self) -> StatusMessage:
         """Fetch data from API endpoint."""
-        async with asyncio.timeout(10):
-            return await self._api.async_get_lock_details()
+        try:
+            async with asyncio.timeout(10):
+                data = await self._api.async_get_lock_details()
+        except aiohttp.ClientResponseError as err:
+            if is_auth_error(err):
+                raise ConfigEntryAuthFailed(
+                    "The LOQED bridge rejected the credentials"
+                ) from err
+            raise
+        if "bolt_state" in data:
+            await self.lock.updateState(data["bolt_state"])
+        # Lock.online reads raw_data. Replace it, like Lock.update() does, so a
+        # lock_online flag set by an earlier webhook does not outlive this status.
+        self.lock.raw_data = dict(data)
+        self._async_log_lock_availability()
+        return data
 
     async def _handle_webhook(
         self, hass: HomeAssistant, webhook_id: str, request: Request
@@ -115,8 +141,20 @@ class LoqedDataCoordinator(DataUpdateCoordinator[StatusMessage]):
             _LOGGER.warning("Incorrect callback received:: %s", event_data)
             return None
 
+        self._async_log_lock_availability()
         self.async_update_listeners()
         return None
+
+    @callback
+    def _async_log_lock_availability(self) -> None:
+        """Log once when the lock goes offline and once when it comes back."""
+        if self.lock.online == self._lock_online:
+            return
+        self._lock_online = self.lock.online
+        if self._lock_online:
+            _LOGGER.info("LOQED lock %s is back online", self.device_name)
+        else:
+            _LOGGER.info("LOQED lock %s is unavailable", self.device_name)
 
     async def ensure_webhooks(self) -> None:
         """Register webhook on LOQED bridge."""

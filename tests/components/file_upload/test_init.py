@@ -11,6 +11,7 @@ from unittest.mock import AsyncMock, patch
 
 from aiohttp import BodyPartReader
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components import file_upload
 from homeassistant.components.file_upload import DOMAIN, FileUploadView
@@ -19,7 +20,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.components.image_upload import TEST_IMAGE
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(name="uploaded_file_dir")

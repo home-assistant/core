@@ -5,17 +5,22 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
+from python_qube_heatpump import StatusCode
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
-
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -31,10 +36,14 @@ async def test_entities(
 
 
 @pytest.mark.parametrize(
-    ("side_effect", "return_value"),
+    ("side_effect", "return_value", "message"),
     [
-        (ConnectionError("Connection lost"), None),
-        (None, None),
+        (
+            ConnectionError("Connection lost"),
+            None,
+            "Error communicating with the Qube heat pump: Connection lost",
+        ),
+        (None, None, "No data received from the Qube heat pump"),
     ],
 )
 async def test_sensor_unavailable_on_coordinator_error(
@@ -42,8 +51,10 @@ async def test_sensor_unavailable_on_coordinator_error(
     mock_qube_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
     side_effect: Exception | None,
     return_value: None,
+    message: str,
 ) -> None:
     """Test sensors become unavailable when coordinator fails."""
     await setup_integration(hass, mock_config_entry)
@@ -66,18 +77,77 @@ async def test_sensor_unavailable_on_coordinator_error(
     # All sensors should be unavailable
     states = hass.states.async_all("sensor")
     assert all(s.state == STATE_UNAVAILABLE for s in states)
+    assert message in caplog.text
 
 
-async def test_sensor_with_none_status_code(
+@pytest.mark.parametrize(
+    ("status", "expected"),
+    [
+        (StatusCode.ANTI_LEGIONELLA, "anti_legionella"),
+        (StatusCode.ALARM, "alarm"),
+        (StatusCode.UNKNOWN, "unknown"),
+        (None, "unknown"),
+    ],
+)
+async def test_status_sensor(
     hass: HomeAssistant,
     mock_qube_client: MagicMock,
     mock_config_entry: MockConfigEntry,
+    status: StatusCode | None,
+    expected: str,
 ) -> None:
-    """Test status sensor handles None status code."""
-    mock_qube_client.get_all_data.return_value.status_code = None
+    """Test the status sensor shows the status resolved by the library."""
+    mock_qube_client.get_all_data.return_value.status = status
 
     await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get("sensor.qube_heat_pump_heat_pump_status")
     assert state is not None
-    assert state.state == "unknown"
+    assert state.state == expected
+
+
+async def test_room_temperature_without_room_sensor(
+    hass: HomeAssistant,
+    mock_qube_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the room temperature sensor is not created without a room sensor."""
+    mock_qube_client.get_all_data.return_value.roomprb_en = False
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.qube_heat_pump_room_temperature") is None
+    assert hass.states.get("sensor.qube_heat_pump_outside_temperature") is not None
+
+
+async def test_room_temperature_missing_value(
+    hass: HomeAssistant,
+    mock_qube_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the room temperature is unknown when the controller reports -999.9."""
+    mock_qube_client.get_all_data.return_value.temp_room = -999.9
+
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("sensor.qube_heat_pump_room_temperature")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize("number", [1, 2, 3])
+async def test_heater_working_hours_disabled_by_default(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_qube_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    number: int,
+) -> None:
+    """Test the heater working hours sensors are disabled by default."""
+    await setup_integration(hass, mock_config_entry)
+
+    entity_id = f"sensor.qube_heat_pump_working_hours_heater_{number}"
+    entry = entity_registry.async_get(entity_id)
+    assert entry is not None
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    assert hass.states.get(entity_id) is None

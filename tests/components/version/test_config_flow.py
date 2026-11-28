@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 from pyhaversion.consts import HaVersionChannel, HaVersionSource
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant import config_entries
 from homeassistant.components.version.const import (
@@ -27,8 +28,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.util import dt as dt_util
 
 from .common import MOCK_VERSION, MOCK_VERSION_DATA, setup_version_integration
-
-from tests.common import async_fire_time_changed
 
 
 async def test_reload_config_entry(hass: HomeAssistant) -> None:
@@ -60,7 +59,7 @@ async def test_basic_form(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.version.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -101,7 +100,7 @@ async def test_form_pypi(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.version.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_BETA: True}
@@ -142,7 +141,7 @@ async def test_form_container(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.version.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_IMAGE: "odroid-n2-homeassistant"}
@@ -183,7 +182,7 @@ async def test_form_supervisor(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.version.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],

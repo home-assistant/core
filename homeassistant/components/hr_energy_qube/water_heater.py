@@ -3,11 +3,11 @@
 from typing import Any, override
 
 from homeassistant.components.water_heater import (
-    ATTR_TEMPERATURE,
     STATE_HEAT_PUMP,
     STATE_PERFORMANCE,
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
+    WaterHeaterServiceArgument,
 )
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
@@ -42,7 +42,7 @@ async def async_setup_entry(
 class QubeWaterHeater(QubeEntity, WaterHeaterEntity):
     """Qube DHW water heater entity."""
 
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_min_temp = DHW_MIN_TEMP
     _attr_max_temp = DHW_MAX_TEMP
     _attr_operation_list = OPERATION_MODES
@@ -63,13 +63,13 @@ class QubeWaterHeater(QubeEntity, WaterHeaterEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current DHW temperature."""
         return self.coordinator.data.state.temp_dhw
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the target DHW temperature."""
         return self.coordinator.data.state.setpoint_dhw
 
@@ -87,7 +87,7 @@ class QubeWaterHeater(QubeEntity, WaterHeaterEntity):
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the target DHW temperature."""
-        temperature = kwargs[ATTR_TEMPERATURE]
+        temperature = kwargs[WaterHeaterServiceArgument.TEMPERATURE]
         try:
             success = await self.coordinator.client.write_setpoint(
                 DHW_SETPOINT_KEY, temperature

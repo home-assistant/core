@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, call
 from pysmartthings import Attribute, Capability, Command
 from pysmartthings.models import HealthStatus
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.smartthings import MAIN
@@ -12,18 +13,16 @@ from homeassistant.components.water_heater import (
     ATTR_AWAY_MODE,
     ATTR_CURRENT_TEMPERATURE,
     ATTR_OPERATION_LIST,
-    ATTR_OPERATION_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     DOMAIN as WATER_HEATER_DOMAIN,
-    SERVICE_SET_AWAY_MODE,
-    SERVICE_SET_OPERATION_MODE,
-    SERVICE_SET_TEMPERATURE,
     STATE_ECO,
     STATE_HEAT_PUMP,
     STATE_HIGH_DEMAND,
     STATE_PERFORMANCE,
     WaterHeaterEntityFeature,
+    WaterHeaterService,
+    WaterHeaterServiceArgument,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -35,6 +34,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -45,8 +45,6 @@ from . import (
     trigger_health_update,
     trigger_update,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_all_entities(
@@ -86,10 +84,10 @@ async def test_set_operation_mode(
 
     await hass.services.async_call(
         WATER_HEATER_DOMAIN,
-        SERVICE_SET_OPERATION_MODE,
+        WaterHeaterService.SET_OPERATION_MODE,
         {
-            ATTR_ENTITY_ID: "water_heater.warmepumpe",
-            ATTR_OPERATION_MODE: operation_mode,
+            TargetKey.ENTITY_ID: "water_heater.warmepumpe",
+            WaterHeaterServiceArgument.OPERATION_MODE: operation_mode,
         },
         blocking=True,
     )
@@ -113,10 +111,10 @@ async def test_set_operation_mode_off(
 
     await hass.services.async_call(
         WATER_HEATER_DOMAIN,
-        SERVICE_SET_OPERATION_MODE,
+        WaterHeaterService.SET_OPERATION_MODE,
         {
-            ATTR_ENTITY_ID: "water_heater.warmepumpe",
-            ATTR_OPERATION_MODE: STATE_OFF,
+            TargetKey.ENTITY_ID: "water_heater.warmepumpe",
+            WaterHeaterServiceArgument.OPERATION_MODE: STATE_OFF,
         },
         blocking=True,
     )
@@ -141,10 +139,10 @@ async def test_set_operation_mode_from_off(
 
     await hass.services.async_call(
         WATER_HEATER_DOMAIN,
-        SERVICE_SET_OPERATION_MODE,
+        WaterHeaterService.SET_OPERATION_MODE,
         {
-            ATTR_ENTITY_ID: "water_heater.eco_heating_system",
-            ATTR_OPERATION_MODE: STATE_ECO,
+            TargetKey.ENTITY_ID: "water_heater.eco_heating_system",
+            WaterHeaterServiceArgument.OPERATION_MODE: STATE_ECO,
         },
         blocking=True,
     )
@@ -176,10 +174,10 @@ async def test_set_operation_to_off(
 
     await hass.services.async_call(
         WATER_HEATER_DOMAIN,
-        SERVICE_SET_OPERATION_MODE,
+        WaterHeaterService.SET_OPERATION_MODE,
         {
-            ATTR_ENTITY_ID: "water_heater.warmepumpe",
-            ATTR_OPERATION_MODE: STATE_OFF,
+            TargetKey.ENTITY_ID: "water_heater.warmepumpe",
+            WaterHeaterServiceArgument.OPERATION_MODE: STATE_OFF,
         },
         blocking=True,
     )
@@ -236,10 +234,10 @@ async def test_set_temperature(
 
     await hass.services.async_call(
         WATER_HEATER_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        WaterHeaterService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: "water_heater.warmepumpe",
-            ATTR_TEMPERATURE: 56,
+            TargetKey.ENTITY_ID: "water_heater.warmepumpe",
+            WaterHeaterServiceArgument.TEMPERATURE: 56,
         },
         blocking=True,
     )
@@ -272,10 +270,10 @@ async def test_away_mode(
 
     await hass.services.async_call(
         WATER_HEATER_DOMAIN,
-        SERVICE_SET_AWAY_MODE,
+        WaterHeaterService.SET_AWAY_MODE,
         {
-            ATTR_ENTITY_ID: "water_heater.warmepumpe",
-            ATTR_AWAY_MODE: on,
+            TargetKey.ENTITY_ID: "water_heater.warmepumpe",
+            WaterHeaterServiceArgument.AWAY_MODE: on,
         },
         blocking=True,
     )

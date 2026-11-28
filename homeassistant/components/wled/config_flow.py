@@ -3,11 +3,18 @@
 from typing import Any, override
 
 import probatio
-from wled import WLED, Device, WLEDConnectionError, WLEDUnsupportedVersionError
+from wled import (
+    WLED,
+    Device,
+    WLEDConnectionError,
+    WLEDError,
+    WLEDUnsupportedVersionError,
+)
 import yarl
 
 from homeassistant.components import onboarding
 from homeassistant.config_entries import (
+    SOURCE_IGNORE,
     SOURCE_RECONFIGURE,
     ConfigFlow,
     ConfigFlowResult,
@@ -64,6 +71,8 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unsupported_version"
             except WLEDConnectionError:
                 errors["base"] = "cannot_connect"
+            except WLEDError:
+                errors["base"] = "invalid_response"
             else:
                 mac_address = normalize_mac_address(device.info.mac_address)
                 await self.async_set_unique_id(mac_address, raise_on_progress=False)
@@ -110,12 +119,20 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
-        # Abort quick if the mac address is provided by discovery info
+        # A changed address has to answer as this device before it replaces
+        # the configured one, so only an unchanged address aborts right away.
         if mac := discovery_info.properties.get(CONF_MAC):
-            await self.async_set_unique_id(normalize_mac_address(mac))
-            self._abort_if_unique_id_configured(
-                updates={CONF_HOST: discovery_info.host}
-            )
+            unique_id = normalize_mac_address(mac)
+            await self.async_set_unique_id(unique_id)
+            if entry := self.hass.config_entries.async_entry_for_domain_unique_id(
+                DOMAIN, unique_id
+            ):
+                if entry.source == SOURCE_IGNORE:
+                    # An ignored entry carries no data, so the host comparison
+                    # below would raise before the flow could abort.
+                    return self.async_abort(reason="already_configured")
+                if entry.data[CONF_HOST] == discovery_info.host:
+                    return self.async_abort(reason="already_configured")
 
         self.discovered_host = discovery_info.host
         try:
@@ -124,6 +141,8 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="unsupported_version")
         except WLEDConnectionError:
             return self.async_abort(reason="cannot_connect")
+        except WLEDError:
+            return self.async_abort(reason="invalid_response")
 
         device_mac_address = normalize_mac_address(
             self.discovered_device.info.mac_address

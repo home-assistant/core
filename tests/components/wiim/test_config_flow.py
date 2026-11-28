@@ -4,6 +4,7 @@ from ipaddress import ip_address
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from wiim.models import WiimProbeResult
 
 from homeassistant.components.wiim.const import DOMAIN
@@ -12,8 +13,6 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -204,6 +203,34 @@ async def test_zeroconf_flow_already_configured(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert mock_config_entry.data[CONF_HOST] == "192.168.1.101"
+
+
+async def test_zeroconf_flow_ipv6_not_supported(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_probe_player: AsyncMock,
+) -> None:
+    """Test an IPv6 discovery aborts and leaves the configured host untouched."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZeroconfServiceInfo(
+            ip_address=ip_address("2001:db8::222:6cff:fe3c:565d"),
+            ip_addresses=[ip_address("2001:db8::222:6cff:fe3c:565d")],
+            hostname="wiim-pro.local.",
+            name="WiiM Pro._linkplay._tcp.local.",
+            port=49152,
+            properties={"uuid": "uuid:test-udn-1234"},
+            type="_linkplay._tcp.local.",
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "ipv6_not_supported"
+    assert mock_config_entry.data[CONF_HOST] == "192.168.1.100"
+    mock_probe_player.assert_not_called()
 
 
 async def test_reconfigure_flow_updates_host(

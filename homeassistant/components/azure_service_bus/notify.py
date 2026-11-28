@@ -22,8 +22,11 @@ from homeassistant.components.notify import (
 )
 from homeassistant.const import CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+DOMAIN = "azure_service_bus"
 
 CONF_CONNECTION_STRING = "connection_string"
 CONF_QUEUE_NAME = "queue"
@@ -109,10 +112,9 @@ class ServiceBusNotificationService(BaseNotificationService):
         )
         try:
             await self._client.send_messages(queue_message)
-        # pylint: disable-next=home-assistant-action-swallowed-exception
         except ServiceBusError as err:
-            _LOGGER.error(
-                "Could not send service bus notification to %s. %s",
-                self._client.name,
-                err,
-            )
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="send_message_failed",
+                translation_placeholders={"target": self._client.name},
+            ) from err

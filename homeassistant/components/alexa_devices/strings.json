@@ -59,6 +59,19 @@
     }
   },
   "entity": {
+    "climate": {
+      "thermostat": {
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "auto": "[%key:common::state::auto%]",
+              "circulate": "Circulate",
+              "on": "[%key:common::state::on%]"
+            }
+          }
+        }
+      }
+    },
     "event": {
       "voice_event": {
         "name": "Voice event",
@@ -77,6 +90,14 @@
       },
       "speak": {
         "name": "Speak"
+      }
+    },
+    "number": {
+      "active_brightness": {
+        "name": "Active brightness"
+      },
+      "inactive_brightness": {
+        "name": "Inactive brightness"
       }
     },
     "select": {
@@ -110,6 +131,9 @@
       "announcements": {
         "name": "Announcements"
       },
+      "aqm_led": {
+        "name": "LED indicator"
+      },
       "communications": {
         "name": "Communications"
       },
@@ -133,6 +157,9 @@
     "cannot_retrieve_data_with_error": {
       "message": "Error retrieving data: {error}"
     },
+    "cannot_set_feature_with_error": {
+      "message": "Error setting device feature: {error}"
+    },
     "device_serial_number_missing": {
       "message": "Device serial number missing: {device_id}"
     },
@@ -142,8 +169,14 @@
     "invalid_info_skill_value": {
       "message": "Invalid info skill {info_skill} specified"
     },
+    "invalid_music_provider": {
+      "message": "Music provider {provider} is not available"
+    },
     "invalid_sound_value": {
       "message": "Invalid sound {sound} specified"
+    },
+    "invalid_user_input": {
+      "message": "Alexa rejected the action because its input is invalid"
     },
     "select_option_not_found": {
       "message": "Selected option not found: {option}"

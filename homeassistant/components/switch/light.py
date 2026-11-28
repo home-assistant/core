@@ -10,13 +10,11 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_ENTITY_ID,
     CONF_NAME,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_ON,
     STATE_UNAVAILABLE,
+    TargetKey,
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
@@ -24,7 +22,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DOMAIN
+from .const import DOMAIN, SwitchService
 
 DEFAULT_NAME = "Light Switch"
 
@@ -76,8 +74,8 @@ class LightSwitch(LightEntity):
         """Forward the turn_on command to the switch in this light switch."""
         await self.hass.services.async_call(
             DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: self._switch_entity_id},
+            SwitchService.TURN_ON,
+            {TargetKey.ENTITY_ID: self._switch_entity_id},
             blocking=True,
             context=self._context,
         )
@@ -87,8 +85,8 @@ class LightSwitch(LightEntity):
         """Forward the turn_off command to the switch in this light switch."""
         await self.hass.services.async_call(
             DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: self._switch_entity_id},
+            SwitchService.TURN_OFF,
+            {TargetKey.ENTITY_ID: self._switch_entity_id},
             blocking=True,
             context=self._context,
         )

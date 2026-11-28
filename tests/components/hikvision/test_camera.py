@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.camera import async_get_image, async_get_stream_source
@@ -14,8 +15,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
 from .conftest import TEST_DEVICE_ID, TEST_DEVICE_NAME, TEST_HOST
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture
@@ -166,7 +165,49 @@ async def test_camera_stream_source(
     assert f"@{TEST_HOST}:554/Streaming/Channels/1" in stream_url
 
     # Verify get_stream_url was called with channel 1
-    mock_hikcamera.return_value.get_stream_url.assert_called_with(1)
+    mock_hikcamera.return_value.get_stream_url.assert_called_with(1, stream_type=1)
+
+
+async def test_substream_disabled_by_default(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+) -> None:
+    """Test the substream camera is created but disabled by default."""
+    await setup_integration(hass, mock_config_entry)
+
+    entry = entity_registry.async_get_entity_id(
+        "camera", DOMAIN, f"{TEST_DEVICE_ID}_1_substream"
+    )
+    assert entry is not None
+    assert (
+        entity_registry.async_get(entry).disabled_by
+        is er.RegistryEntryDisabler.INTEGRATION
+    )
+    assert hass.states.get(entry) is None
+    # The main stream keeps its original unique ID and stays enabled
+    assert hass.states.get("camera.front_camera") is not None
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_substream_stream_source(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+) -> None:
+    """Test the substream camera requests the substream URL."""
+    camera = mock_hikcamera.return_value
+    camera.get_stream_url.side_effect = lambda channel, stream_type=1: (
+        f"rtsp://u:p@{TEST_HOST}:554/Streaming/Channels/{stream_type}"
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    stream_url = await async_get_stream_source(hass, "camera.front_camera_substream")
+
+    assert stream_url is not None
+    assert stream_url.endswith("/Streaming/Channels/2")
+    camera.get_stream_url.assert_called_with(1, stream_type=2)
 
 
 async def test_camera_unavailable_when_stream_disconnected(
@@ -206,7 +247,7 @@ async def test_camera_callback_removed_with_entity(
     added = [
         c.args
         for c in camera.add_update_callback.call_args_list
-        if ".camera." in c.args[1]
+        if c.args[1] == f"{TEST_DEVICE_ID}.camera.1"
     ]
     assert len(added) == 1
     camera.remove_update_callback.assert_not_called()

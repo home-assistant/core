@@ -1,38 +1,36 @@
 """Test the base functions of the media player."""
 
 from http import HTTPStatus
+import logging
+from typing import Any
 from unittest.mock import patch
 
+import aiohttp
 from aiohttp import hdrs
 import probatio
 import pytest
+from pytest_homeassistant.common import MockEntityPlatform, MockUser
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 
 from homeassistant.components import media_player
 from homeassistant.components.media_player import (
-    ATTR_MEDIA_CONTENT_ID,
-    ATTR_MEDIA_CONTENT_TYPE,
-    ATTR_MEDIA_FILTER_CLASSES,
-    ATTR_MEDIA_SEARCH_QUERY,
     DOMAIN,
     BrowseMedia,
     MediaClass,
     MediaPlayerEnqueue,
     MediaPlayerEntity,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
     SearchMedia,
     SearchMediaQuery,
+    entity as media_player_entity,
 )
-from homeassistant.components.media_player.const import (
-    SERVICE_BROWSE_MEDIA,
-    SERVICE_SEARCH_MEDIA,
-)
+from homeassistant.components.media_player.const import DATA_COMPONENT
 from homeassistant.components.websocket_api import TYPE_RESULT
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF
-from homeassistant.core import HomeAssistant
+from homeassistant.const import STATE_OFF, TargetKey
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockEntityPlatform
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -215,14 +213,71 @@ async def test_get_image_http_missing_image(
     assert resp.status == HTTPStatus.NOT_FOUND
 
 
-async def test_get_image_http_log_credentials_redacted(
+_CREDENTIALS_URL = "http://usr51:s3cr3t99@example.com/default.jpg"
+
+
+@pytest.mark.parametrize(
+    ("url", "mock_kwargs", "warning_reason", "debug_detail"),
+    [
+        pytest.param(
+            _CREDENTIALS_URL,
+            {"exc": TimeoutError()},
+            "TimeoutError",
+            "TimeoutError",
+            id="timeout",
+        ),
+        pytest.param(
+            _CREDENTIALS_URL,
+            # InvalidUrlClientError stringifies to the offending URL itself
+            {"exc": aiohttp.InvalidUrlClientError(_CREDENTIALS_URL)},
+            "InvalidUrlClientError",
+            _CREDENTIALS_URL,
+            id="exception_text_contains_url",
+        ),
+        pytest.param(
+            _CREDENTIALS_URL,
+            {"exc": aiohttp.ClientPayloadError("incomplete chunked read")},
+            "ClientPayloadError",
+            "incomplete chunked read",
+            id="client_payload_error",
+        ),
+        pytest.param(
+            _CREDENTIALS_URL,
+            {"exc": aiohttp.ClientConnectionError("connection reset")},
+            "ClientConnectionError",
+            "connection reset",
+            id="client_connection_error",
+        ),
+        pytest.param(
+            _CREDENTIALS_URL,
+            {"status": HTTPStatus.NOT_FOUND},
+            "HTTP 404",
+            "HTTP 404",
+            id="http_status",
+        ),
+        pytest.param(
+            _CREDENTIALS_URL,
+            {
+                "content": b"hello-world",
+                "headers": {"Content-Type": "image/jpeg", "Content-Length": "9999"},
+            },
+            "truncated response, 11 of 9999 bytes",
+            "truncated response, 11 of 9999 bytes",
+            id="truncated_response",
+        ),
+    ],
+)
+async def test_get_image_http_fetch_failure_logging(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     caplog: pytest.LogCaptureFixture,
+    url: str,
+    mock_kwargs: dict[str, Any],
+    warning_reason: str,
+    debug_detail: str,
 ) -> None:
-    """Test credentials are redacted when logging url when fetching image."""
-    url = "http://vi:pass@example.com/default.jpg"
+    """Test a failed fetch logs only the host at warning and the URL at debug."""
     with patch(
         "homeassistant.components.demo.media_player.DemoYoutubePlayer.media_image_url",
         url,
@@ -235,18 +290,31 @@ async def test_get_image_http_log_credentials_redacted(
         state = hass.states.get("media_player.bedroom")
         assert "entity_picture_local" not in state.attributes
 
-        aioclient_mock.get(url, exc=TimeoutError())
-
+        aioclient_mock.get(url, **mock_kwargs)
         client = await hass_client_no_auth()
-
         resp = await client.get(state.attributes["entity_picture"])
 
     assert resp.status == HTTPStatus.NOT_FOUND
-    assert f"Error retrieving proxied image from {url}" not in caplog.text
+    warnings = [r.getMessage() for r in caplog.records if r.levelno == logging.WARNING]
     assert (
-        "Error retrieving proxied image from "
-        f"{url.replace('pass', 'xxxxxxxx').replace('vi', 'xxxx')}"
-    ) in caplog.text
+        f"Error retrieving proxied image from example.com: {warning_reason}" in warnings
+    )
+    assert not any("s3cr3t99" in message for message in warnings)
+    debug = [r.getMessage() for r in caplog.records if r.levelno == logging.DEBUG]
+    assert f"Error retrieving proxied image from {url}: {debug_detail}" in debug
+
+
+@pytest.mark.parametrize(
+    ("url", "expected"),
+    [
+        pytest.param("http://vi:pass@example.com/image.jpg", "example.com", id="host"),
+        pytest.param("/local/image.jpg", "<no host>", id="no_host"),
+        pytest.param("http://[invalid", "<invalid URL>", id="invalid_url"),
+    ],
+)
+def test_url_host(url: str, expected: str) -> None:
+    """Test the host logged for a failed fetch, including unparsable URLs."""
+    assert media_player_entity._url_host(url) == expected
 
 
 async def test_get_image_http_truncated_response(
@@ -538,11 +606,11 @@ async def test_media_browse_service(hass: HomeAssistant) -> None:
     ) as mock_browse_media:
         result = await hass.services.async_call(
             "media_player",
-            SERVICE_BROWSE_MEDIA,
+            MediaPlayerService.BROWSE_MEDIA,
             {
-                ATTR_ENTITY_ID: "media_player.browse",
-                ATTR_MEDIA_CONTENT_TYPE: "album",
-                ATTR_MEDIA_CONTENT_ID: "title=Album*",
+                TargetKey.ENTITY_ID: "media_player.browse",
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "album",
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "title=Album*",
             },
             blocking=True,
             return_response=True,
@@ -570,11 +638,16 @@ async def test_media_browse_service(hass: HomeAssistant) -> None:
 
 
 async def test_media_search(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_admin_user: MockUser,
 ) -> None:
     """Test browsing media."""
     await async_setup_component(hass, DOMAIN, {"media_player": {"platform": "demo"}})
     await hass.async_block_till_done()
+
+    player = hass.data[DATA_COMPONENT].get_entity("media_player.search")
+    player.async_set_context(Context(user_id="other-user-id"))
 
     client = await hass_ws_client(hass)
 
@@ -632,6 +705,7 @@ async def test_media_search(
         media_content_id="abcd",
         media_filter_classes={MediaClass.ALBUM},
     )
+    assert player._context.user_id == hass_admin_user.id
 
 
 async def test_media_search_service(hass: HomeAssistant) -> None:
@@ -656,13 +730,13 @@ async def test_media_search_service(hass: HomeAssistant) -> None:
     ) as mock_search_media:
         result = await hass.services.async_call(
             "media_player",
-            SERVICE_SEARCH_MEDIA,
+            MediaPlayerService.SEARCH_MEDIA,
             {
-                ATTR_ENTITY_ID: "media_player.search",
-                ATTR_MEDIA_CONTENT_TYPE: "album",
-                ATTR_MEDIA_CONTENT_ID: "title=Album*",
-                ATTR_MEDIA_SEARCH_QUERY: "query",
-                ATTR_MEDIA_FILTER_CLASSES: ["album"],
+                TargetKey.ENTITY_ID: "media_player.search",
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "album",
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "title=Album*",
+                MediaPlayerServiceArgument.SEARCH_QUERY: "query",
+                MediaPlayerServiceArgument.MEDIA_FILTER_CLASSES: ["album"],
             },
             blocking=True,
             return_response=True,
@@ -687,7 +761,7 @@ async def test_group_members_available_when_off(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         "media_player",
         "turn_off",
-        {ATTR_ENTITY_ID: "media_player.group"},
+        {TargetKey.ENTITY_ID: "media_player.group"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -695,6 +769,20 @@ async def test_group_members_available_when_off(hass: HomeAssistant) -> None:
     state = hass.states.get("media_player.group")
     assert state.state == STATE_OFF
     assert "group_members" in state.attributes
+
+
+async def test_group_members_without_grouping_support(hass: HomeAssistant) -> None:
+    """Test that group_members are exposed for a player that can not be regrouped."""
+    entity = MediaPlayerEntity()
+    entity.hass = hass
+    entity.platform = MockEntityPlatform(hass)
+    entity._attr_supported_features = media_player.MediaPlayerEntityFeature(0)
+
+    assert "group_members" not in entity.state_attributes
+
+    entity._attr_group_members = ["media_player.kitchen"]
+
+    assert entity.state_attributes["group_members"] == ["media_player.kitchen"]
 
 
 @pytest.mark.parametrize(

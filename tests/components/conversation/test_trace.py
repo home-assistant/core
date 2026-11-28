@@ -3,11 +3,14 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components import conversation
 from homeassistant.components.conversation import DOMAIN, trace
+from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_OFF
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import area_registry as ar, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 
@@ -33,7 +36,7 @@ async def test_converation_trace(
     assert traces
     last_trace = traces[-1].as_dict()
     assert last_trace.get("events")
-    assert len(last_trace.get("events")) == 2
+    assert len(last_trace.get("events")) == 3
     trace_event = last_trace["events"][0]
     assert (
         trace_event.get("event_type") == trace.ConversationTraceEventType.ASYNC_PROCESS
@@ -59,6 +62,53 @@ async def test_converation_trace(
             "item": "apples",
         },
     }
+
+    trace_event = last_trace["events"][2]
+    assert (
+        trace_event.get("event_type") == trace.ConversationTraceEventType.TURN_CONTENT
+    )
+    assert [content["role"] for content in trace_event["data"]["content"]] == [
+        "user",
+        "assistant",
+        "tool_result",
+        "assistant",
+    ]
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_conversation_trace_name_fallback(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that a candidate that finds no targets leaves no tool call."""
+    async_mock_service(hass, "light", "turn_on")
+    area_kitchen = area_registry.async_get_or_create("kitchen")
+    area_bedroom = area_registry.async_get_or_create("bedroom")
+
+    light = entity_registry.async_get_or_create(
+        "light", "demo", "lights", original_name="lights"
+    )
+    entity_registry.async_update_entity(light.entity_id, area_id=area_kitchen.id)
+    hass.states.async_set(light.entity_id, STATE_OFF, {ATTR_FRIENDLY_NAME: "lights"})
+
+    satellite = entity_registry.async_get_or_create("assist_satellite", "demo", "sat")
+    entity_registry.async_update_entity(satellite.entity_id, area_id=area_bedroom.id)
+
+    await conversation.async_converse(
+        hass,
+        "turn on the lights",
+        None,
+        Context(),
+        satellite_id=satellite.entity_id,
+    )
+
+    events = trace.async_get_traces()[-1].as_dict()["events"]
+    assert [
+        event["data"]
+        for event in events
+        if event["event_type"] == trace.ConversationTraceEventType.TOOL_CALL
+    ] == [{"intent_name": "HassTurnOn", "slots": {"name": "lights"}}]
 
 
 async def test_converation_trace_uncaught_error(

@@ -5,6 +5,11 @@ from unittest.mock import AsyncMock, patch
 
 from habiticalib import HabiticaUserResponse
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_load_fixture,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.habitica.const import ASSETS_URL, DOMAIN
@@ -12,8 +17,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, async_load_fixture, snapshot_platform
 
 
 @pytest.fixture(autouse=True)

@@ -49,7 +49,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: HomeConnectConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: HomeConnectConfigEntry) -> None:
     """Set up Home Connect from a config entry."""
     implementation = await async_get_config_entry_implementation(hass, entry)
 
@@ -99,12 +99,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeConnectConfigEntry) 
             f"home_connect-initial-full-refresh-{entry.entry_id}-{appliance_id}",
         )
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: HomeConnectConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
     issue_registry = ir.async_get(hass)
     issues_to_delete = [
@@ -121,12 +119,12 @@ async def async_unload_entry(
 
     for coordinator in entry.runtime_data.appliance_coordinators.values():
         await coordinator.async_shutdown()
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, entry: HomeConnectConfigEntry
-) -> bool:
+) -> None:
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s.%s", entry.version, entry.minor_version)
 
@@ -167,4 +165,3 @@ async def async_migrate_entry(
     _LOGGER.debug(
         "Migration to version %s.%s successful", entry.version, entry.minor_version
     )
-    return True

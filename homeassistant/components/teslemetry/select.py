@@ -16,7 +16,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from . import TeslemetryConfigEntry
 from .entity import (
     TeslemetryEnergyInfoEntity,
     TeslemetryRootEntity,
@@ -28,7 +27,7 @@ from .helpers import (
     handle_command,
     handle_vehicle_command,
 )
-from .models import TeslemetryEnergyData, TeslemetryVehicleData
+from .models import TeslemetryConfigEntry, TeslemetryEnergyData, TeslemetryVehicleData
 
 OFF = "off"
 LOW = "low"
@@ -401,6 +400,7 @@ class TeslemetryOperationSelectEntity(TeslemetryEnergyInfoEntity, SelectEntity):
         self.raise_for_scope(Scope.ENERGY_CMDS)
         await handle_command(self.api.operation(option))
         self._attr_current_option = option
+        self.coordinator.async_set_command_value(self.key, option)
         self.async_write_ha_state()
 
 
@@ -457,4 +457,5 @@ class TeslemetryExportRuleSelectEntity(
             self.api.grid_import_export(customer_preferred_export_rule=option)
         )
         self._attr_current_option = option
+        self.coordinator.async_set_command_value(self.key, option)
         self.async_write_ha_state()
