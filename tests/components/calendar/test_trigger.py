@@ -1159,6 +1159,58 @@ async def test_triggers_share_refetch(
     test_entity.async_get_events.assert_not_called()
 
 
+async def test_separate_windows_fetched_apart(
+    hass: HomeAssistant,
+    calls_data: Callable[[], list[dict[str, Any]]],
+    fake_schedule: FakeSchedule,
+    test_entity: MockCalendarEntity,
+    trigger_format: TriggerFormat,
+) -> None:
+    """Test a change is fetched apart for windows that don't overlap."""
+    _create_departure(test_entity, _test_time("10:35:00"))
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": EVENT_START,
+                "trigger": [
+                    trigger_format.get_trigger_data(CALENDAR_ENTITY_ID, EVENT_START),
+                    trigger_format.get_trigger_data(
+                        CALENDAR_ENTITY_ID, EVENT_START, dt.timedelta(days=-400)
+                    ),
+                ],
+                "action": TEST_AUTOMATION_ACTION,
+                "mode": "queued",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    await fake_schedule.fire_until(_test_time("10:33:00"))
+
+    test_entity.async_get_events.reset_mock()
+    _move_departure(test_entity, _test_time("10:37:00"))
+    await hass.async_block_till_done()
+    spans = [
+        (call.args[1], call.args[2])
+        for call in test_entity.async_get_events.call_args_list
+    ]
+    assert len(spans) == 2
+    assert all(end - start < dt.timedelta(hours=1) for start, end in spans)
+
+    await fake_schedule.fire_until(_test_time("10:40:00"))
+    assert [call["calendar_event"]["start"] for call in calls_data()] == [
+        _test_time("10:37:00").isoformat()
+    ]
+
+    await hass.services.async_call(
+        automation.DOMAIN,
+        AutomationService.TURN_OFF,
+        {TargetKey.ENTITY_ID: f"automation.{EVENT_START}"},
+        blocking=True,
+    )
+
+
 class BlockedFetch:
     """Hold the next event fetch of a calendar until released."""
 

@@ -271,7 +271,7 @@ class CalendarEventRefetcher:
     """Fetch the events of a calendar again when they have changed.
 
     Shared by all listeners of the calendar, so that a change leads to a single
-    fetch however many triggers use the calendar.
+    fetch for all triggers whose windows overlap.
     """
 
     def __init__(self, hass: HomeAssistant, entity_id: str) -> None:
@@ -319,20 +319,33 @@ class CalendarEventRefetcher:
     async def _async_refetch(self) -> None:
         """Fetch the events in the windows of all listeners."""
         self._pending = False
-        windows = [(listener, listener.timespan) for listener in self._listeners]
-        timespans = [listener.fetch_timespan for listener in self._listeners]
+        # Only overlapping windows share a fetch, so none spans the gap between them
+        batches: list[tuple[Timespan, list[tuple[CalendarEventListener, Timespan]]]]
+        batches = []
+        for listener in sorted(
+            self._listeners,
+            key=lambda listener: dt_util.as_utc(listener.fetch_timespan.start),
+        ):
+            span = listener.fetch_timespan
+            window = (listener, listener.timespan)
+            if batches and dt_util.as_utc(span.start) <= dt_util.as_utc(
+                batches[-1][0].end
+            ):
+                batch_span, windows = batches[-1]
+                windows.append(window)
+                if dt_util.as_utc(span.end) > dt_util.as_utc(batch_span.end):
+                    batches[-1] = (Timespan(batch_span.start, span.end), windows)
+            else:
+                batches.append((span, [window]))
         try:
-            events = await self._fetcher(
-                Timespan(
-                    min((span.start for span in timespans), key=dt_util.as_utc),
-                    max((span.end for span in timespans), key=dt_util.as_utc),
-                )
-            )
-        except HomeAssistantError as ex:
-            _LOGGER.debug("Calendar trigger failed to fetch events: %s", ex)
-        else:
-            for listener, timespan in windows:
-                listener.async_replace_events(self._entity_id, timespan, events)
+            for span, windows in batches:
+                try:
+                    events = await self._fetcher(span)
+                except HomeAssistantError as ex:
+                    _LOGGER.debug("Calendar trigger failed to fetch events: %s", ex)
+                    continue
+                for listener, timespan in windows:
+                    listener.async_replace_events(self._entity_id, timespan, events)
         finally:
             # The debouncer drops calls made while this runs
             if self._pending:
