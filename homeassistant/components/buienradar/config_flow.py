@@ -21,7 +21,6 @@ from homeassistant.helpers.schema_config_entry_flow import (
 )
 from homeassistant.helpers.selector import LocationSelector, LocationSelectorConfig
 
-from . import BuienRadarConfigEntry
 from .const import (
     CONF_DELTA,
     CONF_TIMEFRAME,
@@ -31,6 +30,7 @@ from .const import (
     DOMAIN,
     SUPPORTED_COUNTRY_CODES,
 )
+from .coordinator import BuienRadarConfigEntry
 
 OPTIONS_SCHEMA = probatio.Schema(
     {
