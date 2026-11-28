@@ -16,6 +16,7 @@ DOMAIN: Final = "http"
 KEY_HASS_USER: Final = "hass_user"
 KEY_HASS_REFRESH_TOKEN_ID: Final = "hass_refresh_token_id"
 KEY_SUPERVISOR_UNIX_SOCKET: Final = "ha_supervisor_unix_socket"
+KEY_EXPIRED_SIGNED_REQUEST: Final = "ha_expired_signed_request"
 
 # System user used to authenticate requests over the Supervisor Unix socket.
 # Set by the hassio integration during its setup; the Unix socket is only
