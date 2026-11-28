@@ -3,14 +3,10 @@
 from typing import Any, override
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP_KELVIN,
-    ATTR_EFFECT,
-    ATTR_HS_COLOR,
-    ATTR_TRANSITION,
     ColorMode,
     LightEntity,
     LightEntityFeature,
+    LightServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -139,39 +135,43 @@ class HMLight(HMDevice, LightEntity):
     @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the light on and/or change color or color effect settings."""
-        if ATTR_TRANSITION in kwargs:
-            self._hmdevice.setValue("RAMP_TIME", kwargs[ATTR_TRANSITION], self._channel)
+        if LightServiceArgument.TRANSITION in kwargs:
+            self._hmdevice.setValue(
+                "RAMP_TIME", kwargs[LightServiceArgument.TRANSITION], self._channel
+            )
 
-        if ATTR_BRIGHTNESS in kwargs and self._state == "LEVEL":
-            percent_bright = float(kwargs[ATTR_BRIGHTNESS]) / 255
+        if LightServiceArgument.BRIGHTNESS in kwargs and self._state == "LEVEL":
+            percent_bright = float(kwargs[LightServiceArgument.BRIGHTNESS]) / 255
             self._hmdevice.set_level(percent_bright, self._channel)
         elif (
-            ATTR_HS_COLOR not in kwargs
-            and ATTR_COLOR_TEMP_KELVIN not in kwargs
-            and ATTR_EFFECT not in kwargs
+            LightServiceArgument.HS_COLOR not in kwargs
+            and LightServiceArgument.COLOR_TEMP_KELVIN not in kwargs
+            and LightServiceArgument.EFFECT not in kwargs
         ):
             self._hmdevice.on(self._channel)
 
-        if ATTR_HS_COLOR in kwargs:
+        if LightServiceArgument.HS_COLOR in kwargs:
             self._hmdevice.set_hs_color(
-                hue=kwargs[ATTR_HS_COLOR][0] / 360.0,
-                saturation=kwargs[ATTR_HS_COLOR][1] / 100.0,
+                hue=kwargs[LightServiceArgument.HS_COLOR][0] / 360.0,
+                saturation=kwargs[LightServiceArgument.HS_COLOR][1] / 100.0,
                 channel=self._channel,
             )
-        if ATTR_COLOR_TEMP_KELVIN in kwargs:
+        if LightServiceArgument.COLOR_TEMP_KELVIN in kwargs:
             mireds = color_util.color_temperature_kelvin_to_mired(
-                kwargs[ATTR_COLOR_TEMP_KELVIN]
+                kwargs[LightServiceArgument.COLOR_TEMP_KELVIN]
             )
             hm_temp = (MAX_MIREDS - mireds) / (MAX_MIREDS - MIN_MIREDS)
             self._hmdevice.set_color_temp(hm_temp)
-        if ATTR_EFFECT in kwargs:
-            self._hmdevice.set_effect(kwargs[ATTR_EFFECT])
+        if LightServiceArgument.EFFECT in kwargs:
+            self._hmdevice.set_effect(kwargs[LightServiceArgument.EFFECT])
 
     @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
-        if ATTR_TRANSITION in kwargs:
-            self._hmdevice.setValue("RAMP_TIME", kwargs[ATTR_TRANSITION], self._channel)
+        if LightServiceArgument.TRANSITION in kwargs:
+            self._hmdevice.setValue(
+                "RAMP_TIME", kwargs[LightServiceArgument.TRANSITION], self._channel
+            )
 
         self._hmdevice.off(self._channel)
 
