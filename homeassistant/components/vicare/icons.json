@@ -19,6 +19,12 @@
       "domestic_hot_water_pump": {
         "default": "mdi:pump"
       },
+      "external_lock": {
+        "default": "mdi:lock-open-variant",
+        "state": {
+          "on": "mdi:lock"
+        }
+      },
       "filter_hours": {
         "default": "mdi:counter"
       },

@@ -58,6 +58,9 @@
       "domestic_hot_water_pump": {
         "name": "DHW pump"
       },
+      "external_lock": {
+        "name": "External lock"
+      },
       "frost_protection": {
         "name": "Frost protection"
       },
@@ -70,11 +73,17 @@
       "identification_mode": {
         "name": "Identification mode"
       },
+      "malfunction_lock": {
+        "name": "Malfunction lock"
+      },
       "mounting_mode": {
         "name": "Mounting mode"
       },
       "one_time_charge": {
         "name": "One-time charge"
+      },
+      "service_message": {
+        "name": "Service message"
       },
       "solar_pump": {
         "name": "Solar pump"

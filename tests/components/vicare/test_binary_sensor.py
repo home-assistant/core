@@ -165,6 +165,98 @@ async def test_dhw_hygiene(
     assert hass.states.get(entity_id).state == expected_state
 
 
+@pytest.mark.parametrize(
+    ("active", "expected_state"),
+    [
+        pytest.param(False, STATE_OFF, id="inactive"),
+        pytest.param(True, STATE_ON, id="active"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("feature_name", "entity_id"),
+    [
+        pytest.param(
+            "device.lock.malfunction",
+            "binary_sensor.model0_malfunction_lock",
+            id="malfunction_lock",
+        ),
+        pytest.param(
+            "device.lock.external",
+            "binary_sensor.model0_external_lock",
+            id="external_lock",
+        ),
+    ],
+)
+async def test_locks(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    feature_name: str,
+    entity_id: str,
+    active: bool,
+    expected_state: str,
+) -> None:
+    """Test the malfunction and external lock of the device."""
+    vicare = MockPyViCare([Fixture({"type:heatpump"}, "vicare/Vitocal250A.json")])
+    lock = next(
+        feature
+        for feature in vicare.services["gateway0"]._features["deviceId0"]
+        if feature["feature"] == feature_name
+    )
+    lock["properties"]["active"]["value"] = active
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(f"{MODULE}.PyViCare", return_value=vicare),
+        patch(f"{MODULE}.PLATFORMS", [Platform.BINARY_SENSOR]),
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    await async_update_entity(hass, entity_id)
+
+    assert hass.states.get(entity_id).state == expected_state
+
+
+@pytest.mark.parametrize(
+    ("entries", "expected_state"),
+    [
+        pytest.param([], STATE_OFF, id="none"),
+        pytest.param(
+            [{"errorCode": "S.123", "timestamp": "2026-11-01T10:00:00.000Z"}],
+            STATE_ON,
+            id="pending",
+        ),
+    ],
+)
+async def test_service_message(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entries: list[dict[str, str]],
+    expected_state: str,
+) -> None:
+    """Test the service message sensor."""
+    vicare = MockPyViCare([Fixture({"type:heatpump"}, "vicare/Vitocal250A.json")])
+    messages = next(
+        feature
+        for feature in vicare.services["gateway0"]._features["deviceId0"]
+        if feature["feature"] == "device.messages.service.raw"
+    )
+    messages["properties"]["entries"]["value"] = entries
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(f"{MODULE}.PyViCare", return_value=vicare),
+        patch(f"{MODULE}.PLATFORMS", [Platform.BINARY_SENSOR]),
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    entity_id = "binary_sensor.model0_service_message"
+    await async_update_entity(hass, entity_id)
+
+    assert hass.states.get(entity_id).state == expected_state
+
+
 async def test_room_window_and_condensation_risk(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
