@@ -156,6 +156,29 @@ class CameraWebRTCProvider(ABC):
         """Get an image from the camera."""
         return None
 
+    @callback
+    def async_refresh_stream_source(self, camera: Camera) -> None:
+        """Pick up a change of the camera's WebRTC source.
+
+        Optional: a provider that restreams the camera updates the restream,
+        as HLS and recording keep reading it without asking again.
+        """
+        return
+
+    @callback
+    def async_supports_stream_source(self, camera: Camera) -> bool:
+        """Return if async_get_stream_source can restream the camera."""
+        return False
+
+    async def async_get_stream_source(self, camera: Camera) -> str | None:
+        """Return a stream source FFmpeg can open, for a camera without one.
+
+        Optional. A provider that can restream a camera's WebRTC source as a
+        URL FFmpeg can open (e.g. RTSP) returns it, so HLS and recording also
+        work for cameras whose only source is native to the provider.
+        """
+        return None
+
     async def async_register_camera(self, camera: Camera) -> None:
         """Will be called when the provider is registered for a camera."""
         return  # This is an optional method so we need a default here.
@@ -362,7 +385,7 @@ async def async_get_supported_provider(
 ) -> CameraWebRTCProvider | None:
     """Return the first supported provider for the camera."""
     providers = hass.data.get(DATA_WEBRTC_PROVIDERS)
-    if not providers or not (stream_source := await camera.stream_source()):
+    if not providers or not (stream_source := await camera.webrtc_source()):
         return None
 
     for provider in providers:

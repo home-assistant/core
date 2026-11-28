@@ -11,9 +11,11 @@ from unittest.mock import DEFAULT, AsyncMock, MagicMock, Mock, patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.go2rtc.const import SIGNAL_SERVER_RESTARTED
 from homeassistant.components.go2rtc.server import Server
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 TEST_BINARY = "/bin/go2rtc"
 
@@ -356,6 +358,43 @@ async def test_server_restart_process_exit(
 
 
 @patch("homeassistant.components.go2rtc.server._RESPAWN_COOLDOWN", 0)
+async def test_server_restart_signal(
+    hass: HomeAssistant,
+    mock_create_subprocess: AsyncMock,
+    rest_client: AsyncMock,
+    server: Server,
+) -> None:
+    """Test a restarted server signals it, as it lacks the streams added before."""
+    exited = asyncio.Event()
+    mock_create_subprocess.return_value.wait.side_effect = exited.wait
+    restarted = asyncio.Event()
+
+    @callback
+    def on_restarted() -> None:
+        restarted.set()
+
+    async_dispatcher_connect(hass, SIGNAL_SERVER_RESTARTED, on_restarted)
+
+    await server.start()
+    assert not restarted.is_set()
+
+    async def start() -> None:
+        # The new process keeps running
+        exited.clear()
+
+    with (
+        patch.object(server, "_stop"),
+        patch.object(server, "_start", side_effect=start) as mock_start,
+    ):
+        exited.set()
+        async with asyncio.timeout(5):
+            await restarted.wait()
+    mock_start.assert_awaited_once()
+
+    await server.stop()
+
+
+@patch("homeassistant.components.go2rtc.server._RESPAWN_COOLDOWN", 0)
 async def test_server_restart_process_error(
     hass: HomeAssistant,
     mock_create_subprocess: AsyncMock,
@@ -458,6 +497,8 @@ async def test_server_restart_error(
                 "?auth=token&channel=0&user=admin&password=hunter2",
                 "10:27:02.624 WRN [streams] url=http://camera.local"
                 "?user=alice@example.com",
+                "10:27:02.625 WRN [streams] url=homekit://192.168.1.50:51826"
+                "?device_id=AA:BB&client_id=1234&client_private=deadbeef",
             ],
             [
                 "10:27:02.622 WRN producer.go:170 >"
@@ -466,6 +507,8 @@ async def test_server_restart_error(
                 "10:27:02.623 WRN [streams] url=http://192.168.1.145/snapshot"
                 "?auth=****&channel=0&user=****&password=****",
                 "10:27:02.624 WRN [streams] url=http://camera.local?user=****",
+                "10:27:02.625 WRN [streams] url=homekit://192.168.1.50:51826"
+                "?device_id=AA:BB&client_id=1234&client_private=****",
             ],
         )
     ],
