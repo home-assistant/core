@@ -12,6 +12,17 @@
       "unsupported_device_type": "This type of Rainforest Eagle device is not supported."
     },
     "step": {
+      "reconfigure": {
+        "data": {
+          "cloud_id": "Cloud ID",
+          "host": "[%key:common::config_flow::data::host%]",
+          "install_code": "Installation code"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Rainforest gateway."
+        },
+        "description": "The Cloud ID identifies your Rainforest Eagle gateway and cannot be changed. If you are replacing the gateway, add it as a new Rainforest Eagle entry.\n\nIf reconfiguration detects a different meter, Home Assistant creates new entities for it on the existing device."
+      },
       "user": {
         "data": {
           "cloud_id": "Cloud ID",
