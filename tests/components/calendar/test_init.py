@@ -1,6 +1,6 @@
 """The tests for the calendar component."""
 
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from datetime import timedelta
 from http import HTTPStatus
 import re
@@ -963,12 +963,20 @@ async def test_websocket_subscribe_invalid_timespan(
     assert "Start must be before end" in msg["error"]["message"]
 
 
+@pytest.mark.parametrize(
+    "notify",
+    [
+        pytest.param(MockCalendarEntity.async_write_ha_state, id="state_write"),
+        pytest.param(MockCalendarEntity.async_update_event_listeners, id="report"),
+    ],
+)
 async def test_websocket_subscribe_debounces_rapid_updates(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     test_entities: list[MockCalendarEntity],
+    notify: Callable[[MockCalendarEntity], None],
 ) -> None:
-    """Test that rapid state writes are debounced for event listeners."""
+    """Test that rapid state writes and reports are debounced for event listeners."""
     client = await hass_ws_client(hass)
 
     start = dt_util.now()
@@ -1000,7 +1008,7 @@ async def test_websocket_subscribe_debounces_rapid_updates(
             end=start + timedelta(hours=i + 3),
             summary=f"Rapid Event {i}",
         )
-        entity.async_write_ha_state()
+        notify(entity)
 
     await hass.async_block_till_done()
 

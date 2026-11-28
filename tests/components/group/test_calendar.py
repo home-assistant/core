@@ -19,6 +19,7 @@ from pytest_homeassistant.typing import WebSocketGenerator
 from homeassistant import config as hass_config, config_entries
 from homeassistant.components.calendar import (
     DOMAIN as CALENDAR_DOMAIN,
+    SIGNAL_CALENDAR_EVENTS_UPDATED,
     CalendarEntity,
     CalendarEvent,
     CalendarService,
@@ -32,6 +33,7 @@ from homeassistant.const import (
     TargetKey,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import async_setup_component
@@ -645,6 +647,34 @@ async def test_trigger_updates_on_member_change(
     await hass.async_block_till_done()
 
     assert [call.data["summary"] for call in calls] == ["Call"]
+
+
+async def test_member_report_passed_on_once(
+    hass: HomeAssistant, calendar_platform: list[MockCalendarEntity]
+) -> None:
+    """Test a group passes on a report once when it reaches it through two members."""
+    await _setup_groups(
+        hass,
+        [
+            {**FAMILY_GROUP, "entities": ["calendar.left", "calendar.right"]},
+            {"platform": DOMAIN, "entities": ["calendar.home"], "name": "Left"},
+            {"platform": DOMAIN, "entities": ["calendar.home"], "name": "Right"},
+        ],
+    )
+    reports: list[None] = []
+    async_dispatcher_connect(
+        hass,
+        SIGNAL_CALENDAR_EVENTS_UPDATED.format(GROUP_ENTITY_ID),
+        lambda: reports.append(None),
+    )
+
+    calendar_platform[1].async_update_event_listeners()
+    await hass.async_block_till_done()
+    assert len(reports) == 1
+
+    calendar_platform[1].async_update_event_listeners()
+    await hass.async_block_till_done()
+    assert len(reports) == 2
 
 
 @pytest.mark.usefixtures("calendar_platform")

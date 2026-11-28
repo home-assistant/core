@@ -26,14 +26,17 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.event import async_track_state_report_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
+from homeassistant.util.hass_dict import HassKey
 
-from .const import GroupEntityStateAttribute
+from .const import DOMAIN, GroupEntityStateAttribute
 from .entity import GroupEntity
 
 DEFAULT_NAME = "Calendar group"
 
 # No limit on parallel updates to enable a group calling another group
 PARALLEL_UPDATES = 0
+
+DATA_PASSED_ON: HassKey[set[str]] = HassKey(f"{DOMAIN}_calendar_passed_on")
 
 PLATFORM_SCHEMA = CALENDAR_PLATFORM_SCHEMA.extend(
     {
@@ -126,7 +129,6 @@ class CalendarGroup(GroupEntity, CalendarEntity):
         }
         self._attr_unique_id = unique_id
         self._member_events: list[CalendarEvent] = []
-        self._passing_on_update = False
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -159,14 +161,16 @@ class CalendarGroup(GroupEntity, CalendarEntity):
     @callback
     def _async_member_events_updated(self) -> None:
         """Pass on that the events of a member have changed."""
-        # Groups can be members of each other
-        if self._passing_on_update:
+        # A report can reach a group through several members, or around a cycle
+        # of groups. Passing it on is synchronous, so each group does it once.
+        passed_on = self.hass.data.get(DATA_PASSED_ON)
+        if passed_on is None:
+            passed_on = self.hass.data[DATA_PASSED_ON] = set()
+            self.hass.loop.call_soon(self.hass.data.pop, DATA_PASSED_ON, None)
+        if self.entity_id in passed_on:
             return
-        self._passing_on_update = True
-        try:
-            self.async_update_event_listeners()
-        finally:
-            self._passing_on_update = False
+        passed_on.add(self.entity_id)
+        self.async_update_event_listeners()
 
     @property
     @override
