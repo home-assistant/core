@@ -472,3 +472,123 @@ async def test_q7_map_initial_fetch_exception(
     assert mock_roborock_entry.state is ConfigEntryState.LOADED
     assert hass.states.get("image.roborock_q7_map") is not None
     assert "Failed to refresh Q7 map: boom" in caplog.text
+
+
+async def _async_poll(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
+    freezer.tick(V1_LOCAL_NOT_CLEANING_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+
+@patch("homeassistant.components.roborock.coordinator.MAP_SLEEP", 0)
+async def test_missing_map_is_reloaded(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+    fake_vacuum: FakeDevice,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the selected map is reloaded once when the idle vacuum has no map."""
+    client = await hass_client()
+    resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
+    assert await resp.read() == b"\x89PNG-001"
+
+    assert fake_vacuum.v1_properties
+    status = fake_vacuum.v1_properties.status
+    maps = fake_vacuum.v1_properties.maps
+    status.refresh.side_effect = None
+    status.map_present = 0
+    status.in_cleaning = 0
+    fake_vacuum.v1_properties.home.home_map_content = {
+        0: MapContent(
+            image_content=b"\x89PNG-reloaded",
+            map_data=copy.deepcopy(MAP_DATA),
+        )
+    }
+
+    await _async_poll(hass, freezer)
+
+    maps.set_current_map.assert_awaited_once_with(maps.current_map)
+    resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
+    assert await resp.read() == b"\x89PNG-reloaded"
+
+    # The vacuum still reports no map, but the reload is not retried.
+    await _async_poll(hass, freezer)
+    assert maps.set_current_map.await_count == 1
+
+    # Once the map is back, a new loss triggers a new reload.
+    status.map_present = 1
+    await _async_poll(hass, freezer)
+    status.map_present = 0
+    await _async_poll(hass, freezer)
+    assert maps.set_current_map.await_count == 2
+
+
+@pytest.mark.parametrize(
+    ("map_present", "in_cleaning", "current_map"),
+    [
+        pytest.param(0, 1, 0, id="cleaning"),
+        pytest.param(1, 0, 0, id="map_present"),
+        pytest.param(0, 0, None, id="no_selected_map"),
+    ],
+)
+@patch("homeassistant.components.roborock.coordinator.MAP_SLEEP", 0)
+async def test_missing_map_not_reloaded(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+    freezer: FrozenDateTimeFactory,
+    map_present: int,
+    in_cleaning: int,
+    current_map: int | None,
+) -> None:
+    """Test the map is not reloaded when it is present, cleaning, or not selected."""
+    assert fake_vacuum.v1_properties
+    status = fake_vacuum.v1_properties.status
+    maps = fake_vacuum.v1_properties.maps
+    status.refresh.side_effect = None
+    status.map_present = map_present
+    status.in_cleaning = in_cleaning
+    maps.current_map = current_map
+
+    await _async_poll(hass, freezer)
+
+    maps.set_current_map.assert_not_awaited()
+
+
+@pytest.mark.parametrize(
+    ("set_map_error", "refresh_map_error"),
+    [
+        pytest.param(RoborockException, None, id="set_current_map"),
+        pytest.param(None, RoborockException, id="refresh_map"),
+    ],
+)
+@patch("homeassistant.components.roborock.coordinator.MAP_SLEEP", 0)
+async def test_missing_map_reload_fails(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+    fake_vacuum: FakeDevice,
+    freezer: FrozenDateTimeFactory,
+    set_map_error: type[Exception] | None,
+    refresh_map_error: type[Exception] | None,
+) -> None:
+    """Test a failed map reload keeps the existing image."""
+    entity_id = "image.roborock_s7_maxv_upstairs"
+    previous_state = hass.states.get(entity_id).state
+
+    assert fake_vacuum.v1_properties
+    status = fake_vacuum.v1_properties.status
+    status.refresh.side_effect = None
+    status.map_present = 0
+    status.in_cleaning = 0
+    fake_vacuum.v1_properties.maps.set_current_map.side_effect = set_map_error
+    fake_vacuum.v1_properties.home.refresh.side_effect = refresh_map_error
+
+    await _async_poll(hass, freezer)
+
+    fake_vacuum.v1_properties.maps.set_current_map.assert_awaited_once()
+    assert hass.states.get(entity_id).state == previous_state
+    client = await hass_client()
+    resp = await client.get(f"/api/image_proxy/{entity_id}")
+    assert await resp.read() == b"\x89PNG-001"
