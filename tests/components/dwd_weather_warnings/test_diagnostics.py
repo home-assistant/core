@@ -71,6 +71,7 @@ async def test_diagnostics_device_tracker(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics redact the device tracker of a tracker based entry."""
+    mock_dwdwfsapi.data_valid = True
     mock_tracker_entry.add_to_hass(hass)
     entity_registry.async_get_or_create(
         "device_tracker",

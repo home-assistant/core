@@ -6,7 +6,13 @@ from dwdwfsapi import DwdWeatherWarningsAPI
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.helpers.location import Coordinates
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    UpdateFailed,
+    UpdateFailedUnreachable,
+)
 from homeassistant.util import location as location_util
 
 from .const import (
@@ -40,8 +46,8 @@ class DwdWeatherWarningsCoordinator(DataUpdateCoordinator[None]):
             update_interval=DEFAULT_SCAN_INTERVAL,
         )
 
-        self._device_tracker = None
-        self._previous_position = None
+        self._device_tracker: str | None = None
+        self._previous_position: Coordinates | None = None
 
     @override
     async def _async_setup(self) -> None:
@@ -50,9 +56,31 @@ class DwdWeatherWarningsCoordinator(DataUpdateCoordinator[None]):
             self.api = await self.hass.async_add_executor_job(
                 DwdWeatherWarningsAPI, region_identifier
             )
+        elif device_tracker := self.config_entry.data.get(CONF_REGION_DEVICE_TRACKER):
+            self._device_tracker = device_tracker
+            try:
+                position = get_position_data(self.hass, device_tracker)
+            except (EntityNotFoundError, CoordinatesNotFoundError) as err:
+                raise ConfigEntryNotReady(
+                    translation_domain=DOMAIN,
+                    translation_key="position_error",
+                    translation_placeholders={"entity_id": device_tracker},
+                ) from err
+            self.api = await self.hass.async_add_executor_job(
+                DwdWeatherWarningsAPI, position
+            )
+            self._previous_position = position
         else:
-            self._device_tracker = self.config_entry.data.get(
-                CONF_REGION_DEVICE_TRACKER
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_config",
+            )
+
+        # Finally check whether or not the initialization was successful
+        if not self.api.data_valid:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
             )
 
     @override
@@ -92,3 +120,10 @@ class DwdWeatherWarningsCoordinator(DataUpdateCoordinator[None]):
             self._previous_position = position
         else:
             await self.hass.async_add_executor_job(self.api.update)
+
+        # Finally check whether or not the update was successful
+        if not self.api.data_valid:
+            raise UpdateFailedUnreachable(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            )

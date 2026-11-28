@@ -60,6 +60,12 @@
     }
   },
   "exceptions": {
+    "cannot_connect": {
+      "message": "An error occurred while fetching data from DWD servers. Check whether the DWD servers are up and whether your region identifier or device tracker is valid."
+    },
+    "invalid_config": {
+      "message": "The configuration is invalid. Either a region identifier or a device tracker is required."
+    },
     "position_error": {
       "message": "An error occurred while fetching the position of {entity_id}"
     }

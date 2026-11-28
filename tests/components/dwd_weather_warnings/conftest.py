@@ -16,6 +16,7 @@ from homeassistant.components.dwd_weather_warnings.const import (
 from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_NAME
 
 MOCK_NAME = "Unit Test"
+MOCK_UNIQUE_ID = "mock_unique_id"
 MOCK_REGION_IDENTIFIER = "807111000"
 MOCK_REGION_DEVICE_TRACKER = "device_tracker.test_gps"
 MOCK_CONDITIONS = [CURRENT_WARNING_SENSOR, ADVANCE_WARNING_SENSOR]
@@ -36,6 +37,7 @@ def mock_identifier_entry() -> MockConfigEntry:
     """Return a mocked config entry with a region identifier."""
     return MockConfigEntry(
         domain=DOMAIN,
+        unique_id=MOCK_UNIQUE_ID,
         data={
             CONF_NAME: MOCK_NAME,
             CONF_REGION_IDENTIFIER: MOCK_REGION_IDENTIFIER,
@@ -49,6 +51,7 @@ def mock_tracker_entry() -> MockConfigEntry:
     """Return a mocked config entry with a region identifier."""
     return MockConfigEntry(
         domain=DOMAIN,
+        unique_id=MOCK_UNIQUE_ID,
         data={
             CONF_NAME: MOCK_NAME,
             CONF_REGION_DEVICE_TRACKER: MOCK_REGION_DEVICE_TRACKER,
