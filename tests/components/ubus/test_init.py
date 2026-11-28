@@ -153,26 +153,34 @@ async def test_first_refresh_failure_does_not_fail_setup(
     assert MOCK_HOST in unreachable[0].getMessage()
 
 
+@pytest.mark.parametrize(
+    "failure",
+    [
+        pytest.param({"side_effect": None, "return_value": None}, id="no_session"),
+        pytest.param(
+            {"side_effect": PermissionError("login denied")},
+            id="access_denied",
+        ),
+    ],
+)
 async def test_persistent_invalid_credentials_issue(
     hass: HomeAssistant,
     mock_ubus: MagicMock,
     mock_config_entry: MockConfigEntry,
     issue_registry: ir.IssueRegistry,
     freezer: FrozenDateTimeFactory,
+    failure: dict[str, Any],
 ) -> None:
     """Test failing credentials open a repair issue, closed on recovery."""
-    mock_ubus.return_value.connect.configure_mock(side_effect=None, return_value=None)
+    mock_ubus.return_value.connect.configure_mock(**failure)
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     subentry_id = next(iter(mock_config_entry.subentries))
-    assert any(
-        issue.domain == DOMAIN
-        and issue.translation_key == "persistent_invalid_credentials"
-        and issue.config_subentry_id == subentry_id
-        for issue in issue_registry.issues.values()
-    )
+    issue = issue_registry.async_get_issue(DOMAIN, f"invalid_credentials_{subentry_id}")
+    assert issue is not None
+    assert issue.translation_key == "persistent_invalid_credentials"
 
     mock_ubus.return_value.connect.configure_mock(
         side_effect=None, return_value="session-id"
@@ -181,47 +189,9 @@ async def test_persistent_invalid_credentials_issue(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert not any(
-        issue.domain == DOMAIN
-        and issue.translation_key == "persistent_invalid_credentials"
-        for issue in issue_registry.issues.values()
-    )
-
-
-async def test_login_permission_denial_creates_credentials_issue(
-    hass: HomeAssistant,
-    mock_ubus: MagicMock,
-    mock_config_entry: MockConfigEntry,
-    issue_registry: ir.IssueRegistry,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test a permission denial at login is surfaced as a repair."""
-    mock_ubus.return_value.connect.configure_mock(
-        side_effect=PermissionError("login denied")
-    )
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    subentry_id = next(iter(mock_config_entry.subentries))
-    assert any(
-        issue.domain == DOMAIN
-        and issue.translation_key == "persistent_invalid_credentials"
-        and issue.config_subentry_id == subentry_id
-        for issue in issue_registry.issues.values()
-    )
-
-    mock_ubus.return_value.connect.configure_mock(
-        side_effect=None, return_value="session-id"
-    )
-    freezer.tick(timedelta(seconds=30))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert not any(
-        issue.domain == DOMAIN
-        and issue.translation_key == "persistent_invalid_credentials"
-        for issue in issue_registry.issues.values()
+    assert (
+        issue_registry.async_get_issue(DOMAIN, f"invalid_credentials_{subentry_id}")
+        is None
     )
 
 
