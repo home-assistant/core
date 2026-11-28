@@ -2,7 +2,7 @@
 
 import asyncio
 from datetime import timedelta
-from unittest.mock import patch
+from unittest.mock import call, patch
 
 import aiohttp
 from freezegun.api import FrozenDateTimeFactory
@@ -15,9 +15,9 @@ from pytest_homeassistant.common import (
 )
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components import number
+from homeassistant.components import climate, number
 from homeassistant.components.number import ATTR_VALUE, SERVICE_SET_VALUE
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -50,43 +50,51 @@ async def test_numbers(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "attribute", "value"),
+    ("entity_id", "attributes", "value"),
     [
-        pytest.param("number.buro_temperature_offset", "OFFSET", 1.5, id="offset"),
         pytest.param(
-            "number.buro_heating_temperature_day", "T_HEAT_DAY", 22.2, id="heating-day"
+            "number.buro_temperature_offset", {"OFFSET": 1.5}, 1.5, id="offset"
+        ),
+        pytest.param(
+            "number.buro_heating_temperature_day",
+            {"T_HEAT_DAY": 22.2, "T_TARGET": 22.2},
+            22.2,
+            id="heating-day",
         ),
         pytest.param(
             "number.buro_heating_temperature_night",
-            "T_HEAT_NIGHT",
+            {"T_HEAT_NIGHT": 20.2},
             20.2,
             id="heating-night",
         ),
         pytest.param(
-            "number.buro_cooling_temperature_day", "T_COOL_DAY", 24.2, id="cooling-day"
+            "number.buro_cooling_temperature_day",
+            {"T_COOL_DAY": 24.2},
+            24.2,
+            id="cooling-day",
         ),
         pytest.param(
             "number.buro_cooling_temperature_night",
-            "T_COOL_NIGHT",
+            {"T_COOL_NIGHT": 25.2},
             25.2,
             id="cooling-night",
         ),
         pytest.param(
             "number.buro_minimum_target_temperature",
-            "T_TARGET_MIN",
+            {"T_TARGET_MIN": 6.0},
             6.0,
             id="minimum-target",
         ),
         pytest.param(
             "number.buro_maximum_target_temperature",
-            "T_TARGET_MAX",
+            {"T_TARGET_MAX": 31.0},
             31.0,
             id="maximum-target",
         ),
     ],
 )
 async def test_set_number(
-    hass: HomeAssistant, entity_id: str, attribute: str, value: float
+    hass: HomeAssistant, entity_id: str, attributes: dict[str, float], value: float
 ) -> None:
     """Test setting room values."""
     await setup_number_platform(hass)
@@ -101,9 +109,41 @@ async def test_set_number(
             blocking=True,
         )
 
-    mock_update_heat_area.assert_awaited_once_with("Alpha2Test:1", {attribute: value})
+    mock_update_heat_area.assert_awaited_once_with("Alpha2Test:1", attributes)
     assert (state := hass.states.get(entity_id))
     assert state.state == str(value)
+
+
+async def test_active_heating_temperature_updates_climate_target(
+    hass: HomeAssistant,
+) -> None:
+    """Test changing the active heating temperature updates the climate target."""
+    with patch(
+        "homeassistant.components.moehlenhoff_alpha2.PLATFORMS",
+        [Platform.NUMBER, Platform.CLIMATE],
+    ):
+        await init_integration(hass)
+
+    with patch(
+        "homeassistant.components.moehlenhoff_alpha2.coordinator.Alpha2Base.update_heat_area"
+    ) as mock_update_heat_area:
+        await hass.services.async_call(
+            number.DOMAIN,
+            SERVICE_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: "number.buro_heating_temperature_day",
+                ATTR_VALUE: 22.2,
+            },
+            blocking=True,
+        )
+
+    await hass.async_block_till_done()
+
+    mock_update_heat_area.assert_awaited_once_with(
+        "Alpha2Test:1", {"T_HEAT_DAY": 22.2, "T_TARGET": 22.2}
+    )
+    assert (state := hass.states.get(hass.states.async_entity_ids(climate.DOMAIN)[0]))
+    assert state.attributes[ATTR_TEMPERATURE] == 22.2
 
 
 @pytest.mark.parametrize(
@@ -185,15 +225,20 @@ async def test_handle_communication_errors(
 async def test_stale_poll_does_not_overwrite_room_setting(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """Test a poll that finishes after a write does not restore stale limits."""
+    """Test a poll preserves the latest write after multiple setting changes."""
     entry = await setup_number_platform(hass)
     poll_started = asyncio.Event()
+    allow_sample = asyncio.Event()
+    poll_sampled = asyncio.Event()
     release_poll = asyncio.Event()
 
     async def delayed_update_data(base: Alpha2Base) -> None:
         poll_started.set()
-        await release_poll.wait()
+        await allow_sample.wait()
         await mock_update_data(base, hass)
+        base._static_data["Devices"]["Device"]["HEATAREA"][0]["T_TARGET_MIN"] = "25.0"
+        poll_sampled.set()
+        await release_poll.wait()
 
     async def update_heat_area(
         heat_area_id: str, attributes: dict[str, float | int]
@@ -222,29 +267,38 @@ async def test_stale_poll_does_not_overwrite_room_setting(
             },
             blocking=True,
         )
+        allow_sample.set()
+        await poll_sampled.wait()
+        await hass.services.async_call(
+            number.DOMAIN,
+            SERVICE_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: "number.buro_minimum_target_temperature",
+                ATTR_VALUE: 5.0,
+            },
+            blocking=True,
+        )
         release_poll.set()
         await hass.async_block_till_done()
 
-        with pytest.raises(
-            HomeAssistantError,
-            match="The minimum target temperature must not exceed the maximum",
-        ):
-            await hass.services.async_call(
-                number.DOMAIN,
-                SERVICE_SET_VALUE,
-                {
-                    ATTR_ENTITY_ID: "number.buro_maximum_target_temperature",
-                    ATTR_VALUE: 20.0,
-                },
-                blocking=True,
-            )
+        await hass.services.async_call(
+            number.DOMAIN,
+            SERVICE_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: "number.buro_maximum_target_temperature",
+                ATTR_VALUE: 20.0,
+            },
+            blocking=True,
+        )
 
-    mock_update_heat_area.assert_awaited_once_with(
-        "Alpha2Test:1", {"T_TARGET_MIN": 25.0}
-    )
+    assert mock_update_heat_area.await_args_list == [
+        call("Alpha2Test:1", {"T_TARGET_MIN": 25.0}),
+        call("Alpha2Test:1", {"T_TARGET_MIN": 5.0}),
+        call("Alpha2Test:1", {"T_TARGET_MAX": 20.0}),
+    ]
     heat_area = entry.runtime_data.data["heat_areas"]["Alpha2Test:1"]
-    assert heat_area["T_TARGET_MIN"] == 25.0
-    assert heat_area["T_TARGET_MAX"] == 30.0
+    assert heat_area["T_TARGET_MIN"] == 5.0
+    assert heat_area["T_TARGET_MAX"] == 20.0
 
 
 async def test_concurrent_target_temperature_limits(

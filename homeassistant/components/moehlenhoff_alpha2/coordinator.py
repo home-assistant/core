@@ -34,6 +34,7 @@ class Alpha2BaseCoordinator(DataUpdateCoordinator[dict[str, dict]]):
         self._heat_area_locks: defaultdict[str, asyncio.Lock] = defaultdict(
             asyncio.Lock
         )
+        self._heat_area_write_revisions: dict[tuple[str, str], int] = {}
         super().__init__(
             hass=hass,
             logger=_LOGGER,
@@ -53,6 +54,7 @@ class Alpha2BaseCoordinator(DataUpdateCoordinator[dict[str, dict]]):
             if self.data is not None
             else {}
         )
+        write_revisions_before_update = self._heat_area_write_revisions.copy()
         await self.base.update_data()
         data = {
             "heat_areas": {ha["ID"]: ha for ha in self.base.heat_areas if ha.get("ID")},
@@ -72,6 +74,18 @@ class Alpha2BaseCoordinator(DataUpdateCoordinator[dict[str, dict]]):
                         or previous_heat_area[attribute] != value
                     ):
                         updated_heat_area[attribute] = value
+            for key, revision in self._heat_area_write_revisions.items():
+                if revision == write_revisions_before_update.get(key, 0):
+                    continue
+                heat_area_id, attribute = key
+                heat_area = self.data["heat_areas"].get(heat_area_id)
+                updated_heat_area = data["heat_areas"].get(heat_area_id)
+                if (
+                    heat_area is not None
+                    and attribute in heat_area
+                    and updated_heat_area is not None
+                ):
+                    updated_heat_area[attribute] = heat_area[attribute]
 
         return data
 
@@ -123,14 +137,39 @@ class Alpha2BaseCoordinator(DataUpdateCoordinator[dict[str, dict]]):
                     "The minimum target temperature must not exceed the maximum"
                 )
 
+            update_attributes = attributes.copy()
+            active_temperature_attribute = None
+            heat_area_mode = heat_area["HEATAREA_MODE"]
+            if heat_area_mode == 1:
+                active_temperature_attribute = (
+                    "T_COOL_DAY" if self.get_cooling() else "T_HEAT_DAY"
+                )
+            elif heat_area_mode == 2:
+                active_temperature_attribute = (
+                    "T_COOL_NIGHT" if self.get_cooling() else "T_HEAT_NIGHT"
+                )
+            if (
+                active_temperature_attribute is not None
+                and active_temperature_attribute in update_attributes
+                and "T_TARGET" not in update_attributes
+            ):
+                update_attributes["T_TARGET"] = update_attributes[
+                    active_temperature_attribute
+                ]
+
             try:
-                await self.base.update_heat_area(heat_area_id, attributes)
+                await self.base.update_heat_area(heat_area_id, update_attributes)
             except (aiohttp.ClientError, TimeoutError) as http_err:
                 raise HomeAssistantError(
                     "Failed to set heat area settings, communication error with alpha2 base"
                 ) from http_err
 
-            self.data["heat_areas"][heat_area_id].update(attributes)
+            self.data["heat_areas"][heat_area_id].update(update_attributes)
+            for attribute in update_attributes:
+                key = heat_area_id, attribute
+                self._heat_area_write_revisions[key] = (
+                    self._heat_area_write_revisions.get(key, 0) + 1
+                )
             self.async_update_listeners()
 
     async def async_set_heat_area_mode(
