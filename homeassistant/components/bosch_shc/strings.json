@@ -482,6 +482,9 @@
       },
       "vibration_enabled": {
         "name": "Vibration detection"
+      },
+      "warning_suppressed": {
+        "name": "Warning suppressed"
       }
     },
     "update": {
