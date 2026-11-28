@@ -29,7 +29,7 @@ from homeassistant.components.http.const import MAX_UNAUTHENTICATED_BODY_SIZE
 from homeassistant.components.onboarding import DOMAIN, const, views
 from homeassistant.const import EVENT_COMPONENT_LOADED
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.helpers import area_registry as ar
+from homeassistant.helpers import area_registry as ar, storage
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import (
     EventComponentLoaded,
@@ -37,6 +37,7 @@ from homeassistant.setup import (
     async_setup_component,
     async_wait_component,
 )
+from homeassistant.util.file import WriteError
 
 from . import mock_storage
 
@@ -688,6 +689,34 @@ async def test_onboarding_analytics(
 
     resp = await client.post("/api/onboarding/analytics")
     assert resp.status == 403
+
+
+async def test_onboarding_step_save_failure_allows_retry(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_client: ClientSessionGenerator,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test a failed step save rolls back so onboarding can be retried."""
+    mock_storage(hass_storage, {"done": [const.STEP_USER]})
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+
+    with patch.object(
+        storage.Store,
+        "_async_write_data",
+        side_effect=WriteError("simulated write failure"),
+    ):
+        resp = await client.post("/api/onboarding/analytics")
+    assert resp.status == 500
+    assert const.STEP_ANALYTICS not in hass_storage[const.DOMAIN]["data"]["done"]
+
+    resp = await client.post("/api/onboarding/analytics")
+    assert resp.status == 200
+    assert const.STEP_ANALYTICS in hass_storage[const.DOMAIN]["data"]["done"]
 
 
 async def test_onboarding_installation_type(
