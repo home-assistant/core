@@ -10,6 +10,7 @@ from homeassistant.components.climate import (
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
+    FAN_TOP,
     ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
@@ -19,7 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_SUPPORTED_MODES
+from .const import CONF_SUPPORTED_MODES, DOMAIN
 from .coordinator import CoolmasterConfigEntry, CoolmasterDataUpdateCoordinator
 from .entity import CoolmasterEntity
 
@@ -33,10 +34,17 @@ CM_TO_HA_STATE = {
 
 HA_STATE_TO_CM = {value: key for key, value in CM_TO_HA_STATE.items()}
 
+# The CoolMasterNet vocabulary is VLow, Low, Med, High, Top, Auto. Home Assistant
+# has a constant for every one of those but the slowest, which is exposed under its
+# own name and translated in strings.json.
+FAN_VERY_LOW = "vlow"
+
 CM_TO_HA_FAN = {
+    "vlow": FAN_VERY_LOW,
     "low": FAN_LOW,
     "med": FAN_MEDIUM,
     "high": FAN_HIGH,
+    "top": FAN_TOP,
     "auto": FAN_AUTO,
 }
 
@@ -67,6 +75,7 @@ class CoolmasterClimate(CoolmasterEntity, ClimateEntity):
     """Representation of a coolmaster climate device."""
 
     _attr_name = None
+    _attr_translation_key = DOMAIN
 
     # TODO(2026.7.0): When support for unknown fan speeds is
     # removed, delete this variable.
