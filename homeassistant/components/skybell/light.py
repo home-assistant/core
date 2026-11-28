@@ -5,11 +5,10 @@ from typing import Any, override
 from aioskybell.helpers.const import BRIGHTNESS, RGB_COLOR
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_RGB_COLOR,
     ColorMode,
     LightEntity,
     LightEntityDescription,
+    LightServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -40,10 +39,12 @@ class SkybellLight(SkybellEntity, LightEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
-        if ATTR_RGB_COLOR in kwargs:
-            await self._device.async_set_setting(RGB_COLOR, kwargs[ATTR_RGB_COLOR])
-        if ATTR_BRIGHTNESS in kwargs:
-            level = int((kwargs.get(ATTR_BRIGHTNESS, 0) * 100) / 255)
+        if LightServiceArgument.RGB_COLOR in kwargs:
+            await self._device.async_set_setting(
+                RGB_COLOR, kwargs[LightServiceArgument.RGB_COLOR]
+            )
+        if LightServiceArgument.BRIGHTNESS in kwargs:
+            level = int((kwargs.get(LightServiceArgument.BRIGHTNESS, 0) * 100) / 255)
             await self._device.async_set_setting(BRIGHTNESS, level)
 
     @override
