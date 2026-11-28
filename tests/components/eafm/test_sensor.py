@@ -13,7 +13,6 @@ from homeassistant.components.eafm import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 DUMMY_REQUEST_INFO = aiohttp.client.RequestInfo(
@@ -41,7 +40,7 @@ async def async_setup_test_fixture(
     )
     entry.add_to_hass(hass)
 
-    assert await async_setup_component(hass, DOMAIN, {})
+    assert await hass.config_entries.async_setup(entry.entry_id)
     assert entry.state is ConfigEntryState.LOADED
     await hass.async_block_till_done()
 
