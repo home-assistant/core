@@ -1,5 +1,6 @@
 """Support for the Electra climate."""
 
+from dataclasses import dataclass
 import logging
 from typing import Any, override
 
@@ -24,7 +25,7 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 
 from .const import PRESET_NONE, PRESET_SHABAT
 from .coordinator import ElectraSmartConfigEntry, ElectraSmartCoordinator
@@ -72,6 +73,19 @@ ELECTRA_MODES = [
 
 # The mode the unit will resume to, exposed while it is off.
 ATTR_LAST_MODE = "last_mode"
+
+
+@dataclass
+class ElectraRestoreData(ExtraStoredData):
+    """The mode the AC was last running in, kept across restarts."""
+
+    last_mode: HVACMode
+
+    @override
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the extra data."""
+        return {ATTR_LAST_MODE: self.last_mode}
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -149,12 +163,23 @@ class ElectraClimateEntity(ElectraEntity, ClimateEntity, RestoreEntity):
         unit runs again.
         """
         await super().async_added_to_hass()
-        if (last_state := await self.async_get_last_state()) is not None:
-            self._restore_last_mode(last_state.attributes.get(ATTR_LAST_MODE))
+        await self._async_restore_last_mode()
         self._update_device_attrs()
 
-    def _restore_last_mode(self, last_mode: Any) -> None:
-        """Seed the device's remembered mode from a previously stored state."""
+    async def _async_restore_last_mode(self) -> None:
+        """Seed the remembered mode from the stored state.
+
+        Setup fetches telemetry before the entity is added, so a mode the unit
+        has already reported is kept: the stored one is at best as fresh, and a
+        turn-on must not use a mode older than the one the unit is reporting.
+        """
+        if self._device.current_mode is not None:
+            return
+
+        if (extra := await self.async_get_last_extra_data()) is None:
+            return
+
+        last_mode: Any = extra.as_dict().get(ATTR_LAST_MODE)
         if last_mode in HVAC_MODE_HASS_TO_ELECTRA:
             self._device.current_mode = HVAC_MODE_HASS_TO_ELECTRA[last_mode]
 
@@ -271,6 +296,20 @@ class ElectraClimateEntity(ElectraEntity, ClimateEntity, RestoreEntity):
             if last_mode is not None
             else {}
         )
+
+    @property
+    @override
+    def extra_restore_state_data(self) -> ElectraRestoreData | None:
+        """Store the mode the unit will resume to.
+
+        Its published state is not enough to restore from: ``last_mode`` is a
+        state attribute, and Home Assistant drops state attributes while the
+        entity is unavailable, which is exactly when the unit is off and idle.
+        """
+        if (last_mode := self._device.get_last_mode()) is None:
+            return None
+
+        return ElectraRestoreData(HVAC_MODE_ELECTRA_TO_HASS[last_mode])
 
     @override
     async def async_set_swing_mode(self, swing_mode: str) -> None:

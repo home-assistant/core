@@ -1,5 +1,6 @@
 """Common fixtures for the Electra Smart tests."""
 
+from collections.abc import Callable
 from functools import partial
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -73,6 +74,12 @@ def _mock_device(mac: str, name: str) -> Mock:
 def mock_device_fixture() -> Mock:
     """Return a mocked Electra AC device."""
     return _mock_device("a8032ab12345", "Living Room")
+
+
+@pytest.fixture(name="device_factory")
+def device_factory_fixture() -> Callable[[str, str], Mock]:
+    """Return a factory for mocked Electra AC devices."""
+    return _mock_device
 
 
 @pytest.fixture(name="second_device")
