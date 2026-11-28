@@ -1,17 +1,27 @@
 """Data handler for the Marketplace."""
 
 import asyncio
+from collections import defaultdict
 import contextlib
 from datetime import UTC, datetime
 import os
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
+from urllib.parse import urlsplit
 
+from homeassistant.const import Platform
 from homeassistant.core import Event, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.loader import async_get_custom_components
 
-from ..const import DOMAIN, LEGACY_HACS_REPOSITORY_ID, RESTART_ISSUE_PREFIX
+from ..const import (
+    DOMAIN,
+    LEGACY_HACS_REPOSITORY_ID,
+    RESTART_ISSUE_PREFIX,
+    SIGNAL_REPOSITORY_INSTALLED,
+)
 from ..enums import DisabledReason, MarketplaceSignal, RepositoryCategory
 from ..migration import async_forget_retired_repositories
 from ..repositories.base import (
@@ -24,6 +34,7 @@ from .backup import backed_up_paths
 from .identity import one_stored_entry_per_name
 from .logger import LOGGER
 from .path import is_safe
+from .regex import extract_repository_from_url
 from .storage import (
     async_load_from_storage,
     async_save_to_storage,
@@ -31,6 +42,8 @@ from .storage import (
 )
 
 if TYPE_CHECKING:
+    from homeassistant.loader import Integration
+
     from ..base import MarketplaceManager
 
 EXPORTED_BASE_DATA: tuple[tuple[str, Any], ...] = (
@@ -72,6 +85,60 @@ EXPORTED_INSTALLED_REPOSITORY_DATA: tuple[tuple[str, Any], ...] = (
     ("selected_tag", None),
     ("show_beta", False),
 )
+
+
+def _github_repository(link: str | None) -> str | None:
+    """Read the GitHub repository named by a manifest link."""
+    if not isinstance(link, str):
+        return None
+    try:
+        url = urlsplit(link)
+        host = url.hostname
+    except ValueError:
+        return None
+    if host not in ("github.com", "www.github.com") or url.scheme != "https":
+        return None
+    return extract_repository_from_url(url.path.removeprefix("/"))
+
+
+def _recoverable_integrations(
+    root: Path,
+    candidates: dict[str, list[Repository]],
+    integrations: dict[str, Integration],
+) -> list[tuple[Repository, Integration]]:
+    """Match old update entities to their original local packages."""
+    if root.is_symlink():
+        return []
+
+    recovered = []
+    for domain, repositories in candidates.items():
+        if (
+            len(repositories) != 1
+            or (integration := integrations.get(domain)) is None
+            or integration.overwrites_built_in
+            or integration.version is None
+        ):
+            continue
+        folder = integration.file_path
+        if (
+            folder.parent != root
+            or folder.name != domain
+            or folder.is_symlink()
+            or (folder / ".git").exists()
+            or (folder / "manifest.json").is_symlink()
+            or not (folder / "__init__.py").is_file()
+            or (folder / "__init__.py").is_symlink()
+        ):
+            continue
+        repository = repositories[0]
+        links = {
+            name
+            for link in (integration.documentation, integration.issue_tracker)
+            if (name := _github_repository(link))
+        }
+        if links == {repository.data.full_name_lower}:
+            recovered.append((repository, integration))
+    return recovered
 
 
 class MarketplaceData:
@@ -353,6 +420,60 @@ class MarketplaceData:
             repository.data.installed_version = None
             repository.data.installed_commit = None
             await repository.async_remove_entity_device()
+
+    async def async_recover_installed_integrations(self) -> None:
+        """Reconnect installed integrations whose repository record was lost."""
+        marketplace = self.marketplace
+        hass = marketplace.hass
+        registry = er.async_get(hass)
+        entry_id = marketplace.configuration.config_entry.entry_id
+
+        async with marketplace.filesystem_lock:
+            owned_domains = {
+                repo.data.domain
+                for repo in marketplace.repositories.list_installed
+                if repo.data.category == RepositoryCategory.INTEGRATION
+            }
+            candidates: defaultdict[str, list[Repository]] = defaultdict(list)
+            for entry in er.async_entries_for_config_entry(registry, entry_id):
+                if entry.domain != Platform.UPDATE or entry.platform != DOMAIN:
+                    continue
+                if (
+                    (repo := marketplace.repositories.get_by_id(entry.unique_id))
+                    is not None
+                    and repo.data.category == RepositoryCategory.INTEGRATION
+                    and not repo.data.installed
+                    and repo.data.last_version
+                    and (domain := repo.data.domain)
+                    and domain not in owned_domains
+                    and not repo.data.archived
+                    and not marketplace.repositories.is_removed(repo.data.full_name)
+                ):
+                    candidates[domain].append(repo)
+
+            if not candidates:
+                return
+
+            integrations = await async_get_custom_components(hass)
+            recovered = await hass.async_add_executor_job(
+                _recoverable_integrations,
+                Path(hass.config.path("custom_components")),
+                candidates,
+                integrations,
+            )
+            for repo, integration in recovered:
+                repo.data.installed = True
+                repo.data.releases = True
+                repo.data.installed_version = integration.manifest["version"]
+                repo.data.manifest_name = integration.name
+                repo.data.config_flow = integration.config_flow
+                async_dispatcher_send(hass, SIGNAL_REPOSITORY_INSTALLED, repo)
+                self.logger.info(
+                    "Recovered the install record for %s", repo.data.full_name
+                )
+
+            if recovered:
+                await self.async_write()
 
     async def register_unknown_repositories(
         self, repositories: dict[str, dict[str, Any]], category: str | None = None
