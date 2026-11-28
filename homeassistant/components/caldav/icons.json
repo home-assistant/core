@@ -1,0 +1,7 @@
+{
+  "services": {
+    "get_free_busy": {
+      "service": "mdi:calendar-clock"
+    }
+  }
+}

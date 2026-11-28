@@ -21,9 +21,12 @@ from homeassistant.exceptions import (
     ConfigEntryError,
     ConfigEntryNotReady,
 )
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .api import CalDavCalendar, get_calendars
 from .const import DOMAIN, TIMEOUT
+from .services import async_setup_services
 
 
 @dataclass
@@ -38,6 +41,14 @@ type CalDavConfigEntry = ConfigEntry[CalDavData]
 
 
 PLATFORMS: list[Platform] = [Platform.CALENDAR, Platform.TODO]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the CalDAV actions."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: CalDavConfigEntry) -> None:

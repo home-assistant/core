@@ -44,8 +44,36 @@
     }
   },
   "exceptions": {
+    "end_not_after_start": {
+      "message": "The end has to be after the start."
+    },
+    "free_busy_query_not_supported": {
+      "message": "The CalDAV server doesn't support free/busy requests on {calendar}."
+    },
+    "free_busy_request_failed": {
+      "message": "The free/busy request for {calendar} to the CalDAV server failed."
+    },
+    "free_busy_search_not_supported": {
+      "message": "The busy periods of {calendar} aren't available, as it has a search filter and the CalDAV server only reports them for the whole calendar."
+    },
     "unexpected_response": {
       "message": "Unexpected response from the CalDAV server"
+    }
+  },
+  "services": {
+    "get_free_busy": {
+      "description": "Retrieves the busy periods of a calendar in a time range, as reported by the CalDAV server.",
+      "fields": {
+        "end": {
+          "description": "The end of the time range.",
+          "name": "End time"
+        },
+        "start": {
+          "description": "The start of the time range.",
+          "name": "Start time"
+        }
+      },
+      "name": "Get free/busy"
     }
   }
 }
