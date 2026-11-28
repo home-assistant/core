@@ -69,6 +69,12 @@ class SamsungTVEntity(CoordinatorEntity[SamsungTVDataUpdateCoordinator], Entity)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
+        if self._bridge.power_off_in_progress:
+            return
+        await self.coordinator.async_refresh()
+        if self.coordinator.is_on is False:
+            # KEY_POWER toggles the TV, so don't send it when it's off
+            return
         await self._bridge.async_power_off()
         await self.coordinator.async_refresh()
 

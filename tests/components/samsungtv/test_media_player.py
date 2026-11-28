@@ -2,6 +2,7 @@
 
 from copy import deepcopy
 from datetime import timedelta
+from typing import Any
 from unittest.mock import DEFAULT as DEFAULT_MOCK, AsyncMock, Mock, call, patch
 
 from async_upnp_client.exceptions import (
@@ -792,6 +793,122 @@ async def test_turn_off_websocket(
     remote_websocket.send_commands.assert_not_called()
 
 
+@pytest.mark.usefixtures("rest_api")
+async def test_turn_off_websocket_already_off(
+    hass: HomeAssistant, remote_websocket: Mock, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test turn_off is a no-op when the TV is already known to be off."""
+    await setup_samsungtv_entry(hass, MOCK_CONFIGWS)
+
+    with patch.object(remote_websocket, "is_alive", return_value=False):
+        freezer.tick(timedelta(seconds=20))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        state = hass.states.get(ENTITY_ID)
+        assert state.state == STATE_OFF
+
+        remote_websocket.send_commands.reset_mock()
+
+        await hass.services.async_call(
+            MP_DOMAIN,
+            MediaPlayerService.TURN_OFF,
+            {TargetKey.ENTITY_ID: ENTITY_ID},
+            True,
+        )
+
+    # KEY_POWER toggles the TV, so it must not be sent when already off
+    remote_websocket.send_commands.assert_not_called()
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == STATE_OFF
+
+
+@pytest.mark.usefixtures("rest_api")
+async def test_turn_off_websocket_stale_off_state(
+    hass: HomeAssistant, remote_websocket: Mock, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test turn_off refreshes a cached off state and sends KEY_POWER if the TV is on."""
+    await setup_samsungtv_entry(hass, MOCK_CONFIGWS)
+
+    with patch.object(remote_websocket, "is_alive", return_value=False):
+        freezer.tick(timedelta(seconds=20))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    # The TV was turned on outside Home Assistant since the last poll
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF
+    remote_websocket.send_commands.reset_mock()
+
+    await hass.services.async_call(
+        MP_DOMAIN, MediaPlayerService.TURN_OFF, {TargetKey.ENTITY_ID: ENTITY_ID}, True
+    )
+
+    assert remote_websocket.send_commands.call_count == 1
+    commands = remote_websocket.send_commands.call_args_list[0].args[0]
+    assert commands[0].params["DataOfCmd"] == "KEY_POWER"
+
+
+@pytest.mark.usefixtures("rest_api")
+async def test_turn_off_websocket_retry_after_send_failure(
+    hass: HomeAssistant, remote_websocket: Mock
+) -> None:
+    """Test a failed power off does not block the next turn_off."""
+    await setup_samsungtv_entry(hass, MOCK_CONFIGWS)
+    remote_websocket.send_commands.reset_mock()
+
+    with (
+        patch.object(
+            remote_websocket,
+            "send_commands",
+            side_effect=WebSocketException("Boom"),
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            MP_DOMAIN,
+            MediaPlayerService.TURN_OFF,
+            {TargetKey.ENTITY_ID: ENTITY_ID},
+            True,
+        )
+
+    await hass.services.async_call(
+        MP_DOMAIN, MediaPlayerService.TURN_OFF, {TargetKey.ENTITY_ID: ENTITY_ID}, True
+    )
+
+    assert remote_websocket.send_commands.call_count == 1
+    commands = remote_websocket.send_commands.call_args_list[0].args[0]
+    assert commands[0].params["DataOfCmd"] == "KEY_POWER"
+
+
+@pytest.mark.usefixtures("rest_api")
+async def test_turn_off_websocket_while_powering_off(
+    hass: HomeAssistant, remote_websocket: Mock
+) -> None:
+    """Test turn_off is a no-op while a previous power off is still being sent."""
+    await setup_samsungtv_entry(hass, MOCK_CONFIGWS)
+    remote_websocket.send_commands.reset_mock()
+
+    async def _turn_off_again(*args: Any, **kwargs: Any) -> None:
+        # State is still on, so only power_off_in_progress can block this
+        remote_websocket.send_commands.side_effect = None
+        assert hass.states.get(ENTITY_ID).state == STATE_ON
+        await hass.services.async_call(
+            MP_DOMAIN,
+            MediaPlayerService.TURN_OFF,
+            {TargetKey.ENTITY_ID: ENTITY_ID},
+            True,
+        )
+
+    remote_websocket.send_commands.side_effect = _turn_off_again
+
+    await hass.services.async_call(
+        MP_DOMAIN, MediaPlayerService.TURN_OFF, {TargetKey.ENTITY_ID: ENTITY_ID}, True
+    )
+
+    assert remote_websocket.send_commands.call_count == 1
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF
+
+
 async def test_turn_off_websocket_frame(
     hass: HomeAssistant, remote_websocket: Mock, rest_api: Mock
 ) -> None:
@@ -827,6 +944,37 @@ async def test_turn_off_websocket_frame(
     assert isinstance(commands[-1], SendRemoteKey)
     assert commands[-1].params["Cmd"] == "Release"
     assert commands[-1].params["DataOfCmd"] == "KEY_POWER"
+
+
+@pytest.mark.parametrize(
+    ("power_state", "expected_send_calls"),
+    [
+        # Art mode reports PowerState "on"
+        pytest.param("on", 1, id="art_mode"),
+        pytest.param("standby", 0, id="standby"),
+    ],
+)
+async def test_turn_off_websocket_frame_power_state(
+    hass: HomeAssistant,
+    remote_websocket: Mock,
+    rest_api: Mock,
+    power_state: str,
+    expected_send_calls: int,
+) -> None:
+    """Test turn_off on a Frame only sends the power off sequence when not in standby."""
+    device_info = await async_load_json_object_fixture(
+        hass, "device_info_UE43LS003.json", DOMAIN
+    )
+    device_info["device"]["PowerState"] = power_state
+    rest_api.rest_device_info.return_value = device_info
+    await setup_samsungtv_entry(hass, MOCK_CONFIGWS)
+    remote_websocket.send_commands.reset_mock()
+
+    await hass.services.async_call(
+        MP_DOMAIN, MediaPlayerService.TURN_OFF, {TargetKey.ENTITY_ID: ENTITY_ID}, True
+    )
+
+    assert remote_websocket.send_commands.call_count == expected_send_calls
 
 
 async def test_turn_off_encrypted_websocket(

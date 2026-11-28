@@ -1,9 +1,11 @@
 """The tests for the SamsungTV remote platform."""
 
-from unittest.mock import Mock
+from datetime import timedelta
+from unittest.mock import Mock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from samsungtvws.encrypted.remote import SamsungTVEncryptedCommand
 
 from homeassistant.components.remote import (
@@ -12,7 +14,7 @@ from homeassistant.components.remote import (
     RemoteServiceArgument,
 )
 from homeassistant.components.samsungtv.const import DOMAIN
-from homeassistant.const import TargetKey
+from homeassistant.const import STATE_OFF, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -78,6 +80,38 @@ async def test_main_services(
     )
     assert "TV is powering off, not sending keys: ['dash']" in caplog.text
     remote_encrypted_websocket.send_commands.assert_not_called()
+
+
+@pytest.mark.usefixtures("rest_api")
+async def test_turn_off_already_off(
+    hass: HomeAssistant,
+    remote_encrypted_websocket: Mock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test turn_off is a no-op when the TV is already known to be off."""
+    await setup_samsungtv_entry(hass, ENTRYDATA_ENCRYPTED_WEBSOCKET)
+
+    with patch.object(remote_encrypted_websocket, "is_alive", return_value=False):
+        freezer.tick(timedelta(seconds=20))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        state = hass.states.get(ENTITY_ID)
+        assert state.state == STATE_OFF
+
+        remote_encrypted_websocket.send_commands.reset_mock()
+
+        await hass.services.async_call(
+            REMOTE_DOMAIN,
+            RemoteService.TURN_OFF,
+            {TargetKey.ENTITY_ID: ENTITY_ID},
+            True,
+        )
+
+    # KEY_POWEROFF/KEY_POWER toggle the TV, so they must not be sent when already off
+    remote_encrypted_websocket.send_commands.assert_not_called()
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == STATE_OFF
 
 
 @pytest.mark.usefixtures("remote_encrypted_websocket", "rest_api")
