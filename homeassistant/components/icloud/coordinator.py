@@ -242,6 +242,11 @@ UNDECODED_TITLE = "Error Decoding Title"
 # Reminders are fetched one list at a time, so keep the per-list page bounded.
 RESULTS_LIMIT = 200
 
+# An account with hundreds of lists would otherwise issue hundreds of CloudKit
+# requests per refresh and hit FETCH_TIMEOUT before any entity appeared. Visit
+# a rotating window instead; the other lists keep their last known reminders.
+REMINDERS_LIST_WINDOW = 20
+
 
 def _is_zone_not_found_error(err: Exception) -> bool:
     """Return True if err is a CloudKit zone-not-found error.
@@ -301,6 +306,7 @@ class IcloudRemindersCoordinator(DataUpdateCoordinator[dict[str, IcloudReminderL
         self._warned_undecoded = False
         self._skipped_undecoded = False
         self._zone_missing = False
+        self._fetch_offset = 0
         # Fetching years of completed reminders means paging through tens of
         # thousands of CloudKit records on every refresh, which is what made
         # setup hang. The default excludes them; the option brings them back.
@@ -317,12 +323,34 @@ class IcloudRemindersCoordinator(DataUpdateCoordinator[dict[str, IcloudReminderL
         return api.reminders
 
     def _fetch(self) -> dict[str, IcloudReminderList]:
-        """Fetch every list and its reminders. Runs in the executor."""
+        """Fetch a rotating window of lists and their contents. Runs in the executor."""
         service = self.reminders
-        result: dict[str, IcloudReminderList] = {}
         self._skipped_undecoded = False
 
-        for list_id, name in _live_lists(service):
+        lists = _live_lists(service)
+        previous = self.data or {}
+        # Keep every live list present in the snapshot; those outside the
+        # window retain their last reminders rather than losing their entities.
+        result: dict[str, IcloudReminderList] = {
+            list_id: IcloudReminderList(
+                list_id=list_id,
+                name=name,
+                reminders=previous[list_id].reminders if list_id in previous else [],
+            )
+            for list_id, name in lists
+        }
+
+        total = len(lists)
+        if total:
+            start = self._fetch_offset % total
+            window = lists[start : start + REMINDERS_LIST_WINDOW]
+            # A slice stops at the end of the list, so the next window resumes
+            # there and wraps around to the beginning once everything was seen.
+            self._fetch_offset = (start + len(window)) % total
+        else:
+            window = []
+
+        for list_id, name in window:
             batch = service.list_reminders(
                 list_id=list_id,
                 include_completed=self._include_completed,
