@@ -125,6 +125,7 @@ def _mock_homekit(
     homekit_mode: str,
     entity_filter: EntityFilter | None = None,
     devices: list[str] | None = None,
+    entity_config: dict[str, dict[str, Any]] | None = None,
 ) -> HomeKit:
     return HomeKit(
         hass=hass,
@@ -133,7 +134,7 @@ def _mock_homekit(
         ip_address=None,
         entity_filter=entity_filter or generate_filter([], [], [], []),
         exclude_accessory_mode=False,
-        entity_config={},
+        entity_config=entity_config or {},
         homekit_mode=homekit_mode,
         advertise_ips=None,
         entry_id=entry.entry_id,
@@ -1748,6 +1749,135 @@ async def test_homekit_finds_linked_batteries(
             "linked_battery_sensor": battery_sensor.entity_id,
         },
     )
+
+
+@pytest.mark.usefixtures("mock_async_zeroconf")
+@pytest.mark.parametrize(
+    ("entity_config", "information"),
+    [
+        pytest.param(
+            {},
+            {
+                "manufacturer": "Tesla",
+                "model": "Powerwall 2",
+                "sw_version": "0.16.0",
+                "hw_version": "2.34",
+                "serial_number": "SN-0001",
+            },
+            id="device_registry",
+        ),
+        pytest.param(
+            {
+                "manufacturer": "Other",
+                "model": "Other Model",
+                "sw_version": "1.0.0",
+                "hw_version": "3.0",
+                "serial_number": "SN-0002",
+            },
+            {
+                "manufacturer": "Other",
+                "model": "Other Model",
+                "sw_version": "1.0.0",
+                "hw_version": "3.0",
+                "serial_number": "SN-0002",
+            },
+            id="entity_config",
+        ),
+    ],
+)
+async def test_homekit_accessory_information(
+    hass: HomeAssistant,
+    hk_driver: HomeDriver,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    entity_config: dict[str, str],
+    information: dict[str, str],
+) -> None:
+    """Test entity_config accessory information overrides the device registry."""
+    entry = await async_init_integration(hass)
+
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        sw_version="0.16.0",
+        hw_version="2.34",
+        model="Powerwall 2",
+        manufacturer="Tesla",
+        serial_number="SN-0001",
+        connections={(dr.CONNECTION_NETWORK_MAC, "02:00:00:00:00:01")},
+    )
+    light = entity_registry.async_get_or_create(
+        "light", "powerwall", "demo", device_id=device_entry.id
+    )
+    hass.states.async_set(light.entity_id, STATE_ON)
+
+    homekit = _mock_homekit(
+        hass,
+        entry,
+        HOMEKIT_MODE_BRIDGE,
+        entity_config={light.entity_id: entity_config},
+    )
+    homekit.driver = hk_driver
+    homekit.bridge = MagicMock()
+
+    with (
+        patch(f"{PATH_HOMEKIT}.async_show_setup_message"),
+        patch(f"{PATH_HOMEKIT}.get_accessory") as mock_get_acc,
+        patch("pyhap.accessory_driver.AccessoryDriver.async_start"),
+    ):
+        await homekit.async_start()
+    await hass.async_block_till_done()
+
+    mock_get_acc.assert_called_with(
+        hass, ANY, ANY, ANY, {**information, "platform": "test"}
+    )
+
+
+@pytest.mark.usefixtures("mock_async_zeroconf")
+async def test_homekit_device_information_not_kept_in_entity_config(
+    hass: HomeAssistant,
+    hk_driver: HomeDriver,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test device information is read again when the bridge is created again."""
+    entry = await async_init_integration(hass)
+
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        sw_version="0.16.0",
+        connections={(dr.CONNECTION_NETWORK_MAC, "02:00:00:00:00:01")},
+    )
+    light = entity_registry.async_get_or_create(
+        "light", "powerwall", "demo", device_id=device_entry.id
+    )
+    hass.states.async_set(light.entity_id, STATE_ON)
+    entity_config: dict[str, dict[str, Any]] = {light.entity_id: {}}
+
+    async def _async_start_and_get_config() -> dict[str, Any]:
+        homekit = _mock_homekit(
+            hass, entry, HOMEKIT_MODE_BRIDGE, entity_config=entity_config
+        )
+        homekit.driver = hk_driver
+        homekit.bridge = MagicMock()
+        with (
+            patch(f"{PATH_HOMEKIT}.async_show_setup_message"),
+            patch(f"{PATH_HOMEKIT}.get_accessory") as mock_get_acc,
+            patch("pyhap.accessory_driver.AccessoryDriver.async_start"),
+        ):
+            await homekit.async_start()
+        await hass.async_block_till_done()
+        return mock_get_acc.call_args[0][4]
+
+    assert (await _async_start_and_get_config())["sw_version"] == "0.16.0"
+    # The entity config is shared with the config entry options
+    assert entity_config == {light.entity_id: {}}
+
+    device_registry.async_update_device(device_entry.id, sw_version="0.17.0")
+    assert (await _async_start_and_get_config())["sw_version"] == "0.17.0"
 
 
 @pytest.mark.usefixtures("mock_async_zeroconf")
