@@ -637,7 +637,7 @@ class MatterClimate(MatterEntity, ClimateEntity, RestoreEntity):
         self, attribute: type[clusters.ClusterAttributeDescriptor]
     ) -> float | None:
         """Return the scaled temperature value for the given attribute."""
-        if value := self.get_matter_attribute_value(attribute):
+        if (value := self.get_matter_attribute_value(attribute)) is not None:
             return float(value) / TEMPERATURE_SCALING_FACTOR
         return None
 
