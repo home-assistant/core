@@ -1,0 +1,20 @@
+{
+  "mode": "manual",
+  "currentStatus": "cooking",
+  "elapsedTime": 16,
+  "currentOperation": {
+    "parameters": [
+      {
+        "value": "0",
+        "type": "DURATION"
+      }
+    ],
+    "program": {
+      "key": "PROGRAM_200143",
+      "name": "Low Stir Fry Cooking"
+    }
+  },
+  "eventDate": "2026-11-20T17:42:07.000+01",
+  "version": 9,
+  "operationStart": "2026-11-20T17:41:51.000+01"
+}

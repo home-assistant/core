@@ -1,0 +1,34 @@
+{
+  "state": {
+    "reported": {
+      "status": {
+        "connected": true,
+        "lastConnection": 1795195804293,
+        "synchronizing": false,
+        "unpairing": [],
+        "updating": false,
+        "otaUpdated": false,
+        "lastDisconnection": 1795026275854
+      },
+      "firmware": {
+        "updateDate": 0,
+        "files": [
+          {
+            "type": "ui",
+            "name": "",
+            "version": "5.0.54",
+            "product": ""
+          },
+          {
+            "type": "wifi",
+            "name": "",
+            "version": "3.6.3",
+            "product": ""
+          }
+        ],
+        "priority": "low",
+        "version": ""
+      }
+    }
+  }
+}

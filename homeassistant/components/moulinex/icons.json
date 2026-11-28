@@ -1,0 +1,15 @@
+{
+  "entity": {
+    "sensor": {
+      "program": {
+        "default": "mdi:book-open-variant"
+      },
+      "progress": {
+        "default": "mdi:progress-clock"
+      },
+      "state": {
+        "default": "mdi:pot-steam"
+      }
+    }
+  }
+}

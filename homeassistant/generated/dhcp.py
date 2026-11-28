@@ -692,6 +692,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "hostname": "connector_*",
     },
     {
+        "domain": "moulinex",
+        "hostname": "seb_product_*",
+    },
+    {
         "domain": "my_pv",
         "registered_devices": True,
     },
