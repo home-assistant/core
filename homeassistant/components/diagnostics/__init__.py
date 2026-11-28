@@ -11,7 +11,7 @@ from aiohttp import web
 import probatio
 
 from homeassistant.components import http, websocket_api
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
@@ -279,6 +279,10 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
 
         if (config_entry := hass.config_entries.async_get_entry(d_id)) is None:
             return web.Response(status=HTTPStatus.NOT_FOUND)
+
+        # Integrations only provide their runtime data for loaded config entries
+        if config_entry.state is not ConfigEntryState.LOADED:
+            return web.Response(status=HTTPStatus.BAD_REQUEST)
 
         diagnostics_data = hass.data[_DIAGNOSTICS_DATA]
         if (info := diagnostics_data.platforms.get(config_entry.domain)) is None:
