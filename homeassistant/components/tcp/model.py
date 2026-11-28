@@ -8,9 +8,8 @@ from homeassistant.helpers.template import Template
 class TcpSensorConfig(TypedDict):
     """TypedDict for TcpSensor config."""
 
-    name: str
     host: str
-    port: str
+    port: int
     timeout: int
     payload: str
     unit_of_measurement: str | None
