@@ -14,7 +14,6 @@ from pytest_homeassistant.common import (
 from homeassistant.components.evil_genius_labs.const import DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 from homeassistant.util.json import JsonObjectType
 
 
@@ -73,6 +72,6 @@ async def setup_evil_genius_labs(
             platforms,
         ),
     ):
-        assert await async_setup_component(hass, DOMAIN, {})
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         yield
