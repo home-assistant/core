@@ -61,3 +61,14 @@ set_asyncio_debug:
       selector:
         boolean:
 log_current_tasks:
+start_loop_timing:
+  fields:
+    threshold:
+      default: 100
+      selector:
+        number:
+          min: 0
+          max: 60000
+          unit_of_measurement: ms
+stop_loop_timing:
+dump_loop_timing:

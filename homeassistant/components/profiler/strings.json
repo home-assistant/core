@@ -6,6 +6,14 @@
       }
     }
   },
+  "exceptions": {
+    "loop_timing_not_running": {
+      "message": "Event loop timing is not running."
+    },
+    "loop_timing_running": {
+      "message": "Event loop timing is already running."
+    }
+  },
   "services": {
     "dump_log_objects": {
       "description": "Lets the Profiler dump the repr of all matching objects to the log.",
@@ -16,6 +24,10 @@
         }
       },
       "name": "Dump log objects"
+    },
+    "dump_loop_timing": {
+      "description": "Lets the Profiler log what the event loop timing recorded so far, or return it as response data, and keep timing.",
+      "name": "Dump event loop timing"
     },
     "dump_sockets": {
       "description": "Lets the Profiler log information about all currently used sockets.",
@@ -91,6 +103,16 @@
       },
       "name": "Start logging objects"
     },
+    "start_loop_timing": {
+      "description": "Lets the Profiler time every callback of the event loop and keep the slow ones, until stopped.",
+      "fields": {
+        "threshold": {
+          "description": "Callbacks that take at least this long are listed individually.",
+          "name": "Threshold"
+        }
+      },
+      "name": "Start event loop timing"
+    },
     "stop_log_object_sources": {
       "description": "Stops the Profiler logging sources of new objects in memory.",
       "name": "Stop logging object sources"
@@ -98,6 +120,10 @@
     "stop_log_objects": {
       "description": "Stops the Profiler logging growth of objects in memory.",
       "name": "Stop logging objects"
+    },
+    "stop_loop_timing": {
+      "description": "Lets the Profiler stop timing the event loop and log what it recorded. Also returns it as response data.",
+      "name": "Stop event loop timing"
     }
   }
 }

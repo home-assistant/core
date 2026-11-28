@@ -6,3 +6,5 @@ from homeassistant.util.hass_dict import HassKey
 DOMAIN = "profiler"
 DATA_PROFILER: HassKey[dict[str, CALLBACK_TYPE]] = HassKey(DOMAIN)
 DEFAULT_NAME = "Profiler"
+
+LOOP_TIMING = "loop_timing"
