@@ -1,0 +1,7 @@
+unban:
+  fields:
+    ip_address:
+      required: true
+      example: "203.0.113.7"
+      selector:
+        text:

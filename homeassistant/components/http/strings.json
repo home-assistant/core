@@ -1,4 +1,9 @@
 {
+  "exceptions": {
+    "ip_address_not_banned": {
+      "message": "The IP address {ip_address} is not banned."
+    }
+  },
   "issues": {
     "deprecated_yaml": {
       "description": "Your existing HTTP configuration from `configuration.yaml` has been imported. The `http` integration is now configured from the UI under **Settings** > **System** > **Network**.\n\nPlease remove the `http:` block from your `configuration.yaml` and restart Home Assistant.",
@@ -7,6 +12,14 @@
     "deprecated_yaml_import_error": {
       "description": "Migrating the `http` configuration from `configuration.yaml` to the integration's storage failed. Please check the logs for details and configure the `http` integration from the UI under **Settings** > **System** > **Network**.",
       "title": "Failed to import HTTP YAML configuration"
+    },
+    "ip_bans_yaml_ignored": {
+      "description": "The banned IP addresses were moved from `ip_bans.yaml` to the integration's storage and an `ip_bans.yaml` file is present again in your configuration directory. Home Assistant no longer reads this file. Please remove it and restart Home Assistant. Manage banned IP addresses from the UI under **Settings** > **System** > **Network**.",
+      "title": "The IP ban file is ignored"
+    },
+    "ip_bans_yaml_import_error": {
+      "description": "Home Assistant could not read `ip_bans.yaml` in your configuration directory to move its banned IP addresses to the integration's storage, so it is ignored. Please check the logs for details, then correct or remove the file and restart Home Assistant. Banned IP addresses are managed from the UI under **Settings** > **System** > **Network**.",
+      "title": "Failed to import the IP ban file"
     },
     "ssl_configured_without_configured_urls": {
       "description": "Home Assistant detected that SSL has been set up on your instance, however, no custom external internet URL has been set.\n\nThis may result in unexpected behavior. Text-to-speech may fail, and integrations may not be able to connect back to your instance correctly.\n\nTo address this issue, go to Settings > System > Network; under the \"Home Assistant URL\" section, configure your new \"Internet\" and \"Local network\" addresses that match your new SSL configuration.",
@@ -50,6 +63,18 @@
     "yaml_still_present_after_migration": {
       "description": "The HTTP configuration in `configuration.yaml` has already been migrated and is now being ignored. Please remove the `http:` block from your `configuration.yaml`. Manage the HTTP configuration from the UI under **Settings** > **System** > **Network**.",
       "title": "HTTP YAML configuration is ignored after migration"
+    }
+  },
+  "services": {
+    "unban": {
+      "description": "Removes the ban of an IP address that was banned after too many failed login attempts.",
+      "fields": {
+        "ip_address": {
+          "description": "The banned IP address to unban.",
+          "name": "IP address"
+        }
+      },
+      "name": "Unban IP address"
     }
   }
 }

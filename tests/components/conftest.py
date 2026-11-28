@@ -120,15 +120,6 @@ def patch_zeroconf_multiple_catcher() -> Generator[None]:
         yield
 
 
-@pytest.fixture(scope="session", autouse=True)
-def prevent_io() -> Generator[None]:
-    """Fixture to prevent certain I/O from happening."""
-    with patch(
-        "homeassistant.components.http.ban.load_yaml_config_file",
-    ):
-        yield
-
-
 # TTS test fixtures
 @pytest.fixture(name="mock_tts_get_cache_files")
 def mock_tts_get_cache_files_fixture() -> Generator[MagicMock]:

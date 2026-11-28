@@ -1,8 +1,10 @@
 """HTTP specific constants."""
 
+from ipaddress import ip_address
 from typing import TYPE_CHECKING, Final
 
 from aiohttp.web import Request
+import probatio
 
 from homeassistant.helpers.http import KEY_AUTHENTICATED, KEY_HASS  # noqa: F401
 from homeassistant.util.hass_dict import HassKey
@@ -53,6 +55,10 @@ CURRENT_SSL_PROFILES: Final = (SSLProfile.INTERMEDIATE_V6, SSLProfile.MODERN_V6)
 DEFAULT_SSL_PROFILE: Final = CURRENT_SSL_PROFILES[0]
 
 ISSUE_SSL_PROFILE_OUTDATED: Final = "ssl_profile_outdated"
+
+ATTR_IP_ADDRESS: Final = "ip_address"
+ATTR_IP_BANS: Final = "ip_bans"
+IP_ADDRESS: Final = probatio.All(str, probatio.Coerce(ip_address))
 
 ENV_SETUP_PORT: Final = "SETUP_PORT"
 ENV_SUPERVISOR: Final = "SUPERVISOR"

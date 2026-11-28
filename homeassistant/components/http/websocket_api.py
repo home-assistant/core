@@ -12,9 +12,12 @@ from homeassistant.components.homeassistant import (
 from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 
+from .ban import KEY_BAN_MANAGER
 from .config import HTTP_STORAGE_SCHEMA, ConfData, async_get_and_load_store
 from .const import (
     ATTR_CONFIG,
+    ATTR_IP_ADDRESS,
+    ATTR_IP_BANS,
     CONF_SERVER_HOST,
     CONF_SERVER_PORT,
     CONF_SSL_CERTIFICATE,
@@ -22,6 +25,7 @@ from .const import (
     CONF_SSL_PEER_CERTIFICATE_REMOTE,
     CONF_TRUSTED_PROXIES,
     CONF_USE_X_FORWARDED_FOR,
+    IP_ADDRESS,
 )
 from .server import (
     DEFAULT_BIND,
@@ -69,6 +73,8 @@ def async_register_websocket_commands(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_get_config)
     websocket_api.async_register_command(hass, websocket_set_config)
     websocket_api.async_register_command(hass, websocket_promote_config)
+    websocket_api.async_register_command(hass, websocket_list_ip_bans)
+    websocket_api.async_register_command(hass, websocket_remove_ip_ban)
 
 
 @websocket_api.require_admin
@@ -208,6 +214,50 @@ async def websocket_promote_config(
             msg["id"],
             websocket_api.const.ERR_NOT_ALLOWED,
             str(err),
+        )
+        return
+
+    connection.send_result(msg["id"])
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({probatio.Required("type"): "http/ip_bans/list"})
+@callback
+def websocket_list_ip_bans(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Return the banned IP addresses, newest first."""
+    ip_bans = sorted(
+        hass.http.app[KEY_BAN_MANAGER].ip_bans_lookup.values(),
+        key=lambda ip_ban: ip_ban.banned_at,
+        reverse=True,
+    )
+    connection.send_result(
+        msg["id"], {ATTR_IP_BANS: [ip_ban.as_dict() for ip_ban in ip_bans]}
+    )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        probatio.Required("type"): "http/ip_bans/remove",
+        probatio.Required(ATTR_IP_ADDRESS): IP_ADDRESS,
+    }
+)
+@websocket_api.async_response
+async def websocket_remove_ip_ban(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Lift the ban of an IP address right away."""
+    if not await hass.http.app[KEY_BAN_MANAGER].async_remove_ban(msg[ATTR_IP_ADDRESS]):
+        connection.send_error(
+            msg["id"],
+            websocket_api.ERR_NOT_FOUND,
+            f"{msg[ATTR_IP_ADDRESS]} is not banned",
         )
         return
 
