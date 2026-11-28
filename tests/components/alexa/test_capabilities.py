@@ -98,8 +98,12 @@ async def test_discovery_climate_power_controller_opt_out(
     hass.states.async_set("climate.default", HVACMode.OFF, climate_attributes)
     hass.states.async_set("climate.opt_out", HVACMode.OFF, climate_attributes)
     hass.states.async_set("climate.explicit_true", HVACMode.OFF, climate_attributes)
-    hass.states.async_set("climate.feature_default", HVACMode.HEAT, climate_feature_attributes)
-    hass.states.async_set("climate.feature_opt_out", HVACMode.HEAT, climate_feature_attributes)
+    hass.states.async_set(
+        "climate.feature_default", HVACMode.HEAT, climate_feature_attributes
+    )
+    hass.states.async_set(
+        "climate.feature_opt_out", HVACMode.HEAT, climate_feature_attributes
+    )
     hass.states.async_set(
         "water_heater.boiler",
         STATE_OFF,
