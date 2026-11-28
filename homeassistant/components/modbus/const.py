@@ -99,6 +99,20 @@ CONF_SWING_MODE_SWING_OFF = "swing_mode_state_off"
 CONF_SWING_MODE_SWING_ON = "swing_mode_state_on"
 CONF_SWING_MODE_SWING_VERT = "swing_mode_state_vertical"
 CONF_SWING_MODE_VALUES = "values"
+CONF_OFF_VALUE = "off_value"
+CONF_ON_VALUE = "on_value"
+CONF_ONOFF_COIL = "onoff_coil"
+CONF_ONOFF_REGISTER = "onoff_register"
+CONF_OPERATION_MODE_REGISTER = "operation_mode_register"
+CONF_OPERATION_MODE_ECO = "state_eco"
+CONF_OPERATION_MODE_ELECTRIC = "state_electric"
+CONF_OPERATION_MODE_GAS = "state_gas"
+CONF_OPERATION_MODE_HEAT_PUMP = "state_heat_pump"
+CONF_OPERATION_MODE_HIGH_DEMAND = "state_high_demand"
+CONF_OPERATION_MODE_OFF = "state_off"
+CONF_OPERATION_MODE_PERFORMANCE = "state_performance"
+CONF_OPERATION_MODE_VALUES = "values"
+CONF_WATER_HEATERS = "water_heaters"
 CONF_WRITE_REGISTERS = "write_registers"
 CONF_VERIFY = "verify"
 CONF_VIRTUAL_COUNT = "virtual_count"
@@ -167,6 +181,7 @@ PLATFORMS = (
     (Platform.FAN, CONF_FANS),
     (Platform.SENSOR, CONF_SENSORS),
     (Platform.SWITCH, CONF_SWITCHES),
+    (Platform.WATER_HEATER, CONF_WATER_HEATERS),
 )
 
 LIGHT_DEFAULT_MIN_KELVIN = 2000
