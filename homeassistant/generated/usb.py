@@ -11,6 +11,7 @@ SERIAL_PORT_SELECTOR_INTEGRATIONS = [
     "flexit",
     "intesis_modbus",
     "kaco_rs485",
+    "lacrosse",
     "landisgyr_heat_meter",
     "lg_tv_rs232",
     "marantz_rs232",
