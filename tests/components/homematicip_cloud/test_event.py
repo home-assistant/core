@@ -215,3 +215,27 @@ async def test_door_bell_event_after_entity_id_change(
         await hass.async_block_till_done()
 
     mock_trigger_event.assert_called_once_with(event_type="ring")
+
+
+async def test_key_mode_input_button_event(
+    hass: HomeAssistant,
+    default_mock_hap_factory: HomeFactory,
+) -> None:
+    """Test button events on multi mode inputs in key mode, like the HmIP-MOD-RC8."""
+    entity_id = "event.licht_flur_button_2"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Licht Flur", "dsdpcb_klingel"]
+    )
+
+    hmip_device = mock_hap.hmip_device_by_entity_id[entity_id]
+    ch = next(c for c in hmip_device.functionalChannels if c.index == 2)
+    ch.fire_channel_event(
+        ChannelEvent(
+            channelEventType="KEY_PRESS_SHORT", channelIndex=2, deviceId=ch.device.id
+        )
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).attributes["event_type"] == "short_release"
+    # the door bell input is in key mode too but only gets the doorbell event
+    assert hass.states.get("event.dsdpcb_klingel_button_1") is None
