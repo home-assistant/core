@@ -66,6 +66,7 @@ FIXTURES = [
     "lixee_zlinky_tic",
     "longan_link_thermostat",
     "mock_air_purifier",
+    "mock_basic_video_player",
     "mock_battery_solar_bridge",
     "mock_battery_storage",
     "mock_camera",
