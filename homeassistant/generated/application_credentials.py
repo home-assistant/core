@@ -34,6 +34,7 @@ APPLICATION_CREDENTIALS = [
     "neato",
     "nest",
     "netatmo",
+    "olarm",
     "ondilo_ico",
     "onedrive",
     "onedrive_for_business",

@@ -604,6 +604,7 @@ FLOWS = {
         "octoprint",
         "ohme",
         "okok_scale",
+        "olarm",
         "ollama",
         "omie",
         "omnilogic",
