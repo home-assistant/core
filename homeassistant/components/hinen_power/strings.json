@@ -1,0 +1,69 @@
+{
+  "config": {
+    "abort": {
+      "access_not_configured": "Please read the message below from the Hinen service:\n\n{message}",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "failed_to_fetch_countries": "Failed to fetch country list. Please check your network connection and try again.",
+      "no_device": "Please create a Hinen device to be able to use the integration",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "client_id": "OAuth client ID",
+          "client_secret": "OAuth client secret",
+          "page_language": "Certification page language",
+          "region_code": "Region"
+        },
+        "data_description": {
+          "client_id": "Obtained from the Hinen developer portal.",
+          "client_secret": "Obtained from the Hinen developer portal.",
+          "page_language": "Select the language for the certification page.",
+          "region_code": "Select the region where your Hinen devices are located."
+        },
+        "title": "Add Hinen Power integration settings"
+      }
+    }
+  },
+
+  "entity": {
+    "sensor": {
+      "alert_status": {
+        "name": "Alert status",
+        "state": {
+          "alarm": "Alarm",
+          "error": "Error",
+          "normal": "Normal"
+        }
+      },
+      "cumulative_consumption": {
+        "name": "Cumulative consumption"
+      },
+      "cumulative_grid_feed_in": {
+        "name": "Cumulative grid feed-in"
+      },
+      "cumulative_production_active": {
+        "name": "Cumulative production active"
+      },
+      "status": {
+        "name": "Status",
+        "state": {
+          "normal": "Normal",
+          "off": "Off",
+          "sleep": "Sleep"
+        }
+      },
+      "total_charging_energy": {
+        "name": "Total charging energy"
+      },
+      "total_discharging_energy": {
+        "name": "Total discharging energy"
+      }
+    }
+  },
+  "exceptions": {
+    "update_failed": {
+      "message": "Failed to update Hinen Power data."
+    }
+  }
+}

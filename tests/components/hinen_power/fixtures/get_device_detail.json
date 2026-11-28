@@ -1,0 +1,36 @@
+[
+  {
+    "id": "device_12345",
+    "deviceName": "Test Hinen Device",
+    "serialNumber": "SN123456789",
+    "status": 1,
+    "alertStatus": 0,
+    "properties": [
+      {
+        "identifier": "CumulativeConsumption",
+        "name": "累计消耗",
+        "value": 1000.5
+      },
+      {
+        "identifier": "CumulativeProductionActive",
+        "name": "累计生产有功",
+        "value": 1200.3
+      },
+      {
+        "identifier": "CumulativeGridFeedIn",
+        "name": "累计电网馈入",
+        "value": 800.2
+      },
+      {
+        "identifier": "TotalChargingEnergy",
+        "name": "总充电能量",
+        "value": 5000
+      },
+      {
+        "identifier": "TotalDischargingEnergy",
+        "name": "总放电能量",
+        "value": 4800
+      }
+    ]
+  }
+]
