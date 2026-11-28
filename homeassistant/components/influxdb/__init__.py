@@ -10,7 +10,6 @@ import threading
 import time
 from typing import Any, override
 
-from influxdb import InfluxDBClient, exceptions
 from influxdb_client import InfluxDBClient as InfluxDBClientV2
 from influxdb_client.client.write_api import SYNCHRONOUS
 from influxdb_client.rest import ApiException
@@ -442,7 +441,10 @@ def get_influx_connection(  # noqa: C901
 
         return InfluxClient(buckets, write_v2, query_v2, close_v2)
 
-    # Else it's a V1 client
+    # Else it's a V1 client. Imported here because the influxdb package loads
+    # pandas (~40 MB), which V2 setups would otherwise pay for.
+    from influxdb import InfluxDBClient, exceptions  # noqa: PLC0415
+
     if (cert := conf.get(CONF_SSL_CA_CERT)) is not None and conf[CONF_VERIFY_SSL]:
         kwargs[CONF_VERIFY_SSL] = cert
     else:

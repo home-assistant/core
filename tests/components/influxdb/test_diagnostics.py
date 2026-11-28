@@ -13,7 +13,7 @@ from homeassistant.components.influxdb.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from . import BASE_V1_CONFIG, BASE_V2_CONFIG, INFLUX_CLIENT_PATH
+from . import BASE_V1_CONFIG, BASE_V2_CONFIG, INFLUX_CLIENT_PATH, INFLUX_CLIENT_V2_PATH
 
 
 @pytest.mark.parametrize(
@@ -24,7 +24,7 @@ from . import BASE_V1_CONFIG, BASE_V2_CONFIG, INFLUX_CLIENT_PATH
             BASE_V1_CONFIG | {CONF_USERNAME: "user", CONF_PASSWORD: "password"},
             id="v1",
         ),
-        pytest.param(f"{INFLUX_CLIENT_PATH}V2", BASE_V2_CONFIG, id="v2"),
+        pytest.param(INFLUX_CLIENT_V2_PATH, BASE_V2_CONFIG, id="v2"),
     ],
 )
 @pytest.mark.usefixtures("mock_hass_config")

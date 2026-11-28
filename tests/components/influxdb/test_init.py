@@ -11,6 +11,7 @@ import time
 from typing import Any
 from unittest.mock import ANY, MagicMock, Mock, call, patch
 
+from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 from influxdb_client.client.write_api import SYNCHRONOUS
 import probatio
 import pytest
@@ -36,6 +37,7 @@ from . import (
     BASE_V1_CONFIG,
     BASE_V2_CONFIG,
     INFLUX_CLIENT_PATH,
+    INFLUX_CLIENT_V2_PATH,
     INFLUX_PATH,
     _get_write_api_mock_v1,
     _get_write_api_mock_v2,
@@ -76,7 +78,7 @@ def mock_client_fixture(
 ) -> Generator[MagicMock]:
     """Patch the InfluxDBClient object with mock for version under test."""
     if request.param == influxdb.API_VERSION_2:
-        client_target = f"{INFLUX_CLIENT_PATH}V2"
+        client_target = INFLUX_CLIENT_V2_PATH
     else:
         client_target = INFLUX_CLIENT_PATH
 
@@ -1882,7 +1884,7 @@ async def test_event_listener_attribute_name_conflict(
             BASE_V1_CONFIG,
             _get_write_api_mock_v1,
             influxdb.DEFAULT_API_VERSION,
-            influxdb.exceptions.InfluxDBClientError("fail"),
+            InfluxDBClientError("fail"),
         ),
         (
             {"influxdb": {}},
@@ -1890,7 +1892,7 @@ async def test_event_listener_attribute_name_conflict(
             BASE_V1_CONFIG,
             _get_write_api_mock_v1,
             influxdb.DEFAULT_API_VERSION,
-            influxdb.exceptions.InfluxDBServerError("fail"),
+            InfluxDBServerError("fail"),
         ),
         (
             {"influxdb": {}},
@@ -1953,9 +1955,7 @@ async def test_connection_failure_on_startup(
             BASE_V1_CONFIG,
             _get_write_api_mock_v1,
             influxdb.DEFAULT_API_VERSION,
-            influxdb.exceptions.InfluxDBClientError(
-                "fail", code=HTTPStatus.BAD_REQUEST
-            ),
+            InfluxDBClientError("fail", code=HTTPStatus.BAD_REQUEST),
         ),
         (
             {"influxdb": {}},

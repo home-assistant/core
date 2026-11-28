@@ -39,6 +39,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from . import (
     BASE_V1_CONFIG,
     INFLUX_CLIENT_PATH,
+    INFLUX_CLIENT_V2_PATH,
     _get_write_api_mock_v1,
     _get_write_api_mock_v2,
 )
@@ -62,7 +63,7 @@ def mock_client_fixture(
 ) -> Generator[MagicMock]:
     """Patch the InfluxDBClient object with mock for version under test."""
     if request.param == API_VERSION_2:
-        client_target = f"{INFLUX_CLIENT_PATH}V2"
+        client_target = INFLUX_CLIENT_V2_PATH
     else:
         client_target = INFLUX_CLIENT_PATH
 

@@ -31,7 +31,9 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 INFLUXDB_PATH = "homeassistant.components.influxdb"
-INFLUXDB_CLIENT_PATH = f"{INFLUXDB_PATH}.InfluxDBClient"
+# The V1 client is imported lazily by the integration, so patch it at the source.
+INFLUXDB_CLIENT_PATH = "influxdb.InfluxDBClient"
+INFLUXDB_CLIENT_V2_PATH = f"{INFLUXDB_PATH}.InfluxDBClientV2"
 INFLUXDB_SENSOR_PATH = f"{INFLUXDB_PATH}.sensor"
 
 BASE_V1_CONFIG = {}
@@ -83,7 +85,7 @@ def mock_client_fixture(
 ) -> Generator[MagicMock]:
     """Patch the InfluxDBClient object with mock for version under test."""
     if request.param == API_VERSION_2:
-        client_target = f"{INFLUXDB_CLIENT_PATH}V2"
+        client_target = INFLUXDB_CLIENT_V2_PATH
     else:
         client_target = INFLUXDB_CLIENT_PATH
 
@@ -96,7 +98,7 @@ def mock_client_close():
     """Mock close method of clients at module scope."""
     with (
         patch(f"{INFLUXDB_CLIENT_PATH}.close") as close_v1,
-        patch(f"{INFLUXDB_CLIENT_PATH}V2.close") as close_v2,
+        patch(f"{INFLUXDB_CLIENT_V2_PATH}.close") as close_v2,
     ):
         yield (close_v1, close_v2)
 
