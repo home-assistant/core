@@ -27,15 +27,15 @@ SERVICE_SCHEMA = probatio.Schema(
 )
 
 
-def _update(call: ServiceCall) -> None:
+async def _async_update(call: ServiceCall) -> None:
     """Service call to manually update the data."""
     hass = call.hass
     called_host = call.data[Iperf3ServiceArgument.HOST]
     if called_host in hass.data[DOMAIN]:
-        hass.data[DOMAIN][called_host].update()
+        await hass.data[DOMAIN][called_host].async_update()
     else:
         for iperf3_host in hass.data[DOMAIN].values():
-            iperf3_host.update()
+            await iperf3_host.async_update()
 
 
 @callback
@@ -43,5 +43,5 @@ def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the services for the Iperf3 integration."""
 
     hass.services.async_register(
-        DOMAIN, Iperf3Service.SPEEDTEST, _update, schema=SERVICE_SCHEMA
+        DOMAIN, Iperf3Service.SPEEDTEST, _async_update, schema=SERVICE_SCHEMA
     )
