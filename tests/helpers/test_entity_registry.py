@@ -1893,6 +1893,7 @@ async def test_load_bad_data(
                     "config_subentry_id": None,
                     "created_at": "2024-02-14T12:00:00.900075+00:00",
                     "device_class": None,
+                    "device_id": None,
                     "disabled_by": None,
                     "disabled_by_undefined": False,
                     "entity_id": "test.test3",
@@ -1918,6 +1919,7 @@ async def test_load_bad_data(
                     "config_subentry_id": None,
                     "created_at": "2024-02-14T12:00:00.900075+00:00",
                     "device_class": None,
+                    "device_id": None,
                     "disabled_by": None,
                     "disabled_by_undefined": False,
                     "entity_id": "test.test4",
@@ -2578,6 +2580,7 @@ async def test_migration_1_11(
                     "config_subentry_id": None,
                     "created_at": "1970-01-01T00:00:00+00:00",
                     "device_class": None,
+                    "device_id": None,
                     "disabled_by": None,
                     "disabled_by_undefined": True,
                     "entity_id": "test.deleted_entity",
@@ -2750,6 +2753,7 @@ async def test_migration_1_18(
                     "config_subentry_id": None,
                     "created_at": "1970-01-01T00:00:00+00:00",
                     "device_class": None,
+                    "device_id": None,
                     "disabled_by": None,
                     "disabled_by_undefined": False,
                     "entity_id": "test.deleted_entity",
@@ -4269,6 +4273,7 @@ async def test_restore_entity_disabled_by_undefined_config_entry_pref(
             config_subentry_id=None,
             created_at=utcnow(),
             device_class=None,
+            device_id=None,
             disabled_by=Undefined,
             hidden_by=Undefined,
             icon=None,
@@ -8492,6 +8497,7 @@ async def test_migration_1_23(
                     "id": "entity_deleted",
                     "unique_id": "deleted",
                     "name": None,
+                    "device_id": None,
                 },
             ],
             "settings": {"entity_id_parts": None},
@@ -8740,3 +8746,170 @@ async def test_move_to_child_device_unknown_own_area(
     assert entity_registry.async_get(entry.entity_id) == entry
     assert device_registry.async_get(child_device.id) == child_device
     assert not events
+
+
+async def test_forget_deleted_entity(entity_registry: er.EntityRegistry) -> None:
+    """Test a forgotten deleted entity is not restored when added again."""
+    entry = entity_registry.async_get_or_create("light", "hue", "5678")
+    entity_registry.async_update_entity(entry.entity_id, name="Kitchen")
+    entity_registry.async_remove(entry.entity_id)
+    deleted_entity = entity_registry.deleted_entities[("light", "hue", "5678")]
+    assert deleted_entity.id == entry.id
+
+    entity_registry.async_forget_deleted_entity(entry.id)
+
+    assert not entity_registry.deleted_entities
+    restored = entity_registry.async_get_or_create("light", "hue", "5678")
+    assert restored.id != entry.id
+    assert restored.name is None
+
+
+async def test_forget_unknown_deleted_entity(
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test forgetting an unknown deleted entity raises."""
+    entry = entity_registry.async_get_or_create("light", "hue", "5678")
+
+    # An active entity is not a deleted entity
+    with pytest.raises(KeyError):
+        entity_registry.async_forget_deleted_entity(entry.id)
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_migration_1_24(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test migration from version 1.24, which adds device_id to deleted entities."""
+    _setup_name_migration_storage(
+        hass_storage,
+        [{"entity_id": "test.kept", "id": "entity_kept", "unique_id": "kept"}],
+        [{"entity_id": "test.deleted", "id": "entity_deleted", "unique_id": "deleted"}],
+    )
+    hass_storage[er.STORAGE_KEY]["minor_version"] = 24
+    hass_storage[er.STORAGE_KEY]["data"]["entities"][0]["compat_name"] = None
+
+    dr.async_setup(hass)
+    await dr.async_load(hass)
+    await er.async_load(hass)
+    registry = er.async_get(hass)
+
+    deleted_entry = registry.deleted_entities[("test", "super_platform", "deleted")]
+    assert deleted_entry.device_id is None
+
+    await flush_store(registry._store)
+    migrated_data = hass_storage[er.STORAGE_KEY]
+    assert migrated_data["minor_version"] == er.STORAGE_VERSION_MINOR
+    assert migrated_data["data"]["deleted_entities"] == [
+        {
+            **NAME_MIGRATION_DELETED_ENTITY_BASE,
+            "entity_id": "test.deleted",
+            "id": "entity_deleted",
+            "unique_id": "deleted",
+            "device_id": None,
+        }
+    ]
+
+
+async def test_removed_entity_keeps_device_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a deleted entity records its device, and a restore uses the new one."""
+    mock_config_entry = MockConfigEntry(domain="hue")
+    mock_config_entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("hue", "0123")},
+    )
+    entry = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        config_entry=mock_config_entry,
+        device_id=device.id,
+    )
+
+    device_registry.async_remove_device(device.id)
+
+    assert entity_registry.async_get(entry.entity_id) is None
+    deleted_entity = entity_registry.deleted_entities[("light", "hue", "5678")]
+    assert deleted_entity.device_id == device.id
+
+    other_device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("hue", "4567")},
+    )
+    restored = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        config_entry=mock_config_entry,
+        device_id=other_device.id,
+    )
+    assert restored.id == entry.id
+    assert restored.device_id == other_device.id
+
+
+async def test_removed_config_entry_keeps_device_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test entities removed with their config entry record their device."""
+    config_entry = MockConfigEntry(domain="hue")
+    config_entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("hue", "0123")},
+    )
+    entity_registry.async_get_or_create(
+        "light", "hue", "5678", config_entry=config_entry, device_id=device.id
+    )
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+
+    deleted_entity = entity_registry.deleted_entities[("light", "hue", "5678")]
+    assert deleted_entity.device_id == device.id
+
+
+async def test_forget_deleted_device_entities(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test forgetting the deleted entities of a deleted device."""
+    mock_config_entry = MockConfigEntry(domain="hue")
+    mock_config_entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("hue", "0123")},
+    )
+    other_device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("hue", "4567")},
+    )
+    for unique_id, device_id in (
+        ("1", device.id),
+        ("2", device.id),
+        ("3", other_device.id),
+        ("4", None),
+    ):
+        entity_registry.async_get_or_create(
+            "light",
+            "hue",
+            unique_id,
+            config_entry=mock_config_entry,
+            device_id=device_id,
+        )
+    device_registry.async_remove_device(device.id)
+    device_registry.async_remove_device(other_device.id)
+    entity_registry.async_remove("light.hue_4")
+
+    entity_registry.async_forget_deleted_device_entities(device.id)
+
+    assert set(entity_registry.deleted_entities) == {
+        ("light", "hue", "3"),
+        ("light", "hue", "4"),
+    }

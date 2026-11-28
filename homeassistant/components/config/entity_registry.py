@@ -28,9 +28,11 @@ _LOGGER = logging.getLogger(__name__)
 def async_setup(hass: HomeAssistant) -> bool:
     """Enable the Entity Registry views."""
 
+    websocket_api.async_register_command(hass, websocket_forget_deleted_entity)
     websocket_api.async_register_command(hass, websocket_get_automatic_entity_ids)
     websocket_api.async_register_command(hass, websocket_get_entities)
     websocket_api.async_register_command(hass, websocket_get_entity)
+    websocket_api.async_register_command(hass, websocket_list_deleted_entities)
     websocket_api.async_register_command(hass, websocket_list_entities_for_display)
     websocket_api.async_register_command(hass, websocket_list_entities)
     websocket_api.async_register_command(hass, websocket_remove_entity)
@@ -345,6 +347,69 @@ def websocket_remove_entity(
 
     registry.async_remove(msg["entity_id"])
     connection.send_message(websocket_api.result_message(msg["id"]))
+
+
+def _deleted_entity_dict(entry: er.DeletedRegistryEntry) -> dict[str, Any]:
+    """Return the API representation of a deleted entity."""
+    return {
+        "aliases": [None if a is er.COMPUTED_NAME else a for a in entry.aliases],
+        "area_id": entry.area_id,
+        "categories": entry.categories,
+        "config_entry_id": entry.config_entry_id,
+        "config_subentry_id": entry.config_subentry_id,
+        "created_at": entry.created_at.timestamp(),
+        "device_id": entry.device_id,
+        "disabled_by": None if entry.disabled_by is Undefined else entry.disabled_by,
+        "entity_id": entry.entity_id,
+        "hidden_by": None if entry.hidden_by is Undefined else entry.hidden_by,
+        "icon": entry.icon,
+        "id": entry.id,
+        "labels": list(entry.labels),
+        "modified_at": entry.modified_at.timestamp(),
+        "name": entry.name,
+        "orphaned_timestamp": entry.orphaned_timestamp,
+        "platform": entry.platform,
+    }
+
+
+@require_admin
+@websocket_api.websocket_command(
+    {probatio.Required("type"): "config/entity_registry/list_deleted"}
+)
+@callback
+def websocket_list_deleted_entities(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """List the deleted entities the entity registry remembers."""
+    registry = er.async_get(hass)
+    connection.send_result(
+        msg["id"],
+        [_deleted_entity_dict(entry) for entry in registry.deleted_entities.values()],
+    )
+
+
+@require_admin
+@websocket_api.websocket_command(
+    {
+        probatio.Required("type"): "config/entity_registry/forget_deleted",
+        probatio.Required("deleted_id"): str,
+    }
+)
+@callback
+def websocket_forget_deleted_entity(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Forget a deleted entity, so it is not restored when added again."""
+    try:
+        er.async_get(hass).async_forget_deleted_entity(msg["deleted_id"])
+    except KeyError:
+        connection.send_error(msg["id"], ERR_NOT_FOUND, "Deleted entity not found")
+        return
+    connection.send_result(msg["id"])
 
 
 @websocket_api.websocket_command(

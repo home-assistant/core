@@ -11,8 +11,13 @@ from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api import require_admin
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, label_registry as lr
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    label_registry as lr,
+)
 from homeassistant.helpers.device_registry import DeviceEntryDisabler
+from homeassistant.helpers.typing import Undefined
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,7 +26,9 @@ _LOGGER = logging.getLogger(__name__)
 def async_setup(hass: HomeAssistant) -> bool:
     """Enable the Device Registry views."""
 
+    websocket_api.async_register_command(hass, websocket_forget_deleted_device)
     websocket_api.async_register_command(hass, websocket_list_composite_splits)
+    websocket_api.async_register_command(hass, websocket_list_deleted_devices)
     websocket_api.async_register_command(hass, websocket_list_devices)
     websocket_api.async_register_command(hass, websocket_list_linked_devices)
     websocket_api.async_register_command(hass, websocket_update_device)
@@ -328,3 +335,67 @@ async def websocket_remove_config_entry_from_device(
     await _async_remove_device(
         hass, connection, msg, expected_config_entry_id=msg["config_entry_id"]
     )
+
+
+def _deleted_device_dict(entry: dr.DeletedDeviceEntry) -> dict[str, Any]:
+    """Return the API representation of a deleted device."""
+    return {
+        "area_id": entry.area_id,
+        "config_entry_id": entry.config_entry_id,
+        "config_subentry_id": entry.config_subentry_id,
+        "connections": list(entry.connections),
+        "created_at": entry.created_at.timestamp(),
+        "disabled_by": None if entry.disabled_by is Undefined else entry.disabled_by,
+        "domain": entry.domain,
+        "id": entry.id,
+        "identifiers": list(entry.identifiers),
+        "labels": list(entry.labels),
+        "modified_at": entry.modified_at.timestamp(),
+        "name_by_user": entry.name_by_user,
+        "orphaned_timestamp": entry.orphaned_timestamp,
+    }
+
+
+@require_admin
+@websocket_api.websocket_command(
+    {probatio.Required("type"): "config/device_registry/list_deleted"}
+)
+@callback
+def websocket_list_deleted_devices(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """List the deleted devices the device registry remembers."""
+    connection.send_result(
+        msg["id"],
+        [
+            _deleted_device_dict(entry)
+            for entry in dr.async_get(hass).async_get_deleted_devices()
+        ],
+    )
+
+
+@require_admin
+@websocket_api.websocket_command(
+    {
+        probatio.Required("type"): "config/device_registry/forget_deleted",
+        probatio.Required("deleted_id"): str,
+    }
+)
+@callback
+def websocket_forget_deleted_device(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Forget a deleted device and its deleted entities."""
+    try:
+        dr.async_get(hass).async_forget_deleted_device(msg["deleted_id"])
+    except KeyError:
+        connection.send_error(
+            msg["id"], websocket_api.ERR_NOT_FOUND, "Deleted device not found"
+        )
+        return
+    er.async_get(hass).async_forget_deleted_device_entities(msg["deleted_id"])
+    connection.send_result(msg["id"])

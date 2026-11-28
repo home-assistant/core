@@ -2048,3 +2048,103 @@ async def test_update_entity_unknown_area(
     assert msg["error"]["code"] == "invalid_info"
     assert msg["error"]["message"] == "Area 'unknown' not found."
     assert entity_registry.async_get(entry.entity_id) == entry
+
+
+async def test_list_and_forget_deleted_entities(
+    hass: HomeAssistant,
+    client: MockHAClientWebSocket,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    area_registry: ar.AreaRegistry,
+    label_registry: lr.LabelRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test listing and forgetting deleted entities."""
+    created = datetime.fromisoformat("2024-02-14T12:00:00.0+00:00")
+    deleted = datetime.fromisoformat("2024-02-14T13:00:00.0+00:00")
+    freezer.move_to(created)
+    config_entry = MockConfigEntry(domain="hue")
+    config_entry.add_to_hass(hass)
+    area = area_registry.async_create("Kitchen")
+    label = label_registry.async_create("Lights")
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id, identifiers={("hue", "0123")}
+    )
+    entry = entity_registry.async_get_or_create(
+        "light", "hue", "1234", config_entry=config_entry, device_id=device.id
+    )
+    entity_registry.async_update_entity(
+        entry.entity_id,
+        aliases=[er.COMPUTED_NAME, "Ceiling"],
+        area_id=area.id,
+        icon="mdi:lamp",
+        labels={label.label_id},
+        name="Kitchen light",
+    )
+    freezer.move_to(deleted)
+    entity_registry.async_remove(entry.entity_id)
+
+    await client.send_json_auto_id({"type": "config/entity_registry/list_deleted"})
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == [
+        {
+            "aliases": [None, "Ceiling"],
+            "area_id": area.id,
+            "categories": {},
+            "config_entry_id": config_entry.entry_id,
+            "config_subentry_id": None,
+            "created_at": created.timestamp(),
+            "device_id": device.id,
+            "disabled_by": None,
+            "entity_id": entry.entity_id,
+            "hidden_by": None,
+            "icon": "mdi:lamp",
+            "id": entry.id,
+            "labels": [label.label_id],
+            "modified_at": deleted.timestamp(),
+            "name": "Kitchen light",
+            "orphaned_timestamp": None,
+            "platform": "hue",
+        }
+    ]
+
+    await client.send_json_auto_id(
+        {"type": "config/entity_registry/forget_deleted", "deleted_id": entry.id}
+    )
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] is None
+    assert not entity_registry.deleted_entities
+
+    await client.send_json_auto_id(
+        {"type": "config/entity_registry/forget_deleted", "deleted_id": entry.id}
+    )
+    msg = await client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "not_found"
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        {"type": "config/entity_registry/list_deleted"},
+        {"type": "config/entity_registry/forget_deleted", "deleted_id": "abc"},
+    ],
+)
+async def test_deleted_entities_requires_admin(
+    client: MockHAClientWebSocket,
+    hass_admin_user: MockUser,
+    command: dict[str, Any],
+) -> None:
+    """Test the deleted entity commands require an admin."""
+    hass_admin_user.groups = []
+
+    await client.send_json_auto_id(command)
+    msg = await client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "unauthorized"
