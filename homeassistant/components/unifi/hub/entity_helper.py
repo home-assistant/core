@@ -76,12 +76,13 @@ class UnifiEntityHelper:
         obj_id: str,
         *,
         enabled: bool | None = None,
-        schedule_fn: Callable[[Mapping[str, Any]], FirewallPolicySchedule]
+        schedule_fn: Callable[[Mapping[str, Any]], FirewallPolicySchedule | None]
         | None = None,
     ) -> None:
         """Save a change to a firewall policy.
 
-        schedule_fn builds the new schedule from the current one.
+        schedule_fn builds the new schedule from the current one, or returns
+        None when the current one needs no change.
         """
         policies = self.api.firewall_policies
 
@@ -89,6 +90,8 @@ class UnifiEntityHelper:
             schedule = None
             if schedule_fn is not None:
                 schedule = schedule_fn(policy.schedule or {})
+                if schedule is None and enabled is None:
+                    return
             response = await policies.save(policy, enabled=enabled, schedule=schedule)
             if not response.get("data"):
                 # The controller accepted the change without sending the policy

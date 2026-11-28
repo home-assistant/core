@@ -149,7 +149,7 @@ class UnifiHub:
         obj_id: str,
         *,
         enabled: bool | None = None,
-        schedule_fn: Callable[[Mapping[str, Any]], FirewallPolicySchedule]
+        schedule_fn: Callable[[Mapping[str, Any]], FirewallPolicySchedule | None]
         | None = None,
     ) -> None:
         """Save a change to a firewall policy, one write at a time."""

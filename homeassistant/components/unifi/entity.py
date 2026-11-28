@@ -20,8 +20,10 @@ from aiounifi.models.firewall_policy import (
     FirewallPolicySchedule,
     FirewallPolicyScheduleError,
     FirewallPolicyScheduleMode,
+    FirewallPolicyScheduleSettings,
     ScheduleDatesOutOfOrderError,
     ScheduleSettingUnusedError,
+    ScheduleWithoutDaysError,
     build_schedule,
 )
 
@@ -109,6 +111,7 @@ def async_firewall_policy_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
 SCHEDULE_ERROR_TRANSLATION_KEYS: dict[type[FirewallPolicyScheduleError], str] = {
     ScheduleDatesOutOfOrderError: "schedule_dates_out_of_order",
     ScheduleSettingUnusedError: "schedule_setting_unused_in_mode",
+    ScheduleWithoutDaysError: "schedule_needs_a_day",
 }
 
 
@@ -121,13 +124,46 @@ async def async_save_firewall_policy_schedule(
     end_time: time | None = None,
     start_date: date | None = None,
     end_date: date | None = None,
+    all_day: bool | None = None,
+    set_day: tuple[str, bool] | None = None,
 ) -> None:
     """Save a change to a firewall policy's schedule.
 
+    set_day adds a day to the schedule's days or removes it. The change is
+    made to the latest schedule, so a mode changed at the same moment keeps
+    the days it picked. A change to all_day or a day that the latest schedule
+    already has is not sent.
+
     "Today" is the controller's date: its clock is the one the schedule runs on.
     """
+    only_switches = all(
+        value is None for value in (mode, start_time, end_time, start_date, end_date)
+    )
 
-    def schedule_fn(current: Mapping[str, Any]) -> FirewallPolicySchedule:
+    def unchanged(settings: FirewallPolicyScheduleSettings) -> bool:
+        if not only_switches or (all_day is None and set_day is None):
+            return False
+        if all_day is not None and settings.all_day is not all_day:
+            return False
+        if set_day is not None:
+            day, on = set_day
+            # A mode without days is left to aiounifi to reject.
+            if settings.days is None or (day in settings.days) != on:
+                return False
+        return True
+
+    def schedule_fn(current: Mapping[str, Any]) -> FirewallPolicySchedule | None:
+        settings = FirewallPolicyScheduleSettings.from_schedule(current)
+        if unchanged(settings):
+            return None
+        days: set[str] | None = None
+        if set_day is not None:
+            day, on = set_day
+            days = set(settings.days or ())
+            if on:
+                days.add(day)
+            else:
+                days.discard(day)
         try:
             return build_schedule(
                 current,
@@ -137,6 +173,8 @@ async def async_save_firewall_policy_schedule(
                 end_time=end_time,
                 start_date=start_date,
                 end_date=end_date,
+                all_day=all_day,
+                days=days,
             )
         except FirewallPolicyScheduleError as err:
             raise ServiceValidationError(
