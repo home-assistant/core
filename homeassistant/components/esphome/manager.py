@@ -799,10 +799,11 @@ class ESPHomeManager:
             )
         _async_setup_device_registry(hass, entry, entry_data)
 
-        entry_data.async_update_device_state()
         await entry_data.async_update_static_infos(
             hass, entry, entity_infos, device_info.mac_address
         )
+        # Stateless entities write their state on reconnect. Apply the new names first.
+        entry_data.async_update_device_state()
         # The wizard names entities by key, so publish it with their new infos
         entry_data.device_wizard = device_wizard
         _setup_services(hass, entry_data, services)
