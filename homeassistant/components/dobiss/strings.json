@@ -1,0 +1,42 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_host": "Enter a valid hostname or IP address without a URL path."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_secret": "API secret",
+          "host": "[%key:common::config_flow::data::host%]",
+          "ssl": "Use HTTPS"
+        },
+        "data_description": {
+          "api_secret": "The shared secret shown in the NXT API settings.",
+          "host": "The local hostname or IP address, optionally including a port, without http:// or a path.",
+          "ssl": "Enable if your controller provides HTTPS with a trusted certificate."
+        },
+        "description": "Enable the developer API in your NXT administrator settings. Enter its local hostname or IP address and API secret.",
+        "title": "Connect to Dobiss NXT"
+      }
+    }
+  },
+  "exceptions": {
+    "command_failed": {
+      "message": "Unable to send the light command to Dobiss. Check the connection and API settings."
+    },
+    "discovery_failed": {
+      "message": "Unable to discover Dobiss outputs."
+    },
+    "invalid_auth": {
+      "message": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "status_failed": {
+      "message": "Unable to fetch Dobiss light states."
+    }
+  }
+}
