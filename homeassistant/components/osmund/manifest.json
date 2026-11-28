@@ -1,0 +1,14 @@
+{
+  "domain": "osmund",
+  "name": "Osmund",
+  "categories": ["energy.energy_prices"],
+  "codeowners": ["@maziarzamani"],
+  "config_flow": true,
+  "connectivity": ["cloud"],
+  "documentation": "https://www.home-assistant.io/integrations/osmund",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "quality_scale": "bronze",
+  "requirements": ["osmund==0.1.0"],
+  "single_config_entry": true
+}
