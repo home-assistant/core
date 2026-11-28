@@ -3,17 +3,26 @@
 import logging
 from typing import Any, override
 
+from huawei_lte_api.exceptions import ResponseErrorException
+from requests import RequestException
+
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SwitchDeviceClass,
     SwitchEntity,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import HuaweiLteConfigEntry
-from .const import KEY_DIALUP_MOBILE_DATASWITCH, KEY_WLAN_WIFI_GUEST_NETWORK_SWITCH
+from .const import (
+    DOMAIN,
+    KEY_DHCP_SETTINGS,
+    KEY_DIALUP_MOBILE_DATASWITCH,
+    KEY_WLAN_WIFI_GUEST_NETWORK_SWITCH,
+)
 from .entity import HuaweiLteBaseEntityWithDevice
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,6 +39,10 @@ async def async_setup_entry(
 
     if router.data.get(KEY_DIALUP_MOBILE_DATASWITCH):
         switches.append(HuaweiLteMobileDataSwitch(router))
+
+    dhcp = router.data.get(KEY_DHCP_SETTINGS)
+    if isinstance(dhcp, dict) and str(dhcp.get("DhcpStatus")) in ("0", "1"):
+        switches.append(HuaweiLteDhcpSwitch(router))
 
     if router.data.get(KEY_WLAN_WIFI_GUEST_NETWORK_SWITCH, {}).get("WifiEnable"):
         switches.append(HuaweiLteWifiGuestNetworkSwitch(router))
@@ -82,6 +95,53 @@ class HuaweiLteBaseSwitch(HuaweiLteBaseEntityWithDevice, SwitchEntity):
             return
         self._available = True
         self._raw_state = str(value)
+
+
+class HuaweiLteDhcpSwitch(HuaweiLteBaseSwitch):
+    """Control the router DHCP server."""
+
+    _attr_translation_key = "dhcp"
+    key = KEY_DHCP_SETTINGS
+    item = "DhcpStatus"
+
+    @property
+    @override
+    def _device_unique_id(self) -> str:
+        return f"{self.key}.{self.item}"
+
+    @property
+    @override
+    def is_on(self) -> bool:
+        """Return whether DHCP is enabled."""
+        return self._raw_state == "1"
+
+    @override
+    def _turn(self, state: bool) -> None:
+        try:
+            settings = self.router.client.dhcp.settings()
+            if settings.dhcp_status != state:
+                settings.dhcp_status = state
+                self.router.client.dhcp.set_settings(settings)
+            actual = self.router.client.dhcp.settings()
+        except (
+            KeyError,
+            TypeError,
+            ValueError,
+            RequestException,
+            ResponseErrorException,
+        ) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="dhcp_command_failed",
+            ) from err
+        if actual.dhcp_status != state:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="dhcp_state_not_confirmed",
+            )
+        self.router.data[self.key] = actual.to_dict()
+        self._raw_state = "1" if state else "0"
+        self.schedule_update_ha_state()
 
 
 class HuaweiLteMobileDataSwitch(HuaweiLteBaseSwitch):

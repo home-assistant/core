@@ -172,6 +172,9 @@
       }
     },
     "switch": {
+      "dhcp": {
+        "default": "mdi:ip-network"
+      },
       "mobile_data": {
         "default": "mdi:signal-off",
         "state": {
