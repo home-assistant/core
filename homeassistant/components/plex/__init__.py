@@ -272,6 +272,31 @@ async def async_options_updated(hass: HomeAssistant, entry: PlexConfigEntry) -> 
         entry.runtime_data.server.options = entry.options
 
 
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: PlexConfigEntry, device_entry: dr.AnyDeviceEntry
+) -> bool:
+    """Allow removal of Plex client devices that are no longer available."""
+    plex_server = config_entry.runtime_data.server
+    server_id = plex_server.machine_identifier
+    if (DOMAIN, server_id) in device_entry.identifiers:
+        return False
+
+    entity_registry = er.async_get(hass)
+    client_ids = {
+        entity.unique_id.removeprefix(f"{server_id}:")
+        for entity in er.async_entries_for_device(
+            entity_registry, device_entry.id, include_disabled_entities=True
+        )
+        if entity.domain == MP_DOMAIN
+    }
+    if any(plex_server.is_client_available(client_id) for client_id in client_ids):
+        return False
+
+    for client_id in client_ids:
+        plex_server.async_forget_client(client_id)
+    return True
+
+
 @callback
 def async_cleanup_plex_devices(hass, entry):
     """Clean up old and invalid devices from the registry."""

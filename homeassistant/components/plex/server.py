@@ -247,6 +247,20 @@ class PlexServer:
         if config_entry_update_needed:
             raise ShouldUpdateConfigEntry
 
+    def is_client_available(self, machine_identifier: str) -> bool:
+        """Return whether a client with a media_player entity is currently available."""
+        return (
+            machine_identifier in self._created_clients
+            and machine_identifier not in self._known_idle
+        )
+
+    @callback
+    def async_forget_client(self, machine_identifier: str) -> None:
+        """Forget a client so a new entity is created if it is seen again."""
+        self._created_clients.discard(machine_identifier)
+        self._known_clients.discard(machine_identifier)
+        self._known_idle.discard(machine_identifier)
+
     @callback
     def async_refresh_entity(self, machine_identifier, device, session, source):
         """Forward refresh dispatch to media_player."""
