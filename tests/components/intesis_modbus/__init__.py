@@ -9,17 +9,26 @@ from homeassistant.components.intesis_modbus.const import (
     CONF_TEMPERATURE_FORMAT,
     CONF_UNIT_ID,
 )
-from homeassistant.const import CONF_DEVICE
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE
 
 INIT_VALUE = 0x8000
 
 MOCK_USER_INPUT = {CONF_DEVICE: "/dev/ttyUSB0", CONF_BAUDRATE: 9600, CONF_UNIT_ID: 1}
 MOCK_ENTRY_DATA = {
+    CONF_TYPE: "serial",
     **MOCK_USER_INPUT,
     CONF_MODEL: "INMBSMHI001R000",
     CONF_TEMPERATURE_FORMAT: "decicelsius",
 }
 MOCK_ENTRY_OPTIONS = {CONF_HAS_VANE: True}
+
+MOCK_TCP_INPUT = {CONF_HOST: "192.168.1.50", CONF_PORT: 502, CONF_UNIT_ID: 1}
+MOCK_TCP_ENTRY_DATA = {
+    CONF_TYPE: "tcp",
+    **MOCK_TCP_INPUT,
+    CONF_MODEL: "INMBSMHI001R000",
+    CONF_TEMPERATURE_FORMAT: "decicelsius",
+}
 
 # A healthy MHI single-unit gateway, DIP switches on x10 °C.
 SINGLE_UNIT_REGISTERS: dict[int, int] = {

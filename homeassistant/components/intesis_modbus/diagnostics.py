@@ -4,10 +4,14 @@ from typing import Any
 
 from modbus_connection import ModbusError
 
+from homeassistant.components.diagnostics import REDACTED, async_redact_data
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
 from .coordinator import IntesisConfigEntry
+
+TO_REDACT = {CONF_HOST}
 
 
 async def async_get_config_entry_diagnostics(
@@ -20,7 +24,7 @@ async def async_get_config_entry_diagnostics(
     the hardware.
     """
     diagnostics: dict[str, Any] = {
-        "entry": dict(entry.data),
+        "entry": async_redact_data(entry.data, TO_REDACT),
         "options": dict(entry.options),
         "state": entry.state.value,
         "updated": None,
@@ -36,7 +40,12 @@ async def async_get_config_entry_diagnostics(
     # The most recent poll, also when it failed; none if nothing answered
     if (report := coordinator.last_report) is not None:
         diagnostics["updated"] = sorted(report.updated)
-        diagnostics["failed"] = {name: str(err) for name, err in report.failed.items()}
+        # An error of the link can name the bridge it could not reach
+        host = entry.data.get(CONF_HOST)
+        diagnostics["failed"] = {
+            name: str(err).replace(host, REDACTED) if host else str(err)
+            for name, err in report.failed.items()
+        }
     try:
         diagnostics["registers"] = await coordinator.device.async_read_raw()
     except ModbusError as err:

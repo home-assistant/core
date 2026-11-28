@@ -6,6 +6,7 @@
       'device': '/dev/ttyUSB0',
       'model': 'INMBSMHI001R000',
       'temperature_format': 'decicelsius',
+      'type': 'serial',
       'unit_id': 1,
     }),
     'failed': dict({
