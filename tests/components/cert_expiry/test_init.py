@@ -16,7 +16,6 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import CoreState, HomeAssistant
-from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from .const import HOST, PORT
@@ -39,7 +38,7 @@ async def test_update_unique_id(hass: HomeAssistant) -> None:
         "homeassistant.components.cert_expiry.coordinator.get_cert_expiry_timestamp",
         return_value=future_timestamp(1),
     ):
-        assert await async_setup_component(hass, DOMAIN, {}) is True
+        assert await hass.config_entries.async_setup(entry.entry_id) is True
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
@@ -67,7 +66,7 @@ async def test_unload_config_entry(hass: HomeAssistant) -> None:
         "homeassistant.components.cert_expiry.coordinator.get_cert_expiry_timestamp",
         return_value=timestamp,
     ):
-        assert await async_setup_component(hass, DOMAIN, {}) is True
+        assert await hass.config_entries.async_setup(entry.entry_id) is True
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
@@ -96,7 +95,7 @@ async def test_delay_load_during_startup(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: HOST, CONF_PORT: PORT})
     entry.add_to_hass(hass)
 
-    assert await async_setup_component(hass, DOMAIN, {}) is True
+    assert await hass.config_entries.async_setup(entry.entry_id) is True
     await hass.async_block_till_done()
 
     assert hass.state is CoreState.not_running
@@ -134,7 +133,7 @@ async def test_coordinator_refresh_fails_during_startup(
     )
     entry.add_to_hass(hass)
 
-    assert await async_setup_component(hass, DOMAIN, {}) is True
+    assert await hass.config_entries.async_setup(entry.entry_id) is True
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
@@ -170,7 +169,7 @@ async def test_coordinator_refresh_fails_then_recovers_after_startup(
     )
     entry.add_to_hass(hass)
 
-    assert await async_setup_component(hass, DOMAIN, {}) is True
+    assert await hass.config_entries.async_setup(entry.entry_id) is True
     await hass.async_block_till_done()
 
     with patch(
