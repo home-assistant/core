@@ -253,14 +253,12 @@ class CieloClimate(CieloDeviceEntity, ClimateEntity):
         if self.hvac_mode == HVACMode.HEAT_COOL:
             return await self.client.async_set_temperature(
                 self.native_temperature_unit,
-                **{
-                    ATTR_TARGET_TEMP_LOW: kwargs.get(ATTR_TARGET_TEMP_LOW),
-                    ATTR_TARGET_TEMP_HIGH: kwargs.get(ATTR_TARGET_TEMP_HIGH),
-                },
+                target_temp_low=kwargs.get(ATTR_TARGET_TEMP_LOW),
+                target_temp_high=kwargs.get(ATTR_TARGET_TEMP_HIGH),
             )
         return await self.client.async_set_temperature(
             self.native_temperature_unit,
-            **{ATTR_TEMPERATURE: kwargs.get(ATTR_TEMPERATURE)},
+            temperature=kwargs.get(ATTR_TEMPERATURE),
         )
 
     @async_handle_api_call
