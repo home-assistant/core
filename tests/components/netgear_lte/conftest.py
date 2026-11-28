@@ -8,7 +8,6 @@ from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from homeassistant.components.netgear_lte.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 HOST = "192.168.5.1"
 PASSWORD = "password"
@@ -67,7 +66,7 @@ async def mock_setup_integration(
 ) -> None:
     """Set up the Netgear LTE integration in Home Assistant."""
     config_entry.add_to_hass(hass)
-    assert await async_setup_component(hass, DOMAIN, {})
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
 
@@ -79,5 +78,5 @@ async def setup_cannot_connect(
 ) -> None:
     """Set up the Netgear LTE integration in Home Assistant."""
     config_entry.add_to_hass(hass)
-    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
