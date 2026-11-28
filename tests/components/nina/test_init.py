@@ -59,8 +59,8 @@ async def test_config_migration_from1_1(
     assert dict(old_conf_entry.data) == ENTRY_DATA
     assert dict(old_conf_entry.options) == ENTRY_OPTIONS
     assert old_conf_entry.state is ConfigEntryState.LOADED
-    assert old_conf_entry.version == 1
-    assert old_conf_entry.minor_version == 4
+    assert old_conf_entry.version == 2
+    assert old_conf_entry.minor_version == 1
 
 
 async def test_config_migration_from1_2(
@@ -88,8 +88,8 @@ async def test_config_migration_from1_2(
     assert dict(old_conf_entry.data) == ENTRY_DATA
     assert dict(old_conf_entry.options) == ENTRY_OPTIONS
     assert old_conf_entry.state is ConfigEntryState.LOADED
-    assert old_conf_entry.version == 1
-    assert old_conf_entry.minor_version == 4
+    assert old_conf_entry.version == 2
+    assert old_conf_entry.minor_version == 1
 
 
 async def test_config_migration_from1_3(
@@ -120,8 +120,8 @@ async def test_config_migration_from1_3(
     assert dict(old_conf_entry.data) == ENTRY_DATA
     assert dict(old_conf_entry.options) == ENTRY_OPTIONS
     assert old_conf_entry.state is ConfigEntryState.LOADED
-    assert old_conf_entry.version == 1
-    assert old_conf_entry.minor_version == 4
+    assert old_conf_entry.version == 2
+    assert old_conf_entry.minor_version == 1
 
 
 async def test_config_migration_downgrade(
@@ -132,7 +132,7 @@ async def test_config_migration_downgrade(
     """Test the migration to an old version."""
 
     conf_entry: MockConfigEntry = MockConfigEntry(
-        domain=DOMAIN, title="NINA", data=ENTRY_DATA, version=2
+        domain=DOMAIN, title="NINA", data=ENTRY_DATA, version=3
     )
 
     conf_entry.add_to_hass(hass)

@@ -127,8 +127,8 @@ def create_options_schema() -> probatio.Schema:
 class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for NINA."""
 
-    VERSION: int = 1
-    MINOR_VERSION: int = 4
+    VERSION: int = 2
+    MINOR_VERSION: int = 1
 
     def __init__(self) -> None:
         """Initialize."""

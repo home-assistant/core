@@ -64,8 +64,8 @@ def assert_dummy_entry_created(result: dict[str, Any]) -> None:
             CONF_AREA_FILTER: ".*",
         },
     }
-    assert result["version"] == 1
-    assert result["minor_version"] == 4
+    assert result["version"] == 2
+    assert result["minor_version"] == 1
 
 
 async def test_step_user_connection_error(

@@ -41,8 +41,8 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
         title="NINA",
         data=deepcopy(DUMMY_CONFIG_ENTRY),
         options=deepcopy(DUMMY_CONFIG_ENTRY_OPTIONS),
-        version=1,
-        minor_version=4,
+        version=2,
+        minor_version=1,
     )
 
     config_entry.add_to_hass(hass)
@@ -58,8 +58,8 @@ def mock_config_entry_default_filter(hass: HomeAssistant) -> MockConfigEntry:
         title="NINA",
         data=deepcopy(DUMMY_CONFIG_ENTRY),
         options=deepcopy(DUMMY_CONFIG_ENTRY_DEFAULT_FILTERS_OPTIONS),
-        version=1,
-        minor_version=4,
+        version=2,
+        minor_version=1,
     )
 
     config_entry.add_to_hass(hass)
@@ -75,8 +75,8 @@ def mock_config_entry_area_filter(hass: HomeAssistant) -> MockConfigEntry:
         title="NINA",
         data=deepcopy(DUMMY_CONFIG_ENTRY),
         options=deepcopy(DUMMY_CONFIG_ENTRY_AREA_FILTERS_OPTIONS),
-        version=1,
-        minor_version=4,
+        version=2,
+        minor_version=1,
     )
 
     config_entry.add_to_hass(hass)
@@ -92,8 +92,8 @@ def mock_config_entry_multiple_regions(hass: HomeAssistant) -> MockConfigEntry:
         title="NINA",
         data=deepcopy(DUMMY_CONFIG_ENTRY_MULTIPLE_REGIONS),
         options=deepcopy(DUMMY_CONFIG_ENTRY_DEFAULT_FILTERS_OPTIONS),
-        version=1,
-        minor_version=4,
+        version=2,
+        minor_version=1,
     )
 
     config_entry.add_to_hass(hass)

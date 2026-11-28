@@ -107,5 +107,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: NinaConfigEntry) -> No
             entry,
             data=new_data,
             options=new_data_options,
-            minor_version=4,
+            version=2,
+            minor_version=1,
         )
