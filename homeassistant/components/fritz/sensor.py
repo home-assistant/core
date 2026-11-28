@@ -32,7 +32,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 
-from .const import CONNECTION_TYPE_WLAN, DOMAIN, DSL_CONNECTION, LOGGER
+from .const import CONNECTION_TYPE_WLAN, DOMAIN, DSL_CONNECTION, LOGGER, WAN_ACCESS_TYPE
 from .coordinator import FRITZ_DATA_KEY, AvmWrapper, FritzConfigEntry, FritzData
 from .entity import (
     FritzBoxBaseCoordinatorEntity,
@@ -198,6 +198,13 @@ class FritzLinkSensorEntityDescription(SensorEntityDescription):
 
 
 CONNECTION_SENSOR_TYPES: tuple[FritzConnectionSensorEntityDescription, ...] = (
+    FritzConnectionSensorEntityDescription(
+        key=WAN_ACCESS_TYPE,
+        translation_key=WAN_ACCESS_TYPE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=None,
+        is_suitable=lambda info: info.wan_access_type_supported,
+    ),
     FritzConnectionSensorEntityDescription(
         key="external_ip",
         translation_key="external_ip",
@@ -521,10 +528,30 @@ class FritzBoxSensor(FritzBoxBaseCoordinatorEntity, SensorEntity):
         FritzConnectionSensorEntityDescription | FritzDeviceSensorEntityDescription
     )
 
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Register WAN access updates while this sensor is active."""
+        await super().async_added_to_hass()
+        if self.entity_description.key == WAN_ACCESS_TYPE:
+            self.async_on_remove(
+                await self.coordinator.async_register_wan_access_updates()
+            )
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return whether the WAN access type is known."""
+        return super().available and (
+            self.entity_description.key != WAN_ACCESS_TYPE
+            or self.coordinator.data[WAN_ACCESS_TYPE] is not None
+        )
+
     @property
     @override
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
+        if self.entity_description.key == WAN_ACCESS_TYPE:
+            return self.coordinator.data[WAN_ACCESS_TYPE]
         return self.coordinator.data["entity_states"].get(self.entity_description.key)
 
 

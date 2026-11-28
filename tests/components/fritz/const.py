@@ -121,6 +121,7 @@ MOCK_FB_SERVICES: dict[str, dict[str, Any]] = {
             "NewTotalBytesReceived": 5221019883,
             "NewX_AVM_DE_TotalBytesSent64": 1712232562,
             "NeWX_AVM_DE_TotalBytesReceived64": 5221019883,
+            "NewX_AVM_DE_WANAccessType": "DSL",
         },
         "GetTotalBytesSent": {"NewTotalBytesSent": 1712232562},
         "GetTotalBytesReceived": {"NewTotalBytesReceived": 5221019883},

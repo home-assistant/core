@@ -43,6 +43,7 @@ from .const import (
     FRITZ_EXCEPTIONS,
     LOGGER,
     SCAN_INTERVAL,
+    WAN_ACCESS_TYPE,
     MeshRoles,
 )
 from .helpers import ha_is_stopping, normalize_version
@@ -87,6 +88,7 @@ class UpdateCoordinatorDataType(TypedDict):
     wifi_networks: dict[int, dict[str, Any]]
     guest_wifi: int | None
     port_mappings: dict[int, dict[str, Any]]
+    wan_access_type: str | None
 
 
 class FritzConnectionCached(FritzConnection):  # type: ignore[misc]
@@ -184,6 +186,8 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         self._entity_update_functions: dict[
             str, Callable[[FritzStatus, StateType], Any]
         ] = {}
+        self._wan_access_updates_registered = False
+        self._wan_access_unavailable_logged = False
         self._wifi_network_indexes: set[int] = set()
         self._guest_wifi_registered = False
         self._port_mapping_indexes: set[int] = set()
@@ -312,6 +316,20 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 )
         return unregister_entity_updates
 
+    async def async_register_wan_access_updates(self) -> Callable[[], None]:
+        """Register WAN access type updates while its sensor is active."""
+
+        def unregister_wan_access_updates() -> None:
+            """Stop WAN access type updates when its sensor is removed."""
+            self._wan_access_updates_registered = False
+            self.data[WAN_ACCESS_TYPE] = None
+
+        self._wan_access_updates_registered = True
+        self.data[WAN_ACCESS_TYPE] = await self.hass.async_add_executor_job(
+            self._wan_access_update
+        )
+        return unregister_wan_access_updates
+
     async def async_register_wifi_network(self, index: int) -> Callable[[], None]:
         """Register a Wi-Fi network to be updated by coordinator."""
 
@@ -413,6 +431,54 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 )
         return entity_states
 
+    def _wan_access_update(self) -> str | None:
+        """Return the WAN access type reported by the router."""
+        try:
+            addon_info = self.connection.call_action("WANCommonIFC1", "GetAddonInfos")
+        except FRITZ_EXCEPTIONS:
+            LOGGER.debug(
+                "Could not retrieve WAN access type from addon info", exc_info=True
+            )
+        else:
+            if (
+                isinstance(
+                    access_type := addon_info.get("NewX_AVM_DE_WANAccessType"), str
+                )
+                and access_type
+            ):
+                return self._log_wan_access_availability(access_type)
+
+        try:
+            common_info = self.connection.call_action(
+                "WANCommonInterfaceConfig1", "GetCommonLinkProperties"
+            )
+        except FRITZ_EXCEPTIONS:
+            LOGGER.debug("Could not retrieve WAN access type", exc_info=True)
+            return self._log_wan_access_availability(None)
+
+        return self._log_wan_access_availability(common_info.get("NewWANAccessType"))
+
+    def _log_wan_access_availability(self, access_type: str | None) -> str | None:
+        """Log WAN access type availability changes once."""
+        if access_type is None:
+            if not self._wan_access_unavailable_logged:
+                LOGGER.info("WAN access type is unavailable")
+                self._wan_access_unavailable_logged = True
+        elif self._wan_access_unavailable_logged:
+            LOGGER.info("WAN access type is available again")
+            self._wan_access_unavailable_logged = False
+        return access_type
+
+    def _entity_and_wan_update(
+        self,
+    ) -> tuple[dict, str | None]:
+        """Update entity states and WAN access type in one executor job."""
+        entity_states = self._entity_states_update()
+        wan_access_type = (
+            self._wan_access_update() if self._wan_access_updates_registered else None
+        )
+        return entity_states, wan_access_type
+
     @override
     async def _async_update_data(self) -> UpdateCoordinatorDataType:
         """Update FritzboxTools data."""
@@ -422,6 +488,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             "wifi_networks": {},
             "guest_wifi": None,
             "port_mappings": {},
+            WAN_ACCESS_TYPE: None,
         }
         self.connection.clear_cache()
         self.hosts = {}
@@ -431,9 +498,10 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             if self.device_discovery_enabled:
                 await self.async_scan_devices()
 
-            entity_data["entity_states"] = await self.hass.async_add_executor_job(
-                self._entity_states_update
-            )
+            (
+                entity_data["entity_states"],
+                entity_data[WAN_ACCESS_TYPE],
+            ) = await self.hass.async_add_executor_job(self._entity_and_wan_update)
 
             if self.has_call_deflections:
                 entity_data[
@@ -990,12 +1058,19 @@ class AvmWrapper(FritzBoxTools):
         """Return ConnectionInfo data."""
 
         link_properties = await self.async_get_wan_link_properties()
+        addon_infos_supported = await self.async_addon_infos_supported()
         connection_info = ConnectionInfo(
             connection=link_properties.get("NewWANAccessType", "").lower(),
             mesh_role=self.mesh_role,
             wan_enabled=self.device_is_router,
             ipv6_active=await self.async_ipv6_active(),
-            addon_infos_supported=await self.async_addon_infos_supported(),
+            addon_infos_supported=addon_infos_supported,
+            wan_access_type_supported=addon_infos_supported
+            or (
+                "WANCommonInterfaceConfig1" in self.connection.services
+                and "GetCommonLinkProperties"
+                in self.connection.services["WANCommonInterfaceConfig1"].actions
+            ),
         )
         LOGGER.debug(
             "ConnectionInfo for FritzBox %s: %s",

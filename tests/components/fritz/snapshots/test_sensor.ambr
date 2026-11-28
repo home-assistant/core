@@ -857,6 +857,56 @@
     'state': '2024-08-03T16:30:21+00:00',
   })
 # ---
+# name: test_sensor_cpu_temp_not_supported[None-return_values1][sensor.mock_title_wan_access_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('fritz', '1CED6F123411')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_title_wan_access_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'WAN access type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'WAN access type',
+    'platform': 'fritz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'wan_access_type',
+    'unique_id': '1CED6F123411-wan_access_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_cpu_temp_not_supported[None-return_values1][sensor.mock_title_wan_access_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title WAN access type',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_wan_access_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'DSL',
+  })
+# ---
 # name: test_sensor_cpu_temp_not_supported[None-return_values1][sensor.printer_max_download_link_rate-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1829,6 +1879,56 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2024-08-03T16:30:21+00:00',
+  })
+# ---
+# name: test_sensor_cpu_temp_not_supported[None-return_values2][sensor.mock_title_wan_access_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('fritz', '1CED6F123411')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_title_wan_access_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'WAN access type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'WAN access type',
+    'platform': 'fritz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'wan_access_type',
+    'unique_id': '1CED6F123411-wan_access_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_cpu_temp_not_supported[None-return_values2][sensor.mock_title_wan_access_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title WAN access type',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_wan_access_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'DSL',
   })
 # ---
 # name: test_sensor_cpu_temp_not_supported[None-return_values2][sensor.printer_max_download_link_rate-entry]
@@ -2805,6 +2905,56 @@
     'state': '2024-08-03T16:30:21+00:00',
   })
 # ---
+# name: test_sensor_cpu_temp_not_supported[side_effect0-None][sensor.mock_title_wan_access_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('fritz', '1CED6F123411')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_title_wan_access_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'WAN access type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'WAN access type',
+    'platform': 'fritz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'wan_access_type',
+    'unique_id': '1CED6F123411-wan_access_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_cpu_temp_not_supported[side_effect0-None][sensor.mock_title_wan_access_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title WAN access type',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_wan_access_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'DSL',
+  })
+# ---
 # name: test_sensor_cpu_temp_not_supported[side_effect0-None][sensor.printer_max_download_link_rate-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -3777,6 +3927,56 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2024-08-03T16:30:21+00:00',
+  })
+# ---
+# name: test_sensor_cpu_temp_not_supported[side_effect3-None][sensor.mock_title_wan_access_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('fritz', '1CED6F123411')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_title_wan_access_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'WAN access type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'WAN access type',
+    'platform': 'fritz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'wan_access_type',
+    'unique_id': '1CED6F123411-wan_access_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_cpu_temp_not_supported[side_effect3-None][sensor.mock_title_wan_access_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title WAN access type',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_wan_access_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'DSL',
   })
 # ---
 # name: test_sensor_cpu_temp_not_supported[side_effect3-None][sensor.printer_max_download_link_rate-entry]
@@ -4809,6 +5009,56 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2024-08-03T16:30:21+00:00',
+  })
+# ---
+# name: test_sensor_setup[sensor.mock_title_wan_access_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('fritz', '1CED6F123411')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_title_wan_access_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'WAN access type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'WAN access type',
+    'platform': 'fritz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'wan_access_type',
+    'unique_id': '1CED6F123411-wan_access_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_setup[sensor.mock_title_wan_access_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title WAN access type',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_wan_access_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'DSL',
   })
 # ---
 # name: test_sensor_setup[sensor.phone_download_link_rate-entry]

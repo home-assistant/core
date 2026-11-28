@@ -2,7 +2,7 @@
 
 from enum import StrEnum
 import logging
-from typing import Literal
+from typing import Final, Literal
 
 from fritzconnection.core.exceptions import (
     FritzActionError,
@@ -31,6 +31,7 @@ class MeshRoles(StrEnum):
 
 DOMAIN = "fritz"
 SCAN_INTERVAL = 30
+WAN_ACCESS_TYPE: Final = "wan_access_type"
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,

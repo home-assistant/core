@@ -2,6 +2,7 @@
 
 from copy import deepcopy
 from datetime import UTC, datetime
+import logging
 from typing import Any
 from unittest.mock import MagicMock, patch
 
@@ -114,6 +115,246 @@ async def test_sensor_setup(
         await hass.async_block_till_done()
 
     await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
+
+
+@pytest.mark.usefixtures(
+    "entity_registry_enabled_by_default", "fh_class_mock", "fs_class_mock"
+)
+@pytest.mark.parametrize(
+    (
+        "addon_info_updates",
+        "addon_info_removals",
+        "common_access_type",
+        "expected_access_type",
+    ),
+    [
+        pytest.param(
+            {"NewX_AVM_DE_WANAccessType": "Fiber"},
+            (),
+            "X_AVM-DE_Fiber",
+            "Fiber",
+            id="addon-info-access-type",
+        ),
+        pytest.param(
+            {},
+            ("NewX_AVM_DE_WANAccessType",),
+            "X_AVM-DE_Fiber",
+            "X_AVM-DE_Fiber",
+            id="common-link-properties-fallback",
+        ),
+    ],
+)
+async def test_wan_access_type_reports_api_value(
+    hass: HomeAssistant,
+    fc_data: dict[str, dict[str, Any]],
+    fc_class_mock: MagicMock,
+    addon_info_updates: dict[str, Any],
+    addon_info_removals: tuple[str, ...],
+    common_access_type: str,
+    expected_access_type: str,
+) -> None:
+    """Test WAN access type is reported as returned by the router."""
+    for key in addon_info_removals:
+        fc_data["WANCommonIFC1"]["GetAddonInfos"].pop(key)
+    fc_data["WANCommonIFC1"]["GetAddonInfos"].update(addon_info_updates)
+    fc_data["WANCommonInterfaceConfig1"]["GetCommonLinkProperties"][
+        "NewWANAccessType"
+    ] = common_access_type
+    fc_class_mock().override_services(fc_data)
+
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.fritz.PLATFORMS", [Platform.SENSOR]):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert (state := hass.states.get("sensor.mock_title_wan_access_type"))
+    assert state.state == expected_access_type
+
+
+@pytest.mark.usefixtures(
+    "entity_registry_enabled_by_default", "fh_class_mock", "fs_class_mock"
+)
+async def test_wan_access_type_falls_back_if_addon_info_fails(
+    hass: HomeAssistant,
+    fc_data: dict[str, dict[str, Any]],
+    fc_class_mock: MagicMock,
+) -> None:
+    """Test WAN access type falls back when addon info is unavailable."""
+    fc_data["WANCommonIFC1"]["GetAddonInfos"] = FritzConnectionException("boom")
+    fc_data["WANCommonInterfaceConfig1"]["GetCommonLinkProperties"][
+        "NewWANAccessType"
+    ] = "X_AVM-DE_Fiber"
+    fc_class_mock().override_services(fc_data)
+
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.fritz.PLATFORMS", [Platform.SENSOR]):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert (state := hass.states.get("sensor.mock_title_wan_access_type"))
+    assert state.state == "X_AVM-DE_Fiber"
+
+
+@pytest.mark.usefixtures(
+    "entity_registry_enabled_by_default", "fh_class_mock", "fs_class_mock"
+)
+async def test_wan_access_type_unavailable_if_fallback_query_fails(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    fc_data: dict[str, dict[str, Any]],
+    fc_class_mock: MagicMock,
+) -> None:
+    """Test WAN access type becomes unavailable if the fallback query fails."""
+    fc_data["WANCommonIFC1"]["GetAddonInfos"].pop("NewX_AVM_DE_WANAccessType")
+    fc_class_mock().override_services(fc_data)
+
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.fritz.PLATFORMS", [Platform.SENSOR]):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    for entity_id in (
+        "sensor.mock_title_link_download_throughput",
+        "sensor.mock_title_link_upload_throughput",
+    ):
+        entity_registry.async_update_entity(
+            entity_id, disabled_by=er.RegistryEntryDisabler.USER
+        )
+    await hass.async_block_till_done()
+
+    fc_data["WANCommonInterfaceConfig1"]["GetCommonLinkProperties"] = (
+        FritzConnectionException("boom")
+    )
+    fc_class_mock().override_services(fc_data)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entry.runtime_data.last_update_success
+    assert (state := hass.states.get("sensor.mock_title_wan_access_type"))
+    assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures(
+    "entity_registry_enabled_by_default", "fh_class_mock", "fs_class_mock"
+)
+async def test_wan_access_type_unavailable_logs_once_and_recovers(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
+    fc_data: dict[str, dict[str, Any]],
+    fc_class_mock: MagicMock,
+) -> None:
+    """Test WAN access availability is logged once and on recovery."""
+    caplog.set_level(logging.INFO, logger="homeassistant.components.fritz")
+    fc_data["WANCommonIFC1"]["GetAddonInfos"] = FritzConnectionException("boom")
+    fc_class_mock().override_services(fc_data)
+
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.fritz.PLATFORMS", [Platform.SENSOR]):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    fc_data["WANCommonInterfaceConfig1"]["GetCommonLinkProperties"].pop(
+        "NewWANAccessType"
+    )
+    fc_class_mock().override_services(fc_data)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entry.runtime_data.last_update_success
+    assert (state := hass.states.get("sensor.mock_title_wan_access_type"))
+    assert state.state == STATE_UNAVAILABLE
+    assert caplog.text.count("WAN access type is unavailable") == 1
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert caplog.text.count("WAN access type is unavailable") == 1
+
+    fc_data["WANCommonInterfaceConfig1"]["GetCommonLinkProperties"][
+        "NewWANAccessType"
+    ] = "X_AVM-DE_Fiber"
+    fc_class_mock().override_services(fc_data)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entry.runtime_data.last_update_success
+    assert (state := hass.states.get("sensor.mock_title_wan_access_type"))
+    assert state.state == "X_AVM-DE_Fiber"
+    assert caplog.text.count("WAN access type is available again") == 1
+
+
+@pytest.mark.usefixtures(
+    "entity_registry_enabled_by_default",
+    "fh_class_mock",
+    "fs_class_mock",
+)
+async def test_wan_access_polling_stops_when_sensor_is_disabled(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+    fc_data: dict[str, dict[str, Any]],
+    fc_class_mock: MagicMock,
+) -> None:
+    """Test WAN access is no longer polled after its sensor is disabled."""
+    fc_data["WANCommonIFC1"]["GetAddonInfos"].pop("NewX_AVM_DE_WANAccessType")
+    fc_class_mock().override_services(fc_data)
+
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.fritz.PLATFORMS", [Platform.SENSOR]):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    coordinator = entry.runtime_data
+    with patch.object(
+        coordinator.connection,
+        "call_action",
+        wraps=coordinator.connection.call_action,
+    ) as call_action:
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert ("WANCommonInterfaceConfig1", "GetCommonLinkProperties") in [
+        call.args[:2] for call in call_action.call_args_list
+    ]
+
+    entity_registry.async_update_entity(
+        "sensor.mock_title_wan_access_type",
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+    await hass.async_block_till_done()
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = entry.runtime_data
+    with patch.object(
+        coordinator.connection,
+        "call_action",
+        wraps=coordinator.connection.call_action,
+    ) as call_action:
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert ("WANCommonInterfaceConfig1", "GetCommonLinkProperties") not in [
+        call.args[:2] for call in call_action.call_args_list
+    ]
 
 
 async def test_sensor_update_fail(

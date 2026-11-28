@@ -166,6 +166,9 @@
       },
       "max_kb_s_sent": {
         "name": "Max connection upload throughput"
+      },
+      "wan_access_type": {
+        "name": "WAN access type"
       }
     },
     "switch": {

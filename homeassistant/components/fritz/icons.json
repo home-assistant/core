@@ -67,6 +67,9 @@
       },
       "max_kb_s_sent": {
         "default": "mdi:upload"
+      },
+      "wan_access_type": {
+        "default": "mdi:wan"
       }
     },
     "switch": {
