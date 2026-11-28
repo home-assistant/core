@@ -129,9 +129,18 @@ class PurgeTask(RecorderTask):
     @override
     def run(self, instance: Recorder) -> None:
         """Purge the database."""
-        if purge.purge_old_data(
-            instance, self.purge_before, self.repack, self.apply_filter
-        ):
+        finished = True
+        try:
+            finished = purge.purge_old_data(
+                instance, self.purge_before, self.repack, self.apply_filter
+            )
+        finally:
+            # Only a purge that runs again needs the linked states it found
+            if finished:
+                instance.states_manager.forget_linked_state_ids(
+                    self.purge_before.timestamp()
+                )
+        if finished:
             # We always need to do the db cleanups after a purge
             # is finished to ensure the WAL checkpoint and other
             # tasks happen after a vacuum.
