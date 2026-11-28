@@ -1,20 +1,23 @@
 """Tests for the Velbus component initialisation."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 from velbusaio.exceptions import VelbusAuthenticationFailed, VelbusConnectionFailed
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.components.velbus import (
+    RECONNECT_SCAN_COOLDOWN,
     VelbusConfigEntry,
     _child_name_from_registry,
     _is_channel_subdevice_identifier,
     _migrate_via_devices_to_children,
     async_remove_config_entry_device,
 )
+from homeassistant.components.velbus.bus_sync import async_sync_bus_state
 from homeassistant.components.velbus.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_NAME, CONF_PORT, TargetKey
@@ -22,6 +25,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.util import dt as dt_util
 
 from . import get_entity_id, init_integration
 from .const import PORT_TCP
@@ -401,6 +405,26 @@ async def test_remove_config_entry_device(
     )
 
 
+async def test_remove_config_entry_device_without_runtime_data(
+    hass: HomeAssistant,
+    config_entry: VelbusConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Device removal succeeds after the config entry was unloaded."""
+    await init_integration(hass, config_entry)
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "1"), config_entry.entry_id
+    )
+    assert device is not None
+
+    await hass.config_entries.async_unload(config_entry.entry_id)
+    assert hass.config_entries.async_get_entry(config_entry.entry_id) is not None
+    config_entry.runtime_data = None
+
+    assert await async_remove_config_entry_device(hass, config_entry, device) is True
+
+
 async def test_remove_config_entry_device_detaches_subdevices(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -735,3 +759,259 @@ async def test_migrate_property_unique_ids_preserves_entity_id(
         entity_registry.async_get_entity_id("sensor", DOMAIN, "a1b2c3d4e5f6-LightValue")
         == "sensor.legacy_light_value"
     )
+
+
+async def test_scan_complete_removes_stale_devices(
+    hass: HomeAssistant,
+    config_entry: VelbusConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Stale module devices and entities are removed after a full bus scan."""
+    await init_integration(hass, config_entry)
+
+    stale_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "999")},
+        name="Missing Module",
+        manufacturer="Velleman",
+        model="VMBX",
+    )
+    entity_registry.async_get_or_create(
+        "switch",
+        DOMAIN,
+        "stale-entity-unique",
+        config_entry=config_entry,
+        device_id=stale_device.id,
+    )
+    config_entry.runtime_data.known_unique_ids.add("switch:stale-entity-unique")
+
+    await async_sync_bus_state(hass, config_entry, found_addresses={1, 2, 3, 4, 99})
+
+    assert device_registry.async_get(stale_device.id) is None
+    assert (
+        entity_registry.async_get_entity_id("switch", DOMAIN, "stale-entity-unique")
+        is None
+    )
+    assert (
+        "switch:stale-entity-unique" not in config_entry.runtime_data.known_unique_ids
+    )
+
+
+async def test_removed_module_entities_are_not_rediscovered(
+    hass: HomeAssistant,
+    config_entry: VelbusConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Modules absent from a scan stay removed even when the controller still reports them."""
+    await init_integration(hass, config_entry)
+    assert config_entry.runtime_data.scanned_module_addresses is not None
+
+    addresses_without_88 = {
+        address
+        for address in config_entry.runtime_data.scanned_module_addresses
+        if address != 88
+    }
+    await async_sync_bus_state(hass, config_entry, found_addresses=addresses_without_88)
+
+    climate_unique_id = "asdfghjk-3"
+    assert (
+        entity_registry.async_get_entity_id("climate", DOMAIN, climate_unique_id)
+        is None
+    )
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "88"), config_entry.entry_id
+        )
+        is None
+    )
+
+    await async_sync_bus_state(hass, config_entry)
+
+    assert (
+        entity_registry.async_get_entity_id("climate", DOMAIN, climate_unique_id)
+        is None
+    )
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "88"), config_entry.entry_id
+        )
+        is None
+    )
+
+
+async def test_stale_module_removal_clears_child_entities_for_rediscovery(
+    hass: HomeAssistant,
+    config_entry: VelbusConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Removing a sub-device module clears child discovery keys so entities can return."""
+    await init_integration(hass, config_entry)
+
+    climate_unique_id = "asdfghjk-3"
+    switch_unique_id = "qwerty123-55"
+    assert (
+        entity_registry.async_get_entity_id("climate", DOMAIN, climate_unique_id)
+        is not None
+    )
+    assert "climate:asdfghjk-3" in config_entry.runtime_data.known_unique_ids
+    assert "switch:qwerty123-55" in config_entry.runtime_data.known_unique_ids
+
+    addresses_without_88 = {
+        address
+        for address in config_entry.runtime_data.scanned_module_addresses or set()
+        if address != 88
+    }
+    await async_sync_bus_state(hass, config_entry, found_addresses=addresses_without_88)
+
+    assert (
+        entity_registry.async_get_entity_id("climate", DOMAIN, climate_unique_id)
+        is None
+    )
+    assert (
+        entity_registry.async_get_entity_id("switch", DOMAIN, switch_unique_id) is None
+    )
+    assert "climate:asdfghjk-3" not in config_entry.runtime_data.known_unique_ids
+    assert "switch:qwerty123-55" not in config_entry.runtime_data.known_unique_ids
+
+    restored_addresses = {
+        *config_entry.runtime_data.scanned_module_addresses,
+        88,
+    }
+    await async_sync_bus_state(hass, config_entry, found_addresses=restored_addresses)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (
+        entity_registry.async_get_entity_id("climate", DOMAIN, climate_unique_id)
+        is not None
+    )
+    assert (
+        entity_registry.async_get_entity_id("switch", DOMAIN, switch_unique_id)
+        is not None
+    )
+
+
+async def test_module_found_discovers_secondary_module_addresses(
+    hass: HomeAssistant,
+    config_entry: VelbusConfigEntry,
+    controller: MagicMock,
+    entity_registry: er.EntityRegistry,
+    mock_module_no_subdevices: AsyncMock,
+) -> None:
+    """module_found sync discovers channels on all module bus addresses."""
+    await init_integration(hass, config_entry)
+
+    sensor_unique_id = "a1b2c3d4e5f6-3"
+    entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, sensor_unique_id)
+    assert entity_id is not None
+
+    entity_registry.async_remove(entity_id)
+    config_entry.runtime_data.known_unique_ids.discard(f"sensor:{sensor_unique_id}")
+    assert config_entry.runtime_data.scanned_module_addresses is not None
+    config_entry.runtime_data.scanned_module_addresses.discard(2)
+
+    assert controller.return_value._module_found_callbacks
+    await controller.return_value._module_found_callbacks[0](mock_module_no_subdevices)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (
+        entity_registry.async_get_entity_id("sensor", DOMAIN, sensor_unique_id)
+        is not None
+    )
+    assert 2 in config_entry.runtime_data.scanned_module_addresses
+
+
+async def test_module_found_adds_new_switch_entity(
+    hass: HomeAssistant,
+    config_entry: VelbusConfigEntry,
+    controller: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """New channels reported by the controller are registered without reloading."""
+    await init_integration(hass, config_entry)
+
+    extra_relay = MagicMock()
+    extra_relay.get_categories.return_value = ["switch"]
+    extra_relay.get_name.return_value = "Extra relay"
+    extra_relay.get_module_address.return_value = 50
+    extra_relay.get_channel_number.return_value = 56
+    extra_relay.get_module_type_name.return_value = "VMB4RYNO"
+    extra_relay.get_full_name.return_value = "Living room"
+    extra_relay.get_module_sw_version.return_value = "1.0.1"
+    extra_relay.get_module_serial.return_value = "extra-serial"
+    extra_relay.get_module_type.return_value = 2
+    extra_relay.is_sub_device.return_value = True
+    extra_relay.is_on.return_value = False
+    extra_relay.is_connected.return_value = True
+
+    extra_module = MagicMock()
+    extra_module.get_addresses.return_value = [50]
+    extra_module.get_type_name.return_value = "VMB4RYNO"
+    extra_module.get_type.return_value = 2
+    extra_module.get_name.return_value = "Garage"
+    extra_module.get_serial.return_value = "extra-serial"
+    extra_module.get_sw_version.return_value = "1.0.1"
+
+    controller.return_value.get_all_switch.return_value = [
+        *controller.return_value.get_all_switch.return_value,
+        extra_relay,
+    ]
+    controller.return_value.get_modules.return_value = {
+        **controller.return_value.get_modules.return_value,
+        50: extra_module,
+    }
+
+    assert controller.return_value._module_found_callbacks
+    await controller.return_value._module_found_callbacks[0](extra_module)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entity_registry.async_get_entity_id("switch", DOMAIN, "extra-serial-56")
+
+
+async def test_reconnect_scan_is_debounced_via_connect_callback(
+    hass: HomeAssistant,
+    config_entry: VelbusConfigEntry,
+    controller: MagicMock,
+) -> None:
+    """Connect notifications schedule one debounced full bus scan."""
+    await init_integration(hass, config_entry)
+    assert controller.return_value._connect_callbacks
+    controller.return_value.scan.reset_mock()
+
+    connect = controller.return_value._connect_callbacks[0]
+    await connect()
+    await connect()
+    controller.return_value.scan.assert_not_called()
+
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=RECONNECT_SCAN_COOLDOWN + 1)
+    )
+    await hass.async_block_till_done()
+
+    controller.return_value.scan.assert_awaited_once_with()
+
+
+async def test_reconnect_scan_debouncer_shutdown_on_unload(
+    hass: HomeAssistant,
+    config_entry: VelbusConfigEntry,
+    controller: MagicMock,
+) -> None:
+    """Pending reconnect scans are cancelled when the config entry unloads."""
+    await init_integration(hass, config_entry)
+    debouncer = config_entry.runtime_data.reconnect_scan_debouncer
+    assert debouncer is not None
+
+    debouncer.async_schedule_call()
+    controller.return_value.scan.reset_mock()
+
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=RECONNECT_SCAN_COOLDOWN + 1)
+    )
+    await hass.async_block_till_done()
+
+    controller.return_value.scan.assert_not_called()

@@ -1,14 +1,17 @@
 """Support for Velbus devices."""
 
 import asyncio
-from dataclasses import dataclass
+from collections.abc import Callable, Coroutine
+from dataclasses import dataclass, field
 import logging
 import os
 import shutil
+from typing import Any
 
 from velbusaio.controller import Velbus
 from velbusaio.exceptions import VelbusAuthenticationFailed, VelbusConnectionFailed
 from velbusaio.helpers import get_property_key_map
+from velbusaio.module import Module
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_PORT, Platform
@@ -24,13 +27,18 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import ConfigType
 
+from .bus_sync import async_sync_bus_state
 from .const import CONF_VLP_FILE, DOMAIN
+from .entity_discovery import entity_registry_key
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
+
+RECONNECT_SCAN_COOLDOWN = 30.0
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -55,6 +63,10 @@ class VelbusData:
 
     controller: Velbus
     scan_task: asyncio.Task
+    known_unique_ids: set[str] = field(default_factory=set)
+    discoverers: list[Callable[[set[int] | None], None]] = field(default_factory=list)
+    reconnect_scan_debouncer: Debouncer[Coroutine[Any, Any, None]] | None = None
+    scanned_module_addresses: set[int] | None = None
 
 
 async def velbus_scan_task(
@@ -68,22 +80,54 @@ async def velbus_scan_task(
             translation_domain=DOMAIN,
             translation_key="connection_failed",
         ) from ex
-    # create all modules
-    dev_reg = dr.async_get(hass)
-    for module in controller.get_modules().values():
-        dev_reg.async_get_or_create(
-            config_entry_id=entry_id,
-            identifiers={
-                (DOMAIN, str(module.get_addresses()[0])),
-            },
-            manufacturer="Velleman",
-            model=module.get_type_name(),
-            model_id=str(module.get_type()),
-            name=f"{module.get_name()} ({module.get_type_name()})",
-            sw_version=module.get_sw_version(),
-            serial_number=module.get_serial(),
-        )
     _migrate_via_devices_to_children(hass, entry_id)
+
+
+def _register_bus_listeners(hass: HomeAssistant, entry: VelbusConfigEntry) -> None:
+    """Attach module and scan listeners on the controller."""
+    controller = entry.runtime_data.controller
+
+    async def on_module_found(module: Module) -> None:
+        """Keep the registries in sync when a module finishes loading."""
+        await async_sync_bus_state(
+            hass, entry, restrict_to_addresses=set(module.get_addresses())
+        )
+
+    async def on_scan_complete(found_addresses: set[int]) -> None:
+        """Reconcile devices and entities after a full bus scan."""
+        await async_sync_bus_state(hass, entry, found_addresses=found_addresses)
+
+    async def reconnect_scan() -> None:
+        """Run a debounced full scan after reconnect."""
+        try:
+            await controller.scan()
+        except OSError:
+            _LOGGER.warning("Velbus reconnect scan failed", exc_info=True)
+
+    debouncer = Debouncer(
+        hass,
+        _LOGGER,
+        cooldown=RECONNECT_SCAN_COOLDOWN,
+        immediate=False,
+        function=reconnect_scan,
+    )
+    entry.runtime_data.reconnect_scan_debouncer = debouncer
+    entry.async_on_unload(debouncer.async_shutdown)
+
+    async def on_connect() -> None:
+        """Schedule a bus scan after the connection comes back."""
+        debouncer.async_schedule_call()
+
+    controller.add_module_found_callback(on_module_found)
+    controller.add_scan_complete_callback(on_scan_complete)
+    controller.add_connect_callback(on_connect)
+
+    def remove_listeners() -> None:
+        controller.remove_module_found_callback(on_module_found)
+        controller.remove_scan_complete_callback(on_scan_complete)
+        controller.remove_connect_callback(on_connect)
+
+    entry.async_on_unload(remove_listeners)
 
 
 def _child_name_from_registry(
@@ -224,8 +268,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> No
     # Migrate unique ids before the bus scan to preserve entity history
     await _migrate_property_unique_ids(hass, entry.entry_id)
 
-    task = hass.async_create_task(velbus_scan_task(controller, hass, entry.entry_id))
-    entry.runtime_data = VelbusData(controller=controller, scan_task=task)
+    entry.runtime_data = VelbusData(
+        controller=controller,
+        scan_task=hass.async_create_task(
+            velbus_scan_task(controller, hass, entry.entry_id)
+        ),
+    )
+    _register_bus_listeners(hass, entry)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -260,6 +309,20 @@ async def async_remove_config_entry_device(
     if device_entry.config_entry_id != config_entry.entry_id:
         return False
     dev_reg = dr.async_get(hass)
+    ent_reg = er.async_get(hass)
+    removal_device_ids = {device_entry.id}
+    removal_device_ids.update(
+        child.id
+        for child in dr.async_entries_for_parent_device(dev_reg, device_entry.id)
+    )
+    data = getattr(config_entry, "runtime_data", None)
+    for entity in er.async_entries_for_config_entry(ent_reg, config_entry.entry_id):
+        if entity.device_id not in removal_device_ids:
+            continue
+        if data is not None and entity.unique_id:
+            data.known_unique_ids.discard(
+                entity_registry_key(entity.domain, entity.unique_id)
+            )
     for child in dr.async_entries_for_parent_device(dev_reg, device_entry.id):
         dev_reg.async_remove_device(child.id)
     return True

@@ -23,6 +23,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     PERCENTAGE,
     EntityCategory,
+    Platform,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -34,6 +35,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import VelbusConfigEntry
 from .entity import VelbusEntity
+from .entity_discovery import async_setup_platform_discovery, discover_sensor_entities
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -171,28 +173,10 @@ async def async_setup_entry(
     entry: VelbusConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Velbus switch based on config_entry."""
-    await entry.runtime_data.scan_task
-    entities: list[VelbusSensor] = []
-    for channel in entry.runtime_data.controller.get_all_sensor():
-        for sensor_type in channel.get_sensor_types():
-            description = SENSOR_DESCRIPTIONS.get(sensor_type)
-            if description is None:
-                _LOGGER.warning(
-                    "Skipping unknown Velbus sensor type %r on %s",
-                    sensor_type,
-                    channel.get_full_name(),
-                )
-                continue
-            entities.append(
-                VelbusSensor(
-                    channel,
-                    description,
-                    is_counter=sensor_type in COUNTER_SENSOR_KEYS,
-                )
-            )
-
-    async_add_entities(entities)
+    """Set up Velbus sensor based on config_entry."""
+    await async_setup_platform_discovery(
+        hass, entry, async_add_entities, discover_sensor_entities, Platform.SENSOR
+    )
 
 
 class VelbusSensor(VelbusEntity, SensorEntity):

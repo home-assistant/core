@@ -1,0 +1,151 @@
+"""Discover Velbus entities from the live bus state."""
+
+from collections.abc import Callable
+import logging
+from typing import TYPE_CHECKING
+
+from velbusaio.controller import Velbus
+
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from .entity import VelbusEntity
+
+if TYPE_CHECKING:
+    from . import VelbusConfigEntry
+
+_LOGGER = logging.getLogger(__name__)
+
+
+def entity_registry_key(domain: str, unique_id: str) -> str:
+    """Return a domain-scoped key for tracking known unique IDs."""
+    return f"{domain}:{unique_id}"
+
+
+def discover_binary_sensor_entities(controller: Velbus) -> list[Entity]:
+    """Return binary sensor entities for the current bus state."""
+    from .binary_sensor import VelbusBinarySensor  # noqa: PLC0415
+
+    return [
+        VelbusBinarySensor(channel) for channel in controller.get_all_binary_sensor()
+    ]
+
+
+def discover_button_entities(controller: Velbus) -> list[Entity]:
+    """Return button entities for the current bus state."""
+    from .button import VelbusButton  # noqa: PLC0415
+
+    return [VelbusButton(channel) for channel in controller.get_all_button()]
+
+
+def discover_climate_entities(controller: Velbus) -> list[Entity]:
+    """Return climate entities for the current bus state."""
+    from .climate import VelbusClimate  # noqa: PLC0415
+
+    return [VelbusClimate(channel) for channel in controller.get_all_climate()]
+
+
+def discover_cover_entities(controller: Velbus) -> list[Entity]:
+    """Return cover entities for the current bus state."""
+    from .cover import VelbusCover  # noqa: PLC0415
+
+    return [VelbusCover(channel) for channel in controller.get_all_cover()]
+
+
+def discover_event_entities(controller: Velbus) -> list[Entity]:
+    """Return event entities for the current bus state."""
+    from .event import VelbusButtonEvent  # noqa: PLC0415
+
+    return [VelbusButtonEvent(channel) for channel in controller.get_all_button()]
+
+
+def discover_light_entities(controller: Velbus) -> list[Entity]:
+    """Return light entities for the current bus state."""
+    from .light import VelbusButtonLight, VelbusLight  # noqa: PLC0415
+
+    entities: list[Entity] = [
+        VelbusLight(channel) for channel in controller.get_all_light()
+    ]
+    entities.extend(VelbusButtonLight(channel) for channel in controller.get_all_led())
+    return entities
+
+
+def discover_select_entities(controller: Velbus) -> list[Entity]:
+    """Return select entities for the current bus state."""
+    from .select import VelbusSelect  # noqa: PLC0415
+
+    return [VelbusSelect(channel) for channel in controller.get_all_select()]
+
+
+def discover_sensor_entities(controller: Velbus) -> list[Entity]:
+    """Return sensor entities for the current bus state."""
+    from .sensor import COUNTER_SENSOR_KEYS, SENSOR_DESCRIPTIONS, VelbusSensor  # noqa: PLC0415
+
+    entities: list[Entity] = []
+    for channel in controller.get_all_sensor():
+        for sensor_type in channel.get_sensor_types():
+            description = SENSOR_DESCRIPTIONS.get(sensor_type)
+            if description is None:
+                _LOGGER.warning(
+                    "Skipping unknown Velbus sensor type %r on %s",
+                    sensor_type,
+                    channel.get_full_name(),
+                )
+                continue
+            entities.append(
+                VelbusSensor(
+                    channel,
+                    description,
+                    is_counter=sensor_type in COUNTER_SENSOR_KEYS,
+                )
+            )
+
+    return entities
+
+
+def discover_switch_entities(controller: Velbus) -> list[Entity]:
+    """Return switch entities for the current bus state."""
+    from .switch import VelbusSwitch  # noqa: PLC0415
+
+    return [VelbusSwitch(channel) for channel in controller.get_all_switch()]
+
+
+async def async_setup_platform_discovery(
+    hass: HomeAssistant,
+    entry: VelbusConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+    discover: Callable[[Velbus], list[Entity]],
+    platform_domain: str,
+) -> None:
+    """Wait for the initial scan and register ongoing entity discovery."""
+    await entry.runtime_data.scan_task
+
+    @callback
+    def _add_discovered(allowed_module_addresses: set[int] | None = None) -> None:
+        entities = discover(entry.runtime_data.controller)
+        if allowed_module_addresses is not None:
+            entities = [
+                entity
+                for entity in entities
+                if isinstance(entity, VelbusEntity)
+                and entity.module_address in allowed_module_addresses
+            ]
+        new_entities = [
+            entity
+            for entity in entities
+            if entity.unique_id
+            and entity_registry_key(platform_domain, entity.unique_id)
+            not in entry.runtime_data.known_unique_ids
+        ]
+        if not new_entities:
+            return
+        entry.runtime_data.known_unique_ids.update(
+            entity_registry_key(platform_domain, unique_id)
+            for entity in new_entities
+            if (unique_id := entity.unique_id)
+        )
+        async_add_entities(new_entities)
+
+    entry.runtime_data.discoverers.append(_add_discovered)
+    _add_discovered(entry.runtime_data.scanned_module_addresses)
