@@ -78,7 +78,9 @@ BASE_OPTIONS = {
 }
 
 INFLUX_PATH = "homeassistant.components.influxdb"
-INFLUX_CLIENT_PATH = f"{INFLUX_PATH}.InfluxDBClient"
+# The V1 client is imported lazily by the integration, so patch it at the source.
+INFLUX_CLIENT_PATH = "influxdb.InfluxDBClient"
+INFLUX_CLIENT_V2_PATH = f"{INFLUX_PATH}.InfluxDBClientV2"
 
 
 def _get_write_api_mock_v1(mock_influx_client):
