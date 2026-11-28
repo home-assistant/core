@@ -14,7 +14,6 @@ from todoist_api_python.models import Collaborator, Due, Label, Project, Section
 from homeassistant.components.todoist.const import DOMAIN
 from homeassistant.const import CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 PROJECT_ID = "project-id-1"
 SECTION_ID = "section-id-1"
@@ -217,6 +216,6 @@ async def mock_setup_integration(
         patch("homeassistant.components.todoist.TodoistAPIAsync", return_value=api),
         patch("homeassistant.components.todoist.PLATFORMS", platforms),
     ):
-        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.config_entries.async_setup(todoist_config_entry.entry_id)
         await hass.async_block_till_done()
         yield
