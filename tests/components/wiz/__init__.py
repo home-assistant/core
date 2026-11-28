@@ -15,7 +15,6 @@ from pywizlight.discovery import DiscoveredBulb
 from homeassistant.components.wiz.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 FAKE_STATE = PilotParser(
     {
@@ -325,7 +324,7 @@ async def async_setup_integration(
     entry.add_to_hass(hass)
     bulb = wizlight or _mocked_wizlight(device, extended_white_range, bulb_type)
     with _patch_discovery(), _patch_wizlight(device=bulb):
-        await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+        await hass.config_entries.async_setup(entry.entry_id)
         # Let the discovery started by async_setup finish while it is patched.
         await hass.async_block_till_done(wait_background_tasks=True)
     return bulb, entry

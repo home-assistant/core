@@ -9,7 +9,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, STATE_OFF, STATE_ON, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
 
 from . import (
     FAKE_IP,
@@ -66,7 +65,7 @@ async def test_binary_sensor_restored_from_registry(
     entity_id = reg_ent.entity_id
 
     with _patch_discovery(), _patch_wizlight(device=bulb):
-        await async_setup_component(hass, wiz.DOMAIN, {wiz.DOMAIN: {}})
+        await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)

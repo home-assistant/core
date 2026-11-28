@@ -9,7 +9,6 @@ from homeassistant.components.wiz.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_FRIENDLY_NAME, CONF_HOST, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from . import (
@@ -62,7 +61,7 @@ async def test_cleanup_on_failed_first_update(hass: HomeAssistant) -> None:
         patch("homeassistant.components.wiz.discovery.find_wizlights", return_value=[]),
         _patch_wizlight(device=bulb),
     ):
-        await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+        await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
     assert entry.state is ConfigEntryState.SETUP_RETRY
     bulb.async_close.assert_called_once()
