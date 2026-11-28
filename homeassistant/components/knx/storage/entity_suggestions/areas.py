@@ -46,7 +46,9 @@ def _unique_names(paths: dict[str, tuple[str, ...]]) -> dict[str, str]:
     A name used by more than one path is prefixed with the names of the spaces
     containing it, as far as needed to tell them apart - eg. "Ground floor /
     Kitchen" and "First floor / Kitchen". Names are compared like the area and
-    floor registries do, so "Kitchen" and "kitchen" are told apart too.
+    floor registries do, so "Kitchen" and "kitchen" are told apart too. Names
+    the prefixes don't tell apart, eg. of two rooms "Bath" on one floor, are
+    numbered in project order - "Bath" and "Bath (2)".
     """
     depths = dict.fromkeys(paths, 1)
     while True:
@@ -62,9 +64,23 @@ def _unique_names(paths: dict[str, tuple[str, ...]]) -> dict[str, str]:
             and depths[identifier] < len(paths[identifier])
         ]
         if not deeper:
-            return labels
+            return _numbered(labels)
         for identifier in deeper:
             depths[identifier] += 1
+
+
+def _numbered(labels: dict[str, str]) -> dict[str, str]:
+    """Number labels that are still used more than once, in project order."""
+    used: set[str] = set()
+    numbered: dict[str, str] = {}
+    for identifier, label in labels.items():
+        name, number = label, 1
+        while normalize_name(name) in used:
+            number += 1
+            name = f"{label} ({number})"
+        used.add(normalize_name(name))
+        numbered[identifier] = name
+    return numbered
 
 
 def space_names(locations: dict[str, Space]) -> dict[str, str]:

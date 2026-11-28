@@ -105,7 +105,22 @@ LOCATIONS: dict[str, Any] = {
             ),
             # floors and areas are told apart in their own registries
             "F-4": _space(
-                "F-4", "Floor", "Attic", {"R-8": _space("R-8", "Room", "Attic")}
+                "F-4",
+                "Floor",
+                "Attic",
+                {
+                    "R-8": _space("R-8", "Room", "Attic"),
+                    # prefixes can't tell rooms of one floor apart
+                    "R-9": _space("R-9", "Room", "Store"),
+                    "R-10": _space("R-10", "Room", "store"),
+                },
+            ),
+            # nor floors of one building
+            "F-5": _space(
+                "F-5", "Floor", "Cellar", {"R-11": _space("R-11", "Room", "Boiler")}
+            ),
+            "F-6": _space(
+                "F-6", "Floor", "Cellar", {"R-12": _space("R-12", "Room", "Laundry")}
             ),
         },
     ),
@@ -223,6 +238,14 @@ async def test_suggested_areas(
             "area_id": None,
         },
         "R-8": {"name": "Attic", "floor": "Attic", "area_id": None},
+        "R-9": {"name": "Annex / Attic / Store", "floor": "Attic", "area_id": None},
+        "R-10": {
+            "name": "Annex / Attic / store (2)",
+            "floor": "Attic",
+            "area_id": None,
+        },
+        "R-11": {"name": "Boiler", "floor": "Annex / Cellar", "area_id": None},
+        "R-12": {"name": "Laundry", "floor": "Annex / Cellar (2)", "area_id": None},
         # an existing area is found by its normalized name
         "A-1": {"name": "Garden", "floor": None, "area_id": garden.id},
     }

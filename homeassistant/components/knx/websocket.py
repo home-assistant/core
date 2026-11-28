@@ -691,7 +691,8 @@ async def ws_create_entity(
             area_id = _async_get_or_create_area(
                 hass, suggested_area["name"], suggested_area.get("floor")
             )
-        if area_id is not None:
+        # an area deleted meanwhile is left out, as deleting it clears it anyway
+        if area_id is not None and ar.async_get(hass).async_get_area(area_id):
             er.async_get(hass).async_update_entity(entity_id, area_id=area_id)
     connection.send_result(
         msg["id"], EntityStoreValidationSuccess(success=True, entity_id=entity_id)

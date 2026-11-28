@@ -4,6 +4,7 @@ import dataclasses
 import json
 import string
 from typing import Any
+from unittest.mock import patch
 
 import pytest
 from pytest_homeassistant.common import async_load_json_object_fixture
@@ -18,6 +19,7 @@ from homeassistant.components.knx.const import (
 )
 from homeassistant.components.knx.storage.config_store import (
     STORAGE_KEY as KNX_CONFIG_STORAGE_KEY,
+    KNXConfigStore,
     to_storage_dict,
 )
 from homeassistant.components.knx.storage.const import CONF_DATA
@@ -319,6 +321,38 @@ async def test_create_entity_area_of_device_entity(
     assert KNX_CONFIG_STORAGE_KEY not in hass_storage
     assert area_registry.async_get_area_by_name("Bath") is None
     assert floor_registry.async_get_floor_by_name("Second floor") is None
+
+
+async def test_create_entity_area_deleted_meanwhile(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test an area deleted while the entity is created is left out."""
+    kitchen = area_registry.async_create("Kitchen")
+    await knx.setup_integration()
+    client = await hass_ws_client(hass)
+    create_entity = KNXConfigStore.create_entity
+
+    async def _delete_area_first(self: KNXConfigStore, *args: Any) -> str | None:
+        area_registry.async_delete(kitchen.id)
+        return await create_entity(self, *args)
+
+    with patch.object(KNXConfigStore, "create_entity", _delete_area_first):
+        await client.send_json_auto_id(
+            {
+                "type": "knx/create_entity",
+                "platform": Platform.SWITCH,
+                "data": SWITCH_ENTITY_DATA,
+                "area_id": kitchen.id,
+            }
+        )
+        res = await client.receive_json()
+    assert res["success"], res
+    assert res["result"]["success"]
+    assert entity_registry.async_get(res["result"]["entity_id"]).area_id is None
 
 
 async def test_create_entity_invalid_data_creates_no_area(
