@@ -774,13 +774,13 @@ async def test_history_with_invalid_entity_ids(
 
 
 @pytest.mark.usefixtures("recorder_mock")
-async def test_fetch_period_api_filters_unauthorized_entities(
+async def test_fetch_period_api_rejects_non_admin_users(
     hass: HomeAssistant,
     hass_read_only_user: MockUser,
     hass_read_only_access_token: str,
     hass_client: ClientSessionGenerator,
 ) -> None:
-    """Test history is filtered by per-entity read permissions for non-admins."""
+    """Test history period API rejects all non-admin users."""
     assert not hass_read_only_user.is_admin
     hass_read_only_user.mock_policy(
         {"entities": {"entity_ids": {"light.kitchen": True}}}
@@ -798,17 +798,6 @@ async def test_fetch_period_api_filters_unauthorized_entities(
         f"/api/history/period/{now}",
         params={"filter_entity_id": "light.kitchen,light.cow"},
     )
-    assert response.status == HTTPStatus.OK
-    response_json = await response.json()
-    assert all(
-        state["entity_id"] == "light.kitchen"
-        for entity_states in response_json
-        for state in entity_states
-    )
 
-    response = await client.get(
-        f"/api/history/period/{now}",
-        params={"filter_entity_id": "light.cow"},
-    )
-    assert response.status == HTTPStatus.OK
-    assert await response.json() == []
+    assert response.status == HTTPStatus.FORBIDDEN
+    assert await response.text() == "403: Forbidden"

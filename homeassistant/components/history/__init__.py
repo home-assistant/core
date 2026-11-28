@@ -46,7 +46,9 @@ CONFIG_SCHEMA = probatio.Schema(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the history hooks."""
     hass.http.register_view(HistoryPeriodView())
-    frontend.async_register_built_in_panel(hass, "history", "history", "mdi:chart-box")
+    frontend.async_register_built_in_panel(
+        hass, "history", "history", "mdi:chart-box", require_admin=True
+    )
     websocket_api.async_setup(hass)
     return True
 
@@ -62,6 +64,8 @@ class HistoryPeriodView(HomeAssistantView):
         self, request: web.Request, datetime: str | None = None
     ) -> web.Response:
         """Return history over a period of time."""
+        if not request[KEY_HASS_USER].is_admin:
+            raise web.HTTPForbidden
         datetime_ = None
         query = request.query
 

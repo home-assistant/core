@@ -8,7 +8,7 @@ from typing import Any
 from aiohttp import web
 import probatio
 
-from homeassistant.components.http import KEY_HASS, HomeAssistantView
+from homeassistant.components.http import KEY_HASS, KEY_HASS_USER, HomeAssistantView
 from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.filters import Filters
 from homeassistant.core import HomeAssistant, callback
@@ -54,6 +54,8 @@ class LogbookView(HomeAssistantView):
         self, request: web.Request, datetime: str | None = None
     ) -> web.Response:
         """Retrieve logbook entries."""
+        if not request[KEY_HASS_USER].is_admin:
+            raise web.HTTPForbidden
         if datetime:
             if (datetime_dt := dt_util.parse_datetime(datetime)) is None:
                 return self.json_message("Invalid datetime", HTTPStatus.BAD_REQUEST)

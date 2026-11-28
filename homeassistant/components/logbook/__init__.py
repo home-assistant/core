@@ -65,7 +65,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Logbook setup."""
 
     frontend.async_register_built_in_panel(
-        hass, "logbook", "logbook", "mdi:format-list-bulleted-type"
+        hass, "logbook", "logbook", "mdi:format-list-bulleted-type", require_admin=True
     )
 
     recorder_conf = config.get(RECORDER_DOMAIN, {})
