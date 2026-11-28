@@ -3,10 +3,12 @@
 from datetime import timedelta
 import http
 import time
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 from aiohttp import ClientConnectionError
 from freezegun.api import FrozenDateTimeFactory
+import orjson
 import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
@@ -19,9 +21,18 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.myuplink.const import DOMAIN, OAUTH2_TOKEN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
+from homeassistant.const import (
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    EntityCategory,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
@@ -329,3 +340,182 @@ async def test_entity_unknown_when_point_is_missing(
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNKNOWN
     assert "Unexpected error" not in caplog.text
+
+
+def _s320_point(parameter_id: str, name: str, **overrides: Any) -> dict[str, Any]:
+    """Return a writable data point as a NIBE S320 reports it."""
+    return {
+        "category": "NIBE VVM S320 CU EM 3x400V",
+        "parameterId": parameter_id,
+        "parameterName": name,
+        "parameterUnit": "",
+        "writable": True,
+        "timestamp": "2026-11-20T10:00:00+00:00",
+        "value": 0.0,
+        "strVal": "0",
+        "smartHomeCategories": [],
+        "minValue": None,
+        "maxValue": None,
+        "stepValue": 1.0,
+        "enumValues": [],
+        "scaleValue": "1",
+        "zoneId": None,
+    } | overrides
+
+
+@pytest.mark.parametrize(
+    "load_device_points_jv_file",
+    [
+        orjson.dumps(
+            [
+                _s320_point("47007", "Heating curve", minValue=0.0, maxValue=15.0),
+                _s320_point(
+                    "10613", "Activate SG Ready via API", minValue=0.0, maxValue=1.0
+                ),
+                _s320_point(
+                    "61597",
+                    "Public Rest API Enabled",
+                    category="Software Debug",
+                    minValue=0.0,
+                    maxValue=1.0,
+                ),
+                _s320_point(
+                    "61999",
+                    "Debug log level",
+                    category="Software Debug",
+                    minValue=0.0,
+                    maxValue=5.0,
+                ),
+            ]
+        ).decode()
+    ],
+)
+async def test_settings_with_zero_limit(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_myuplink_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that settings with a limit of 0 can be changed, with the right range."""
+    await setup_integration(hass, mock_config_entry)
+    await hass.async_block_till_done()
+    device_id = "robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff"
+
+    assert not entity_registry.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, f"{device_id}-47007"
+    )
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.NUMBER, DOMAIN, f"{device_id}-47007"
+    )
+    assert entity_id
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["min"] == 0
+    assert state.attributes["max"] == 15
+
+    assert not entity_registry.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, f"{device_id}-10613"
+    )
+    assert entity_registry.async_get_entity_id(
+        Platform.SWITCH, DOMAIN, f"{device_id}-10613"
+    )
+
+    # Settings for the unit itself, like its local API, start disabled
+    for platform, point_id in ((Platform.SWITCH, "61597"), (Platform.NUMBER, "61999")):
+        entity_id = entity_registry.async_get_entity_id(
+            platform, DOMAIN, f"{device_id}-{point_id}"
+        )
+        assert entity_id
+        entry = entity_registry.async_get(entity_id)
+        assert entry
+        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+        assert entry.entity_category is EntityCategory.CONFIG
+
+
+SG_READY_POINTS = orjson.dumps(
+    [_s320_point("10613", "Activate SG Ready via API", minValue=0.0, maxValue=1.0)]
+).decode()
+SG_READY_UNIQUE_ID = "robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-10613"
+
+
+@pytest.mark.parametrize("load_device_points_jv_file", [SG_READY_POINTS])
+async def test_deprecated_setting_sensor_kept(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    mock_myuplink_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that an install that had the setting as a sensor keeps the sensor."""
+    sensor = entity_registry.async_get_or_create(
+        Platform.SENSOR,
+        DOMAIN,
+        SG_READY_UNIQUE_ID,
+        config_entry=mock_config_entry,
+        suggested_object_id="sg_ready",
+    )
+
+    await setup_integration(hass, mock_config_entry)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(sensor.entity_id).state == "0.0"
+    assert entity_registry.async_get_entity_id(
+        Platform.SWITCH, DOMAIN, SG_READY_UNIQUE_ID
+    )
+    # Not used anywhere, so there is nothing to repair
+    assert not issue_registry.issues
+
+
+@pytest.mark.parametrize("load_device_points_jv_file", [SG_READY_POINTS])
+async def test_deprecated_setting_sensor_issue(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    mock_myuplink_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that a repair issue is raised when the old sensor is still used."""
+    sensor = entity_registry.async_get_or_create(
+        Platform.SENSOR,
+        DOMAIN,
+        SG_READY_UNIQUE_ID,
+        config_entry=mock_config_entry,
+        suggested_object_id="sg_ready",
+    )
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": [
+                {
+                    "id": "sg_ready_watch",
+                    "alias": "SG Ready watch",
+                    "triggers": {"trigger": "state", "entity_id": sensor.entity_id},
+                    "actions": [],
+                },
+                {
+                    "alias": "SG Ready without an id",
+                    "triggers": {"trigger": "state", "entity_id": sensor.entity_id},
+                    "actions": [],
+                },
+            ]
+        },
+    )
+
+    await setup_integration(hass, mock_config_entry)
+    await hass.async_block_till_done()
+
+    switch_id = entity_registry.async_get_entity_id(
+        Platform.SWITCH, DOMAIN, SG_READY_UNIQUE_ID
+    )
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"deprecated_setting_sensor_{sensor.entity_id}"
+    )
+    assert issue is not None
+    assert issue.breaks_in_ha_version == "2027.7.0"
+    assert issue.translation_key == "deprecated_setting_sensor"
+    assert issue.translation_placeholders["replacement_entity_id"] == switch_id
+    assert "SG Ready watch" in issue.translation_placeholders["items"]
+    assert (
+        "automation.sg_ready_without_an_id" in issue.translation_placeholders["items"]
+    )
