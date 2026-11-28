@@ -1,5 +1,9 @@
 """Tests for the Wemo switch entity."""
 
+from datetime import timedelta
+from unittest.mock import MagicMock
+
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 import pywemo
 
@@ -27,6 +31,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from . import entity_test_helpers
 from .conftest import (
@@ -116,19 +121,29 @@ async def test_turn_off_state(hass: HomeAssistant, wemo_entity) -> None:
     await entity_test_helpers.test_turn_off_state(hass, wemo_entity, SWITCH_DOMAIN)
 
 
-async def test_insight_state_attributes(hass: HomeAssistant, pywemo_registry) -> None:
-    """Verify the switch attributes are set for the Insight device."""
+async def test_insight_state_attributes(
+    hass: HomeAssistant,
+    pywemo_registry: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Verify the switch attributes are set for the Insight device.
+
+    ``on_latest_time`` is the UTC start of the current on period. Cumulative
+    today and total on-time stay duration strings.
+    """
+    freezer.move_to("2026-11-06T12:00:00+00:00")
     await async_setup_component(hass, HA_DOMAIN, {})
     with create_pywemo_device(pywemo_registry, "Insight") as insight:
         wemo_entity = await async_create_wemo_entity(hass, insight, "")
+        assert wemo_entity is not None
         attributes = hass.states.get(wemo_entity.entity_id).attributes
-        assert attributes[ATTR_ON_LATEST_TIME] == "00d 00h 20m 34s"
+        assert ATTR_ON_LATEST_TIME not in attributes
         assert attributes[ATTR_ON_TODAY_TIME] == "00d 01h 34m 38s"
         assert attributes[ATTR_ON_TOTAL_TIME] == "00d 02h 30m 12s"
         assert attributes[ATTR_POWER_THRESHOLD] == MOCK_INSIGHT_STATE_THRESHOLD_POWER
         assert attributes[ATTR_CURRENT_STATE_DETAIL] == STATE_OFF
 
-        async def async_update():
+        async def async_update() -> None:
             await hass.services.async_call(
                 HA_DOMAIN,
                 SERVICE_UPDATE_ENTITY,
@@ -136,23 +151,217 @@ async def test_insight_state_attributes(hass: HomeAssistant, pywemo_registry) ->
                 blocking=True,
             )
 
-        # Test 'ON' state detail value.
         insight.standby_state = pywemo.StandbyState.ON
         await async_update()
         attributes = hass.states.get(wemo_entity.entity_id).attributes
         assert attributes[ATTR_CURRENT_STATE_DETAIL] == STATE_ON
+        on_since = dt_util.utcnow() - timedelta(seconds=insight.on_for)
+        assert attributes[ATTR_ON_LATEST_TIME] == on_since
+        assert attributes[ATTR_ON_TODAY_TIME] == "00d 01h 34m 38s"
+        assert attributes[ATTR_ON_TOTAL_TIME] == "00d 02h 30m 12s"
 
-        # Test 'STANDBY' state detail value.
+        insight.on_for += 9
+        freezer.tick(timedelta(seconds=10))
+        await async_update()
+        attributes = hass.states.get(wemo_entity.entity_id).attributes
+        assert attributes[ATTR_ON_LATEST_TIME] == on_since
+
+        insight.on_for = 5
+        freezer.tick(timedelta(seconds=10))
+        await async_update()
+        attributes = hass.states.get(wemo_entity.entity_id).attributes
+        assert attributes[ATTR_ON_LATEST_TIME] == dt_util.utcnow() - timedelta(
+            seconds=5
+        )
+
         insight.standby_state = pywemo.StandbyState.STANDBY
         await async_update()
         attributes = hass.states.get(wemo_entity.entity_id).attributes
         assert attributes[ATTR_CURRENT_STATE_DETAIL] == STATE_STANDBY
+        assert attributes[ATTR_ON_LATEST_TIME] == dt_util.utcnow() - timedelta(
+            seconds=5
+        )
 
-        # Test 'UNKNOWN' state detail value.
+        insight.standby_state = pywemo.StandbyState.OFF
+        await async_update()
+        attributes = hass.states.get(wemo_entity.entity_id).attributes
+        assert attributes[ATTR_CURRENT_STATE_DETAIL] == STATE_OFF
+        assert ATTR_ON_LATEST_TIME not in attributes
+
         insight.standby_state = None
         await async_update()
         attributes = hass.states.get(wemo_entity.entity_id).attributes
         assert attributes[ATTR_CURRENT_STATE_DETAIL] == STATE_UNKNOWN
+        assert ATTR_ON_LATEST_TIME not in attributes
+
+
+async def test_insight_on_since_resets_when_on_for_decreases(
+    hass: HomeAssistant,
+    pywemo_registry: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A shorter on_for within the drift window starts a new on period.
+
+    Subscriptions can miss the off transition, so consecutive on polls can
+    report on_for=20 at t=20 and on_for=5 at t=50. The start must move to
+    t-5 instead of keeping the cached start from the previous period.
+    """
+    start = dt_util.parse_datetime("2026-11-06T12:00:00+00:00")
+    assert start is not None
+    freezer.move_to(start)
+    await async_setup_component(hass, HA_DOMAIN, {})
+    with create_pywemo_device(pywemo_registry, "Insight") as insight:
+        wemo_entity = await async_create_wemo_entity(hass, insight, "")
+        assert wemo_entity is not None
+
+        async def async_update() -> None:
+            await hass.services.async_call(
+                HA_DOMAIN,
+                SERVICE_UPDATE_ENTITY,
+                {ATTR_ENTITY_ID: [wemo_entity.entity_id]},
+                blocking=True,
+            )
+
+        insight.standby_state = pywemo.StandbyState.ON
+        insight.on_for = 20
+        freezer.move_to(start + timedelta(seconds=20))
+        await async_update()
+        attributes = hass.states.get(wemo_entity.entity_id).attributes
+        assert attributes[ATTR_ON_LATEST_TIME] == start
+
+        insight.on_for = 5
+        freezer.move_to(start + timedelta(seconds=50))
+        await async_update()
+        attributes = hass.states.get(wemo_entity.entity_id).attributes
+        assert attributes[ATTR_ON_LATEST_TIME] == start + timedelta(seconds=45)
+
+
+async def test_insight_on_since_holds_when_refresh_is_skipped(
+    hass: HomeAssistant,
+    pywemo_registry: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A skipped refresh must not move the cached on period start.
+
+    Subscribed Insight devices that are on return from the coordinator update
+    without reading the device, then still notify entities. ``on_for`` stays
+    stale while the clock advances past the drift window.
+    """
+    freezer.move_to("2026-11-06T12:00:00+00:00")
+    await async_setup_component(hass, HA_DOMAIN, {})
+    with create_pywemo_device(pywemo_registry, "Insight") as insight:
+        wemo_entity = await async_create_wemo_entity(hass, insight, "")
+        assert wemo_entity is not None
+
+        async def async_update() -> None:
+            await hass.services.async_call(
+                HA_DOMAIN,
+                SERVICE_UPDATE_ENTITY,
+                {ATTR_ENTITY_ID: [wemo_entity.entity_id]},
+                blocking=True,
+            )
+
+        insight.standby_state = pywemo.StandbyState.ON
+        insight.get_state.return_value = 1
+        await async_update()
+        state = hass.states.get(wemo_entity.entity_id)
+        assert state is not None
+        on_since = state.attributes[ATTR_ON_LATEST_TIME]
+
+        pywemo_registry.is_subscribed.return_value = True
+        freezer.tick(timedelta(seconds=90))
+        await async_update()
+        state = hass.states.get(wemo_entity.entity_id)
+        assert state is not None
+        assert state.attributes[ATTR_ON_LATEST_TIME] == on_since
+
+
+async def test_insight_binary_state_subscription_keeps_on_since(
+    hass: HomeAssistant,
+    pywemo_registry: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A BinaryState push must not move the cached on period start.
+
+    That callback calls get_state(False), which does not reload Insight on_for.
+    """
+    freezer.move_to("2026-11-06T12:00:00+00:00")
+    await async_setup_component(hass, HA_DOMAIN, {})
+    with create_pywemo_device(pywemo_registry, "Insight") as insight:
+        wemo_entity = await async_create_wemo_entity(hass, insight, "")
+        assert wemo_entity is not None
+
+        async def async_update() -> None:
+            await hass.services.async_call(
+                HA_DOMAIN,
+                SERVICE_UPDATE_ENTITY,
+                {ATTR_ENTITY_ID: [wemo_entity.entity_id]},
+                blocking=True,
+            )
+
+        insight.standby_state = pywemo.StandbyState.ON
+        insight.get_state.return_value = 1
+        await async_update()
+        state = hass.states.get(wemo_entity.entity_id)
+        assert state is not None
+        on_since = state.attributes[ATTR_ON_LATEST_TIME]
+
+        insight.subscription_update.return_value = True
+        pywemo_registry.is_subscribed.return_value = True
+        freezer.tick(timedelta(seconds=90))
+        await hass.async_add_executor_job(
+            pywemo_registry.callbacks[insight.name],
+            insight,
+            "BinaryState",
+            "1",
+        )
+        await hass.async_block_till_done()
+        state = hass.states.get(wemo_entity.entity_id)
+        assert state is not None
+        assert state.attributes[ATTR_ON_LATEST_TIME] == on_since
+
+
+async def test_insight_on_since_advances_on_fresh_equal_on_for(
+    hass: HomeAssistant,
+    pywemo_registry: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A new device read with the same on_for starts a new on period.
+
+    With subscriptions disabled, an off/on between polls can report on_for=20
+    again. That is a fresh sample, so the start moves to now minus on_for
+    even though the counter matches and the gap is inside the drift window.
+    """
+    start = dt_util.parse_datetime("2026-11-06T12:00:00+00:00")
+    assert start is not None
+    freezer.move_to(start)
+    await async_setup_component(hass, HA_DOMAIN, {})
+    with create_pywemo_device(pywemo_registry, "Insight") as insight:
+        wemo_entity = await async_create_wemo_entity(hass, insight, "")
+        assert wemo_entity is not None
+
+        async def async_update() -> None:
+            await hass.services.async_call(
+                HA_DOMAIN,
+                SERVICE_UPDATE_ENTITY,
+                {ATTR_ENTITY_ID: [wemo_entity.entity_id]},
+                blocking=True,
+            )
+
+        insight.standby_state = pywemo.StandbyState.ON
+        insight.get_state.return_value = 1
+        insight.on_for = 20
+        freezer.move_to(start + timedelta(seconds=20))
+        await async_update()
+        state = hass.states.get(wemo_entity.entity_id)
+        assert state is not None
+        assert state.attributes[ATTR_ON_LATEST_TIME] == start
+
+        freezer.move_to(start + timedelta(seconds=50))
+        await async_update()
+        state = hass.states.get(wemo_entity.entity_id)
+        assert state is not None
+        assert state.attributes[ATTR_ON_LATEST_TIME] == start + timedelta(seconds=30)
 
 
 async def test_maker_state_attributes(hass: HomeAssistant, pywemo_registry) -> None:
