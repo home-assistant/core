@@ -4,10 +4,8 @@ from unittest.mock import patch
 
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.sense.const import DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 
 async def setup_platform(
@@ -17,7 +15,7 @@ async def setup_platform(
     config_entry.add_to_hass(hass)
 
     with patch("homeassistant.components.sense.PLATFORMS", [platform]):
-        assert await async_setup_component(hass, DOMAIN, {})
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     return config_entry
