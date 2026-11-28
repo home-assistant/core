@@ -101,6 +101,17 @@ def mock_get_wifi_info() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
+def mock_set_notifications() -> Generator[AsyncMock]:
+    """Mock the notifications write of the library."""
+    with patch(
+        "bosch_shc_camera_client.client.cloud_set_notifications",
+        autospec=True,
+        return_value=CloudPutResult(ok=True, status=204),
+    ) as mock:
+        yield mock
+
+
+@pytest.fixture
 def mock_soft_reset() -> Generator[AsyncMock]:
     """Mock the restart of the library."""
     with patch(
