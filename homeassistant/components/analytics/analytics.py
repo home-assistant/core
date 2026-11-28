@@ -335,14 +335,41 @@ class Analytics:
         if not self.onboarded or not self.preferences.get(ATTR_BASE, False):
             return
 
+        if self._data.uuid is None:
+            self._data.uuid = gen_uuid()
+            await self._save()
+
+        if (payload := await self._async_analytics_payload()) is None:
+            return
+
+        try:
+            async with timeout(30):
+                response = await self._session.post(self.endpoint_basic, json=payload)
+                if response.status == 200:
+                    LOGGER.info(
+                        (
+                            "Submitted analytics to Home Assistant servers. "
+                            "Information submitted includes %s"
+                        ),
+                        payload,
+                    )
+                else:
+                    LOGGER.warning(
+                        "Sending analytics failed with statuscode %s from %s",
+                        response.status,
+                        self.endpoint_basic,
+                    )
+        except TimeoutError:
+            LOGGER.error("Timeout sending analytics to %s", BASIC_ENDPOINT_URL)
+        except aiohttp.ClientError as err:
+            LOGGER.error("Error sending analytics to %s: %r", BASIC_ENDPOINT_URL, err)
+
+    async def _async_analytics_payload(self) -> dict[str, Any] | None:
+        """Return the analytics payload, None if the configuration is invalid."""
         hass = self._hass
         supervisor_info = None
         addons_info: dict[str, Any] | None = None
         operating_system_info: dict[str, Any] = {}
-
-        if self._data.uuid is None:
-            self._data.uuid = gen_uuid()
-            await self._save()
 
         if self.supervisor:
             # Try to pull Supervisor information, but don't fail if some or all
@@ -386,7 +413,7 @@ class Analytics:
                 yaml_configuration = await conf_util.async_hass_config_yaml(hass)
             except HomeAssistantError as err:
                 LOGGER.error(err)
-                return
+                return None
 
             configuration_set = _domains_from_yaml_config(yaml_configuration)
 
@@ -477,27 +504,7 @@ class Analytics:
                 ]
             )
 
-        try:
-            async with timeout(30):
-                response = await self._session.post(self.endpoint_basic, json=payload)
-                if response.status == 200:
-                    LOGGER.info(
-                        (
-                            "Submitted analytics to Home Assistant servers. "
-                            "Information submitted includes %s"
-                        ),
-                        payload,
-                    )
-                else:
-                    LOGGER.warning(
-                        "Sending analytics failed with statuscode %s from %s",
-                        response.status,
-                        self.endpoint_basic,
-                    )
-        except TimeoutError:
-            LOGGER.error("Timeout sending analytics to %s", BASIC_ENDPOINT_URL)
-        except aiohttp.ClientError as err:
-            LOGGER.error("Error sending analytics to %s: %r", BASIC_ENDPOINT_URL, err)
+        return payload
 
     @callback
     def _async_should_report_integration(
@@ -529,6 +536,16 @@ class Analytics:
             for entry in entries
             if entry.source != SOURCE_IGNORE and entry.disabled_by is None
         )
+
+    async def async_preview(self) -> dict[str, dict[str, Any] | None]:
+        """Return the payloads that would be sent right now."""
+        analytics_payload = None
+        snapshot_payload = None
+        if self.preferences[ATTR_BASE]:
+            analytics_payload = await self._async_analytics_payload()
+        if self.preferences[ATTR_SNAPSHOTS] and self._snapshots_enabled:
+            snapshot_payload = await _async_snapshot_payload(self._hass) or None
+        return {"analytics": analytics_payload, "snapshot": snapshot_payload}
 
     async def send_snapshot(self, _: datetime | None = None) -> None:
         """Send a snapshot."""

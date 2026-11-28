@@ -5,9 +5,10 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
-from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.common import MockUser, async_fire_time_changed
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from pytest_homeassistant.typing import WebSocketGenerator
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.analytics import CONF_SNAPSHOTS_URL, LABS_SNAPSHOT_FEATURE
 from homeassistant.components.analytics.const import (
@@ -25,6 +26,8 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
+
+from .conftest import MOCK_SNAPSHOT_PAYLOAD
 
 MOCK_VERSION = "1970.1.0"
 
@@ -121,7 +124,11 @@ async def test_schedule_starts_and_sends_analytics(
 
 @pytest.mark.parametrize(
     ("ws_type", "ws_options"),
-    [("analytics", {}), ("analytics/preferences", {"preferences": {"base": True}})],
+    [
+        ("analytics", {}),
+        ("analytics/preferences", {"preferences": {"base": True}}),
+        ("analytics/preview", {}),
+    ],
 )
 async def test_websocket_not_loaded(
     hass: HomeAssistant,
@@ -222,3 +229,144 @@ async def test_websocket(
     await ws_client.send_json_auto_id({"type": "analytics"})
     response = await ws_client.receive_json()
     assert response["result"]["preferences"]["base"]
+
+
+@pytest.mark.parametrize(
+    ("preferences", "uuid"),
+    [
+        pytest.param({}, "abcdefg", id="no_preferences"),
+        pytest.param({"base": False, "usage": True}, "abcdefg", id="base_off"),
+        pytest.param({"base": True}, "abcdefg", id="base"),
+        pytest.param({"base": True}, None, id="base_without_uuid"),
+        pytest.param({"base": True, "usage": True}, "abcdefg", id="usage"),
+        pytest.param({"base": True, "statistics": True}, "abcdefg", id="statistics"),
+        pytest.param(
+            {"base": True, "usage": True, "statistics": True}, "abcdefg", id="all"
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_hass_config")
+async def test_websocket_preview(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_ws_client: WebSocketGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    snapshot: SnapshotAssertion,
+    preferences: dict[str, bool],
+    uuid: str | None,
+) -> None:
+    """Test previewing the analytics payload without sending or storing it."""
+    hass_storage[STORAGE_KEY] = {
+        "version": 1,
+        "key": STORAGE_KEY,
+        "data": {"onboarded": True, "preferences": preferences, "uuid": uuid},
+    }
+
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    await hass.async_block_till_done()
+
+    ws_client = await hass_ws_client(hass)
+    with (
+        patch("homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION),
+        patch(
+            "homeassistant.components.analytics.analytics.async_get_system_info",
+            return_value={"installation_type": "Home Assistant Tests"},
+        ),
+    ):
+        await ws_client.send_json_auto_id({"type": "analytics/preview"})
+        response = await ws_client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == snapshot
+    assert len(aioclient_mock.mock_calls) == 0
+    assert hass_storage[STORAGE_KEY]["data"]["uuid"] == uuid
+
+
+@pytest.mark.parametrize(
+    ("preferences", "labs_features", "snapshot_payload", "expected"),
+    [
+        pytest.param(
+            {"snapshots": True},
+            [{"domain": DOMAIN, "preview_feature": LABS_SNAPSHOT_FEATURE}],
+            MOCK_SNAPSHOT_PAYLOAD,
+            MOCK_SNAPSHOT_PAYLOAD,
+            id="enabled",
+        ),
+        pytest.param(
+            {"snapshots": True},
+            [{"domain": DOMAIN, "preview_feature": LABS_SNAPSHOT_FEATURE}],
+            {},
+            None,
+            id="nothing_to_send",
+        ),
+        pytest.param(
+            {"snapshots": False},
+            [{"domain": DOMAIN, "preview_feature": LABS_SNAPSHOT_FEATURE}],
+            MOCK_SNAPSHOT_PAYLOAD,
+            None,
+            id="preference_off",
+        ),
+        pytest.param(
+            {"snapshots": True},
+            [],
+            MOCK_SNAPSHOT_PAYLOAD,
+            None,
+            id="labs_feature_off",
+        ),
+    ],
+)
+async def test_websocket_preview_snapshot(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_ws_client: WebSocketGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    preferences: dict[str, bool],
+    labs_features: list[dict[str, str]],
+    snapshot_payload: dict[str, Any],
+    expected: dict[str, Any] | None,
+) -> None:
+    """Test previewing the snapshot payload without sending it."""
+    hass_storage[STORAGE_KEY] = {
+        "version": 1,
+        "key": STORAGE_KEY,
+        "data": {"onboarded": True, "preferences": preferences, "uuid": None},
+    }
+    hass_storage["core.labs"] = {
+        "version": 1,
+        "key": "core.labs",
+        "data": {"preview_feature_status": labs_features},
+    }
+
+    assert await async_setup_component(hass, "labs", {})
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    await hass.async_block_till_done()
+
+    ws_client = await hass_ws_client(hass)
+    with patch(
+        "homeassistant.components.analytics.analytics._async_snapshot_payload",
+        return_value=snapshot_payload,
+    ):
+        await ws_client.send_json_auto_id({"type": "analytics/preview"})
+        response = await ws_client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == {"analytics": None, "snapshot": expected}
+    assert len(aioclient_mock.mock_calls) == 0
+
+
+async def test_websocket_preview_requires_admin(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test previewing the payloads is rejected for non-admin users."""
+    hass_admin_user.groups = []
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    await hass.async_block_till_done()
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json_auto_id({"type": "analytics/preview"})
+    response = await ws_client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["code"] == "unauthorized"

@@ -77,6 +77,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     websocket_api.async_register_command(hass, websocket_analytics)
     websocket_api.async_register_command(hass, websocket_analytics_preferences)
+    websocket_api.async_register_command(hass, websocket_analytics_preview)
 
     hass.http.register_view(AnalyticsDevicesView)
 
@@ -164,3 +165,18 @@ async def websocket_analytics_preferences(
         msg["id"],
         {ATTR_PREFERENCES: analytics.preferences},
     )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({probatio.Required("type"): "analytics/preview"})
+@websocket_api.async_response
+async def websocket_analytics_preview(
+    hass: HomeAssistant,
+    connection: websocket_api.connection.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Return the payloads that would be sent right now."""
+    if (analytics := hass.data.get(DATA_COMPONENT)) is None:
+        connection.send_error(msg["id"], websocket_api.ERR_NOT_FOUND, "Not loaded")
+        return
+    connection.send_result(msg["id"], await analytics.async_preview())
