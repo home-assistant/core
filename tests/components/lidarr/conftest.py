@@ -18,7 +18,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.setup import async_setup_component
 
 URL = "http://127.0.0.1:8668"
 API_KEY = "1234567890abcdef1234567890abcdef"
@@ -141,7 +140,7 @@ async def mock_setup_integration(
     config_entry.add_to_hass(hass)
 
     async def func() -> None:
-        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
     return func
